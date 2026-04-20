@@ -11,13 +11,24 @@ export default function IntroSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">AVALON VITALITY</h2>
+          <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Foundation</p>
+          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">IV THERAPY IS THE BASE</h2>
           <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
-            Our licensed medical team goes beyond IV therapy to deliver mobile recovery therapies wherever you are.
+            We started with IV therapy because it's the most direct, science-backed way to deliver nutrients at 100% absorption. It's the bedrock every other modality builds on.
           </p>
           <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            From backstage tents and private villas to hotel suites and corporate retreats, Avalon has built a new standard for mobile recovery. We're not just elevating hydration — we're redefining how people prepare, perform, and recover.
+            From that foundation, we're building Avalon into a full-stack recovery platform — adding verticals like NAD+, Exosomes, Peptides, HRT, Recovery Devices, and beyond. Each new modality layers on top of our mobile IV infrastructure, delivered to you by licensed clinicians wherever you are.
           </p>
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            {['IV Vitamins', 'NAD+', 'Exosomes', 'CBD', 'Peptides →', 'HRT →', 'Genetic Testing →'].map((v, i) => (
+              <span
+                key={v}
+                className={`px-4 py-1.5 rounded border font-body text-[10px] tracking-widest uppercase ${i < 4 ? 'border-foreground/30 text-foreground' : 'border-border text-muted-foreground/40'}`}
+              >
+                {v}
+              </span>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>
