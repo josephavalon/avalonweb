@@ -1,67 +1,63 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const faqs = [
   {
-    q: "What is mobile IV therapy?",
-    a: "Mobile IV therapy is a premium service where a registered nurse comes to your chosen location — home, office, hotel, or event — and administers an IV drip customized with vitamins, minerals, and hydration directly into your bloodstream."
+    q: "What's in your IVs?",
+    a: "Every IV is customized and made fresh on-site with medical-grade ingredients like B-complex vitamins, glutathione, magnesium, zinc, and electrolytes — tailored to your needs. Whether it's hydration for a hangover, immune support, or athletic performance, your formula is dialed in."
   },
   {
-    q: "Is IV therapy safe?",
-    a: "Yes. All IV treatments are administered by licensed registered nurses using medical-grade equipment and formulas compounded by accredited U.S. pharmacies. A physician reviews every patient's health intake before treatment."
+    q: "How long does an IV session take, and is it painful?",
+    a: "Sessions last 30–60 minutes with minimal discomfort — just a quick pinch like a standard blood draw. Many clients love the relaxing, spa-like vibe of receiving treatment at home or their hotel."
   },
   {
-    q: "How long does a session take?",
-    a: "Most IV drip sessions last between 30-60 minutes depending on the formula. Our nurse handles all setup and cleanup — you just sit back and relax."
+    q: "Are there side effects, and is it safe?",
+    a: "Side effects are rare and mild, such as minor bruising at the insertion site, which our licensed RNs minimize through strict sterile protocols. IV therapy is safe for most people; always disclose any allergies or medical conditions when booking."
   },
   {
-    q: "Do I need a prescription?",
-    a: "No prescription is needed. When you book, you'll complete a brief health questionnaire that is reviewed by a licensed physician before your treatment is approved."
+    q: "Can IV vitamins help with hangovers or fatigue?",
+    a: "Absolutely. Our IVs are designed to support rapid rehydration and nutrient replenishment for a quick bounce-back. Clients report feeling dramatically better within 30–60 minutes after a hangover or fatigue session."
   },
   {
-    q: "Where can I receive treatment?",
-    a: "Anywhere you're comfortable — your home, office, hotel room, or private event. We bring everything needed for a safe, sterile treatment."
+    q: "How often should I get an IV?",
+    a: "Frequency varies by goal. Weekly for chronic fatigue or performance maintenance, bi-weekly for athletes, or on-demand for travel and events. Our team will recommend a cadence based on your lifestyle."
   },
   {
-    q: "What's included in the membership?",
-    a: "Membership gives you access to priority scheduling, personalized drip consultations every 3 months, clinical support, unlimited messaging with your care team, and exclusive member pricing on all IV drips. The IV drips themselves are sold separately."
+    q: "Do you offer mobile services for events?",
+    a: "Yes — our teams arrive with everything needed for an on-site recovery lounge. We've done festivals, corporate retreats, film sets, and private parties. Contact us for group and event pricing."
   },
   {
-    q: "Can I book without a membership?",
-    a: "Yes! Your first session requires no membership. After that, a $49/month membership unlocks ongoing benefits and member pricing."
+    q: "Is IV therapy better than oral vitamins?",
+    a: "IV therapy delivers nutrients directly to the bloodstream, bypassing digestion for up to 100% absorption compared to 10–20% from oral supplements. This means faster, more reliable results — especially for rehydration and energy."
   },
   {
-    q: "How quickly will I feel results?",
-    a: "Most clients report feeling noticeably better within 30-60 minutes of their infusion. Because nutrients go directly into your bloodstream, the effects are near-immediate."
+    q: "What is NAD+ and why would I want it?",
+    a: "NAD+ (Nicotinamide Adenine Dinucleotide) is a coenzyme essential for cellular energy production, DNA repair, and cognitive function. Levels decline with age. IV NAD+ replenishes them directly — supporting energy, mental clarity, and longevity."
+  },
+  {
+    q: "What are Exosomes?",
+    a: "Exosomes are extracellular vesicles that carry biological signals between cells, supporting regeneration and repair. Our Exosome IVs range from 30B to 90B particles and represent the frontier of cellular regenerative therapy."
   },
 ];
 
 export default function FAQ() {
   return (
-    <section id="faq" className="py-24 md:py-32 px-6">
+    <section id="faq" className="py-20 md:py-28 px-4">
       <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
-          <h2 className="font-heading text-3xl md:text-4xl text-foreground">
-            Frequently asked questions
-          </h2>
+          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">FAQ</h2>
         </motion.div>
 
-        <Accordion type="single" collapsible className="space-y-4">
+        <Accordion type="single" collapsible className="space-y-2">
           {faqs.map((faq, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-xl px-6 bg-card">
-              <AccordionTrigger className="font-heading text-sm md:text-base text-foreground hover:no-underline py-5">
+            <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded px-6 bg-card">
+              <AccordionTrigger className="font-body text-sm font-semibold text-foreground tracking-wide hover:no-underline py-5 text-left">
                 {faq.q}
               </AccordionTrigger>
               <AccordionContent className="font-body text-sm text-muted-foreground leading-relaxed pb-5">

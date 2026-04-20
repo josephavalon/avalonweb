@@ -3,64 +3,66 @@ import { motion } from 'framer-motion';
 
 const testimonials = [
   {
-    quote: "I was completely wiped after a red-eye flight. The nurse arrived at my hotel in 45 minutes. Within an hour of the IV, I felt like a completely different person — hydrated, energized, and ready for my meetings.",
+    quote: "I was completely wiped after a red-eye flight. The nurse arrived at my hotel in 45 minutes. Within an hour I felt like a completely different person — hydrated, focused, and ready for my meetings.",
     name: "A.R.",
-    drip: "Revival Drip"
+    tag: "Dehydration IV"
   },
   {
-    quote: "I used to lose entire weekends recovering from Friday nights. Now I book a Saturday morning session and I'm back to 100% by lunch. It's genuinely life-changing.",
+    quote: "I used to lose entire Saturdays recovering. Now I book a morning session and I'm back to 100% by lunch. Genuinely life-changing for my weekends.",
     name: "M.T.",
-    drip: "Revival Drip"
+    tag: "Hangover IV"
   },
   {
-    quote: "My skin has never looked better. After four Radiance sessions, my esthetician asked me what I changed. The glow is real — and it comes from within.",
+    quote: "The NAD+ IV is next level. My mental clarity after a 1000mg session lasts for days. I do one before any big pitch or launch. It's become part of my founder toolkit.",
     name: "J.L.",
-    drip: "Radiance Drip"
+    tag: "NAD+ 1000mg"
   },
   {
-    quote: "As a competitive CrossFit athlete, recovery is everything. The Vitality drip has cut my recovery time in half. I'm hitting PRs I haven't seen in years.",
+    quote: "As a competitive athlete, recovery is everything. Since adding biweekly IVs my recovery time has cut in half. I'm hitting PRs I haven't seen in years.",
     name: "K.D.",
-    drip: "Vitality Drip"
+    tag: "Event Performance IV"
   },
   {
-    quote: "I was getting sick every other month. Since starting monthly Immunity drips, I haven't been down once in six months. My whole family is on it now.",
+    quote: "We booked Avalon for our entire team during BottleRock. They set up a recovery lounge backstage — the whole crew was back on their feet same day.",
     name: "S.P.",
-    drip: "Immunity Drip"
+    tag: "Event Recovery IV"
+  },
+  {
+    quote: "The CBD IV was something I'd never tried before. Zero THC, pure calm. Slept better than I have in months. Already scheduled my next session.",
+    name: "D.K.",
+    tag: "CBD IV"
   },
 ];
 
 export default function Testimonials() {
   return (
-    <section className="py-24 md:py-32 px-6 bg-secondary/30">
+    <section className="py-20 md:py-28 px-4 bg-secondary/40">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
-          <h2 className="font-heading text-3xl md:text-4xl text-foreground">
-            Not reviews. True reactions.
-          </h2>
+          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">REAL RESULTS</h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {testimonials.map((t, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="border border-border rounded-2xl p-6 md:p-8 bg-card"
+              transition={{ delay: i * 0.08 }}
+              className="border border-border rounded p-6 bg-card"
             >
-              <p className="font-body text-sm text-foreground/80 leading-relaxed mb-6 italic">
+              <p className="font-body text-sm text-foreground/80 leading-relaxed mb-5 italic">
                 "{t.quote}"
               </p>
               <div className="flex items-center justify-between">
-                <span className="font-heading text-sm text-foreground">{t.name}</span>
-                <span className="text-[10px] tracking-[0.15em] text-primary font-body uppercase">{t.drip}</span>
+                <span className="font-body text-sm font-semibold text-foreground">{t.name}</span>
+                <span className="text-[9px] tracking-[0.15em] text-accent font-body uppercase">{t.tag}</span>
               </div>
             </motion.div>
           ))}

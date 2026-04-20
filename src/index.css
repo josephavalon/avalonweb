@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,77 +6,42 @@
 
 @layer base {
   :root {
-    --font-heading: 'Playfair Display', serif;
+    --font-heading: 'Bebas Neue', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    --background: 15 14% 8%;
-    --foreground: 38 38% 92%;
-    --card: 15 14% 11%;
-    --card-foreground: 38 38% 92%;
-    --popover: 15 14% 11%;
-    --popover-foreground: 38 38% 92%;
-    --primary: 36 38% 60%;
-    --primary-foreground: 15 14% 8%;
-    --secondary: 15 10% 16%;
-    --secondary-foreground: 38 38% 85%;
-    --muted: 15 10% 16%;
-    --muted-foreground: 30 10% 55%;
-    --accent: 36 38% 60%;
-    --accent-foreground: 15 14% 8%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 45 90% 55%;
+    --accent-foreground: 0 0% 4%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 15 10% 20%;
-    --input: 15 10% 20%;
-    --ring: 36 38% 60%;
-    --chart-1: 36 38% 60%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 96%;
+    --chart-1: 45 90% 55%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 15 14% 8%;
-    --sidebar-foreground: 38 38% 92%;
-    --sidebar-primary: 36 38% 60%;
-    --sidebar-primary-foreground: 15 14% 8%;
-    --sidebar-accent: 15 10% 16%;
-    --sidebar-accent-foreground: 38 38% 92%;
-    --sidebar-border: 15 10% 20%;
-    --sidebar-ring: 36 38% 60%;
-  }
-
-  .dark {
-    --background: 15 14% 8%;
-    --foreground: 38 38% 92%;
-    --card: 15 14% 11%;
-    --card-foreground: 38 38% 92%;
-    --popover: 15 14% 11%;
-    --popover-foreground: 38 38% 92%;
-    --primary: 36 38% 60%;
-    --primary-foreground: 15 14% 8%;
-    --secondary: 15 10% 16%;
-    --secondary-foreground: 38 38% 85%;
-    --muted: 15 10% 16%;
-    --muted-foreground: 30 10% 55%;
-    --accent: 36 38% 60%;
-    --accent-foreground: 15 14% 8%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 15 10% 20%;
-    --input: 15 10% 20%;
-    --ring: 36 38% 60%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 15 14% 8%;
-    --sidebar-foreground: 38 38% 92%;
-    --sidebar-primary: 36 38% 60%;
-    --sidebar-primary-foreground: 15 14% 8%;
-    --sidebar-accent: 15 10% 16%;
-    --sidebar-accent-foreground: 38 38% 92%;
-    --sidebar-border: 15 10% 20%;
-    --sidebar-ring: 36 38% 60%;
+    --radius: 0.25rem;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 0 0% 96%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 0 0% 96%;
   }
 }
 
@@ -84,12 +49,13 @@
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
   }
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
+
+.font-heading { font-family: var(--font-heading); }
+.font-body { font-family: var(--font-body); }

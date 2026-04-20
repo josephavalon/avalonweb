@@ -1,54 +1,61 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+const BOOK_URL = 'https://avalonvitality.as.me/schedule/a9d85b1e';
+
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background image */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80"
-          alt="IV therapy"
+          src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1920&q=80"
+          alt="Festival performance"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+        <div className="absolute inset-0 bg-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
       </div>
 
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="font-heading text-5xl md:text-7xl lg:text-8xl tracking-wide text-foreground mb-8"
+          transition={{ duration: 0.9, delay: 0.2 }}
+          className="font-heading text-7xl md:text-9xl lg:text-[11rem] leading-none tracking-wide text-foreground uppercase"
         >
-          THE INFUSION
+          MOBILE<br />RECOVERY<br />THERAPY
         </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.7 }}
+          className="mt-6 font-body text-sm md:text-base text-muted-foreground tracking-widest uppercase"
+        >
+          Elite recovery — wherever you are
+        </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          transition={{ duration: 0.7, delay: 0.95 }}
+          className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <span className="px-8 py-3 border border-foreground/30 rounded-full text-xs md:text-sm tracking-[0.15em] text-foreground/80 font-body uppercase">
-            Wellness delivered to your door
-          </span>
           <a
-            href="#membership"
-            className="px-8 py-3 bg-foreground text-background rounded-full text-xs md:text-sm tracking-[0.15em] font-body uppercase hover:bg-foreground/90 transition-colors"
+            href={BOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-4 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
           >
-            Book Now
+            Start Your Recovery
+          </a>
+          <a
+            href="#treatments"
+            className="px-8 py-4 border border-foreground/30 text-foreground font-body text-sm tracking-widest uppercase hover:border-foreground transition-colors rounded"
+          >
+            View Treatments
           </a>
         </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1 }}
-          className="mt-6 text-xs tracking-[0.15em] text-muted-foreground font-body"
-        >
-          Premium mobile IV therapy. Nurse-administered. At your location.
-        </motion.p>
       </div>
     </section>
   );

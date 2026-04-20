@@ -2,10 +2,7 @@ import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import IntroSection from '../components/landing/IntroSection';
-import WhatAreIVs from '../components/landing/WhatAreIVs';
-import WhyIVTherapy from '../components/landing/WhyIVTherapy';
 import HowItWorks from '../components/landing/HowItWorks';
-import Membership from '../components/landing/Membership';
 import OurDrips from '../components/landing/OurDrips';
 import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
@@ -17,11 +14,8 @@ export default function Home() {
       <Navbar />
       <Hero />
       <IntroSection />
-      <WhatAreIVs />
-      <WhyIVTherapy />
       <HowItWorks />
       <OurDrips />
-      <Membership />
       <Testimonials />
       <FAQ />
       <Footer />
