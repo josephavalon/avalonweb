@@ -3,6 +3,7 @@ import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import IntroSection from '../components/landing/IntroSection';
 import HowItWorks from '../components/landing/HowItWorks';
+import WhatIsIV from '../components/landing/WhatIsIV';
 import OurDrips from '../components/landing/OurDrips';
 import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
@@ -14,6 +15,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <IntroSection />
+      <WhatIsIV />
       <HowItWorks />
       <OurDrips />
       <Testimonials />
