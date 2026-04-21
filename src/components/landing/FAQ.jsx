@@ -110,18 +110,18 @@ const faqs = [
   },
   {
     category: 'Insurance',
-    q: "Does insurance cover IV therapy?",
-    a: "Most standard insurance plans do not cover elective IV wellness therapy. However, specific medical-necessity treatments may qualify — consult your provider and we can help with documentation."
+    q: "Do you accept insurance?",
+    a: "We do not bill insurance directly. Payment is required at the time of service. However, we provide itemized receipts that you can submit to your insurance provider for potential reimbursement if your policy covers IV wellness therapy."
   },
   {
     category: 'Insurance',
     q: "Can I use FSA or HSA funds?",
-    a: "Yes, most FSA and HSA accounts can be used for IV therapy treatments classified as wellness or medical services. Check with your account administrator for specifics."
+    a: "Yes, most FSA and HSA accounts can be used for IV therapy treatments. Check with your account administrator for specifics, and we'll provide documentation to support your claim."
   },
   {
     category: 'Insurance',
-    q: "Do you provide receipts for tax or insurance purposes?",
-    a: "Absolutely. We provide itemized receipts detailing treatment type, date, and cost. This documentation is available for insurance claims or tax deductions if applicable."
+    q: "Do you provide receipts for reimbursement purposes?",
+    a: "Absolutely. We provide itemized receipts detailing treatment type, date, and cost — perfect for FSA/HSA submissions or insurance reimbursement claims."
   },
 ];
 
