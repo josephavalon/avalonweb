@@ -12,13 +12,6 @@ const categories = [
     image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/dc9537125_fffff.png',
   },
   {
-    label: 'Fluid',
-    href: '/services/iv-vitamins',
-    tag: 'FROM $150 — HYDRATION & ELECTROLYTES',
-    desc: 'Premium hydration therapy for recovery, performance, and wellness.',
-    image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/dc9537125_fffff.png',
-  },
-  {
     label: 'NAD+',
     href: '/services/nad',
     tag: 'FROM $350 — LONGEVITY MOLECULE',
