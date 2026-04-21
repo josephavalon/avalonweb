@@ -23,7 +23,7 @@ const IV_TIERS = [
     ],
   },
   {
-    name: 'Advanced',
+    name: 'Pro',
     category: 'VITAMINS',
     tagline: 'Most Popular',
     price: 400, regularPrice: 500,
@@ -414,7 +414,7 @@ const FLUID_TIERS = [
     ],
   },
   {
-    name: 'Advanced',
+    name: 'Pro',
     category: 'FLUID',
     tagline: 'Most Popular',
     price: 240, regularPrice: 300,
