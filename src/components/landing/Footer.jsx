@@ -61,6 +61,9 @@ export default function Footer() {
                 <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                 <span className="text-xs text-muted-foreground font-body">Mon-Sun: 8AM-8PM</span>
               </div>
+              <div className="flex items-start gap-3">
+                <span className="text-xs text-muted-foreground font-body">San Francisco Bay Area</span>
+              </div>
             </div>
           </div>
         </div>
