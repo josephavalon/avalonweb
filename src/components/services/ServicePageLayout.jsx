@@ -54,7 +54,7 @@ export default function ServicePageLayout({ title, subtitle, description, treatm
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
-                className="border border-border rounded bg-card overflow-hidden group hover:border-accent/40 transition-colors"
+                className="border border-border rounded-3xl bg-card overflow-hidden group hover:border-accent/40 transition-colors"
               >
                 {t.image && (
                   <div className="aspect-square overflow-hidden">
