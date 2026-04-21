@@ -89,9 +89,9 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1.5 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center space-y-1"
       >
-        <p className="font-body text-[10px] text-muted-foreground tracking-widest mb-2">
+        <p className="font-body text-[10px] text-muted-foreground tracking-widest">
           Licensed Nurses • Physician Supervised • HIPAA Secure
         </p>
         <p className="font-body text-[10px] text-muted-foreground/60 tracking-widest">
