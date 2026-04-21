@@ -58,7 +58,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 1.1 }}
           className="font-body text-sm md:text-base text-foreground/90 tracking-[0.3em] uppercase mb-12"
         >
-          Mobile Optimization Therapy · Coming Soon to SF Bay
+          Mobile Optimization Therapy · Coming Soon to SF
         </motion.p>
 
         {/* CTA pill — same style as The Protocole */}
