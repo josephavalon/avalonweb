@@ -61,20 +61,20 @@ export default function Hero() {
           Mobile Optimization Therapy{'\n'}Coming Soon to SF
         </motion.p>
 
-        {/* CTA pill — same style as The Protocole */}
+        {/* CTA pill */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3"
+          className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
         >
-          <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden pr-1">
-            <span className="font-body text-xs tracking-widest text-muted-foreground uppercase px-6 py-3">
+          <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden w-full sm:w-auto">
+            <span className="font-body text-xs tracking-widest text-muted-foreground uppercase px-8 py-4 flex-1 sm:flex-none text-center sm:text-left">
               A new standard in recovery
             </span>
             <a
               href={APPLY_URL}
-              className="px-6 py-3 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap"
+              className="px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
             >
               Apply Now
             </a>
