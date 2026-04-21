@@ -20,10 +20,11 @@ export default function B2BSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
+            className="flex flex-col justify-center"
           >
             <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Corporate & B2B</p>
             <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6">BRING AVALON TO YOUR TEAM</h2>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-6">
+            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
               We partner with companies, agencies, and high-performance teams across San Francisco to deliver on-site wellness — no clinic required. From executive recovery programs to team events, we handle the logistics.
             </p>
             <div className="flex justify-center">
