@@ -524,11 +524,11 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9 }}
-          className="text-center mb-10"
+          className="text-center mb-6"
         >
-          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Presale — Limited Availability</p>
-          <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-6">MEMBERSHIP</h2>
-          <p className="font-body text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-3">Presale — Limited Availability</p>
+          <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4">MEMBERSHIP</h2>
+          <p className="font-body text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Membership by application only. Available in the San Francisco Bay Area. Lock in presale pricing and secure your spot.
             All plans include a <span className="text-foreground">20% discount</span>, rollover credits, and a 3-month minimum.
           </p>
@@ -536,7 +536,7 @@ export default function MembershipSection() {
         </motion.div>
 
         {/* Billing toggle */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-6">
           <div className="flex items-center bg-secondary/50 rounded-full p-1 gap-1">
             <button
               onClick={() => setBilling('monthly')}
@@ -554,7 +554,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex justify-center gap-1 mb-12 flex-wrap">
+        <div className="flex justify-center gap-1 mb-8 flex-wrap">
           {TABS.map((t, i) => (
             <button
               key={t.label}
@@ -600,9 +600,9 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="mt-3 text-center"
+          className="mt-2 text-center"
         >
-          <p className="font-body text-[10px] text-muted-foreground/50 tracking-wider max-w-lg mx-auto leading-relaxed">
+          <p className="font-body text-[9px] text-muted-foreground/50 tracking-wider max-w-lg mx-auto leading-relaxed">
             3-month minimum commitment. Credits roll over month-to-month as long as your membership remains active.
             Presale spots are limited — membership subject to approval.
           </p>
