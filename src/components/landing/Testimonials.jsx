@@ -155,8 +155,8 @@ export default function Testimonials() {
         </button>
         <div
           ref={scrollRef}
-          className="flex gap-6 pb-6 px-4 items-center w-fit"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth', scrollBehavior: 'smooth' }}
+          className="flex gap-6 pb-6 px-4 pr-20 items-center w-fit"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
         >
           {testimonials.map((t, i) => (
             <motion.div
