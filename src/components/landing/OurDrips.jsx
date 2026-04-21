@@ -57,7 +57,7 @@ export default function OurDrips() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group relative rounded overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500"
+              className="group relative rounded overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer"
             >
               <div className="aspect-video relative overflow-hidden">
                 <img
@@ -67,12 +67,12 @@ export default function OurDrips() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
               </div>
-              <div className="p-6">
+              <div className="absolute bottom-0 left-0 right-0 p-6">
                 <p className="text-[10px] tracking-[0.25em] text-accent font-body uppercase mb-1">{cat.tag}</p>
                 <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-2">{cat.label}</h3>
                 <p className="font-body text-xs text-muted-foreground leading-relaxed">{cat.desc}</p>
                 
-                <div className="flex items-center gap-3 mt-4">
+                <div className="flex items-center gap-3 mt-3">
                   <Link
                     to={cat.href}
                     className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded px-6 py-2.5 hover:bg-foreground/90 transition-colors"
