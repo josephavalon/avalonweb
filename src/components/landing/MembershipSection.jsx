@@ -134,7 +134,7 @@ const EXOSOME_TIERS = [
     name: 'Exosome Vital',
     dose: '90B',
     featured: false,
-    price: 960, regularPrice: 1200,
+    price: 1440, regularPrice: 1800,
     perks: ['1 × 90B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
   },
 ];
