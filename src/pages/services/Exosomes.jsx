@@ -5,18 +5,21 @@ const treatments = [
   {
     name: 'Exosomes 30B IV',
     price: '$700',
+    annualPrice: '$560',
     desc: '30 billion exosomes. Entry-level cellular support for tissue repair, inflammation reduction, and regenerative health.',
     image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=600&q=80',
   },
   {
     name: 'Exosomes 50B IV',
     price: '$1,200',
+    annualPrice: '$960',
     desc: '50 billion exosomes. Mid-range cellular regeneration for deeper tissue repair and systemic anti-inflammatory response.',
     image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=600&q=80',
   },
   {
     name: 'Exosomes 90B IV',
     price: '$1,800',
+    annualPrice: '$1,440',
     desc: '90 billion exosomes. Maximum-dose cellular support — the frontier of regenerative IV therapy for longevity and performance.',
     image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=600&q=80',
   },
