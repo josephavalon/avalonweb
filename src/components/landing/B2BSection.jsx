@@ -24,7 +24,7 @@ export default function B2BSection() {
           >
             <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Corporate & B2B</p>
             <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6">BRING AVALON TO YOUR TEAM</h2>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
+            <p className="font-body text-sm text-foreground leading-relaxed mb-8">
               We partner with companies, agencies, and high-performance teams across San Francisco to deliver on-site wellness — no clinic required. From executive recovery programs to team events, we handle the logistics.
             </p>
             <div className="flex justify-center">
@@ -49,7 +49,7 @@ export default function B2BSection() {
               >
                 <item.icon className="w-5 h-5 text-accent mb-3" strokeWidth={1.5} />
                 <h3 className="font-heading text-lg text-foreground tracking-wide mb-1">{item.title}</h3>
-                <p className="font-body text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                <p className="font-body text-xs text-foreground leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
