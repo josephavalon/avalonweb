@@ -175,13 +175,11 @@ export default function DehydrationIV() {
                 </ul>
 
                 <a
-                  href="https://avalonvitality.as.me/schedule/a9d85b1e"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
-                >
-                  Book Now
-                </a>
+                   href="/apply"
+                   className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                 >
+                   Order Now
+                 </a>
               </motion.div>
             )}
 
