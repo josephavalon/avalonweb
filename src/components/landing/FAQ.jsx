@@ -188,7 +188,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
       className="border border-border/60 rounded-2xl bg-card overflow-hidden cursor-pointer"
       onClick={onToggle}
     >
-      <div className="flex items-center justify-between px-5 py-4 gap-4">
+      <div className="flex items-center justify-between px-5 py-3 gap-4">
          <span className="font-body text-sm text-foreground">{faq.q}</span>
          <div className="shrink-0 w-5 h-5 flex items-center justify-center">
            {isOpen
@@ -205,8 +205,8 @@ function FAQItem({ faq, isOpen, onToggle }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            <div className="px-5 pb-4 border-t border-border/40">
-               <p className="font-body text-sm text-muted-foreground leading-relaxed pt-3">{faq.a}</p>
+            <div className="px-5 pb-3 border-t border-border/40">
+               <p className="font-body text-sm text-muted-foreground leading-relaxed pt-2">{faq.a}</p>
              </div>
           </motion.div>
         )}
@@ -229,20 +229,20 @@ export default function FAQ() {
   const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <section id="faq" className="py-8 md:py-10 px-4">
+    <section id="faq" className="py-6 md:py-8 px-4">
       <div className="max-w-3xl mx-auto">
 
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-6"
+          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4"
         >
           FAQ
         </motion.h2>
 
         {/* Search */}
-        <div className="relative mb-4">
+        <div className="relative mb-3">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
           <input
             type="text"
@@ -254,9 +254,9 @@ export default function FAQ() {
         </div>
 
         {/* Category filters */}
-        <div className="mb-4">
-          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-2">Topic</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-3">
+          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-1.5">Topic</p>
+          <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map(cat => (
               <button
                 key={cat}
@@ -274,7 +274,7 @@ export default function FAQ() {
         </div>
 
         {/* FAQ items */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {filtered.length === 0 ? (
             <p className="font-body text-sm text-muted-foreground py-4 text-center">No results found.</p>
           ) : (
