@@ -265,66 +265,66 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
-      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
+      <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
         {tier.category}
       </p>
-      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured || tier.isMostPopular ? 'text-accent' : 'text-muted-foreground'}`}>
+      <p className={`text-[8px] tracking-[0.3em] font-body uppercase mb-3 whitespace-nowrap ${tier.featured || tier.isMostPopular ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline || ''}
       </p>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-heading text-3xl text-foreground tracking-wide">{tier.name}</h3>
-        {tier.isMostPopular && <span className="text-accent text-[9px] tracking-[0.15em] uppercase whitespace-nowrap pt-1">Most Popular</span>}
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide">{tier.name}</h3>
+        {tier.isMostPopular && <span className="text-accent text-[7px] tracking-[0.15em] uppercase whitespace-nowrap pt-0.5">Most Popular</span>}
       </div>
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-baseline gap-2">
-          <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
+          <span className="font-heading text-4xl md:text-5xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
         </div>
-        <p className="font-body text-[10px] text-muted-foreground mt-1">
+        <p className="font-body text-[9px] text-muted-foreground mt-0.5">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
-          {tier.locationNote && <div className="text-[8px] text-muted-foreground/60 mt-1">{tier.locationNote}</div>}
+          {tier.locationNote && <div className="text-[7px] text-muted-foreground/60 mt-0.5">{tier.locationNote}</div>}
         </p>
       </div>
-      <ul className="space-y-3 mb-4 flex-1">
+      <ul className="space-y-2.5 mb-3 flex-1">
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
-          <li key={perk} className="flex items-start gap-2.5">
-            <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
-            <span className="font-body text-xs text-muted-foreground leading-relaxed">{perk}</span>
+          <li key={perk} className="flex items-start gap-2">
+            <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+            <span className="font-body text-[13px] text-muted-foreground leading-tight">{perk}</span>
           </li>
         ))}
       </ul>
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-accent text-xs font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-6"
+          className="flex items-center gap-2 text-accent text-[11px] font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-4"
         >
           {expanded ? 'Show less' : 'Show more'}
           <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       )}
-      {!hasMore && <div className="mb-6" />}
+      {!hasMore && <div className="mb-4" />}
       <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
-        className={`block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded transition-colors ${
+        className={`block text-center py-3 font-body text-[12px] tracking-widest uppercase font-semibold rounded transition-colors ${
           tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
         }`}
       >
         Apply for Membership
       </a>
-    </motion.div>
-  );
-}
+      </motion.div>
+      );
+      }
 
-// Card for NAD+, CBD, and Exosomes (single frequency)
-function SimpleTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
-  const regularYearlyPrice = tier.regularPrice * 12;
-  const [expanded, setExpanded] = useState(false);
-  const visiblePerks = 3;
-  const hasMore = tier.perks.length > visiblePerks;
+      // Card for NAD+, CBD, and Exosomes (single frequency)
+      function SimpleTierCard({ tier, i, billing }) {
+      const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
+      const regularYearlyPrice = tier.regularPrice * 12;
+      const [expanded, setExpanded] = useState(false);
+      const visiblePerks = 3;
+      const hasMore = tier.perks.length > visiblePerks;
 
   return (
     <motion.div
@@ -332,37 +332,37 @@ function SimpleTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded-3xl p-8 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
-      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
+      <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
         {tier.category}
       </p>
-      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-4 text-muted-foreground whitespace-nowrap">
+      <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-3 text-muted-foreground whitespace-nowrap">
         {tier.dose} per session
       </p>
-      <div className="flex items-start justify-center gap-2 mb-6">
-        <h3 className="font-heading text-3xl text-foreground tracking-wide">{tier.name}</h3>
-        {tier.isMostPopular && <span className="text-accent text-[9px] tracking-[0.15em] uppercase whitespace-nowrap pt-1">Most Popular</span>}
+      <div className="flex items-start justify-center gap-2 mb-4">
+        <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide">{tier.name}</h3>
+        {tier.isMostPopular && <span className="text-accent text-[7px] tracking-[0.15em] uppercase whitespace-nowrap pt-0.5">Most Popular</span>}
       </div>
 
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-baseline justify-center gap-2">
-          <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
+          <span className="font-heading text-4xl md:text-5xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">/month</span>
         </div>
-        <p className="font-body text-[10px] text-muted-foreground text-center mt-1">
+        <p className="font-body text-[9px] text-muted-foreground text-center mt-0.5">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">20% member discount</span>
         </p>
       </div>
 
-      <ul className="space-y-3 mb-4 flex-1">
+      <ul className="space-y-2.5 mb-3 flex-1">
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
-          <li key={perk} className="flex items-center justify-center gap-2.5">
-            <Check className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={2.5} />
-            <span className="font-body text-xs text-muted-foreground leading-relaxed">{perk}</span>
+          <li key={perk} className="flex items-center justify-center gap-2">
+            <Check className="w-3 h-3 text-accent shrink-0" strokeWidth={2.5} />
+            <span className="font-body text-[13px] text-muted-foreground leading-tight">{perk}</span>
           </li>
         ))}
       </ul>
@@ -370,16 +370,16 @@ function SimpleTierCard({ tier, i, billing }) {
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-accent text-xs font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-6"
+          className="flex items-center gap-2 text-accent text-[11px] font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-4"
         >
           {expanded ? 'Show less' : 'Show more'}
           <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       )}
-      {!hasMore && <div className="mb-6" />}
+      {!hasMore && <div className="mb-4" />}
 
       <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
-        className={`block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded transition-colors ${
+        className={`block text-center py-3 font-body text-[12px] tracking-widest uppercase font-semibold rounded transition-colors ${
           tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
         }`}
       >
@@ -539,12 +539,14 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div className={`grid gap-4 w-full ${gridClass}`}>
-          {tab.tiers.map((tier, i) =>
-            tab.type === 'iv'
-              ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
-              : <SimpleTierCard key={tier.name} tier={tier} i={i} billing={billing} />
-          )}
+        <div className="overflow-x-auto md:overflow-visible">
+          <div className={`flex md:grid gap-4 w-fit md:w-full ${gridClass}`}>
+            {tab.tiers.map((tier, i) =>
+              tab.type === 'iv'
+                ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
+                : <SimpleTierCard key={tier.name} tier={tier} i={i} billing={billing} />
+            )}
+          </div>
         </div>
 
         <motion.div
