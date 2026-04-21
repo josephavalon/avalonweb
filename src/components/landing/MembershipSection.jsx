@@ -571,7 +571,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div className="overflow-x-auto md:overflow-visible relative group flex justify-center md:block">
+        <div className="overflow-x-auto md:overflow-visible relative group">
           <button
             onClick={() => scroll('left')}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
@@ -586,7 +586,7 @@ export default function MembershipSection() {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className={`flex md:grid gap-4 w-fit md:w-full px-16 md:px-0 ${gridClass}`} style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className={`flex md:grid gap-4 w-fit md:w-full md:px-0 justify-center md:justify-start ${gridClass}`} style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {tab.tiers.map((tier, i) =>
               tab.type === 'iv'
                 ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
