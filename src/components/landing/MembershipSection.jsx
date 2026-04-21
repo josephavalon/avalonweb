@@ -85,7 +85,7 @@ const IV_TIERS = [
 // Each NAD tier has pricing/perks for 1x and 2x per month
 const NAD_TIERS = [
   {
-    name: 'NAD+ Core',
+    name: 'Core',
     category: 'NAD+',
     dose: '250mg',
     featured: false,
@@ -93,7 +93,7 @@ const NAD_TIERS = [
     perks: ['1 × 250mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'NAD+ Plus',
+    name: 'Plus',
     category: 'NAD+',
     dose: '500mg',
     featured: true,
@@ -101,7 +101,7 @@ const NAD_TIERS = [
     perks: ['1 × 500mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'NAD+ Pro',
+    name: 'Pro',
     category: 'NAD+',
     dose: '750mg',
     featured: false,
@@ -109,7 +109,7 @@ const NAD_TIERS = [
     perks: ['1 × 750mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'NAD+ Vital',
+    name: 'Vital',
     category: 'NAD+',
     dose: '1000mg',
     featured: false,
