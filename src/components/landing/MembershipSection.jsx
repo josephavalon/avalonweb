@@ -73,21 +73,21 @@ const NAD_TIERS = [
     dose: '250mg',
     featured: false,
     price: 240, regularPrice: 300,
-    perks: ['1 × 250mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
+    perks: ['1 × 250mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
   },
   {
     name: 'NAD+ Advanced',
     dose: '500mg',
     featured: true,
     price: 440, regularPrice: 550,
-    perks: ['1 × 500mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
+    perks: ['1 × 500mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
   },
   {
     name: 'NAD+ Vital',
     dose: '1000mg',
     featured: false,
     price: 720, regularPrice: 900,
-    perks: ['1 × 1000mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
+    perks: ['1 × 1000mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
   },
 ];
 
@@ -97,21 +97,21 @@ const CBD_TIERS = [
     dose: '33mg',
     featured: false,
     price: 200, regularPrice: 250,
-    perks: ['1 × 33mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
+    perks: ['1 × 33mg IV CBD per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
   },
   {
     name: 'CBD Advanced',
     dose: '66mg',
     featured: true,
     price: 240, regularPrice: 300,
-    perks: ['1 × 66mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
+    perks: ['1 × 66mg IV CBD per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
   },
   {
     name: 'CBD Vital',
     dose: '132mg',
     featured: false,
     price: 320, regularPrice: 400,
-    perks: ['1 × 132mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
+    perks: ['1 × 132mg IV CBD per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
   },
 ];
 
@@ -121,21 +121,21 @@ const EXOSOME_TIERS = [
     dose: '30B',
     featured: false,
     price: 560, regularPrice: 700,
-    perks: ['1 × 30B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
+    perks: ['1 × 30B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
   },
   {
     name: 'Exosome Advanced',
     dose: '50B',
     featured: true,
     price: 960, regularPrice: 1200,
-    perks: ['1 × 50B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
+    perks: ['1 × 50B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
   },
   {
     name: 'Exosome Vital',
     dose: '90B',
     featured: false,
     price: 1440, regularPrice: 1800,
-    perks: ['1 × 90B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
+    perks: ['1 × 90B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
   },
 ];
 
