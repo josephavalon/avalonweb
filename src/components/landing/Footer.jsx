@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram } from 'lucide-react';
+import { Facebook, Instagram, Mail, Phone, Clock } from 'lucide-react';
 
 export default function Footer() {
   return (
     <footer className="border-t border-border py-16 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-4 gap-10 mb-12">
+        <div className="grid md:grid-cols-5 gap-10 mb-12">
           <div className="md:col-span-2">
             <div className="mb-4">
               <div className="font-heading text-lg tracking-widest">AVALON</div>
@@ -43,6 +43,24 @@ export default function Footer() {
               <a href="#events" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
               <a href="#b2b" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Corporate & B2B</a>
               <Link to="/careers" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Careers</Link>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase font-body mb-4">About Us</p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                <a href="mailto:support@avalonvitality.co" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-body">support@avalonvitality.co</a>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                <a href="tel:+14159807708" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-body">(415) 980-7708</a>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="text-xs text-muted-foreground font-body">Mon-Sun: 8AM-8PM</span>
+              </div>
             </div>
           </div>
         </div>
