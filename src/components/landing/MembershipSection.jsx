@@ -6,7 +6,7 @@ const APPLY_URL = '/apply';
 
 const IV_TIERS = [
   {
-    name: 'Essential',
+    name: 'Core',
     tagline: 'The Foundation',
     price: 200, regularPrice: 250,
     perks: [
@@ -34,7 +34,7 @@ const IV_TIERS = [
     ],
   },
   {
-    name: 'Elite',
+    name: 'Vital',
     tagline: 'Full Protocol',
     price: 600, regularPrice: 750,
     perks: [
@@ -49,7 +49,7 @@ const IV_TIERS = [
     ],
   },
   {
-    name: 'Vital',
+    name: 'Signature',
     tagline: 'Maximum Protocol', noWrap: true,
     price: 800, regularPrice: 1000,
     perks: [
