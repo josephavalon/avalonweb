@@ -37,9 +37,10 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </p>
 
-          {/* Vertical grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-3xl mx-auto">
-            {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+          {/* Vertical grid - 5 visible on desktop, horizontal scroll on mobile/tablet */}
+          <div className="overflow-x-auto md:overflow-visible">
+            <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-5 gap-3 max-w-3xl mx-auto md:max-w-none md:w-fit md:mx-auto">
+              {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 16 }}
@@ -70,6 +71,7 @@ export default function IntroSection() {
                 )}
               </motion.div>
             ))}
+            </div>
           </div>
 
           <p className="mt-6 font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
