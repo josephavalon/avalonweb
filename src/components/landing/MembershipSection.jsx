@@ -290,7 +290,7 @@ export default function MembershipSection() {
     : 'md:grid-cols-3';
 
   return (
-    <section id="membership" className="py-24 md:py-36 px-4 border-t border-border">
+    <section id="membership" className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
 
         <motion.div
