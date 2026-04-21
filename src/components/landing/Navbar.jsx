@@ -58,7 +58,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-background border-t border-border overflow-hidden"
+            className="md:hidden backdrop-blur-md bg-background/30 border-t border-white/10 overflow-hidden"
           >
             <div className="px-6 py-6 space-y-5">
               <a href="#how-it-works" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">How It Works</a>
