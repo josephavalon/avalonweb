@@ -49,31 +49,27 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </p>
 
-          {/* Vertical grid - 5 visible on desktop, horizontal scroll on mobile/tablet */}
-          <div className="overflow-x-auto md:overflow-visible relative group">
+          {/* Horizontal scroll - shows 4 cards on desktop, 2 on mobile */}
+          <div className="overflow-x-auto relative group h-32">
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-5 h-5 text-foreground" />
             </button>
-            <div ref={scrollRef} className="flex gap-3 w-fit md:grid md:grid-cols-8 md:max-w-7xl md:mx-auto" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {verticals.slice(0, 8).map(({ label, icon: Icon, live, location, isLocation }, i) => (
-              <motion.div
+            <div ref={scrollRef} className="flex gap-3 h-full items-center" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+              <div
                 key={label}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06, duration: 0.5 }}
-                className={`flex-shrink-0 w-[calc(50vw-1rem)] sm:w-[calc(33.333vw-1rem)] md:w-auto relative flex flex-col items-center gap-2 border rounded-3xl p-4 transition-colors ${
+                className={`flex-shrink-0 w-[calc(50vw-1rem)] sm:w-[calc(25vw-1rem)] md:w-56 relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
                     : 'border-border bg-card/40 text-muted-foreground/40'
@@ -95,8 +91,8 @@ export default function IntroSection() {
                 {!live && (
                   <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
                 )}
-              </motion.div>
-            ))}
+                </div>
+                ))}
             </div>
           </div>
 
