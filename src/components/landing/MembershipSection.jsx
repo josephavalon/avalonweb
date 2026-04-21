@@ -329,16 +329,14 @@ function SimpleTierCard({ tier, i, billing }) {
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-8">{tier.name}</h3>
 
       <div className="mb-8">
-        <div className="flex items-baseline justify-center gap-1 mb-3">
+        <div className="flex items-baseline justify-center gap-2 mb-2">
           <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
         </div>
-        <div className="text-center">
-          <p className="font-body text-[10px] text-muted-foreground">
-            <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
-          </p>
-          <p className="font-body text-[10px] text-accent">20% member discount</p>
-        </div>
+        <p className="font-body text-[10px] text-muted-foreground text-center">
+          <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
+          <span className="text-accent ml-2">20% member discount</span>
+        </p>
       </div>
 
       <ul className="space-y-3 mb-4 flex-1">
