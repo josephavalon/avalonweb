@@ -44,7 +44,7 @@ const IV_TIERS = [
   {
     name: 'Vital',
     category: 'VITAMINS',
-    tagline: 'Triple',
+    tagline: 'Premium',
     price: 600, regularPrice: 750,
     perks: [
       '3 of vitamin IVs per month',
@@ -435,7 +435,7 @@ const FLUID_TIERS = [
   {
     name: 'Vital',
     category: 'FLUID',
-    tagline: 'Triple',
+    tagline: 'Premium',
     price: 360, regularPrice: 450,
     perks: [
       '3 dehydration IVs per month',
