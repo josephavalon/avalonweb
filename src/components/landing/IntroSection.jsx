@@ -33,11 +33,8 @@ export default function IntroSection() {
         >
           <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Foundation</p>
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">IV THERAPY IS THE BASE</h2>
-          <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
-            We started with IV therapy because it's the most direct, science-backed way to deliver nutrients at 100% absorption. It's the bedrock every other modality builds on.
-          </p>
-          <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
-            From that foundation, we're building Avalon into a full-stack optimization platform — each vertical layered on top of our mobile clinical infrastructure, delivered by licensed clinicians wherever you are.
+          <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
+            IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are.
           </p>
 
           {/* Vertical grid */}

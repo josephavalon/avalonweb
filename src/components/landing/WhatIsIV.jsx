@@ -22,8 +22,8 @@ export default function WhatIsIV() {
         >
           <div className="aspect-[3/4] rounded overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=900&q=85"
-              alt="IV bag"
+              src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=900&q=85"
+              alt="IV drip"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
@@ -46,15 +46,11 @@ export default function WhatIsIV() {
           <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6">WHAT IS IV THERAPY?</h2>
 
           <p className="font-body text-sm text-muted-foreground leading-relaxed mb-5">
-            Intravenous (IV) therapy delivers vitamins, minerals, and fluids <span className="text-foreground font-semibold">directly into your bloodstream</span> — completely bypassing the digestive system. That means your body absorbs <span className="text-foreground font-semibold">100% of every nutrient</span>, exactly as administered.
-          </p>
-
-          <p className="font-body text-sm text-muted-foreground leading-relaxed mb-5">
-            When you swallow a vitamin pill or drink a supplement, your gut processes it first. Stomach acid, digestive enzymes, and liver metabolism degrade the nutrients before they ever reach your cells. The result? Only <strong className="text-foreground">10–20% of what you took</strong> actually gets used.
+            IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span> — bypassing digestion entirely. Your body absorbs <span className="text-foreground font-semibold">100% of every nutrient</span>, exactly as administered.
           </p>
 
           <p className="font-body text-sm text-muted-foreground leading-relaxed mb-10">
-            IV therapy eliminates that loss entirely. Nutrients flow straight into your circulation, reaching cells at full concentration within minutes — delivering effects you can <span className="text-foreground font-semibold">feel within 30–60 minutes</span>.
+            Oral supplements lose up to 90% through gut metabolism. IV bypasses that completely — effects you can <span className="text-foreground font-semibold">feel within 30 minutes</span>.
           </p>
 
           {/* Stats row */}
