@@ -11,6 +11,7 @@ import IVVitamins from './pages/services/IVVitamins';
 import NAD from './pages/services/NAD';
 import CBD from './pages/services/CBD';
 import Exosomes from './pages/services/Exosomes';
+import Apply from './pages/Apply';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -40,6 +41,7 @@ const AuthenticatedApp = () => {
       <Route path="/services/nad" element={<NAD />} />
       <Route path="/services/cbd" element={<CBD />} />
       <Route path="/services/exosomes" element={<Exosomes />} />
+      <Route path="/apply" element={<Apply />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

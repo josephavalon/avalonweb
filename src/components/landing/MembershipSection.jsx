@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
-const APPLY_URL = 'https://placeholder-square-presale.com';
+const APPLY_URL = '/apply';
 
 const IV_TIERS = [
   {
