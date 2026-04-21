@@ -76,17 +76,8 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </motion.p>
 
-          {/* Scrollable cards - reveals SOON items on scroll */}
-          <div className="relative group">
-            <button
-              onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors md:hidden"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-5 h-5 text-foreground" />
-            </button>
-            <div className="overflow-x-auto mx-auto max-w-full md:overflow-visible" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div ref={scrollRef} className="inline-grid gap-3 md:gap-4 md:grid md:w-full md:justify-center md:grid-cols-6" style={{ gridTemplateRows: 'auto', gridAutoColumns: 'minmax(140px, 1fr)', gridAutoFlow: 'column', width: 'fit-content' }}>
+          <div className="mx-auto max-w-full">
+            <div className="grid gap-3 md:gap-4 md:w-full md:justify-center md:grid-cols-6">
                 {/* Mobile: original order (inline-grid); Desktop: grid layout with live items first */}
                 {liveItems.map(({ label, icon: Icon, live, location, isLocation }, i) => (
                   <div
@@ -136,15 +127,7 @@ export default function IntroSection() {
                     )}
                   </div>
                 ))}
-              </div>
             </div>
-            <button
-              onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors md:hidden"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5 text-foreground" />
-            </button>
           </div>
 
           <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
