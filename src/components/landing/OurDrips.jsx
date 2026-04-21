@@ -43,7 +43,7 @@ export default function OurDrips() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-8"
+          className="text-left mb-8"
         >
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
