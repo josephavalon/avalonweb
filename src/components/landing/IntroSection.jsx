@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf, MapPin, Dumbbell, Lightbulb, Flame, CircleUser } from 'lucide-react';
+import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf, MapPin, Dumbbell, Lightbulb, Flame, CircleUser, ChevronLeft, ChevronRight } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 const verticals = [
@@ -22,6 +22,18 @@ const verticals = [
 ];
 
 export default function IntroSection() {
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-4xl mx-auto text-center">
@@ -38,18 +50,22 @@ export default function IntroSection() {
           </p>
 
           {/* Vertical grid - 5 visible on desktop, horizontal scroll on mobile/tablet */}
-          <div className="overflow-x-auto md:overflow-visible relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-              <div className="flex items-center gap-1 text-muted-foreground/40">
-                <span className="text-[10px] tracking-widest uppercase">←</span>
-              </div>
-            </div>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-              <div className="flex items-center gap-1 text-muted-foreground/40">
-                <span className="text-[10px] tracking-widest uppercase">→</span>
-              </div>
-            </div>
-            <div className="flex gap-3 w-fit md:grid md:grid-cols-8 md:max-w-7xl md:mx-auto">
+          <div className="overflow-x-auto md:overflow-visible relative group">
+            <button
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-foreground" />
+            </button>
+            <div ref={scrollRef} className="flex gap-3 w-fit md:grid md:grid-cols-8 md:max-w-7xl md:mx-auto" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {verticals.slice(0, 8).map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <motion.div
                 key={label}
@@ -88,6 +104,7 @@ export default function IntroSection() {
             <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
             Live at launch
           </p>
+          <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
         </motion.div>
       </div>
     </section>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const APPLY_URL = '/apply';
 
@@ -475,7 +475,18 @@ const TABS = [
 export default function MembershipSection() {
   const [activeTab, setActiveTab] = useState(0);
   const [billing, setBilling] = useState('monthly');
+  const scrollRef = useRef(null);
   const tab = TABS[activeTab];
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const gridClass = tab.tiers.length === 5
     ? 'md:grid-cols-5'
@@ -539,24 +550,28 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div className="overflow-x-auto md:overflow-visible relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-            <div className="flex items-center gap-1 text-muted-foreground/40">
-              <span className="text-[10px] tracking-widest uppercase">←</span>
-            </div>
-          </div>
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-            <div className="flex items-center gap-1 text-muted-foreground/40">
-              <span className="text-[10px] tracking-widest uppercase">→</span>
-            </div>
-          </div>
-          <div className={`flex md:grid gap-4 w-fit md:w-full ${gridClass}`}>
+        <div className="overflow-x-auto md:overflow-visible relative group">
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5 text-foreground" />
+          </button>
+          <div ref={scrollRef} className={`flex md:grid gap-4 w-fit md:w-full ${gridClass}`} style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {tab.tiers.map((tier, i) =>
               tab.type === 'iv'
                 ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
                 : <SimpleTierCard key={tier.name} tier={tier} i={i} billing={billing} />
             )}
-          </div>
+            </div>
         </div>
 
         <motion.div
@@ -572,6 +587,7 @@ export default function MembershipSection() {
           </p>
         </motion.div>
       </div>
+      <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 }

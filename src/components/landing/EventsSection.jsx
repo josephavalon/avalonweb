@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const events = [
   {
@@ -35,6 +36,18 @@ const events = [
 ];
 
 export default function EventsSection() {
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section id="events" className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
@@ -48,18 +61,22 @@ export default function EventsSection() {
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>
         </motion.div>
 
-        <div className="overflow-x-auto md:overflow-visible relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-            <div className="flex items-center gap-1 text-muted-foreground/40">
-              <span className="text-[10px] tracking-widest uppercase">←</span>
-            </div>
-          </div>
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-            <div className="flex items-center gap-1 text-muted-foreground/40">
-              <span className="text-[10px] tracking-widest uppercase">→</span>
-            </div>
-          </div>
-          <div className="flex gap-4 w-fit md:w-full">
+        <div className="overflow-x-auto md:overflow-visible relative group">
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5 text-foreground" />
+          </button>
+          <div ref={scrollRef} className="flex gap-4 w-fit md:w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {events.map((event, i) => (
               <motion.div
                 key={event.title}
@@ -83,9 +100,10 @@ export default function EventsSection() {
               </a>
               </motion.div>
             ))}
-          </div>
+            </div>
         </div>
       </div>
+      <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 }
