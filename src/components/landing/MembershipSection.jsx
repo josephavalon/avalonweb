@@ -283,7 +283,10 @@ function IVTierCard({ tier, i, billing }) {
       <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured || tier.isMostPopular ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline || ''}
       </p>
-      <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="font-heading text-3xl text-foreground tracking-wide">{tier.name}</h3>
+        {tier.isMostPopular && <span className="text-accent text-[9px] tracking-[0.15em] uppercase whitespace-nowrap pt-1">Most Popular</span>}
+      </div>
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
@@ -292,7 +295,6 @@ function IVTierCard({ tier, i, billing }) {
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
-          {tier.isMostPopular && <div className="text-accent mt-2 text-[9px] tracking-[0.15em] uppercase">Most Popular</div>}
           {tier.locationNote && <div className="text-[8px] text-muted-foreground/60 mt-1">{tier.locationNote}</div>}
         </p>
       </div>
@@ -349,7 +351,10 @@ function SimpleTierCard({ tier, i, billing }) {
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-4 text-muted-foreground whitespace-nowrap">
         {tier.dose} per session
       </p>
-      <h3 className="font-heading text-3xl text-foreground tracking-wide mb-6">{tier.name}</h3>
+      <div className="flex items-start justify-center gap-2 mb-6">
+        <h3 className="font-heading text-3xl text-foreground tracking-wide">{tier.name}</h3>
+        {tier.isMostPopular && <span className="text-accent text-[9px] tracking-[0.15em] uppercase whitespace-nowrap pt-1">Most Popular</span>}
+      </div>
 
       <div className="mb-8">
         <div className="flex items-baseline justify-center gap-2">
