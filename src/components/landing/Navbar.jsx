@@ -21,7 +21,7 @@ export default function Navbar() {
   const linkClass = "text-[11px] tracking-[0.18em] text-muted-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
+    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-background/30 border-b border-white/5 transition-all duration-500">
 
       {/* Desktop */}
       <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-8 h-14">
@@ -36,6 +36,7 @@ export default function Navbar() {
 
         {/* Center links */}
         <div className="flex items-center gap-10">
+          <a href="#treatments" className={linkClass}>Services</a>
           <a href="#membership" className={linkClass}>Membership</a>
           <Link to="/our-story" className={linkClass}>About</Link>
           <a href="#faq" className={linkClass}>FAQs</a>
