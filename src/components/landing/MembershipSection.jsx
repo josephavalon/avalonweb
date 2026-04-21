@@ -127,6 +127,36 @@ const CBD_TIERS = [
   },
 ];
 
+const EXOSOME_TIERS = [
+  {
+    name: 'Exosome Foundation',
+    dose: '30B',
+    featured: false,
+    options: {
+      1: { price: 560, regularPrice: 700, perks: ['1 × 30B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+      2: { price: 1040, regularPrice: 1300, perks: ['2 × 30B Exosome IVs per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+    },
+  },
+  {
+    name: 'Exosome Advanced',
+    dose: '50B',
+    featured: true,
+    options: {
+      1: { price: 680, regularPrice: 850, perks: ['1 × 50B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+      2: { price: 1260, regularPrice: 1575, perks: ['2 × 50B Exosome IVs per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+    },
+  },
+  {
+    name: 'Exosome Elite',
+    dose: '90B',
+    featured: false,
+    options: {
+      1: { price: 960, regularPrice: 1200, perks: ['1 × 90B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+      2: { price: 1760, regularPrice: 2200, perks: ['2 × 90B Exosome IVs per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+    },
+  },
+];
+
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
   const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.7) : tier.price;
@@ -245,6 +275,7 @@ const TABS = [
   { label: 'IV Vitamins', tiers: IV_TIERS, type: 'iv' },
   { label: 'NAD+', tiers: NAD_TIERS, type: 'frequency' },
   { label: 'CBD', tiers: CBD_TIERS, type: 'frequency' },
+  { label: 'Exosomes', tiers: EXOSOME_TIERS, type: 'frequency' },
 ];
 
 export default function MembershipSection() {
