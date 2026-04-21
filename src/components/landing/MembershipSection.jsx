@@ -586,7 +586,7 @@ export default function MembershipSection() {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className={`flex md:grid gap-4 w-fit md:w-full ${gridClass}`} style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className={`flex md:grid gap-4 w-fit md:w-full px-16 md:px-0 ${gridClass}`} style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {tab.tiers.map((tier, i) =>
               tab.type === 'iv'
                 ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
