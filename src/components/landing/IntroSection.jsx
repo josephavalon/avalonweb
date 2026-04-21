@@ -19,7 +19,6 @@ const verticals = [
   { label: 'Supplements', icon: Pill, live: false },
   { label: 'Diet', icon: Apple, live: false },
   { label: 'Aesthetics', icon: Sparkles, live: false },
-  { label: 'Locations', icon: MapPin, live: true, isLocation: true },
 ];
 
 export default function IntroSection() {
