@@ -22,7 +22,7 @@ export default function WhatIsIV() {
         >
           <div className="aspect-[3/4] rounded overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=900&q=85"
+              src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=900&q=85"
               alt="IV bag"
               className="w-full h-full object-cover"
             />
