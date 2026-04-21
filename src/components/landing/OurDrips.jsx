@@ -62,9 +62,9 @@ export default function OurDrips() {
               key={cat.label}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer"
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.6 }}
+              className="group relative rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-300 cursor-pointer"
             >
               <Link to={cat.href} className="aspect-video relative overflow-hidden block">
                 <img
