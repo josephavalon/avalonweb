@@ -64,6 +64,26 @@ const faqs = [
     a: "Credits roll over indefinitely as long as your membership remains active. If you cancel, any unused credits expire at the end of your final billing cycle."
   },
   {
+    category: 'Membership',
+    q: "What's included in each membership tier?",
+    a: "Tiers include monthly IV drips and IM injections ranging from 1–4 treatments per month, depending on the plan. All members get 20% off à la carte services, priority scheduling, and access to exclusive member events. Higher tiers include a dedicated care coordinator and white-glove concierge service."
+  },
+  {
+    category: 'Membership',
+    q: "Can I upgrade or downgrade my membership?",
+    a: "Yes. You may upgrade or downgrade your membership tier at any time. Changes take effect on your next billing cycle. Downgrades may affect your credit allowance; any excess credits will roll over to the next month."
+  },
+  {
+    category: 'Membership',
+    q: "What happens if I don't use my monthly credits?",
+    a: "Monthly credits roll over indefinitely as long as your membership stays active. There's no penalty for not using them — they accumulate and are available whenever you need them."
+  },
+  {
+    category: 'Membership',
+    q: "Can I transfer my membership to someone else?",
+    a: "Memberships are non-transferable and tied to your account. However, we offer corporate and family plans for multiple users — contact partnerships@avalonvitality.com for details."
+  },
+  {
     category: 'Booking',
     q: "Do you offer mobile services for events?",
     a: "Yes — our teams arrive with everything needed for an on-site recovery lounge. We've done festivals, corporate retreats, film sets, and private parties. Contact us for group and event pricing."
