@@ -9,6 +9,42 @@
     --font-heading: 'Bebas Neue', sans-serif;
     --font-body: 'Inter', sans-serif;
 
+    --background: 0 0% 96%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 93%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 93%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 0 0% 4%;
+    --primary-foreground: 0 0% 96%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 45 90% 55%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 86%;
+    --input: 0 0% 86%;
+    --ring: 0 0% 4%;
+    --chart-1: 45 90% 55%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.25rem;
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 0 0% 4%;
+    --sidebar-primary: 0 0% 4%;
+    --sidebar-primary-foreground: 0 0% 96%;
+    --sidebar-accent: 0 0% 90%;
+    --sidebar-accent-foreground: 0 0% 4%;
+    --sidebar-border: 0 0% 86%;
+    --sidebar-ring: 0 0% 4%;
+  }
+
+  .dark {
     --background: 0 0% 4%;
     --foreground: 0 0% 96%;
     --card: 0 0% 7%;
@@ -33,7 +69,6 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.25rem;
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 0 0% 96%;
