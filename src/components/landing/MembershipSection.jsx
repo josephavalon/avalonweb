@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
-const APPLY_URL = 'https://placeholder-square-presale.com'; // replace with Square link
+const APPLY_URL = 'https://placeholder-square-presale.com';
 
 const IV_TIERS = [
   {
     name: 'Essential',
     tagline: 'The Foundation',
-    ivs: 1, ims: 1,
     price: 200, regularPrice: 250,
     perks: [
       '1 IV drip per month',
@@ -22,7 +21,6 @@ const IV_TIERS = [
   {
     name: 'Performance',
     tagline: 'Most Popular',
-    ivs: 2, ims: 2,
     price: 400, regularPrice: 500,
     featured: true,
     perks: [
@@ -38,7 +36,6 @@ const IV_TIERS = [
   {
     name: 'Elite',
     tagline: 'Full Protocol',
-    ivs: 3, ims: 3,
     price: 600, regularPrice: 750,
     perks: [
       '3 IV drips per month',
@@ -54,7 +51,6 @@ const IV_TIERS = [
   {
     name: 'Vital',
     tagline: 'Maximum Protocol',
-    ivs: 4, ims: 4,
     price: 800, regularPrice: 1000,
     perks: [
       '4 IV drips per month',
@@ -70,184 +66,100 @@ const IV_TIERS = [
   },
 ];
 
+// Each NAD tier has pricing/perks for 1x and 2x per month
 const NAD_TIERS = [
   {
     name: 'NAD+ Starter',
-    tagline: '2 × 250mg Monthly',
-    price: 480, regularPrice: 600,
-    perks: [
-      '2 × 250mg NAD+ IVs per month',
-      '20% off all à la carte NAD+',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-    ],
+    dose: '250mg',
+    featured: false,
+    options: {
+      1: { price: 240, regularPrice: 300, perks: ['1 × 250mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+      2: { price: 480, regularPrice: 600, perks: ['2 × 250mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+    },
   },
   {
     name: 'NAD+ Core',
-    tagline: '2 × 500mg Monthly',
-    price: 880, regularPrice: 1100,
+    dose: '500mg',
     featured: true,
-    perks: [
-      '2 × 500mg NAD+ IVs per month',
-      '20% off all à la carte NAD+',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-    ],
+    options: {
+      1: { price: 440, regularPrice: 550, perks: ['1 × 500mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+      2: { price: 880, regularPrice: 1100, perks: ['2 × 500mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+    },
   },
   {
     name: 'NAD+ Elite',
-    tagline: '2 × 1000mg Monthly',
-    price: 1440, regularPrice: 1800,
-    perks: [
-      '2 × 1000mg NAD+ IVs per month',
-      '20% off all à la carte NAD+',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-    ],
+    dose: '1000mg',
+    featured: false,
+    options: {
+      1: { price: 720, regularPrice: 900, perks: ['1 × 1000mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+      2: { price: 1440, regularPrice: 1800, perks: ['2 × 1000mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+    },
   },
   {
     name: 'NAD+ Protocol',
-    tagline: '2 × 1250mg Monthly',
-    price: 1760, regularPrice: 2200,
-    perks: [
-      '2 × 1250mg NAD+ IVs per month',
-      '20% off all à la carte NAD+',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-    ],
+    dose: '1250mg',
+    featured: false,
+    options: {
+      1: { price: 880, regularPrice: 1100, perks: ['1 × 1250mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+      2: { price: 1760, regularPrice: 2200, perks: ['2 × 1250mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+    },
   },
   {
     name: 'NAD+ Vital',
-    tagline: '2 × 1500mg Monthly',
-    price: 2080, regularPrice: 2600,
-    perks: [
-      '2 × 1500mg NAD+ IVs per month',
-      '20% off all à la carte NAD+',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-      'White-glove concierge service',
-    ],
+    dose: '1500mg',
+    featured: false,
+    options: {
+      1: { price: 1040, regularPrice: 1300, perks: ['1 × 1500mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events', 'White-glove concierge service'] },
+      2: { price: 2080, regularPrice: 2600, perks: ['2 × 1500mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events', 'White-glove concierge service'] },
+    },
   },
 ];
 
 const CBD_TIERS = [
   {
     name: 'CBD Relief',
-    tagline: '1 × 33mg Monthly',
-    price: 200, regularPrice: 250,
-    perks: [
-      '1 × 33mg IV CBD per month',
-      '20% off all à la carte CBD',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-    ],
+    dose: '33mg',
+    featured: false,
+    options: {
+      1: { price: 200, regularPrice: 250, perks: ['1 × 33mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+      2: { price: 360, regularPrice: 450, perks: ['2 × 33mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+    },
   },
   {
     name: 'CBD Balance',
-    tagline: '1 × 66mg Monthly',
-    price: 320, regularPrice: 400,
+    dose: '66mg',
     featured: true,
-    perks: [
-      '1 × 66mg IV CBD per month',
-      '20% off all à la carte CBD',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-    ],
+    options: {
+      1: { price: 320, regularPrice: 400, perks: ['1 × 66mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+      2: { price: 560, regularPrice: 700, perks: ['2 × 66mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+    },
   },
   {
     name: 'CBD Restore',
-    tagline: '1 × 132mg Monthly',
-    price: 520, regularPrice: 650,
-    perks: [
-      '1 × 132mg IV CBD per month',
-      '20% off all à la carte CBD',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-    ],
-  },
-  {
-    name: 'CBD Double Relief',
-    tagline: '2 × 33mg Monthly',
-    price: 360, regularPrice: 450,
-    perks: [
-      '2 × 33mg IV CBD per month',
-      '20% off all à la carte CBD',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-    ],
-  },
-  {
-    name: 'CBD Double Balance',
-    tagline: '2 × 66mg Monthly',
-    price: 560, regularPrice: 700,
-    perks: [
-      '2 × 66mg IV CBD per month',
-      '20% off all à la carte CBD',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-    ],
-  },
-  {
-    name: 'CBD Double Restore',
-    tagline: '2 × 132mg Monthly',
-    price: 920, regularPrice: 1150,
-    perks: [
-      '2 × 132mg IV CBD per month',
-      '20% off all à la carte CBD',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-    ],
+    dose: '132mg',
+    featured: false,
+    options: {
+      1: { price: 520, regularPrice: 650, perks: ['1 × 132mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+      2: { price: 920, regularPrice: 1150, perks: ['2 × 132mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+    },
   },
 ];
 
-const TABS = [
-  { label: 'IV Vitamins', tiers: IV_TIERS },
-  { label: 'NAD+', tiers: NAD_TIERS },
-  { label: 'CBD', tiers: CBD_TIERS },
-];
-
-function TierCard({ tier, i }) {
+// Card for IV Vitamins (simple, no frequency toggle)
+function IVTierCard({ tier, i }) {
   return (
     <motion.div
-      key={tier.name}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded p-8 flex flex-col ${
-        tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'
-      }`}
+      className={`relative border rounded p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline}
       </p>
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
-
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-5xl text-foreground">${tier.price}</span>
@@ -258,7 +170,6 @@ function TierCard({ tier, i }) {
           <span className="text-accent ml-2">20% member discount</span>
         </p>
       </div>
-
       <ul className="space-y-3 mb-10 flex-1">
         {tier.perks.map((perk) => (
           <li key={perk} className="flex items-start gap-2.5">
@@ -267,15 +178,9 @@ function TierCard({ tier, i }) {
           </li>
         ))}
       </ul>
-
-      <a
-        href={APPLY_URL}
-        target="_blank"
-        rel="noopener noreferrer"
+      <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
         className={`block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded transition-colors ${
-          tier.featured
-            ? 'bg-foreground text-background hover:bg-foreground/90'
-            : 'border border-foreground/30 text-foreground hover:border-foreground'
+          tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
         }`}
       >
         Apply for Membership
@@ -284,14 +189,92 @@ function TierCard({ tier, i }) {
   );
 }
 
+// Card for NAD+ and CBD (with 1x / 2x frequency toggle)
+function FrequencyTierCard({ tier, i }) {
+  const [freq, setFreq] = useState(1);
+  const option = tier.options[freq];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: i * 0.1, duration: 0.7 }}
+      className={`relative border rounded p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+    >
+      {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
+
+      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
+        {tier.dose} per session
+      </p>
+      <h3 className="font-heading text-3xl text-foreground tracking-wide mb-4">{tier.name}</h3>
+
+      {/* Frequency toggle */}
+      <div className="flex gap-1 mb-6 bg-secondary/50 rounded p-1">
+        {[1, 2].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFreq(f)}
+            className={`flex-1 py-1.5 font-body text-[10px] tracking-widest uppercase rounded transition-colors ${
+              freq === f ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {f}× / month
+          </button>
+        ))}
+      </div>
+
+      <div className="mb-8">
+        <div className="flex items-baseline gap-2">
+          <span className="font-heading text-5xl text-foreground">${option.price}</span>
+          <span className="font-body text-xs text-muted-foreground">/month</span>
+        </div>
+        <p className="font-body text-[10px] text-muted-foreground mt-1">
+          <span className="line-through">${option.regularPrice}</span>
+          <span className="text-accent ml-2">20% member discount</span>
+        </p>
+      </div>
+
+      <ul className="space-y-3 mb-10 flex-1">
+        {option.perks.map((perk) => (
+          <li key={perk} className="flex items-start gap-2.5">
+            <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+            <span className="font-body text-xs text-muted-foreground leading-relaxed">{perk}</span>
+          </li>
+        ))}
+      </ul>
+
+      <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
+        className={`block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded transition-colors ${
+          tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
+        }`}
+      >
+        Apply for Membership
+      </a>
+    </motion.div>
+  );
+}
+
+const TABS = [
+  { label: 'IV Vitamins', tiers: IV_TIERS, type: 'iv' },
+  { label: 'NAD+', tiers: NAD_TIERS, type: 'frequency' },
+  { label: 'CBD', tiers: CBD_TIERS, type: 'frequency' },
+];
+
 export default function MembershipSection() {
   const [activeTab, setActiveTab] = useState(0);
+  const tab = TABS[activeTab];
+
+  const gridClass = tab.tiers.length === 5
+    ? 'md:grid-cols-5'
+    : tab.tiers.length === 4
+    ? 'md:grid-cols-4'
+    : 'md:grid-cols-3';
 
   return (
     <section id="membership" className="py-24 md:py-36 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -309,9 +292,9 @@ export default function MembershipSection() {
 
         {/* Tab switcher */}
         <div className="flex justify-center gap-1 mb-12">
-          {TABS.map((tab, i) => (
+          {TABS.map((t, i) => (
             <button
-              key={tab.label}
+              key={t.label}
               onClick={() => setActiveTab(i)}
               className={`px-6 py-2.5 font-body text-[10px] tracking-widest uppercase rounded transition-colors ${
                 activeTab === i
@@ -319,19 +302,20 @@ export default function MembershipSection() {
                   : 'border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40'
               }`}
             >
-              {tab.label}
+              {t.label}
             </button>
           ))}
         </div>
 
         {/* Tiers */}
-        <div className={`grid gap-4 ${TABS[activeTab].tiers.length === 6 ? 'md:grid-cols-3' : TABS[activeTab].tiers.length === 5 ? 'md:grid-cols-5' : TABS[activeTab].tiers.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-          {TABS[activeTab].tiers.map((tier, i) => (
-            <TierCard key={tier.name} tier={tier} i={i} />
-          ))}
+        <div className={`grid gap-4 ${gridClass}`}>
+          {tab.tiers.map((tier, i) =>
+            tab.type === 'frequency'
+              ? <FrequencyTierCard key={tier.name} tier={tier} i={i} />
+              : <IVTierCard key={tier.name} tier={tier} i={i} />
+          )}
         </div>
 
-        {/* Fine print */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
