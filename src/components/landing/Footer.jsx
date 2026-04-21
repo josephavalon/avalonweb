@@ -46,6 +46,7 @@ export default function Footer() {
               <a href="#gift" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Gift Certificates</a>
               <a href="#events" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
               <a href="#b2b" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Corporate & B2B</a>
+              <Link to="/careers" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Careers</Link>
             </div>
           </div>
         </div>

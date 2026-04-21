@@ -12,6 +12,7 @@ import NAD from './pages/services/NAD';
 import CBD from './pages/services/CBD';
 import Exosomes from './pages/services/Exosomes';
 import Apply from './pages/Apply';
+import Careers from './pages/Careers';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -42,6 +43,7 @@ const AuthenticatedApp = () => {
       <Route path="/services/cbd" element={<CBD />} />
       <Route path="/services/exosomes" element={<Exosomes />} />
       <Route path="/apply" element={<Apply />} />
+      <Route path="/careers" element={<Careers />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
