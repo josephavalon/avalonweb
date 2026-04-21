@@ -8,28 +8,28 @@ const categories = [
     href: '/services/iv-vitamins',
     tag: 'FROM $150',
     desc: 'Dehydration, Myers\' Cocktail, Hangover, Energy, Immunity, Beauty & more.',
-    image: 'https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?w=1000&q=85&fm=webp',
+    image: 'https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?ixlib=rb-4.0.3&w=1000&q=80',
   },
   {
     label: 'NAD+',
     href: '/services/nad',
     tag: 'FROM $350 — LONGEVITY MOLECULE',
     desc: 'Cellular energy, cognitive enhancement, and anti-aging from 250mg to 1500mg.',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173ba999ef0?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?ixlib=rb-4.0.3&w=1000&q=80',
   },
   {
     label: 'IV CBD',
     href: '/services/cbd',
     tag: 'FROM $250 — ZERO THC',
     desc: 'Anti-inflammatory, stress relief, and recovery. 33mg to 132mg formulas.',
-    image: 'https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde0e?ixlib=rb-4.0.3&w=1000&q=80',
   },
   {
     label: 'Exosomes',
     href: '/services/exosomes',
     tag: 'FROM $700 — CELLULAR SUPPORT',
     desc: 'Advanced cellular regeneration with 30B, 50B, and 90B exosome IV options.',
-    image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1530026405186-a1ca16072dfd?ixlib=rb-4.0.3&w=1000&q=80',
   },
 ];
 
