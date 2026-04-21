@@ -74,7 +74,7 @@ export default function EventsSection() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="font-heading text-5xl md:text-7xl text-foreground tracking-wide"
           >
-            EVENTS
+            NEWS & EVENTS
           </motion.h2>
         </motion.div>
 
