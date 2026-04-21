@@ -40,7 +40,7 @@ export default function HowItWorks() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-8"
+          className="text-left mb-8"
         >
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">HOW IT WORKS</h2>
           <p className="font-body text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">

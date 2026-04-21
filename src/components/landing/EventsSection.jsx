@@ -55,7 +55,7 @@ export default function EventsSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-8"
+          className="mb-8 text-left"
         >
           <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">In the Field</p>
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>

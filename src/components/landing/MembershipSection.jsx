@@ -515,7 +515,7 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9 }}
-          className="text-center mb-6"
+          className="text-left mb-6"
         >
           <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-3">Presale — Limited Availability</p>
           <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4">MEMBERSHIP</h2>

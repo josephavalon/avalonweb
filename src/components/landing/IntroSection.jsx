@@ -42,6 +42,7 @@ export default function IntroSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
+          className="text-left"
         >
           <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Foundation</p>
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">IV THERAPY<br />IS THE BASE</h2>
