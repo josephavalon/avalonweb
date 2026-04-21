@@ -5,6 +5,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const events = [
   {
     date: 'Coming Soon',
+    title: 'RECOVERY DEVICES',
+    location: 'San Francisco, CA',
+    desc: 'Red light therapy, vagus nerve stimulation, and compression pants. Advanced recovery technology for members.',
+  },
+  {
+    date: 'Coming Soon',
     title: 'BUILDER NIGHT',
     location: 'San Francisco, CA',
     desc: 'Mixer for founders and builders. Connect, recover, and optimize with fellow startup leaders. IV therapy and wellness expertise at your service.',
