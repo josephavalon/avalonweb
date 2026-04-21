@@ -15,7 +15,7 @@ const categories = [
     href: '/services/nad',
     tag: 'FROM $350 — LONGEVITY MOLECULE',
     desc: 'Cellular energy, cognitive enhancement, and anti-aging from 250mg to 1500mg.',
-    image: 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80',
   },
   {
     label: 'IV CBD',
