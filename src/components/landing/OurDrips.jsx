@@ -60,7 +60,7 @@ export default function OurDrips() {
         </motion.div>
 
         <div className="relative group">
-          <div ref={scrollRef} className="flex gap-4 overflow-x-auto" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className="flex gap-4 overflow-x-auto pr-20" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.label}
@@ -96,7 +96,7 @@ export default function OurDrips() {
           </div>
           <button
             onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
