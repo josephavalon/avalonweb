@@ -24,7 +24,7 @@ export default function WhatIsIV() {
             <img
               src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/537c1fe37_Gemini_Generated_Image_6ak3r6ak3r6ak3r6.png"
               alt="IV bag"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
           </div>
