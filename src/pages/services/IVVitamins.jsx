@@ -23,7 +23,7 @@ export default function IVVitamins() {
       subtitle="Medical-grade intravenous vitamin therapy"
       description="Every IV is customized and made fresh on-site with medical-grade ingredients — B-complex vitamins, glutathione, magnesium, zinc, and electrolytes. Tailored to your needs, administered by licensed RNs wherever you are."
       treatments={treatments}
-      heroImage="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
+      heroImage="https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?w=1200&q=80"
     />
   );
 }
