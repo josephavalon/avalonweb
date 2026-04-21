@@ -24,7 +24,7 @@ const testimonials = [
     tag: "RECOVERY IV"
   },
   {
-    quote: "Used to lose entire Saturdays recovering. Now I book a morning session and I'm back to 100% by lunch. Life-changing for weekends.",
+    quote: "Used to lose entire days recovering. Now I book a before or after appointment and I'm back in the game by lunch. Life changing.",
     name: "J.L.",
     tag: "HANGOVER IV"
   },
