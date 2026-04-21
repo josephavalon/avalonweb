@@ -31,6 +31,9 @@ export default function HowItWorks() {
           className="text-center mb-8"
         >
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">HOW IT WORKS</h2>
+          <p className="font-body text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
+            Order now for immediate service, or <a href="#membership" className="text-accent hover:text-accent/80 underline">join membership</a> to save time and money on recurring treatments.
+          </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
