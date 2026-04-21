@@ -61,7 +61,7 @@ export default function OurDrips() {
                   <img
                     src={cat.image}
                     alt={cat.label}
-                    className="w-full h-full object-cover object-bottom group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-80"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-80"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                 </div>
