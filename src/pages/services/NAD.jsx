@@ -19,7 +19,7 @@ export default function NAD() {
       badge="Cellular Energy · Cognitive Support · Anti-Aging"
       description="NAD+ (Nicotinamide Adenine Dinucleotide) is a coenzyme critical for cellular energy production, DNA repair, and cognitive function. Levels decline with age. IV NAD+ delivers it directly to your bloodstream — supporting energy, mental clarity, and longevity."
       treatments={treatments}
-      heroImage="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=1920&q=80"
+      heroImage="https://images.unsplash.com/photo-1576091160550-112173f7f869?w=1920&q=80"
     />
   );
 }
