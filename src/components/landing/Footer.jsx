@@ -7,14 +7,9 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-full border-2 border-foreground flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-              </div>
-              <div>
-                <div className="font-heading text-lg tracking-widest">AVALON</div>
-                <div className="text-[8px] tracking-[0.3em] text-muted-foreground -mt-0.5">VITALITY</div>
-              </div>
+            <div className="mb-4">
+              <div className="font-heading text-lg tracking-widest">AVALON</div>
+              <div className="text-[8px] tracking-[0.3em] text-muted-foreground -mt-0.5">VITALITY</div>
             </div>
             <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-xs">
               Mobile wellness optimization, delivered. IV hydration, NAD+, CBD, and advanced recovery services—available throughout the San Francisco Bay Area.
