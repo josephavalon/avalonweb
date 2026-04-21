@@ -200,7 +200,7 @@ const CATEGORIES = ['General', 'Treatments', 'Membership', 'Booking', 'Safety', 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
     <div
-      className="border border-border/60 rounded-2xl bg-card overflow-hidden cursor-pointer"
+      className="border border-border/60 rounded-3xl bg-card overflow-hidden cursor-pointer"
       onClick={onToggle}
     >
       <div className="flex items-center justify-between px-5 py-3 gap-4">
@@ -264,7 +264,7 @@ export default function FAQ() {
             placeholder="SEARCH"
             value={search}
             onChange={e => { setSearch(e.target.value); setOpenIndex(null); }}
-            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-2 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="w-full bg-transparent border border-border/60 rounded-2xl pl-12 pr-6 py-2 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
 

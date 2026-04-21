@@ -31,7 +31,7 @@ export default function GiftCertificates() {
                   href={GIFT_SQUARE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground hover:text-accent transition-colors rounded text-center"
+                  className="px-5 py-2.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground hover:text-accent transition-colors rounded-full text-center"
                 >
                   {amt}
                 </a>
@@ -42,7 +42,7 @@ export default function GiftCertificates() {
                 href={GIFT_SQUARE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-7 py-3.5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded text-center"
+                className="px-7 py-3.5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full text-center"
               >
                 Purchase Online
               </a>
@@ -50,7 +50,7 @@ export default function GiftCertificates() {
                 href={GIFT_TYPEFORM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-7 py-3.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground transition-colors rounded text-center"
+                className="px-7 py-3.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground transition-colors rounded-full text-center"
               >
                 Custom Amount
               </a>
@@ -65,7 +65,7 @@ export default function GiftCertificates() {
             transition={{ duration: 0.9, delay: 0.2 }}
             className="relative"
           >
-            <div className="border border-border rounded bg-card p-10 relative overflow-hidden">
+            <div className="border border-border rounded-3xl bg-card p-10 relative overflow-hidden">
               {/* Background glow */}
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-3xl" />
 
