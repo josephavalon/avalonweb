@@ -83,37 +83,22 @@ export default function Hero() {
           </div>
         </motion.div>
 
-<motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.5 }}
-          className="mt-6 font-body text-[10px] text-muted-foreground tracking-widest"
-        >
-          Licensed Nurses • Physician Supervised • HIPAA Secure
-        </motion.p>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.6 }}
-          className="mt-4 font-body text-[10px] text-muted-foreground/60 tracking-widest"
-        >
-          Presale membership. Secure yours now.
-        </motion.p>
       </motion.div>
 
-      {/* Scroll indicator */}
+      {/* Bottom text */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        transition={{ duration: 0.8, delay: 1.5 }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center"
       >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          className="w-px h-12 bg-gradient-to-b from-foreground/40 to-transparent"
-        />
+        <p className="font-body text-[10px] text-muted-foreground tracking-widest mb-2">
+          Licensed Nurses • Physician Supervised • HIPAA Secure
+        </p>
+        <p className="font-body text-[10px] text-muted-foreground/60 tracking-widest">
+          Presale membership. Secure yours now.
+        </p>
       </motion.div>
     </section>
   );
