@@ -95,6 +95,13 @@ const NAD_TIERS = [
     perks: ['1 × 500mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
+    name: 'NAD+ Advanced Plus',
+    dose: '750mg',
+    featured: false,
+    price: 580, regularPrice: 725,
+    perks: ['1 × 750mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
+  },
+  {
     name: 'NAD+ Vital',
     dose: '1000mg',
     featured: false,
