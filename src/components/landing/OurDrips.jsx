@@ -35,7 +35,6 @@ const categories = [
 ];
 
 export default function OurDrips() {
-  const [expanded, setExpanded] = useState({});
 
   return (
     <section id="treatments" className="py-8 md:py-10 px-4 border-t border-border">
@@ -72,22 +71,13 @@ export default function OurDrips() {
                 <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-2">{cat.label}</h3>
                 <p className="font-body text-xs text-muted-foreground leading-relaxed">{cat.desc}</p>
                 
-                <div className="flex items-center gap-3 mt-3">
-                  <Link
-                    to={cat.href}
-                    className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded px-6 py-2.5 hover:bg-foreground/90 transition-colors"
-                  >
-                    Order Now
-                  </Link>
-                  
-                  <button
-                    onClick={() => setExpanded(prev => ({ ...prev, [cat.label]: !prev[cat.label] }))}
-                    className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors text-xs font-body uppercase tracking-wider"
-                  >
-                    {expanded[cat.label] ? 'Less' : 'More'}
-                    <ChevronDown className={`w-3 h-3 transition-transform ${expanded[cat.label] ? 'rotate-180' : ''}`} />
-                  </button>
-                </div>
+                <Link
+                  to={cat.href}
+                  className="inline-flex items-center gap-2 text-accent hover:text-accent/80 transition-colors text-xs font-body uppercase tracking-wider mt-3"
+                >
+                  More
+                  <ChevronDown className="w-3 h-3" />
+                </Link>
               </div>
             </motion.div>
           ))}
