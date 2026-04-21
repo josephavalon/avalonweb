@@ -495,7 +495,7 @@ export default function MembershipSection() {
       const scrollAmount = 400;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
+        behavior: 'auto'
       });
     }
   };
@@ -583,7 +583,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div ref={scrollRef} className="overflow-x-auto md:overflow-visible relative group" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+         <div ref={scrollRef} className="overflow-x-auto md:overflow-visible relative group" style={{ scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <button
             onClick={() => scroll('left')}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
