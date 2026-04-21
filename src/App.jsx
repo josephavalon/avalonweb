@@ -10,10 +10,12 @@ import ChatWidget from '@/components/ChatWidget';
 import Home from './pages/Home';
 import OurStory from './pages/OurStory';
 import DehydrationIV from './pages/products/DehydrationIV';
-import IVVitamins from './pages/services/IVVitamins';
+import IVVitaminsService from './pages/services/IVVitamins';
 import NAD from './pages/services/NAD';
 import CBD from './pages/services/CBD';
 import Exosomes from './pages/services/Exosomes';
+import IVVitaminsCategory from './pages/products/IVVitamins';
+import ProductDetail from './pages/products/ProductDetail';
 import Apply from './pages/Apply';
 import Careers from './pages/Careers';
 import MembershipDashboard from './pages/MembershipDashboard';
@@ -47,10 +49,12 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Home />} />
       <Route path="/our-story" element={<OurStory />} />
       <Route path="/products/dehydration-iv" element={<DehydrationIV />} />
-      <Route path="/services/iv-vitamins" element={<IVVitamins />} />
+      <Route path="/services/iv-vitamins" element={<IVVitaminsService />} />
       <Route path="/services/nad" element={<NAD />} />
       <Route path="/services/cbd" element={<CBD />} />
       <Route path="/services/exosomes" element={<Exosomes />} />
+      <Route path="/products/iv-vitamins" element={<IVVitaminsCategory />} />
+      <Route path="/products/iv-vitamins/:slug" element={<ProductDetail />} />
       <Route path="/apply" element={<Apply />} />
       <Route path="/careers" element={<Careers />} />
       <Route path="/membership" element={<MembershipDashboard />} />

@@ -58,14 +58,14 @@ export default function OurDrips() {
               transition={{ delay: i * 0.1 }}
               className="group relative rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer"
             >
-              <div className="aspect-video relative overflow-hidden">
+              <Link to={cat.href} className="aspect-video relative overflow-hidden block">
                 <img
                   src={cat.image}
                   alt={cat.label}
                   className="w-full h-full object-cover object-[center_70%] group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-80"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-              </div>
+              </Link>
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <p className="text-[10px] tracking-[0.25em] text-accent font-body uppercase mb-1">{cat.tag}</p>
                 <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-2">{cat.label}</h3>
