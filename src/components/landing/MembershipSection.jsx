@@ -348,7 +348,7 @@ function SimpleTierCard({ tier, i, billing }) {
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
         {tier.category}
       </p>
-      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-4 text-muted-foreground">
+      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-4 text-muted-foreground whitespace-nowrap">
         {tier.dose} per session
       </p>
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-6">{tier.name}</h3>
