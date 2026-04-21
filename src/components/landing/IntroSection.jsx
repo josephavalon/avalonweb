@@ -8,16 +8,16 @@ const verticals = [
   { label: 'Exosomes', icon: Sparkles, live: true },
   { label: 'CBD', icon: Leaf, live: true },
   { label: 'Peptides', icon: Link, live: false },
-  { label: 'Aesthetics', icon: Sparkles, live: false },
   { label: 'Weight Loss', icon: Apple, live: false },
+  { label: 'Optimization Data', icon: Zap, live: false },
   { label: 'Blood Testing', icon: TestTube, live: false },
   { label: 'Genetic Testing', icon: TestTube, live: false },
-  { label: 'Optimization Data', icon: Zap, live: false },
   { label: 'Sexual Wellness', icon: Heart, live: false },
   { label: 'Hair', icon: Scissors, live: false },
   { label: 'HRT', icon: Pill, live: false },
   { label: 'Supplements', icon: Pill, live: false },
   { label: 'Diet', icon: Apple, live: false },
+  { label: 'Aesthetics', icon: Sparkles, live: false },
 ];
 
 export default function IntroSection() {
