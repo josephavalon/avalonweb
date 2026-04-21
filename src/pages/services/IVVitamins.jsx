@@ -1,5 +1,6 @@
 import React from 'react';
 import ServicePageLayout from '../../components/services/ServicePageLayout';
+import CuriositySection from '../../components/landing/CuriositySection';
 
 const treatments = [
   { name: 'Dehydration', price: '$150', annualPrice: '$120', desc: '1000ml saline with electrolytes. Rapid rehydration for fatigue, heat exposure, and daily recovery.', image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=600&q=80' },
@@ -18,12 +19,15 @@ const treatments = [
 
 export default function IVVitamins() {
   return (
-    <ServicePageLayout
-      title="IV VITAMINS"
-      subtitle="Medical-grade intravenous vitamin therapy"
-      description="Every IV is customized and made fresh on-site with medical-grade ingredients — B-complex vitamins, glutathione, magnesium, zinc, and electrolytes. Tailored to your needs, administered by licensed RNs wherever you are."
-      treatments={treatments}
-      heroImage="https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?w=1200&q=80"
-    />
+    <>
+      <ServicePageLayout
+        title="IV VITAMINS"
+        subtitle="Medical-grade intravenous vitamin therapy"
+        description="Every IV is customized and made fresh on-site with medical-grade ingredients — B-complex vitamins, glutathione, magnesium, zinc, and electrolytes. Tailored to your needs, administered by licensed RNs wherever you are."
+        treatments={treatments}
+        heroImage="https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?w=1200&q=80"
+      />
+      <CuriositySection />
+    </>
   );
 }
