@@ -86,7 +86,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.4 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8 px-4"
+          className="mt-10 flex flex-row items-center justify-center gap-8 px-4"
         >
           <div className="text-center">
             <Star className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
