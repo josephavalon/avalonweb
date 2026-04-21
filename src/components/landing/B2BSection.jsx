@@ -23,15 +23,17 @@ export default function B2BSection() {
           >
             <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Corporate & B2B</p>
             <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6">BRING AVALON TO YOUR TEAM</h2>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
+            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-6">
               We partner with companies, agencies, and high-performance teams across San Francisco to deliver on-site wellness — no clinic required. From executive recovery programs to team events, we handle the logistics.
             </p>
-            <a
-              href="mailto:hello@avalonvitality.com"
-              className="inline-block px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"
-            >
-              Inquire →
-            </a>
+            <div className="flex justify-center">
+              <a
+                href="mailto:hello@avalonvitality.com"
+                className="px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"
+              >
+                Inquire →
+              </a>
+            </div>
           </motion.div>
 
           <div className="grid grid-cols-2 gap-4">
