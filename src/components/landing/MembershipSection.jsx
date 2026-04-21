@@ -275,12 +275,12 @@ function IVTierCard({ tier, i, billing }) {
         {tier.tagline || ''}
       </p>
       <div className="flex items-start justify-between gap-2 mb-1">
-        <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide">{tier.name}</h3>
+        <h3 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide">{tier.name}</h3>
         {tier.isMostPopular && <span className="text-accent text-[7px] tracking-[0.15em] uppercase whitespace-nowrap pt-0.5">Most Popular</span>}
       </div>
-      <div className="mb-6">
+      <div className="mb-6 relative">
         <div className="flex items-baseline gap-2">
-          <span className="font-heading text-4xl md:text-5xl text-foreground">${displayPrice}</span>
+          <span className="font-heading text-6xl md:text-7xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
         </div>
         <p className="font-body text-[9px] text-muted-foreground mt-0.5">
@@ -289,6 +289,27 @@ function IVTierCard({ tier, i, billing }) {
           {tier.locationNote && <div className="text-[7px] text-muted-foreground/60 mt-0.5">{tier.locationNote}</div>}
         </p>
       </div>
+
+      {/* Side scroll arrows - visible on desktop only */}
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 hidden md:flex">
+        <button
+          onClick={() => scroll('left')}
+          className="p-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4 text-foreground" />
+        </button>
+      </div>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex">
+        <button
+          onClick={() => scroll('right')}
+          className="p-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4 text-foreground" />
+        </button>
+      </div>
+
       <ul className="space-y-2.5 mb-3 flex-1">
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
           <li key={perk} className="flex items-start gap-2">
