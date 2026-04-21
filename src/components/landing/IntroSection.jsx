@@ -46,7 +46,7 @@ export default function IntroSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06, duration: 0.5 }}
-                className={`relative flex flex-col items-center gap-2 border rounded p-4 transition-colors ${
+                className={`relative flex flex-col items-center gap-2 border rounded-2xl p-4 transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
                     : 'border-border bg-card/40 text-muted-foreground/40'
