@@ -22,10 +22,10 @@ export default function Navbar() {
   const linkClass = "text-[11px] tracking-[0.18em] text-muted-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-background/30 border-b border-white/5 transition-all duration-500">
+    <nav className="fixed top-4 left-4 right-4 z-40 backdrop-blur-md bg-background/30 border border-white/10 rounded-3xl transition-all duration-500">
 
       {/* Desktop */}
-      <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-8 h-14">
+      <div className="hidden md:flex items-center justify-between px-8 h-16">
 
         {/* Logo */}
         <Link to="/" className="font-heading text-[15px] tracking-[0.25em] text-foreground shrink-0">
@@ -44,7 +44,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile */}
-      <div className="md:hidden flex items-center justify-between max-w-7xl mx-auto px-5 h-14">
+      <div className="md:hidden flex items-center justify-between px-5 h-14">
         <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AVALON VITALITY</Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
