@@ -186,7 +186,7 @@ export default function Testimonials() {
               key={i}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-50px' }}
               transition={{ delay: i * 0.1, duration: 0.7 }}
             >
               <IPhoneMockup testimonial={t} />
