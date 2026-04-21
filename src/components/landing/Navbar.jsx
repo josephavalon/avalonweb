@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AvalonTearDrop from '@/components/icons/AvalonTearDrop';
+
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -28,9 +28,8 @@ export default function Navbar() {
       <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-8 h-14">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <AvalonTearDrop className="w-5 h-5 text-foreground" />
-          <span className="font-heading text-[15px] tracking-[0.25em] text-foreground">AVALON VITALITY</span>
+        <Link to="/" className="font-heading text-[15px] tracking-[0.25em] text-foreground shrink-0">
+          AVALON VITALITY
         </Link>
 
         {/* Center links */}
