@@ -66,15 +66,14 @@ export default function ServicePageLayout({ title, subtitle, description, treatm
                   </div>
                 )}
                 <div className="p-5">
-                  <h3 className="font-heading text-xl md:text-2xl text-foreground tracking-wide mb-1">{t.name}</h3>
-                  {t.desc && <p className="font-body text-xs text-muted-foreground leading-relaxed mb-3">{t.desc}</p>}
-                  <div className="flex flex-col">
-                    <span className="font-body text-base font-semibold text-foreground">{t.price}</span>
-                    {t.annualPrice && (
-                      <span className="font-body text-xs text-accent">{t.annualPrice} <span className="text-muted-foreground">annually</span></span>
-                    )}
-                  </div>
-                </div>
+                   <h3 className="font-heading text-xl md:text-2xl text-foreground tracking-wide mb-1">{t.name}</h3>
+                   {t.desc && <p className="font-body text-xs text-muted-foreground leading-relaxed mb-3">{t.desc}</p>}
+                   <div className="space-y-1">
+                     {t.oneTime && <div className="font-body text-sm text-foreground">{t.oneTime} <span className="text-xs text-muted-foreground">one-time</span></div>}
+                     {t.monthly && <div className="font-body text-sm text-accent">{t.monthly} <span className="text-xs text-muted-foreground">monthly</span></div>}
+                     {t.annual && <div className="font-body text-sm text-foreground">{t.annual} <span className="text-xs text-muted-foreground">annual</span></div>}
+                   </div>
+                 </div>
               </motion.div>
             ))}
           </div>
