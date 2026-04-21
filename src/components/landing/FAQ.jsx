@@ -229,33 +229,33 @@ export default function FAQ() {
   const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <section id="faq" className="py-6 md:py-8 px-4">
+    <section id="faq" className="py-4 md:py-6 px-4">
       <div className="max-w-3xl mx-auto">
 
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4"
+          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-3"
         >
           FAQ
         </motion.h2>
 
         {/* Search */}
-        <div className="relative mb-3">
+        <div className="relative mb-2">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="SEARCH"
             value={search}
             onChange={e => { setSearch(e.target.value); setOpenIndex(null); }}
-            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-2.5 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-2 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
 
         {/* Category filters */}
-        <div className="mb-3">
-          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-1.5">Topic</p>
+        <div className="mb-2">
+          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-1">Topic</p>
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map(cat => (
               <button
@@ -274,7 +274,7 @@ export default function FAQ() {
         </div>
 
         {/* FAQ items */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {filtered.length === 0 ? (
             <p className="font-body text-sm text-muted-foreground py-4 text-center">No results found.</p>
           ) : (
