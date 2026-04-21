@@ -14,7 +14,7 @@ export default function OurStory() {
       <section className="relative h-[60vh] flex items-end justify-start overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&q=80"
+            src="https://images.unsplash.com/photo-1619983081563-430f63602d4a?w=1920&q=80"
             alt="Golden Gate Bridge"
             className="w-full h-full object-cover opacity-50"
           />
