@@ -22,7 +22,7 @@ const categories = [
     href: '/services/cbd',
     tag: 'FROM $250 — ZERO THC',
     desc: 'Anti-inflammatory, stress relief, and recovery. 33mg to 132mg formulas.',
-    image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde0e?ixlib=rb-4.0.3&w=1000&q=80',
+    image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/cbe90ca8d_33.png',
   },
   {
     label: 'Exosomes',
