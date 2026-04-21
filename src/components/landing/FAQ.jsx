@@ -96,7 +96,7 @@ const faqs = [
   {
     category: 'Pricing',
     q: "What's the cost of a single IV session?",
-    a: "Single IV sessions range from $150–$400 depending on the treatment. Members receive 20% off all services, making regular therapy more affordable."
+    a: "Single IV sessions range from $150–$1,800 depending on the treatment type. IV Vitamins start at $150, NAD+ from $350, CBD from $250, and Exosomes from $700. Members receive 20% off all services."
   },
   {
     category: 'Pricing',
