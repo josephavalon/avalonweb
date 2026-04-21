@@ -12,13 +12,13 @@ const events = [
     date: 'Coming Soon',
     title: 'Bay 2 Breakers Expo',
     location: 'Sports Basement',
-    desc: 'Deep dive into cellular health, NAD+ science, and what optimization actually looks like.',
+    desc: 'IM injections and exclusive merchandise sales. Optimize your performance before the race.',
   },
   {
     date: 'Coming Soon',
     title: 'Bay 2 Breakers Finish Line',
-    location: 'Ocean Beach',
-    desc: 'Exclusive member event. Network, recover, and experience new protocols before public launch.',
+    location: 'Near Finish Line',
+    desc: 'Exclusive IVs heavily discounted for race participants. Recovery and hydration right at the finish line.',
   },
 ];
 
