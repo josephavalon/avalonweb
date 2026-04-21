@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf } from 'lucide-react';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 const verticals = [
   { label: 'IV Vitamins', icon: Droplets, live: true },
   { label: 'NAD+', icon: Zap, live: true },
   { label: 'Exosomes', icon: Sparkles, live: true },
-  { label: 'CBD', icon: Leaf, emoji: '🌿', live: true },
+  { label: 'CBD', icon: CannabisLeaf, live: true },
   { label: 'Peptides', icon: Link, live: false },
   { label: 'Weight Loss', icon: Apple, live: false },
   { label: 'Optimization Data', icon: Zap, live: false },
@@ -41,7 +42,7 @@ export default function IntroSection() {
 
           {/* Vertical grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-3xl mx-auto">
-            {verticals.map(({ label, icon: Icon, emoji, live }, i) => (
+            {verticals.map(({ label, icon: Icon, live }, i) => (
               <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 16 }}
@@ -54,14 +55,10 @@ export default function IntroSection() {
                     : 'border-border bg-card/40 text-muted-foreground/40'
                 }`}
               >
-                {emoji ? (
-                  <span className="text-lg leading-none">{emoji}</span>
-                ) : (
-                  <Icon
-                    className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
-                    strokeWidth={1.5}
-                  />
-                )}
+                <Icon
+                  className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                  strokeWidth={1.5}
+                />
                 <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
                   {label}
                 </span>
