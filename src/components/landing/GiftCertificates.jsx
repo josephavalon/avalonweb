@@ -25,7 +25,7 @@ export default function GiftCertificates() {
             </p>
             {/* Denomination buttons */}
             <div className="flex flex-wrap gap-2 mb-5">
-              {['$500', '$1,000', '$5,000'].map((amt) => (
+              {['$500', '$1,000', '$5,000', '$10,000'].map((amt) => (
                 <a
                   key={amt}
                   href={GIFT_SQUARE_URL}
