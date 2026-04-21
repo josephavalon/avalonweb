@@ -72,7 +72,7 @@ export default function RealResultsReviews() {
                     className="overflow-hidden"
                   >
                     <div className="pt-6 space-y-4">
-                      <p className="font-body text-base text-muted-foreground leading-relaxed">
+                      <p className="font-body text-base text-foreground leading-relaxed">
                         {review.quote}
                       </p>
                       <div className="flex items-center gap-2">

@@ -25,7 +25,7 @@ export default function PremiumFeatureCards({ features, actionButton }) {
                 <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-4 tracking-wide">
                   {feature.title}
                 </h3>
-                <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed">
+                <p className="font-body text-sm md:text-base text-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </motion.div>

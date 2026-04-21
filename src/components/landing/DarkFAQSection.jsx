@@ -51,7 +51,7 @@ export default function DarkFAQSection({ title, faqs, ctaButton }) {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <p className="pt-4 font-body text-base text-muted-foreground leading-relaxed">
+                    <p className="pt-4 font-body text-base text-foreground leading-relaxed">
                       {faq.answer}
                     </p>
                   </motion.div>

@@ -68,7 +68,7 @@ export default function Hero() {
           className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
         >
           <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden w-full sm:w-auto">
-            <span className="font-body text-xs tracking-widest text-muted-foreground uppercase px-8 py-4 flex-1 sm:flex-none text-center sm:text-left">
+            <span className="font-body text-xs tracking-widest text-foreground uppercase px-8 py-4 flex-1 sm:flex-none text-center sm:text-left">
               A new standard in recovery
             </span>
             <Link
@@ -90,11 +90,11 @@ export default function Hero() {
         transition={{ duration: 0.8, delay: 1.5 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center space-y-0.5"
       >
-        <p className="font-body text-[9px] text-muted-foreground tracking-widest">
-          Licensed Nurses • Physician Supervised • HIPAA Secure
+        <p className="font-body text-[9px] text-foreground tracking-widest">
+         Licensed Nurses • Physician Supervised • HIPAA Secure
         </p>
-        <p className="font-body text-[9px] text-muted-foreground/60 tracking-widest">
-          Presale membership. Secure yours now.
+        <p className="font-body text-[9px] text-foreground tracking-widest">
+         Presale membership. Secure yours now.
         </p>
       </motion.div>
     </section>
