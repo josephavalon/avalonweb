@@ -180,7 +180,7 @@ const faqs = [
   },
 ];
 
-const CATEGORIES = ['General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance'];
+const CATEGORIES = ['General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance', 'Events', 'B2B', 'Coming Soon'];
 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
