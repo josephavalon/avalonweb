@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import CookieConsent from '@/components/CookieConsent';
 import Home from './pages/Home';
 import OurStory from './pages/OurStory';
 import IVVitamins from './pages/services/IVVitamins';
@@ -57,6 +58,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <CookieConsent />
       </QueryClientProvider>
     </AuthProvider>
   )
