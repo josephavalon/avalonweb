@@ -6,8 +6,8 @@ import CannabisLeaf from '@/components/icons/CannabisLeaf';
 const verticals = [
   { label: 'IV Vitamins', icon: Droplets, live: true },
   { label: 'NAD+', icon: Zap, live: true },
-  { label: 'Exosomes', icon: Sparkles, live: true },
   { label: 'CBD', icon: CannabisLeaf, live: true },
+  { label: 'Exosomes', icon: Sparkles, live: true },
   { label: 'Contrast Therapy', icon: Heart, live: true },
   { label: 'Peptides', icon: Link, live: false },
   { label: 'Weight Loss', icon: Apple, live: false },
