@@ -7,7 +7,7 @@ const categories = [
   {
     label: 'IV Vitamins',
     href: '/services/iv-vitamins',
-    tag: 'FROM $150',
+    tag: 'FROM $150 — WELLNESS FOUNDATION',
     desc: 'Dehydration, Myers\' Cocktail, Hangover, Energy, Immunity, Beauty & more.',
     image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/dc9537125_fffff.png',
   },
