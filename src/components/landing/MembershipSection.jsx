@@ -24,9 +24,8 @@ const IV_TIERS = [
   {
     name: 'Pro',
     category: 'VITAMINS',
-    tagline: 'Most Popular',
     price: 400, regularPrice: 500,
-    featured: true,
+    isMostPopular: true,
     perks: [
       '2 of vitamin IVs per month',
       '2 IM injections per month',
@@ -274,13 +273,13 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
-      {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
+      {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
         {tier.category}
       </p>
-      {tier.tagline && <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
+      {tier.tagline && <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured || tier.isMostPopular ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline}
       </p>}
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
@@ -292,6 +291,7 @@ function IVTierCard({ tier, i, billing }) {
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
+          {tier.isMostPopular && <div className="text-accent mt-2 text-[9px] tracking-[0.15em] uppercase">Most Popular</div>}
           {tier.locationNote && <div className="text-[8px] text-muted-foreground/60 mt-1">{tier.locationNote}</div>}
         </p>
       </div>
@@ -338,9 +338,9 @@ function SimpleTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded-3xl p-8 flex flex-col text-center ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`relative border rounded-3xl p-8 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
-      {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
+      {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
         {tier.category}
@@ -412,9 +412,8 @@ const FLUID_TIERS = [
   {
     name: 'Pro',
     category: 'FLUID',
-    tagline: 'Most Popular',
     price: 240, regularPrice: 300,
-    featured: true,
+    isMostPopular: true,
     perks: [
       '2 dehydration IVs per month',
       '2 IM injections per month',
