@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarCheck, MapPin, Zap } from 'lucide-react';
+import { CalendarCheck, MapPin, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const steps = [
   {
@@ -21,6 +21,18 @@ const steps = [
 ];
 
 export default function HowItWorks() {
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section id="how-it-works" className="py-8 md:py-10 px-4 border-t border-border bg-secondary/40 scroll-mt-20">
       <div className="max-w-5xl mx-auto">
@@ -36,18 +48,22 @@ export default function HowItWorks() {
           </p>
         </motion.div>
 
-        <div className="overflow-x-auto md:overflow-visible relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-            <div className="flex items-center gap-1 text-muted-foreground/40">
-              <span className="text-[10px] tracking-widest uppercase">←</span>
-            </div>
-          </div>
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
-            <div className="flex items-center gap-1 text-muted-foreground/40">
-              <span className="text-[10px] tracking-widest uppercase">→</span>
-            </div>
-          </div>
-          <div className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full">
+        <div className="overflow-x-auto md:overflow-visible relative group">
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5 text-foreground" />
+          </button>
+          <div ref={scrollRef} className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
@@ -62,11 +78,11 @@ export default function HowItWorks() {
               <p className="font-body text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
-          </div>
+            </div>
         </div>
 
-
       </div>
+      <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 }
