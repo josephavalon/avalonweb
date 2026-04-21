@@ -8,7 +8,6 @@ const IV_TIERS = [
   {
     name: 'Core',
     category: 'VITAMINS',
-    tagline: 'The Foundation',
     price: 200, regularPrice: 250,
     perks: [
       '1 of vitamin IVs per month',
@@ -44,7 +43,6 @@ const IV_TIERS = [
   {
     name: 'Vital',
     category: 'VITAMINS',
-    tagline: 'Premium',
     price: 600, regularPrice: 750,
     perks: [
       '3 of vitamin IVs per month',
@@ -63,7 +61,6 @@ const IV_TIERS = [
   {
     name: 'Max',
     category: 'VITAMINS',
-    tagline: 'Maximum Protocol', noWrap: true,
     price: 800, regularPrice: 1000,
     perks: [
       '4 of vitamin IVs per month',
@@ -283,9 +280,9 @@ function IVTierCard({ tier, i, billing }) {
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
         {tier.category}
       </p>
-      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
+      {tier.tagline && <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline}
-      </p>
+      </p>}
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
@@ -399,7 +396,6 @@ const FLUID_TIERS = [
   {
     name: 'Core',
     category: 'FLUID',
-    tagline: 'The Foundation',
     price: 120, regularPrice: 150,
     perks: [
       '1 dehydration IV per month',
@@ -435,7 +431,6 @@ const FLUID_TIERS = [
   {
     name: 'Vital',
     category: 'FLUID',
-    tagline: 'Premium',
     price: 360, regularPrice: 450,
     perks: [
       '3 dehydration IVs per month',
@@ -454,7 +449,6 @@ const FLUID_TIERS = [
   {
     name: 'Max',
     category: 'FLUID',
-    tagline: 'Maximum Protocol', noWrap: true,
     price: 480, regularPrice: 600,
     perks: [
       '4 dehydration IVs per month',
