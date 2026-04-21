@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link } from 'lucide-react';
+import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf } from 'lucide-react';
 
 const verticals = [
   { label: 'IV Vitamins', icon: Droplets, live: true },
   { label: 'NAD+', icon: Zap, live: true },
   { label: 'Exosomes', icon: Sparkles, live: true },
-  { label: 'CBD', icon: Droplets, live: true },
+  { label: 'CBD', icon: Leaf, live: true },
   { label: 'Peptides', icon: Link, live: false },
   { label: 'Aesthetics', icon: Sparkles, live: false },
   { label: 'Weight Loss', icon: Apple, live: false },
