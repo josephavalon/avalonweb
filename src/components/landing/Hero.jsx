@@ -16,10 +16,11 @@ export default function Hero() {
         <img
           src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
           alt="Nurse with patient"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover brightness-110"
         />
-        <div className="absolute inset-0 bg-background/70" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background" />
+        <div className="absolute inset-0 bg-background/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </motion.div>
 
       <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto">
