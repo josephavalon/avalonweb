@@ -81,30 +81,7 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Conversion Strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.4 }}
-          className="mt-10 flex flex-row items-center justify-center gap-8 px-4"
-        >
-          <div className="text-center">
-            <Star className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
-            <p className="font-body text-xs text-muted-foreground leading-tight">Trusted by SF Tech<br />& Event Leaders</p>
-          </div>
-          <div className="hidden sm:block w-px h-8 bg-border/40" />
-          <div className="text-center">
-            <Zap className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
-            <p className="font-body text-xs text-muted-foreground leading-tight">30–60+ Min<br />Sessions</p>
-          </div>
-          <div className="hidden sm:block w-px h-8 bg-border/40" />
-          <div className="text-center">
-            <Heart className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
-            <p className="font-body text-xs text-muted-foreground leading-tight">Delivered by<br />Registered Nurses</p>
-          </div>
-        </motion.div>
-
-        <motion.p
+<motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.5 }}
