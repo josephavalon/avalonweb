@@ -40,7 +40,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="font-heading text-7xl md:text-[10rem] lg:text-[13rem] leading-none tracking-wide text-foreground uppercase"
+          className="font-heading text-8xl md:text-[12rem] lg:text-[15rem] leading-none tracking-wide text-foreground uppercase"
         >
           AVALON
         </motion.h1>
@@ -49,7 +49,7 @@ export default function Hero() {
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 1, delay: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="h-px bg-foreground/20 my-4 mx-auto max-w-md origin-center"
+          className="h-px bg-foreground/20 my-2 mx-auto max-w-md origin-center"
         />
 
         <motion.p
