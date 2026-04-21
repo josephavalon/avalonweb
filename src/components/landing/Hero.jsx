@@ -56,7 +56,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 1.1 }}
           className="font-body text-sm md:text-base text-muted-foreground tracking-[0.3em] uppercase mb-12"
         >
-          Mobile IV Therapy · By Application Only
+          Mobile Optimization Therapy · Coming Soon
         </motion.p>
 
         {/* CTA pill — same style as The Protocole */}

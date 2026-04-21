@@ -23,6 +23,20 @@ export default function GiftCertificates() {
             <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
               Give someone the experience of elite mobile IV therapy — delivered to their door. Gift certificates are available in any denomination and never expire.
             </p>
+            {/* Denomination buttons */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {['$500', '$1,000', '$5,000'].map((amt) => (
+                <a
+                  key={amt}
+                  href={GIFT_SQUARE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground hover:text-accent transition-colors rounded text-center"
+                >
+                  {amt}
+                </a>
+              ))}
+            </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <a
                 href={GIFT_SQUARE_URL}
@@ -38,7 +52,7 @@ export default function GiftCertificates() {
                 rel="noopener noreferrer"
                 className="px-7 py-3.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground transition-colors rounded text-center"
               >
-                Custom Request
+                Custom Amount
               </a>
             </div>
           </div>
