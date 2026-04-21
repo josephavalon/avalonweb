@@ -269,7 +269,7 @@ function IVTierCard({ tier, i, billing }) {
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
-          {tier.locationNote && <div className="text-[9px] text-muted-foreground/70 mt-2">{tier.locationNote}</div>}
+          {tier.locationNote && <div className="text-[8px] text-muted-foreground/60 mt-1">{tier.locationNote}</div>}
         </p>
       </div>
       <ul className="space-y-3 mb-4 flex-1">
