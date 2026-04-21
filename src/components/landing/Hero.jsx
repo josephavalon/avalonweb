@@ -14,8 +14,8 @@ export default function Hero() {
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <img
-          src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/4abffc667_image4.png"
-          alt="Woman receiving IV drip with Bay Bridge view"
+          src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&q=85"
+          alt="Woman receiving IV therapy with Bay Bridge view"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-background/70" />
