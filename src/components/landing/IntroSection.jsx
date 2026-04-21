@@ -9,7 +9,7 @@ const verticals = [
   { label: 'CBD', icon: CannabisLeaf, live: true },
   { label: 'Exosomes', icon: Sparkles, live: true },
   { label: 'Contrast Therapy', icon: Flame, live: true, location: 'Vital Ice SF' },
-  { label: 'Peptides', icon: Link, live: true },
+  { label: 'Peptides', icon: Link, live: false },
   { label: 'Recovery Devices', icon: Lightbulb, live: false },
   { label: 'Personalized Protocols', icon: Zap, live: false },
   { label: 'Blood & Genetic Testing', icon: TestTube, live: false },
