@@ -88,7 +88,7 @@ const NAD_TIERS = [
     perks: ['1 × 250mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'NAD+ Advanced',
+    name: 'NAD+ Plus',
     dose: '500mg',
     featured: true,
     price: 440, regularPrice: 550,
