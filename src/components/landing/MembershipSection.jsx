@@ -73,10 +73,10 @@ const IV_TIERS = [
 const NAD_TIERS = [
   {
     name: 'NAD+ Starter',
-    tagline: '250mg Monthly',
-    price: 280, regularPrice: 350,
+    tagline: '2 × 250mg Monthly',
+    price: 480, regularPrice: 600,
     perks: [
-      '1 × 250mg NAD+ IV per month',
+      '2 × 250mg NAD+ IVs per month',
       '20% off all à la carte NAD+',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -85,11 +85,11 @@ const NAD_TIERS = [
   },
   {
     name: 'NAD+ Core',
-    tagline: '500mg Monthly',
-    price: 480, regularPrice: 600,
+    tagline: '2 × 500mg Monthly',
+    price: 880, regularPrice: 1100,
     featured: true,
     perks: [
-      '1 × 500mg NAD+ IV per month',
+      '2 × 500mg NAD+ IVs per month',
       '20% off all à la carte NAD+',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -99,16 +99,45 @@ const NAD_TIERS = [
   },
   {
     name: 'NAD+ Elite',
-    tagline: '1000mg Monthly',
-    price: 800, regularPrice: 1000,
+    tagline: '2 × 1000mg Monthly',
+    price: 1440, regularPrice: 1800,
     perks: [
-      '1 × 1000mg NAD+ IV per month',
+      '2 × 1000mg NAD+ IVs per month',
       '20% off all à la carte NAD+',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
       'Priority scheduling',
       'Dedicated care coordinator',
       'Exclusive member events',
+    ],
+  },
+  {
+    name: 'NAD+ Protocol',
+    tagline: '2 × 1250mg Monthly',
+    price: 1760, regularPrice: 2200,
+    perks: [
+      '2 × 1250mg NAD+ IVs per month',
+      '20% off all à la carte NAD+',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Dedicated care coordinator',
+      'Exclusive member events',
+    ],
+  },
+  {
+    name: 'NAD+ Vital',
+    tagline: '2 × 1500mg Monthly',
+    price: 2080, regularPrice: 2600,
+    perks: [
+      '2 × 1500mg NAD+ IVs per month',
+      '20% off all à la carte NAD+',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Dedicated care coordinator',
+      'Exclusive member events',
+      'White-glove concierge service',
     ],
   },
 ];
@@ -257,7 +286,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div className={`grid gap-4 ${TABS[activeTab].tiers.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+        <div className={`grid gap-4 ${TABS[activeTab].tiers.length === 5 ? 'md:grid-cols-5' : TABS[activeTab].tiers.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
           {TABS[activeTab].tiers.map((tier, i) => (
             <TierCard key={tier.name} tier={tier} i={i} />
           ))}
