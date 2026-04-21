@@ -38,7 +38,7 @@ export default function ServicePageLayout({ title, subtitle, description, treatm
       {description && (
         <section className="py-12 px-6 md:px-16 border-b border-border">
           <div className="max-w-2xl">
-            <p className="font-body text-base text-muted-foreground leading-relaxed">{description}</p>
+            <p className="font-body text-base text-foreground leading-relaxed">{description}</p>
           </div>
         </section>
       )}
