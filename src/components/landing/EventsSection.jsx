@@ -55,21 +55,21 @@ export default function EventsSection() {
   };
 
   return (
-    <section id="events" className="py-8 md:py-10 px-4 border-t border-border">
+    <section id="events" className="py-6 md:py-8 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="mb-8 text-left"
+          className="mb-6 text-center"
         >
           <motion.p 
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-2"
           >
             In the Field
           </motion.p>
@@ -78,7 +78,7 @@ export default function EventsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-5xl md:text-7xl text-foreground tracking-wide"
+            className="font-heading text-5xl md:text-6xl text-foreground tracking-wide"
           >
             NEWS & EVENTS
           </motion.h2>
@@ -101,7 +101,7 @@ export default function EventsSection() {
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
           <div ref={scrollRef} className="overflow-x-auto w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-4 px-16 md:px-20 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
+            <div className="flex gap-3 md:gap-3 px-16 md:px-0 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
               {events.map((event, i) => (
                 <motion.div
                   key={event.title}
@@ -109,7 +109,7 @@ export default function EventsSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex-shrink-0 w-[calc(100vw-8rem)] md:w-[500px] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4 snap-center"
+                  className="flex-shrink-0 w-[calc(100vw-8rem)] md:w-[450px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-center"
                 >
                 <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
                 <div>
