@@ -42,7 +42,7 @@ export default function IntroSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-left"
+          className="text-center"
         >
           <motion.p 
             initial={{ opacity: 0, x: -20 }}
