@@ -81,9 +81,9 @@ export default function IntroSection() {
            >
              <ChevronLeft className="w-5 h-5 text-foreground" />
            </button>
-           <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+           <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}>
              <div ref={scrollRef} className="flex px-4 md:px-0" style={{ scrollBehavior: 'smooth', width: 'fit-content' }}>
-               <div className="grid gap-3 md:gap-4" style={{ gridAutoRows: 'minmax(140px, 1fr)', gridTemplateColumns: 'repeat(6, minmax(160px, 1fr))', width: 'fit-content' }}>
+               <div className="grid gap-3 md:gap-4" style={{ gridAutoRows: 'minmax(140px, 1fr)', gridTemplateColumns: 'repeat(6, minmax(160px, 1fr))', width: 'fit-content', scrollSnapAlign: 'start' }}>
                  {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
                  <div
                    key={label}
