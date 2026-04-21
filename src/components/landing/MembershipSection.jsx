@@ -267,7 +267,7 @@ function IVTierCard({ tier, i, billing }) {
       transition={{ delay: i * 0.1, duration: 0.7 }}
       className={`flex-shrink-0 w-[90vw] sm:w-[340px] md:w-auto relative border rounded-3xl p-6 flex flex-col ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
-      {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
+      {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
       <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
         {tier.category}
       </p>
@@ -355,7 +355,7 @@ function SimpleTierCard({ tier, i, billing }) {
       transition={{ delay: i * 0.1, duration: 0.7 }}
       className={`flex-shrink-0 w-[90vw] sm:w-[340px] md:w-auto relative border rounded-3xl p-6 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
-      {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
+      {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
 
       <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
         {tier.category}
