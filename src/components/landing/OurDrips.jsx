@@ -5,10 +5,17 @@ import { ChevronDown } from 'lucide-react';
 
 const categories = [
   {
-    label: 'IV Vitamins',
+    label: 'Vitamins',
     href: '/services/iv-vitamins',
     tag: 'FROM $150 — WELLNESS FOUNDATION',
     desc: 'Dehydration, Myers\' Cocktail, Hangover, Energy, Immunity, Beauty & more.',
+    image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/dc9537125_fffff.png',
+  },
+  {
+    label: 'Fluid',
+    href: '/services/iv-vitamins',
+    tag: 'FROM $150 — HYDRATION & ELECTROLYTES',
+    desc: 'Premium hydration therapy for recovery, performance, and wellness.',
     image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/dc9537125_fffff.png',
   },
   {
@@ -19,7 +26,7 @@ const categories = [
     image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/58e932da3_ddddd.png',
   },
   {
-    label: 'IV CBD',
+    label: 'CBD',
     href: '/services/cbd',
     tag: 'FROM $250 — ZERO THC',
     desc: 'Anti-inflammatory, stress relief, and recovery. 33mg to 132mg formulas.',
