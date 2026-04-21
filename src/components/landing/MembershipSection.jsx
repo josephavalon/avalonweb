@@ -319,7 +319,7 @@ function SimpleTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`relative border rounded-3xl p-8 flex flex-col text-center ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
@@ -329,7 +329,7 @@ function SimpleTierCard({ tier, i, billing }) {
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-8">{tier.name}</h3>
 
       <div className="mb-8">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline justify-center gap-2">
           <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
         </div>
@@ -341,8 +341,8 @@ function SimpleTierCard({ tier, i, billing }) {
 
       <ul className="space-y-3 mb-4 flex-1">
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
-          <li key={perk} className="flex items-start gap-2.5">
-            <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+          <li key={perk} className="flex items-center justify-center gap-2.5">
+            <Check className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={2.5} />
             <span className="font-body text-xs text-muted-foreground leading-relaxed">{perk}</span>
           </li>
         ))}
