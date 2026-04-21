@@ -238,25 +238,25 @@ export default function Apply() {
 
             {/* Membership tier selection */}
             <div className="pt-2">
-              <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-4 px-1">Select a membership tier</p>
-              <div className="space-y-4">
+              <p className="font-body text-[9px] tracking-[0.25em] text-muted-foreground uppercase mb-3 px-1">Select a membership tier</p>
+              <div className="space-y-2">
                 {MEMBERSHIP_CATEGORIES.map(category => (
                   <div key={category.category}>
-                    <p className="font-body text-[9px] tracking-[0.2em] text-accent uppercase mb-2 px-1">{category.category}</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <p className="font-body text-[8px] tracking-[0.2em] text-accent uppercase mb-1 px-1">{category.category}</p>
+                    <div className="grid grid-cols-2 gap-1.5 md:grid-cols-4">
                       {category.tiers.map(tier => (
                         <button
                           key={tier.id}
                           type="button"
                           onClick={() => setSelectedMembership(tier.id)}
-                          className={`border rounded-2xl px-4 py-3 font-body text-xs transition-all ${
+                          className={`border rounded-xl px-2 py-2 font-body text-[10px] transition-all ${
                             selectedMembership === tier.id
                               ? 'border-white/40 bg-white/10 text-foreground'
                               : 'border-white/15 text-muted-foreground hover:border-white/40 hover:text-foreground'
                           }`}
                         >
                           <div className="font-semibold">{tier.name}</div>
-                          <div className="text-[9px] text-muted-foreground/70">{tier.price}</div>
+                          <div className="text-[8px] text-muted-foreground/70">{tier.price}</div>
                         </button>
                       ))}
                     </div>
