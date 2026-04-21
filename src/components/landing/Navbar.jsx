@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,17 +22,20 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
-      {/* Desktop */}
-      <div className="hidden lg:flex items-center justify-between max-w-7xl mx-auto px-8 h-14">
-        {/* Left: Logo + Nav links inline */}
-        <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-5 h-5 rounded-full border border-foreground/60 flex items-center justify-center">
-              <div className="w-1 h-1 rounded-full bg-accent" />
-            </div>
-            <span className="font-heading text-[15px] tracking-[0.25em] text-foreground">AVALON VITALITY</span>
-          </Link>
 
+      {/* Desktop — logo left | links center | login right */}
+      <div className="hidden lg:grid grid-cols-3 items-center max-w-7xl mx-auto px-8 h-14">
+
+        {/* Left: Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full border border-foreground/60 flex items-center justify-center">
+            <div className="w-1 h-1 rounded-full bg-accent" />
+          </div>
+          <span className="font-heading text-[15px] tracking-[0.25em] text-foreground">AVALON VITALITY</span>
+        </Link>
+
+        {/* Center: Nav links */}
+        <div className="flex items-center justify-center gap-7">
           <a href="#membership" className={linkClass}>Membership</a>
           <Link to="/services/iv-vitamins" className={linkClass}>IV Vitamins</Link>
           <Link to="/services/nad" className={linkClass}>NAD+</Link>
@@ -43,7 +46,9 @@ export default function Navbar() {
         </div>
 
         {/* Right: Login */}
-        <a href="#" className={linkClass}>Login</a>
+        <div className="flex justify-end">
+          <a href="#" className={linkClass}>Login</a>
+        </div>
       </div>
 
       {/* Mobile */}
