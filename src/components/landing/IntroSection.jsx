@@ -69,7 +69,7 @@ export default function IntroSection() {
               {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <div
                 key={label}
-                className={`flex-shrink-0 w-[calc(50vw-1rem)] sm:w-[calc(25vw-1rem)] md:w-56 relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                className={`flex-shrink-0 w-[calc(50vw-1rem)] sm:w-[calc(33.333vw-1rem)] md:w-48 relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
                     : 'border-border bg-card/40 text-muted-foreground/40'
