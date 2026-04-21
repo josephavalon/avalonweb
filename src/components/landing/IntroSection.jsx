@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf } from 'lucide-react';
+import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf, MapPin } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 const verticals = [
@@ -8,7 +8,7 @@ const verticals = [
   { label: 'NAD+', icon: Zap, live: true },
   { label: 'CBD', icon: CannabisLeaf, live: true },
   { label: 'Exosomes', icon: Sparkles, live: true },
-  { label: 'Contrast Therapy', icon: Heart, live: true },
+  { label: 'Contrast Therapy', icon: Heart, live: true, location: 'Vital Ice SF' },
   { label: 'Peptides', icon: Link, live: false },
   { label: 'Weight Loss', icon: Apple, live: false },
   { label: 'Personalized Protocols', icon: Zap, live: false },
@@ -19,6 +19,7 @@ const verticals = [
   { label: 'Supplements', icon: Pill, live: false },
   { label: 'Diet', icon: Apple, live: false },
   { label: 'Aesthetics', icon: Sparkles, live: false },
+  { label: 'Locations', icon: MapPin, live: true, isLocation: true },
 ];
 
 export default function IntroSection() {
@@ -34,12 +35,12 @@ export default function IntroSection() {
           <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Foundation</p>
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">IV THERAPY IS THE BASE</h2>
           <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
-            IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are.
+            IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </p>
 
           {/* Vertical grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-3xl mx-auto">
-            {verticals.map(({ label, icon: Icon, live }, i) => (
+            {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 16 }}
@@ -59,7 +60,10 @@ export default function IntroSection() {
                 <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
                   {label}
                 </span>
-                {live && (
+                {location && (
+                  <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+                )}
+                {live && !isLocation && (
                   <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
                 )}
                 {!live && (
