@@ -10,7 +10,7 @@ export default function Hero() {
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <img
