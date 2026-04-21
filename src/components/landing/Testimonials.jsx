@@ -34,7 +34,7 @@ const testimonials = [
     tag: "ATHLETIC RECOVERY"
   },
   {
-    quote: "Booked Avalon for our team during BottleRock. They set up a recovery lounge backstage. Whole crew back on their feet same day.",
+    quote: "Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.",
     name: "G.B.",
     tag: "EVENT RECOVERY"
   },
