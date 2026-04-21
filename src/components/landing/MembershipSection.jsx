@@ -550,7 +550,7 @@ export default function MembershipSection() {
             <button
               key={t.label}
               onClick={() => setActiveTab(i)}
-              className={`px-3 md:px-6 py-2 md:py-2.5 font-body text-[8px] md:text-[10px] tracking-widest uppercase rounded-full transition-colors shrink-0 ${
+              className={`px-3 md:px-6 py-2 md:py-2.5 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors shrink-0 ${
                 activeTab === i
                   ? 'bg-foreground text-background'
                   : 'border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40'
