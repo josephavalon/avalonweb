@@ -72,38 +72,7 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </motion.p>
 
-          {/* First 4 cards in grid (mobile) / 6 cards (desktop) */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 px-4 md:px-0 mb-6 max-w-2xl mx-auto">
-           {verticals.slice(0, 4).map(({ label, icon: Icon, live, location, isLocation }, i) => (
-           <div
-             key={label}
-             className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
-               live
-                 ? 'border-foreground/25 bg-card text-foreground'
-                 : 'border-border bg-card/40 text-muted-foreground/40'
-             }`}
-           >
-             <Icon
-               className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
-               strokeWidth={1.5}
-             />
-             <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
-               {label}
-             </span>
-             {location && (
-               <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
-             )}
-             {live && !isLocation && (
-               <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
-             )}
-             {!live && (
-               <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
-             )}
-             </div>
-             ))}
-          </div>
-
-          {/* Scrollable section for remaining items */}
+          {/* All 6 cards in scrollable grid - 2 columns, 3 rows */}
           <div className="relative group">
            <button
              onClick={() => scroll('left')}
@@ -113,34 +82,67 @@ export default function IntroSection() {
              <ChevronLeft className="w-5 h-5 text-foreground" />
            </button>
            <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-             <div ref={scrollRef} className="flex gap-3 md:gap-4 px-4 md:px-0 w-max md:w-full" style={{ scrollBehavior: 'smooth' }}>
-               {verticals.slice(4).map(({ label, icon: Icon, live, location, isLocation }, i) => (
-               <div
-                 key={label}
-                 className={`flex-shrink-0 w-[calc(50vw-2rem)] md:w-64 relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
-                   live
-                     ? 'border-foreground/25 bg-card text-foreground'
-                     : 'border-border bg-card/40 text-muted-foreground/40'
-                 }`}
-               >
-                 <Icon
-                   className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
-                   strokeWidth={1.5}
-                 />
-                 <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
-                   {label}
-                 </span>
-                 {location && (
-                   <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
-                 )}
-                 {live && !isLocation && (
-                   <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
-                 )}
-                 {!live && (
-                   <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
-                 )}
+             <div ref={scrollRef} className="w-max md:w-full" style={{ scrollBehavior: 'smooth' }}>
+               <div className="grid grid-cols-2 gap-3 md:gap-4 px-4 md:px-0 w-[calc(100vw-2rem)] md:w-full" style={{ gridAutoRows: 'minmax(140px, 1fr)' }}>
+                 {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
+                 <div
+                   key={label}
+                   className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                     live
+                       ? 'border-foreground/25 bg-card text-foreground'
+                       : 'border-border bg-card/40 text-muted-foreground/40'
+                   }`}
+                 >
+                   <Icon
+                     className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                     strokeWidth={1.5}
+                   />
+                   <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                     {label}
+                   </span>
+                   {location && (
+                     <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+                   )}
+                   {live && !isLocation && (
+                     <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
+                   )}
+                   {!live && (
+                     <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
+                   )}
+                   </div>
+                   ))}
+               </div>
+               {verticals.length > 6 && (
+                 <div className="grid grid-cols-2 gap-3 md:gap-4 px-4 md:px-0 w-[calc(100vw-2rem)] md:w-full mt-6" style={{ gridAutoRows: 'minmax(140px, 1fr)' }}>
+                   {verticals.slice(6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
+                   <div
+                     key={label}
+                     className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                       live
+                         ? 'border-foreground/25 bg-card text-foreground'
+                         : 'border-border bg-card/40 text-muted-foreground/40'
+                     }`}
+                   >
+                     <Icon
+                       className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                       strokeWidth={1.5}
+                     />
+                     <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                       {label}
+                     </span>
+                     {location && (
+                       <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+                     )}
+                     {live && !isLocation && (
+                       <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
+                     )}
+                     {!live && (
+                       <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
+                     )}
+                     </div>
+                     ))}
                  </div>
-                 ))}
+               )}
              </div>
            </div>
            <button
