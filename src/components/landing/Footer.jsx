@@ -72,6 +72,11 @@ export default function Footer() {
               IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
             </p>
           </div>
+          <div className="pt-6 border-t border-border/50">
+            <p className="font-body text-[9px] text-muted-foreground/40 leading-relaxed">
+              The services provided have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure or prevent any disease. The material on this website is provided for informational purposes only and is not medical advice. Always consult your physician before beginning any treatment or therapy program. Any designations or references to therapies are for marketing purposes only and do not represent actual products.
+            </p>
+          </div>
           <div className="flex items-center justify-center md:justify-end gap-6">
             <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
