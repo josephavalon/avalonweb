@@ -28,7 +28,7 @@ export default function B2BSection() {
             </p>
             <a
               href="mailto:hello@avalonvitality.com"
-              className="inline-block px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
+              className="inline-block px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"
             >
               Inquire →
             </a>
@@ -42,7 +42,7 @@ export default function B2BSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="border border-border rounded bg-card p-5"
+                className="border border-border rounded-3xl bg-card p-5"
               >
                 <item.icon className="w-5 h-5 text-accent mb-3" strokeWidth={1.5} />
                 <h3 className="font-heading text-lg text-foreground tracking-wide mb-1">{item.title}</h3>
