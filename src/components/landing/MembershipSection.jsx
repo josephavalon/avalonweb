@@ -507,7 +507,7 @@ export default function MembershipSection() {
     : 'md:grid-cols-3';
 
   return (
-    <section id="membership" className="py-8 md:py-10 px-4 border-t border-border">
+    <section id="membership" className="py-6 md:py-8 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
 
         <motion.div
@@ -515,14 +515,14 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9 }}
-          className="text-left mb-6"
+          className="text-center mb-4"
         >
           <motion.p 
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-3"
+            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-2"
           >
             Presale — Limited Availability
           </motion.p>
@@ -531,7 +531,7 @@ export default function MembershipSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4"
+            className="font-heading text-6xl md:text-7xl text-foreground tracking-wide mb-3"
           >
             MEMBERSHIP
           </motion.h2>
@@ -540,7 +540,7 @@ export default function MembershipSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="font-body text-base text-muted-foreground max-w-xl mx-auto leading-relaxed"
+            className="font-body text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed"
           >
             Membership by application only. Available in the San Francisco Bay Area. Lock in presale pricing and secure your spot.
           </motion.p>
@@ -548,7 +548,7 @@ export default function MembershipSection() {
         </motion.div>
 
         {/* Billing toggle */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-5">
           <div className="flex items-center bg-secondary/50 rounded-full p-1 gap-1">
             <button
               onClick={() => setBilling('monthly')}
@@ -566,7 +566,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex justify-center gap-1 mb-8 flex-wrap">
+        <div className="flex justify-center gap-1 mb-6 flex-wrap">
           {TABS.map((t, i) => (
             <button
               key={t.label}
@@ -598,7 +598,7 @@ export default function MembershipSection() {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-          <div className={`flex md:grid gap-4 w-fit md:w-full md:px-0 justify-center md:justify-start ${gridClass}`}>
+          <div className={`flex md:grid gap-3 md:gap-3 w-fit md:w-full md:px-0 md:justify-center ${gridClass}`}>
             {tab.tiers.map((tier, i) =>
               tab.type === 'iv'
                 ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
@@ -612,7 +612,7 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="mt-8 pt-6 text-center"
+          className="mt-6 pt-4 text-center"
         >
           <p className="font-body text-[9px] text-muted-foreground/50 tracking-wider max-w-lg mx-auto leading-relaxed">
             3-month minimum commitment. Credits roll over month-to-month as long as your membership remains active.
