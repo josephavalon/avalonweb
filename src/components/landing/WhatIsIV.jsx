@@ -41,6 +41,7 @@ export default function WhatIsIV() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
+          className="text-left"
         >
           <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
           <h2 className="font-heading text-6xl md:text-7xl text-foreground tracking-wide mb-6 whitespace-nowrap">WHAT IS IV THERAPY?</h2>
