@@ -148,7 +148,7 @@ export default function Testimonials() {
         </button>
         <button
           onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+          className="absolute right-4 md:right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
           aria-label="Scroll right"
         >
           <ChevronRight className="w-5 h-5 text-foreground" />
