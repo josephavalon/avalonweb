@@ -153,7 +153,7 @@ const EXOSOME_TIERS = [
 
 const VITAL_ICE_SF_TIERS = [
   {
-    name: 'Vital Ice — Community',
+    name: 'Community',
     tagline: 'The Foundation',
     community: true,
     price: 420, regularPrice: 525,
@@ -170,7 +170,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Vital Ice — Private',
+    name: 'Private',
     tagline: 'The Foundation',
     community: false,
     price: 480, regularPrice: 600,
@@ -187,7 +187,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Vital Ice Plus — Community',
+    name: 'Plus — Community',
     tagline: 'Most Popular',
     community: true,
     price: 744, regularPrice: 930,
@@ -206,7 +206,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Vital Ice Plus — Private',
+    name: 'Plus — Private',
     tagline: 'Most Popular',
     community: false,
     price: 816, regularPrice: 1020,
@@ -225,7 +225,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Vital Ice SF — Community',
+    name: 'SF — Community',
     tagline: 'Ultimate Protocol',
     community: true,
     price: 1440, regularPrice: 1800,
@@ -244,7 +244,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Vital Ice SF — Private',
+    name: 'SF — Private',
     tagline: 'Ultimate Protocol',
     community: false,
     price: 1620, regularPrice: 2025,
