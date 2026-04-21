@@ -95,24 +95,6 @@ const NAD_TIERS = [
       2: { price: 1440, regularPrice: 1800, perks: ['2 × 1000mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
     },
   },
-  {
-    name: 'NAD+ Protocol',
-    dose: '1250mg',
-    featured: false,
-    options: {
-      1: { price: 880, regularPrice: 1100, perks: ['1 × 1250mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
-      2: { price: 1760, regularPrice: 2200, perks: ['2 × 1250mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
-    },
-  },
-  {
-    name: 'NAD+ Vital',
-    dose: '1500mg',
-    featured: false,
-    options: {
-      1: { price: 1040, regularPrice: 1300, perks: ['1 × 1500mg NAD+ IV per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events', 'White-glove concierge service'] },
-      2: { price: 2080, regularPrice: 2600, perks: ['2 × 1500mg NAD+ IVs per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events', 'White-glove concierge service'] },
-    },
-  },
 ];
 
 const CBD_TIERS = [
