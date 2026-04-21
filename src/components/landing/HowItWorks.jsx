@@ -43,7 +43,7 @@ export default function HowItWorks() {
           className="text-left mb-8"
         >
           <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide">HOW IT WORKS</h2>
-          <p className="font-body text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
+          <p className="font-body text-sm text-foreground mt-4 max-w-2xl mx-auto">
             <a href="#membership" className="text-accent hover:text-accent/80 underline">Apply for membership</a> now to secure your spot. On-demand service launching soon.
           </p>
         </motion.div>
@@ -75,7 +75,7 @@ export default function HowItWorks() {
               >
               <step.icon className="w-8 h-8 text-accent mx-auto mb-5" strokeWidth={1.5} />
               <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 tracking-wide">{step.title}</h3>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+              <p className="font-body text-sm text-foreground leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
             </div>

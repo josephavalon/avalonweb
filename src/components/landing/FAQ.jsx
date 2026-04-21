@@ -207,8 +207,8 @@ function FAQItem({ faq, isOpen, onToggle }) {
          <span className="font-body text-sm text-foreground">{faq.q}</span>
          <div className="shrink-0 w-5 h-5 flex items-center justify-center">
            {isOpen
-             ? <Minus className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-             : <Plus className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+             ? <Minus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+             : <Plus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
            }
          </div>
        </div>
@@ -221,7 +221,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             <div className="px-5 pb-3 border-t border-border/40">
-               <p className="font-body text-sm text-muted-foreground leading-relaxed pt-2">{faq.a}</p>
+               <p className="font-body text-sm text-foreground leading-relaxed pt-2">{faq.a}</p>
              </div>
           </motion.div>
         )}
@@ -258,7 +258,7 @@ export default function FAQ() {
 
         {/* Search */}
         <div className="relative mb-2">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="SEARCH"
@@ -270,7 +270,7 @@ export default function FAQ() {
 
         {/* Category filters */}
         <div className="mb-2">
-          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-1">Topic</p>
+          <p className="font-body text-[10px] tracking-[0.25em] text-foreground uppercase mb-1">Topic</p>
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map(cat => (
               <button
@@ -279,7 +279,7 @@ export default function FAQ() {
                 className={`font-body text-sm transition-colors ${
                   activeCategory === cat
                     ? 'text-foreground font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-foreground hover:text-foreground'
                 }`}
               >
                 {cat}
@@ -291,7 +291,7 @@ export default function FAQ() {
         {/* FAQ items */}
         <div className="space-y-1">
           {filtered.length === 0 ? (
-            <p className="font-body text-sm text-muted-foreground py-4 text-center">No results found.</p>
+            <p className="font-body text-sm text-foreground py-4 text-center">No results found.</p>
           ) : (
             filtered.map((faq, i) => (
               <FAQItem

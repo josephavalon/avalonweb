@@ -10,15 +10,15 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="mb-3">
               <div className="font-heading text-2xl tracking-widest">AVALON</div>
-              <div className="text-[9px] tracking-[0.3em] text-muted-foreground -mt-1">VITALITY</div>
+              <div className="text-[9px] tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
             </div>
-            <p className="font-body text-xs text-muted-foreground leading-tight max-w-xs">
+            <p className="font-body text-xs text-foreground leading-tight max-w-xs">
               Mobile wellness optimization, delivered. IV hydration, NAD+, CBD, and advanced recovery services—available throughout the San Francisco Bay Area.
             </p>
           </div>
 
           <div>
-            <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase font-body mb-4">Services</p>
+            <p className="text-[9px] tracking-[0.3em] text-foreground uppercase font-body mb-4">Services</p>
             <div className="space-y-2.5">
               {[
                 { label: 'IV Vitamins', href: '/services/iv-vitamins' },
@@ -26,7 +26,7 @@ export default function Footer() {
                 { label: 'IV CBD', href: '/services/cbd' },
                 { label: 'Exosomes', href: '/services/exosomes' },
               ].map((l) => (
-                <Link key={l.href} to={l.href} className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">
+                <Link key={l.href} to={l.href} className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">
                   {l.label}
                 </Link>
               ))}
@@ -34,35 +34,35 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase font-body mb-4">Company</p>
+            <p className="text-[9px] tracking-[0.3em] text-foreground uppercase font-body mb-4">Company</p>
             <div className="space-y-2.5">
-              <Link to="/our-story" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
-              <a href="/#faq" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</a>
+              <Link to="/our-story" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
+              <a href="/#faq" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</a>
               <a href="#membership" className="block text-xs text-accent hover:text-accent/80 transition-colors font-body uppercase tracking-wider">Membership</a>
-              <a href="#gift" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Gift Certificates</a>
-              <a href="#events" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
-              <a href="#b2b" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Corporate & B2B</a>
-              <Link to="/careers" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Careers</Link>
+              <a href="#gift" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Gift Certificates</a>
+              <a href="#events" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
+              <a href="#b2b" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Corporate & B2B</a>
+              <Link to="/careers" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Careers</Link>
             </div>
           </div>
 
           <div>
-            <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase font-body mb-4">About Us</p>
+            <p className="text-[9px] tracking-[0.3em] text-foreground uppercase font-body mb-4">About Us</p>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-                <a href="mailto:support@avalonvitality.co" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-body">support@avalonvitality.co</a>
+                <Mail className="w-4 h-4 text-foreground shrink-0" />
+                <a href="mailto:support@avalonvitality.co" className="text-xs text-foreground hover:text-foreground transition-colors font-body">support@avalonvitality.co</a>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-                <a href="tel:+14159807708" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-body">(415) 980-7708</a>
+                <Phone className="w-4 h-4 text-foreground shrink-0" />
+                <a href="tel:+14159807708" className="text-xs text-foreground hover:text-foreground transition-colors font-body">(415) 980-7708</a>
               </div>
               <div className="flex items-center gap-3">
-                <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="text-xs text-muted-foreground font-body">Mon-Sun: 8AM-8PM</span>
+                <Clock className="w-4 h-4 text-foreground shrink-0" />
+                <span className="text-xs text-foreground font-body">Mon-Sun: 8AM-8PM</span>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-xs text-muted-foreground font-body">San Francisco Bay Area</span>
+                <span className="text-xs text-foreground font-body">San Francisco Bay Area</span>
               </div>
               <div className="flex items-center gap-4 pt-2">
                 <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
@@ -83,13 +83,13 @@ export default function Footer() {
 
         <div className="border-t border-border pt-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
-            <p className="font-body text-xs text-muted-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
-            <p className="font-body text-[10px] text-muted-foreground/50 max-w-md text-center md:text-right">
+            <p className="font-body text-xs text-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
+            <p className="font-body text-[10px] text-foreground max-w-md text-center md:text-right">
               IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
             </p>
           </div>
           <div className="pt-4 border-t border-border/50 mb-6">
-            <p className="font-body text-[9px] text-muted-foreground/40 leading-relaxed text-center md:text-right">
+            <p className="font-body text-[9px] text-foreground leading-relaxed text-center md:text-right">
               The services provided have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure or prevent any disease. The material on this website is provided for informational purposes only and is not medical advice. Always consult your physician before beginning any treatment or therapy program. Any designations or references to therapies are for marketing purposes only and do not represent actual products.
             </p>
           </div>
