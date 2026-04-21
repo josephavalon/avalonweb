@@ -29,7 +29,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link to="/" className="font-heading text-[15px] tracking-[0.25em] text-foreground shrink-0">
-          AVALON VITALITY
+          AV
         </Link>
 
         {/* Center links */}
@@ -45,7 +45,7 @@ export default function Navbar() {
 
       {/* Mobile */}
       <div className="md:hidden flex items-center justify-between px-5 h-14">
-        <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AVALON VITALITY</Link>
+        <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
