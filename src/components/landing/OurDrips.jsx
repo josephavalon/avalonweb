@@ -72,32 +72,22 @@ export default function OurDrips() {
                 <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-2">{cat.label}</h3>
                 <p className="font-body text-xs text-muted-foreground leading-relaxed">{cat.desc}</p>
                 
-                <AnimatePresence>
-                  {expanded[cat.label] && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4 pt-4 border-t border-border/30"
-                    >
-                      <Link
-                        to={cat.href}
-                        className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded px-6 py-2.5 hover:bg-foreground/90 transition-colors"
-                      >
-                        Order Now
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <button
-                  onClick={() => setExpanded(prev => ({ ...prev, [cat.label]: !prev[cat.label] }))}
-                  className="mt-3 flex items-center gap-2 text-accent hover:text-accent/80 transition-colors text-xs font-body uppercase tracking-wider"
-                >
-                  {expanded[cat.label] ? 'Show Less' : 'Show More'}
-                  <ChevronDown className={`w-3 h-3 transition-transform ${expanded[cat.label] ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="flex items-center gap-3 mt-4">
+                  <Link
+                    to={cat.href}
+                    className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded px-6 py-2.5 hover:bg-foreground/90 transition-colors"
+                  >
+                    Order Now
+                  </Link>
+                  
+                  <button
+                    onClick={() => setExpanded(prev => ({ ...prev, [cat.label]: !prev[cat.label] }))}
+                    className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors text-xs font-body uppercase tracking-wider"
+                  >
+                    {expanded[cat.label] ? 'Less' : 'More'}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${expanded[cat.label] ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
