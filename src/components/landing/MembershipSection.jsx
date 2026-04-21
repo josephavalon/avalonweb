@@ -141,7 +141,7 @@ const EXOSOME_TIERS = [
 
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.8) : tier.price;
+  const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
   return (
     <motion.div
@@ -187,7 +187,7 @@ function IVTierCard({ tier, i, billing }) {
 
 // Card for NAD+, CBD, and Exosomes (single frequency)
 function SimpleTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.8) : tier.price;
+  const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
 
   return (
