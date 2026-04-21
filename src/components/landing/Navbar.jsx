@@ -55,26 +55,27 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
-        {/* Desktop layout: 3-column grid — logo | nav+apply | login */}
-        <div className="hidden lg:grid max-w-7xl mx-auto px-8 h-16" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
-          {/* Left: Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-7 h-7 rounded-full border-2 border-foreground flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-              </div>
-              <div className="leading-none">
-                <div className="font-heading text-lg tracking-widest text-foreground">AVALON</div>
-                <div className="text-[8px] tracking-[0.3em] text-muted-foreground font-body -mt-0.5">VITALITY</div>
-              </div>
-            </Link>
-          </div>
+      {/* Promo bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-accent text-accent-foreground text-center text-xs font-body py-2 tracking-widest font-semibold">
+        NEW CLIENTS: 15% OFF WITH CODE: WEOUTHERE!
+      </div>
 
-          {/* Center: Nav links + Apply Now */}
-          <div className="flex items-center gap-6">
+      <nav className={`fixed top-8 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded-full border-2 border-foreground flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-accent" />
+            </div>
+            <div className="leading-none">
+              <div className="font-heading text-xl tracking-widest text-foreground">AVALON</div>
+              <div className="text-[9px] tracking-[0.3em] text-muted-foreground font-body -mt-0.5">VITALITY</div>
+            </div>
+          </Link>
+
+          {/* Desktop nav */}
+          <div className="hidden lg:flex items-center gap-8">
             <Link to="/" className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase">Home</Link>
-            <a href="#membership" className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase">Membership</a>
 
             {/* Services Dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -84,6 +85,7 @@ export default function Navbar() {
               >
                 Services <ChevronDown className={`w-3 h-3 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
               </button>
+
               <AnimatePresence>
                 {servicesOpen && (
                   <motion.div
@@ -96,7 +98,11 @@ export default function Navbar() {
                     <div className="p-2">
                       <p className="text-[9px] tracking-[0.25em] text-muted-foreground uppercase px-3 py-2 font-body">Available Now</p>
                       {activeServices.map((s) => (
-                        <Link key={s.href} to={s.href} className="block px-3 py-2.5 text-xs tracking-wider text-foreground hover:bg-secondary hover:text-accent transition-colors rounded font-body uppercase">
+                        <Link
+                          key={s.href}
+                          to={s.href}
+                          className="block px-3 py-2.5 text-xs tracking-wider text-foreground hover:bg-secondary hover:text-accent transition-colors rounded font-body uppercase"
+                        >
                           {s.label}
                         </Link>
                       ))}
@@ -107,7 +113,9 @@ export default function Navbar() {
                       </p>
                       <div className="grid grid-cols-2 gap-0.5">
                         {comingSoon.map((s) => (
-                          <span key={s} className="px-3 py-2 text-[10px] tracking-wide text-muted-foreground/50 font-body uppercase cursor-not-allowed">{s}</span>
+                          <span key={s} className="px-3 py-2 text-[10px] tracking-wide text-muted-foreground/50 font-body uppercase cursor-not-allowed">
+                            {s}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -118,36 +126,22 @@ export default function Navbar() {
 
             <Link to="/our-story" className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase">Our Story</Link>
             <a href="/#faq" className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase">FAQ</a>
+          </div>
 
-            {/* Apply Now — center-prominent */}
+          {/* CTA */}
+          <div className="hidden lg:flex items-center gap-4">
             <a
-              href="#membership"
-              className="ml-4 px-5 py-2.5 bg-foreground text-background text-xs tracking-widest font-body uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"
+              href={BOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2.5 bg-foreground text-background text-xs tracking-widest font-body uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
             >
-              Apply Now
+              Start Your Recovery
             </a>
           </div>
 
-          {/* Right: Login */}
-          <div className="flex items-center justify-end">
-            <a
-              href="#"
-              className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase"
-            >
-              Login
-            </a>
-          </div>
-        </div>
-
-        {/* Mobile layout */}
-        <div className="lg:hidden max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-full border-2 border-foreground flex items-center justify-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-            </div>
-            <div className="font-heading text-lg tracking-widest text-foreground">AVALON</div>
-          </Link>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-2">
+          {/* Mobile hamburger */}
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-foreground p-2">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -200,10 +194,12 @@ export default function Navbar() {
                 <a href="/#faq" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">FAQ</a>
 
                 <a
-                  href="#membership"
+                  href={BOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full text-center px-5 py-3 bg-foreground text-background text-sm tracking-widest font-body uppercase font-semibold mt-4 rounded"
                 >
-                  Apply Now
+                  Start Your Recovery
                 </a>
               </div>
             </motion.div>
