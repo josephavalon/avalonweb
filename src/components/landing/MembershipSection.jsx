@@ -290,16 +290,7 @@ function IVTierCard({ tier, i, billing }) {
         </p>
       </div>
 
-      {/* Side scroll arrows - visible on desktop only */}
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 hidden md:flex">
-        <button
-          onClick={() => scroll('left')}
-          className="p-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft className="w-4 h-4 text-foreground" />
-        </button>
-      </div>
+
       <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex">
         <button
           onClick={() => scroll('right')}
