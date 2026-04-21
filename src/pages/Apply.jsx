@@ -27,11 +27,60 @@ const US_STATES = [
   'Wisconsin','Wyoming',
 ];
 
-const MEMBERSHIP_TYPES = [
-  { id: 'essential', name: 'Essential', price: '$200/mo', description: 'Entry-level wellness' },
-  { id: 'performance', name: 'Performance', price: '$400/mo', description: 'Optimized recovery' },
-  { id: 'elite', name: 'Elite', price: '$600/mo', description: 'Premium access' },
-  { id: 'vital', name: 'Vital', price: '$800/mo', description: 'Concierge service' },
+const MEMBERSHIP_CATEGORIES = [
+  {
+    category: 'FLUID',
+    tiers: [
+      { id: 'fluid-core', name: 'Core', price: '$120/mo' },
+      { id: 'fluid-pro', name: 'Pro', price: '$240/mo' },
+      { id: 'fluid-vital', name: 'Vital', price: '$360/mo' },
+      { id: 'fluid-max', name: 'Max', price: '$480/mo' },
+    ]
+  },
+  {
+    category: 'VITAMINS',
+    tiers: [
+      { id: 'vitamins-core', name: 'Core', price: '$200/mo' },
+      { id: 'vitamins-pro', name: 'Pro', price: '$400/mo' },
+      { id: 'vitamins-vital', name: 'Vital', price: '$600/mo' },
+      { id: 'vitamins-max', name: 'Max', price: '$800/mo' },
+    ]
+  },
+  {
+    category: 'NAD+',
+    tiers: [
+      { id: 'nad-core', name: 'Core', price: '$240/mo' },
+      { id: 'nad-pro', name: 'Pro', price: '$440/mo' },
+      { id: 'nad-vital', name: 'Vital', price: '$580/mo' },
+      { id: 'nad-max', name: 'Max', price: '$720/mo' },
+    ]
+  },
+  {
+    category: 'CBD',
+    tiers: [
+      { id: 'cbd-core', name: 'Core', price: '$120/mo' },
+      { id: 'cbd-pro', name: 'Pro', price: '$160/mo' },
+      { id: 'cbd-vital', name: 'Vital', price: '$200/mo' },
+      { id: 'cbd-max', name: 'Max', price: '$240/mo' },
+    ]
+  },
+  {
+    category: 'EXOSOMES',
+    tiers: [
+      { id: 'exo-core', name: 'Core (30B)', price: '$560/mo' },
+      { id: 'exo-pro', name: 'Pro (50B)', price: '$960/mo' },
+      { id: 'exo-vital', name: 'Vital (90B)', price: '$1440/mo' },
+    ]
+  },
+  {
+    category: 'VITAL ICE SF',
+    tiers: [
+      { id: 'vital-ice-essential-comm', name: 'Essential — Community', price: '$300/mo' },
+      { id: 'vital-ice-essential-priv', name: 'Essential — Private', price: '$360/mo' },
+      { id: 'vital-ice-plus-comm', name: 'Plus — Community', price: '$480/mo' },
+      { id: 'vital-ice-plus-priv', name: 'Plus — Private', price: '$576/mo' },
+    ]
+  },
 ];
 
 export default function Apply() {
@@ -189,22 +238,29 @@ export default function Apply() {
 
             {/* Membership tier selection */}
             <div className="pt-2">
-              <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-3 px-1">Select a membership tier</p>
-              <div className="grid grid-cols-2 gap-2">
-                {MEMBERSHIP_TYPES.map(tier => (
-                  <button
-                    key={tier.id}
-                    type="button"
-                    onClick={() => setSelectedMembership(tier.id)}
-                    className={`border rounded-2xl px-4 py-3 font-body text-xs transition-all ${
-                      selectedMembership === tier.id
-                        ? 'border-white/40 bg-white/10 text-foreground'
-                        : 'border-white/15 text-muted-foreground hover:border-white/40 hover:text-foreground'
-                    }`}
-                  >
-                    <div className="font-semibold">{tier.name}</div>
-                    <div className="text-[9px] text-muted-foreground/70">{tier.price}</div>
-                  </button>
+              <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-4 px-1">Select a membership tier</p>
+              <div className="space-y-4">
+                {MEMBERSHIP_CATEGORIES.map(category => (
+                  <div key={category.category}>
+                    <p className="font-body text-[9px] tracking-[0.2em] text-accent uppercase mb-2 px-1">{category.category}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {category.tiers.map(tier => (
+                        <button
+                          key={tier.id}
+                          type="button"
+                          onClick={() => setSelectedMembership(tier.id)}
+                          className={`border rounded-2xl px-4 py-3 font-body text-xs transition-all ${
+                            selectedMembership === tier.id
+                              ? 'border-white/40 bg-white/10 text-foreground'
+                              : 'border-white/15 text-muted-foreground hover:border-white/40 hover:text-foreground'
+                          }`}
+                        >
+                          <div className="font-semibold">{tier.name}</div>
+                          <div className="text-[9px] text-muted-foreground/70">{tier.price}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
