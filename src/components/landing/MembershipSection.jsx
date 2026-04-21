@@ -129,7 +129,8 @@ const CBD_TIERS = [
 
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 0.7) : tier.price;
+  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.7) : tier.price;
+  const regularYearlyPrice = tier.regularPrice * 12;
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -146,11 +147,11 @@ function IVTierCard({ tier, i, billing }) {
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
-          <span className="font-body text-xs text-muted-foreground">/month</span>
+          <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
         </div>
         <p className="font-body text-[10px] text-muted-foreground mt-1">
-          <span className="line-through">${tier.regularPrice}</span>
-          <span className="text-accent ml-2">{billing === 'yearly' ? '30% yearly discount' : '20% member discount'}</span>
+          <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
+          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 30% annually' : '20% member discount'}</span>
         </p>
       </div>
       <ul className="space-y-3 mb-10 flex-1">
@@ -176,7 +177,8 @@ function IVTierCard({ tier, i, billing }) {
 function FrequencyTierCard({ tier, i, billing }) {
   const [freq, setFreq] = useState(1);
   const option = tier.options[freq];
-  const displayPrice = billing === 'yearly' ? Math.round(option.price * 0.7) : option.price;
+  const displayPrice = billing === 'yearly' ? Math.round(option.price * 12 * 0.7) : option.price;
+  const regularYearlyPrice = option.regularPrice * 12;
 
   return (
     <motion.div
@@ -211,11 +213,11 @@ function FrequencyTierCard({ tier, i, billing }) {
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
-          <span className="font-body text-xs text-muted-foreground">/month</span>
+          <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
         </div>
         <p className="font-body text-[10px] text-muted-foreground mt-1">
-          <span className="line-through">${option.regularPrice}</span>
-          <span className="text-accent ml-2">{billing === 'yearly' ? '30% yearly discount' : '20% member discount'}</span>
+          <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : option.regularPrice}</span>
+          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 30% annually' : '20% member discount'}</span>
         </p>
       </div>
 
