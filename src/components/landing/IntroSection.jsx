@@ -51,7 +51,7 @@ export default function IntroSection() {
 
           {/* Grid layout */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+              {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <div
                 key={label}
                 className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
