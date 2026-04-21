@@ -62,7 +62,7 @@ export default function IntroSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-4xl md:text-7xl text-foreground tracking-wide mb-8 whitespace-nowrap"
+            className="font-heading text-6xl md:text-7xl text-foreground tracking-wide mb-8 whitespace-nowrap"
           >
             IV THERAPY IS THE BASE
           </motion.h2>

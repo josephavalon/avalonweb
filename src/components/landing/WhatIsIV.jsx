@@ -26,7 +26,7 @@ export default function WhatIsIV() {
           >
             <div className="relative w-full max-w-xs">
               <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-              <h2 className="font-heading text-6xl md:text-7xl text-foreground tracking-wide mb-8">WHAT IS IV THERAPY?</h2>
+              <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-8">WHAT IS IV THERAPY?</h2>
               <div className="aspect-[3/4] rounded-3xl overflow-hidden w-full">
                 <img
                   src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/11af8bb23_ivtherapy.png"
@@ -53,7 +53,7 @@ export default function WhatIsIV() {
           >
             <div className="md:hidden mb-6">
               <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-              <h2 className="font-heading text-6xl text-foreground tracking-wide mb-6">WHAT IS IV THERAPY?</h2>
+              <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-6">WHAT IS IV THERAPY?</h2>
             </div>
 
             <p className="font-body text-sm text-foreground leading-relaxed mb-5">
