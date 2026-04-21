@@ -49,6 +49,26 @@ const faqs = [
     a: "Our IV CBD is 100% THC-free isolate administered directly into the bloodstream for maximum bioavailability. It's used for anti-inflammatory effects, stress relief, and recovery support."
   },
   {
+    category: 'Treatments',
+    q: "Which IV treatment is best for athletic recovery?",
+    a: "Our Event Recovery IV is specifically designed for athletes post-workout. It includes anti-inflammatory agents, amino acids, electrolytes, and hydration. Many athletes also pair it with NAD+ or Exosomes for deeper cellular repair."
+  },
+  {
+    category: 'Treatments',
+    q: "Can I combine multiple IV treatments?",
+    a: "Yes. Many clients enhance their sessions by stacking treatments. For example, combining Myers' Cocktail with NAD+ or CBD with amino acid boosters. Our clinical team can recommend safe and effective combinations based on your goals."
+  },
+  {
+    category: 'Treatments',
+    q: "How quickly will I feel the effects?",
+    a: "Most clients feel effects within 15–30 minutes as nutrients enter the bloodstream. Energy, mental clarity, and hydration improvements are typically noticed immediately. Regenerative benefits from Exosomes develop over days to weeks."
+  },
+  {
+    category: 'Treatments',
+    q: "Are there any lifestyle changes I should make with IV therapy?",
+    a: "While IV therapy is powerful alone, results are maximized with adequate sleep, hydration, balanced nutrition, and regular exercise. We provide personalized wellness guidance with every treatment to optimize your protocol."
+  },
+  {
     category: 'Membership',
     q: "How does the membership work?",
     a: "Membership is by application only. Once approved, you lock in presale pricing with a 3-month minimum commitment. Credits roll over month-to-month as long as your membership stays active."
