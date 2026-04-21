@@ -32,6 +32,16 @@ const testimonials = [
     name: "D.K.",
     tag: "CBD IV"
   },
+  {
+    quote: "IV infusions before touring changed everything. More energy, faster recovery between shows, and I can actually enjoy my time off.",
+    name: "L.M.",
+    tag: "ENERGY IV"
+  },
+  {
+    quote: "First time doing IV therapy. The whole experience was seamless—professional, clean, and effective. Booked my next appointment the same day.",
+    name: "R.C.",
+    tag: "BEAUTY IV"
+  },
 ];
 
 function IPhoneMockup({ testimonial, offset = 0 }) {
@@ -103,7 +113,7 @@ function IPhoneMockup({ testimonial, offset = 0 }) {
   );
 }
 
-const offsets = [-6, 0, 5, -4, 2, -3];
+const offsets = [-6, 0, 5, -4, 2, -3, 4, -5];
 
 export default function Testimonials() {
   const scrollRef = useRef(null);
@@ -120,11 +130,11 @@ export default function Testimonials() {
         <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mt-3">From our clients</p>
       </motion.div>
 
-      {/* Scrollable iPhone row */}
+      {/* Scrollable iPhone row - shows 3 at a time */}
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-6 px-8 items-end"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
       >
         {testimonials.map((t, i) => (
           <motion.div
@@ -132,11 +142,16 @@ export default function Testimonials() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.1, duration: 0.7 }}
+            transition={{ delay: (i % 3) * 0.1, duration: 0.7 }}
           >
             <IPhoneMockup testimonial={t} offset={offsets[i]} />
           </motion.div>
         ))}
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="text-center mt-4">
+        <p className="font-body text-xs text-muted-foreground/50">← Scroll to see more →</p>
       </div>
 
       <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
