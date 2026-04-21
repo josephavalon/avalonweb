@@ -65,10 +65,10 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.3 }}
-          className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
+          className="flex items-center justify-start w-full max-w-2xl mx-auto px-4"
         >
-          <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden w-full sm:w-auto">
-            <span className="font-body text-xs tracking-widest text-foreground uppercase px-8 py-4 flex-1 sm:flex-none text-center sm:text-left">
+          <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden">
+            <span className="font-body text-xs tracking-widest text-foreground uppercase px-8 py-4">
               A new standard in recovery
             </span>
             <Link
