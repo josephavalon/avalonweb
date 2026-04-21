@@ -73,81 +73,83 @@ export default function IntroSection() {
           </motion.p>
 
           {/* First 6 cards in grid */}
-          <div className="grid grid-cols-2 gap-3 md:gap-4 px-4 md:px-0 mb-6">
-            {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
-            <div
-              key={label}
-              className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
-                live
-                  ? 'border-foreground/25 bg-card text-foreground'
-                  : 'border-border bg-card/40 text-muted-foreground/40'
-              }`}
-            >
-              <Icon
-                className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
-                strokeWidth={1.5}
-              />
-              <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
-                {label}
-              </span>
-              {location && (
-                <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
-              )}
-              {live && !isLocation && (
-                <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
-              )}
-              {!live && (
-                <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
-              )}
-              </div>
-              ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 px-4 md:px-0 mb-6 max-w-2xl mx-auto">
+           {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
+           <div
+             key={label}
+             className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+               live
+                 ? 'border-foreground/25 bg-card text-foreground'
+                 : 'border-border bg-card/40 text-muted-foreground/40'
+             }`}
+           >
+             <Icon
+               className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+               strokeWidth={1.5}
+             />
+             <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+               {label}
+             </span>
+             {location && (
+               <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+             )}
+             {live && !isLocation && (
+               <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
+             )}
+             {!live && (
+               <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
+             )}
+             </div>
+             ))}
           </div>
 
           {/* Scrollable section for remaining items */}
-          <div className="overflow-x-auto relative group">
-            <button
-              onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-5 h-5 text-foreground" />
-            </button>
-            <div ref={scrollRef} className="flex gap-3 md:gap-4 px-16 md:px-0 justify-start w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}>
-              {verticals.slice(6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
-              <div
-                key={label}
-                className={`flex-shrink-0 w-[calc(50vw-2rem)] md:w-auto relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
-                  live
-                    ? 'border-foreground/25 bg-card text-foreground'
-                    : 'border-border bg-card/40 text-muted-foreground/40'
-                }`}
-              >
-                <Icon
-                  className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
-                  strokeWidth={1.5}
-                />
-                <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
-                  {label}
-                </span>
-                {location && (
-                  <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
-                )}
-                {live && !isLocation && (
-                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
-                )}
-                {!live && (
-                  <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
-                )}
-                </div>
-                ))}
-            </div>
-            <button
-              onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5 text-foreground" />
-            </button>
+          <div className="relative group">
+           <button
+             onClick={() => scroll('left')}
+             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+             aria-label="Scroll left"
+           >
+             <ChevronLeft className="w-5 h-5 text-foreground" />
+           </button>
+           <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+             <div ref={scrollRef} className="flex gap-3 md:gap-4 px-4 md:px-0 w-max md:w-full" style={{ scrollBehavior: 'smooth' }}>
+               {verticals.slice(6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
+               <div
+                 key={label}
+                 className={`flex-shrink-0 w-[calc(50vw-2rem)] md:w-64 relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                   live
+                     ? 'border-foreground/25 bg-card text-foreground'
+                     : 'border-border bg-card/40 text-muted-foreground/40'
+                 }`}
+               >
+                 <Icon
+                   className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                   strokeWidth={1.5}
+                 />
+                 <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                   {label}
+                 </span>
+                 {location && (
+                   <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+                 )}
+                 {live && !isLocation && (
+                   <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
+                 )}
+                 {!live && (
+                   <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
+                 )}
+                 </div>
+                 ))}
+             </div>
+           </div>
+           <button
+             onClick={() => scroll('right')}
+             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+             aria-label="Scroll right"
+           >
+             <ChevronRight className="w-5 h-5 text-foreground" />
+           </button>
           </div>
 
           <p className="mt-6 font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
