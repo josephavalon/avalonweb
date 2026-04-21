@@ -265,7 +265,7 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col max-h-screen md:max-h-none overflow-y-auto ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-[90vw] sm:w-[340px] md:w-auto relative border rounded-3xl p-6 flex flex-col ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
@@ -308,18 +308,18 @@ function IVTierCard({ tier, i, billing }) {
       )}
       {!hasMore && <div className="mb-4" />}
       <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
-        className={`block text-center py-3 font-body text-[12px] tracking-widest uppercase font-semibold rounded transition-colors ${
+        className={`block text-center py-3 font-body text-[12px] tracking-widest uppercase font-semibold rounded transition-colors md:mt-auto ${
           tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
         }`}
       >
         Apply for Membership
       </a>
-      </motion.div>
-      );
-      }
+    </motion.div>
+  );
+}
 
-      // Card for NAD+, CBD, and Exosomes (single frequency)
-      function SimpleTierCard({ tier, i, billing }) {
+// Card for NAD+, CBD, and Exosomes (single frequency)
+function SimpleTierCard({ tier, i, billing }) {
       const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
       const regularYearlyPrice = tier.regularPrice * 12;
       const [expanded, setExpanded] = useState(false);
@@ -332,7 +332,7 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col text-center max-h-screen md:max-h-none overflow-y-auto ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-[90vw] sm:w-[340px] md:w-auto relative border rounded-3xl p-6 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
@@ -379,7 +379,7 @@ function IVTierCard({ tier, i, billing }) {
       {!hasMore && <div className="mb-4" />}
 
       <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
-        className={`block text-center py-3 font-body text-[12px] tracking-widest uppercase font-semibold rounded transition-colors ${
+        className={`block text-center py-3 font-body text-[12px] tracking-widest uppercase font-semibold rounded transition-colors md:mt-auto ${
           tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
         }`}
       >
