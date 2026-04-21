@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 const events = [
   {
     date: 'Coming Soon',
-    title: 'Y Combinator Night',
+    title: 'BUILDER NIGHT',
     location: 'San Francisco, CA',
     desc: 'Mixer for founders and builders. Connect, recover, and optimize with fellow startup leaders. IV therapy and wellness expertise at your service.',
   },
