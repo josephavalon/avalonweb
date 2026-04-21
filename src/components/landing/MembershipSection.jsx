@@ -529,7 +529,7 @@ export default function MembershipSection() {
           <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Presale — Limited Availability</p>
           <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-6">MEMBERSHIP</h2>
           <p className="font-body text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Membership by application only. Available in the San Francisco Bay Area. Lock in presale pricing and secure your spot before we go live.
+            Membership by application only. Available in the San Francisco Bay Area. Lock in presale pricing and secure your spot.
             All plans include a <span className="text-foreground">20% discount</span>, rollover credits, and a 3-month minimum.
           </p>
 
