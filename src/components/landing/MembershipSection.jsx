@@ -19,7 +19,7 @@ const IV_TIERS = [
     ],
   },
   {
-    name: 'Performance',
+    name: 'Advanced',
     tagline: 'Most Popular',
     price: 400, regularPrice: 500,
     featured: true,
