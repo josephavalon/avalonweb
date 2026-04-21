@@ -36,9 +36,9 @@ export default function WhatIsIV() {
                 <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
               </div>
               {/* Floating stat */}
-              <div className="absolute bottom-6 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-4">
-                <p className="font-heading text-4xl text-foreground tracking-wide">100%</p>
-                <p className="font-body text-xs text-accent tracking-widest uppercase mt-0.5">Absorption — Direct to Bloodstream</p>
+              <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-6">
+                <p className="font-heading text-5xl text-foreground tracking-wide">100%</p>
+                <p className="font-body text-[10px] text-accent tracking-widest uppercase mt-3">Absorption — Direct to Bloodstream</p>
               </div>
             </div>
           </motion.div>
