@@ -4,9 +4,9 @@ import { Facebook, Instagram, Mail, Phone, Clock } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border py-16 px-4">
+    <footer className="border-t border-border py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-5 gap-10 mb-12">
+        <div className="grid md:grid-cols-5 gap-8 mb-8">
           <div className="md:col-span-2">
             <div className="mb-3">
               <div className="font-heading text-2xl tracking-widest">AVALON</div>
@@ -68,15 +68,15 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="border-t border-border pt-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
             <p className="font-body text-xs text-muted-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
             <p className="font-body text-[10px] text-muted-foreground/50 max-w-md text-center md:text-right">
               IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
             </p>
           </div>
-          <div className="pt-6 border-t border-border/50">
-            <p className="font-body text-[9px] text-muted-foreground/40 leading-relaxed">
+          <div className="pt-4 border-t border-border/50 mb-4">
+            <p className="font-body text-[9px] text-muted-foreground/40 leading-relaxed text-center md:text-right">
               The services provided have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure or prevent any disease. The material on this website is provided for informational purposes only and is not medical advice. Always consult your physician before beginning any treatment or therapy program. Any designations or references to therapies are for marketing purposes only and do not represent actual products.
             </p>
           </div>
