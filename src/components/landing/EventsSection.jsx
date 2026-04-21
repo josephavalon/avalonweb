@@ -95,7 +95,7 @@ export default function EventsSection() {
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
           <div ref={scrollRef} className="overflow-x-auto w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-4 px-16 md:px-0 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
+            <div className="flex gap-4 px-16 md:px-20 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
               {events.map((event, i) => (
                 <motion.div
                   key={event.title}
