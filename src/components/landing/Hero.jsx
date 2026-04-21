@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Star, Zap, Heart } from 'lucide-react';
 
 const APPLY_URL = '#membership';
 
@@ -88,17 +89,17 @@ export default function Hero() {
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8 px-4"
         >
           <div className="text-center">
-            <p className="text-lg mb-1">⭐</p>
+            <Star className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
             <p className="font-body text-xs text-muted-foreground leading-tight">Trusted by SF Tech<br />& Event Leaders</p>
           </div>
           <div className="hidden sm:block w-px h-8 bg-border/40" />
           <div className="text-center">
-            <p className="text-lg mb-1">⚡</p>
+            <Zap className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
             <p className="font-body text-xs text-muted-foreground leading-tight">30–60+ Min<br />Sessions</p>
           </div>
           <div className="hidden sm:block w-px h-8 bg-border/40" />
           <div className="text-center">
-            <p className="text-lg mb-1">🏥</p>
+            <Heart className="w-6 h-6 text-foreground mx-auto mb-2" fill="currentColor" />
             <p className="font-body text-xs text-muted-foreground leading-tight">Delivered by<br />Registered Nurses</p>
           </div>
         </motion.div>
