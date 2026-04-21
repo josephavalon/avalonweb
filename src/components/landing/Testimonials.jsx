@@ -4,43 +4,43 @@ import { motion } from 'framer-motion';
 const testimonials = [
   {
     quote: "Completely wiped after a red-eye. Nurse showed up in 45 minutes. Within an hour I felt like a different person—hydrated, focused, ready for meetings.",
-    name: "A.R.",
+    name: "J.G.",
     tag: "HYDRATION IV"
   },
   {
     quote: "Used to lose entire Saturdays recovering. Now I book a morning session and I'm back to 100% by lunch. Life-changing for weekends.",
-    name: "M.T.",
+    name: "J.L.",
     tag: "HANGOVER IV"
   },
   {
     quote: "The NAD+ IV is next level. Mental clarity after a 1000mg session lasts for days. I do one before any big pitch. Part of my founder toolkit.",
-    name: "J.L.",
+    name: "R.D.",
     tag: "NAD+ 1000MG"
   },
   {
     quote: "Competitive athlete here. Recovery is everything. Since adding biweekly IVs my recovery time cut in half. Hitting PRs I haven't seen in years.",
-    name: "K.D.",
+    name: "A.G.",
     tag: "ATHLETIC RECOVERY"
   },
   {
     quote: "Booked Avalon for our team during BottleRock. They set up a recovery lounge backstage. Whole crew back on their feet same day.",
-    name: "S.P.",
+    name: "G.B.",
     tag: "EVENT RECOVERY"
   },
   {
     quote: "CBD IV—never tried it before. Zero THC, pure calm. Slept better than in months. Already scheduled my next session.",
-    name: "D.K.",
+    name: "C.A.",
     tag: "CBD IV"
   },
   {
-    quote: "IV infusions before touring changed everything. More energy, faster recovery between shows, and I can actually enjoy my time off.",
-    name: "L.M.",
+    quote: "That was awesome.",
+    name: "Diplo",
     tag: "ENERGY IV"
   },
   {
-    quote: "First time doing IV therapy. The whole experience was seamless—professional, clean, and effective. Booked my next appointment the same day.",
-    name: "R.C.",
-    tag: "BEAUTY IV"
+    quote: "That IV did digits.",
+    name: "Larry June",
+    tag: "RECOVERY IV"
   },
 ];
 
