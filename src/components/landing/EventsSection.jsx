@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 const events = [
   {
     date: 'Coming Soon',
-    title: 'Recovery Night',
+    title: 'Y Combinator Night',
     location: 'San Francisco, CA',
-    desc: 'An intimate evening of IV therapy, wellness education, and community. Limited spots.',
+    desc: 'Mixer for founders and builders. Connect, recover, and optimize with fellow startup leaders. IV therapy and wellness expertise at your service.',
   },
   {
     date: 'Coming Soon',
