@@ -61,7 +61,7 @@ const IV_TIERS = [
     ],
   },
   {
-    name: 'Signature',
+    name: 'Max',
     category: 'VITAMINS',
     tagline: 'Maximum Protocol', noWrap: true,
     price: 800, regularPrice: 1000,
@@ -452,7 +452,7 @@ const FLUID_TIERS = [
     ],
   },
   {
-    name: 'Signature',
+    name: 'Max',
     category: 'FLUID',
     tagline: 'Maximum Protocol', noWrap: true,
     price: 480, regularPrice: 600,
