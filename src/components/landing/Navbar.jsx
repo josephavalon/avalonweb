@@ -24,7 +24,7 @@ export default function Navbar() {
     <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
 
       {/* Desktop */}
-      <div className="hidden lg:flex items-center justify-between max-w-7xl mx-auto px-8 h-14">
+      <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-8 h-14">
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
@@ -46,7 +46,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile */}
-      <div className="lg:hidden flex items-center justify-between max-w-7xl mx-auto px-5 h-14">
+      <div className="md:hidden flex items-center justify-between max-w-7xl mx-auto px-5 h-14">
         <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AVALON VITALITY</Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -60,7 +60,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background border-t border-border overflow-hidden"
+            className="md:hidden bg-background border-t border-border overflow-hidden"
           >
             <div className="px-6 py-6 space-y-5">
               <a href="#membership" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">Membership</a>
