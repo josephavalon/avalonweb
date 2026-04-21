@@ -21,9 +21,18 @@ export default function DarkFAQSection({ title, faqs, ctaButton }) {
                 onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
                 className="w-full flex items-center justify-between group"
               >
-                <h3 className="font-body text-lg md:text-xl text-foreground tracking-widest uppercase text-left font-semibold">
+                {expandedIndex === index && (
+                  <motion.div
+                    layoutId={`indicator-${index}`}
+                    className="w-12 h-8 bg-[#9b7b70] rounded-full shrink-0 mr-6"
+                  />
+                )}
+                <motion.h3
+                  layout
+                  className="font-body text-lg md:text-xl text-foreground tracking-widest uppercase text-left font-semibold flex-1"
+                >
                   {faq.question}
-                </h3>
+                </motion.h3>
                 <div className="shrink-0 text-foreground ml-4">
                   {expandedIndex === index ? (
                     <Minus className="w-7 h-7" />
