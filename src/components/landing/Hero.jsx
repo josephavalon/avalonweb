@@ -42,7 +42,7 @@ export default function Hero() {
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="font-heading text-8xl md:text-[12rem] lg:text-[15rem] leading-none tracking-wide text-foreground uppercase"
         >
-          AVALON
+          AV
         </motion.h1>
 
         <motion.div
