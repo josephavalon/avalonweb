@@ -18,9 +18,9 @@ export default function WhatIsIV() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="relative"
+          className="relative flex items-center justify-center"
         >
-          <div className="aspect-[3/4] rounded overflow-hidden">
+          <div className="aspect-[3/4] rounded overflow-hidden w-full max-w-xs">
             <img
               src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/11af8bb23_ivtherapy.png"
               alt="IV bag"
