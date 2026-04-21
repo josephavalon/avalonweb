@@ -95,7 +95,7 @@ const NAD_TIERS = [
     perks: ['1 × 500mg NAD+ IV per month', '1 IM injection per month', '20% off all à la carte NAD+', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'NAD+ Advanced Plus',
+    name: 'NAD+ Pro',
     dose: '750mg',
     featured: false,
     price: 580, regularPrice: 725,
@@ -126,7 +126,7 @@ const CBD_TIERS = [
     perks: ['1 × 66mg CBD IV per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'CBD Advanced Plus',
+    name: 'CBD Pro',
     dose: '99mg',
     featured: false,
     price: 200, regularPrice: 250,
@@ -150,7 +150,7 @@ const EXOSOME_TIERS = [
     perks: ['1 × 30B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'Exosome Advanced',
+    name: 'Exosome Pro',
     dose: '50B',
     featured: true,
     price: 960, regularPrice: 1200,
