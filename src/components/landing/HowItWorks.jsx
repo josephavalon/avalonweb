@@ -63,7 +63,7 @@ export default function HowItWorks() {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full px-16 md:px-0 snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}

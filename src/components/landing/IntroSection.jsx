@@ -65,7 +65,7 @@ export default function IntroSection() {
             >
               <ChevronRight className="w-5 h-5 text-foreground" />
             </button>
-            <div ref={scrollRef} className="flex gap-3 h-full items-center" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div ref={scrollRef} className="flex gap-3 h-full items-center px-16 md:px-0" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <div
                 key={label}
