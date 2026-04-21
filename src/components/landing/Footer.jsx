@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Facebook, Instagram } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -46,11 +47,26 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-body text-xs text-muted-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
-          <p className="font-body text-[10px] text-muted-foreground/50 max-w-md text-center md:text-right">
-            IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
-          </p>
+        <div className="border-t border-border pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <p className="font-body text-xs text-muted-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
+            <p className="font-body text-[10px] text-muted-foreground/50 max-w-md text-center md:text-right">
+              IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
+            </p>
+          </div>
+          <div className="flex items-center justify-center md:justify-end gap-6">
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.514l-5.106-6.694-5.934 6.694H2.88l7.644-8.769-8.169-10.731h6.332l4.432 5.89 5.064-5.89zM16.736 20.033h1.832L6.363 4.125H4.447l12.289 15.908z"/>
+              </svg>
+            </a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
+              <Facebook className="w-6 h-6" fill="currentColor" />
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
+              <Instagram className="w-6 h-6" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
