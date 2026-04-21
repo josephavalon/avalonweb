@@ -590,7 +590,7 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="mt-0 text-center"
+          className="mt-8 pt-6 text-center"
         >
           <p className="font-body text-[9px] text-muted-foreground/50 tracking-wider max-w-lg mx-auto leading-relaxed">
             3-month minimum commitment. Credits roll over month-to-month as long as your membership remains active.
