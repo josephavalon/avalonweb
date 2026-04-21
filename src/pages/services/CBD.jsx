@@ -17,7 +17,7 @@ export default function CBD() {
       badge="100% Zero THC — Pharmaceutical Grade"
       description="Our CBD IVs deliver pharmaceutical-grade cannabidiol directly to the bloodstream — zero THC, maximum bioavailability. Anti-inflammatory, stress-relieving, and profoundly calming. From 33mg to 132mg."
       treatments={treatments}
-      heroImage="https://media.base44.com/images/public/69e5682f98e509792c71ef21/0df25bfe0_Gemini_Generated_Image_59fz4c59fz4c59fz.png"
+      heroImage="https://images.unsplash.com/photo-1585707032515-6f3241ce038f?w=1200&q=85"
     />
   );
 }
