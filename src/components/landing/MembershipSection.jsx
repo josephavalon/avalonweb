@@ -110,7 +110,7 @@ const CBD_TIERS = [
     name: 'CBD Vital',
     dose: '132mg',
     featured: false,
-    price: 520, regularPrice: 650,
+    price: 320, regularPrice: 400,
     perks: ['1 × 132mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'],
   },
 ];
