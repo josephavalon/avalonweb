@@ -224,10 +224,10 @@ export default function Apply() {
           
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              { name: 'ESSENTIAL', price: '$200/mo', perks: '1 IV per month' },
-              { name: 'PERFORMANCE', price: '$400/mo', perks: '2 IVs per month' },
-              { name: 'ELITE', price: '$600/mo', perks: '3 IVs per month' },
-              { name: 'VITAL', price: '$800/mo', perks: '4 IVs per month' },
+              { name: 'ESSENTIAL', monthly: '$250', annual: '$2,400', savings: 'save 20% annually', perks: '1 IV Vitamin per month' },
+              { name: 'PERFORMANCE', monthly: '$550', annual: '$5,280', savings: 'save 20% annually', perks: '1 IV Vitamin + NAD+ per month' },
+              { name: 'ELITE', monthly: '$800', annual: '$7,680', savings: 'save 20% annually', perks: '1 IV Vitamin + NAD+ + CBD per month' },
+              { name: 'VITAL', monthly: '$1,200', annual: '$11,520', savings: 'save 20% annually', perks: '1 Exosome IV + all services per month' },
             ].map((tier, i) => (
               <motion.div
                 key={tier.name}
@@ -237,9 +237,17 @@ export default function Apply() {
                 transition={{ delay: i * 0.1 }}
                 className="border border-border rounded p-8 bg-card"
               >
-                <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
-                <p className="font-body text-lg font-semibold text-foreground mb-4">{tier.price}</p>
-                <p className="font-body text-sm text-muted-foreground">{tier.perks}</p>
+                <h3 className="font-heading text-3xl text-foreground tracking-wide mb-4">{tier.name}</h3>
+                <div className="mb-4">
+                  <p className="font-body text-sm text-muted-foreground mb-1">Monthly</p>
+                  <p className="font-body text-2xl font-semibold text-foreground">{tier.monthly}</p>
+                </div>
+                <div className="mb-4">
+                  <p className="font-body text-sm text-muted-foreground mb-1">Annual</p>
+                  <p className="font-body text-2xl font-semibold text-foreground">{tier.annual}</p>
+                  <p className="font-body text-xs text-accent mt-1">{tier.savings}</p>
+                </div>
+                <p className="font-body text-sm text-muted-foreground pt-4 border-t border-border/40">{tier.perks}</p>
               </motion.div>
             ))}
           </div>
