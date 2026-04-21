@@ -141,7 +141,7 @@ const EXOSOME_TIERS = [
 
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.7) : tier.price;
+  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.8) : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
   return (
     <motion.div
@@ -163,7 +163,7 @@ function IVTierCard({ tier, i, billing }) {
         </div>
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
-          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 30% annually' : '20% member discount'}</span>
+          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
         </p>
       </div>
       <ul className="space-y-3 mb-10 flex-1">
@@ -187,7 +187,7 @@ function IVTierCard({ tier, i, billing }) {
 
 // Card for NAD+, CBD, and Exosomes (single frequency)
 function SimpleTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.7) : tier.price;
+  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 12 * 0.8) : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
 
   return (
@@ -212,7 +212,7 @@ function SimpleTierCard({ tier, i, billing }) {
         </div>
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
-          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 30% annually' : '20% member discount'}</span>
+          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
         </p>
       </div>
 
@@ -286,7 +286,7 @@ export default function MembershipSection() {
               onClick={() => setBilling('yearly')}
               className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'yearly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Yearly — Save 30%
+              Yearly — Save 20%
             </button>
           </div>
         </div>
