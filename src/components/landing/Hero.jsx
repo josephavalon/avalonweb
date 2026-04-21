@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Droplets } from 'lucide-react';
 
 const APPLY_URL = '#membership';
 
@@ -23,6 +24,11 @@ export default function Hero() {
       </motion.div>
 
       <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        {/* Water drop icon in corner */}
+        <div className="absolute top-8 left-8 text-foreground">
+          <Droplets className="w-8 h-8" strokeWidth={1.5} />
+        </div>
+
         {/* Eyebrow */}
         <motion.p
           initial={{ opacity: 0, letterSpacing: '0.1em' }}
