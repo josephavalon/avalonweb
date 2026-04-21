@@ -50,7 +50,7 @@ const IV_TIERS = [
   },
   {
     name: 'Vital',
-    tagline: 'Maximum Protocol',
+    tagline: 'Maximum Protocol', noWrap: true,
     price: 800, regularPrice: 1000,
     perks: [
       '4 IV drips per month',
@@ -138,7 +138,7 @@ function IVTierCard({ tier, i }) {
       className={`relative border rounded p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
-      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
+      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline}
       </p>
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
