@@ -22,8 +22,8 @@ export default function WhatIsIV() {
         >
           <div className="aspect-[3/4] rounded overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=900&q=85"
-              alt="IV drip"
+              src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/eac99e95b_ivtherapy.png"
+              alt="IV bag"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
