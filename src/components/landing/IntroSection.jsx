@@ -83,7 +83,7 @@ export default function IntroSection() {
            </button>
            <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}>
              <div ref={scrollRef} className="flex px-4 md:px-0" style={{ scrollBehavior: 'smooth', width: 'fit-content' }}>
-               <div className="grid gap-3 md:gap-4" style={{ gridAutoRows: 'minmax(140px, 1fr)', gridTemplateColumns: 'repeat(6, minmax(160px, 1fr))', width: 'fit-content', scrollSnapAlign: 'start' }}>
+               <div className="grid gap-3 md:gap-4" style={{ gridAutoRows: 'minmax(140px, 1fr)', gridTemplateColumns: 'repeat(3, minmax(160px, 1fr))', width: 'fit-content', scrollSnapAlign: 'start' }}>
                  {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
                  <div
                    key={label}
