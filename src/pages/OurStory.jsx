@@ -138,15 +138,7 @@ export default function OurStory() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-6">THIS IS AVALON VITALITY</h2>
-          <a
-            href={BOOK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-10 py-4 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
-          >
-            Start Your Recovery
-          </a>
+          <h2 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide">THIS IS AVALON VITALITY</h2>
         </motion.div>
       </section>
 
