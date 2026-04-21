@@ -78,9 +78,54 @@ const faqs = [
     q: "What areas do you serve?",
     a: "We currently serve the entire San Francisco Bay Area, including SF, the Peninsula, East Bay, and Marin. Service area is expanding — join the waitlist for your city."
   },
+  {
+    category: 'Safety',
+    q: "Is IV therapy safe for everyone?",
+    a: "IV therapy is safe for most people, but not suitable for those with certain medical conditions like heart failure, kidney disease, or severe allergies. Always disclose your full medical history during consultation."
+  },
+  {
+    category: 'Safety',
+    q: "What are the possible side effects?",
+    a: "Side effects are rare and mild — minor bruising at the injection site, slight lightheadedness, or temporary headache. Serious complications are extremely uncommon with our licensed nurses and protocols."
+  },
+  {
+    category: 'Safety',
+    q: "Are the ingredients FDA-approved and sterile?",
+    a: "Yes. All our ingredients are pharmaceutical-grade and meet strict FDA standards. We use sterile, single-use equipment and maintain rigorous infection control protocols for every session."
+  },
+  {
+    category: 'Pricing',
+    q: "What's the cost of a single IV session?",
+    a: "Single IV sessions range from $150–$400 depending on the treatment. Members receive 20% off all services, making regular therapy more affordable."
+  },
+  {
+    category: 'Pricing',
+    q: "Are there payment plans available?",
+    a: "We accept all major credit cards and offer membership plans with monthly installments. For large orders or corporate packages, contact us for custom payment arrangements."
+  },
+  {
+    category: 'Pricing',
+    q: "Do you offer group or corporate discounts?",
+    a: "Yes. Corporate wellness programs, team events, and group bookings receive special rates. Contact us at partnerships@avalonvitality.com for details."
+  },
+  {
+    category: 'Insurance',
+    q: "Does insurance cover IV therapy?",
+    a: "Most standard insurance plans do not cover elective IV wellness therapy. However, specific medical-necessity treatments may qualify — consult your provider and we can help with documentation."
+  },
+  {
+    category: 'Insurance',
+    q: "Can I use FSA or HSA funds?",
+    a: "Yes, most FSA and HSA accounts can be used for IV therapy treatments classified as wellness or medical services. Check with your account administrator for specifics."
+  },
+  {
+    category: 'Insurance',
+    q: "Do you provide receipts for tax or insurance purposes?",
+    a: "Absolutely. We provide itemized receipts detailing treatment type, date, and cost. This documentation is available for insurance claims or tax deductions if applicable."
+  },
 ];
 
-const CATEGORIES = ['All', 'General', 'Treatments', 'Membership', 'Booking'];
+const CATEGORIES = ['All', 'General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance'];
 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
