@@ -30,7 +30,7 @@ export default function Exosomes() {
       badge="Frontier Cellular Regeneration"
       description="Exosomes are extracellular vesicles that carry biological signals between cells, activating repair and regeneration. Our Exosome IVs — ranging from 30B to 90B particles — represent the most advanced cellular recovery therapy available in mobile format."
       treatments={treatments}
-      heroImage="https://images.unsplash.com/photo-1576091160550-112173f7f869?w=1920&q=80"
+      heroImage="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
     />
   );
 }
