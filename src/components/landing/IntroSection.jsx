@@ -49,27 +49,13 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </p>
 
-          {/* Scrollable grid */}
-          <div className="overflow-x-auto relative group">
-            <button
-              onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-5 h-5 text-foreground" />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5 text-foreground" />
-            </button>
-            <div ref={scrollRef} className="flex gap-3 px-16 md:px-4 w-fit md:w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+          {/* Grid with scroll buttons */}
+          <div className="relative group">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 px-4 md:px-0">
+              {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <div
                 key={label}
-                className={`flex-shrink-0 w-[calc(50vw-3rem)] md:w-56 relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
                     : 'border-border bg-card/40 text-muted-foreground/40'
@@ -94,6 +80,13 @@ export default function IntroSection() {
                 </div>
                 ))}
             </div>
+            <button
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-foreground" />
+            </button>
           </div>
 
           <p className="mt-6 font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
