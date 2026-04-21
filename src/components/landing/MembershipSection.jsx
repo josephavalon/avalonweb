@@ -311,9 +311,7 @@ export default function MembershipSection() {
             Membership by application only. Lock in presale pricing and secure your spot before we go live.
             All plans include a <span className="text-foreground">20% discount</span>, rollover credits, and a 3-month minimum.
           </p>
-          <p className="font-body text-xs text-accent mt-4">
-            <span className="font-semibold">Founding Members Get 20% Off for Life</span> — Your presale rate is locked in forever.
-          </p>
+
         </motion.div>
 
         {/* Billing toggle */}
