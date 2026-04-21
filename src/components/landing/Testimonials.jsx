@@ -4,9 +4,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const testimonials = [
   {
-    quote: "Completely wiped after a red-eye. Nurse showed up in 45 minutes. Within an hour I felt like a different person—hydrated, focused, ready for meetings.",
+    quote: "I'm a founder who codes 20hrs a day now. Avalon's NAD+ offerings make it happen.",
     name: "J.G.",
-    tag: "HYDRATION IV"
+    tag: "NAD+ IV"
   },
   {
     quote: "That was awesome.",
@@ -131,7 +131,7 @@ export default function Testimonials() {
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="text-center mb-8"
+        className="text-left mb-8"
       >
         <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">REAL RESULTS</h2>
         <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mt-3">From our clients</p>
