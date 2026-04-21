@@ -171,6 +171,7 @@ const VITAL_ICE_SF_TIERS = [
     tagline: 'Fire & Ice Partner',
     locationNote: 'Studio Only - Marina District SF',
     community: true,
+    visiblePerks: 4,
     price: 300, regularPrice: 375,
     perks: [
       '1 IV drip per month',
@@ -188,6 +189,7 @@ const VITAL_ICE_SF_TIERS = [
     tagline: 'Fire & Ice Partner',
     locationNote: 'Studio Only - Marina District SF',
     community: false,
+    visiblePerks: 4,
     price: 360, regularPrice: 450,
     perks: [
       '1 IV drip per month',
@@ -205,6 +207,7 @@ const VITAL_ICE_SF_TIERS = [
     tagline: 'Most Popular',
     locationNote: 'Studio Only - Marina District SF',
     community: true,
+    visiblePerks: 4,
     price: 480, regularPrice: 600,
     featured: true,
     perks: [
@@ -224,6 +227,7 @@ const VITAL_ICE_SF_TIERS = [
     tagline: 'Most Popular',
     locationNote: 'Studio Only - Marina District SF',
     community: false,
+    visiblePerks: 4,
     price: 576, regularPrice: 720,
     featured: true,
     perks: [
@@ -245,7 +249,7 @@ function IVTierCard({ tier, i, billing }) {
   const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
   const [expanded, setExpanded] = useState(false);
-  const visiblePerks = 3;
+  const visiblePerks = tier.visiblePerks || 3;
   const hasMore = tier.perks.length > visiblePerks;
   
   return (
