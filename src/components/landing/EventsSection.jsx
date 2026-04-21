@@ -20,6 +20,18 @@ const events = [
     location: 'Near Finish Line, San Francisco',
     desc: 'Exclusive IVs heavily discounted for race participants. Recovery and hydration right at the finish line.',
   },
+  {
+    date: 'Coming Soon',
+    title: 'Vital Ice SF Influencer Night',
+    location: 'Marina District, San Francisco',
+    desc: 'Exclusive event for creators and influencers. Experience cold plunge, sauna, and IV therapy in our studio.',
+  },
+  {
+    date: 'June',
+    title: 'PRIDE Parade',
+    location: 'San Francisco, CA',
+    desc: 'Wellness recovery station at Pride. IV hydration and recovery support for all participants.',
+  },
 ];
 
 export default function EventsSection() {
@@ -36,7 +48,7 @@ export default function EventsSection() {
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="flex gap-4 overflow-x-auto pb-2">
           {events.map((event, i) => (
             <motion.div
               key={event.title}
@@ -44,7 +56,7 @@ export default function EventsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="border border-border rounded-3xl bg-card p-6 flex flex-col gap-4"
+              className="flex-shrink-0 w-full md:w-[calc(33.333%-1rem)] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4"
             >
               <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
               <div>
