@@ -27,10 +27,18 @@ const US_STATES = [
   'Wisconsin','Wyoming',
 ];
 
+const MEMBERSHIP_TYPES = [
+  { id: 'essential', name: 'Essential', price: '$200/mo', description: 'Entry-level wellness' },
+  { id: 'performance', name: 'Performance', price: '$400/mo', description: 'Optimized recovery' },
+  { id: 'elite', name: 'Elite', price: '$600/mo', description: 'Premium access' },
+  { id: 'vital', name: 'Vital', price: '$800/mo', description: 'Concierge service' },
+];
+
 export default function Apply() {
   const [showPassword, setShowPassword] = useState(false);
   const [goalsOpen, setGoalsOpen] = useState(false);
   const [selectedGoals, setSelectedGoals] = useState([]);
+  const [selectedMembership, setSelectedMembership] = useState(null);
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', password: '', state: '', notes: '',
   });
@@ -183,13 +191,19 @@ export default function Apply() {
             <div className="pt-2">
               <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-3 px-1">Select a membership tier</p>
               <div className="grid grid-cols-2 gap-2">
-                {['Essential — $200/mo', 'Performance — $400/mo', 'Elite — $600/mo', 'Vital — $800/mo'].map(tier => (
+                {MEMBERSHIP_TYPES.map(tier => (
                   <button
-                    key={tier}
+                    key={tier.id}
                     type="button"
-                    className="border border-white/15 rounded-full px-4 py-3 font-body text-xs text-muted-foreground hover:border-white/40 hover:text-foreground transition-colors text-left"
+                    onClick={() => setSelectedMembership(tier.id)}
+                    className={`border rounded-2xl px-4 py-3 font-body text-xs transition-all ${
+                      selectedMembership === tier.id
+                        ? 'border-white/40 bg-white/10 text-foreground'
+                        : 'border-white/15 text-muted-foreground hover:border-white/40 hover:text-foreground'
+                    }`}
                   >
-                    {tier}
+                    <div className="font-semibold">{tier.name}</div>
+                    <div className="text-[9px] text-muted-foreground/70">{tier.price}</div>
                   </button>
                 ))}
               </div>

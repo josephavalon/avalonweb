@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Star, Zap, Heart } from 'lucide-react';
-
-const APPLY_URL = '#membership';
 
 export default function Hero() {
   const ref = useRef(null);
@@ -72,12 +71,12 @@ export default function Hero() {
             <span className="font-body text-xs tracking-widest text-muted-foreground uppercase px-8 py-4 flex-1 sm:flex-none text-center sm:text-left">
               A new standard in recovery
             </span>
-            <a
-              href={APPLY_URL}
+            <Link
+              to="/apply"
               className="px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
             >
               Apply Now
-            </a>
+            </Link>
           </div>
         </motion.div>
 
