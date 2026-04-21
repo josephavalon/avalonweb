@@ -11,7 +11,7 @@ const useCases = [
 
 export default function B2BSection() {
   return (
-    <section id="b2b" className="py-20 md:py-28 px-4 border-t border-border bg-secondary/30">
+    <section id="b2b" className="py-8 md:py-10 px-4 border-t border-border bg-secondary/30">
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-2 gap-16 items-start">
 

@@ -22,13 +22,13 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-10 md:py-14 px-4 bg-secondary/40">
+    <section className="py-8 md:py-10 px-4 border-t border-border bg-secondary/40">
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-8"
         >
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">HOW IT WORKS</h2>
         </motion.div>

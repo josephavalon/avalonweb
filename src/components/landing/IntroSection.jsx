@@ -23,7 +23,7 @@ const verticals = [
 
 export default function IntroSection() {
   return (
-    <section className="pt-10 md:pt-14 pb-6 md:pb-8 px-4">
+    <section className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-4xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

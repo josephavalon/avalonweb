@@ -24,13 +24,13 @@ const events = [
 
 export default function EventsSection() {
   return (
-    <section id="events" className="py-20 md:py-28 px-4 border-t border-border">
+    <section id="events" className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-14"
+          className="mb-8"
         >
           <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">In the Field</p>
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>

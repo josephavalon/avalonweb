@@ -7,7 +7,7 @@ const GIFT_TYPEFORM_URL = 'https://placeholder-typeform-gift.com'; // replace wi
 
 export default function GiftCertificates() {
   return (
-    <section id="gift" className="py-24 md:py-32 px-4 border-t border-border">
+    <section id="gift" className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
