@@ -76,7 +76,7 @@ export default function IntroSection() {
           <div className="relative group">
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors md:hidden"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-5 h-5 text-foreground" />
@@ -114,7 +114,7 @@ export default function IntroSection() {
             </div>
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors md:hidden"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-5 h-5 text-foreground" />
