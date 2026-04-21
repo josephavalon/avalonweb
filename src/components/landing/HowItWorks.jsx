@@ -32,7 +32,7 @@ export default function HowItWorks() {
         >
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">HOW IT WORKS</h2>
           <p className="font-body text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Order now for immediate service, or <a href="#membership" className="text-accent hover:text-accent/80 underline">apply for membership</a> to save time, money, and get first access to new protocols.
+            <a href="#membership" className="text-accent hover:text-accent/80 underline">Apply for membership</a> now to secure your spot. On-demand service launching soon.
           </p>
         </motion.div>
 
