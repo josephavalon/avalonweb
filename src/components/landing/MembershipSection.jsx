@@ -10,7 +10,7 @@ const IV_TIERS = [
     tagline: 'The Foundation',
     price: 200, regularPrice: 250,
     perks: [
-      '1 IV drip per month',
+      '1 vitamin IV per month',
       '1 IM injection per month',
       '20% off all à la carte treatments',
       'Credits roll over (membership must be active)',
@@ -27,7 +27,7 @@ const IV_TIERS = [
     price: 400, regularPrice: 500,
     featured: true,
     perks: [
-      '2 IV drips per month',
+      '2 vitamin IVs per month',
       '2 IM injections per month',
       '20% off all à la carte treatments',
       'Credits roll over (membership must be active)',
@@ -44,7 +44,7 @@ const IV_TIERS = [
     tagline: 'Full Protocol',
     price: 600, regularPrice: 750,
     perks: [
-      '3 IV drips per month',
+      '3 vitamin IVs per month',
       '3 IM injections per month',
       '20% off all à la carte treatments',
       'Credits roll over (membership must be active)',
@@ -62,7 +62,7 @@ const IV_TIERS = [
     tagline: 'Maximum Protocol', noWrap: true,
     price: 800, regularPrice: 1000,
     perks: [
-      '4 IV drips per month',
+      '4 vitamin IVs per month',
       '4 IM injections per month',
       '20% off all à la carte treatments',
       'Credits roll over (membership must be active)',
