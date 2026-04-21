@@ -9,6 +9,7 @@ import CookieConsent from '@/components/CookieConsent';
 import ChatWidget from '@/components/ChatWidget';
 import Home from './pages/Home';
 import OurStory from './pages/OurStory';
+import DehydrationIV from './pages/products/DehydrationIV';
 import IVVitamins from './pages/services/IVVitamins';
 import NAD from './pages/services/NAD';
 import CBD from './pages/services/CBD';
@@ -45,6 +46,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/our-story" element={<OurStory />} />
+      <Route path="/products/dehydration-iv" element={<DehydrationIV />} />
       <Route path="/services/iv-vitamins" element={<IVVitamins />} />
       <Route path="/services/nad" element={<NAD />} />
       <Route path="/services/cbd" element={<CBD />} />
