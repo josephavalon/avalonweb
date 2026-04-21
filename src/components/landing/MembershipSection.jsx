@@ -323,17 +323,17 @@ function SimpleTierCard({ tier, i, billing }) {
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
-      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
+      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-4 text-muted-foreground">
         {tier.dose} per session
       </p>
-      <h3 className="font-heading text-3xl text-foreground tracking-wide mb-8">{tier.name}</h3>
+      <h3 className="font-heading text-3xl text-foreground tracking-wide mb-6">{tier.name}</h3>
 
       <div className="mb-8">
-        <div className="flex items-baseline justify-center gap-2 mb-2">
+        <div className="flex items-baseline justify-center gap-2">
           <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
-          <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
+          <span className="font-body text-xs text-muted-foreground">/month</span>
         </div>
-        <p className="font-body text-[10px] text-muted-foreground text-center">
+        <p className="font-body text-[10px] text-muted-foreground text-center mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">20% member discount</span>
         </p>
