@@ -24,13 +24,13 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </motion.div>
 
-      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-screen">
         {/* Eyebrow */}
         <motion.p
           initial={{ opacity: 0, letterSpacing: '0.1em' }}
           animate={{ opacity: 1, letterSpacing: '0.4em' }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="font-body text-[10px] tracking-[0.4em] text-accent uppercase mb-8"
+          className="font-body text-[10px] tracking-[0.4em] text-accent uppercase mb-6"
         >
           Presale — Limited Spots
         </motion.p>
@@ -40,7 +40,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 60, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="font-heading text-8xl md:text-[12rem] lg:text-[15rem] leading-none tracking-wide text-foreground uppercase"
+          className="font-heading text-7xl md:text-9xl lg:text-[11rem] leading-tight tracking-wide text-foreground uppercase mb-4"
         >
           AVALON<br />VITALITY
         </motion.h1>
@@ -49,14 +49,14 @@ export default function Hero() {
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 1, delay: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="h-px bg-foreground/20 my-2 mx-auto max-w-md origin-center"
+          className="h-px bg-foreground/20 my-3 mx-auto max-w-md origin-center"
         />
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1 }}
-          className="font-body text-xs md:text-base text-foreground/90 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-16 px-2 max-w-sm mx-auto whitespace-pre-line"
+          className="font-body text-xs md:text-base text-foreground/90 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-12 px-2 max-w-sm mx-auto whitespace-pre-line"
         >
           Mobile Optimization Therapy{'\n'}Coming Soon to SF
         </motion.p>
@@ -89,12 +89,12 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1.5 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center space-y-1"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center space-y-0.5"
       >
-        <p className="font-body text-[10px] text-muted-foreground tracking-widest">
+        <p className="font-body text-[9px] text-muted-foreground tracking-widest">
           Licensed Nurses • Physician Supervised • HIPAA Secure
         </p>
-        <p className="font-body text-[10px] text-muted-foreground/60 tracking-widest">
+        <p className="font-body text-[9px] text-muted-foreground/60 tracking-widest">
           Presale membership. Secure yours now.
         </p>
       </motion.div>
