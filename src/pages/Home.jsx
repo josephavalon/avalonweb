@@ -7,6 +7,8 @@ import WhatIsIV from '../components/landing/WhatIsIV';
 import OurDrips from '../components/landing/OurDrips';
 import MembershipSection from '../components/landing/MembershipSection';
 import GiftCertificates from '../components/landing/GiftCertificates';
+import EventsSection from '../components/landing/EventsSection';
+import B2BSection from '../components/landing/B2BSection';
 import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
 import Footer from '../components/landing/Footer';
@@ -22,6 +24,8 @@ export default function Home() {
       <OurDrips />
       <MembershipSection />
       <GiftCertificates />
+      <EventsSection />
+      <B2BSection />
       <Testimonials />
       <FAQ />
       <Footer />

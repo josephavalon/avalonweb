@@ -17,7 +17,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Mobile recovery therapy delivered to you. Founded in San Francisco by Dr. Jayson Weir, MD.
+              Precision wellness delivered to you. IV therapy, NAD+, CBD, and cellular recovery — wherever you are in San Francisco.
             </p>
           </div>
 
@@ -42,18 +42,10 @@ export default function Footer() {
             <div className="space-y-2.5">
               <Link to="/our-story" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
               <a href="/#faq" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</a>
-              <a
-                href="#membership"
-                className="block text-xs text-accent hover:text-accent/80 transition-colors font-body uppercase tracking-wider"
-              >
-                Presale Membership
-              </a>
-              <a
-                href="#gift"
-                className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider"
-              >
-                Gift Certificates
-              </a>
+              <a href="#membership" className="block text-xs text-accent hover:text-accent/80 transition-colors font-body uppercase tracking-wider">Presale Membership</a>
+              <a href="#gift" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Gift Certificates</a>
+              <a href="#events" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
+              <a href="#b2b" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Corporate & B2B</a>
             </div>
           </div>
         </div>
