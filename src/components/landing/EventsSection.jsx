@@ -55,10 +55,27 @@ export default function EventsSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
           className="mb-8 text-left"
         >
-          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">In the Field</p>
-          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>
+          <motion.p 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+          >
+            In the Field
+          </motion.p>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="font-heading text-5xl md:text-7xl text-foreground tracking-wide"
+          >
+            EVENTS
+          </motion.h2>
         </motion.div>
 
         <div className="overflow-x-auto md:overflow-visible relative group">

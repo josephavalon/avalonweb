@@ -15,7 +15,7 @@ import Footer from '../components/landing/Footer';
 
 export default function Home() {
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen overflow-x-hidden" style={{ touchAction: 'manipulation' }}>
       <Navbar />
       <Hero />
       <IntroSection />

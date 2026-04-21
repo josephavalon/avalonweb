@@ -517,11 +517,33 @@ export default function MembershipSection() {
           transition={{ duration: 0.9 }}
           className="text-left mb-6"
         >
-          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-3">Presale — Limited Availability</p>
-          <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4">MEMBERSHIP</h2>
-          <p className="font-body text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          <motion.p 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-3"
+          >
+            Presale — Limited Availability
+          </motion.p>
+          <motion.h2 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-4"
+          >
+            MEMBERSHIP
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="font-body text-base text-muted-foreground max-w-xl mx-auto leading-relaxed"
+          >
             Membership by application only. Available in the San Francisco Bay Area. Lock in presale pricing and secure your spot.
-          </p>
+          </motion.p>
 
         </motion.div>
 

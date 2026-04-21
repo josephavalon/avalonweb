@@ -37,9 +37,9 @@ export default function Hero() {
 
         {/* Title */}
         <motion.h1
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 60, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="font-heading text-8xl md:text-[12rem] lg:text-[15rem] leading-none tracking-wide text-foreground uppercase"
         >
           AVALON<br />VITALITY
