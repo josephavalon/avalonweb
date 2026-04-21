@@ -51,14 +51,15 @@ export default function Hero() {
           className="h-px bg-foreground/20 my-3 mx-auto max-w-md origin-center"
         />
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1 }}
-          className="font-body text-xs md:text-base text-foreground/90 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-12 px-2 max-w-sm mx-auto whitespace-pre-line"
+          className="font-body text-xs md:text-base text-foreground/90 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-12 px-2 mx-auto flex flex-col"
         >
-          Mobile Optimization Therapy{'\n'}Coming Soon to SF
-        </motion.p>
+          <div className="whitespace-nowrap">Mobile Optimization Therapy</div>
+          <div className="whitespace-nowrap">Coming Soon to SF</div>
+        </motion.div>
 
         {/* CTA pill */}
         <motion.div
