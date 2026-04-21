@@ -75,14 +75,7 @@ export default function OurDrips() {
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <a
-            href="#membership"
-            className="inline-block px-8 py-4 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
-          >
-            Apply for Presale
-          </a>
-        </div>
+
       </div>
     </section>
   );
