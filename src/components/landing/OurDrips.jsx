@@ -56,7 +56,7 @@ export default function OurDrips() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group relative rounded overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer"
+              className="group relative rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer"
             >
               <div className="aspect-video relative overflow-hidden">
                 <img

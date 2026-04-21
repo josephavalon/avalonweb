@@ -20,7 +20,7 @@ export default function WhatIsIV() {
           transition={{ duration: 0.8 }}
           className="relative flex items-center justify-center"
         >
-          <div className="aspect-[3/4] rounded overflow-hidden w-full max-w-xs">
+          <div className="aspect-[3/4] rounded-3xl overflow-hidden w-full max-w-xs">
             <img
               src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/11af8bb23_ivtherapy.png"
               alt="IV bag"
@@ -29,7 +29,7 @@ export default function WhatIsIV() {
             <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
           </div>
           {/* Floating stat */}
-          <div className="absolute bottom-6 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded p-4">
+          <div className="absolute bottom-6 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-4">
             <p className="font-heading text-4xl text-foreground tracking-wide">100%</p>
             <p className="font-body text-xs text-accent tracking-widest uppercase mt-0.5">Absorption — Direct to Bloodstream</p>
           </div>

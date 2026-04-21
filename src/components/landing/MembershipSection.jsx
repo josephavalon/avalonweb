@@ -165,7 +165,7 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
@@ -225,7 +225,7 @@ function SimpleTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`relative border rounded p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
