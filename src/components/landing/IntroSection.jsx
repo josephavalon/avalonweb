@@ -49,15 +49,15 @@ export default function IntroSection() {
                 <span className="text-[10px] tracking-widest uppercase">→</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-5 gap-3 max-w-3xl mx-auto md:max-w-none md:w-fit md:mx-auto">
-              {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+            <div className="flex gap-3 w-fit md:grid md:grid-cols-8 md:max-w-7xl md:mx-auto">
+              {verticals.slice(0, 8).map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06, duration: 0.5 }}
-                className={`relative flex flex-col items-center gap-2 border rounded-3xl p-4 transition-colors ${
+                className={`flex-shrink-0 w-[calc(50vw-1rem)] sm:w-[calc(33.333vw-1rem)] md:w-auto relative flex flex-col items-center gap-2 border rounded-3xl p-4 transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
                     : 'border-border bg-card/40 text-muted-foreground/40'
