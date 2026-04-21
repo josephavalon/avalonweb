@@ -13,6 +13,9 @@ const verticals = [
   { label: 'Hair', icon: Scissors, live: false },
   { label: 'Supplements', icon: Pill, live: false },
   { label: 'Diet', icon: Apple, live: false },
+  { label: 'Peptides', icon: Link, live: false },
+  { label: 'HRT', icon: Zap, live: false },
+  { label: 'Genetic Testing', icon: TestTube, live: false },
 ];
 
 export default function IntroSection() {
