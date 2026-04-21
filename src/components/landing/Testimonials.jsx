@@ -14,7 +14,7 @@ const testimonials = [
     tag: "ENERGY IV"
   },
   {
-    quote: "The NAD+ IV is next level. Mental clarity after a 1000mg session lasts for days. I do one before any big pitch. Part of my founder toolkit.",
+    quote: "Mental clarity after NAD+ lasts for days. It's wild. I love it. I knock one out before any big pitch.",
     name: "R.D.",
     tag: "NAD+ 1000MG"
   },
