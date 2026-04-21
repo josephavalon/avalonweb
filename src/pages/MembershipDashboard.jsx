@@ -28,32 +28,32 @@ export default function MembershipDashboard() {
     }
   };
 
-  const inputClass = "w-full bg-transparent border border-white/15 rounded-full px-6 py-4 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-white/35 transition-colors";
+  const inputClass = "w-full bg-transparent border border-white/15 rounded-full px-5 py-3 font-body text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-white/35 transition-colors";
 
   return (
     <div className="bg-background min-h-screen">
       <Navbar />
       
       {/* Hero */}
-      <section className="py-12 md:py-16 px-4 md:px-16 text-center">
+      <section className="py-8 md:py-10 px-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="font-heading text-6xl md:text-[8rem] text-foreground tracking-wide mb-3">
+          <h1 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-2">
             WELCOME BACK
           </h1>
-          <p className="font-body text-sm text-muted-foreground">
+          <p className="font-body text-xs text-muted-foreground max-w-md mx-auto">
             Access your account to manage your health protocol and track your progress.
           </p>
         </motion.div>
       </section>
 
       {/* Form Section */}
-      <section className="py-8 md:py-12 px-4 md:px-16">
-        <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleContinue} className="w-full space-y-3">
+      <section className="py-6 md:py-8 px-4">
+        <div className="max-w-sm mx-auto">
+          <form onSubmit={handleContinue} className="w-full space-y-2.5">
 
             {/* Email */}
             <input
@@ -90,8 +90,8 @@ export default function MembershipDashboard() {
             )}
 
             {/* Forgot password */}
-            <div className="pt-2">
-              <a href="#" className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase">
+            <div className="pt-1">
+              <a href="#" className="font-body text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase">
                 Forgot password?
               </a>
             </div>
@@ -100,7 +100,7 @@ export default function MembershipDashboard() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-4 hover:bg-foreground/90 transition-colors mt-8 disabled:opacity-50"
+              className="w-full bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-3 hover:bg-foreground/90 transition-colors mt-3 disabled:opacity-50"
             >
               {isLoading ? 'Loading...' : 'Continue'}
             </button>
