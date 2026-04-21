@@ -126,6 +126,13 @@ const CBD_TIERS = [
     perks: ['1 × 66mg IV CBD per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
+    name: 'CBD Advanced Plus',
+    dose: '99mg',
+    featured: false,
+    price: 280, regularPrice: 350,
+    perks: ['1 × 99mg IV CBD per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
+  },
+  {
     name: 'CBD Vital',
     dose: '132mg',
     featured: false,
