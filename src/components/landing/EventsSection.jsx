@@ -86,11 +86,7 @@ export default function EventsSection() {
           >
             <ChevronLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 text-center z-10 pointer-events-none">
-            <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase">
-              Slide to explore
-            </p>
-          </div>
+
           <button
             onClick={() => scroll('right')}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
