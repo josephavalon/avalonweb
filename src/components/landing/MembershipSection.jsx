@@ -365,11 +365,11 @@ const FLUID_TIERS = [
   {
     name: 'Core',
     tagline: 'The Foundation',
-    price: 150, regularPrice: 188,
+    price: 150, regularPrice: 167,
     perks: [
-      '1 fluid infusion per month',
+      '1 dehydration IV per month',
       '1 IM injection per month',
-      '20% off all à la carte treatments',
+      '10% off all à la carte treatments',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
       'Priority scheduling',
@@ -381,12 +381,12 @@ const FLUID_TIERS = [
   {
     name: 'Advanced',
     tagline: 'Most Popular',
-    price: 300, regularPrice: 375,
+    price: 300, regularPrice: 333,
     featured: true,
     perks: [
-      '2 fluid infusions per month',
+      '2 dehydration IVs per month',
       '2 IM injections per month',
-      '20% off all à la carte treatments',
+      '10% off all à la carte treatments',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
       'Priority scheduling',
@@ -399,11 +399,11 @@ const FLUID_TIERS = [
   {
     name: 'Vital',
     tagline: 'Full Protocol',
-    price: 450, regularPrice: 562,
+    price: 450, regularPrice: 500,
     perks: [
-      '3 fluid infusions per month',
+      '3 dehydration IVs per month',
       '3 IM injections per month',
-      '20% off all à la carte treatments',
+      '10% off all à la carte treatments',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
       'Priority scheduling',
@@ -417,11 +417,11 @@ const FLUID_TIERS = [
   {
     name: 'Signature',
     tagline: 'Maximum Protocol', noWrap: true,
-    price: 600, regularPrice: 750,
+    price: 600, regularPrice: 667,
     perks: [
-      '4 fluid infusions per month',
+      '4 dehydration IVs per month',
       '4 IM injections per month',
-      '20% off all à la carte treatments',
+      '10% off all à la carte treatments',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
       'Priority scheduling',
@@ -436,8 +436,8 @@ const FLUID_TIERS = [
 ];
 
 const TABS = [
-  { label: 'Vitamins', tiers: IV_TIERS, type: 'iv' },
   { label: 'Fluid', tiers: FLUID_TIERS, type: 'iv' },
+  { label: 'Vitamins', tiers: IV_TIERS, type: 'iv' },
   { label: 'NAD+', tiers: NAD_TIERS, type: 'simple' },
   { label: 'CBD', tiers: CBD_TIERS, type: 'simple' },
   { label: 'Exosomes', tiers: EXOSOME_TIERS, type: 'simple' },
