@@ -17,7 +17,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Precision wellness delivered to you. IV therapy, NAD+, CBD, and cellular recovery — wherever you are in San Francisco.
+              Mobile wellness optimization, delivered. IV hydration, NAD+, CBD, and advanced recovery services—available throughout the San Francisco Bay Area.
             </p>
           </div>
 
