@@ -133,15 +133,15 @@ function FAQItem({ faq, isOpen, onToggle }) {
       className="border border-border/60 rounded-2xl bg-card overflow-hidden cursor-pointer"
       onClick={onToggle}
     >
-      <div className="flex items-center justify-between px-6 py-5 gap-4">
-        <span className="font-body text-sm text-foreground">{faq.q}</span>
-        <div className="shrink-0 w-6 h-6 flex items-center justify-center">
-          {isOpen
-            ? <Minus className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-            : <Plus className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-          }
-        </div>
-      </div>
+      <div className="flex items-center justify-between px-5 py-4 gap-4">
+         <span className="font-body text-sm text-foreground">{faq.q}</span>
+         <div className="shrink-0 w-5 h-5 flex items-center justify-center">
+           {isOpen
+             ? <Minus className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+             : <Plus className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+           }
+         </div>
+       </div>
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
@@ -150,9 +150,9 @@ function FAQItem({ faq, isOpen, onToggle }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            <div className="px-6 pb-5 border-t border-border/40">
-              <p className="font-body text-sm text-muted-foreground leading-relaxed pt-4">{faq.a}</p>
-            </div>
+            <div className="px-5 pb-4 border-t border-border/40">
+               <p className="font-body text-sm text-muted-foreground leading-relaxed pt-3">{faq.a}</p>
+             </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -174,34 +174,34 @@ export default function FAQ() {
   const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <section id="faq" className="py-12 md:py-16 px-4">
+    <section id="faq" className="py-8 md:py-10 px-4">
       <div className="max-w-3xl mx-auto">
 
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-8"
+          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-6"
         >
           FAQ
         </motion.h2>
 
         {/* Search */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="SEARCH"
             value={search}
             onChange={e => { setSearch(e.target.value); setOpenIndex(null); }}
-            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-3 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-2.5 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
 
         {/* Category filters */}
-        <div className="mb-6">
+        <div className="mb-4">
           <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-2">Topic</p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-2">
             {CATEGORIES.map(cat => (
               <button
                 key={cat}
@@ -219,9 +219,9 @@ export default function FAQ() {
         </div>
 
         {/* FAQ items */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filtered.length === 0 ? (
-            <p className="font-body text-sm text-muted-foreground py-8 text-center">No results found.</p>
+            <p className="font-body text-sm text-muted-foreground py-4 text-center">No results found.</p>
           ) : (
             filtered.map((faq, i) => (
               <FAQItem
