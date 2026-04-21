@@ -48,16 +48,17 @@ export default function EventsSection() {
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>
         </motion.div>
 
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {events.map((event, i) => (
-            <motion.div
-              key={event.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="flex-shrink-0 w-full md:w-[calc(33.333%-1rem)] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4"
-            >
+        <div className="overflow-x-auto md:overflow-visible">
+          <div className="flex gap-4 w-fit md:w-full">
+            {events.map((event, i) => (
+              <motion.div
+                key={event.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="flex-shrink-0 w-[85vw] md:w-[calc(33.333%-1rem)] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4"
+              >
               <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
               <div>
                 <h3 className="font-heading text-2xl text-foreground tracking-wide mb-1">{event.title}</h3>
@@ -70,8 +71,9 @@ export default function EventsSection() {
               >
                 Get Notified →
               </a>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
