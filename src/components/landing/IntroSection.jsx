@@ -72,18 +72,18 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </motion.p>
 
-          {/* All 6+ cards in scrollable grid - 2 columns, multiple rows */}
+          {/* All 6+ cards in grid - no scroll on desktop */}
           <div className="relative group">
            <button
              onClick={() => scroll('left')}
-             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
              aria-label="Scroll left"
            >
              <ChevronLeft className="w-5 h-5 text-foreground" />
            </button>
-           <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+           <div className="overflow-x-auto md:overflow-visible" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
              <div ref={scrollRef} className="flex md:w-full md:px-0 px-4" style={{ scrollBehavior: 'smooth', width: 'fit-content' }}>
-               <div className="grid grid-cols-2 gap-3 md:gap-4 md:w-full" style={{ gridAutoRows: 'minmax(140px, 1fr)', width: 'calc(100vw - 2rem)' }}>
+               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full md:w-auto" style={{ gridAutoRows: 'minmax(140px, 1fr)' }}>
                  {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
                  <div
                    key={label}
@@ -116,7 +116,7 @@ export default function IntroSection() {
            </div>
            <button
              onClick={() => scroll('right')}
-             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
              aria-label="Scroll right"
            >
              <ChevronRight className="w-5 h-5 text-foreground" />
