@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
@@ -18,6 +19,11 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
   }, [location]);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    document.documentElement.classList.toggle('dark');
+  };
 
   const linkClass = "text-[11px] tracking-[0.18em] text-foreground/70 hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
 
@@ -39,8 +45,17 @@ export default function Navbar() {
           <a href="#events" className={linkClass}>For Events</a>
         </div>
 
-        {/* Login far right */}
-        <a href="/membership" className={linkClass}>Login</a>
+        {/* Theme toggle and Login far right */}
+        <div className="flex items-center gap-6">
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground"
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <a href="/membership" className={linkClass}>Login</a>
+        </div>
       </div>
 
       {/* Mobile */}
