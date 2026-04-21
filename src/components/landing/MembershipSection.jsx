@@ -169,7 +169,7 @@ const VITAL_ICE_SF_TIERS = [
   {
     name: 'Essential — Community',
     tagline: 'Fire & Ice Partner',
-    locationNote: 'Marina District SF Studio Only',
+    locationNote: 'Studio Only - Marina District SF',
     community: true,
     price: 300, regularPrice: 375,
     perks: [
@@ -186,6 +186,7 @@ const VITAL_ICE_SF_TIERS = [
   {
     name: 'Essential — Private',
     tagline: 'Fire & Ice Partner',
+    locationNote: 'Studio Only - Marina District SF',
     community: false,
     price: 360, regularPrice: 450,
     perks: [
@@ -202,6 +203,7 @@ const VITAL_ICE_SF_TIERS = [
   {
     name: 'Plus — Community',
     tagline: 'Most Popular',
+    locationNote: 'Studio Only - Marina District SF',
     community: true,
     price: 480, regularPrice: 600,
     featured: true,
@@ -220,6 +222,7 @@ const VITAL_ICE_SF_TIERS = [
   {
     name: 'Plus — Private',
     tagline: 'Most Popular',
+    locationNote: 'Studio Only - Marina District SF',
     community: false,
     price: 576, regularPrice: 720,
     featured: true,
@@ -255,7 +258,7 @@ function IVTierCard({ tier, i, billing }) {
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
-        {tier.locationNote || tier.tagline}
+        {tier.tagline}
       </p>
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
       <div className="mb-8">
@@ -266,6 +269,7 @@ function IVTierCard({ tier, i, billing }) {
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
+          {tier.locationNote && <div className="text-[9px] text-muted-foreground/70 mt-2">{tier.locationNote}</div>}
         </p>
       </div>
       <ul className="space-y-3 mb-4 flex-1">
