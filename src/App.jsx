@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import CookieConsent from '@/components/CookieConsent';
+import ChatWidget from '@/components/ChatWidget';
 import Home from './pages/Home';
 import OurStory from './pages/OurStory';
 import IVVitamins from './pages/services/IVVitamins';
@@ -59,6 +60,7 @@ function App() {
         </Router>
         <Toaster />
         <CookieConsent />
+        <ChatWidget />
       </QueryClientProvider>
     </AuthProvider>
   )
