@@ -169,6 +169,7 @@ const VITAL_ICE_SF_TIERS = [
   {
     name: 'Essential — Community',
     tagline: 'Fire & Ice Partner',
+    locationNote: 'Marina District SF Studio Only',
     community: true,
     price: 300, regularPrice: 375,
     perks: [
@@ -254,7 +255,7 @@ function IVTierCard({ tier, i, billing }) {
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
-        {tier.tagline}
+        {tier.locationNote || tier.tagline}
       </p>
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
       <div className="mb-8">
