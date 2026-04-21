@@ -68,21 +68,11 @@ export default function ServicePageLayout({ title, subtitle, description, treatm
                 <div className="p-5">
                   <h3 className="font-heading text-xl md:text-2xl text-foreground tracking-wide mb-1">{t.name}</h3>
                   {t.desc && <p className="font-body text-xs text-muted-foreground leading-relaxed mb-3">{t.desc}</p>}
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-body text-base font-semibold text-foreground">{t.price}</span>
-                      {t.annualPrice && (
-                        <span className="font-body text-xs text-accent">{t.annualPrice} <span className="text-muted-foreground">annually</span></span>
-                      )}
-                    </div>
-                    <a
-                      href={BOOK_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
-                    >
-                      Book →
-                    </a>
+                  <div className="flex flex-col">
+                    <span className="font-body text-base font-semibold text-foreground">{t.price}</span>
+                    {t.annualPrice && (
+                      <span className="font-body text-xs text-accent">{t.annualPrice} <span className="text-muted-foreground">annually</span></span>
+                    )}
                   </div>
                 </div>
               </motion.div>
