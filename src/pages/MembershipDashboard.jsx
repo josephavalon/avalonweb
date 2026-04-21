@@ -35,7 +35,7 @@ export default function MembershipDashboard() {
       <Navbar />
       
       {/* Hero */}
-      <section className="py-8 md:py-10 px-4 text-center">
+      <section className="pt-28 md:pt-32 pb-8 md:pb-10 px-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
