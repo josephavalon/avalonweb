@@ -7,6 +7,7 @@ const APPLY_URL = '/apply';
 const IV_TIERS = [
   {
     name: 'Core',
+    category: 'VITAMINS',
     tagline: 'The Foundation',
     price: 200, regularPrice: 250,
     perks: [
@@ -23,6 +24,7 @@ const IV_TIERS = [
   },
   {
     name: 'Advanced',
+    category: 'VITAMINS',
     tagline: 'Most Popular',
     price: 400, regularPrice: 500,
     featured: true,
@@ -41,6 +43,7 @@ const IV_TIERS = [
   },
   {
     name: 'Vital',
+    category: 'VITAMINS',
     tagline: 'Full Protocol',
     price: 600, regularPrice: 750,
     perks: [
@@ -59,6 +62,7 @@ const IV_TIERS = [
   },
   {
     name: 'Signature',
+    category: 'VITAMINS',
     tagline: 'Maximum Protocol', noWrap: true,
     price: 800, regularPrice: 1000,
     perks: [
@@ -82,6 +86,7 @@ const IV_TIERS = [
 const NAD_TIERS = [
   {
     name: 'NAD+ Core',
+    category: 'NAD+',
     dose: '250mg',
     featured: false,
     price: 240, regularPrice: 300,
@@ -89,6 +94,7 @@ const NAD_TIERS = [
   },
   {
     name: 'NAD+ Plus',
+    category: 'NAD+',
     dose: '500mg',
     featured: true,
     price: 440, regularPrice: 550,
@@ -96,6 +102,7 @@ const NAD_TIERS = [
   },
   {
     name: 'NAD+ Pro',
+    category: 'NAD+',
     dose: '750mg',
     featured: false,
     price: 580, regularPrice: 725,
@@ -103,6 +110,7 @@ const NAD_TIERS = [
   },
   {
     name: 'NAD+ Vital',
+    category: 'NAD+',
     dose: '1000mg',
     featured: false,
     price: 720, regularPrice: 900,
@@ -113,6 +121,7 @@ const NAD_TIERS = [
 const CBD_TIERS = [
   {
     name: 'CBD Core',
+    category: 'CBD',
     dose: '33mg',
     featured: false,
     price: 120, regularPrice: 150,
@@ -120,6 +129,7 @@ const CBD_TIERS = [
   },
   {
     name: 'CBD Advanced',
+    category: 'CBD',
     dose: '66mg',
     featured: true,
     price: 160, regularPrice: 200,
@@ -127,6 +137,7 @@ const CBD_TIERS = [
   },
   {
     name: 'CBD Pro',
+    category: 'CBD',
     dose: '99mg',
     featured: false,
     price: 200, regularPrice: 250,
@@ -134,6 +145,7 @@ const CBD_TIERS = [
   },
   {
     name: 'CBD Vital',
+    category: 'CBD',
     dose: '132mg',
     featured: false,
     price: 240, regularPrice: 300,
@@ -144,6 +156,7 @@ const CBD_TIERS = [
 const EXOSOME_TIERS = [
   {
     name: 'Exosome Core',
+    category: 'EXOSOMES',
     dose: '30B',
     featured: false,
     price: 560, regularPrice: 700,
@@ -151,6 +164,7 @@ const EXOSOME_TIERS = [
   },
   {
     name: 'Exosome Pro',
+    category: 'EXOSOMES',
     dose: '50B',
     featured: true,
     price: 960, regularPrice: 1200,
@@ -158,6 +172,7 @@ const EXOSOME_TIERS = [
   },
   {
     name: 'Exosome Vital',
+    category: 'EXOSOMES',
     dose: '90B',
     featured: false,
     price: 1440, regularPrice: 1800,
@@ -168,6 +183,7 @@ const EXOSOME_TIERS = [
 const VITAL_ICE_SF_TIERS = [
   {
     name: 'Essential — Community',
+    category: 'VITAL ICE SF',
     tagline: 'Fire & Ice Partner',
     locationNote: 'Studio Only - Marina District SF',
     community: true,
@@ -186,6 +202,7 @@ const VITAL_ICE_SF_TIERS = [
   },
   {
     name: 'Essential — Private',
+    category: 'VITAL ICE SF',
     tagline: 'Fire & Ice Partner',
     locationNote: 'Studio Only - Marina District SF',
     community: false,
@@ -204,6 +221,7 @@ const VITAL_ICE_SF_TIERS = [
   },
   {
     name: 'Plus — Community',
+    category: 'VITAL ICE SF',
     tagline: 'Most Popular',
     locationNote: 'Studio Only - Marina District SF',
     community: true,
@@ -224,6 +242,7 @@ const VITAL_ICE_SF_TIERS = [
   },
   {
     name: 'Plus — Private',
+    category: 'VITAL ICE SF',
     tagline: 'Most Popular',
     locationNote: 'Studio Only - Marina District SF',
     community: false,
@@ -261,6 +280,9 @@ function IVTierCard({ tier, i, billing }) {
       className={`relative border rounded-3xl p-8 flex flex-col ${tier.featured ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
+      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
+        {tier.category}
+      </p>
       <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured ? 'text-accent' : 'text-muted-foreground'}`}>
         {tier.tagline}
       </p>
@@ -323,6 +345,9 @@ function SimpleTierCard({ tier, i, billing }) {
     >
       {tier.featured && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
+      <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
+        {tier.category}
+      </p>
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-4 text-muted-foreground">
         {tier.dose} per session
       </p>
@@ -373,6 +398,7 @@ function SimpleTierCard({ tier, i, billing }) {
 const FLUID_TIERS = [
   {
     name: 'Core',
+    category: 'FLUID',
     tagline: 'The Foundation',
     price: 120, regularPrice: 150,
     perks: [
@@ -389,6 +415,7 @@ const FLUID_TIERS = [
   },
   {
     name: 'Advanced',
+    category: 'FLUID',
     tagline: 'Most Popular',
     price: 240, regularPrice: 300,
     featured: true,
@@ -407,6 +434,7 @@ const FLUID_TIERS = [
   },
   {
     name: 'Vital',
+    category: 'FLUID',
     tagline: 'Full Protocol',
     price: 360, regularPrice: 450,
     perks: [
@@ -425,6 +453,7 @@ const FLUID_TIERS = [
   },
   {
     name: 'Signature',
+    category: 'FLUID',
     tagline: 'Maximum Protocol', noWrap: true,
     price: 480, regularPrice: 600,
     perks: [
