@@ -8,14 +8,24 @@ const testimonials = [
     tag: "HYDRATION IV"
   },
   {
-    quote: "Used to lose entire Saturdays recovering. Now I book a morning session and I'm back to 100% by lunch. Life-changing for weekends.",
-    name: "J.L.",
-    tag: "HANGOVER IV"
+    quote: "That was awesome.",
+    name: "Diplo",
+    tag: "ENERGY IV"
   },
   {
     quote: "The NAD+ IV is next level. Mental clarity after a 1000mg session lasts for days. I do one before any big pitch. Part of my founder toolkit.",
     name: "R.D.",
     tag: "NAD+ 1000MG"
+  },
+  {
+    quote: "That IV did digits.",
+    name: "Larry June",
+    tag: "RECOVERY IV"
+  },
+  {
+    quote: "Used to lose entire Saturdays recovering. Now I book a morning session and I'm back to 100% by lunch. Life-changing for weekends.",
+    name: "J.L.",
+    tag: "HANGOVER IV"
   },
   {
     quote: "Competitive athlete here. Recovery is everything. Since adding biweekly IVs my recovery time cut in half. Hitting PRs I haven't seen in years.",
@@ -32,26 +42,14 @@ const testimonials = [
     name: "C.A.",
     tag: "CBD IV"
   },
-  {
-    quote: "That was awesome.",
-    name: "Diplo",
-    tag: "ENERGY IV"
-  },
-  {
-    quote: "That IV did digits.",
-    name: "Larry June",
-    tag: "RECOVERY IV"
-  },
 ];
 
-function IPhoneMockup({ testimonial, offset = 0 }) {
+function IPhoneMockup({ testimonial }) {
   return (
     <div
       className="relative shrink-0"
       style={{
         width: 160,
-        transform: `rotate(${offset}deg)`,
-        transformOrigin: 'bottom center',
       }}
     >
       {/* Phone shell */}
@@ -113,13 +111,11 @@ function IPhoneMockup({ testimonial, offset = 0 }) {
   );
 }
 
-const offsets = [-6, 0, 5, -4, 2, -3, 4, -5];
-
 export default function Testimonials() {
   const scrollRef = useRef(null);
 
   return (
-    <section className="py-8 md:py-10 px-4 border-t border-border overflow-hidden">
+    <section className="py-8 md:py-10 px-4 border-t border-border">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -130,12 +126,12 @@ export default function Testimonials() {
         <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mt-3">From our clients</p>
       </motion.div>
 
-      {/* Scrollable iPhone row - shows 3 at a time */}
-      <div className="overflow-hidden">
+      {/* Scrollable iPhone row - shows 2 at a time */}
+      <div className="overflow-x-auto">
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto pb-6 px-8 items-end"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth', scrollSnapType: 'x mandatory' }}
+          className="flex gap-6 pb-6 px-4 items-center w-fit"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
         >
           {testimonials.map((t, i) => (
             <motion.div
@@ -143,10 +139,9 @@ export default function Testimonials() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: (i % 3) * 0.1, duration: 0.7 }}
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+              transition={{ delay: i * 0.1, duration: 0.7 }}
             >
-              <IPhoneMockup testimonial={t} offset={offsets[i]} />
+              <IPhoneMockup testimonial={t} />
             </motion.div>
           ))}
         </div>
