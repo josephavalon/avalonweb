@@ -72,13 +72,20 @@ export default function IntroSection() {
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </motion.p>
 
-          {/* Grid with scroll buttons */}
-          <div className="relative group">
-            <div className="grid grid-cols-2 gap-3 md:gap-4 px-4 md:px-0">
-              {verticals.slice(0, 6).map(({ label, icon: Icon, live, location, isLocation }, i) => (
+          {/* Horizontal scroll */}
+          <div className="overflow-x-auto relative group">
+            <button
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <div ref={scrollRef} className="flex gap-3 md:gap-4 px-16 md:px-0 justify-start w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}>
+              {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <div
                 key={label}
-                className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                className={`flex-shrink-0 w-[calc(50vw-2rem)] md:w-auto relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
                     : 'border-border bg-card/40 text-muted-foreground/40'
