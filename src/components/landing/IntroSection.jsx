@@ -10,7 +10,7 @@ const verticals = [
   { label: 'CBD', icon: CannabisLeaf, live: true },
   { label: 'Peptides', icon: Link, live: false },
   { label: 'Weight Loss', icon: Apple, live: false },
-  { label: 'Optimization Data', icon: Zap, live: false },
+  { label: 'Personalized Protocols', icon: Zap, live: false },
   { label: 'Blood Testing', icon: TestTube, live: false },
   { label: 'Genetic Testing', icon: TestTube, live: false },
   { label: 'Sexual Wellness', icon: Heart, live: false },
