@@ -8,7 +8,7 @@ const categories = [
     href: '/services/iv-vitamins',
     tag: 'FROM $150',
     desc: 'Dehydration, Myers\' Cocktail, Hangover, Energy, Immunity, Beauty & more.',
-    image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=800&q=80',
   },
   {
     label: 'NAD+',
