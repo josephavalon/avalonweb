@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf, MapPin } from 'lucide-react';
+import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf, MapPin, Dumbbell, Lightbulb, Flame, CircleUser } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 const verticals = [
@@ -8,17 +8,17 @@ const verticals = [
   { label: 'NAD+', icon: Zap, live: true },
   { label: 'CBD', icon: CannabisLeaf, live: true },
   { label: 'Exosomes', icon: Sparkles, live: true },
-  { label: 'Contrast Therapy', icon: Heart, live: true, location: 'Vital Ice SF' },
+  { label: 'Contrast Therapy', icon: Flame, live: true, location: 'Vital Ice SF' },
   { label: 'Peptides', icon: Link, live: false },
-  { label: 'Recovery Devices', icon: Apple, live: false },
+  { label: 'Recovery Devices', icon: Lightbulb, live: false },
   { label: 'Personalized Protocols', icon: Zap, live: false },
   { label: 'Blood & Genetic Testing', icon: TestTube, live: false },
   { label: 'Sexual Wellness', icon: Heart, live: false },
-  { label: 'Personal Fitness', icon: Zap, live: false },
+  { label: 'Personal Fitness', icon: Dumbbell, live: false },
   { label: 'HRT', icon: Pill, live: false },
   { label: 'Supplements', icon: Pill, live: false },
   { label: 'Diet', icon: Apple, live: false },
-  { label: 'Aesthetics', icon: Sparkles, live: false },
+  { label: 'Aesthetics', icon: CircleUser, live: false },
 ];
 
 export default function IntroSection() {
