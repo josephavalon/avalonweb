@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, ChevronDown } from 'lucide-react';
 
 const APPLY_URL = '/apply';
 
@@ -155,6 +155,10 @@ const EXOSOME_TIERS = [
 function IVTierCard({ tier, i, billing }) {
   const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
+  const [expanded, setExpanded] = useState(false);
+  const visiblePerks = 3;
+  const hasMore = tier.perks.length > visiblePerks;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -178,14 +182,24 @@ function IVTierCard({ tier, i, billing }) {
           <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
         </p>
       </div>
-      <ul className="space-y-3 mb-10 flex-1">
-        {tier.perks.map((perk) => (
+      <ul className="space-y-3 mb-4 flex-1">
+        {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
           <li key={perk} className="flex items-start gap-2.5">
             <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
             <span className="font-body text-xs text-muted-foreground leading-relaxed">{perk}</span>
           </li>
         ))}
       </ul>
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 text-accent text-xs font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-6"
+        >
+          {expanded ? 'Show less' : 'Show more'}
+          <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+      {!hasMore && <div className="mb-6" />}
       <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
         className={`block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded transition-colors ${
           tier.featured ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'
@@ -201,6 +215,9 @@ function IVTierCard({ tier, i, billing }) {
 function SimpleTierCard({ tier, i, billing }) {
   const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
   const regularYearlyPrice = tier.regularPrice * 12;
+  const [expanded, setExpanded] = useState(false);
+  const visiblePerks = 3;
+  const hasMore = tier.perks.length > visiblePerks;
 
   return (
     <motion.div
@@ -228,14 +245,25 @@ function SimpleTierCard({ tier, i, billing }) {
         </p>
       </div>
 
-      <ul className="space-y-3 mb-10 flex-1">
-        {tier.perks.map((perk) => (
+      <ul className="space-y-3 mb-4 flex-1">
+        {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
           <li key={perk} className="flex items-start gap-2.5">
             <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
             <span className="font-body text-xs text-muted-foreground leading-relaxed">{perk}</span>
           </li>
         ))}
       </ul>
+
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 text-accent text-xs font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-6"
+        >
+          {expanded ? 'Show less' : 'Show more'}
+          <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+      {!hasMore && <div className="mb-6" />}
 
       <a href={APPLY_URL} target="_blank" rel="noopener noreferrer"
         className={`block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded transition-colors ${
