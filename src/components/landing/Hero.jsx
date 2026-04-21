@@ -56,7 +56,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1 }}
-          className="font-body text-sm md:text-base text-muted-foreground tracking-[0.3em] uppercase mb-12"
+          className="font-body text-sm md:text-base text-foreground/90 tracking-[0.3em] uppercase mb-12"
         >
           Mobile Optimization Therapy · Coming Soon
         </motion.p>
