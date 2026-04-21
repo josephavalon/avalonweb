@@ -127,7 +127,7 @@ const EXOSOME_TIERS = [
     name: 'Exosome Advanced',
     dose: '50B',
     featured: true,
-    price: 680, regularPrice: 850,
+    price: 960, regularPrice: 1200,
     perks: ['1 × 50B Exosome IV per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'],
   },
   {
