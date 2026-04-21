@@ -80,7 +80,7 @@ function IPhoneMockup({ testimonial }) {
             {/* Message with tag visible */}
             <div className="flex gap-1.5 items-start justify-start">
               <div className="flex flex-col gap-1.5 flex-1">
-                <div className="bg-gray-150 rounded-2xl rounded-bl-sm px-2.5 py-1.5">
+                <div className="bg-gray-300 rounded-3xl rounded-bl-none px-3 py-2">
                   <p className="text-black text-[10px] leading-[1.4] font-normal">
                     {testimonial.quote}
                   </p>
