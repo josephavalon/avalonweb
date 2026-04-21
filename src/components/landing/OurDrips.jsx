@@ -29,7 +29,7 @@ const categories = [
     href: '/services/exosomes',
     tag: 'FROM $700 — CELLULAR SUPPORT',
     desc: 'Advanced cellular regeneration with 30B, 50B, and 90B exosome IV options.',
-    image: 'https://images.unsplash.com/photo-1530026405186-a1ca16072dfd?ixlib=rb-4.0.3&w=1000&q=80',
+    image: 'https://media.base44.com/images/public/69e5682f98e509792c71ef21/e81e482a1_444.png',
   },
 ];
 
