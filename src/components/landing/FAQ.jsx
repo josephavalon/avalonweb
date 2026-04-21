@@ -178,6 +178,21 @@ const faqs = [
     q: "Do you provide receipts for reimbursement purposes?",
     a: "Absolutely. We provide itemized receipts detailing treatment type, date, and cost — perfect for FSA/HSA submissions or insurance reimbursement claims."
   },
+  {
+    category: 'Coming Soon',
+    q: "What services are in your development pipeline?",
+    a: "We're actively expanding our offerings to include peptide therapies, aesthetic treatments, and specialized regenerative protocols. Join our waitlist to be first notified when new services launch."
+  },
+  {
+    category: 'Coming Soon',
+    q: "When will new treatments become available?",
+    a: "Our roadmap includes quarterly service launches. We're prioritizing based on member feedback and clinical validation. Subscribe to our newsletter for the latest updates on upcoming offerings."
+  },
+  {
+    category: 'Coming Soon',
+    q: "How can I request a specific treatment?",
+    a: "We'd love to hear what you're interested in. Email us at support@avalonvitality.co with your treatment suggestions — member requests directly influence our development priorities."
+  },
 ];
 
 const CATEGORIES = ['General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance', 'Events', 'B2B', 'Coming Soon'];
