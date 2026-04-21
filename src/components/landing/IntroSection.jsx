@@ -152,7 +152,7 @@ export default function IntroSection() {
            </button>
           </div>
 
-          <p className="mt-6 font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
+          <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
             <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
             Live at launch
           </p>
