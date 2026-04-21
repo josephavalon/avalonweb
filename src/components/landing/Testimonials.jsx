@@ -155,7 +155,7 @@ export default function Testimonials() {
         </button>
         <div
           ref={scrollRef}
-          className="flex gap-6 pb-6 px-4 pr-32 items-center w-fit"
+          className="flex gap-6 pb-2 px-4 pr-32 items-center w-fit"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
         >
           {testimonials.map((t, i) => (
