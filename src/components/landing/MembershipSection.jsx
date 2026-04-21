@@ -120,7 +120,7 @@ const NAD_TIERS = [
 
 const CBD_TIERS = [
   {
-    name: 'CBD Core',
+    name: 'Core',
     category: 'CBD',
     dose: '33mg',
     featured: false,
@@ -128,7 +128,7 @@ const CBD_TIERS = [
     perks: ['1 × 33mg CBD IV per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'CBD Plus',
+    name: 'Plus',
     category: 'CBD',
     dose: '66mg',
     featured: true,
@@ -136,7 +136,7 @@ const CBD_TIERS = [
     perks: ['1 × 66mg CBD IV per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'CBD Pro',
+    name: 'Pro',
     category: 'CBD',
     dose: '99mg',
     featured: false,
@@ -144,7 +144,7 @@ const CBD_TIERS = [
     perks: ['1 × 99mg CBD IV per month', '1 IM injection per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
   },
   {
-    name: 'CBD Vital',
+    name: 'Vital',
     category: 'CBD',
     dose: '132mg',
     featured: false,
