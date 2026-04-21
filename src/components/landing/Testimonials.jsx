@@ -172,11 +172,6 @@ export default function Testimonials() {
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="text-center mt-4">
-        <p className="font-body text-xs text-muted-foreground/50">← Scroll to see more →</p>
-      </div>
-
       <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
