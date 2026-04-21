@@ -36,21 +36,23 @@ export default function HowItWorks() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              className="text-center p-8 border border-border rounded-3xl bg-card"
-            >
+        <div className="overflow-x-auto md:overflow-visible">
+          <div className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="flex-shrink-0 w-[85vw] md:w-auto text-center p-8 border border-border rounded-3xl bg-card"
+              >
               <step.icon className="w-8 h-8 text-accent mx-auto mb-5" strokeWidth={1.5} />
               <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 tracking-wide">{step.title}</h3>
               <p className="font-body text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
 
 
