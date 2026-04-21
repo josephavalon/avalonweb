@@ -9,7 +9,7 @@ const stats = [
 
 export default function WhatIsIV() {
   return (
-    <section className="py-20 md:py-28 px-4 border-t border-border">
+    <section className="py-10 md:py-14 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
 
         {/* Image */}
