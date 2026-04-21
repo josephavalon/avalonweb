@@ -131,22 +131,25 @@ export default function Testimonials() {
       </motion.div>
 
       {/* Scrollable iPhone row - shows 3 at a time */}
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-6 px-8 items-end"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
-      >
-        {testimonials.map((t, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: (i % 3) * 0.1, duration: 0.7 }}
-          >
-            <IPhoneMockup testimonial={t} offset={offsets[i]} />
-          </motion.div>
-        ))}
+      <div className="overflow-hidden">
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto pb-6 px-8 items-end"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth', scrollSnapType: 'x mandatory' }}
+        >
+          {testimonials.map((t, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: (i % 3) * 0.1, duration: 0.7 }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+            >
+              <IPhoneMockup testimonial={t} offset={offsets[i]} />
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Scroll indicator */}
