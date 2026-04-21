@@ -39,21 +39,21 @@ function IPhoneMockup({ testimonial, offset = 0 }) {
     <div
       className="relative shrink-0"
       style={{
-        width: 240,
+        width: 160,
         transform: `rotate(${offset}deg)`,
         transformOrigin: 'bottom center',
       }}
     >
       {/* Phone shell */}
-      <div className="relative bg-black rounded-[40px] p-[8px] shadow-2xl"
-        style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.1)' }}
+      <div className="relative bg-black rounded-[28px] p-1.5 shadow-2xl"
+        style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.1)' }}
       >
         {/* Screen */}
-        <div className="bg-white rounded-[35px] overflow-hidden" style={{ minHeight: 500 }}>
+        <div className="bg-white rounded-[24px] overflow-hidden" style={{ minHeight: 340 }}>
           {/* Status bar */}
-          <div className="flex items-center justify-between px-6 pt-2 pb-2 bg-white">
-            <span className="text-black text-[13px] font-semibold">9:41</span>
-            <div className="w-24 h-5 bg-black rounded-full" />
+          <div className="flex items-center justify-between px-3 pt-1.5 pb-1 bg-white">
+            <span className="text-black text-[9px] font-semibold">9:41</span>
+            <div className="w-16 h-3 bg-black rounded-full" />
             <div className="flex items-center gap-0.5">
               <div className="flex gap-0.5 items-end h-3">
                 {[2, 3, 4, 5].map(h => (
@@ -67,17 +67,17 @@ function IPhoneMockup({ testimonial, offset = 0 }) {
           </div>
 
           {/* Messages area - SMS style */}
-          <div className="px-4 pt-4 pb-6 flex flex-col gap-3 bg-white" style={{ minHeight: 420 }}>
+          <div className="px-2.5 pt-2.5 pb-3 flex flex-col gap-2 bg-white" style={{ minHeight: 280 }}>
             {/* Message with tag visible */}
-            <div className="flex gap-2 items-start justify-start">
-              <div className="flex flex-col gap-2 flex-1">
-                <div className="bg-gray-150 rounded-3xl rounded-bl-sm px-4 py-2.5">
-                  <p className="text-black text-[13px] leading-[1.45] font-normal">
+            <div className="flex gap-1.5 items-start justify-start">
+              <div className="flex flex-col gap-1.5 flex-1">
+                <div className="bg-gray-150 rounded-2xl rounded-bl-sm px-2.5 py-1.5">
+                  <p className="text-black text-[10px] leading-[1.4] font-normal">
                     {testimonial.quote}
                   </p>
                 </div>
                 {/* Tag inline with message */}
-                <span className="text-[9px] tracking-widest text-yellow-600 font-semibold uppercase ml-2 bg-yellow-50 px-2.5 py-0.5 rounded-full inline-block w-fit">
+                <span className="text-[7px] tracking-widest text-yellow-600 font-semibold uppercase ml-1.5 bg-yellow-50 px-1.5 py-0.5 rounded-full inline-block w-fit">
                   {testimonial.tag}
                 </span>
               </div>
@@ -85,20 +85,20 @@ function IPhoneMockup({ testimonial, offset = 0 }) {
           </div>
 
           {/* Home indicator */}
-          <div className="flex justify-center pb-2 bg-white">
-            <div className="w-28 h-1 bg-black rounded-full" />
+          <div className="flex justify-center pb-1 bg-white">
+            <div className="w-20 h-0.5 bg-black rounded-full" />
           </div>
         </div>
       </div>
 
       {/* Side buttons */}
-      <div className="absolute left-[-8px] top-24 w-[4px] h-8 bg-black rounded-l" />
-      <div className="absolute left-[-8px] top-36 w-[4px] h-10 bg-black rounded-l" />
-      <div className="absolute left-[-8px] top-52 w-[4px] h-10 bg-black rounded-l" />
-      <div className="absolute right-[-8px] top-32 w-[4px] h-16 bg-black rounded-r" />
+      <div className="absolute left-[-5px] top-16 w-[3px] h-6 bg-black rounded-l" />
+      <div className="absolute left-[-5px] top-24 w-[3px] h-7 bg-black rounded-l" />
+      <div className="absolute left-[-5px] top-32 w-[3px] h-7 bg-black rounded-l" />
+      <div className="absolute right-[-5px] top-20 w-[3px] h-12 bg-black rounded-r" />
 
       {/* Name label */}
-      <p className="text-center font-body text-[10px] tracking-widest text-foreground uppercase font-semibold mt-3">{testimonial.name}</p>
+      <p className="text-center font-body text-[8px] tracking-widest text-foreground uppercase font-semibold mt-2">{testimonial.name}</p>
     </div>
   );
 }
@@ -123,7 +123,7 @@ export default function Testimonials() {
       {/* Scrollable iPhone row */}
       <div
         ref={scrollRef}
-        className="flex gap-8 overflow-x-auto pb-8 px-12 items-end"
+        className="flex gap-4 overflow-x-auto pb-6 px-8 items-end"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {testimonials.map((t, i) => (
