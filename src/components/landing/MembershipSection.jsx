@@ -100,7 +100,7 @@ const CBD_TIERS = [
     perks: ['1 × 33mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'],
   },
   {
-    name: 'CBD Balance',
+    name: 'CBD Advanced',
     dose: '66mg',
     featured: true,
     price: 320, regularPrice: 400,
