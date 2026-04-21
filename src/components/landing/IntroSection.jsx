@@ -34,6 +34,10 @@ export default function IntroSection() {
     }
   };
 
+  // Live items
+  const liveItems = verticals.filter(v => v.live);
+  const soonItems = verticals.filter(v => !v.live);
+
   return (
     <section className="py-8 md:py-10 px-4 border-t border-border">
       <div className="max-w-4xl mx-auto text-center">
@@ -82,8 +86,9 @@ export default function IntroSection() {
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
             <div className="overflow-x-auto mx-auto max-w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div ref={scrollRef} className="inline-grid gap-3 md:gap-4" style={{ gridTemplateRows: 'repeat(3, minmax(140px, 1fr))', gridAutoColumns: 'minmax(140px, 1fr)', gridAutoFlow: 'column', width: 'fit-content' }}>
-                {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+              <div ref={scrollRef} className="inline-grid gap-3 md:gap-4 md:grid" style={{ gridTemplateRows: 'auto', gridAutoColumns: 'minmax(140px, 1fr)', gridAutoFlow: 'column', width: 'fit-content' }}>
+                {/* Mobile: original order (inline-grid); Desktop: grid layout with live items first */}
+                {liveItems.map(({ label, icon: Icon, live, location, isLocation }, i) => (
                   <div
                     key={label}
                     className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
@@ -104,6 +109,27 @@ export default function IntroSection() {
                     )}
                     {live && !isLocation && (
                       <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
+                    )}
+                  </div>
+                ))}
+                {soonItems.map(({ label, icon: Icon, live, location, isLocation }, i) => (
+                  <div
+                    key={label}
+                    className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                      live
+                        ? 'border-foreground/25 bg-card text-foreground'
+                        : 'border-border bg-card/40 text-muted-foreground/40'
+                    }`}
+                  >
+                    <Icon
+                      className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                      strokeWidth={1.5}
+                    />
+                    <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                      {label}
+                    </span>
+                    {location && (
+                      <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
                     )}
                     {!live && (
                       <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
