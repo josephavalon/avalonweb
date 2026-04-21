@@ -52,7 +52,7 @@ const IV_TIERS = [
     ],
   },
   {
-    name: 'Concierge',
+    name: 'Vital',
     tagline: 'Maximum Protocol',
     ivs: 4, ims: 4,
     price: 800, regularPrice: 1000,
