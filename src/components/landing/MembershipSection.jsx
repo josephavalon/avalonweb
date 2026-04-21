@@ -228,9 +228,9 @@ const VITAL_ICE_SF_TIERS = [
     name: 'SF — Community',
     tagline: 'Ultimate Protocol',
     community: true,
-    price: 1440, regularPrice: 1800,
+    price: 720, regularPrice: 900,
     perks: [
-      '6 mixed IV drips per month',
+      '1 mixed IV drip per month',
       '6 IM injections per month',
       'Unlimited cold plunge access',
       'Unlimited sauna access',
@@ -247,9 +247,9 @@ const VITAL_ICE_SF_TIERS = [
     name: 'SF — Private',
     tagline: 'Ultimate Protocol',
     community: false,
-    price: 1620, regularPrice: 2025,
+    price: 810, regularPrice: 1012.50,
     perks: [
-      '6 mixed IV drips per month',
+      '1 mixed IV drip per month',
       '6 IM injections per month',
       'Unlimited cold plunge access',
       'Unlimited sauna access',
