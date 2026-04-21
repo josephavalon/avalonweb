@@ -1,5 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link } from 'lucide-react';
+
+const verticals = [
+  { label: 'IV Vitamins', icon: Droplets, live: true },
+  { label: 'NAD+', icon: Zap, live: true },
+  { label: 'Exosomes', icon: Sparkles, live: true },
+  { label: 'CBD', icon: Droplets, live: true },
+  { label: 'Aesthetics', icon: Sparkles, live: false },
+  { label: 'Blood Testing', icon: TestTube, live: false },
+  { label: 'Sexual Wellness', icon: Heart, live: false },
+  { label: 'Hair', icon: Scissors, live: false },
+  { label: 'Supplements', icon: Pill, live: false },
+  { label: 'Diet', icon: Apple, live: false },
+];
 
 export default function IntroSection() {
   return (
@@ -16,19 +30,46 @@ export default function IntroSection() {
           <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
             We started with IV therapy because it's the most direct, science-backed way to deliver nutrients at 100% absorption. It's the bedrock every other modality builds on.
           </p>
-          <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            From that foundation, we're building Avalon into a full-stack recovery platform — adding verticals like NAD+, Exosomes, Peptides, HRT, Recovery Devices, and beyond. Each new modality layers on top of our mobile IV infrastructure, delivered to you by licensed clinicians wherever you are.
+          <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
+            From that foundation, we're building Avalon into a full-stack optimization platform — each vertical layered on top of our mobile clinical infrastructure, delivered by licensed clinicians wherever you are.
           </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {['IV Vitamins', 'NAD+', 'Exosomes', 'CBD', 'Peptides →', 'HRT →', 'Genetic Testing →'].map((v, i) => (
-              <span
-                key={v}
-                className={`px-4 py-1.5 rounded border font-body text-[10px] tracking-widest uppercase ${i < 4 ? 'border-foreground/30 text-foreground' : 'border-border text-muted-foreground/40'}`}
+
+          {/* Vertical grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-3xl mx-auto">
+            {verticals.map(({ label, icon: Icon, live }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06, duration: 0.5 }}
+                className={`relative flex flex-col items-center gap-2 border rounded p-4 transition-colors ${
+                  live
+                    ? 'border-foreground/25 bg-card text-foreground'
+                    : 'border-border bg-card/40 text-muted-foreground/40'
+                }`}
               >
-                {v}
-              </span>
+                <Icon
+                  className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                  strokeWidth={1.5}
+                />
+                <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                  {label}
+                </span>
+                {live && (
+                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
+                )}
+                {!live && (
+                  <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
+                )}
+              </motion.div>
             ))}
           </div>
+
+          <p className="mt-6 font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
+            <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
+            Live at launch
+          </p>
         </motion.div>
       </div>
     </section>
