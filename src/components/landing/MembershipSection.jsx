@@ -265,7 +265,7 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col max-h-screen md:max-h-none overflow-y-auto ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
       <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
@@ -332,7 +332,7 @@ function IVTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-full md:w-auto relative border rounded-3xl p-6 flex flex-col text-center max-h-screen md:max-h-none overflow-y-auto ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-0 right-0 h-px bg-accent" />}
 
@@ -539,7 +539,17 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div className="overflow-x-auto md:overflow-visible">
+        <div className="overflow-x-auto md:overflow-visible relative">
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="text-[10px] tracking-widest uppercase">←</span>
+            </div>
+          </div>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="text-[10px] tracking-widest uppercase">→</span>
+            </div>
+          </div>
           <div className={`flex md:grid gap-4 w-fit md:w-full ${gridClass}`}>
             {tab.tiers.map((tier, i) =>
               tab.type === 'iv'

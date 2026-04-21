@@ -38,7 +38,17 @@ export default function IntroSection() {
           </p>
 
           {/* Vertical grid - 5 visible on desktop, horizontal scroll on mobile/tablet */}
-          <div className="overflow-x-auto md:overflow-visible">
+          <div className="overflow-x-auto md:overflow-visible relative">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+              <div className="flex items-center gap-1 text-muted-foreground/40">
+                <span className="text-[10px] tracking-widest uppercase">←</span>
+              </div>
+            </div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+              <div className="flex items-center gap-1 text-muted-foreground/40">
+                <span className="text-[10px] tracking-widest uppercase">→</span>
+              </div>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-5 gap-3 max-w-3xl mx-auto md:max-w-none md:w-fit md:mx-auto">
               {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
               <motion.div

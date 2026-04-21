@@ -127,7 +127,17 @@ export default function Testimonials() {
       </motion.div>
 
       {/* Scrollable iPhone row - shows 2 at a time */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+          <div className="flex items-center gap-1 text-muted-foreground/40">
+            <span className="text-[10px] tracking-widest uppercase">←</span>
+          </div>
+        </div>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+          <div className="flex items-center gap-1 text-muted-foreground/40">
+            <span className="text-[10px] tracking-widest uppercase">→</span>
+          </div>
+        </div>
         <div
           ref={scrollRef}
           className="flex gap-6 pb-6 px-4 items-center w-fit"

@@ -36,7 +36,17 @@ export default function HowItWorks() {
           </p>
         </motion.div>
 
-        <div className="overflow-x-auto md:overflow-visible">
+        <div className="overflow-x-auto md:overflow-visible relative">
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="text-[10px] tracking-widest uppercase">←</span>
+            </div>
+          </div>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="text-[10px] tracking-widest uppercase">→</span>
+            </div>
+          </div>
           <div className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full">
             {steps.map((step, i) => (
               <motion.div
@@ -45,7 +55,7 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="flex-shrink-0 w-[85vw] md:w-auto text-center p-8 border border-border rounded-3xl bg-card"
+                className="flex-shrink-0 w-[85vw] md:w-auto text-center p-8 border border-border rounded-3xl bg-card max-h-screen md:max-h-none overflow-y-auto"
               >
               <step.icon className="w-8 h-8 text-accent mx-auto mb-5" strokeWidth={1.5} />
               <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 tracking-wide">{step.title}</h3>

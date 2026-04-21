@@ -48,7 +48,17 @@ export default function EventsSection() {
           <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">EVENTS</h2>
         </motion.div>
 
-        <div className="overflow-x-auto md:overflow-visible">
+        <div className="overflow-x-auto md:overflow-visible relative">
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="text-[10px] tracking-widest uppercase">←</span>
+            </div>
+          </div>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 md:hidden pointer-events-none">
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="text-[10px] tracking-widest uppercase">→</span>
+            </div>
+          </div>
           <div className="flex gap-4 w-fit md:w-full">
             {events.map((event, i) => (
               <motion.div
@@ -57,7 +67,7 @@ export default function EventsSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="flex-shrink-0 w-[85vw] md:w-[calc(33.333%-1rem)] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4"
+                className="flex-shrink-0 w-[85vw] md:w-[calc(33.333%-1rem)] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4 max-h-screen md:max-h-none overflow-y-auto"
               >
               <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
               <div>
