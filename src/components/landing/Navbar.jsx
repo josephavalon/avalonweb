@@ -34,10 +34,9 @@ export default function Navbar() {
 
         {/* Center links */}
         <div className="flex items-center gap-10">
-          <Link to="/services/iv-vitamins" className={linkClass}>Services</Link>
+          <a href="#how-it-works" className={linkClass}>How It Works</a>
           <a href="#membership" className={linkClass}>Membership</a>
-          <Link to="/our-story" className={linkClass}>About</Link>
-          <a href="#faq" className={linkClass}>FAQs</a>
+          <a href="#events" className={linkClass}>For Events</a>
         </div>
 
         {/* Login far right */}
@@ -62,9 +61,9 @@ export default function Navbar() {
             className="md:hidden bg-background border-t border-border overflow-hidden"
           >
             <div className="px-6 py-6 space-y-5">
+              <a href="#how-it-works" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">How It Works</a>
               <a href="#membership" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">Membership</a>
-              <Link to="/our-story" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">About</Link>
-              <a href="#faq" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">FAQs</a>
+              <a href="#events" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">For Events</a>
               <a href="#" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">Login</a>
             </div>
           </motion.div>
