@@ -81,9 +81,8 @@ export default function IntroSection() {
            >
              <ChevronLeft className="w-5 h-5 text-foreground" />
            </button>
-           <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}>
-             <div ref={scrollRef} className="flex px-4 md:px-0" style={{ scrollBehavior: 'smooth', width: 'fit-content' }}>
-               <div className="grid gap-3 md:gap-4" style={{ gridAutoRows: 'minmax(140px, 1fr)', gridTemplateColumns: 'repeat(6, minmax(160px, 1fr))', width: 'fit-content' }}>
+           <div className="overflow-x-auto mx-auto max-w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+             <div ref={scrollRef} className="inline-grid gap-3 md:gap-4" style={{ gridAutoRows: 'minmax(140px, 1fr)', gridTemplateColumns: 'repeat(6, minmax(160px, 1fr))' }}>
                  {verticals.map(({ label, icon: Icon, live, location, isLocation }, i) => (
                  <div
                    key={label}
@@ -121,15 +120,15 @@ export default function IntroSection() {
            >
              <ChevronRight className="w-5 h-5 text-foreground" />
            </button>
-          </div>
+           </div>
 
-          <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
-            <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
-            Live at launch
-          </p>
-          <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
-        </motion.div>
-      </div>
-    </section>
+           <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
+           <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
+           Live at launch
+           </p>
+           <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
+           </motion.div>
+           </div>
+           </section>
   );
 }
