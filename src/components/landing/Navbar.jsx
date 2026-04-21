@@ -22,7 +22,7 @@ export default function Navbar() {
   const linkClass = "text-[11px] tracking-[0.18em] text-foreground/70 hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
 
   return (
-    <nav className="fixed top-4 left-4 right-4 z-40 backdrop-blur-md bg-background/30 border border-white/10 rounded-3xl transition-all duration-500">
+    <nav className="fixed top-4 left-4 right-4 z-40 backdrop-blur-md bg-background/30 border border-white/10 rounded-3xl transition-all duration-500 overflow-hidden">
 
       {/* Desktop */}
       <div className="hidden md:flex items-center justify-between px-8 h-16">
@@ -45,6 +45,7 @@ export default function Navbar() {
 
       {/* Mobile */}
       <div className="md:hidden flex items-center justify-between px-5 h-14">
+        <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
