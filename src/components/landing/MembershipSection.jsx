@@ -279,9 +279,9 @@ function IVTierCard({ tier, i, billing }) {
       <p className="text-[9px] tracking-[0.3em] font-body uppercase mb-2 text-muted-foreground">
         {tier.category}
       </p>
-      {tier.tagline && <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured || tier.isMostPopular ? 'text-accent' : 'text-muted-foreground'}`}>
-        {tier.tagline}
-      </p>}
+      <p className={`text-[9px] tracking-[0.3em] font-body uppercase mb-4 whitespace-nowrap ${tier.featured || tier.isMostPopular ? 'text-accent' : 'text-muted-foreground'}`}>
+        {tier.tagline || ''}
+      </p>
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
