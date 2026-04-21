@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
-const BOOK_URL = 'https://avalonvitality.as.me/schedule/a9d85b1e';
-
 const categories = [
   {
     label: 'IV Vitamins',
@@ -79,12 +77,10 @@ export default function OurDrips() {
 
         <div className="text-center mt-12">
           <a
-            href={BOOK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#membership"
             className="inline-block px-8 py-4 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
           >
-            Book Online
+            Apply for Presale
           </a>
         </div>
       </div>

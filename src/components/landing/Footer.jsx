@@ -1,8 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const BOOK_URL = 'https://avalonvitality.as.me/schedule/a9d85b1e';
-
 export default function Footer() {
   return (
     <footer className="border-t border-border py-16 px-4">
@@ -45,12 +43,16 @@ export default function Footer() {
               <Link to="/our-story" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
               <a href="/#faq" className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</a>
               <a
-                href={BOOK_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#membership"
                 className="block text-xs text-accent hover:text-accent/80 transition-colors font-body uppercase tracking-wider"
               >
-                Book Online
+                Presale Membership
+              </a>
+              <a
+                href="#gift"
+                className="block text-xs text-muted-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider"
+              >
+                Gift Certificates
               </a>
             </div>
           </div>

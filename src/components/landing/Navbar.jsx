@@ -55,12 +55,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Promo bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-accent text-accent-foreground text-center text-xs font-body py-2 tracking-widest font-semibold">
-        NEW CLIENTS: 15% OFF WITH CODE: WEOUTHERE!
-      </div>
-
-      <nav className={`fixed top-8 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
@@ -76,6 +71,7 @@ export default function Navbar() {
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-8">
             <Link to="/" className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase">Home</Link>
+            <a href="#membership" className="text-xs tracking-widest text-muted-foreground hover:text-foreground transition-colors font-body uppercase">Membership</a>
 
             {/* Services Dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -131,12 +127,10 @@ export default function Navbar() {
           {/* CTA */}
           <div className="hidden lg:flex items-center gap-4">
             <a
-              href={BOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#membership"
               className="px-5 py-2.5 bg-foreground text-background text-xs tracking-widest font-body uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
             >
-              Start Your Recovery
+              Apply Now
             </a>
           </div>
 
@@ -194,12 +188,10 @@ export default function Navbar() {
                 <a href="/#faq" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">FAQ</a>
 
                 <a
-                  href={BOOK_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#membership"
                   className="block w-full text-center px-5 py-3 bg-foreground text-background text-sm tracking-widest font-body uppercase font-semibold mt-4 rounded"
                 >
-                  Start Your Recovery
+                  Apply Now
                 </a>
               </div>
             </motion.div>
