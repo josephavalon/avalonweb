@@ -145,7 +145,7 @@ const NAD_TIERS = [
 const CBD_TIERS = [
   {
     name: 'CBD Relief',
-    tagline: '33mg Monthly',
+    tagline: '1 × 33mg Monthly',
     price: 200, regularPrice: 250,
     perks: [
       '1 × 33mg IV CBD per month',
@@ -157,7 +157,7 @@ const CBD_TIERS = [
   },
   {
     name: 'CBD Balance',
-    tagline: '66mg Monthly',
+    tagline: '1 × 66mg Monthly',
     price: 320, regularPrice: 400,
     featured: true,
     perks: [
@@ -171,10 +171,49 @@ const CBD_TIERS = [
   },
   {
     name: 'CBD Restore',
-    tagline: '132mg Monthly',
+    tagline: '1 × 132mg Monthly',
     price: 520, regularPrice: 650,
     perks: [
       '1 × 132mg IV CBD per month',
+      '20% off all à la carte CBD',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Dedicated care coordinator',
+      'Exclusive member events',
+    ],
+  },
+  {
+    name: 'CBD Double Relief',
+    tagline: '2 × 33mg Monthly',
+    price: 360, regularPrice: 450,
+    perks: [
+      '2 × 33mg IV CBD per month',
+      '20% off all à la carte CBD',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+    ],
+  },
+  {
+    name: 'CBD Double Balance',
+    tagline: '2 × 66mg Monthly',
+    price: 560, regularPrice: 700,
+    perks: [
+      '2 × 66mg IV CBD per month',
+      '20% off all à la carte CBD',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Dedicated care coordinator',
+    ],
+  },
+  {
+    name: 'CBD Double Restore',
+    tagline: '2 × 132mg Monthly',
+    price: 920, regularPrice: 1150,
+    perks: [
+      '2 × 132mg IV CBD per month',
       '20% off all à la carte CBD',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -286,7 +325,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-        <div className={`grid gap-4 ${TABS[activeTab].tiers.length === 5 ? 'md:grid-cols-5' : TABS[activeTab].tiers.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+        <div className={`grid gap-4 ${TABS[activeTab].tiers.length === 6 ? 'md:grid-cols-3' : TABS[activeTab].tiers.length === 5 ? 'md:grid-cols-5' : TABS[activeTab].tiers.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
           {TABS[activeTab].tiers.map((tier, i) => (
             <TierCard key={tier.name} tier={tier} i={i} />
           ))}
