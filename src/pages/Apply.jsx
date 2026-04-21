@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import Navbar from '../components/landing/Navbar';
+import Footer from '../components/landing/Footer';
 
 const GOALS = [
   'Energy & Performance',
@@ -46,28 +49,30 @@ export default function Apply() {
   const inputClass = "w-full bg-transparent border border-white/15 rounded-full px-6 py-4 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-white/35 transition-colors";
 
   return (
-    <div className="min-h-screen bg-[#1a0a0a] flex flex-col items-center justify-start pt-12 pb-20 px-4">
+    <div className="bg-background min-h-screen">
+      <Navbar />
 
-      {/* Logo */}
-      <Link to="/" className="mb-10">
-        <div className="w-16 h-16 rounded-full border-2 border-white/30 flex items-center justify-center">
-          <div className="flex items-end gap-0.5">
-            <div className="w-3 h-5 rounded-full border-2 border-white/70" />
-            <div className="w-3 h-3 rounded-full border-2 border-white/70 mb-0.5" />
-          </div>
-        </div>
-      </Link>
+      {/* Hero */}
+      <section className="py-12 md:py-16 px-4 md:px-16 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="font-heading text-6xl md:text-[8rem] text-foreground tracking-wide mb-3">
+            APPLY FOR MEMBERSHIP
+          </h1>
+          <p className="font-body text-sm text-muted-foreground">
+            Start your personalized wellness journey with Avalon Vitality.
+          </p>
+        </motion.div>
+      </section>
 
-      {/* Heading */}
-      <h1 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-3 text-center">
-        Apply for Membership
-      </h1>
-      <p className="font-body text-sm text-muted-foreground mb-10 text-center">
-        Start your personalized wellness journey with Avalon Vitality.
-      </p>
+      {/* Form Section */}
+      <section className="py-8 md:py-12 px-4 md:px-16">
+        <div className="max-w-2xl mx-auto">
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-3">
+          <form onSubmit={handleSubmit} className="w-full space-y-3">
 
         {/* Name row */}
         <div className="flex gap-3">
@@ -174,34 +179,74 @@ export default function Apply() {
           className="w-full bg-transparent border border-white/15 rounded-2xl px-6 py-4 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-white/35 transition-colors resize-none"
         />
 
-        {/* Membership tier selection */}
-        <div className="pt-2">
-          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-3 px-1">Select a membership tier</p>
-          <div className="grid grid-cols-2 gap-2">
-            {['Essential — $200/mo', 'Performance — $400/mo', 'Elite — $600/mo', 'Vital — $800/mo'].map(tier => (
-              <button
-                key={tier}
-                type="button"
-                className="border border-white/15 rounded-full px-4 py-3 font-body text-xs text-muted-foreground hover:border-white/40 hover:text-foreground transition-colors text-left"
+            {/* Membership tier selection */}
+            <div className="pt-2">
+              <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-3 px-1">Select a membership tier</p>
+              <div className="grid grid-cols-2 gap-2">
+                {['Essential — $200/mo', 'Performance — $400/mo', 'Elite — $600/mo', 'Vital — $800/mo'].map(tier => (
+                  <button
+                    key={tier}
+                    type="button"
+                    className="border border-white/15 rounded-full px-4 py-3 font-body text-xs text-muted-foreground hover:border-white/40 hover:text-foreground transition-colors text-left"
+                  >
+                    {tier}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="w-full bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-4 hover:bg-foreground/90 transition-colors mt-2"
+            >
+              Submit Application
+            </button>
+
+            <p className="text-center font-body text-xs text-muted-foreground/50 pt-1">
+              Membership by application only. You'll be contacted within 48 hours.
+            </p>
+          </form>
+        </div>
+      </section>
+
+      {/* Membership Categories */}
+      <section className="py-12 md:py-16 px-4 md:px-16 border-t border-border">
+        <div className="max-w-6xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8 text-center"
+          >
+            MEMBERSHIP TIERS
+          </motion.h2>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              { name: 'ESSENTIAL', price: '$200/mo', perks: '1 IV per month' },
+              { name: 'PERFORMANCE', price: '$400/mo', perks: '2 IVs per month' },
+              { name: 'ELITE', price: '$600/mo', perks: '3 IVs per month' },
+              { name: 'VITAL', price: '$800/mo', perks: '4 IVs per month' },
+            ].map((tier, i) => (
+              <motion.div
+                key={tier.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="border border-border rounded p-8 bg-card"
               >
-                {tier}
-              </button>
+                <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
+                <p className="font-body text-lg font-semibold text-foreground mb-4">{tier.price}</p>
+                <p className="font-body text-sm text-muted-foreground">{tier.perks}</p>
+              </motion.div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-4 hover:bg-foreground/90 transition-colors mt-2"
-        >
-          Submit Application
-        </button>
-
-        <p className="text-center font-body text-xs text-muted-foreground/50 pt-1">
-          Membership by application only. You'll be contacted within 48 hours.
-        </p>
-      </form>
+      <Footer />
     </div>
   );
 }
