@@ -128,7 +128,8 @@ const CBD_TIERS = [
 ];
 
 // Card for IV Vitamins (simple, no frequency toggle)
-function IVTierCard({ tier, i }) {
+function IVTierCard({ tier, i, billing }) {
+  const displayPrice = billing === 'yearly' ? Math.round(tier.price * 0.7) : tier.price;
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -144,12 +145,12 @@ function IVTierCard({ tier, i }) {
       <h3 className="font-heading text-3xl text-foreground tracking-wide mb-2">{tier.name}</h3>
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
-          <span className="font-heading text-5xl text-foreground">${tier.price}</span>
+          <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">/month</span>
         </div>
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${tier.regularPrice}</span>
-          <span className="text-accent ml-2">20% member discount</span>
+          <span className="text-accent ml-2">{billing === 'yearly' ? '30% yearly discount' : '20% member discount'}</span>
         </p>
       </div>
       <ul className="space-y-3 mb-10 flex-1">
@@ -172,9 +173,10 @@ function IVTierCard({ tier, i }) {
 }
 
 // Card for NAD+ and CBD (with 1x / 2x frequency toggle)
-function FrequencyTierCard({ tier, i }) {
+function FrequencyTierCard({ tier, i, billing }) {
   const [freq, setFreq] = useState(1);
   const option = tier.options[freq];
+  const displayPrice = billing === 'yearly' ? Math.round(option.price * 0.7) : option.price;
 
   return (
     <motion.div
@@ -208,12 +210,12 @@ function FrequencyTierCard({ tier, i }) {
 
       <div className="mb-8">
         <div className="flex items-baseline gap-2">
-          <span className="font-heading text-5xl text-foreground">${option.price}</span>
+          <span className="font-heading text-5xl text-foreground">${displayPrice}</span>
           <span className="font-body text-xs text-muted-foreground">/month</span>
         </div>
         <p className="font-body text-[10px] text-muted-foreground mt-1">
           <span className="line-through">${option.regularPrice}</span>
-          <span className="text-accent ml-2">20% member discount</span>
+          <span className="text-accent ml-2">{billing === 'yearly' ? '30% yearly discount' : '20% member discount'}</span>
         </p>
       </div>
 
@@ -245,6 +247,7 @@ const TABS = [
 
 export default function MembershipSection() {
   const [activeTab, setActiveTab] = useState(0);
+  const [billing, setBilling] = useState('monthly');
   const tab = TABS[activeTab];
 
   const gridClass = tab.tiers.length === 5
@@ -272,6 +275,24 @@ export default function MembershipSection() {
           </p>
         </motion.div>
 
+        {/* Billing toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center bg-secondary/50 rounded-full p-1 gap-1">
+            <button
+              onClick={() => setBilling('monthly')}
+              className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBilling('yearly')}
+              className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'yearly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Yearly — Save 30%
+            </button>
+          </div>
+        </div>
+
         {/* Tab switcher */}
         <div className="flex justify-center gap-1 mb-12">
           {TABS.map((t, i) => (
@@ -293,8 +314,8 @@ export default function MembershipSection() {
         <div className={`grid gap-4 ${gridClass}`}>
           {tab.tiers.map((tier, i) =>
             tab.type === 'frequency'
-              ? <FrequencyTierCard key={tier.name} tier={tier} i={i} />
-              : <IVTierCard key={tier.name} tier={tier} i={i} />
+              ? <FrequencyTierCard key={tier.name} tier={tier} i={i} billing={billing} />
+              : <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
           )}
         </div>
 
