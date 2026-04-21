@@ -18,7 +18,7 @@ export default function WhatIsIV() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="relative flex items-center justify-center"
+          className="hidden md:flex relative items-center justify-center"
         >
           <div className="aspect-[3/4] rounded-3xl overflow-hidden w-full max-w-xs">
             <img
