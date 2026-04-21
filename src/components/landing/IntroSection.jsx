@@ -86,7 +86,7 @@ export default function IntroSection() {
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
             <div className="overflow-x-auto mx-auto max-w-full md:overflow-visible" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div ref={scrollRef} className="inline-grid gap-3 md:gap-4 md:grid md:w-full md:justify-center" style={{ gridTemplateRows: 'auto', gridAutoColumns: 'minmax(140px, 1fr)', gridAutoFlow: 'column', width: 'fit-content' }}>
+              <div ref={scrollRef} className="inline-grid gap-3 md:gap-4 md:grid md:w-full md:justify-center md:grid-cols-6" style={{ gridTemplateRows: 'auto', gridAutoColumns: 'minmax(140px, 1fr)', gridAutoFlow: 'column', width: 'fit-content' }}>
                 {/* Mobile: original order (inline-grid); Desktop: grid layout with live items first */}
                 {liveItems.map(({ label, icon: Icon, live, location, isLocation }, i) => (
                   <div
