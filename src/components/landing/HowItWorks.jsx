@@ -63,7 +63,7 @@ export default function HowItWorks() {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-fit md:w-full px-16 md:px-0 snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-full md:w-full px-16 md:px-0 justify-center md:justify-start snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
@@ -71,7 +71,7 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="flex-shrink-0 w-[85vw] md:w-auto text-center p-8 border border-border rounded-3xl bg-card"
+                className="flex-shrink-0 w-[calc(100vw-8rem-2rem)] sm:w-[calc(50vw-3rem)] md:w-auto text-center p-8 border border-border rounded-3xl bg-card"
               >
               <step.icon className="w-8 h-8 text-accent mx-auto mb-5" strokeWidth={1.5} />
               <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 tracking-wide">{step.title}</h3>
