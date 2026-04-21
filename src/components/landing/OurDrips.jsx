@@ -60,7 +60,7 @@ export default function OurDrips() {
         </motion.div>
 
         <div className="relative group">
-          <div ref={scrollRef} className="grid grid-cols-2 gap-4 w-fit md:w-full overflow-x-auto" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className="flex gap-4 overflow-x-auto" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.label}
@@ -68,7 +68,7 @@ export default function OurDrips() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer flex-shrink-0 w-[calc(50vw-1rem)] md:w-80"
+                className="group relative rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-500 cursor-pointer flex-shrink-0 w-80"
               >
                 <Link to={cat.href} className="aspect-video relative overflow-hidden block">
                   <img
