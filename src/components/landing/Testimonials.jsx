@@ -39,85 +39,67 @@ function IPhoneMockup({ testimonial, offset = 0 }) {
     <div
       className="relative shrink-0"
       style={{
-        width: 220,
+        width: 240,
         transform: `rotate(${offset}deg)`,
         transformOrigin: 'bottom center',
       }}
     >
       {/* Phone shell */}
-      <div className="relative bg-[#1a1a1a] rounded-[36px] p-[3px] shadow-2xl"
-        style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.08)' }}
+      <div className="relative bg-black rounded-[40px] p-[8px] shadow-2xl"
+        style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.1)' }}
       >
         {/* Screen */}
-        <div className="bg-[#111] rounded-[33px] overflow-hidden" style={{ minHeight: 420 }}>
+        <div className="bg-white rounded-[35px] overflow-hidden" style={{ minHeight: 500 }}>
           {/* Status bar */}
-          <div className="flex items-center justify-between px-5 pt-3 pb-1">
-            <span className="text-white text-[10px] font-semibold">9:41</span>
-            <div className="w-16 h-4 bg-black rounded-full" />
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between px-6 pt-2 pb-2 bg-white">
+            <span className="text-black text-[13px] font-semibold">9:41</span>
+            <div className="w-24 h-5 bg-black rounded-full" />
+            <div className="flex items-center gap-0.5">
               <div className="flex gap-0.5 items-end h-3">
                 {[2, 3, 4, 5].map(h => (
-                  <div key={h} className="w-0.5 bg-white/70 rounded-sm" style={{ height: h * 2 }} />
+                  <div key={h} className="w-0.5 bg-black rounded-sm" style={{ height: h * 1.8 }} />
                 ))}
               </div>
-              <span className="text-white text-[9px] font-semibold">5G</span>
-              <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M16 6.75V17.25C16 17.665 15.665 18 15.25 18H8.75C8.335 18 8 17.665 8 17.25V6.75C8 6.335 8.335 6 8.75 6H9.5V5.5C9.5 5.224 9.724 5 10 5H14C14.276 5 14.5 5.224 14.5 5.5V6H15.25C15.665 6 16 6.335 16 6.75Z"/>
               </svg>
             </div>
           </div>
 
-          {/* iMessage-style chat bubble area */}
-          <div className="px-4 pt-4 pb-6 flex flex-col gap-3" style={{ minHeight: 360 }}>
-            {/* Blurred "other" messages */}
-            <div className="self-start flex gap-2 items-end">
-              <div className="w-6 h-6 rounded-full bg-gray-600 shrink-0" />
-              <div className="bg-[#2c2c2e] rounded-2xl rounded-bl-sm px-3 py-2 max-w-[130px]">
-                <div className="h-2 bg-white/20 rounded mb-1.5 w-20" />
-                <div className="h-2 bg-white/20 rounded w-14" />
-              </div>
-            </div>
-
-            <div className="self-end">
-              <div className="bg-[#0a84ff] rounded-2xl rounded-br-sm px-3 py-2 max-w-[130px]">
-                <div className="h-2 bg-white/40 rounded mb-1.5 w-16" />
-                <div className="h-2 bg-white/40 rounded w-10" />
-              </div>
-            </div>
-
-            {/* Main testimonial bubble */}
-            <div className="self-start flex gap-2 items-end mt-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 shrink-0" />
-              <div className="bg-[#2c2c2e] rounded-2xl rounded-bl-sm px-3 py-2.5" style={{ maxWidth: 145 }}>
-                <p className="text-white text-[10px] leading-[1.45] font-normal">
+          {/* Messages area - Light mode realistic */}
+          <div className="px-4 pt-3 pb-6 flex flex-col gap-2.5 bg-white" style={{ minHeight: 420 }}>
+            {/* Incoming message */}
+            <div className="flex gap-2 items-end justify-start">
+              <div className="bg-gray-200 rounded-3xl rounded-bl-sm px-4 py-2.5 max-w-[160px]">
+                <p className="text-black text-[13px] leading-[1.4] font-normal">
                   "{testimonial.quote}"
                 </p>
               </div>
             </div>
 
-            {/* Tag pill */}
-            <div className="self-start ml-8">
-              <span className="text-[8px] tracking-[0.15em] text-accent font-body uppercase bg-accent/10 border border-accent/30 rounded-full px-2 py-0.5">
+            {/* Tag below message */}
+            <div className="flex justify-start pl-2 mt-1">
+              <span className="text-[10px] tracking-widest text-accent font-body uppercase bg-accent/15 border border-accent/40 rounded-full px-3 py-1 font-semibold">
                 {testimonial.tag}
               </span>
             </div>
           </div>
 
           {/* Home indicator */}
-          <div className="flex justify-center pb-3">
-            <div className="w-20 h-1 bg-white/30 rounded-full" />
+          <div className="flex justify-center pb-2 bg-white">
+            <div className="w-28 h-1 bg-black rounded-full" />
           </div>
         </div>
       </div>
 
       {/* Side buttons */}
-      <div className="absolute left-[-3px] top-20 w-[3px] h-8 bg-[#2a2a2a] rounded-l-sm" />
-      <div className="absolute left-[-3px] top-32 w-[3px] h-10 bg-[#2a2a2a] rounded-l-sm" />
-      <div className="absolute left-[-3px] top-44 w-[3px] h-10 bg-[#2a2a2a] rounded-l-sm" />
-      <div className="absolute right-[-3px] top-28 w-[3px] h-14 bg-[#2a2a2a] rounded-r-sm" />
+      <div className="absolute left-[-8px] top-24 w-[4px] h-8 bg-black rounded-l" />
+      <div className="absolute left-[-8px] top-36 w-[4px] h-10 bg-black rounded-l" />
+      <div className="absolute left-[-8px] top-52 w-[4px] h-10 bg-black rounded-l" />
+      <div className="absolute right-[-8px] top-32 w-[4px] h-16 bg-black rounded-r" />
 
       {/* Name label */}
-      <p className="text-center font-body text-[9px] tracking-widest text-muted-foreground uppercase mt-3">{testimonial.name}</p>
+      <p className="text-center font-body text-[10px] tracking-widest text-foreground uppercase font-semibold mt-3">{testimonial.name}</p>
     </div>
   );
 }
