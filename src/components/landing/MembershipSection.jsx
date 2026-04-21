@@ -515,7 +515,7 @@ export default function MembershipSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9 }}
-          className="text-center mb-4"
+          className="text-left mb-4"
         >
           <motion.p 
             initial={{ opacity: 0, x: -30 }}
