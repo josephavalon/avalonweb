@@ -1,6 +1,7 @@
 import React from 'react';
 import ServicePageLayout from '../../components/services/ServicePageLayout';
 import CuriositySection from '../../components/landing/CuriositySection';
+import NewsletterSignup from '../../components/landing/NewsletterSignup';
 
 const treatments = [
   { name: 'Dehydration', price: '$150', annualPrice: '$120', desc: '1000ml saline with electrolytes. Rapid rehydration for fatigue, heat exposure, and daily recovery.', image: 'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=600&q=80' },
@@ -28,6 +29,7 @@ export default function IVVitamins() {
         heroImage="https://images.unsplash.com/photo-1579154204601-01d3cc01d8e2?w=1200&q=80"
       />
       <CuriositySection />
+      <NewsletterSignup />
     </>
   );
 }
