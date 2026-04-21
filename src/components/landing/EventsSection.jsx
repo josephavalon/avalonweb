@@ -114,9 +114,9 @@ export default function EventsSection() {
                 <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
                 <div>
                   <h3 className="font-heading text-2xl text-foreground tracking-wide mb-1">{event.title}</h3>
-                  <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase">{event.location}</p>
+                  <p className="font-body text-[10px] tracking-widest text-foreground uppercase">{event.location}</p>
                 </div>
-                <p className="font-body text-[11px] text-muted-foreground leading-relaxed flex-1">{event.desc}</p>
+                <p className="font-body text-[11px] text-foreground leading-relaxed flex-1">{event.desc}</p>
                 <a
                   href="#membership"
                   className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
