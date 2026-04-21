@@ -227,7 +227,7 @@ export default function Apply() {
               { name: 'ESSENTIAL', monthly: '$250', annual: '$2,400', savings: 'save 20% annually', perks: '1 IV Vitamin per month' },
               { name: 'PERFORMANCE', monthly: '$550', annual: '$5,280', savings: 'save 20% annually', perks: '1 IV Vitamin + NAD+ per month' },
               { name: 'ELITE', monthly: '$800', annual: '$7,680', savings: 'save 20% annually', perks: '1 IV Vitamin + NAD+ + CBD per month' },
-              { name: 'VITAL', monthly: '$1,200', annual: '$11,520', savings: 'save 20% annually', perks: '1 Exosome IV + all services per month' },
+              { name: 'VITAL', monthly: '$1,800', annual: '$17,280', savings: 'save 20% annually', perks: '1 Exosome IV + all services per month' },
             ].map((tier, i) => (
               <motion.div
                 key={tier.name}
