@@ -39,7 +39,7 @@ const testimonials = [
     tag: "EVENT RECOVERY"
   },
   {
-    quote: "CBD IV—never tried it before. Zero THC, pure calm. Slept better than in months. Already scheduled my next session.",
+    quote: "Who knew CBD IVs were a thing? Zero THC, pure calm. Slept better than I have in months. Already booked my next bag.",
     name: "C.A.",
     tag: "CBD IV"
   },
