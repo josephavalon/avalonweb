@@ -365,7 +365,7 @@ const FLUID_TIERS = [
   {
     name: 'Core',
     tagline: 'The Foundation',
-    price: 150, regularPrice: 167,
+    price: 150, regularPrice: 150,
     perks: [
       '1 dehydration IV per month',
       '1 IM injection per month',
@@ -381,7 +381,7 @@ const FLUID_TIERS = [
   {
     name: 'Advanced',
     tagline: 'Most Popular',
-    price: 300, regularPrice: 333,
+    price: 300, regularPrice: 300,
     featured: true,
     perks: [
       '2 dehydration IVs per month',
@@ -399,7 +399,7 @@ const FLUID_TIERS = [
   {
     name: 'Vital',
     tagline: 'Full Protocol',
-    price: 450, regularPrice: 500,
+    price: 450, regularPrice: 450,
     perks: [
       '3 dehydration IVs per month',
       '3 IM injections per month',
@@ -417,7 +417,7 @@ const FLUID_TIERS = [
   {
     name: 'Signature',
     tagline: 'Maximum Protocol', noWrap: true,
-    price: 600, regularPrice: 667,
+    price: 600, regularPrice: 600,
     perks: [
       '4 dehydration IVs per month',
       '4 IM injections per month',
