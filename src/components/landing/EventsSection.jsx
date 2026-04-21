@@ -44,7 +44,7 @@ export default function EventsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="border border-border rounded bg-card p-6 flex flex-col gap-4"
+              className="border border-border rounded-3xl bg-card p-6 flex flex-col gap-4"
             >
               <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
               <div>
