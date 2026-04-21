@@ -44,7 +44,7 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15 }}
-              className="text-center p-8 border border-border rounded bg-card"
+              className="text-center p-8 border border-border rounded-3xl bg-card"
             >
               <step.icon className="w-8 h-8 text-accent mx-auto mb-5" strokeWidth={1.5} />
               <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 tracking-wide">{step.title}</h3>
