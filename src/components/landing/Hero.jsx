@@ -56,9 +56,11 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1 }}
-          className="font-body text-sm md:text-base text-foreground/90 tracking-[0.3em] uppercase mb-12"
+          className="font-body text-sm md:text-base text-foreground/90 tracking-[0.3em] uppercase mb-12 px-2"
         >
-          Mobile Optimization Therapy · Coming Soon to SF
+          Mobile Optimization Therapy<span className="hidden md:inline"> · </span>
+          <br className="md:hidden" />
+          Coming Soon to SF
         </motion.p>
 
         {/* CTA pill — same style as The Protocole */}
