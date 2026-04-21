@@ -40,7 +40,7 @@ export default function Navbar() {
         </div>
 
         {/* Login far right */}
-        <a href="javascript:void(0)" onClick={() => alert('Login coming soon')} className={linkClass}>Login</a>
+        <a href="/membership" className={linkClass}>Login</a>
       </div>
 
       {/* Mobile */}
@@ -64,7 +64,7 @@ export default function Navbar() {
               <a href="#how-it-works" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">How It Works</a>
               <a href="#membership" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">Membership</a>
               <a href="#events" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">For Events</a>
-              <a href="#" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">Login</a>
+              <a href="/membership" className="block text-sm tracking-widest text-muted-foreground hover:text-foreground font-body uppercase">Login</a>
             </div>
           </motion.div>
         )}
