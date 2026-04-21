@@ -103,8 +103,8 @@ const CBD_TIERS = [
     dose: '33mg',
     featured: false,
     options: {
-      1: { price: 200, regularPrice: 250, perks: ['1 × 33mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
-      2: { price: 360, regularPrice: 450, perks: ['2 × 33mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+      1: { price: 200, regularPrice: 250, perks: ['1 × 33mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
+      2: { price: 360, regularPrice: 450, perks: ['2 × 33mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling'] },
     },
   },
   {
@@ -112,8 +112,8 @@ const CBD_TIERS = [
     dose: '66mg',
     featured: true,
     options: {
-      1: { price: 320, regularPrice: 400, perks: ['1 × 66mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
-      2: { price: 560, regularPrice: 700, perks: ['2 × 66mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+      1: { price: 320, regularPrice: 400, perks: ['1 × 66mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
+      2: { price: 560, regularPrice: 700, perks: ['2 × 66mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator'] },
     },
   },
   {
@@ -121,8 +121,8 @@ const CBD_TIERS = [
     dose: '132mg',
     featured: false,
     options: {
-      1: { price: 520, regularPrice: 650, perks: ['1 × 132mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
-      2: { price: 920, regularPrice: 1150, perks: ['2 × 132mg IV CBD per month', '20% off all à la carte CBD', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+      1: { price: 520, regularPrice: 650, perks: ['1 × 132mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
+      2: { price: 920, regularPrice: 1150, perks: ['2 × 132mg IV CBD per month', '20% off all à la carte add-ons', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events'] },
     },
   },
 ];
