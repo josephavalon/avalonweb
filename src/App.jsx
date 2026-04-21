@@ -15,6 +15,10 @@ import CBD from './pages/services/CBD';
 import Exosomes from './pages/services/Exosomes';
 import Apply from './pages/Apply';
 import Careers from './pages/Careers';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
+import TelehealthDisclaimer from './pages/TelehealthDisclaimer';
+import ProductDisclaimer from './pages/ProductDisclaimer';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -46,6 +50,10 @@ const AuthenticatedApp = () => {
       <Route path="/services/exosomes" element={<Exosomes />} />
       <Route path="/apply" element={<Apply />} />
       <Route path="/careers" element={<Careers />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+      <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
+      <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
