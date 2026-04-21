@@ -24,7 +24,7 @@ export default function GiftCertificates() {
               Give someone the experience of elite mobile IV therapy — delivered to their door. Gift certificates are available in any denomination and never expire.
             </p>
             {/* Denomination buttons */}
-            <div className="flex flex-wrap gap-2 mb-5">
+             <div className="flex flex-wrap gap-2 mb-5 justify-center">
              {['$250', '$500', '$1,000', '$5,000', '$10,000', '$15,000'].map((amt) => (
                 <a
                   key={amt}
