@@ -180,7 +180,7 @@ const faqs = [
   },
 ];
 
-const CATEGORIES = ['All', 'General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance'];
+const CATEGORIES = ['General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance'];
 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
@@ -217,11 +217,11 @@ function FAQItem({ faq, isOpen, onToggle }) {
 
 export default function FAQ() {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('General');
   const [openIndex, setOpenIndex] = useState(null);
 
   const filtered = faqs.filter(f => {
-    const matchesCategory = activeCategory === 'All' || f.category === activeCategory;
+    const matchesCategory = f.category === activeCategory;
     const matchesSearch = !search || f.q.toLowerCase().includes(search.toLowerCase()) || f.a.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
