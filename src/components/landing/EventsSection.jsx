@@ -78,7 +78,7 @@ export default function EventsSection() {
           </motion.h2>
         </motion.div>
 
-        <div className="overflow-x-auto md:overflow-visible relative group">
+        <div className="relative group flex justify-center items-center">
           <button
             onClick={() => scroll('left')}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
@@ -93,31 +93,33 @@ export default function EventsSection() {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className="flex gap-4 w-fit md:w-full px-16 md:px-0" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {events.map((event, i) => (
-              <motion.div
-                key={event.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex-shrink-0 w-[85vw] md:w-[calc(33.333%-1rem)] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4 max-h-screen md:max-h-none overflow-y-auto"
-              >
-              <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
-              <div>
-                <h3 className="font-heading text-2xl text-foreground tracking-wide mb-1">{event.title}</h3>
-                <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase">{event.location}</p>
+          <div ref={scrollRef} className="overflow-x-auto w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex gap-4 px-16 md:px-0 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
+              {events.map((event, i) => (
+                <motion.div
+                  key={event.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex-shrink-0 w-[85vw] md:w-[600px] border border-border rounded-3xl bg-card p-6 flex flex-col gap-4 snap-center"
+                >
+                <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
+                <div>
+                  <h3 className="font-heading text-2xl text-foreground tracking-wide mb-1">{event.title}</h3>
+                  <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase">{event.location}</p>
+                </div>
+                <p className="font-body text-[11px] text-muted-foreground leading-relaxed flex-1">{event.desc}</p>
+                <a
+                  href="#membership"
+                  className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
+                >
+                  Get Notified →
+                </a>
+                </motion.div>
+              ))}
               </div>
-              <p className="font-body text-[11px] text-muted-foreground leading-relaxed flex-1">{event.desc}</p>
-              <a
-                href="#membership"
-                className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
-              >
-                Get Notified →
-              </a>
-              </motion.div>
-            ))}
-            </div>
+          </div>
         </div>
       </div>
       <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
