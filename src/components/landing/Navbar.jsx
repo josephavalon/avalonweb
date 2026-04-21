@@ -34,14 +34,14 @@ export default function Navbar() {
 
         {/* Center links */}
         <div className="flex items-center gap-10">
-          <a href="#treatments" className={linkClass}>Services</a>
+          <Link to="/services/iv-vitamins" className={linkClass}>Services</Link>
           <a href="#membership" className={linkClass}>Membership</a>
           <Link to="/our-story" className={linkClass}>About</Link>
           <a href="#faq" className={linkClass}>FAQs</a>
         </div>
 
         {/* Login far right */}
-        <a href="#" className={linkClass}>Login</a>
+        <a href="javascript:void(0)" onClick={() => alert('Login coming soon')} className={linkClass}>Login</a>
       </div>
 
       {/* Mobile */}
