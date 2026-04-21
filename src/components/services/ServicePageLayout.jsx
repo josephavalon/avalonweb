@@ -86,17 +86,7 @@ export default function ServicePageLayout({ title, subtitle, description, treatm
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 px-6 text-center border-t border-border">
-        <a
-          href={BOOK_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-10 py-4 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded"
-        >
-          Book Online
-        </a>
-      </section>
+
 
       <Footer />
     </div>
