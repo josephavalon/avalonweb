@@ -43,7 +43,7 @@ export default function WhatIsIV() {
           transition={{ duration: 0.8 }}
         >
           <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-          <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6">WHAT IS IV THERAPY?</h2>
+          <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6 whitespace-nowrap">WHAT IS IV THERAPY?</h2>
 
           <p className="font-body text-sm text-foreground leading-relaxed mb-5">
             IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span> — bypassing digestion entirely. Your body absorbs <span className="text-foreground font-semibold">100% of every nutrient</span>, exactly as administered.
