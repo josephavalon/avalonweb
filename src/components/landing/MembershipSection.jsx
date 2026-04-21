@@ -151,6 +151,62 @@ const EXOSOME_TIERS = [
   },
 ];
 
+const VITAL_ICE_SF_TIERS = [
+  {
+    name: 'Vital Ice',
+    tagline: 'The Foundation',
+    price: 300, regularPrice: 375,
+    perks: [
+      '2 IV drips per month',
+      '2 IM injections per month',
+      '20% off all à la carte treatments',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Unlimited messaging with your care team',
+      'Exclusive access and pricing on all products',
+      'Fast, discreet delivery - straight to your door',
+    ],
+  },
+  {
+    name: 'Vital Ice Plus',
+    tagline: 'Most Popular',
+    price: 500, regularPrice: 625,
+    featured: true,
+    perks: [
+      '4 IV drips per month',
+      '4 IM injections per month',
+      '20% off all à la carte treatments',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Dedicated care coordinator',
+      'Unlimited messaging with your care team',
+      'Exclusive access and pricing on all products',
+      'Fast, discreet delivery - straight to your door',
+    ],
+  },
+  {
+    name: 'Vital Ice SF',
+    tagline: 'Ultimate Protocol',
+    price: 750, regularPrice: 937,
+    perks: [
+      '6 IV drips per month',
+      '6 IM injections per month',
+      '20% off all à la carte treatments',
+      'Credits roll over (membership must be active)',
+      '3-month minimum commitment',
+      'Priority scheduling',
+      'Dedicated care coordinator',
+      'Exclusive member events',
+      'White-glove concierge service',
+      'Unlimited messaging with your care team',
+      'Exclusive access and pricing on all products',
+      'Fast, discreet delivery - straight to your door',
+    ],
+  },
+];
+
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
   const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
@@ -281,6 +337,7 @@ const TABS = [
   { label: 'NAD+', tiers: NAD_TIERS, type: 'simple' },
   { label: 'CBD', tiers: CBD_TIERS, type: 'simple' },
   { label: 'Exosomes', tiers: EXOSOME_TIERS, type: 'simple' },
+  { label: 'Vital Ice SF', tiers: VITAL_ICE_SF_TIERS, type: 'iv' },
 ];
 
 export default function MembershipSection() {
