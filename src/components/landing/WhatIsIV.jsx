@@ -5,6 +5,9 @@ const stats = [
   { value: '100%', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplements' },
   { value: '30min', label: 'Time to Effect', sub: 'nutrients reach cells almost instantly' },
   { value: '0%', label: 'Digestive Loss', sub: 'bypasses the gut entirely' },
+  { value: '∞', label: 'Zero Waste', sub: 'no degradation in digestive system' },
+  { value: '100%', label: 'Customizable', sub: 'tailored formulas for your needs' },
+  { value: '24/7', label: 'On-Demand', sub: 'available whenever you need it' },
 ];
 
 export default function WhatIsIV() {
@@ -61,15 +64,17 @@ export default function WhatIsIV() {
               Oral supplements lose up to 90% through gut metabolism. IV bypasses that completely — effects you can <span className="text-foreground font-semibold">feel within 30 minutes</span>.
             </p>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-4 border-t border-border pt-8">
-              {stats.map((s) => (
-                <div key={s.value}>
-                  <p className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{s.value}</p>
-                  <p className="font-body text-[10px] tracking-[0.15em] text-accent uppercase mt-1">{s.label}</p>
-                  <p className="font-body text-[10px] text-foreground mt-1 leading-tight">{s.sub}</p>
-                </div>
-              ))}
+            {/* Stats grid */}
+            <div className="border-t border-border pt-8">
+              <div className="grid grid-cols-3 gap-8 md:gap-12">
+                {stats.map((s) => (
+                  <div key={s.label}>
+                    <p className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{s.value}</p>
+                    <p className="font-body text-[10px] tracking-[0.15em] text-accent uppercase mt-2">{s.label}</p>
+                    <p className="font-body text-[10px] text-foreground mt-2 leading-tight">{s.sub}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
 
