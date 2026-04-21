@@ -64,6 +64,19 @@ export default function Footer() {
               <div className="flex items-start gap-3">
                 <span className="text-xs text-muted-foreground font-body">San Francisco Bay Area</span>
               </div>
+              <div className="flex items-center gap-4 pt-2">
+                <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.514l-5.106-6.694-5.934 6.694H2.88l7.644-8.769-8.169-10.731h6.332l4.432 5.89 5.064-5.89zM16.736 20.033h1.832L6.363 4.125H4.447l12.289 15.908z"/>
+                  </svg>
+                </a>
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
+                  <Facebook className="w-5 h-5" fill="currentColor" />
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
+                  <Instagram className="w-5 h-5" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -80,19 +93,7 @@ export default function Footer() {
               The services provided have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure or prevent any disease. The material on this website is provided for informational purposes only and is not medical advice. Always consult your physician before beginning any treatment or therapy program. Any designations or references to therapies are for marketing purposes only and do not represent actual products.
             </p>
           </div>
-          <div className="flex items-center justify-center md:justify-end gap-6 pt-4">
-            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.514l-5.106-6.694-5.934 6.694H2.88l7.644-8.769-8.169-10.731h6.332l4.432 5.89 5.064-5.89zM16.736 20.033h1.832L6.363 4.125H4.447l12.289 15.908z"/>
-              </svg>
-            </a>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
-              <Facebook className="w-6 h-6" fill="currentColor" />
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-accent transition-colors">
-              <Instagram className="w-6 h-6" />
-            </a>
-          </div>
+
         </div>
       </div>
     </footer>
