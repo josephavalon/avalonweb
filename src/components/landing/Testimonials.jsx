@@ -126,7 +126,7 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-8 md:py-10 px-4 border-t border-border">
+    <section className="py-8 md:py-6 px-4 border-t border-border">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
