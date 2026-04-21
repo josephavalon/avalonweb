@@ -160,6 +160,8 @@ const VITAL_ICE_SF_TIERS = [
     perks: [
       '2 Hydration or standard IVs per month',
       '2 IM injections per month',
+      'Unlimited cold plunge access',
+      'Unlimited sauna access',
       '15–20% off group booking discounts',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -175,6 +177,8 @@ const VITAL_ICE_SF_TIERS = [
     perks: [
       '2 Hydration or standard IVs per month',
       '2 IM injections per month',
+      'Unlimited cold plunge access',
+      'Unlimited sauna access',
       '15–20% off group booking discounts',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -191,6 +195,8 @@ const VITAL_ICE_SF_TIERS = [
     perks: [
       '4 mixed IV drips per month (Beauty, Recovery, Myers, Energy)',
       '4 IM injections per month',
+      'Unlimited cold plunge access',
+      'Unlimited sauna access',
       '15–20% off group booking discounts',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -208,6 +214,8 @@ const VITAL_ICE_SF_TIERS = [
     perks: [
       '4 mixed IV drips per month (Beauty, Recovery, Myers, Energy)',
       '4 IM injections per month',
+      'Unlimited cold plunge access',
+      'Unlimited sauna access',
       '15–20% off group booking discounts',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -224,6 +232,8 @@ const VITAL_ICE_SF_TIERS = [
     perks: [
       '6 mixed IV drips per month',
       '6 IM injections per month',
+      'Unlimited cold plunge access',
+      'Unlimited sauna access',
       '15–20% off group booking discounts',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
@@ -241,6 +251,8 @@ const VITAL_ICE_SF_TIERS = [
     perks: [
       '6 mixed IV drips per month',
       '6 IM injections per month',
+      'Unlimited cold plunge access',
+      'Unlimited sauna access',
       '15–20% off group booking discounts',
       'Credits roll over (membership must be active)',
       '3-month minimum commitment',
