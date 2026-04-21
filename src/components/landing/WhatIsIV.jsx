@@ -60,12 +60,12 @@ export default function WhatIsIV() {
               IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span> — bypassing digestion entirely. Your body absorbs <span className="text-foreground font-semibold">100% of every nutrient</span>, exactly as administered.
             </p>
 
-            <p className="font-body text-sm text-foreground leading-relaxed mb-10">
+            <p className="font-body text-sm text-foreground leading-relaxed mb-8">
               Oral supplements lose up to 90% through gut metabolism. IV bypasses that completely — effects you can <span className="text-foreground font-semibold">feel within 30 minutes</span>.
             </p>
 
             {/* Stats grid */}
-            <div className="border-t border-border pt-8">
+            <div className="border-t border-border pt-6">
               <div className="grid grid-cols-3 gap-8 md:gap-12">
                 {stats.map((s) => (
                   <div key={s.label}>
