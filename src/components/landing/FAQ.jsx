@@ -129,34 +129,34 @@ export default function FAQ() {
   const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <section id="faq" className="py-16 md:py-24 px-4">
+    <section id="faq" className="py-12 md:py-16 px-4">
       <div className="max-w-3xl mx-auto">
 
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-10"
+          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-8"
         >
           FAQ
         </motion.h2>
 
         {/* Search */}
-        <div className="relative mb-8">
+        <div className="relative mb-6">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="SEARCH"
             value={search}
             onChange={e => { setSearch(e.target.value); setOpenIndex(null); }}
-            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-4 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="w-full bg-transparent border border-border/60 rounded-full pl-12 pr-6 py-3 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
 
         {/* Category filters */}
-        <div className="mb-8">
-          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-3">Topic</p>
-          <div className="flex flex-wrap gap-6">
+        <div className="mb-6">
+          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-2">Topic</p>
+          <div className="flex flex-wrap gap-4">
             {CATEGORIES.map(cat => (
               <button
                 key={cat}
@@ -174,7 +174,7 @@ export default function FAQ() {
         </div>
 
         {/* FAQ items */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {filtered.length === 0 ? (
             <p className="font-body text-sm text-muted-foreground py-8 text-center">No results found.</p>
           ) : (
