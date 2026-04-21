@@ -29,7 +29,7 @@ const testimonials = [
     tag: "HANGOVER IV"
   },
   {
-    quote: "Competitive athlete here. Recovery is everything. Since adding biweekly IVs my recovery time cut in half. Hitting PRs I haven't seen in years.",
+    quote: "I ball in a few leauges out here. Recovery is everything. Weekly IVs was key to cutting my down time in half.",
     name: "A.G.",
     tag: "ATHLETIC RECOVERY"
   },
