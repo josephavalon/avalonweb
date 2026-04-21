@@ -35,15 +35,15 @@ const categories = [
 
 export default function OurDrips() {
   return (
-    <section id="treatments" className="py-20 md:py-28 px-4">
+    <section id="treatments" className="py-12 md:py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10"
         >
-          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide">VITALITY TREATMENTS</h2>
+          <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide">VITALITY TREATMENTS</h2>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-4">
