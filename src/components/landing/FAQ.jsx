@@ -79,6 +79,21 @@ const faqs = [
     a: "We currently serve the entire San Francisco Bay Area, including SF, the Peninsula, East Bay, and Marin. Service area is expanding — join the waitlist for your city."
   },
   {
+    category: 'Booking',
+    q: "What is your cancellation and refund policy?",
+    a: "Cancellations made 24 hours in advance receive a full refund. Cancellations within 24 hours are subject to a 50% service fee. No-shows forfeit the full appointment cost. Members may cancel up to 2 monthly credits per billing cycle without penalty."
+  },
+  {
+    category: 'Booking',
+    q: "Do you require a deposit for events and group bookings?",
+    a: "Yes. Event bookings require a 50% deposit to secure your date and time. The remaining balance is due 48 hours before the event. Deposits are non-refundable unless you reschedule with at least 7 days notice."
+  },
+  {
+    category: 'Booking',
+    q: "Can I customize my IV treatment?",
+    a: "Absolutely. Every IV is customized based on your goals and needs. During your consultation, our clinical team will discuss your wellness objectives and design the perfect formula for you."
+  },
+  {
     category: 'Safety',
     q: "Is IV therapy safe for everyone?",
     a: "IV therapy is safe for most people, but not suitable for those with certain medical conditions like heart failure, kidney disease, or severe allergies. Always disclose your full medical history during consultation."
