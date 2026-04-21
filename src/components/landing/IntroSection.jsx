@@ -44,7 +44,7 @@ export default function IntroSection() {
           transition={{ duration: 0.8 }}
         >
           <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Foundation</p>
-          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">IV THERAPY IS THE BASE</h2>
+          <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8">IV THERAPY<br />IS THE BASE</h2>
           <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
             IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
           </p>
