@@ -43,7 +43,10 @@ const testimonials = [
     name: "C.A.",
     tag: "CBD IV"
   },
-];
+].sort((a, b) => {
+  const order = { 'J.G.': 0, 'Diplo': 1, 'R.D.': 2 };
+  return (order[a.name] ?? 999) - (order[b.name] ?? 999);
+});
 
 function IPhoneMockup({ testimonial }) {
   return (
@@ -117,6 +120,9 @@ export default function Testimonials() {
 
   const scroll = (direction) => {
     if (scrollRef.current) {
+      if (direction === 'left' && scrollRef.current.scrollLeft <= 0) {
+        return;
+      }
       const scrollAmount = 400;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
