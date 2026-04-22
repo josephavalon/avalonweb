@@ -170,7 +170,7 @@ const EXOSOME_TIERS = [
 
 const VITAL_ICE_SF_TIERS = [
   {
-    name: 'Essential — Community',
+    name: 'Essential Community',
     category: 'VITAL ICE SF',
     tagline: 'Fire & Ice Partner',
     locationNote: 'Studio Only - Marina District SF',
@@ -189,7 +189,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Essential — Private',
+    name: 'Essential Private',
     category: 'VITAL ICE SF',
     tagline: 'Fire & Ice Partner',
     locationNote: 'Studio Only - Marina District SF',
@@ -208,7 +208,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Plus — Community',
+    name: 'Plus Community',
     category: 'VITAL ICE SF',
     tagline: 'Most Popular',
     locationNote: 'Studio Only - Marina District SF',
@@ -229,7 +229,7 @@ const VITAL_ICE_SF_TIERS = [
     ],
   },
   {
-    name: 'Plus — Private',
+    name: 'Plus Private',
     category: 'VITAL ICE SF',
     tagline: 'Most Popular',
     locationNote: 'Studio Only - Marina District SF',
