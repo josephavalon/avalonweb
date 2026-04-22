@@ -116,7 +116,7 @@ export default function Apply() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="font-heading text-6xl md:text-[8rem] text-foreground tracking-wide mb-3">
+          <h1 className="font-heading text-[11vw] md:text-[8rem] text-foreground tracking-wide mb-3">
             APPLY FOR MEMBERSHIP
           </h1>
           <p className="font-body text-sm text-muted-foreground">
