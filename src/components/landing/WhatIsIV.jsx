@@ -49,7 +49,7 @@ export default function WhatIsIV() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-left pt-8"
+            className="text-left"
           >
             <div className="md:hidden mb-6">
               <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
