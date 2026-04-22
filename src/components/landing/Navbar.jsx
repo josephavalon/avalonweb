@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sunset } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isDark, setIsDark] = useState(true);
+  const [theme, setTheme] = useState('dark');
   const location = useLocation();
 
   useEffect(() => {
@@ -20,10 +20,14 @@ export default function Navbar() {
     setMobileOpen(false);
   }, [location]);
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle('dark');
+  const cycleTheme = () => {
+    const next = theme === 'dark' ? 'light' : theme === 'light' ? 'golden' : 'dark';
+    document.documentElement.classList.remove('dark', 'golden');
+    if (next !== 'light') document.documentElement.classList.add(next);
+    setTheme(next);
   };
+
+  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Sunset;
 
   const linkClass = "text-[11px] tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
 
@@ -48,11 +52,11 @@ export default function Navbar() {
         {/* Theme toggle and Login far right */}
         <div className="flex items-center gap-6">
           <button
-            onClick={toggleTheme}
+            onClick={cycleTheme}
             className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground"
-            aria-label="Toggle theme"
+            aria-label="Cycle theme"
           >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <ThemeIcon className="w-4 h-4" />
           </button>
           <a href="/membership" className={linkClass}>Login</a>
         </div>
@@ -63,11 +67,11 @@ export default function Navbar() {
         <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
         <div className="flex items-center gap-3">
           <button
-            onClick={toggleTheme}
+            onClick={cycleTheme}
             className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground"
-            aria-label="Toggle theme"
+            aria-label="Cycle theme"
           >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <ThemeIcon className="w-4 h-4" />
           </button>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
