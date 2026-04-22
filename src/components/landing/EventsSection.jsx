@@ -42,7 +42,7 @@ const events = [
 
 export default function EventsSection() {
   return (
-    <section id="events" className="py-6 md:py-8 px-4 border-t border-border">
+    <section id="events" className="py-6 md:py-8 px-4 border-t border-border scroll-mt-24">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
