@@ -14,7 +14,7 @@ export default function WhatIsIV() {
   return (
     <section className="py-10 md:py-14 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-start">
+        <div className="grid md:grid-cols-2 gap-16 items-end">
 
           {/* Image with Title Overlay */}
           <motion.div
