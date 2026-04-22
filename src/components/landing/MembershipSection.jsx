@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Check, ChevronDown } from 'lucide-react';
 
 const APPLY_URL = '/apply';
 
@@ -291,16 +291,6 @@ function IVTierCard({ tier, i, billing }) {
       </div>
 
 
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex">
-        <button
-          onClick={() => scroll('right')}
-          className="p-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
-          aria-label="Scroll right"
-        >
-          <ChevronRight className="w-4 h-4 text-foreground" />
-        </button>
-      </div>
-
       <ul className="space-y-2.5 mb-3 flex-1">
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
           <li key={perk} className="flex items-start gap-2">
@@ -487,18 +477,7 @@ const TABS = [
 export default function MembershipSection() {
   const [activeTab, setActiveTab] = useState(0);
   const [billing, setBilling] = useState('monthly');
-  const scrollRef = useRef(null);
   const tab = TABS[activeTab];
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 400;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'auto'
-      });
-    }
-  };
 
   const gridClass = tab.tiers.length === 5
     ? 'md:grid-cols-5'
@@ -583,28 +562,14 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers */}
-         <div ref={scrollRef} className="overflow-x-auto md:overflow-visible relative group" style={{ scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-5 h-5 text-foreground" />
-          </button>
+         <div className="overflow-x-auto md:overflow-visible" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className={`flex md:grid gap-3 md:gap-3 w-fit md:w-full md:px-0 md:justify-center ${gridClass}`}>
             {tab.tiers.map((tier, i) =>
               tab.type === 'iv'
                 ? <IVTierCard key={tier.name} tier={tier} i={i} billing={billing} />
                 : <SimpleTierCard key={tier.name} tier={tier} i={i} billing={billing} />
             )}
-            </div>
+          </div>
         </div>
 
         <motion.div
