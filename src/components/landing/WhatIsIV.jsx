@@ -7,7 +7,7 @@ const stats = [
   { value: '0%', label: 'Digestive Loss', sub: 'bypasses the gut entirely' },
   { value: '∞', label: 'Zero Waste', sub: 'no degradation in digestive system' },
   { value: '100%', label: 'Customizable', sub: 'tailored formulas for your needs' },
-  { value: '24/7', label: 'On-Demand', sub: 'available whenever you need it' },
+  { value: 'RN', label: 'Licensed Nurses', sub: 'every drip administered by a registered nurse' },
 ];
 
 export default function WhatIsIV() {
