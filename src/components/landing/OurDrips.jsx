@@ -72,7 +72,7 @@ export default function OurDrips() {
                   alt={cat.label}
                   className="w-full h-full object-cover object-[center_70%] group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-80"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/20" />
               </Link>
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <p className="text-[10px] tracking-[0.25em] text-accent font-body uppercase mb-1">{cat.tag}</p>
