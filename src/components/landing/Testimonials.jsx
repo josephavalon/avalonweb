@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const testimonials = [
   {
-    quote: "NAD+ makes it happen, CBD helps me relax at night.",
+    quote: "I'm a founder who codes 20 hours a day now. NAD+ makes it happen, CBD helps me relax at night.",
     name: "J.G.",
     tag: "NAD+ IV"
   },
