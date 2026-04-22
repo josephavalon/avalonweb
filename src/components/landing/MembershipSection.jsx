@@ -200,8 +200,8 @@ const VITAL_ICE_SF_TIERS = [
 
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
-  const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
-  const regularYearlyPrice = tier.regularPrice * 12;
+  const displayPrice = billing === 'annual' ? tier.price * 12 : tier.price;
+  const regularAnnualPrice = tier.regularPrice * 12;
   const [expanded, setExpanded] = useState(false);
   const visiblePerks = tier.visiblePerks || 3;
   const hasMore = tier.perks.length > visiblePerks;
@@ -228,11 +228,11 @@ function IVTierCard({ tier, i, billing }) {
       <div className="mb-6 relative">
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-6xl md:text-7xl text-foreground">${displayPrice}</span>
-          <span className="font-body text-xs text-muted-foreground">{billing === 'yearly' ? '/year' : '/month'}</span>
+          <span className="font-body text-xs text-muted-foreground">{billing === 'annual' ? '/year' : '/month'}</span>
         </div>
         <p className="font-body text-[9px] text-muted-foreground mt-0.5">
-          <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
-          <span className="text-accent ml-2">{billing === 'yearly' ? 'save 20% annually' : '20% member discount'}</span>
+          <span className="line-through">${billing === 'annual' ? regularAnnualPrice : tier.regularPrice}</span>
+          <span className="text-accent ml-2">{billing === 'annual' ? 'save 20% annual' : '20% member discount'}</span>
           {tier.locationNote && <div className="text-[7px] text-muted-foreground/60 mt-0.5">{tier.locationNote}</div>}
         </p>
       </div>
@@ -269,8 +269,8 @@ function IVTierCard({ tier, i, billing }) {
 
 // Card for NAD+, CBD, and Exosomes (single frequency)
 function SimpleTierCard({ tier, i, billing }) {
-      const displayPrice = billing === 'yearly' ? tier.price * 12 : tier.price;
-      const regularYearlyPrice = tier.regularPrice * 12;
+      const displayPrice = billing === 'annual' ? tier.price * 12 : tier.price;
+      const regularAnnualPrice = tier.regularPrice * 12;
       const [expanded, setExpanded] = useState(false);
       const visiblePerks = 3;
       const hasMore = tier.perks.length > visiblePerks;
@@ -302,7 +302,7 @@ function SimpleTierCard({ tier, i, billing }) {
           <span className="font-body text-xs text-muted-foreground">/month</span>
         </div>
         <p className="font-body text-[9px] text-muted-foreground text-center mt-0.5">
-          <span className="line-through">${billing === 'yearly' ? regularYearlyPrice : tier.regularPrice}</span>
+          <span className="line-through">${billing === 'annual' ? regularAnnualPrice : tier.regularPrice}</span>
           <span className="text-accent ml-2">20% member discount</span>
         </p>
       </div>
@@ -462,10 +462,10 @@ export default function MembershipSection() {
               Monthly
             </button>
             <button
-              onClick={() => setBilling('yearly')}
-              className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'yearly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setBilling('annual')}
+              className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Yearly — Save 20%
+              Annual — Save 20%
             </button>
           </div>
         </div>
