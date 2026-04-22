@@ -61,9 +61,18 @@ export default function Navbar() {
       {/* Mobile */}
       <div className="md:hidden flex items-center justify-between px-5 h-14">
         <Link to="/" className="font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground"
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="text-foreground p-1">
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
