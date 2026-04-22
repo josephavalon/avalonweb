@@ -21,10 +21,12 @@ export default function Navbar() {
   }, [location]);
 
   const cycleTheme = () => {
-    const next = theme === 'dark' ? 'light' : theme === 'light' ? 'golden' : 'dark';
-    document.documentElement.classList.remove('dark', 'golden');
-    if (next !== 'light') document.documentElement.classList.add(next);
-    setTheme(next);
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : prev === 'light' ? 'golden' : 'dark';
+      document.documentElement.classList.remove('dark', 'golden');
+      if (next !== 'light') document.documentElement.classList.add(next);
+      return next;
+    });
   };
 
   const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Sunset;
