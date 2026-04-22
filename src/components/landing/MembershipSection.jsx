@@ -184,13 +184,13 @@ function IVTierCard({ tier, i, billing }) {
   );
 }
 
-// Card for NAD+, CBD, and Exosomes (single frequency)
+// Card for NAD+, CBD (matches IVTierCard style)
 function SimpleTierCard({ tier, i, billing }) {
-      const displayPrice = billing === 'annual' ? tier.price * 12 : tier.price;
-      const regularAnnualPrice = tier.regularPrice * 12;
-      const [expanded, setExpanded] = useState(false);
-      const visiblePerks = 3;
-      const hasMore = tier.perks.length > visiblePerks;
+  const displayPrice = billing === 'annual' ? tier.price * 12 : tier.price;
+  const regularAnnualPrice = tier.regularPrice * 12;
+  const [expanded, setExpanded] = useState(false);
+  const visiblePerks = 3;
+  const hasMore = tier.perks.length > visiblePerks;
 
   return (
     <motion.div
@@ -198,36 +198,34 @@ function SimpleTierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className={`flex-shrink-0 w-[calc(100vw-12rem)] sm:w-[340px] md:w-auto relative border rounded-3xl p-6 flex flex-col text-center ${tier.featured || tier.isMostPopular ? 'border-accent/60 bg-card' : 'border-border bg-card'}`}
+      className={`flex-shrink-0 w-[calc(100vw-12rem)] sm:w-[340px] md:w-auto relative border rounded-3xl p-6 flex flex-col border-foreground bg-card`}
     >
       {(tier.featured || tier.isMostPopular) && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
-
       <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-1.5 text-muted-foreground">
         {tier.category}
       </p>
-      <p className="text-[8px] tracking-[0.3em] font-body uppercase mb-3 text-muted-foreground whitespace-nowrap">
+      <p className={`text-[8px] tracking-[0.3em] font-body uppercase mb-3 whitespace-nowrap text-muted-foreground`}>
         {tier.dose} per session
       </p>
-      <div className="flex items-start justify-center gap-2 mb-4">
-        <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide">{tier.name}</h3>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h3 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide">{tier.name}</h3>
         {tier.isMostPopular && <span className="text-accent text-[7px] tracking-[0.15em] uppercase whitespace-nowrap pt-0.5">Most Popular</span>}
       </div>
-
-      <div className="mb-6">
-        <div className="flex items-baseline justify-center gap-2">
-          <span className="font-heading text-4xl md:text-5xl text-foreground">${displayPrice}</span>
-          <span className="font-body text-xs text-muted-foreground">/month</span>
+      <div className="mb-6 relative">
+        <div className="flex items-baseline gap-2">
+          <span className="font-heading text-6xl md:text-7xl text-foreground">${displayPrice}</span>
+          <span className="font-body text-xs text-muted-foreground">{billing === 'annual' ? '/year' : '/month'}</span>
         </div>
-        <p className="font-body text-[9px] text-muted-foreground text-center mt-0.5">
+        <p className="font-body text-[9px] text-muted-foreground mt-0.5">
           <span className="line-through">${billing === 'annual' ? regularAnnualPrice : tier.regularPrice}</span>
-          <span className="text-accent ml-2">20% member discount</span>
+          <span className="text-accent ml-2">{billing === 'annual' ? 'save 20% annual' : '20% member discount'}</span>
         </p>
       </div>
 
       <ul className="space-y-2.5 mb-3 flex-1">
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
-          <li key={perk} className="flex items-center justify-center gap-2">
-            <Check className="w-3 h-3 text-accent shrink-0" strokeWidth={2.5} />
+          <li key={perk} className="flex items-start gap-2">
+            <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
             <span className="font-body text-[13px] text-muted-foreground leading-tight">{perk}</span>
           </li>
         ))}
