@@ -87,7 +87,7 @@ export default function Apply() {
   const [showPassword, setShowPassword] = useState(false);
   const [goalsOpen, setGoalsOpen] = useState(false);
   const [selectedGoals, setSelectedGoals] = useState([]);
-  const [selectedMembership, setSelectedMembership] = useState(null);
+  const [selectedMemberships, setSelectedMemberships] = useState({});
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', password: '', state: '', notes: '',
   });
@@ -239,29 +239,30 @@ export default function Apply() {
             {/* Membership tier selection */}
             <div className="pt-2">
               <p className="font-body text-[9px] tracking-[0.25em] text-muted-foreground uppercase mb-3 px-1">Select a membership tier</p>
-              <div className="space-y-2">
-                {MEMBERSHIP_CATEGORIES.map(category => (
-                  <div key={category.category}>
-                    <p className="font-body text-[8px] tracking-[0.2em] text-accent uppercase mb-1 px-1">{category.category}</p>
-                    <div className="grid grid-cols-2 gap-1.5 md:grid-cols-4">
-                      {category.tiers.map(tier => (
-                        <button
-                          key={tier.id}
-                          type="button"
-                          onClick={() => setSelectedMembership(tier.id)}
-                          className={`border rounded-xl px-2 py-2 font-body text-[10px] transition-all ${
-                            selectedMembership === tier.id
-                              ? 'border-white/40 bg-white/10 text-foreground'
-                              : 'border-white/15 text-muted-foreground hover:border-white/40 hover:text-foreground'
-                          }`}
-                        >
-                          <div className="font-semibold">{tier.name}</div>
-                          <div className="text-[8px] text-muted-foreground/70">{tier.price}</div>
-                        </button>
-                      ))}
+              <div className="grid grid-cols-2 gap-2">
+                {MEMBERSHIP_CATEGORIES.map(category => {
+                  const val = selectedMemberships[category.category] || '';
+                  return (
+                    <div key={category.category} className="relative">
+                      <select
+                        value={val}
+                        onChange={e => setSelectedMemberships(prev => ({ ...prev, [category.category]: e.target.value }))}
+                        className={`w-full appearance-none bg-transparent border rounded-full px-4 py-3 pr-8 font-body text-xs cursor-pointer transition-colors focus:outline-none ${
+                          val ? 'border-white/40 text-foreground' : 'border-white/15 text-muted-foreground'
+                        }`}
+                        style={{ background: 'transparent' }}
+                      >
+                        <option value="" className="bg-background text-muted-foreground">{category.category}</option>
+                        {category.tiers.map(tier => (
+                          <option key={tier.id} value={tier.id} className="bg-background text-foreground">
+                            {tier.name} — {tier.price}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
