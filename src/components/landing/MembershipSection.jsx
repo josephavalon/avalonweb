@@ -486,7 +486,7 @@ export default function MembershipSection() {
     : 'md:grid-cols-3';
 
   return (
-    <section id="membership" className="py-6 md:py-8 px-4 border-t border-border">
+    <section id="membership" className="py-6 md:py-8 px-4 border-t border-border scroll-mt-24">
       <div className="max-w-6xl mx-auto">
 
         <motion.div

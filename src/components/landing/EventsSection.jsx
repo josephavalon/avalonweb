@@ -1,6 +1,5 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const events = [
   {
@@ -42,18 +41,6 @@ const events = [
 ];
 
 export default function EventsSection() {
-  const scrollRef = useRef(null);
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 400;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
   return (
     <section id="events" className="py-6 md:py-8 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
@@ -84,24 +71,8 @@ export default function EventsSection() {
           </motion.h2>
         </motion.div>
 
-        <div className="relative group flex justify-center items-center">
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
-
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-5 h-5 text-foreground" />
-          </button>
-          <div ref={scrollRef} className="overflow-x-auto w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-3 md:gap-3 px-12 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
+        <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex gap-3 snap-x snap-mandatory w-fit md:w-full md:justify-center">
               {events.map((event, i) => (
                 <motion.div
                   key={event.title}
@@ -125,11 +96,9 @@ export default function EventsSection() {
                 </a>
                 </motion.div>
               ))}
-              </div>
           </div>
         </div>
       </div>
-      <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 }
