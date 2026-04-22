@@ -111,92 +111,9 @@ const CBD_TIERS = [
   },
 ];
 
-const EXOSOME_TIERS = [
-  {
-    name: 'Starter',
-    category: 'EXOSOMES',
-    dose: '30B',
-    price: 560, regularPrice: 700,
-    perks: ['1 × 30B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
-  },
-  {
-    name: 'Premium',
-    category: 'EXOSOMES',
-    dose: '50B',
-    isMostPopular: true,
-    price: 960, regularPrice: 1200,
-    perks: ['1 × 50B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
-  },
-  {
-    name: 'VIP',
-    category: 'EXOSOMES',
-    dose: '90B',
-    price: 1440, regularPrice: 1800,
-    perks: ['1 × 90B Exosome IV per month', '1 IM injection per month', '20% off all à la carte regeneration', 'Credits roll over (membership must be active)', '3-month minimum commitment', 'Priority scheduling', 'Dedicated care coordinator', 'Exclusive member events', 'White-glove concierge service', 'Unlimited messaging with your care team', 'Exclusive access and pricing on all products', 'Fast, discreet delivery - straight to your door'],
-  },
-];
 
-const VITAL_ICE_SF_TIERS = [
-  {
-    name: 'Starter',
-    category: 'VITAL ICE SF',
-    tagline: 'Fire & Ice Partner',
-    locationNote: 'Studio Only - Marina District SF',
-    visiblePerks: 4,
-    price: 300, regularPrice: 375,
-    perks: [
-      '1 IV drip per month',
-      '1 IM injection per month',
-      'Unlimited cold plunge access',
-      'Unlimited sauna access',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Unlimited messaging with your care team',
-    ],
-  },
-  {
-    name: 'Premium',
-    category: 'VITAL ICE SF',
-    tagline: 'Most Popular',
-    locationNote: 'Studio Only - Marina District SF',
-    visiblePerks: 4,
-    price: 480, regularPrice: 600,
-    isMostPopular: true,
-    perks: [
-      '2 IV drips per month',
-      '2 IM injections per month',
-      'Unlimited cold plunge access',
-      'Unlimited sauna access',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Unlimited messaging with your care team',
-    ],
-  },
-  {
-    name: 'VIP',
-    category: 'VITAL ICE SF',
-    tagline: 'Elite Access',
-    locationNote: 'Studio Only - Marina District SF',
-    visiblePerks: 4,
-    price: 720, regularPrice: 900,
-    perks: [
-      '4 IV drips per month',
-      '4 IM injections per month',
-      'Unlimited cold plunge access',
-      'Unlimited sauna access',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-      'White-glove concierge service',
-      'Unlimited messaging with your care team',
-    ],
-  },
-];
+
+
 
 // Card for IV Vitamins (simple, no frequency toggle)
 function IVTierCard({ tier, i, billing }) {
@@ -338,70 +255,12 @@ function SimpleTierCard({ tier, i, billing }) {
   );
 }
 
-const FLUID_TIERS = [
-  {
-    name: 'Starter',
-    category: 'FLUID',
-    price: 120, regularPrice: 150,
-    perks: [
-      '1 dehydration IV per month',
-      '1 IM injection per month',
-      '10% off all à la carte treatments',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Unlimited messaging with your care team',
-      'Exclusive access and pricing on all products',
-      'Fast, discreet delivery - straight to your door',
-    ],
-  },
-  {
-    name: 'Premium',
-    category: 'FLUID',
-    price: 240, regularPrice: 300,
-    isMostPopular: true,
-    perks: [
-      '2 dehydration IVs per month',
-      '2 IM injections per month',
-      '10% off all à la carte treatments',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-      'Unlimited messaging with your care team',
-      'Exclusive access and pricing on all products',
-      'Fast, discreet delivery - straight to your door',
-    ],
-  },
-  {
-    name: 'VIP',
-    category: 'FLUID',
-    price: 420, regularPrice: 525,
-    perks: [
-      '4 dehydration IVs per month',
-      '4 IM injections per month',
-      '10% off all à la carte treatments',
-      'Credits roll over (membership must be active)',
-      '3-month minimum commitment',
-      'Priority scheduling',
-      'Dedicated care coordinator',
-      'Exclusive member events',
-      'White-glove concierge service',
-      'Unlimited messaging with your care team',
-      'Exclusive access and pricing on all products',
-      'Fast, discreet delivery - straight to your door',
-    ],
-  },
-];
+
 
 const TABS = [
-  { label: 'Fluid', tiers: FLUID_TIERS, type: 'iv' },
   { label: 'Vitamins', tiers: IV_TIERS, type: 'iv' },
   { label: 'NAD+', tiers: NAD_TIERS, type: 'simple' },
   { label: 'CBD', tiers: CBD_TIERS, type: 'simple' },
-  { label: 'Exosomes', tiers: EXOSOME_TIERS, type: 'simple' },
-  { label: 'Vital Ice SF', tiers: VITAL_ICE_SF_TIERS, type: 'iv' },
 ];
 
 export default function MembershipSection() {
