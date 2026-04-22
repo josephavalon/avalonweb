@@ -5,7 +5,7 @@ const stats = [
   { value: '100%', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplements' },
   { value: '30min', label: 'Time to Effect', sub: 'nutrients reach cells almost instantly' },
   { value: '0%', label: 'Digestive Loss', sub: 'bypasses the gut entirely' },
-  { value: '∞', label: 'Zero Waste', sub: 'no degradation in digestive system' },
+  { value: 'MD', label: 'Physician Supervised', sub: 'all protocols reviewed by a licensed physician' },
   { value: '100%', label: 'Customizable', sub: 'tailored formulas for your needs' },
   { value: 'RN', label: 'Licensed Nurses', sub: 'every drip administered by a registered nurse' },
 ];
