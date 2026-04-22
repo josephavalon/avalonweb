@@ -101,7 +101,7 @@ export default function EventsSection() {
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
           <div ref={scrollRef} className="overflow-x-auto w-full" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-3 md:gap-3 px-16 md:px-0 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
+            <div className="flex gap-3 md:gap-3 px-12 snap-x snap-mandatory w-fit md:w-full md:justify-center" style={{ width: 'fit-content' }}>
               {events.map((event, i) => (
                 <motion.div
                   key={event.title}
@@ -109,7 +109,7 @@ export default function EventsSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex-shrink-0 w-[calc(100vw-8rem)] md:w-[450px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-center"
+                  className="flex-shrink-0 w-[calc(100vw-10rem)] md:w-[450px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-center"
                 >
                 <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
                 <div>
