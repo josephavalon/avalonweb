@@ -69,12 +69,12 @@ export default function Hero() {
           className="flex items-center justify-start w-full max-w-2xl mx-auto px-4"
         >
           <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden">
-            <span className="font-body text-xs tracking-widest text-foreground uppercase px-8 py-4">
+            <span className="font-body text-xs tracking-widest text-foreground uppercase px-12 py-5">
               A new standard in recovery
             </span>
             <Link
               to="/apply"
-              className="px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
+              className="px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
             >
               Apply Now
             </Link>
@@ -89,7 +89,7 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center space-y-0.5"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center space-y-2"
       >
         <p className="font-body text-[9px] text-foreground tracking-widest">
          Licensed Nurses • Physician Supervised • HIPAA Secure
