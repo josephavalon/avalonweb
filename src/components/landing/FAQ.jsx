@@ -171,7 +171,7 @@ export default function FAQ() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8 whitespace-nowrap"
+          className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8 md:whitespace-nowrap"
         >
           FAQ
         </motion.h2>
