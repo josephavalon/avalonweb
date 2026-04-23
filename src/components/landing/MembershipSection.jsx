@@ -92,7 +92,7 @@ function TierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col h-full border-foreground bg-card"
+      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-foreground bg-card"
     >
       {tier.isMostPopular && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
 
@@ -243,7 +243,7 @@ export default function MembershipSection() {
 
         {/* Tiers — always all three, no category switching */}
         <div className="overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain md:overflow-visible md:touch-auto md:overscroll-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-3 w-fit md:w-full md:px-0 md:justify-center md:items-start">
+          <div className="flex items-stretch md:grid md:grid-cols-3 gap-3 md:gap-3 w-fit md:w-full md:px-0 md:justify-center md:items-start">
             {TIERS.map((tier, i) => (
               <TierCard key={tier.name} tier={tier} i={i} billing={billing} />
             ))}
