@@ -37,7 +37,7 @@ export default function Navbar() {
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // localStorage may be unavailable (private mode, SSR) â non-fatal.
+      // localStorage may be unavailable (private mode, SSR) — non-fatal.
     }
   }, [theme]);
 
@@ -47,7 +47,7 @@ export default function Navbar() {
 
   const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Sunset;
 
-  // Always route home and scroll to top â even when user is already on "/"
+  // Always route home and scroll to top — even when user is already on "/"
   // (React Router's <Link to="/"> is a no-op from "/"; this forces the reset).
   const handleLogoClick = (e) => {
     if (location.pathname === '/') {
@@ -86,7 +86,7 @@ export default function Navbar() {
           <button
             onClick={cycleTheme}
             className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label={`Switch theme â currently ${theme}`}
+            aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
             <ThemeIcon className="w-4 h-4" />
@@ -104,7 +104,7 @@ export default function Navbar() {
           <button
             onClick={cycleTheme}
             className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            aria-label={`Switch theme â currently ${theme}`}
+            aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
             <ThemeIcon className="w-4 h-4" />
