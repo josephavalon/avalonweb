@@ -164,7 +164,6 @@ export default async function handler(req, res) {
         <p><strong>Name:</strong> ${safeFirst} ${safeLast}</p>
         <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
         <p><strong>Phone:</strong> ${safePhone || '<em>Not provided</em>'}</p>
-        <p><strong>Job title:</strong> ${safeJobTitle || '<em>Not provided</em>'}</p>
         <p><strong>State:</strong> ${safeState || '<em>Not provided</em>'}</p>
         <p><strong>Wellness goals:</strong></p>
         <ul>${goalsList}</ul>
