@@ -26,7 +26,7 @@ export default function WhatIsIV() {
           >
             <div className="relative w-full max-w-xs">
               <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-              <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8 whitespace-nowrap">WHAT IS IV THERAPY?</h2>
+              <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
               <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full bg-card">
                 <img
                   src="/bags/immunity.png"
@@ -53,7 +53,7 @@ export default function WhatIsIV() {
           >
             <div className="md:hidden mb-6">
               <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-              <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-6 whitespace-nowrap">WHAT IS IV THERAPY?</h2>
+              <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-6 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
             </div>
 
             <p className="font-body text-sm text-foreground leading-relaxed mb-5">
