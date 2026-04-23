@@ -3,7 +3,7 @@ import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const INTERNAL_TO = 'support@avalonvitality.co';
+const INTERNAL_TO = 'joseph@avalonvitality.co';
 const FROM_INTERNAL = 'Avalon Waitlist <onboarding@resend.dev>';
 const FROM_SUBSCRIBER = 'Avalon Vitality <support@avalonvitality.co>';
 
