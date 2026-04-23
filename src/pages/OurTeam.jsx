@@ -16,14 +16,14 @@ const CLINICAL = [
     name: 'Dr. Jayson Weir',
     role: 'Medical Director',
     credentials: 'MD — Internal Medicine',
-    bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol.',
+    bio: 'Internist with over a decade of hospital and concierge practice.',
     anchor: true,
   },
   {
     name: 'Stephanie Weeks',
     role: 'Clinical Lead',
     credentials: null,
-    bio: null,
+    bio: 'Years of concierge clinical experience.',
   },
 ];
 
