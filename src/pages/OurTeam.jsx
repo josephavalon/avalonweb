@@ -6,8 +6,8 @@ import Footer from '../components/landing/Footer';
 const EASE = [0.16, 1, 0.3, 1];
 
 // Our Team page. Two stacked sections:
-//   1. Clinical Team — Medical Director + Clinical Lead
-//   2. Leadership — founders + operating team
+//   1. Clinical Team â Medical Director + Clinical Lead
+//   2. Leadership â founders + operating team
 // Text-only cards for launch. Headshots to come post-presale.
 // Bios are a single paragraph where present; placeholder cards omit bio.
 
@@ -15,7 +15,7 @@ const CLINICAL = [
   {
     name: 'Dr. Jayson Weir',
     role: 'Medical Director',
-    credentials: 'MD — Internal Medicine',
+    credentials: 'MD â Internal Medicine',
     bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol. He reviews every formulation, signs off on every new modality before it reaches a member, and owns every clinical escalation from the field.',
     anchor: true,
   },
@@ -29,14 +29,14 @@ const CLINICAL = [
 
 const LEADERSHIP = [
   {
-    name: 'Joshua Goldbard',
-    role: 'Co-Founder',
-    bio: 'Founder of MobileCoin and Crypto Lotus. Co-founder of Fire Wallet.',
-  },
-  {
     name: 'Joseph Litton',
     role: 'Co-Founder',
     bio: 'Startup veteran across multiple Bay Area companies.',
+  },
+  {
+    name: 'Joshua Goldbard',
+    role: 'Co-Founder',
+    bio: 'Founder of MobileCoin and Crypto Lotus. Co-founder of Fire Wallet.',
   },
   {
     name: 'Corey Assibey',
@@ -45,18 +45,23 @@ const LEADERSHIP = [
   },
   {
     name: 'Grady Brannan',
-    role: 'Head of Marketing',
-    bio: 'Bay Area photography legend. Led marketing at MobileCoin; credits include Rolling Stone, Billboard, and the SF Giants.',
+    role: 'Head of Partnerships',
+    bio: 'Bay Area photography legend; credits include Rolling Stone, Billboard, and the SF Giants.',
   },
   {
     name: 'Robert Decoito',
     role: 'Head of Business Development',
-    bio: 'MobileCoin veteran running Avalon\u2019s partner and commercial channels.',
+    bio: 'Startup veteran running Avalon\u2019s partner and commercial channels.',
   },
   {
     name: 'Manuel',
     role: 'Operations',
-    bio: 'MobileCoin veteran running day-to-day operations.',
+    bio: 'Startup veteran running day-to-day operations.',
+  },
+  {
+    name: 'Aaron',
+    role: 'Head of Workforce Operations',
+    bio: 'Startup veteran leading workforce operations.',
   },
 ];
 
