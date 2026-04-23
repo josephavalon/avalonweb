@@ -126,13 +126,17 @@ export default async function handler(req, res) {
     `;
 
     // 1. Internal notification — must succeed.
-    await resend.emails.send({
+    const internalResult = await resend.emails.send({
       from: FROM_INTERNAL,
       to: INTERNAL_TO,
       replyTo: email,
       subject: `Waitlist signup — ${email}`,
       html: internalHtml,
     });
+    if (internalResult?.error) {
+      console.error('Waitlist internal email failed:', internalResult.error);
+      return res.status(502).json({ error: 'Email service rejected the send.', detail: internalResult.error.message || JSON.stringify(internalResult.error) });
+    }
 
     // 2. Subscriber confirmation — fire-and-forget.
     try {
