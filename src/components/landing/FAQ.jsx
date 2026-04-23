@@ -10,36 +10,6 @@ const faqs = [
     a: "Every IV is customized and made fresh on-site with medical-grade ingredients like B-complex vitamins, glutathione, magnesium, zinc, and electrolytes — tailored to your needs."
   },
   {
-    category: 'General',
-    q: "How long does an IV session take, and is it painful?",
-    a: "Sessions last 30–60 minutes with minimal discomfort — just a quick pinch like a standard blood draw. Many clients love the relaxing, spa-like vibe of receiving treatment at home or their hotel."
-  },
-  {
-    category: 'General',
-    q: "Are there side effects, and is it safe?",
-    a: "Side effects are rare and mild, such as minor bruising at the insertion site. IV therapy is safe for most people; always disclose any allergies or medical conditions when booking."
-  },
-  {
-    category: 'General',
-    q: "Is IV therapy often used around hangovers or fatigue?",
-    a: "IV fluids and electrolytes are commonly used to address dehydration, and B-complex and magnesium are popular nutrients in this context. Individual experiences vary — this is educational information, not medical advice. Your clinician will help you decide if a session is appropriate for you."
-  },
-  {
-    category: 'General',
-    q: "Is IV therapy better than oral vitamins?",
-    a: "IV therapy delivers nutrients directly to the bloodstream, bypassing digestion for up to 100% absorption compared to 10–20% from oral supplements."
-  },
-  {
-    category: 'General',
-    q: "How often should I get an IV?",
-    a: "Frequency varies by goal. Weekly for chronic fatigue or performance maintenance, bi-weekly for athletes, or on-demand for travel and events."
-  },
-  {
-    category: 'General',
-    q: "What is NAD+ and why would I want it?",
-    a: "NAD+ is a coenzyme essential for cellular energy production, DNA repair, and cognitive function. Levels decline with age. IV NAD+ replenishes them directly — supporting energy, mental clarity, and longevity."
-  },
-  {
     category: 'Membership',
     q: "How does the membership work?",
     a: "Membership is by application only. Once approved, you lock in presale pricing with a 3-month minimum commitment. Credits roll over month-to-month as long as your membership stays active."
@@ -80,11 +50,6 @@ const faqs = [
     a: "We currently serve the entire San Francisco Bay Area, including SF, the Peninsula, East Bay, and Marin. Service area is expanding — join the waitlist for your city."
   },
   {
-    category: 'General',
-    q: "What is your cancellation and refund policy?",
-    a: "Cancellations made 24 hours in advance receive a full refund. Cancellations within 24 hours are subject to a 50% service fee. No-shows forfeit the full appointment cost. Members may cancel up to 2 monthly credits per billing cycle without penalty."
-  },
-  {
     category: 'Safety',
     q: "Is IV therapy safe for everyone?",
     a: "IV therapy is safe for most people, but not suitable for those with certain medical conditions like heart failure, kidney disease, or severe allergies. Always disclose your full medical history during consultation."
@@ -101,18 +66,8 @@ const faqs = [
   },
   {
     category: 'General',
-    q: "Are there payment plans available?",
-    a: "We accept all major credit cards and offer membership plans with monthly installments. For large orders or corporate packages, contact us for custom payment arrangements."
-  },
-  {
-    category: 'General',
     q: "Do you accept insurance?",
     a: "We do not bill insurance directly. Payment is required at the time of service. However, we provide itemized receipts that you can submit to your insurance provider for potential reimbursement if your policy covers IV wellness therapy."
-  },
-  {
-    category: 'General',
-    q: "Can I use FSA or HSA funds?",
-    a: "Yes, most FSA and HSA accounts can be used for IV therapy treatments. Check with your account administrator for specifics, and we'll provide documentation to support your claim."
   },
 ];
 
