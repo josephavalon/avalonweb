@@ -114,9 +114,9 @@ export default function OurStory() {
               The infrastructure never kept pace.
             </h3>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed mb-4">
-              California builds everything else at the frontier — but recovery felt like an
-              afterthought. Walk-in clinics with hour-long waits. Generic menus. Nothing
-              calibrated to the way Bay Area professionals actually live.
+              California builds everything at the frontier — but recovery was an
+              afterthought. Walk-in waits. Generic menus. Nothing calibrated to how Bay
+              Area professionals actually live.
             </p>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
               We believed you deserved something better: care that comes to you, informed by
@@ -135,10 +135,9 @@ export default function OurStory() {
               World-leading recovery at reasonable cost.
             </h3>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
-              Deliver clinician-supervised hydration and wellness therapies with the best
-              possible outcomes — at a price that rewards membership rather than punishes it.
-              Whether you're bouncing back after a pitch meeting or recharging after a
-              weekend on your feet, we bring the visit to you.
+              Clinician-supervised hydration and wellness therapies, delivered to you —
+              priced to reward membership. Whether you're bouncing back from a pitch or
+              recharging after a weekend on your feet.
             </p>
           </motion.div>
         </div>
@@ -162,9 +161,8 @@ export default function OurStory() {
             className="md:col-span-7 max-w-measure"
           >
             <p className="font-body text-body-lg text-foreground/90 leading-relaxed mb-5">
-              Avalon Vitality is the product of years of clinical and operational
-              collaboration applied to one real problem — world-class recovery that works
-              when you need it most and doesn't cost an arm or a leg.
+              Years of clinical and operational collaboration, pointed at one problem:
+              world-class recovery that works when you need it and doesn't cost a fortune.
             </p>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
               We're here to support creators, founders, and performers with the kind of care
