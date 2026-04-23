@@ -47,7 +47,7 @@ export default function B2BSection() {
             </p>
             <div className="flex justify-start mt-4">
               <a
-                href="mailto:partnerships@avalonvitality.co"
+                href="mailto:support@avalonvitality.co"
                 className="px-8 py-4 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"
               >
                 Talk to Partnerships →
