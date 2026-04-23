@@ -108,7 +108,7 @@ export default function EventsSection() {
                 </div>
                 <p className="font-body text-[11px] text-foreground leading-relaxed flex-1">{event.desc}</p>
                 <a
-                  href="/#membership"
+                  href="/#waitlist"
                   className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
                 >
                   Get Notified →
