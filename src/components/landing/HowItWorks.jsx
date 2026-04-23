@@ -48,7 +48,7 @@ export default function HowItWorks() {
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4 md:mb-8"
         >
           <div className="text-left max-w-3xl">
-            <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide whitespace-nowrap">
+            <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">
               HOW IT WORKS
             </h2>
             <p className="font-body text-sm text-foreground mt-4 max-w-2xl">
