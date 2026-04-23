@@ -30,39 +30,14 @@ const faqs = [
     a: "IV therapy delivers nutrients directly to the bloodstream, bypassing digestion for up to 100% absorption compared to 10–20% from oral supplements."
   },
   {
-    category: 'Treatments',
+    category: 'General',
     q: "How often should I get an IV?",
     a: "Frequency varies by goal. Weekly for chronic fatigue or performance maintenance, bi-weekly for athletes, or on-demand for travel and events."
   },
   {
-    category: 'Treatments',
+    category: 'General',
     q: "What is NAD+ and why would I want it?",
     a: "NAD+ is a coenzyme essential for cellular energy production, DNA repair, and cognitive function. Levels decline with age. IV NAD+ replenishes them directly — supporting energy, mental clarity, and longevity."
-  },
-  {
-    category: 'Treatments',
-    q: "What is IV CBD and does it contain THC?",
-    a: "Our IV CBD is 100% THC-free isolate administered directly into the bloodstream for maximum bioavailability. It's used for anti-inflammatory effects, stress relief, and recovery support."
-  },
-  {
-    category: 'Treatments',
-    q: "Which IV treatment do athletes often choose for recovery?",
-    a: "Our Event Recovery IV is formulated with amino acids, electrolytes, and hydration — a common post-workout choice. Some athletes pair it with NAD+ for cellular energy support. Your clinician will help you decide what's appropriate for you."
-  },
-  {
-    category: 'Treatments',
-    q: "Can I combine multiple IV treatments?",
-    a: "Yes. Many clients enhance their sessions by stacking treatments. For example, combining Myers' Cocktail with NAD+ or CBD with amino acid boosters. Our clinical team can recommend safe and effective combinations based on your goals."
-  },
-  {
-    category: 'Treatments',
-    q: "How quickly might I notice a difference?",
-    a: "Individual experiences vary. Many clients report noticing hydration and a sense of wellbeing during or shortly after their session. This is educational information, not medical advice — your clinician will discuss what to expect."
-  },
-  {
-    category: 'Treatments',
-    q: "Are there any lifestyle changes I should make with IV therapy?",
-    a: "IV therapy works best as part of a broader wellness routine — adequate sleep, hydration, balanced nutrition, and regular exercise. Our clinical team provides personalized guidance with every session. This is educational content, not medical advice."
   },
   {
     category: 'Membership',
@@ -100,34 +75,14 @@ const faqs = [
     a: "Memberships are non-transferable and tied to your account. However, we offer corporate and family plans for multiple users — contact partnerships@avalonvitality.co for details."
   },
   {
-    category: 'Booking',
-    q: "Do you offer mobile services for events?",
-    a: "Yes — our teams arrive with everything needed for an on-site recovery lounge. We've done festivals, corporate retreats, film sets, and private parties. Contact us for group and event pricing."
-  },
-  {
-    category: 'Booking',
-    q: "How far in advance do I need to book?",
-    a: "Same-day appointments are often available, though we recommend booking 24 hours ahead to guarantee your preferred time. Members receive priority scheduling."
-  },
-  {
-    category: 'Booking',
+    category: 'General',
     q: "What areas do you serve?",
     a: "We currently serve the entire San Francisco Bay Area, including SF, the Peninsula, East Bay, and Marin. Service area is expanding — join the waitlist for your city."
   },
   {
-    category: 'Booking',
+    category: 'General',
     q: "What is your cancellation and refund policy?",
     a: "Cancellations made 24 hours in advance receive a full refund. Cancellations within 24 hours are subject to a 50% service fee. No-shows forfeit the full appointment cost. Members may cancel up to 2 monthly credits per billing cycle without penalty."
-  },
-  {
-    category: 'Booking',
-    q: "Do you require a deposit for events and group bookings?",
-    a: "Yes. Event bookings require a 50% deposit to secure your date and time. The remaining balance is due 48 hours before the event. Deposits are non-refundable unless you reschedule with at least 7 days notice."
-  },
-  {
-    category: 'Booking',
-    q: "Can I customize my IV treatment?",
-    a: "Absolutely. Every IV is customized based on your goals and needs. During your consultation, our clinical team will discuss your wellness objectives and design the perfect formula for you."
   },
   {
     category: 'Safety',
@@ -145,49 +100,19 @@ const faqs = [
     a: "Yes. All our ingredients are pharmaceutical-grade and meet strict FDA standards. We use sterile, single-use equipment and maintain rigorous infection control protocols for every session."
   },
   {
-    category: 'Pricing',
-    q: "What's the cost of a single IV session?",
-    a: "Single IV sessions range from $150–$1,100 depending on the treatment type. IV Vitamins start at $150, NAD+ from $350, and CBD from $250. Members receive 20% off all services."
-  },
-  {
-    category: 'Pricing',
+    category: 'General',
     q: "Are there payment plans available?",
     a: "We accept all major credit cards and offer membership plans with monthly installments. For large orders or corporate packages, contact us for custom payment arrangements."
   },
   {
-    category: 'Pricing',
-    q: "Do you offer group or corporate discounts?",
-    a: "Yes. Corporate wellness programs, team events, and group bookings receive special rates. Contact us at partnerships@avalonvitality.co for details."
-  },
-  {
-    category: 'Insurance',
+    category: 'General',
     q: "Do you accept insurance?",
     a: "We do not bill insurance directly. Payment is required at the time of service. However, we provide itemized receipts that you can submit to your insurance provider for potential reimbursement if your policy covers IV wellness therapy."
   },
   {
-    category: 'Insurance',
+    category: 'General',
     q: "Can I use FSA or HSA funds?",
     a: "Yes, most FSA and HSA accounts can be used for IV therapy treatments. Check with your account administrator for specifics, and we'll provide documentation to support your claim."
-  },
-  {
-    category: 'Insurance',
-    q: "Do you provide receipts for reimbursement purposes?",
-    a: "Absolutely. We provide itemized receipts detailing treatment type, date, and cost — perfect for FSA/HSA submissions or insurance reimbursement claims."
-  },
-  {
-    category: 'Coming Soon',
-    q: "What services are in your development pipeline?",
-    a: "We're actively expanding our offerings to include peptide therapies, aesthetic treatments, and specialized regenerative protocols. Join our waitlist to be first notified when new services launch."
-  },
-  {
-    category: 'Coming Soon',
-    q: "When will new treatments become available?",
-    a: "Our roadmap includes quarterly service launches. We're prioritizing based on member feedback and clinical validation. Subscribe to our newsletter for the latest updates on upcoming offerings."
-  },
-  {
-    category: 'Coming Soon',
-    q: "How can I request a specific treatment?",
-    a: "We'd love to hear what you're interested in. Email us at support@avalonvitality.co with your treatment suggestions — member requests directly influence our development priorities."
   },
 ];
 
