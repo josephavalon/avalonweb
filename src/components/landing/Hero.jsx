@@ -64,7 +64,7 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 1.1 }}
             className="px-2 mx-auto flex flex-col items-center gap-3 md:gap-4"
           >
-            <div className="font-body text-xs md:text-sm text-foreground tracking-[0.3em] md:tracking-[0.4em] uppercase whitespace-nowrap">
+            <div className="font-body text-[10px] md:text-sm text-foreground tracking-[0.2em] md:tracking-[0.4em] uppercase text-center md:whitespace-nowrap">
               The Operating System for Human Performance
             </div>
             <p className="font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-xl">
