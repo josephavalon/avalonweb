@@ -61,7 +61,7 @@ export default function HowItWorks() {
 
           {/* Desktop-hidden, mobile-visible carousel controls lifted above the cards
               so they don't overlap card content. */}
-          <div className="flex md:hidden items-center gap-2 self-end">
+          <div className="hidden items-center gap-2 self-end">
             <button
               onClick={() => scroll('left')}
               className="p-2 rounded-full border border-border bg-card hover:bg-secondary transition-colors"
