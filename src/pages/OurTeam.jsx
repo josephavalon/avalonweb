@@ -30,12 +30,12 @@ const CLINICAL = [
 const LEADERSHIP = [
   {
     name: 'Joseph Litton',
-    role: 'Co-Founder',
+    role: 'Co-Founder & CEO',
     bio: 'Startup veteran across multiple Bay Area companies.',
   },
   {
     name: 'Joshua Goldbard',
-    role: 'Co-Founder',
+    role: 'Strategic Advisor',
     bio: 'Founder of MobileCoin and Crypto Lotus. Co-founder of Fire Wallet.',
   },
   {
@@ -103,37 +103,8 @@ export default function OurTeam() {
     <div className="bg-background min-h-screen">
       <Navbar />
 
-      <section className="pt-32 md:pt-40 pb-10 md:pb-12 px-6 md:px-16">
-        <div className="max-w-6xl mx-auto">
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
-          >
-            The Team
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: EASE }}
-            className="font-heading text-5xl md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.95]"
-          >
-            OUR TEAM
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15, ease: EASE }}
-            className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-6"
-          >
-            Clinicians, operators, and builders. Every Protocol at Avalon is designed, reviewed, and renewed under our Medical Director, Dr. Jayson Weir.
-          </motion.p>
-        </div>
-      </section>
-
       {/* Clinical Team */}
-      <section className="py-8 md:py-12 px-6 md:px-16 border-t border-border">
+      <section className="pt-32 md:pt-40 pb-8 md:pb-12 px-6 md:px-16">
         <div className="max-w-6xl mx-auto">
           <motion.p
             initial={{ opacity: 0, y: 10 }}
