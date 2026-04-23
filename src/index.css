@@ -140,6 +140,20 @@ p, h1, h2, h3, h4, h5, h6 {
   word-break: break-word;
 }
 
+/* #root containment — prevent any absolute/fixed children from pushing layout. */
+#root, .app-shell {
+  max-width: 100vw;
+  overflow-x: clip;
+  position: relative;
+}
+
+/* Mobile-only: prevent grid/flex containers from exceeding viewport, clamp media. */
+@media (max-width: 767px) {
+  img, video, iframe, svg { max-width: 100%; height: auto; }
+  .grid, .flex { max-width: 100%; }
+  section > div, main > div { max-width: 100vw; }
+}
+
 /* Horizontal-overflow clip lives on a wrapper, not html/body, so middle-click
    autoscroll still has a real root scroller to anchor on. */
 .app-shell {
