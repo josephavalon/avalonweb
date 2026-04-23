@@ -82,7 +82,7 @@ const faqs = [
   {
     category: 'Membership',
     q: "What's included in each membership tier?",
-    a: "Tiers include monthly IV drips and IM injections ranging from 1–4 treatments per month, depending on the plan. All members get 20% off à la carte services, priority scheduling, and access to exclusive member events. Higher tiers include a dedicated care coordinator and white-glove concierge service."
+    a: "Tiers include monthly IV drips and IM injections ranging from 1–4 treatments per month, depending on the plan. All members get 20% off à la carte services, priority scheduling, and access to exclusive member events. Higher tiers include a dedicated care coordinator."
   },
   {
     category: 'Membership',
