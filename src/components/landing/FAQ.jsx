@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Search } from 'lucide-react';
+import { EASE_OUT_EXPO } from '@/lib/motion';
 
 const faqs = [
   {
@@ -20,8 +21,8 @@ const faqs = [
   },
   {
     category: 'General',
-    q: "Can IV vitamins help with hangovers or fatigue?",
-    a: "Absolutely. Our IVs are designed to support rapid rehydration and nutrient replenishment. Clients report feeling dramatically better within 30–60 minutes after a hangover or fatigue session."
+    q: "Is IV therapy often used around hangovers or fatigue?",
+    a: "IV fluids and electrolytes are commonly used to address dehydration, and B-complex and magnesium are popular nutrients in this context. Individual experiences vary — this is educational information, not medical advice. Your clinician will help you decide if a session is appropriate for you."
   },
   {
     category: 'General',
@@ -40,18 +41,13 @@ const faqs = [
   },
   {
     category: 'Treatments',
-    q: "What are Exosomes?",
-    a: "Exosomes are extracellular vesicles that carry biological signals between cells, supporting regeneration and repair. Our Exosome IVs range from 30B to 90B particles and represent the frontier of cellular regenerative therapy."
-  },
-  {
-    category: 'Treatments',
     q: "What is IV CBD and does it contain THC?",
     a: "Our IV CBD is 100% THC-free isolate administered directly into the bloodstream for maximum bioavailability. It's used for anti-inflammatory effects, stress relief, and recovery support."
   },
   {
     category: 'Treatments',
-    q: "Which IV treatment is best for athletic recovery?",
-    a: "Our Event Recovery IV is specifically designed for athletes post-workout. It includes anti-inflammatory agents, amino acids, electrolytes, and hydration. Many athletes also pair it with NAD+ or Exosomes for deeper cellular repair."
+    q: "Which IV treatment do athletes often choose for recovery?",
+    a: "Our Event Recovery IV is formulated with amino acids, electrolytes, and hydration — a common post-workout choice. Some athletes pair it with NAD+ for cellular energy support. Your clinician will help you decide what's appropriate for you."
   },
   {
     category: 'Treatments',
@@ -60,13 +56,13 @@ const faqs = [
   },
   {
     category: 'Treatments',
-    q: "How quickly will I feel the effects?",
-    a: "Most clients feel effects within 15–30 minutes as nutrients enter the bloodstream. Energy, mental clarity, and hydration improvements are typically noticed immediately. Regenerative benefits from Exosomes develop over days to weeks."
+    q: "How quickly might I notice a difference?",
+    a: "Individual experiences vary. Many clients report noticing hydration and a sense of wellbeing during or shortly after their session. This is educational information, not medical advice — your clinician will discuss what to expect."
   },
   {
     category: 'Treatments',
     q: "Are there any lifestyle changes I should make with IV therapy?",
-    a: "While IV therapy is powerful alone, results are maximized with adequate sleep, hydration, balanced nutrition, and regular exercise. We provide personalized wellness guidance with every treatment to optimize your protocol."
+    a: "IV therapy works best as part of a broader wellness routine — adequate sleep, hydration, balanced nutrition, and regular exercise. Our clinical team provides personalized guidance with every session. This is educational content, not medical advice."
   },
   {
     category: 'Membership',
@@ -101,7 +97,7 @@ const faqs = [
   {
     category: 'Membership',
     q: "Can I transfer my membership to someone else?",
-    a: "Memberships are non-transferable and tied to your account. However, we offer corporate and family plans for multiple users — contact partnerships@avalonvitality.com for details."
+    a: "Memberships are non-transferable and tied to your account. However, we offer corporate and family plans for multiple users — contact partnerships@avalonvitality.co for details."
   },
   {
     category: 'Booking',
@@ -151,7 +147,7 @@ const faqs = [
   {
     category: 'Pricing',
     q: "What's the cost of a single IV session?",
-    a: "Single IV sessions range from $150–$1,800 depending on the treatment type. IV Vitamins start at $150, NAD+ from $350, CBD from $250, and Exosomes from $700. Members receive 20% off all services."
+    a: "Single IV sessions range from $150–$1,100 depending on the treatment type. IV Vitamins start at $150, NAD+ from $350, and CBD from $250. Members receive 20% off all services."
   },
   {
     category: 'Pricing',
@@ -161,7 +157,7 @@ const faqs = [
   {
     category: 'Pricing',
     q: "Do you offer group or corporate discounts?",
-    a: "Yes. Corporate wellness programs, team events, and group bookings receive special rates. Contact us at partnerships@avalonvitality.com for details."
+    a: "Yes. Corporate wellness programs, team events, and group bookings receive special rates. Contact us at partnerships@avalonvitality.co for details."
   },
   {
     category: 'Insurance',
@@ -218,7 +214,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
           >
             <div className="px-5 pb-3 border-t border-border/40">
                <p className="font-body text-sm text-foreground leading-relaxed pt-2">{faq.a}</p>
@@ -245,16 +241,18 @@ export default function FAQ() {
 
   return (
     <section id="faq" className="py-4 md:py-6 px-4">
-      <div className="max-w-3xl mx-auto">
-
+      <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-6xl md:text-8xl text-foreground tracking-wide mb-3"
+          className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8 whitespace-nowrap"
         >
           FAQ
         </motion.h2>
+      </div>
+      <div className="max-w-3xl mx-auto">
+
 
         {/* Search */}
         <div className="relative mb-2">

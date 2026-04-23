@@ -36,7 +36,7 @@ export default function Careers() {
               Avalon Vitality is building the future of high-performance recovery. We're looking for passionate, driven individuals who are committed to excellence in clinical care, operations, and innovation.
             </p>
             <p className="font-body text-base text-muted-foreground leading-relaxed">
-              If you're interested in joining our growing team, reach out to us at <a href="mailto:careers@avalonvitality.com" className="text-accent hover:text-accent/70">careers@avalonvitality.com</a> with your resume and a brief introduction.
+              If you're interested in joining our growing team, reach out to us at <a href="mailto:careers@avalonvitality.co" className="text-accent hover:text-accent/70">careers@avalonvitality.co</a> with your resume and a brief introduction.
             </p>
           </motion.div>
 

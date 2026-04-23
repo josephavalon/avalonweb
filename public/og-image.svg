@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background: Avalon off-black with a subtle warm spotlight behind the lockup. -->
+  <defs>
+    <radialGradient id="spot" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#D4B578" stop-opacity="0.18"/>
+      <stop offset="55%" stop-color="#D4B578" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#0A0A0A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vignette" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="75%" stop-color="#0A0A0A" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0A0A0A" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0A0A0A"/>
+  <rect width="1200" height="630" fill="url(#spot)"/>
+  <rect width="1200" height="630" fill="url(#vignette)"/>
+
+  <!-- Top rule -->
+  <line x1="72" y1="72" x2="1128" y2="72" stroke="#F1F1F0" stroke-opacity="0.18" stroke-width="1"/>
+
+  <!-- Eyebrow -->
+  <text x="72" y="110"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="16" letter-spacing="6"
+        fill="#D4B578"
+        font-weight="500">
+    PRESALE — LIMITED SPOTS
+  </text>
+
+  <!-- Wordmark -->
+  <text x="72" y="300"
+        font-family="'Bebas Neue', 'Oswald', 'Arial Narrow', sans-serif"
+        font-size="220" letter-spacing="4"
+        fill="#F1F1F0"
+        font-weight="400">
+    AVALON
+  </text>
+  <text x="72" y="470"
+        font-family="'Bebas Neue', 'Oswald', 'Arial Narrow', sans-serif"
+        font-size="220" letter-spacing="4"
+        fill="#F1F1F0"
+        font-weight="400">
+    VITALITY
+  </text>
+
+  <!-- Divider -->
+  <line x1="72" y1="510" x2="360" y2="510" stroke="#F1F1F0" stroke-opacity="0.35" stroke-width="1"/>
+
+  <!-- Subhead -->
+  <text x="72" y="552"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="22" letter-spacing="1"
+        fill="#F1F1F0" fill-opacity="0.88"
+        font-weight="400">
+    Mobile IV therapy in San Francisco.
+  </text>
+  <text x="72" y="584"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="18" letter-spacing="5"
+        fill="#F1F1F0" fill-opacity="0.65"
+        font-weight="500">
+    RN-ADMINISTERED  ·  PHYSICIAN-SUPERVISED  ·  HIPAA-SECURE
+  </text>
+
+  <!-- Accent mark -->
+  <circle cx="1090" cy="112" r="6" fill="#D4B578"/>
+  <text x="970" y="116"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="13" letter-spacing="4"
+        fill="#F1F1F0" fill-opacity="0.7"
+        text-anchor="end"
+        font-weight="500">
+    AVALONVITALITY.CO
+  </text>
+
+  <!-- Bottom rule -->
+  <line x1="72" y1="558" x2="1128" y2="558" stroke="#F1F1F0" stroke-opacity="0.06" stroke-width="1"/>
+</svg>

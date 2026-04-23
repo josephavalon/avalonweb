@@ -2,19 +2,19 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const stats = [
-  { value: '100%', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplements' },
-  { value: '30min', label: 'Time to Effect', sub: 'nutrients reach cells almost instantly' },
+  { value: '100%', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplementation' },
+  { value: '30min', label: 'Average Session', sub: 'typical infusion time, door-to-door' },
   { value: '0%', label: 'Digestive Loss', sub: 'bypasses the gut entirely' },
   { value: 'MD', label: 'Physician Supervised', sub: 'all protocols reviewed by a licensed physician' },
-  { value: '100%', label: 'Customizable', sub: 'tailored formulas for your needs' },
+  { value: '100%', label: 'Customizable', sub: 'formulas tailored to your preferences' },
   { value: 'RN', label: 'Licensed Nurses', sub: 'every drip administered by a registered nurse' },
 ];
 
 export default function WhatIsIV() {
   return (
     <section className="py-10 md:py-14 px-4 border-t border-border">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-end">
+      <div className="max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-[minmax(320px,380px)_minmax(0,620px)] gap-8 md:gap-10 items-end">
 
           {/* Image with Title Overlay */}
           <motion.div
@@ -27,13 +27,13 @@ export default function WhatIsIV() {
             <div className="relative w-full max-w-xs">
               <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
               <h2 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8 whitespace-nowrap">WHAT IS IV THERAPY?</h2>
-              <div className="aspect-[3/4] rounded-3xl overflow-hidden w-full">
+              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full bg-card">
                 <img
-                  src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/11af8bb23_ivtherapy.png"
-                  alt="IV bag"
-                  className="w-full h-full object-cover object-center"
+                  src="/bags/immunity.png"
+                  alt="Avalon Vitality vitamin IV bag"
+                  className="w-full h-full object-contain object-center"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
               </div>
               {/* Floating stat */}
               <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-6">
@@ -57,11 +57,11 @@ export default function WhatIsIV() {
             </div>
 
             <p className="font-body text-sm text-foreground leading-relaxed mb-5">
-              IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span> — bypassing digestion entirely. Your body absorbs <span className="text-foreground font-semibold">100% of every nutrient</span>, exactly as administered.
+              IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span> — bypassing the digestive tract entirely. Nutrients reach circulation without the absorption losses associated with oral supplementation.
             </p>
 
             <p className="font-body text-sm text-foreground leading-relaxed mb-8">
-              Oral supplements lose up to 90% through gut metabolism. IV bypasses that completely — effects you can <span className="text-foreground font-semibold">feel within 30 minutes</span>.
+              Oral supplements can lose a significant portion of their bioavailability during gut metabolism. IV administration bypasses that process, supporting your wellness protocol in a single <span className="text-foreground font-semibold">30–60 minute</span> session.
             </p>
 
             {/* Stats grid */}

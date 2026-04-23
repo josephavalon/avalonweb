@@ -25,13 +25,13 @@ export default function RealResultsReviews() {
 
   return (
     <section className="py-16 md:py-20 px-4 md:px-16 border-t border-border">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-12 md:mb-16"
+          className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8 leading-[0.95]"
         >
           REAL PEOPLE. REAL RESULTS.
         </motion.h2>

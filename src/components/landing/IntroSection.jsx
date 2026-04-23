@@ -1,24 +1,29 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, Sparkles, TestTube, Heart, Scissors, Pill, Apple, Link, Leaf, MapPin, Dumbbell, Lightbulb, Flame, CircleUser, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link, Dumbbell, Lightbulb, Flame, CircleUser } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
+// Ordered for grid layout. Diagnostics sits immediately after the three
+// live verticals because biomarkers are the foundation beneath every future
+// Protocol — they're the primitive that makes personalization real.
+// The Protocol registry (src/lib/protocol/verticals.js) is the data-level
+// source of truth; this array is the presentation order for the grid.
+// Launch quarters mirror src/lib/protocol/verticals.js — keep in sync. A
+// change here is a public commitment change, so don't quietly edit quarters
+// without also updating the Protocol registry and ensuring ops can ship.
 const verticals = [
   { label: 'IV Vitamins', icon: Droplets, live: true },
   { label: 'NAD+', icon: Zap, live: true },
   { label: 'CBD', icon: CannabisLeaf, live: true },
-  { label: 'Exosomes', icon: Sparkles, live: false },
-  { label: 'Contrast Therapy', icon: Flame, live: true, location: 'Vital Ice SF' },
-  { label: 'Recovery Devices', icon: Lightbulb, live: false },
+  { label: 'Diagnostics', icon: TestTube, live: false },
   { label: 'Peptides', icon: Link, live: false },
-  { label: 'Personalized Protocols', icon: Zap, live: false },
-  { label: 'Blood & Genetic Testing', icon: TestTube, live: false },
-  { label: 'Sexual Wellness', icon: Heart, live: false },
-  { label: 'Personal Fitness', icon: Dumbbell, live: false },
-  { label: 'HRT', icon: Pill, live: false },
+  { label: 'Hormone Optimization', icon: Heart, live: false },
   { label: 'Supplements', icon: Pill, live: false },
-  { label: 'Diet', icon: Apple, live: false },
-  { label: 'Aesthetics', icon: CircleUser, live: false },
+  { label: 'Regenerative Aesthetics', icon: CircleUser, live: false },
+  { label: 'Nutrition', icon: Apple, live: false },
+  { label: 'Contrast Therapy', icon: Flame, live: false, location: 'studio' },
+  { label: 'Recovery Devices', icon: Lightbulb, live: false },
+  { label: 'Personal Fitness', icon: Dumbbell, live: false },
 ];
 
 export default function IntroSection() {
@@ -40,7 +45,7 @@ export default function IntroSection() {
 
   return (
     <section className="py-8 md:py-10 px-4 border-t border-border">
-      <div className="max-w-4xl mx-auto text-center">
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -48,32 +53,41 @@ export default function IntroSection() {
           transition={{ duration: 0.8 }}
           className="text-left"
         >
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4"
+            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             The Foundation
           </motion.p>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-8"
+            className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8"
           >
             IV THERAPY IS THE BASE
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="font-body text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12"
+            className="font-body text-base md:text-lg text-foreground leading-relaxed max-w-2xl mb-5"
           >
-            IV therapy is the bedrock. Every other modality builds on top — delivered by licensed clinicians, wherever you are, or visit us in San Francisco.
+            We operate at the protocol layer. IV therapy is the base — every modality is composable on top.
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mb-12"
+          >
+            Every session compounds into a proprietary longitudinal biology record.
           </motion.p>
 
           {/* Mobile: horizontal scroll, 2 rows of 3 visible */}
@@ -83,14 +97,14 @@ export default function IntroSection() {
                 <div
                   key={label}
                   style={{ width: 'calc((100vw - 2rem) / 3)' }}
-                  className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                  className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[104px] transition-colors ${
                     live
                       ? 'border-foreground/25 bg-card text-foreground'
-                      : 'border-border bg-card/40 text-muted-foreground/40'
+                      : 'border-border bg-card/40 text-muted-foreground/70'
                   }`}
                 >
                   <Icon
-                    className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                    className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/60'}`}
                     strokeWidth={1.5}
                   />
                   <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
@@ -102,9 +116,6 @@ export default function IntroSection() {
                   {live && (
                     <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
                   )}
-                  {!live && (
-                    <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
-                  )}
                 </div>
               ))}
             </div>
@@ -115,14 +126,14 @@ export default function IntroSection() {
             {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }) => (
               <div
                 key={label}
-                className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 transition-colors ${
+                className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[120px] transition-colors ${
                   live
                     ? 'border-foreground/25 bg-card text-foreground'
-                    : 'border-border bg-card/40 text-muted-foreground/40'
+                    : 'border-border bg-card/40 text-muted-foreground/70'
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/30'}`}
+                  className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/60'}`}
                   strokeWidth={1.5}
                 />
                 <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
@@ -135,13 +146,13 @@ export default function IntroSection() {
                   <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
                 )}
                 {!live && (
-                  <span className="font-body text-[8px] tracking-widest text-muted-foreground/30 uppercase">Soon</span>
+                  <span className="font-body text-[8px] tracking-widest text-muted-foreground/60 uppercase">Soon</span>
                 )}
               </div>
             ))}
           </div>
 
-          <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/40 uppercase">
+          <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/70 uppercase">
             <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
             Live at launch
           </p>

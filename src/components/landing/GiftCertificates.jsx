@@ -8,36 +8,45 @@ const GIFT_TYPEFORM_URL = 'https://placeholder-typeform-gift.com'; // replace wi
 export default function GiftCertificates() {
   return (
     <section id="gift" className="py-8 md:py-10 px-4 border-t border-border">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9 }}
+          transition={{ duration: 0.8 }}
+          className="text-left mb-4 md:mb-8"
+        >
+          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Give The Gift of Recovery</p>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide whitespace-nowrap">GIFT CERTIFICATES</h2>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.1 }}
           className="grid md:grid-cols-2 gap-12 items-center"
         >
           {/* Left */}
           <div>
-            <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Give The Gift of Recovery</p>
-            <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6 leading-none">GIFT<br />CERTIFICATES</h2>
             <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
               Give someone the experience of elite mobile IV therapy — delivered to their door. Gift certificates are available in any denomination and never expire.
             </p>
             {/* Denomination buttons */}
-             <div className="flex flex-wrap gap-2 mb-5 justify-center">
-             {['$100', '$250', '$500', '$1,000', '$5,000', '$10,000'].map((amt) => (
+             <div className="flex flex-wrap md:flex-nowrap gap-2 mb-5 justify-center">
+             {['$100', '$250', '$500', '$1,000', '$5,000'].map((amt) => (
                 <a
                   key={amt}
                   href={GIFT_SQUARE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground hover:text-accent transition-colors rounded-full text-center"
+                  className="px-4 py-2.5 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase hover:border-foreground hover:text-accent transition-colors rounded-full text-center"
                 >
                   {amt}
                 </a>
               ))}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href={GIFT_SQUARE_URL}
                 target="_blank"
@@ -57,13 +66,13 @@ export default function GiftCertificates() {
             </div>
           </div>
 
-          {/* Right — decorative card */}
+          {/* Right — decorative card (desktop only) */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.9, delay: 0.2 }}
-            className="relative"
+            className="relative hidden md:block"
           >
             <div className="border border-border rounded-3xl bg-card p-10 relative overflow-hidden">
               {/* Background glow */}

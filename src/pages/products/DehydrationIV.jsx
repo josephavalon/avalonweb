@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Navbar from '../../components/landing/Navbar';
 import Footer from '../../components/landing/Footer';
@@ -78,14 +79,12 @@ export default function DehydrationIV() {
               <p className="font-heading text-3xl text-foreground">30–60 min</p>
             </div>
 
-            <a
-              href="https://avalonvitality.as.me/schedule/a9d85b1e"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/apply"
               className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-4 hover:bg-foreground/90 transition-colors mb-6"
             >
-              Book Online
-            </a>
+              Apply for Membership
+            </Link>
 
             <div className="flex gap-4">
               <a href="tel:+14159807708" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-body uppercase tracking-wide">

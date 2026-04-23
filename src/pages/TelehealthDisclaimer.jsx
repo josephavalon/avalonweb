@@ -18,7 +18,7 @@ export default function TelehealthDisclaimer() {
           >
             TELEHEALTH DISCLAIMER
           </motion.h1>
-          <p className="font-body text-sm text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+          <p className="font-body text-sm text-muted-foreground">Last updated: April 2026</p>
         </div>
       </section>
 

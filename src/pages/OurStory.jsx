@@ -1,9 +1,34 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import {
+  MapPin,
+  Stethoscope,
+  Shield,
+  Home,
+  Briefcase,
+  Hotel,
+  Users,
+  Calendar,
+} from 'lucide-react';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
 
-const BOOK_URL = 'https://avalonvitality.as.me/schedule/a9d85b1e';
+// Editorial easing per non-negotiable #5.
+const EASE = [0.16, 1, 0.3, 1];
+const REVEAL = {
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.8, ease: EASE },
+};
+
+const MEET_YOU = [
+  { icon: Home, label: 'At home' },
+  { icon: Briefcase, label: 'At work' },
+  { icon: Hotel, label: 'In hotels' },
+  { icon: Users, label: 'Green rooms' },
+  { icon: Calendar, label: 'Bay Area events' },
+];
 
 export default function OurStory() {
   return (
@@ -11,134 +36,309 @@ export default function OurStory() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative h-[60vh] flex items-end justify-start overflow-hidden">
+      <section className="relative min-h-[72vh] flex items-end overflow-hidden pt-24">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80"
-            alt="Golden Gate Bridge"
+            alt="Golden Gate Bridge at dusk"
             className="w-full h-full object-cover opacity-50"
+            loading="eager"
+            fetchPriority="high"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         </div>
-        <div className="relative z-10 px-6 md:px-16 pb-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="font-heading text-7xl md:text-[9rem] text-foreground tracking-wide leading-none"
+        <div className="relative z-10 px-6 md:px-16 pb-12 md:pb-16 max-w-5xl">
+          <motion.p
+            {...REVEAL}
+            className="text-eyebrow text-accent font-body uppercase mb-6"
           >
-            OUR STORY
+            Our Story
+          </motion.p>
+          <motion.h1
+            {...REVEAL}
+            transition={{ ...REVEAL.transition, delay: 0.1 }}
+            className="font-heading text-display-xl text-foreground leading-none"
+          >
+            RECOVERY
+            <br />
+            ENGINEERED FOR
+            <br />
+            THE GOLDEN STATE
           </motion.h1>
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-8 md:py-10 px-6 md:px-16">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            <h2 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-6">
-              Recovery Engineered for the Golden State
+      {/* Thesis */}
+      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+        <div className="max-w-content mx-auto grid md:grid-cols-12 gap-rhythm-6">
+          <motion.div {...REVEAL} className="md:col-span-5">
+            <p className="text-eyebrow text-muted-foreground/80 font-body uppercase mb-6">
+              The Thesis
+            </p>
+            <h2 className="font-heading text-h1 text-foreground tracking-wide">
+              California runs on ambition.
             </h2>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-5">
-              Living in the San Francisco Bay Area means operating at full velocity. High performers do not guess at recovery — they engineer it.
-            </p>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-5">
-              From late nights in Silicon Valley to all-out weekends at BottleRock and Burning Man, high performance is the baseline. The pace never stops, and your recovery should not either.
-            </p>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed">
-              That's why we deliver science-backed, on-demand recovery therapies designed to keep you sharp, resilient, and ready for what is next. We are here to help creators, founders, and performers thrive — rather than just survive.
-            </p>
           </motion.div>
-
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
+            {...REVEAL}
+            transition={{ ...REVEAL.transition, delay: 0.15 }}
+            className="md:col-span-7 space-y-5 max-w-measure"
           >
-            <div className="border border-border rounded p-8 bg-card mb-6">
-              <h3 className="font-heading text-2xl text-foreground tracking-wide mb-4">Why We Created Avalon Vitality</h3>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
-                California runs on ambition, but the recovery infrastructure never kept pace. We saw walk-in clinics with hour-long waits, generic treatments, and recovery options that felt like an afterthought.
-              </p>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                We believed high performers deserved something better — recovery that comes to you, calibrated to your body, and delivered by clinicians who treat outcomes as seriously as you treat your goals.
-              </p>
-            </div>
-
-            <div className="border border-border rounded p-8 bg-card">
-              <h3 className="font-heading text-2xl text-foreground tracking-wide mb-4">Our Mission</h3>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                To deliver world-leading recovery therapies with the best possible outcomes at the lowest reasonable cost — wherever you are.
-              </p>
-            </div>
+            <p className="font-body text-body text-foreground/90 leading-relaxed">
+              Living in the Bay Area means operating at full velocity. High performers don't
+              guess at recovery — they engineer it.
+            </p>
+            <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
+              From late nights in Silicon Valley to weekends at BottleRock and Burning Man,
+              the pace never stops. Recovery shouldn't either.
+            </p>
+            <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
+              We built Avalon to bring clinician-delivered hydration and wellness protocols
+              directly to you — so you can stay present for the life you've chosen.
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Founder section */}
-      <section className="py-8 md:py-10 px-6 md:px-16 border-t border-border">
-        <div className="max-w-5xl mx-auto">
+      {/* Why / Mission split */}
+      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+        <div className="max-w-content mx-auto grid md:grid-cols-2 gap-rhythm-4">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-10"
+            {...REVEAL}
+            className="border border-border rounded-2xl p-8 md:p-10 bg-card"
           >
-            <h2 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-2">Clinical Leadership</h2>
-            <p className="font-body text-sm text-muted-foreground">Dr. Jayson Weir, MD and Stephanie Weeks, RN</p>
+            <p className="text-eyebrow text-accent font-body uppercase mb-5">
+              Why We Built Avalon
+            </p>
+            <h3 className="font-heading text-h3 text-foreground tracking-wide mb-6">
+              The infrastructure never kept pace.
+            </h3>
+            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed mb-4">
+              California builds everything else at the frontier — but recovery felt like an
+              afterthought. Walk-in clinics with hour-long waits. Generic menus. Nothing
+              calibrated to the way Bay Area professionals actually live.
+            </p>
+            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+              We believed you deserved something better: care that comes to you, informed by
+              your intake assessment, delivered by clinicians who take outcomes as seriously
+              as you take your work.
+            </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <motion.div
+            {...REVEAL}
+            transition={{ ...REVEAL.transition, delay: 0.15 }}
+            className="border border-border rounded-2xl p-8 md:p-10 bg-card"
+          >
+            <p className="text-eyebrow text-accent font-body uppercase mb-5">Our Mission</p>
+            <h3 className="font-heading text-h3 text-foreground tracking-wide mb-6">
+              World-leading recovery at reasonable cost.
+            </h3>
+            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+              Deliver clinician-supervised hydration and wellness therapies with the best
+              possible outcomes — at a price that rewards membership rather than punishes it.
+              Whether you're bouncing back after a pitch meeting or recharging after a
+              weekend on your feet, we bring the visit to you.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Founded in San Francisco */}
+      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+        <div className="max-w-content mx-auto grid md:grid-cols-12 gap-rhythm-6 items-start">
+          <motion.div {...REVEAL} className="md:col-span-5">
+            <p className="text-eyebrow text-accent font-body uppercase mb-6 inline-flex items-center gap-2">
+              <MapPin className="w-3 h-3" strokeWidth={2} />
+              Founded in San Francisco
+            </p>
+            <h2 className="font-heading text-h2 text-foreground tracking-wide">
+              Built by Bay Area natives for the lives we actually live.
+            </h2>
+          </motion.div>
+          <motion.div
+            {...REVEAL}
+            transition={{ ...REVEAL.transition, delay: 0.15 }}
+            className="md:col-span-7 max-w-measure"
+          >
+            <p className="font-body text-body-lg text-foreground/90 leading-relaxed mb-5">
+              Avalon Vitality is the product of years of clinical and operational
+              collaboration applied to one real problem — world-class recovery that works
+              when you need it most and doesn't cost an arm or a leg.
+            </p>
+            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+              We're here to support creators, founders, and performers with the kind of care
+              that fits how they actually work.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Where we meet you */}
+      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+        <div className="max-w-content mx-auto">
+          <motion.div {...REVEAL} className="mb-10">
+            <p className="text-eyebrow text-accent font-body uppercase mb-4">
+              Where We Meet You
+            </p>
+            <h2 className="font-heading text-h2 text-foreground tracking-wide">
+              Your place. Your pace.
+            </h2>
+            <p className="font-body text-body text-muted-foreground/90 leading-relaxed mt-4 max-w-measure">
+              Under expert clinical guidance, licensed clinicians deliver hydration and
+              wellness protocols wherever you are across the Bay Area.
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {MEET_YOU.map(({ icon: Icon, label }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ delay: i * 0.08, duration: 0.6, ease: EASE }}
+                className="flex flex-col items-center justify-center gap-3 border border-foreground/25 rounded-2xl p-5 md:p-6 bg-card min-h-[120px]"
+              >
+                <Icon className="w-5 h-5 text-accent" strokeWidth={1.5} />
+                <span className="font-body text-micro uppercase text-foreground text-center">
+                  {label}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Clinical Leadership */}
+      <section
+        id="leadership"
+        className="px-6 md:px-16 py-section-sm md:py-section border-t border-border"
+      >
+        <div className="max-w-content mx-auto">
+          <motion.div {...REVEAL} className="mb-10 max-w-measure-lg">
+            <p className="text-eyebrow text-accent font-body uppercase mb-4 inline-flex items-center gap-2">
+              <Stethoscope className="w-3 h-3" strokeWidth={2} />
+              Clinical Leadership
+            </p>
+            <h2 className="font-heading text-h1 text-foreground tracking-wide mb-4">
+              Care that travels with credentials.
+            </h2>
+            <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
+              Every visit is supervised by our medical director and delivered by a
+              California-licensed clinician — at home, at work, in hotels, in green rooms,
+              and at events across the Bay Area.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-rhythm-4">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="border border-border rounded p-8 bg-card"
+              {...REVEAL}
+              className="border border-border rounded-2xl p-8 md:p-10 bg-card"
             >
-              <div className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center mb-4">
-                <span className="font-heading text-2xl text-accent">JW</span>
+              <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center mb-6">
+                <span className="font-heading text-xl text-accent tracking-wider">JW</span>
               </div>
-              <h3 className="font-heading text-xl text-foreground tracking-wide mb-1">Dr. Jayson Weir, MD</h3>
-              <p className="text-[10px] tracking-[0.2em] text-accent font-body uppercase mb-3">Founder & Medical Director</p>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                A respected medical doctor with a background in internal medicine and regenerative therapies. Dr. Weir envisioned a new kind of wellness: on-demand, elite-grade, and tailored for artists, athletes, and professionals who live at the edge.
+              <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">
+                Dr. Jayson Weir, MD
+              </h3>
+              <p className="text-micro tracking-[0.2em] text-accent font-body uppercase mb-5">
+                Founder &amp; Medical Director
+              </p>
+              <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+                Medical doctor with a background in internal medicine and performance-focused
+                wellness. Dr. Weir built Avalon around a new standard: on-demand clinical
+                care, tailored to the people who move the Bay Area forward.
               </p>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-              className="border border-border rounded p-8 bg-card"
+              {...REVEAL}
+              transition={{ ...REVEAL.transition, delay: 0.15 }}
+              className="border border-border rounded-2xl p-8 md:p-10 bg-card"
             >
-              <div className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center mb-4">
-                <span className="font-heading text-2xl text-accent">SW</span>
+              <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center mb-6">
+                <span className="font-heading text-xl text-accent tracking-wider">SW</span>
               </div>
-              <h3 className="font-heading text-xl text-foreground tracking-wide mb-1">Stephanie Weeks, RN</h3>
-              <p className="text-[10px] tracking-[0.2em] text-accent font-body uppercase mb-3">Lead Registered Nurse</p>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                Veteran nurse and co-clinical lead. Stephanie brings years of IV therapy experience and ensures every Avalon treatment upholds the highest standards of safety, sterility, and patient care.
+              <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">
+                Stephanie Weeks, RN
+              </h3>
+              <p className="text-micro tracking-[0.2em] text-accent font-body uppercase mb-5">
+                Lead Registered Nurse
+              </p>
+              <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+                Veteran IV nurse and co-clinical lead. Stephanie sets Avalon's standards for
+                safety, sterility, and bedside care — so every session meets the same bar,
+                whether it's your first or your fortieth.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-8 md:py-10 px-6 text-center border-t border-border">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide">THIS IS AVALON VITALITY</h2>
+      {/* Trust trailer */}
+      <section className="px-6 md:px-16 py-section-sm border-t border-border">
+        <div className="max-w-content mx-auto grid grid-cols-1 md:grid-cols-3 gap-rhythm-4">
+          <motion.div
+            {...REVEAL}
+            className="flex flex-col gap-2.5"
+          >
+            <Shield className="w-4 h-4 text-accent" strokeWidth={1.5} />
+            <p className="text-micro uppercase text-foreground tracking-[0.2em]">
+              Licensed Clinicians
+            </p>
+            <p className="font-body text-body-sm text-muted-foreground/85 leading-relaxed">
+              Every Avalon visit is delivered by a California-licensed clinician under
+              medical director oversight.
+            </p>
+          </motion.div>
+          <motion.div
+            {...REVEAL}
+            transition={{ ...REVEAL.transition, delay: 0.1 }}
+            className="flex flex-col gap-2.5"
+          >
+            <MapPin className="w-4 h-4 text-accent" strokeWidth={1.5} />
+            <p className="text-micro uppercase text-foreground tracking-[0.2em]">
+              Bay Area Coverage
+            </p>
+            <p className="font-body text-body-sm text-muted-foreground/85 leading-relaxed">
+              San Francisco and the greater Bay Area at launch. Expanding methodically, not
+              in a hurry.
+            </p>
+          </motion.div>
+          <motion.div
+            {...REVEAL}
+            transition={{ ...REVEAL.transition, delay: 0.2 }}
+            className="flex flex-col gap-2.5"
+          >
+            <Stethoscope className="w-4 h-4 text-accent" strokeWidth={1.5} />
+            <p className="text-micro uppercase text-foreground tracking-[0.2em]">
+              Intake First
+            </p>
+            <p className="font-body text-body-sm text-muted-foreground/85 leading-relaxed">
+              Every protocol begins with a clinical intake. No guesswork. No one-size-fits-all
+              drip menus.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Close */}
+      <section className="px-6 md:px-16 py-section border-t border-border">
+        <motion.div {...REVEAL} className="max-w-content mx-auto text-center">
+          <p className="text-eyebrow text-accent font-body uppercase mb-6">This is</p>
+          <h2 className="font-heading text-display text-foreground tracking-wide leading-none">
+            AVALON VITALITY
+          </h2>
+          <div className="h-px bg-foreground/20 w-24 mx-auto mt-8 mb-8" />
+          <p className="font-body text-body text-muted-foreground/85 leading-relaxed max-w-measure mx-auto">
+            Launching in San Francisco.
+          </p>
+          <a
+            href="/apply"
+            className="inline-block mt-8 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-10 py-4 hover:bg-foreground/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            Apply for Membership
+          </a>
         </motion.div>
       </section>
 

@@ -1,85 +1,81 @@
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import PageNotFound from './lib/PageNotFound';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { Toaster } from '@/components/ui/toaster';
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
-import ChatWidget from '@/components/ChatWidget';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import RouteFallback from '@/components/RouteFallback';
 import Home from './pages/Home';
-import OurStory from './pages/OurStory';
-import DehydrationIV from './pages/products/DehydrationIV';
-import IVVitaminsService from './pages/services/IVVitamins';
-import NAD from './pages/services/NAD';
-import CBD from './pages/services/CBD';
-import Exosomes from './pages/services/Exosomes';
-import IVVitaminsCategory from './pages/products/IVVitamins';
-import ProductDetail from './pages/products/ProductDetail';
-import Apply from './pages/Apply';
-import Careers from './pages/Careers';
-import MembershipDashboard from './pages/MembershipDashboard';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsAndConditions from './pages/TermsAndConditions';
-import TelehealthDisclaimer from './pages/TelehealthDisclaimer';
-import ProductDisclaimer from './pages/ProductDisclaimer';
 
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+// Home stays eager — it's the landing page, it needs to be instant.
+// Everything else is code-split so the initial bundle is just the marketing shell.
+const OurStory = lazy(() => import('./pages/OurStory'));
+const OurTeam = lazy(() => import('./pages/OurTeam'));
+const Apply = lazy(() => import('./pages/Apply'));
+const Careers = lazy(() => import('./pages/Careers'));
+const DehydrationIV = lazy(() => import('./pages/products/DehydrationIV'));
+const IVVitaminsService = lazy(() => import('./pages/services/IVVitamins'));
+const NAD = lazy(() => import('./pages/services/NAD'));
+const CBD = lazy(() => import('./pages/services/CBD'));
+const IVVitaminsCategory = lazy(() => import('./pages/products/IVVitamins'));
+const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
+const TelehealthDisclaimer = lazy(() => import('./pages/TelehealthDisclaimer'));
+const ProductDisclaimer = lazy(() => import('./pages/ProductDisclaimer'));
+const PageNotFound = lazy(() => import('./lib/PageNotFound'));
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-4 border-secondary border-t-foreground rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
-  }
-
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/our-story" element={<OurStory />} />
-      <Route path="/products/dehydration-iv" element={<DehydrationIV />} />
-      <Route path="/services/iv-vitamins" element={<IVVitaminsService />} />
-      <Route path="/services/nad" element={<NAD />} />
-      <Route path="/services/cbd" element={<CBD />} />
-      <Route path="/services/exosomes" element={<Exosomes />} />
-      <Route path="/products/iv-vitamins" element={<IVVitaminsCategory />} />
-      <Route path="/products/iv-vitamins/:slug" element={<ProductDetail />} />
-      <Route path="/apply" element={<Apply />} />
-      <Route path="/careers" element={<Careers />} />
-      <Route path="/membership" element={<MembershipDashboard />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-      <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
-      <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  );
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
 };
+
+function AppRoutes() {
+  return (
+    <>
+      <a href="#main-content" className="skip-to-content">Skip to content</a>
+      <main id="main-content" tabIndex={-1} className="outline-none">
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/our-story" element={<OurStory />} />
+            <Route path="/team" element={<OurTeam />} />
+            <Route path="/medical-direction" element={<Navigate to="/team" replace />} />
+            <Route path="/products/dehydration-iv" element={<DehydrationIV />} />
+            <Route path="/services/iv-vitamins" element={<IVVitaminsService />} />
+            <Route path="/services/nad" element={<NAD />} />
+            <Route path="/services/cbd" element={<CBD />} />
+            <Route path="/products/iv-vitamins" element={<IVVitaminsCategory />} />
+            <Route path="/products/:category/:slug" element={<ProductDetail />} />
+            <Route path="/apply" element={<Apply />} />
+            <Route path="/careers" element={<Careers />} />
+            {/* Presale phase: /membership redirects to /apply until member portal ships post-launch. */}
+            <Route path="/membership" element={<Navigate to="/apply" replace />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
+            <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
+            <Route path="*" element={<PageNotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
+    </>
+  );
+}
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-        <CookieConsent />
-        <ChatWidget />
-      </QueryClientProvider>
-    </AuthProvider>
-  )
+    <ErrorBoundary>
+      <Router>
+        <ScrollToTop />
+        <AppRoutes />
+      </Router>
+      <Toaster />
+      <CookieConsent />
+    </ErrorBoundary>
+  );
 }
 
-export default App
+export default App;

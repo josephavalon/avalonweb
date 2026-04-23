@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /membership-dashboard
+
+Sitemap: https://avalonvitality.co/sitemap.xml

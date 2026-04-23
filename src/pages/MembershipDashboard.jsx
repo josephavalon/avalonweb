@@ -28,7 +28,7 @@ export default function MembershipDashboard() {
     }
   };
 
-  const inputClass = "w-full bg-transparent border border-white/15 rounded-full px-5 py-3 font-body text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-white/35 transition-colors";
+  const inputClass = "w-full bg-transparent border border-white/15 rounded-full px-5 py-3 font-body text-xs text-foreground placeholder:text-muted-foreground/75 focus:outline-none focus:border-white/35 transition-colors";
 
   return (
     <div className="bg-background min-h-screen">
@@ -105,7 +105,7 @@ export default function MembershipDashboard() {
               {isLoading ? 'Loading...' : 'Continue'}
             </button>
 
-            <p className="text-center font-body text-xs text-muted-foreground/50 pt-1">
+            <p className="text-center font-body text-xs text-muted-foreground/75 pt-1">
               Don't have an account?{' '}
               <Link to="/apply" className="text-foreground font-semibold hover:underline">
                 Apply Now

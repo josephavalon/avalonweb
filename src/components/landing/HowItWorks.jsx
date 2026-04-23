@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarCheck, MapPin, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 
+const EASE = [0.16, 1, 0.3, 1];
+
 const steps = [
   {
     icon: CalendarCheck,
@@ -24,65 +26,99 @@ export default function HowItWorks() {
   const scrollRef = useRef(null);
 
   const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 400;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
+    if (!scrollRef.current) return;
+    const amount = scrollRef.current.clientWidth * 0.85;
+    scrollRef.current.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth',
+    });
   };
 
   return (
-    <section id="how-it-works" className="py-8 md:py-10 px-4 border-t border-border bg-secondary/40 scroll-mt-20">
-      <div className="max-w-5xl mx-auto">
+    <section
+      id="how-it-works"
+      className="py-8 md:py-10 px-4 border-t border-border bg-secondary/40 scroll-mt-20"
+    >
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-left mb-8"
+          transition={{ duration: 0.7, ease: EASE }}
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4 md:mb-8"
         >
-          <h2 className="font-heading text-6xl md:text-8xl text-foreground tracking-wide">HOW IT WORKS</h2>
-          <p className="font-body text-sm text-foreground mt-4 max-w-2xl mx-auto">
-            <a href="#membership" className="text-accent hover:text-accent/80 underline">Apply for membership</a> now to secure your spot. On-demand service launching soon.
-          </p>
+          <div className="text-left max-w-3xl">
+            <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide whitespace-nowrap">
+              HOW IT WORKS
+            </h2>
+            <p className="font-body text-sm text-foreground mt-4 max-w-2xl">
+              <a href="/#membership" className="text-accent hover:text-accent/80 underline">
+                Apply for membership
+              </a>{' '}
+              now to secure your spot. Mobile platform launching soon — book, reorder, and track in one tap.
+            </p>
+          </div>
+
+          {/* Desktop-hidden, mobile-visible carousel controls lifted above the cards
+              so they don't overlap card content. */}
+          <div className="flex md:hidden items-center gap-2 self-end">
+            <button
+              onClick={() => scroll('left')}
+              className="p-2 rounded-full border border-border bg-card hover:bg-secondary transition-colors"
+              aria-label="Previous step"
+            >
+              <ChevronLeft className="w-4 h-4 text-foreground" strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              className="p-2 rounded-full border border-border bg-card hover:bg-secondary transition-colors"
+              aria-label="Next step"
+            >
+              <ChevronRight className="w-4 h-4 text-foreground" strokeWidth={1.75} />
+            </button>
+          </div>
         </motion.div>
 
-        <div className="overflow-x-auto md:overflow-visible relative group">
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-5 h-5 text-foreground" />
-          </button>
-          <div ref={scrollRef} className="flex md:grid md:grid-cols-3 gap-8 md:gap-8 w-full md:w-full px-16 md:px-0 justify-center md:justify-start snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* Carousel — snap-mandatory with peek on mobile, grid on desktop. */}
+        <div
+          ref={scrollRef}
+          className="how-it-works-scroll -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible snap-x snap-mandatory"
+          style={{
+            scrollBehavior: 'smooth',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 w-max md:w-full md:justify-start">
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="flex-shrink-0 w-[calc(100vw-8rem-2rem)] sm:w-[calc(50vw-3rem)] md:w-auto text-center p-8 border border-border rounded-3xl bg-card"
+                transition={{ delay: i * 0.12, duration: 0.7, ease: EASE }}
+                className="shrink-0 w-[60vw] sm:w-[45vw] md:w-auto snap-start text-center p-4 md:p-5 border border-border rounded-3xl bg-card"
               >
-              <step.icon className="w-8 h-8 text-accent mx-auto mb-5" strokeWidth={1.5} />
-              <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 tracking-wide">{step.title}</h3>
-              <p className="font-body text-sm text-foreground leading-relaxed">{step.desc}</p>
+                <step.icon
+                  className="w-6 h-6 text-accent mx-auto mb-2"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <h3 className="font-heading text-lg md:text-xl text-foreground mb-1 tracking-wide">
+                  {step.title}
+                </h3>
+                <p className="font-body text-xs md:text-sm text-foreground leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
-            </div>
+            {/* End-of-list spacer keeps the last card from bumping the viewport edge
+                so its right border is visible when snapped. */}
+            <div aria-hidden="true" className="shrink-0 w-4 md:hidden" />
+          </div>
         </div>
-
       </div>
-      <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
+
+      <style>{`.how-it-works-scroll::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 }

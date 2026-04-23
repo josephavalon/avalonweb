@@ -1,7 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+// Salon events are members-only. Field events are where we publicly appear.
+// Quarterly salon frames the cultural layer; don't drop it even when field
+// events pile up.
 const events = [
+  {
+    date: 'Members Only',
+    title: 'THE LONGEVITY SALON',
+    location: 'San Francisco',
+    desc: "Quarterly members' dinner with leading longevity clinicians. Closed invite, off the record. First salon summer 2026.",
+    kind: 'salon',
+  },
   {
     date: 'Coming Soon',
     title: 'RECOVERY DEVICES',
@@ -12,13 +22,13 @@ const events = [
     date: 'Coming Soon',
     title: 'BUILDER NIGHT',
     location: 'San Francisco, CA',
-    desc: 'Mixer for founders and builders. Connect, recover, and optimize with fellow startup leaders. IV therapy and wellness expertise at your service.',
+    desc: 'Mixer for founders and builders. Connect with fellow startup leaders over IV therapy and wellness expertise on-site.',
   },
   {
     date: 'Coming Soon',
     title: 'Bay 2 Breakers Expo',
     location: 'Sports Basement, San Francisco',
-    desc: 'IM injections and exclusive merchandise sales. Optimize your performance before the race.',
+    desc: 'IM injections and exclusive merchandise sales. Pre-race hydration and IV therapy on-site.',
   },
   {
     date: 'Coming Soon',
@@ -49,30 +59,39 @@ export default function EventsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="mb-6 text-left"
+          className="text-left mb-4 md:mb-8"
         >
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-2"
+            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             In the Field
           </motion.p>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-6xl md:text-8xl text-foreground tracking-wide"
+            className="font-heading text-[11vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.95]"
           >
-            NEWS & EVENTS
+            NEWS &amp; EVENTS
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-3"
+          >
+            Where you'll find us in the Bay — from members' dinners to finish lines and founder nights.
+          </motion.p>
         </motion.div>
 
-        <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-3 snap-x snap-mandatory w-fit md:w-full md:justify-center">
+        <div className="overflow-x-auto -mx-4 px-4 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex gap-4 snap-x snap-mandatory w-max">
               {events.map((event, i) => (
                 <motion.div
                   key={event.title}
@@ -80,7 +99,7 @@ export default function EventsSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex-shrink-0 w-[calc(100vw-10rem)] md:w-[450px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-center"
+                  className="flex-shrink-0 w-[calc(100vw-5rem)] sm:w-[360px] md:w-[400px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-start"
                 >
                 <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
                 <div>
@@ -89,7 +108,7 @@ export default function EventsSection() {
                 </div>
                 <p className="font-body text-[11px] text-foreground leading-relaxed flex-1">{event.desc}</p>
                 <a
-                  href="#membership"
+                  href="/#membership"
                   className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
                 >
                   Get Notified →

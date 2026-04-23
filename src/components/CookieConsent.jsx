@@ -40,13 +40,13 @@ export default function CookieConsent() {
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleDecline}
-                className="px-8 py-3 border-2 border-foreground text-foreground font-body text-sm font-semibold uppercase tracking-wider rounded hover:bg-foreground/5 transition-colors"
+                className="px-8 py-3 border-2 border-foreground text-foreground font-body text-sm font-semibold uppercase tracking-wider rounded-full hover:bg-foreground/5 transition-colors"
               >
                 Decline
               </button>
               <button
                 onClick={handleAllow}
-                className="px-8 py-3 bg-foreground text-background font-body text-sm font-semibold uppercase tracking-wider rounded hover:bg-foreground/90 transition-colors"
+                className="px-8 py-3 bg-foreground text-background font-body text-sm font-semibold uppercase tracking-wider rounded-full hover:bg-foreground/90 transition-colors"
               >
                 Allow
               </button>
