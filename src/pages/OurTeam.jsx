@@ -30,7 +30,7 @@ const CLINICAL = [
 const LEADERSHIP = [
   {
     name: 'Joseph Litton',
-    role: 'Co-Founder & CEO',
+    role: 'CEO',
     bio: 'Startup veteran across multiple Bay Area companies.',
   },
   {
@@ -51,12 +51,12 @@ const LEADERSHIP = [
   {
     name: 'Robert Decoito',
     role: 'Head of Business Development',
-    bio: 'Startup veteran running Avalon\u2019s partner and commercial channels.',
+    bio: 'Veteran of Yelp and MobileCoin. Runs Avalon\u2019s partner and commercial channels.',
   },
   {
     name: 'Manuel',
     role: 'Operations',
-    bio: 'Startup veteran running day-to-day operations.',
+    bio: 'Co-founder of Fire Wallet. Runs day-to-day operations at Avalon.',
   },
   {
     name: 'Aaron',
