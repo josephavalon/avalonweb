@@ -75,7 +75,7 @@ export default function EventsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-[11vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.95]"
+            className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap"
           >
             NEWS &amp; EVENTS
           </motion.h2>
