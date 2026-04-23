@@ -16,7 +16,7 @@ const CLINICAL = [
     name: 'Dr. Jayson Weir',
     role: 'Medical Director',
     credentials: 'MD — Internal Medicine',
-    bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol. He reviews every formulation, signs off on every new modality before it reaches a member, and owns every clinical escalation from the field.',
+    bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol.',
     anchor: true,
   },
   {
