@@ -129,6 +129,17 @@ html, body {
   overflow-x: clip;
 }
 
+/* Mobile-first: no section can exceed viewport; text breaks to fit. */
+section, main, footer {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* Horizontal-overflow clip lives on a wrapper, not html/body, so middle-click
    autoscroll still has a real root scroller to anchor on. */
 .app-shell {
