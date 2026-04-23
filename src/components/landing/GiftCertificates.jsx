@@ -17,7 +17,7 @@ export default function GiftCertificates() {
           className="text-left mb-4 md:mb-8"
         >
           <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Give The Gift of Recovery</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide whitespace-nowrap">GIFT CERTIFICATES</h2>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">GIFT CERTIFICATES</h2>
         </motion.div>
 
         <motion.div
