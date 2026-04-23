@@ -3,8 +3,8 @@ import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const INTERNAL_TO = 'support@avalonvitality.co';
-const FROM_INTERNAL = 'Avalon Vitality <noreply@avalonvitality.co>';
+const INTERNAL_TO = 'joseph@avalonvitality.co';
+const FROM_INTERNAL = 'Avalon Apply <onboarding@resend.dev>';
 const FROM_APPLICANT = 'Avalon Vitality <support@avalonvitality.co>';
 
 // --- Config ------------------------------------------------------------------
@@ -192,13 +192,17 @@ export default async function handler(req, res) {
     `;
 
     // 1. Internal notification — must succeed, or we fail the request.
-    await resend.emails.send({
+    const applyResult = await resend.emails.send({
       from: FROM_INTERNAL,
       to: INTERNAL_TO,
       replyTo: email,
       subject: `New Membership Application — ${firstName} ${lastName}`,
       html: internalHtml,
     });
+    if (applyResult?.error) {
+      console.error('Apply internal email failed:', applyResult.error);
+      return res.status(502).json({ error: 'Email service rejected the send.', detail: applyResult.error.message || JSON.stringify(applyResult.error) });
+    }
 
     // 2. Applicant confirmation — fire-and-forget. Failure shouldn't block.
     try {
