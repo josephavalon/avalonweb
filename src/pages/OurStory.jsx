@@ -86,7 +86,7 @@ export default function OurStory() {
           >
             <p className="font-body text-body text-foreground/90 leading-relaxed">
               Living in the Bay Area means operating at full velocity. High performers don't
-              guess at recovery â they engineer it.
+              guess at recovery — they engineer it.
             </p>
             <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
               From late nights in Silicon Valley to weekends at BottleRock and Burning Man,
@@ -94,7 +94,7 @@ export default function OurStory() {
             </p>
             <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
               We built Avalon to bring clinician-delivered hydration and wellness protocols
-              directly to you â so you can stay present for the life you've chosen.
+              directly to you — so you can stay present for the life you've chosen.
             </p>
           </motion.div>
         </div>
@@ -114,7 +114,7 @@ export default function OurStory() {
               The infrastructure never kept pace.
             </h3>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed mb-4">
-              California builds everything else at the frontier â but recovery felt like an
+              California builds everything else at the frontier — but recovery felt like an
               afterthought. Walk-in clinics with hour-long waits. Generic menus. Nothing
               calibrated to the way Bay Area professionals actually live.
             </p>
@@ -136,7 +136,7 @@ export default function OurStory() {
             </h3>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
               Deliver clinician-supervised hydration and wellness therapies with the best
-              possible outcomes â at a price that rewards membership rather than punishes it.
+              possible outcomes — at a price that rewards membership rather than punishes it.
               Whether you're bouncing back after a pitch meeting or recharging after a
               weekend on your feet, we bring the visit to you.
             </p>
@@ -163,7 +163,7 @@ export default function OurStory() {
           >
             <p className="font-body text-body-lg text-foreground/90 leading-relaxed mb-5">
               Avalon Vitality is the product of years of clinical and operational
-              collaboration applied to one real problem â world-class recovery that works
+              collaboration applied to one real problem — world-class recovery that works
               when you need it most and doesn't cost an arm or a leg.
             </p>
             <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
@@ -225,7 +225,7 @@ export default function OurStory() {
             </h2>
             <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
               Every visit is supervised by our medical director and delivered by a
-              California-licensed clinician â at home, at work, in hotels, in green rooms,
+              California-licensed clinician — at home, at work, in hotels, in green rooms,
               and at events across the Bay Area.
             </p>
           </motion.div>
@@ -267,7 +267,7 @@ export default function OurStory() {
               </p>
               <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
                 Veteran IV nurse and co-clinical lead. Stephanie sets Avalon's standards for
-                safety, sterility, and bedside care â so every session meets the same bar,
+                safety, sterility, and bedside care — so every session meets the same bar,
                 whether it's your first or your fortieth.
               </p>
             </motion.div>
