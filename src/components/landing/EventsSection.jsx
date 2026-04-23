@@ -90,7 +90,7 @@ export default function EventsSection() {
           </motion.p>
         </motion.div>
 
-        <div className="overflow-x-auto -mx-4 px-4 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain -mx-4 px-4 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex gap-4 snap-x snap-mandatory w-max">
               {events.map((event, i) => (
                 <motion.div
