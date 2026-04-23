@@ -56,12 +56,8 @@ export default function WhatIsIV() {
               <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-6 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
             </div>
 
-            <p className="font-body text-sm text-foreground leading-relaxed mb-5">
-              IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span> — bypassing the digestive tract entirely. Nutrients reach circulation without the absorption losses associated with oral supplementation.
-            </p>
-
             <p className="font-body text-sm text-foreground leading-relaxed mb-8">
-              Oral supplements can lose a significant portion of their bioavailability during gut metabolism. IV administration bypasses that process, supporting your wellness protocol in a single <span className="text-foreground font-semibold">30–60 minute</span> session.
+              IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span>, bypassing the digestive tract entirely. Full bioavailability in a single <span className="text-foreground font-semibold">30–60 minute</span> session — no absorption losses from gut metabolism.
             </p>
 
             {/* Stats grid */}
