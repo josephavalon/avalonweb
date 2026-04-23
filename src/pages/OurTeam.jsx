@@ -6,8 +6,8 @@ import Footer from '../components/landing/Footer';
 const EASE = [0.16, 1, 0.3, 1];
 
 // Our Team page. Two stacked sections:
-//   1. Clinical Team â Medical Director + Clinical Lead
-//   2. Leadership â founders + operating team
+//   1. Clinical Team — Medical Director + Clinical Lead
+//   2. Leadership — founders + operating team
 // Text-only cards for launch. Headshots to come post-presale.
 // Bios are a single paragraph where present; placeholder cards omit bio.
 
@@ -15,7 +15,7 @@ const CLINICAL = [
   {
     name: 'Dr. Jayson Weir',
     role: 'Medical Director',
-    credentials: 'MD â Internal Medicine',
+    credentials: 'MD — Internal Medicine',
     bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol. He reviews every formulation, signs off on every new modality before it reaches a member, and owns every clinical escalation from the field.',
     anchor: true,
   },
