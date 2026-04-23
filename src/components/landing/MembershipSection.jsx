@@ -67,7 +67,6 @@ const TIERS = [
       'Priority scheduling',
       'Dedicated care coordinator',
       'Exclusive member events',
-      'White-glove concierge service',
       'Unlimited messaging with your care team',
       'Exclusive access and pricing on all products',
       'Fast, discreet delivery — straight to your door',
