@@ -67,7 +67,7 @@ export default function WaitlistSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
-          className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-4"
+          className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:whitespace-nowrap"
         >
           STAY IN THE LOOP
         </motion.h2>
