@@ -70,7 +70,6 @@ const validators = {
     if (digits.length < 10) return 'Enter a valid phone number.';
     return '';
   },
-  jobTitle: () => '',
   state: () => '',
 };
 
@@ -78,7 +77,7 @@ export default function Apply() {
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [selectedMemberships, setSelectedMemberships] = useState({});
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '', jobTitle: '', state: '',
+    firstName: '', lastName: '', email: '', phone: '', state: '',
     // Honeypot — hidden from real users, filled by bots. If this is non-empty
     // at submit time the server silently discards the submission.
     website: '',
@@ -144,7 +143,6 @@ export default function Apply() {
           lastName: form.lastName,
           email: form.email,
           phone: form.phone,
-          jobTitle: form.jobTitle,
           state: form.state,
           goals: selectedGoals,
           memberships: selectedMemberships,
@@ -344,36 +342,22 @@ export default function Apply() {
           <FieldError name="email" />
         </div>
 
-        {/* Phone + Job title row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="phone" className="sr-only">Phone number</label>
-            <input
-              id="phone"
-              type="tel"
-              placeholder="Phone number"
-              value={form.phone}
-              onChange={e => updateField('phone', e.target.value)}
-              onBlur={() => handleBlur('phone')}
-              className={inputClass('phone')}
-              autoComplete="tel"
-              inputMode="tel"
-              {...ariaProps('phone')}
-            />
-            <FieldError name="phone" />
-          </div>
-          <div>
-            <label htmlFor="jobTitle" className="sr-only">Job title</label>
-            <input
-              id="jobTitle"
-              type="text"
-              placeholder="Job title"
-              value={form.jobTitle}
-              onChange={e => updateField('jobTitle', e.target.value)}
-              className={inputClass('jobTitle')}
-              autoComplete="organization-title"
-            />
-          </div>
+        {/* Phone */}
+        <div>
+          <label htmlFor="phone" className="sr-only">Phone number</label>
+          <input
+            id="phone"
+            type="tel"
+            placeholder="Phone number"
+            value={form.phone}
+            onChange={e => updateField('phone', e.target.value)}
+            onBlur={() => handleBlur('phone')}
+            className={inputClass('phone')}
+            autoComplete="tel"
+            inputMode="tel"
+            {...ariaProps('phone')}
+          />
+          <FieldError name="phone" />
         </div>
 
         {/* State select */}
