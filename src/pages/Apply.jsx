@@ -195,7 +195,7 @@ export default function Apply() {
     return (
       <div className="bg-background min-h-screen flex flex-col">
         <Navbar />
-        <section className="flex-1 flex items-center justify-center px-4 py-24">
+        <section className="flex-1 flex items-start justify-center px-4 pt-32 md:pt-40 pb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
