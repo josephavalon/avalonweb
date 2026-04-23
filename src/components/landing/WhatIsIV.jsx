@@ -66,7 +66,7 @@ export default function WhatIsIV() {
 
             {/* Stats grid */}
             <div className="border-t border-border pt-6">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 {stats.map((s) => (
                   <div key={s.label} className="text-center">
                     <p className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{s.value}</p>
