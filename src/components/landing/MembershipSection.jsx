@@ -92,7 +92,7 @@ function TierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-foreground bg-card"
+      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col h-full border-foreground bg-card"
     >
       {tier.isMostPopular && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
 
@@ -168,7 +168,7 @@ function TierCard({ tier, i, billing }) {
 
       <a
         href={APPLY_URL}
-        className={`block text-center py-2.5 font-body text-[11px] tracking-widest uppercase font-semibold rounded-full transition-colors md:mt-auto ${
+        className={`block text-center py-2.5 font-body text-[11px] tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto ${
           tier.isMostPopular
             ? 'bg-foreground text-background hover:bg-foreground/90'
             : 'border border-foreground/30 text-foreground hover:border-foreground'
