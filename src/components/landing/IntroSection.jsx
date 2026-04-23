@@ -5,10 +5,10 @@ import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 // Ordered for grid layout. Diagnostics sits immediately after the three
 // live verticals because biomarkers are the foundation beneath every future
-// Protocol â they're the primitive that makes personalization real.
+// Protocol — they're the primitive that makes personalization real.
 // The Protocol registry (src/lib/protocol/verticals.js) is the data-level
 // source of truth; this array is the presentation order for the grid.
-// Launch quarters mirror src/lib/protocol/verticals.js â keep in sync. A
+// Launch quarters mirror src/lib/protocol/verticals.js — keep in sync. A
 // change here is a public commitment change, so don't quietly edit quarters
 // without also updating the Protocol registry and ensuring ops can ship.
 const verticals = [
@@ -78,7 +78,7 @@ export default function IntroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="font-body text-base md:text-lg text-foreground leading-relaxed max-w-2xl mb-5"
           >
-            We operate at the protocol layer. IV therapy is the base â every modality is composable on top.
+            We operate at the protocol layer. IV therapy is the base — every modality is composable on top.
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
