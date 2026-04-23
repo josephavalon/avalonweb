@@ -24,7 +24,7 @@ const testimonials = [
     tag: "RECOVERY IV"
   },
   {
-    quote: "Before I go down for the count, I book a performance IV and keep it moving.",
+    quote: "I'm an AI founder. Every day I gain new abilities. Avalon holds me down through the storm.",
     name: "J.L.",
     tag: "PERFORMANCE IV"
   },
