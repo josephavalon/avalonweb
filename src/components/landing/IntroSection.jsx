@@ -60,7 +60,7 @@ export default function IntroSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
-            The Foundation
+            The Platform
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
