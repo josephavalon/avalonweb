@@ -50,7 +50,7 @@ const LEADERSHIP = [
   },
   {
     name: 'Robert Decoito',
-    role: 'Head of Business Development',
+    role: 'Head of Strategic Partnerships',
     bio: 'Veteran of Yelp and MobileCoin. Runs Avalon\u2019s partner and commercial channels.',
   },
   {
