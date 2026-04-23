@@ -100,13 +100,8 @@ function TierCard({ tier, i, billing }) {
       <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
         <div className="flex items-center gap-2.5">
           <TierIcon className="w-5 h-5 text-accent shrink-0" strokeWidth={1.5} aria-hidden="true" />
-          <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{tier.name}</h3>
+          <h3 className="font-heading text-2xl md:text-4xl text-foreground tracking-wide whitespace-nowrap">{tier.name}</h3>
         </div>
-        {tier.isMostPopular && (
-          <span className="text-accent text-[7px] tracking-[0.15em] uppercase whitespace-nowrap pt-0.5">
-            Most Popular
-          </span>
-        )}
       </div>
 
       {/* Headline price */}
