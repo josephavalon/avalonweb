@@ -253,8 +253,14 @@ body {
    using the editorial easing cubic-bezier(0.16, 1, 0.3, 1). The former
    fadeInUp / slideInLeft / slideInRight / scaleIn CSS helpers lived here
    with `ease-out` and are removed — nothing referenced them. */
-/* Dubs theme: gold logo override */
-.dubs .av-logo {
+/* Theme toggle button always matches logo color across all themes */
+.theme-toggle-btn {
+  color: hsl(var(--foreground));
+}
+
+/* Dubs theme: gold logo + matching theme toggle button */
+.dubs .av-logo,
+.dubs .theme-toggle-btn {
   color: hsl(var(--accent));
 }
 
