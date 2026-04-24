@@ -23,7 +23,7 @@ export default function B2BSection() {
           transition={{ duration: 0.8 }}
           className="text-left mb-4 md:mb-8"
         >
-          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Partnerships</p>
+          <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Partnerships</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">PARTNERSHIPS</h2>
         </motion.div>
 
