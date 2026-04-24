@@ -32,7 +32,7 @@ export default function ServicePageLayout({
         )}
         <div className="relative z-10 px-6 md:px-16 pb-6 md:pb-14">
           {badge && (
-            <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-2">{badge}</p>
+            <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-2">{badge}</p>
           )}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
@@ -61,7 +61,7 @@ export default function ServicePageLayout({
       {comingSoon ? (
         <section className="py-20 px-6 md:px-16">
           <div className="max-w-2xl mx-auto text-center">
-            <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">
+            <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">
               Joining after launch
             </p>
             <h2 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-5 leading-none">
@@ -82,7 +82,7 @@ export default function ServicePageLayout({
         <section className="py-8 md:py-16 px-6 md:px-16">
           <div className="max-w-6xl mx-auto">
             <div className="mb-6 md:mb-10 flex flex-col items-start gap-3">
-              <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase">
+              <p className="text-xs tracking-[0.3em] text-accent font-body uppercase">
                 Presale — Limited Spots
               </p>
               <Link
