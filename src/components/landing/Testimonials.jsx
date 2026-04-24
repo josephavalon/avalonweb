@@ -305,7 +305,7 @@ export default function Testimonials() {
       if (direction === 'left' && scrollRef.current.scrollLeft <= 0) {
         return;
       }
-      const scrollAmount = 400;
+      const scrollAmount = scrollRef.current.clientWidth;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -345,7 +345,7 @@ export default function Testimonials() {
       </div>
 
       {/* Horizontal-only scroller — no vertical scroll, cards pinned/static */}
-      <div className="overflow-x-auto overflow-y-hidden relative group">
+      <div className="overflow-x-auto overflow-y-hidden relative group snap-x snap-mandatory">
         <button
           onClick={() => scroll('left')}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
@@ -362,11 +362,13 @@ export default function Testimonials() {
         </button>
         <div
           ref={scrollRef}
-          className="flex gap-6 pb-2 px-16 md:px-4 items-start justify-start w-full"
+          className="flex pb-2 items-start w-full"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
         >
           {testimonials.map((t, i) => (
-            <IPhoneMockup key={i} testimonial={t} />
+            <div key={i} className="snap-center shrink-0 w-full flex items-start justify-center px-4">
+              <IPhoneMockup testimonial={t} />
+            </div>
           ))}
         </div>
       </div>
