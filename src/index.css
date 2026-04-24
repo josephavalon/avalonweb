@@ -262,28 +262,30 @@ body {
 .dubs::before {
   content: 'Go Dubs!';
   position: fixed;
-  top: 18vh;
-  right: 6vw;
+  top: 22vh;
+  left: 4vw;
   font-family: 'Caveat', cursive;
   font-weight: 700;
-  font-size: clamp(64px, 11vw, 180px);
-  color: rgba(255, 199, 44, 0.18);
-  text-shadow: 0 0 18px rgba(255, 199, 44, 0.22), 0 2px 0 rgba(255,255,255,0.06);
-  filter: blur(0.6px);
-  transform: rotate(-6deg);
+  font-size: clamp(64px, 11vw, 170px);
+  color: rgba(255, 199, 44, 0.82);
+  -webkit-text-stroke: 2px rgba(29, 66, 138, 0.9);
+  text-shadow: 0 0 22px rgba(255, 199, 44, 0.45), 3px 3px 0 rgba(29, 66, 138, 0.55);
+  filter: blur(0.3px);
+  transform: rotate(-7deg);
   pointer-events: none;
   user-select: none;
   z-index: 1;
   letter-spacing: 0.02em;
   line-height: 1;
-  mix-blend-mode: screen;
 }
 
 @media (max-width: 768px) {
   .dubs::before {
     top: auto;
-    bottom: 15vh;
-    right: 6vw;
+    bottom: 18vh;
+    left: 4vw;
+    right: auto;
     font-size: clamp(56px, 16vw, 110px);
+    -webkit-text-stroke-width: 1.5px;
   }
 }
