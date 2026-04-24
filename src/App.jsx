@@ -13,6 +13,7 @@ const OurStory = lazy(() => import('./pages/OurStory'));
 const OurTeam = lazy(() => import('./pages/OurTeam'));
 const Apply = lazy(() => import('./pages/Apply'));
 const Careers = lazy(() => import('./pages/Careers'));
+const FAQPage = lazy(() => import('./pages/FAQ'));
 const DehydrationIV = lazy(() => import('./pages/products/DehydrationIV'));
 const IVVitaminsService = lazy(() => import('./pages/services/IVVitamins'));
 const NAD = lazy(() => import('./pages/services/NAD'));
@@ -53,6 +54,7 @@ function AppRoutes() {
             <Route path="/apply" element={<Apply />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/faq" element={<FAQPage />} />
             {/* Presale phase: /membership redirects to /apply until member portal ships post-launch. */}
             <Route path="/membership" element={<Navigate to="/apply" replace />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
