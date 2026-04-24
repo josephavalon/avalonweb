@@ -1,4 +1,4 @@
-// @rev 1777071986160 — hotfix handleCursor
+// @rev 1777073683808 — credits model
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
