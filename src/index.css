@@ -321,3 +321,12 @@ body {
   background: none;
   filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.4));
 }
+
+/* Dubs theme: gold APPLY NOW button */
+.dubs .apply-now-btn {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+.dubs .apply-now-btn:hover {
+  background-color: hsl(45 100% 52%) !important;
+}
