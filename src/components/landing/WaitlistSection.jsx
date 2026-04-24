@@ -86,17 +86,59 @@ export default function WaitlistSection() {
 
         {status === 'success' ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            key="success-state"
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE }}
             role="status"
             aria-live="polite"
-            className="inline-flex items-center gap-3 px-6 py-4 border border-accent/40 bg-accent/5 rounded-md"
+            className="flex flex-col items-center gap-3 px-8 py-6 border border-accent/40 bg-accent/5 rounded-3xl max-w-md mx-auto"
           >
-            <Check className="w-4 h-4 text-accent shrink-0" strokeWidth={2.5} aria-hidden="true" />
-            <span className="font-body text-sm text-foreground">
-              You're on the list. Check your inbox for confirmation.
-            </span>
+            <div className="flex items-center gap-3">
+              <motion.span
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: EASE }}
+                className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent text-background"
+                aria-hidden="true"
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <motion.path
+                    d="M3.5 8.3 L6.8 11.5 L12.6 5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3, ease: EASE }}
+                  />
+                </svg>
+              </motion.span>
+              <span className="font-body text-sm md:text-base text-foreground">
+                You're on the list{form.firstName ? `, ${form.firstName}` : ''}.
+              </span>
+            </div>
+            <svg width="220" height="14" viewBox="0 0 220 14" className="mt-1" aria-hidden="true">
+              <motion.path
+                d="M 6 9 C 40 3, 92 14, 140 7 S 200 10, 214 7"
+                stroke="hsl(var(--accent))"
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 1.2, delay: 0.45, ease: EASE }}
+              />
+            </svg>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.3, ease: EASE }}
+              className="font-body text-xs tracking-wide text-muted-foreground"
+            >
+              Check your inbox for confirmation.
+            </motion.span>
           </motion.div>
         ) : (
           <motion.form
