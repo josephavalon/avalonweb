@@ -183,7 +183,7 @@ export default function WaitlistSection() {
               </p>
             )}
 
-            <p className="mt-4 font-body text-[10px] text-muted-foreground/80 leading-relaxed">
+            <p className="mt-4 font-body text-xs text-muted-foreground/80 leading-relaxed">
               By joining, you agree to receive occasional updates from Avalon Vitality.
               Unsubscribe any time.
             </p>
