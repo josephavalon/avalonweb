@@ -117,7 +117,7 @@ export default function Navbar() {
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="text-foreground p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+            className="mobile-menu-btn text-foreground p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}>
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
