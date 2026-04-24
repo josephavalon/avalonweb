@@ -61,7 +61,7 @@ export default function Footer() {
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-2 md:gap-3">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <a href="mailto:support@avalonvitality.co" className="text-xs md:text-xs text-foreground hover:text-foreground transition-colors font-body break-all md:break-normal">support@avalonvitality.co</a>
+                <a href="mailto:support@avalonvitality.co" className="text-[11px] md:text-xs text-foreground hover:text-foreground transition-colors font-body whitespace-nowrap">support@avalonvitality.co</a>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
