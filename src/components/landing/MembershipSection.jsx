@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Circle, CircleDot, Sparkles, Wrench } from 'lucide-react';
+import { Plus, ChevronDown, ChevronLeft, ChevronRight, Circle, CircleDot, Sparkles, Wrench } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 
@@ -122,7 +122,7 @@ function TierCard({ tier, billing }) {
         <ul className="space-y-1.5">
           {tier.perks.slice(0, visiblePerks).map((perk) => (
             <li key={perk} className="flex items-start gap-2">
-              <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+              <Plus className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
               <span className="font-body text-xs text-foreground leading-snug">{perk}</span>
             </li>
           ))}
@@ -139,7 +139,7 @@ function TierCard({ tier, billing }) {
             >
               {tier.perks.slice(visiblePerks).map((perk) => (
                 <li key={perk} className="flex items-start gap-2 pt-1.5">
-                  <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <Plus className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
                   <span className="font-body text-xs text-foreground leading-snug">{perk}</span>
                 </li>
               ))}
