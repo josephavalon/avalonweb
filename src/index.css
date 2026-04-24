@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -253,3 +253,37 @@ body {
    using the editorial easing cubic-bezier(0.16, 1, 0.3, 1). The former
    fadeInUp / slideInLeft / slideInRight / scaleIn CSS helpers lived here
    with `ease-out` and are removed — nothing referenced them. */
+/* Dubs theme: gold logo override */
+.dubs .av-logo {
+  color: hsl(var(--accent));
+}
+
+/* Dubs theme: GO DUBS! steam-on-glass background easter egg */
+.dubs::before {
+  content: 'Go Dubs!';
+  position: fixed;
+  top: 18vh;
+  right: 6vw;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: clamp(64px, 11vw, 180px);
+  color: rgba(255, 199, 44, 0.18);
+  text-shadow: 0 0 18px rgba(255, 199, 44, 0.22), 0 2px 0 rgba(255,255,255,0.06);
+  filter: blur(0.6px);
+  transform: rotate(-6deg);
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 768px) {
+  .dubs::before {
+    top: auto;
+    bottom: 15vh;
+    right: 6vw;
+    font-size: clamp(56px, 16vw, 110px);
+  }
+}
