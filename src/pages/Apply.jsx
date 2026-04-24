@@ -179,7 +179,7 @@ export default function Apply() {
       <p
         id={`${name}-error`}
         role="alert"
-        className="mt-1.5 px-2 font-body text-[11px] text-destructive/90"
+        className="mt-1.5 px-2 font-body text-xs text-destructive/90"
       >
         {fieldErrors[name]}
       </p>
@@ -212,7 +212,7 @@ export default function Apply() {
               <Check className="w-6 h-6 text-accent" strokeWidth={2.5} />
             </motion.div>
 
-            <p className="font-body text-[10px] tracking-[0.35em] text-accent uppercase mb-6">
+            <p className="font-body text-xs tracking-[0.35em] text-accent uppercase mb-6">
               Application Received
             </p>
             <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-6">
@@ -380,7 +380,7 @@ export default function Apply() {
 
         {/* Wellness goals — multi-select pill grid. No dropdown state = no freeze. */}
         <div className="pt-1">
-          <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-2 px-1" id="goals-label">
+          <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-2 px-1" id="goals-label">
             Wellness goals — choose all that apply
           </p>
           <div className="flex flex-wrap gap-2" role="group" aria-labelledby="goals-label">
@@ -408,7 +408,7 @@ export default function Apply() {
 
             {/* Membership tier selection */}
             <div className="pt-2">
-              <p className="font-body text-[9px] tracking-[0.25em] text-muted-foreground uppercase mb-1 px-1" id="tier-label">
+              <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-1 px-1" id="tier-label">
                 Select your preferred tier(s) — optional
               </p>
               <p className="font-body text-xs text-muted-foreground/75 mb-3 px-1 leading-snug">
