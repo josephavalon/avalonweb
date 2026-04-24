@@ -1,4 +1,4 @@
-// @rev 1777070102287 — animation batch
+// @rev 1777071986160 — hotfix handleCursor
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
