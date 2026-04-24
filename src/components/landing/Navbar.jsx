@@ -59,6 +59,8 @@ export default function Navbar() {
     if (location.pathname === '/') {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Clear focus so keyboard users aren't stuck on the nav logo after scroll.
+      if (e.currentTarget && typeof e.currentTarget.blur === 'function') e.currentTarget.blur();
     }
   };
 
