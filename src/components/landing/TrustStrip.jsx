@@ -40,7 +40,7 @@ export default function TrustStrip() {
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
-                  <span className="font-body text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                  <span className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground">
                     {item.label}
                   </span>
                 </span>
@@ -68,7 +68,7 @@ export default function TrustStrip() {
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
-                    <span className="font-body text-[9px] tracking-[0.25em] uppercase text-muted-foreground">
+                    <span className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground">
                       {item.label}
                     </span>
                   </span>
