@@ -29,7 +29,7 @@ const verticals = [
   { label: 'Weight Loss', icon: Scale, live: false },
   { label: 'Sexual Health', icon: HeartPulse, live: false },
   { label: 'Fertility', icon: Baby, live: false },
-  { label: 'Biosensors', icon: Activity, live: false },
+  { label: 'Wearable/Biosensors Data', icon: Activity, live: false },
 ];
 
 export default function IntroSection() {
