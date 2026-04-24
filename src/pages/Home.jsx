@@ -12,7 +12,6 @@ import MembershipSection from '../components/landing/MembershipSection';
 import EventsSection from '../components/landing/EventsSection';
 import B2BSection from '../components/landing/B2BSection';
 import Testimonials from '../components/landing/Testimonials';
-import FAQ from '../components/landing/FAQ';
 import WaitlistSection from '../components/landing/WaitlistSection';
 import Footer from '../components/landing/Footer';
 
@@ -41,7 +40,6 @@ export default function Home() {
       <EventsSection />
       <B2BSection />
       <Testimonials />
-      <FAQ />
       <WaitlistSection />
       <Footer />
     </div>
