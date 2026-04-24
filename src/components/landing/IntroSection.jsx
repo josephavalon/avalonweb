@@ -111,6 +111,9 @@ export default function IntroSection() {
                   {live && (
                     <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
                   )}
+                    {!live && (
+                      <span className="mt-1 block font-body text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase">Soon</span>
+                    )}
                 </div>
               ))}
             </div>
