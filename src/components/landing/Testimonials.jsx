@@ -362,11 +362,11 @@ export default function Testimonials() {
         </button>
         <div
           ref={scrollRef}
-          className="flex pb-2 items-start w-full"
+          className="flex gap-5 md:gap-8 pb-2 items-start px-[calc(50%-140px)] md:px-[calc(50%-180px)]"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
         >
           {testimonials.map((t, i) => (
-            <div key={i} className="snap-center shrink-0 w-full flex items-start justify-center px-4">
+            <div key={i} className="snap-center shrink-0">
               <IPhoneMockup testimonial={t} />
             </div>
           ))}
