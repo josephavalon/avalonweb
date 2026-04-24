@@ -156,8 +156,8 @@ export default function FAQ() {
                 onClick={() => { setActiveCategory(cat); setOpenIndex(null); }}
                 className={`font-body text-sm transition-colors ${
                   activeCategory === cat
-                    ? 'text-foreground font-semibold'
-                    : 'text-foreground hover:text-foreground'
+                    ? 'bg-foreground text-background font-semibold px-3 py-1 rounded-full'
+                    : 'text-muted-foreground hover:text-foreground px-3 py-1 rounded-full'
                 }`}
               >
                 {cat}
@@ -175,8 +175,8 @@ export default function FAQ() {
               <FAQItem
                 key={faq.q}
                 faq={faq}
-                isOpen={openIndex === i}
-                onToggle={() => handleToggle(i)}
+                isOpen={openIndex === faq.q}
+                onToggle={() => handleToggle(faq.q)}
               />
             ))
           )}
