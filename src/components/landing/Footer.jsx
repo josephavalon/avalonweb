@@ -51,7 +51,7 @@ export default function Footer() {
               <a href="/#membership" className="block text-xs text-accent hover:text-accent/80 transition-colors font-body uppercase tracking-wider">Membership</a>
               <Link to="/our-story" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
               <Link to="/team" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Team</Link>
-              <a href="/#faq" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</a>
+              <Link to="/faq" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</Link>
               <a href="/#events" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
             </div>
           </div>
