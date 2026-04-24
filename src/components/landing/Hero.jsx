@@ -11,7 +11,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-root relative h-[100svh] flex items-stretch md:items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
+      className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
     >
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110 pointer-events-none">
@@ -27,9 +27,9 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </motion.div>
 
-      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-between md:justify-center gap-6 md:gap-10 w-full h-full md:h-auto">
+      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-4 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}
-        <div className="flex flex-col items-center justify-center w-full flex-1 md:flex-none">
+        <div className="flex flex-col items-center w-full">
           <motion.p
             initial={{ opacity: 0, letterSpacing: '0.1em' }}
             animate={{ opacity: 1, letterSpacing: '0.4em' }}
