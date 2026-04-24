@@ -56,7 +56,7 @@ export default function Navbar() {
     }
   };
 
-  const linkClass = "text-[11px] tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
+  const linkClass = "text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
 
   return (
     <nav className={`fixed left-4 right-4 z-40 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden transition-all duration-500 ease-editorial ${
