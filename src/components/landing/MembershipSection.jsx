@@ -232,7 +232,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Tiers — always all three, no category switching */}
-        <div className="overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain md:overflow-visible md:touch-auto md:overscroll-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="overflow-x-auto no-scrollbar overflow-y-hidden touch-pan-x overscroll-x-contain md:overflow-visible md:touch-auto md:overscroll-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex items-stretch md:grid md:grid-cols-3 gap-3 md:gap-3 w-fit md:w-full md:px-0 md:justify-center md:items-start">
             {TIERS.map((tier, i) => (
               <TierCard key={tier.name} tier={tier} i={i} billing={billing} />
@@ -253,7 +253,6 @@ export default function MembershipSection() {
           </p>
         </motion.div>
       </div>
-      <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 }
