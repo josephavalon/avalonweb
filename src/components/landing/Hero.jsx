@@ -84,7 +84,7 @@ export default function Hero() {
               </span>
               <Link
                 to="/apply"
-                className="px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
+                className="apply-now-btn px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
               >
                 Apply Now
               </Link>
