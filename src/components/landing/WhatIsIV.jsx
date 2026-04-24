@@ -25,7 +25,7 @@ export default function WhatIsIV() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="hidden md:flex relative items-start justify-start pt-8"
           >
             <div className="relative w-full max-w-xs">
@@ -50,7 +50,7 @@ export default function WhatIsIV() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="text-left"
           >
             <p className="font-body text-sm text-foreground leading-relaxed mb-8">
