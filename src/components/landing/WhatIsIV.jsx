@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const stats = [
-  { value: '100%', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplementation' },
+  { value: 'Full', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplementation' },
   { value: '30min', label: 'Average Session', sub: 'typical infusion time, door-to-door' },
   { value: '0%', label: 'Digestive Loss', sub: 'bypasses the gut entirely' },
   { value: 'MD', label: 'Physician Supervised', sub: 'all protocols reviewed by a licensed physician' },
