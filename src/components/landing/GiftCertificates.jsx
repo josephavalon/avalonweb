@@ -16,7 +16,7 @@ export default function GiftCertificates() {
           transition={{ duration: 0.8 }}
           className="text-left mb-4 md:mb-8"
         >
-          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">Give The Gift of Recovery</p>
+          <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Give The Gift of Recovery</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">GIFT CERTIFICATES</h2>
         </motion.div>
 
@@ -81,13 +81,13 @@ export default function GiftCertificates() {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <div className="font-heading text-2xl tracking-widest text-foreground">AVALON</div>
-                  <div className="text-[10px] tracking-[0.3em] text-muted-foreground font-body -mt-0.5">VITALITY</div>
+                  <div className="text-xs tracking-[0.3em] text-muted-foreground font-body -mt-0.5">VITALITY</div>
                 </div>
                 <Gift className="w-6 h-6 text-accent" strokeWidth={1.5} />
               </div>
 
               <div className="mb-8">
-                <p className="font-body text-[9px] tracking-[0.25em] text-muted-foreground uppercase mb-1">Gift Certificate</p>
+                <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-1">Gift Certificate</p>
                 <p className="font-heading text-6xl text-foreground tracking-wide">$250</p>
               </div>
 
