@@ -16,7 +16,7 @@ export default function EventsSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="text-left mb-4 md:mb-8"
         >
           <motion.p
@@ -32,7 +32,7 @@ export default function EventsSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap"
           >
             NEWS &amp; EVENTS
