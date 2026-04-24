@@ -25,7 +25,7 @@ export default function WhatIsIV() {
             className="hidden md:flex relative items-start justify-start pt-8"
           >
             <div className="relative w-full max-w-xs">
-              <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
+              <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
               <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-8 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
               <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full bg-card">
                 <img
@@ -38,7 +38,7 @@ export default function WhatIsIV() {
               {/* Floating stat */}
               <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-6">
                 <p className="font-heading text-5xl text-foreground tracking-wide">100%</p>
-                <p className="font-body text-[10px] text-accent tracking-widest uppercase mt-3">Absorption — Direct to Bloodstream</p>
+                <p className="font-body text-xs text-accent tracking-widest uppercase mt-3">Absorption — Direct to Bloodstream</p>
               </div>
             </div>
           </motion.div>
@@ -52,7 +52,7 @@ export default function WhatIsIV() {
             className="text-left"
           >
             <div className="md:hidden mb-6">
-              <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
+              <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
               <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-6 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
             </div>
 
@@ -66,7 +66,7 @@ export default function WhatIsIV() {
                 {stats.map((s) => (
                   <div key={s.label} className="text-center">
                     <p className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{s.value}</p>
-                    <p className="font-body text-[10px] tracking-[0.15em] text-accent uppercase mt-2">{s.label}</p>
+                    <p className="font-body text-xs tracking-[0.15em] text-accent uppercase mt-2">{s.label}</p>
                     <p className="font-body text-xs text-foreground mt-2 leading-tight">{s.sub}</p>
                   </div>
                 ))}
