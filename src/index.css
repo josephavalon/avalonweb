@@ -172,9 +172,9 @@ p, h1, h2, h3, h4, h5, h6 {
 
 /* #root containment — prevent any absolute/fixed children from pushing layout. */
 /* Light theme: no gray text — every foreground-based text renders solid black. */
-html:not(.dark):not(.golden) [class*="text-foreground/"],
-html:not(.dark):not(.golden) [class*="text-muted-foreground"],
-html:not(.dark):not(.golden) .text-muted-foreground {
+html:not(.dark):not(.golden):not(.dubs) [class*="text-foreground/"],
+html:not(.dark):not(.golden):not(.dubs) [class*="text-muted-foreground"],
+html:not(.dark):not(.golden):not(.dubs) .text-muted-foreground {
   color: hsl(var(--foreground)) !important;
 }
 
