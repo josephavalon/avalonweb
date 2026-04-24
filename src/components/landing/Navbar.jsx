@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Sunset } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sunset, Flame, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const THEMES = ['dark', 'light', 'golden'];
+const THEMES = ['dark', 'light', 'golden', 'niners', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
 
 const readInitialTheme = () => {
@@ -45,7 +45,7 @@ export default function Navbar() {
     setTheme(prev => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length]);
   };
 
-  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Sunset;
+  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : theme === 'niners' ? Flame : theme === 'dubs' ? Zap : Sunset;
 
   // Always route home and scroll to top — even when user is already on "/"
   // (React Router's <Link to="/"> is a no-op from "/"; this forces the reset).
