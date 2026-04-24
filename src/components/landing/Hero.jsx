@@ -11,7 +11,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-root relative h-[100svh] flex items-stretch md:items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
+      className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
     >
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110 pointer-events-none">
@@ -27,7 +27,7 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </motion.div>
 
-      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-4 md:gap-10 w-full h-full md:h-auto">
+      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
           <motion.p
@@ -81,7 +81,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.1 }}
-            className="px-2 mx-auto flex flex-col items-center gap-3 md:gap-4 mt-auto md:mt-0 mb-4 md:mb-0"
+            className="px-2 mx-auto flex flex-col items-center gap-3 md:gap-4"
           >
             <div className="font-body text-xs md:text-sm text-foreground tracking-[0.2em] md:tracking-[0.4em] uppercase text-center md:whitespace-nowrap">
               The Operating System for Human Performance
