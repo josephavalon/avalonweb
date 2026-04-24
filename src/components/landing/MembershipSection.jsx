@@ -92,7 +92,7 @@ function TierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-foreground bg-card"
+      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-border bg-card"
     >
       {tier.isMostPopular && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
 
@@ -124,14 +124,14 @@ function TierCard({ tier, i, billing }) {
           return (
             <div key={opt.category} className="flex items-baseline justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-body text-[12px] text-foreground leading-tight">{opt.category}</p>
-                <p className="font-body text-xs text-muted-foreground truncate leading-tight">{opt.detail}</p>
+                <p className="font-body text-sm md:text-base text-foreground leading-tight">{opt.category}</p>
+                <p className="font-body text-xs md:text-sm text-muted-foreground truncate leading-tight">{opt.detail}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className="font-body text-[13px] text-foreground leading-tight">
+                <p className="font-body text-sm md:text-base text-foreground leading-tight">
                   {fmt(optPrice)}<span className="text-muted-foreground text-[9px]">{billing === 'annual' ? '/yr' : '/mo'}</span>
                 </p>
-                <p className="font-body text-[10px] text-muted-foreground/80 line-through leading-tight">
+                <p className="font-body text-xs text-muted-foreground/80 line-through leading-tight">
                   {fmt(optRegular)}
                 </p>
               </div>
@@ -145,7 +145,7 @@ function TierCard({ tier, i, billing }) {
         {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
           <li key={perk} className="flex items-start gap-2">
             <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
-            <span className="font-body text-[12px] text-muted-foreground leading-tight">{perk}</span>
+            <span className="font-body text-sm text-muted-foreground leading-tight">{perk}</span>
           </li>
         ))}
       </ul>
@@ -153,7 +153,7 @@ function TierCard({ tier, i, billing }) {
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-accent text-[10px] font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-3"
+          className="flex items-center gap-2 text-accent text-xs font-body uppercase tracking-wider hover:text-accent/80 transition-colors mb-3"
         >
           {expanded ? 'Show less' : 'Show more'}
           <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -163,11 +163,8 @@ function TierCard({ tier, i, billing }) {
 
       <a
         href={APPLY_URL}
-        className={`block text-center py-2.5 font-body text-[11px] tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto ${
-          tier.isMostPopular
-            ? 'bg-foreground text-background hover:bg-foreground/90'
-            : 'border border-foreground/30 text-foreground hover:border-foreground'
-        }`}
+        className={`block text-center py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto ${
+'border border-foreground/30 text-foreground hover:border-foreground'}`}
       >
         Apply for Membership
       </a>
