@@ -32,7 +32,7 @@ export default function Navbar() {
   // This fixes the "first click does nothing" bug by guaranteeing the DOM
   // matches the React state before the first user interaction.
   useEffect(() => {
-    document.documentElement.classList.remove('dark', 'golden');
+    document.documentElement.classList.remove('dark', 'golden', 'niners', 'dubs');
     if (theme !== 'light') document.documentElement.classList.add(theme);
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
