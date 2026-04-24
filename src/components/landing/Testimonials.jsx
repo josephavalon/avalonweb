@@ -328,7 +328,7 @@ export default function Testimonials() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             From our clients
           </motion.p>
