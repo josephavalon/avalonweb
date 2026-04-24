@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link, Dumbbell, Lightbulb, Flame, CircleUser , Syringe, Atom } from 'lucide-react';
+import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link, Dumbbell, Lightbulb, Flame, CircleUser , Syringe, Atom , Scale, HeartPulse, Baby, Activity } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 // Ordered for grid layout. Diagnostics sits immediately after the three
@@ -26,6 +26,10 @@ const verticals = [
   { label: 'Personal Fitness', icon: Dumbbell, live: false },
   { label: 'Ketamine', icon: Syringe, live: false },
   { label: 'Exosomes', icon: Atom, live: false },
+  { label: 'Weight Loss', icon: Scale, live: false },
+  { label: 'Sexual Health', icon: HeartPulse, live: false },
+  { label: 'Fertility', icon: Baby, live: false },
+  { label: 'Biosensors', icon: Activity, live: false },
 ];
 
 export default function IntroSection() {
