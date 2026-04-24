@@ -344,15 +344,7 @@ body {
 .dubs .hero-root h1 {
   filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.4));
 }
-/* Never recolor text inside the iPhone mockup (keeps iMessage UI realistic) */
-.dubs .iphone-mockup h1,
-.dubs .iphone-mockup h2,
-.dubs .iphone-mockup h3,
-.dubs .iphone-mockup h4,
-.dubs .iphone-mockup * {
-  color: inherit !important;
-  -webkit-text-fill-color: inherit;
-}
+/* iPhone mockup color-inherit guard removed: no element uses the iphone-mockup class; gold overrides already scoped to h1-h4 */
 
 /* Scoped scrollbar hide utility — replaces inline <style> blocks that leaked globally */
 .no-scrollbar {
