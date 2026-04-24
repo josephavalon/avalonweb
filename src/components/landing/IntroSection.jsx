@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link, Dumbbell, Lightbulb, Flame, CircleUser , Syringe, Atom , Scale, HeartPulse, Baby, Activity } from 'lucide-react';
+import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link as LinkIcon, Dumbbell, Lightbulb, Flame, CircleUser , Syringe, Atom , Scale, HeartPulse, Baby, Activity } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 // Ordered for grid layout. Diagnostics sits immediately after the three
@@ -16,7 +16,7 @@ const verticals = [
   { label: 'NAD+', icon: Zap, live: true },
   { label: 'CBD', icon: CannabisLeaf, live: true },
   { label: 'Diagnostics', icon: TestTube, live: false },
-  { label: 'Peptides', icon: Link, live: false },
+  { label: 'Peptides', icon: LinkIcon, live: false },
   { label: 'Hormone Optimization', icon: Heart, live: false },
   { label: 'Supplements', icon: Pill, live: false },
   { label: 'Regenerative Aesthetics', icon: CircleUser, live: false },
@@ -33,17 +33,6 @@ const verticals = [
 ];
 
 export default function IntroSection() {
-  const scrollRef = useRef(null);
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 400;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   // Live items
   const liveItems = verticals.filter(v => v.live);
@@ -162,7 +151,7 @@ export default function IntroSection() {
             <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
             Live at launch
           </p>
-          <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
+          
           </motion.div>
           </div>
           </section>
