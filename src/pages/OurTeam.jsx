@@ -78,14 +78,14 @@ function PersonCard({ person, i, anchor }) {
           : 'border border-border bg-card/40'
       }`}
     >
-      <p className="font-body text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3">
+      <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">
         {person.role}
       </p>
       <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide mb-1 leading-tight">
         {person.name}
       </h3>
       {person.credentials && (
-        <p className="font-body text-[11px] tracking-[0.25em] uppercase text-accent mb-5">
+        <p className="font-body text-xs tracking-[0.25em] uppercase text-accent mb-5">
           {person.credentials}
         </p>
       )}
@@ -111,7 +111,7 @@ export default function OurTeam() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: EASE }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             Clinical
           </motion.p>
@@ -140,7 +140,7 @@ export default function OurTeam() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: EASE }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             Leadership
           </motion.p>
