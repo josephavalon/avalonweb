@@ -267,16 +267,16 @@ body {
   font-family: 'Caveat', cursive;
   font-weight: 700;
   font-size: clamp(80px, 13vw, 220px);
-  color: rgba(255, 255, 255, 0.16);
-  text-shadow: 0 0 24px rgba(255, 255, 255, 0.22), 1px 2px 0 rgba(255, 255, 255, 0.10);
-  filter: blur(1.2px);
+  color: rgba(255, 199, 44, 0.42);
+  text-shadow: 0 0 32px rgba(255, 199, 44, 0.55), 0 0 14px rgba(255, 199, 44, 0.35), 1px 2px 0 rgba(255, 199, 44, 0.18);
+  filter: blur(1px);
   transform: rotate(-6deg);
   pointer-events: none;
   user-select: none;
   z-index: 2;
   letter-spacing: 0.02em;
   line-height: 1;
-  mix-blend-mode: soft-light;
+  mix-blend-mode: screen;
 }
 
 @media (max-width: 768px) {
