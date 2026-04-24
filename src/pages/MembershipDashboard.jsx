@@ -91,7 +91,7 @@ export default function MembershipDashboard() {
 
             {/* Forgot password */}
             <div className="pt-1">
-              <a href="#" className="font-body text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase">
+              <a href="#" className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase">
                 Forgot password?
               </a>
             </div>
