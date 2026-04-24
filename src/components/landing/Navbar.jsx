@@ -95,7 +95,7 @@ export default function Navbar() {
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
-            <ThemeIcon className="w-4 h-4" />
+            <ThemeIcon className="w-5 h-5 md:w-4 md:h-4" />
           </button>
           <Link to="/apply" className={linkClass}>Apply</Link>
         </div>
@@ -105,7 +105,7 @@ export default function Navbar() {
       <div className={`md:hidden flex items-center justify-between px-5 transition-all duration-500 ease-editorial ${
         scrolled ? 'h-12' : 'h-14'
       }`}>
-        <Link to="/" onClick={handleLogoClick} className="av-logo font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
+        <Link to="/" onClick={handleLogoClick} className="av-logo font-heading text-[18px] md:text-[15px] tracking-[0.22em] md:tracking-[0.2em] text-foreground">AV</Link>
         <div className="flex items-center gap-3">
           <button
             onClick={cycleTheme}
@@ -113,14 +113,14 @@ export default function Navbar() {
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
-            <ThemeIcon className="w-4 h-4" />
+            <ThemeIcon className="w-5 h-5 md:w-4 md:h-4" />
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="text-foreground p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}>
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
