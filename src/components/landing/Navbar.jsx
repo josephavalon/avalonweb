@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const Thirty = (props) => (
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <text x="12" y="17.5" textAnchor="middle" fontSize="14" fontWeight="900" fill="currentColor" fontFamily="'Bebas Neue', 'Impact', 'Arial Black', sans-serif" letterSpacing="0.02em">30</text>
+    <text x="12" y="19.5" textAnchor="middle" fontSize="22" fontWeight="900" fill="currentColor" fontFamily="'Bebas Neue', 'Impact', 'Arial Black', sans-serif" letterSpacing="0.02em">30</text>
   </svg>
 );
 
@@ -95,7 +95,7 @@ export default function Navbar() {
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
-            <ThemeIcon className="w-5 h-5 md:w-4 md:h-4" />
+            <ThemeIcon className="w-7 h-7 md:w-4 md:h-4" />
           </button>
           <Link to="/apply" className={linkClass}>Apply</Link>
         </div>
@@ -113,7 +113,7 @@ export default function Navbar() {
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
-            <ThemeIcon className="w-5 h-5 md:w-4 md:h-4" />
+            <ThemeIcon className="w-7 h-7 md:w-4 md:h-4" />
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
