@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Sunset, Zap } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sunset } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const Thirty = (props) => (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <text x="12" y="17.5" textAnchor="middle" fontSize="14" fontWeight="900" fill="currentColor" fontFamily="'Bebas Neue', 'Impact', 'Arial Black', sans-serif" letterSpacing="0.02em">30</text>
+  </svg>
+);
 
 const THEMES = ['dark', 'light', 'golden', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
@@ -45,7 +51,7 @@ export default function Navbar() {
     setTheme(prev => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length]);
   };
 
-  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : theme === 'dubs' ? Zap : Sunset;
+  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : theme === 'dubs' ? Thirty : Sunset;
 
   // Always route home and scroll to top — even when user is already on "/"
   // (React Router's <Link to="/"> is a no-op from "/"; this forces the reset).
@@ -99,7 +105,7 @@ export default function Navbar() {
       <div className={`md:hidden flex items-center justify-between px-5 transition-all duration-500 ease-editorial ${
         scrolled ? 'h-12' : 'h-14'
       }`}>
-        <Link to="/" onClick={handleLogoClick} className="font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
+        <Link to="/" onClick={handleLogoClick} className="av-logo font-heading text-[15px] tracking-[0.2em] text-foreground">AV</Link>
         <div className="flex items-center gap-3">
           <button
             onClick={cycleTheme}
