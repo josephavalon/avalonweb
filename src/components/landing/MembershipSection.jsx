@@ -106,7 +106,7 @@ function TierCard({ tier, i, billing }) {
 
       {/* Headline price */}
       <div className="mb-2">
-        <p className="font-body text-[9px] tracking-[0.3em] text-muted-foreground uppercase mb-0.5">From</p>
+        <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-0.5">From</p>
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-3xl md:text-4xl text-foreground">{fmt(displayHeadline)}</span>
           <span className="font-body text-xs text-muted-foreground">{billing === 'annual' ? '/year' : '/month'}</span>
@@ -115,7 +115,7 @@ function TierCard({ tier, i, billing }) {
 
       {/* Three protocol options */}
       <div className="mb-3 pt-3 border-t border-border/60 space-y-1.5">
-        <p className="font-body text-[9px] tracking-[0.3em] text-muted-foreground uppercase mb-1.5">
+        <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-1.5">
           Choose your protocol
         </p>
         {tier.options.map((opt) => {
@@ -129,7 +129,7 @@ function TierCard({ tier, i, billing }) {
               </div>
               <div className="text-right shrink-0">
                 <p className="font-body text-sm md:text-base text-foreground leading-tight">
-                  {fmt(optPrice)}<span className="text-muted-foreground text-[9px]">{billing === 'annual' ? '/yr' : '/mo'}</span>
+                  {fmt(optPrice)}<span className="text-muted-foreground text-xs">{billing === 'annual' ? '/yr' : '/mo'}</span>
                 </p>
                 <p className="font-body text-xs text-muted-foreground/80 line-through leading-tight">
                   {fmt(optRegular)}
@@ -191,7 +191,7 @@ export default function MembershipSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-2"
+            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-2"
           >
             Presale — Limited Availability
           </motion.p>
@@ -220,13 +220,13 @@ export default function MembershipSection() {
           <div className="flex items-center bg-secondary/50 rounded-full p-1 gap-1">
             <button
               onClick={() => setBilling('monthly')}
-              className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-6 py-2 font-body text-xs tracking-widest uppercase rounded-full transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBilling('annual')}
-              className={`px-6 py-2 font-body text-[10px] tracking-widest uppercase rounded-full transition-colors ${billing === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-6 py-2 font-body text-xs tracking-widest uppercase rounded-full transition-colors ${billing === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Annual — Save 20%
             </button>
@@ -249,7 +249,7 @@ export default function MembershipSection() {
           transition={{ delay: 0.4 }}
           className="mt-3 pt-2 text-center"
         >
-          <p className="font-body text-[11px] text-muted-foreground tracking-wider max-w-lg mx-auto leading-relaxed">
+          <p className="font-body text-xs text-muted-foreground tracking-wider max-w-lg mx-auto leading-relaxed">
             3-month minimum commitment. Credits roll over month-to-month as long as your membership remains active.
             Presale spots are limited — membership subject to approval.
           </p>
