@@ -353,3 +353,12 @@ body {
   color: inherit !important;
   -webkit-text-fill-color: inherit;
 }
+
+/* Scoped scrollbar hide utility — replaces inline <style> blocks that leaked globally */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
