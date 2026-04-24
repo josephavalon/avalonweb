@@ -94,7 +94,6 @@ function TierCard({ tier, i, billing }) {
       transition={{ delay: i * 0.1, duration: 0.7 }}
       className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-border bg-card"
     >
-      {tier.isMostPopular && <div className="absolute -top-px left-6 right-6 h-px bg-accent" />}
 
       {/* Tier name row */}
       <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
