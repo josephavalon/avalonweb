@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import MagneticButton from '@/components/ui/MagneticButton';
 import { Link } from 'react-router-dom';
 
 export default function Hero() {
@@ -12,9 +13,10 @@ export default function Hero() {
     <section
       ref={ref}
       className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
+      onMouseMove={handleCursor}
     >
       {/* Parallax BG */}
-      <motion.div style={{ y }} className="absolute inset-0 scale-110 pointer-events-none">
+      <motion.div style={{ y, x: cx, translateY: cy }} className="absolute inset-0 scale-110 pointer-events-none">
         <img
           src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
           alt="Avalon Vitality IV therapy"
@@ -61,12 +63,14 @@ export default function Hero() {
               <span className="font-body text-xs tracking-widest text-foreground uppercase px-12 py-5">
                 A new standard in recovery
               </span>
-              <Link
-                to="/apply"
-                className="apply-now-btn px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
-              >
-                Apply Now
-              </Link>
+              <MagneticButton strength={14}>
+                <Link
+                  to="/apply"
+                  className="apply-now-btn inline-block px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
+                >
+                  Apply Now
+                </Link>
+              </MagneticButton>
             </div>
           </motion.div>
 
