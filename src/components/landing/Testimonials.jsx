@@ -315,13 +315,14 @@ export default function Testimonials() {
 
   return (
     <section className="py-8 md:py-6 px-4 border-t border-border">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto md:grid md:grid-cols-[1fr_420px] md:gap-10 md:items-start">
+        {/* LEFT COLUMN (desktop) | TOP (mobile): title + disclaimer */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-left mb-4 md:mb-8"
+          className="text-left mb-4 md:mb-0 md:col-start-1 md:row-start-1"
         >
           <motion.p
             initial={{ opacity: 0, x: -30 }}
@@ -337,56 +338,54 @@ export default function Testimonials() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap"
+            className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.95]"
           >
             REAL RESULTS
           </motion.h2>
         </motion.div>
-      </div>
 
-      {/* Horizontal-only scroller — no vertical scroll, cards pinned/static */}
-      <div className="max-w-6xl mx-auto relative"><div className="overflow-x-auto overflow-y-hidden relative group snap-x snap-mandatory">
-        <button
-          onClick={() => scroll('left')}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
-        </button>
-        <button
-          onClick={() => scroll('right')}
-          className="absolute right-4 md:right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
-          aria-label="Scroll right"
-        >
-          <ChevronRight className="w-5 h-5 text-foreground" />
-        </button>
-        <div
-          ref={scrollRef}
-          className="flex gap-5 md:gap-8 pb-2 items-start px-[calc(50%-140px)] md:px-[calc(50%-180px)]"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
-        >
-          {testimonials.map((t, i) => (
-            <div key={i} className="snap-center shrink-0">
-              <IPhoneMockup testimonial={t} />
+        {/* RIGHT COLUMN (desktop) | MIDDLE (mobile): single-phone carousel */}
+        <div className="relative md:col-start-2 md:row-start-1 md:row-span-2 md:w-[420px] md:justify-self-end">
+          <div className="overflow-x-auto overflow-y-hidden relative group snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollBehavior: "smooth" }}>
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-foreground" />
+            </button>
+            <div
+              ref={scrollRef}
+              className="flex gap-5 md:gap-8 pb-2 items-start px-[calc(50%-140px)] md:px-[calc(50%-180px)]"
+            >
+              {testimonials.map((t, i) => (
+                <div key={i} className="snap-center shrink-0">
+                  <IPhoneMockup testimonial={t} />
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
-      </div>
 
-      {/* FTC 16 CFR §255 disclosure. Plain-language material connection +
-          typical-results language. Required before any paid-media spend;
-          currently belt-and-suspenders while paid is inactive. */}
-      </div>
-      <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-10">
-        <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground/80 leading-relaxed max-w-3xl">
-          Testimonials reflect the individual experience of real Avalon clients.
-          Names and handles may be initials or stage names at each client's
-          request. Individual experiences vary; results are not typical and are
-          not guaranteed. No clients were compensated in cash for these
-          statements; some received complimentary sessions. Educational
-          information only — not medical advice. Not intended to diagnose,
-          treat, cure, or prevent any condition.
-        </p>
+        {/* LEFT COLUMN ROW 2 (desktop) | BOTTOM (mobile): disclaimer */}
+        <div className="mt-8 md:mt-10 md:col-start-1 md:row-start-2 md:self-start md:max-w-md">
+          <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground/80 leading-relaxed">
+            Testimonials reflect the individual experience of real Avalon clients.
+            Names and handles may be initials or stage names at each client's
+            request. Individual experiences vary; results are not typical and are
+            not guaranteed. No clients were compensated in cash for these
+            statements; some received complimentary sessions. Educational
+            information only — not medical advice. Not intended to diagnose,
+            treat, cure, or prevent any condition.
+          </p>
+        </div>
       </div>
 
       <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
