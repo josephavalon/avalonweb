@@ -11,7 +11,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
+      className="hero-root relative h-[100svh] flex items-stretch md:items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
     >
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110 pointer-events-none">
@@ -27,7 +27,7 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </motion.div>
 
-      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
+      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-between md:justify-center gap-6 md:gap-10 w-full h-full md:h-auto">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
           <motion.p
@@ -43,7 +43,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 60, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading text-6xl md:text-7xl lg:text-[7rem] leading-[0.9] tracking-wide text-foreground uppercase"
+            className="font-heading text-7xl md:text-7xl lg:text-[7rem] leading-[0.95] tracking-[0.06em] md:tracking-wide text-foreground uppercase"
           >
             AVALON<br />VITALITY
           </motion.h1>
