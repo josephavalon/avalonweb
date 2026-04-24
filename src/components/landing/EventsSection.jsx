@@ -1,54 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { events } from '../../data/events';
 
 // Salon events are members-only. Field events are where we publicly appear.
 // Quarterly salon frames the cultural layer; don't drop it even when field
 // events pile up.
-const events = [
-  {
-    date: 'Members Only',
-    title: 'THE LONGEVITY SALON',
-    location: 'San Francisco',
-    desc: "Quarterly members' dinner with leading longevity clinicians. Closed invite, off the record. First salon summer 2026.",
-    kind: 'salon',
-  },
-  {
-    date: 'Coming Soon',
-    title: 'RECOVERY DEVICES',
-    location: 'San Francisco, CA',
-    desc: 'Red light therapy, vagus nerve stimulation, and compression pants. Advanced recovery technology for members.',
-  },
-  {
-    date: 'Coming Soon',
-    title: 'BUILDER NIGHT',
-    location: 'San Francisco, CA',
-    desc: 'Mixer for founders and builders. Connect with fellow startup leaders over IV therapy and wellness expertise on-site.',
-  },
-  {
-    date: 'Coming Soon',
-    title: 'Bay 2 Breakers Expo',
-    location: 'Sports Basement, San Francisco',
-    desc: 'IM injections and exclusive merchandise sales. Pre-race hydration and IV therapy on-site.',
-  },
-  {
-    date: 'Coming Soon',
-    title: 'Bay 2 Breakers Finish Line',
-    location: 'Near Finish Line, San Francisco',
-    desc: 'Exclusive IVs heavily discounted for race participants. Recovery and hydration right at the finish line.',
-  },
-  {
-    date: 'Coming Soon',
-    title: 'Vital Ice SF Influencer Night',
-    location: 'Marina District, San Francisco',
-    desc: 'Exclusive event for creators and influencers. Experience cold plunge, sauna, and IV therapy in our studio.',
-  },
-  {
-    date: 'June',
-    title: 'PRIDE Parade',
-    location: 'San Francisco, CA',
-    desc: 'Wellness recovery station at Pride. IV hydration and recovery support for all participants.',
-  },
-];
+
 
 export default function EventsSection() {
   return (
@@ -107,12 +65,12 @@ export default function EventsSection() {
                   <p className="font-body text-[10px] tracking-widest text-foreground uppercase">{event.location}</p>
                 </div>
                 <p className="font-body text-[11px] text-foreground leading-relaxed flex-1">{event.desc}</p>
-                <a
-                  href="/#waitlist"
+                <Link
+                  to={`/events/${event.slug}`}
                   className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
                 >
-                  Get Notified →
-                </a>
+                  Details →
+                </Link>
                 </motion.div>
               ))}
           </div>
