@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function CannabisLeaf({ className, strokeWidth = 1.25 }) {
+export default function CannabisLeaf({ className, strokeWidth = 1.2 }) {
   return (
     <svg
       className={className}
@@ -12,21 +12,21 @@ export default function CannabisLeaf({ className, strokeWidth = 1.25 }) {
       strokeLinejoin="round"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g transform="translate(12 14)">
-        {/* Center (tallest) */}
-        <path d="M0 0 Q -2.1 -5.5 0 -11.5 Q 2.1 -5.5 0 0 Z" />
+      <g transform="translate(12 14.2)">
+        {/* Center leaflet (tallest) */}
+        <path d="M0 0 C -3.4 -3 -3.4 -8.2 0 -11.3 C 3.4 -8.2 3.4 -3 0 0 Z" />
         {/* Upper pair */}
-        <g transform="rotate(-38)"><path d="M0 0 Q -1.9 -5 0 -10.3 Q 1.9 -5 0 0 Z" /></g>
-        <g transform="rotate(38)"><path d="M0 0 Q -1.9 -5 0 -10.3 Q 1.9 -5 0 0 Z" /></g>
-        {/* Middle pair */}
-        <g transform="rotate(-76)"><path d="M0 0 Q -1.8 -4.5 0 -9.2 Q 1.8 -4.5 0 0 Z" /></g>
-        <g transform="rotate(76)"><path d="M0 0 Q -1.8 -4.5 0 -9.2 Q 1.8 -4.5 0 0 Z" /></g>
+        <g transform="rotate(-40)"><path d="M0 0 C -3.0 -2.8 -3.0 -7.3 0 -10.2 C 3.0 -7.3 3.0 -2.8 0 0 Z" /></g>
+        <g transform="rotate(40)"><path d="M0 0 C -3.0 -2.8 -3.0 -7.3 0 -10.2 C 3.0 -7.3 3.0 -2.8 0 0 Z" /></g>
+        {/* Middle pair (nearly horizontal) */}
+        <g transform="rotate(-80)"><path d="M0 0 C -2.7 -2.4 -2.7 -6.3 0 -9 C 2.7 -6.3 2.7 -2.4 0 0 Z" /></g>
+        <g transform="rotate(80)"><path d="M0 0 C -2.7 -2.4 -2.7 -6.3 0 -9 C 2.7 -6.3 2.7 -2.4 0 0 Z" /></g>
         {/* Lower pair */}
-        <g transform="rotate(-115)"><path d="M0 0 Q -1.6 -4 0 -8 Q 1.6 -4 0 0 Z" /></g>
-        <g transform="rotate(115)"><path d="M0 0 Q -1.6 -4 0 -8 Q 1.6 -4 0 0 Z" /></g>
+        <g transform="rotate(-120)"><path d="M0 0 C -2.3 -2.0 -2.3 -5.3 0 -7.5 C 2.3 -5.3 2.3 -2.0 0 0 Z" /></g>
+        <g transform="rotate(120)"><path d="M0 0 C -2.3 -2.0 -2.3 -5.3 0 -7.5 C 2.3 -5.3 2.3 -2.0 0 0 Z" /></g>
       </g>
       {/* Stem */}
-      <line x1="12" y1="14" x2="12" y2="21.5" />
+      <line x1="12" y1="14.2" x2="12" y2="22" />
     </svg>
   );
 }
