@@ -1,3 +1,4 @@
+// @rev 1777070102287 — animation batch
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
