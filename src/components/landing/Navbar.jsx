@@ -91,7 +91,7 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <button
             onClick={cycleTheme}
-            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
@@ -109,7 +109,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <button
             onClick={cycleTheme}
-            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
