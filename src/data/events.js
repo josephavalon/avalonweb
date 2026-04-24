@@ -1,0 +1,66 @@
+// Shared source of truth for News & Events cards and their detail pages.
+// Each event has a slug that routes to /events/:slug.
+
+export const events = [
+  {
+    slug: 'longevity-salon',
+    date: 'Members Only',
+    title: 'THE LONGEVITY SALON',
+    location: 'San Francisco',
+    desc: "Quarterly members' dinner with leading longevity clinicians. Closed invite, off the record. First salon summer 2026.",
+    kind: 'salon',
+    briefing: "The Longevity Salon is Avalon's private quarterly dinner for members and invited guests. Each salon convenes leading clinicians and scientists in longevity medicine for a closed-door conversation. Off the record, member-only. First salon scheduled for summer 2026.",
+  },
+  {
+    slug: 'recovery-devices',
+    date: 'Coming Soon',
+    title: 'RECOVERY DEVICES',
+    location: 'San Francisco, CA',
+    desc: 'Red light therapy, vagus nerve stimulation, and compression pants. Advanced recovery technology for members.',
+    briefing: 'Avalon is expanding beyond IV protocols into recovery devices — red light therapy, vagus nerve stimulation, compression therapy. Members get first access when the device suite launches.',
+  },
+  {
+    slug: 'builder-night',
+    date: 'Coming Soon',
+    title: 'BUILDER NIGHT',
+    location: 'San Francisco, CA',
+    desc: 'Mixer for founders and builders. Connect with fellow startup leaders over IV therapy and wellness expertise on-site.',
+    briefing: 'A Bay Area mixer for founders, engineers, and operators. Avalon clinicians on-site administering drips and fielding questions. Capacity is limited; invitation-first.',
+  },
+  {
+    slug: 'bay-to-breakers-expo',
+    date: 'Coming Soon',
+    title: 'Bay 2 Breakers Expo',
+    location: 'Sports Basement, San Francisco',
+    desc: 'IM injections and exclusive merchandise sales. Pre-race hydration and IV therapy on-site.',
+    briefing: 'Avalon at the Bay to Breakers pre-race expo: IM injections, pre-race hydration protocols, and limited merch. Stop by before race day to dial in your plan.',
+  },
+  {
+    slug: 'bay-to-breakers-finish-line',
+    date: 'Coming Soon',
+    title: 'Bay 2 Breakers Finish Line',
+    location: 'Near Finish Line, San Francisco',
+    desc: 'Exclusive IVs heavily discounted for race participants. Recovery and hydration right at the finish line.',
+    briefing: 'Post-race recovery station near the Bay to Breakers finish line. Discounted recovery drips for registered participants. Walk up or book ahead.',
+  },
+  {
+    slug: 'vital-ice-influencer-night',
+    date: 'Coming Soon',
+    title: 'Vital Ice SF Influencer Night',
+    location: 'Marina District, San Francisco',
+    desc: 'Exclusive event for creators and influencers. Experience cold plunge, sauna, and IV therapy in our studio.',
+    briefing: 'A curated evening at the Vital Ice studio in the Marina. Cold plunge, sauna, Avalon IV therapy. Invited creators only.',
+  },
+  {
+    slug: 'pride-parade',
+    date: 'June',
+    title: 'PRIDE Parade',
+    location: 'San Francisco, CA',
+    desc: 'Wellness recovery station at Pride. IV hydration and recovery support for all participants.',
+    briefing: 'Avalon will operate a wellness recovery station along the Pride parade route. IV hydration, electrolytes, and rapid recovery support for anyone who needs it.',
+  },
+];
+
+export function findEventBySlug(slug) {
+  return events.find((e) => e.slug === slug);
+}
