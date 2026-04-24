@@ -81,7 +81,7 @@ export default function GiftCertificates() {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <div className="font-heading text-2xl tracking-widest text-foreground">AVALON</div>
-                  <div className="text-[8px] tracking-[0.3em] text-muted-foreground font-body -mt-0.5">VITALITY</div>
+                  <div className="text-[10px] tracking-[0.3em] text-muted-foreground font-body -mt-0.5">VITALITY</div>
                 </div>
                 <Gift className="w-6 h-6 text-accent" strokeWidth={1.5} />
               </div>
