@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -299,6 +299,25 @@ function IPhoneMockup({ testimonial }) {
 
 export default function Testimonials() {
   const scrollRef = useRef(null);
+  const [paused, setPaused] = useState(false);
+
+  // Auto-advance testimonials every 4.5s (pauses on hover or when tab is hidden).
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      if (document.hidden) return;
+      const cardW = el.firstElementChild?.getBoundingClientRect().width || 280;
+      const gap = 32;
+      const maxLeft = el.scrollWidth - el.clientWidth;
+      const next = Math.abs(el.scrollLeft - maxLeft) < 8
+        ? 0
+        : el.scrollLeft + cardW + gap;
+      el.scrollTo({ left: next, behavior: 'smooth' });
+    }, 4500);
+    return () => clearInterval(id);
+  }, [paused]);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -363,6 +382,8 @@ export default function Testimonials() {
             </button>
             <div
               ref={scrollRef}
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
               className="flex gap-5 md:gap-8 pb-2 items-start px-[calc(50%-140px)] md:px-[calc(50%-180px)]"
             >
               {testimonials.map((t, i) => (
