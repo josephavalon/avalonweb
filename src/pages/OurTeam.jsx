@@ -39,9 +39,9 @@ const LEADERSHIP = [
     bio: 'Founder of MobileCoin and Crypto Lotus. Co-founder of Fire Wallet.',
   },
   {
-    name: 'Corey Assibey',
-    role: 'CFO',
-    bio: 'Co-founder of PeteHealth, the mobile physical therapy company. UCLA Anderson MBA.',
+    name: 'Robert Decoito',
+    role: 'Head of Business Development',
+    bio: 'Veteran of Yelp and MobileCoin. Runs Avalon\u2019s partner and commercial channels.',
   },
   {
     name: 'Grady Brannan',
@@ -49,9 +49,9 @@ const LEADERSHIP = [
     bio: 'Bay Area photography legend; credits include Rolling Stone, Billboard, and the SF Giants.',
   },
   {
-    name: 'Robert Decoito',
-    role: 'Head of Strategic Partnerships',
-    bio: 'Veteran of Yelp and MobileCoin. Runs Avalon\u2019s partner and commercial channels.',
+    name: 'Corey Assibey',
+    role: 'CFO',
+    bio: 'Co-founder of PeteHealth, the mobile physical therapy company. UCLA Anderson MBA.',
   },
   {
     name: 'Manuel',
