@@ -345,7 +345,7 @@ export default function Testimonials() {
       </div>
 
       {/* Horizontal-only scroller — no vertical scroll, cards pinned/static */}
-      <div className="overflow-x-auto overflow-y-hidden relative group snap-x snap-mandatory">
+      <div className="max-w-6xl mx-auto relative"><div className="overflow-x-auto overflow-y-hidden relative group snap-x snap-mandatory">
         <button
           onClick={() => scroll('left')}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
@@ -376,6 +376,7 @@ export default function Testimonials() {
       {/* FTC 16 CFR §255 disclosure. Plain-language material connection +
           typical-results language. Required before any paid-media spend;
           currently belt-and-suspenders while paid is inactive. */}
+      </div>
       <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-10">
         <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground/80 leading-relaxed max-w-3xl">
           Testimonials reflect the individual experience of real Avalon clients.
