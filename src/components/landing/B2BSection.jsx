@@ -36,13 +36,13 @@ export default function B2BSection() {
             transition={{ duration: 0.8, delay: 0.1 }}
             className="flex flex-col justify-center"
           >
-            <p className="font-body text-sm text-foreground leading-relaxed mb-4">
+            <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
               Avalon operates at the point of execution — tech orgs, touring productions, festivals, venues. Protocols delivered where performance happens, not after.
             </p>
-            <p className="font-body text-sm text-foreground leading-relaxed mb-4">
+            <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
               We don&rsquo;t plug in. We integrate.
             </p>
-            <p className="font-body text-sm text-foreground leading-relaxed mb-4">
+            <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
               On rider, on call, or on site — Avalon embeds directly into the production, adapting to whatever the environment demands.
             </p>
             <div className="flex justify-start mt-4">
@@ -66,8 +66,8 @@ export default function B2BSection() {
                 className="border border-border rounded-3xl bg-card p-5"
               >
                 <item.icon className="w-5 h-5 text-accent mb-3" strokeWidth={1.5} />
-                <h3 className="font-heading text-lg text-foreground tracking-wide mb-1">{item.title}</h3>
-                <p className="font-body text-xs text-foreground leading-relaxed">{item.desc}</p>
+                <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-1">{item.title}</h3>
+                <p className="font-body text-sm md:text-base text-foreground leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
