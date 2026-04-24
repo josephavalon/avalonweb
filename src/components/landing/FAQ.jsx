@@ -71,7 +71,7 @@ const faqs = [
   },
 ];
 
-const CATEGORIES = ['General', 'Treatments', 'Membership', 'Booking', 'Safety', 'Pricing', 'Insurance', 'Events', 'B2B', 'Coming Soon'];
+const CATEGORIES = ['All', 'General', 'Membership', 'Safety'];
 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
@@ -120,8 +120,8 @@ export default function FAQ() {
   const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <section id="faq" className="py-4 md:py-6 px-4">
-      <div className="max-w-3xl mx-auto">
+    <section id="faq" className="py-4 md:py-6 px-4 border-t border-border">
+      <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
