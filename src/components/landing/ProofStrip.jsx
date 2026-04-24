@@ -35,7 +35,7 @@ export default function ProofStrip() {
               <p className="font-heading text-4xl md:text-7xl text-foreground tracking-wide mb-2 md:mb-3 leading-none">
                 {stat.value}
               </p>
-              <p className="font-body text-[9px] md:text-[10px] tracking-[0.25em] uppercase text-muted-foreground leading-tight">
+              <p className="font-body text-xs md:text-xs tracking-[0.25em] uppercase text-muted-foreground leading-tight">
                 {stat.label}
               </p>
             </motion.div>
