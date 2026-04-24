@@ -64,7 +64,7 @@ export default function IntroSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             The Platform
           </motion.p>
@@ -113,11 +113,11 @@ export default function IntroSection() {
                     className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/60'}`}
                     strokeWidth={1.5}
                   />
-                  <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                  <span className="font-body text-xs tracking-[0.15em] uppercase leading-tight text-center">
                     {label}
                   </span>
                   {location && (
-                    <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+                    <span className="font-body text-xs tracking-widest text-accent uppercase">In Studio</span>
                   )}
                   {live && (
                     <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
@@ -142,23 +142,23 @@ export default function IntroSection() {
                   className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/60'}`}
                   strokeWidth={1.5}
                 />
-                <span className="font-body text-[9px] tracking-[0.15em] uppercase leading-tight text-center">
+                <span className="font-body text-xs tracking-[0.15em] uppercase leading-tight text-center">
                   {label}
                 </span>
                 {location && (
-                  <span className="font-body text-[7px] tracking-widest text-accent uppercase">In Studio</span>
+                  <span className="font-body text-xs tracking-widest text-accent uppercase">In Studio</span>
                 )}
                 {live && (
                   <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
                 )}
                 {!live && (
-                  <span className="font-body text-[8px] tracking-widest text-muted-foreground/60 uppercase">Soon</span>
+                  <span className="font-body text-xs tracking-widest text-muted-foreground/60 uppercase">Soon</span>
                 )}
               </div>
             ))}
           </div>
 
-          <p className="mt-6 text-center font-body text-[10px] tracking-widest text-muted-foreground/70 uppercase">
+          <p className="mt-6 text-center font-body text-xs tracking-widest text-muted-foreground/70 uppercase">
             <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
             Live at launch
           </p>
