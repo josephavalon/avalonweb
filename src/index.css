@@ -331,3 +331,25 @@ body {
 .dubs .apply-now-btn:hover {
   background-color: hsl(45 100% 52%) !important;
 }
+
+/* Dubs: all headings warriors gold */
+.dubs h1,
+.dubs h2,
+.dubs h3,
+.dubs h4 {
+  color: hsl(var(--accent)) !important;
+  -webkit-text-fill-color: hsl(var(--accent));
+}
+/* Preserve existing hero drop-shadow treatment */
+.dubs .hero-root h1 {
+  filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.4));
+}
+/* Never recolor text inside the iPhone mockup (keeps iMessage UI realistic) */
+.dubs .iphone-mockup h1,
+.dubs .iphone-mockup h2,
+.dubs .iphone-mockup h3,
+.dubs .iphone-mockup h4,
+.dubs .iphone-mockup * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit;
+}
