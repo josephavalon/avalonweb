@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import { Check, ChevronDown, Circle, CircleDot, Sparkles } from 'lucide-react';
 
 const TIER_ICON = {
@@ -107,7 +108,7 @@ function TierCard({ tier, i, billing }) {
       <div className="mb-2">
         <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-0.5">From</p>
         <div className="flex items-baseline gap-2">
-          <span className="font-heading text-3xl md:text-4xl text-foreground">{fmt(displayHeadline)}</span>
+          <span className="font-heading text-3xl md:text-4xl text-foreground"><AnimatedNumber value={displayHeadline} prefix="$" duration={0.9} /></span>
           <span className="font-body text-xs text-muted-foreground">{billing === 'annual' ? '/year' : '/month'}</span>
         </div>
       </div>
@@ -128,10 +129,10 @@ function TierCard({ tier, i, billing }) {
               </div>
               <div className="text-right shrink-0">
                 <p className="font-body text-sm md:text-base text-foreground leading-tight">
-                  {fmt(optPrice)}<span className="text-muted-foreground text-xs">{billing === 'annual' ? '/yr' : '/mo'}</span>
+                  <AnimatedNumber value={optPrice} prefix="$" duration={0.6} /><span className="text-muted-foreground text-xs">{billing === 'annual' ? '/yr' : '/mo'}</span>
                 </p>
                 <p className="font-body text-xs text-muted-foreground/80 line-through leading-tight">
-                  {fmt(optRegular)}
+                  <AnimatedNumber value={optRegular} prefix="$" duration={0.6} />
                 </p>
               </div>
             </div>
