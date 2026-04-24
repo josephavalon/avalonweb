@@ -20,7 +20,7 @@ export default function B2BSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="text-left mb-4 md:mb-8"
         >
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Partnerships</p>
