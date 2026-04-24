@@ -315,7 +315,7 @@ export default function Testimonials() {
 
   return (
     <section className="py-8 md:py-6 px-4 border-t border-border">
-      <div className="max-w-6xl mx-auto md:grid md:grid-cols-[1fr_420px] md:gap-10 md:items-start">
+      <div className="max-w-6xl mx-auto md:grid md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_420px] md:gap-8 lg:gap-10 md:items-start">
         {/* LEFT COLUMN (desktop) | TOP (mobile): title + disclaimer */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -338,14 +338,14 @@ export default function Testimonials() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.95]"
+            className="font-heading text-[9vw] md:text-6xl lg:text-7xl xl:text-8xl text-foreground tracking-wide leading-[0.95]"
           >
             REAL RESULTS
           </motion.h2>
         </motion.div>
 
         {/* RIGHT COLUMN (desktop) | MIDDLE (mobile): single-phone carousel */}
-        <div className="relative md:col-start-2 md:row-start-1 md:row-span-2 md:w-[420px] md:justify-self-end">
+        <div className="relative md:col-start-2 md:row-start-1 md:row-span-2 md:w-[360px] lg:w-[420px] md:justify-self-end">
           <div className="overflow-x-auto overflow-y-hidden relative group snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollBehavior: "smooth" }}>
             <button
               onClick={() => scroll("left")}
