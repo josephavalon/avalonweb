@@ -125,7 +125,7 @@ function TierCard({ tier, i, billing }) {
             <div key={opt.category} className="flex items-baseline justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-body text-[12px] text-foreground leading-tight">{opt.category}</p>
-                <p className="font-body text-[10px] text-muted-foreground truncate leading-tight">{opt.detail}</p>
+                <p className="font-body text-xs text-muted-foreground truncate leading-tight">{opt.detail}</p>
               </div>
               <div className="text-right shrink-0">
                 <p className="font-body text-[13px] text-foreground leading-tight">
