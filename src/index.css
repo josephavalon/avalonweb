@@ -281,9 +281,18 @@ body {
 
 @media (max-width: 768px) {
   .dubs .hero-root::after {
-    top: 28%;
+    content: "Go Dubs!";
+    display: block;
+    position: absolute;
+    top: 22%;
     left: 4%;
-    font-size: clamp(72px, 18vw, 140px);
-    filter: blur(1px);
+    right: 4%;
+    font-size: clamp(64px, 20vw, 150px);
+    color: rgba(255, 199, 44, 0.55);
+    text-shadow: 0 0 22px rgba(255, 199, 44, 0.6), 0 0 10px rgba(255, 199, 44, 0.35), 1px 2px 0 rgba(255, 199, 44, 0.22);
+    filter: blur(0.8px);
+    transform: rotate(-5deg);
+    mix-blend-mode: screen;
+    z-index: 2;
   }
 }
