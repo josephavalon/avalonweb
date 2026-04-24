@@ -116,7 +116,7 @@ export default function EventPage() {
                   Apply for Membership
                 </Link>
 
-                <p className="font-body text-[10px] text-muted-foreground leading-relaxed mt-5 text-center">
+                <p className="font-body text-xs text-muted-foreground leading-relaxed mt-5 text-center">
                   Member dinners and clinical salons are invitation-first. Join the waitlist for presale updates.
                 </p>
               </div>
