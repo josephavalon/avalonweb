@@ -8,6 +8,18 @@ export default function Hero() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  // Cursor-aware parallax — gentle drift toward mouse (luxury micro-motion).
+  const cursorX = useMotionValue(0);
+  const cursorY = useMotionValue(0);
+  const cx = useSpring(cursorX, { stiffness: 40, damping: 22, mass: 0.8 });
+  const cy = useSpring(cursorY, { stiffness: 40, damping: 22, mass: 0.8 });
+  const handleCursor = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const nx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+    const ny = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+    cursorX.set(nx * 12);
+    cursorY.set(ny * 8);
+  };
 
   return (
     <section
