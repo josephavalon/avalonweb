@@ -148,7 +148,7 @@ export default function FAQ() {
 
         {/* Category filters */}
         <div className="mb-2">
-          <p className="font-body text-[10px] tracking-[0.25em] text-foreground uppercase mb-1">Topic</p>
+          <p className="font-body text-xs tracking-[0.25em] text-foreground uppercase mb-1">Topic</p>
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map(cat => (
               <button
