@@ -1,5 +1,4 @@
 import React from 'react';
-import BloodstreamPath from '@/components/ui/BloodstreamPath';
 import { motion } from 'framer-motion';
 
 const stats = [
@@ -57,11 +56,6 @@ export default function WhatIsIV() {
             <p className="font-body text-sm text-foreground leading-relaxed mb-8">
               IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span>, bypassing the digestive tract entirely. Full bioavailability in a single <span className="text-foreground font-semibold">30–60 minute</span> session — no absorption losses from gut metabolism.
             </p>
-
-            {/* Bioavailability education viz */}
-        <div className="mt-8 mb-10">
-          <BloodstreamPath />
-        </div>
         {/* Stats grid */}
             <div className="border-t border-border pt-6">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
