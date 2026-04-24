@@ -48,7 +48,7 @@ export default function Footer() {
           <div>
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Company</p>
             <div className="space-y-2 md:space-y-2.5">
-              <a href="/#membership" className="block text-xs text-accent hover:text-accent/80 transition-colors font-body uppercase tracking-wider">Membership</a>
+              <a href="/#membership" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Membership</a>
               <Link to="/our-story" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
               <Link to="/team" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Team</Link>
               <Link to="/faq" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</Link>
