@@ -20,7 +20,7 @@ export default function B2BSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-left mb-4 md:mb-8"
         >
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Partnerships</p>
@@ -33,7 +33,7 @@ export default function B2BSection() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col justify-center"
           >
             <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
@@ -62,7 +62,7 @@ export default function B2BSection() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                 className="border border-border rounded-3xl bg-card p-5"
               >
                 <item.icon className="w-5 h-5 text-accent mb-3" strokeWidth={1.5} />
