@@ -50,7 +50,7 @@ export default function ClinicalOversight() {
           transition={{ duration: 0.8, ease: EASE }}
           className="text-left mb-8 md:mb-12"
         >
-          <p className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4">
+          <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">
             Clinical Oversight
           </p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">
@@ -70,13 +70,13 @@ export default function ClinicalOversight() {
             transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
             className="border border-foreground/25 rounded-3xl bg-card p-6 md:p-8 flex flex-col"
           >
-            <p className="font-body text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3">
+            <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">
               {MEDICAL_DIRECTOR.title}
             </p>
             <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide mb-1 leading-tight">
               {MEDICAL_DIRECTOR.name}
             </h3>
-            <p className="font-body text-[11px] tracking-[0.25em] uppercase text-accent mb-5">
+            <p className="font-body text-xs tracking-[0.25em] uppercase text-accent mb-5">
               {MEDICAL_DIRECTOR.credentials}
             </p>
             <p className="font-body text-sm text-foreground/85 leading-relaxed">
