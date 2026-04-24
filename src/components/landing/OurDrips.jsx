@@ -74,7 +74,6 @@ export default function OurDrips() {
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <p className="text-[10px] tracking-[0.25em] text-accent font-body uppercase mb-1">{cat.tag}</p>
                   <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide mb-1">{cat.label}</h3>
-                  <p className="font-body text-xs text-foreground leading-relaxed">{cat.desc}</p>
 
                   <span className="inline-flex items-center gap-2 text-accent group-hover:text-accent/80 transition-colors text-xs font-body uppercase tracking-wider mt-2">
                     {cat.comingSoon ? 'Apply Now' : 'More'}
