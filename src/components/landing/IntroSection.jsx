@@ -88,13 +88,9 @@ export default function IntroSection() {
           {/* Mobile: horizontal scroll, 2 rows of 3 visible */}
           <div className="md:hidden overflow-x-auto overflow-y-visible py-3 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="grid grid-rows-2 grid-flow-col gap-3 w-max">
-              {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }, idx) => (
-                <motion.div
+              {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }) => (
+                <div
                   key={label}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-10%" }}
-                  transition={{ duration: 0.55, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
                   style={{ width: 'calc((100vw - 2rem) / 3)' }}
                   className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[104px] transition-colors ${
                     live
@@ -118,14 +114,14 @@ export default function IntroSection() {
                     {!live && (
                       <span className="mt-1 block font-body text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase">Soon</span>
                     )}
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Desktop: original 6-col grid */}
           <div className="hidden md:grid gap-4 w-full md:grid-cols-6">
-            {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }, idx) => (
+            {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }) => (
               <div
                 key={label}
                 className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[120px] transition-colors ${
@@ -150,7 +146,7 @@ export default function IntroSection() {
                 {!live && (
                   <span className="mt-1 block font-body text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase">Soon</span>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
 
