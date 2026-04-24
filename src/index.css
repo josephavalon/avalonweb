@@ -286,22 +286,25 @@ body {
 
 @media (max-width: 768px) {
   .dubs .hero-root::after {
-    content: "Go Dubs!";
+    content: "Go\A Dubs!";
+    white-space: pre;
     display: block;
     position: absolute;
-    top: 20%;
-    left: 4%;
+    top: 12%;
+    left: 3%;
     right: auto;
-    font-size: clamp(64px, 20vw, 150px);
-    color: rgba(255, 255, 255, 0.62);
+    max-width: 42vw;
+    font-size: clamp(38px, 11vw, 76px);
+    color: rgba(255, 255, 255, 0.6);
     text-shadow:
       0 0 2px rgba(255, 255, 255, 0.5),
-      0 0 8px rgba(255, 255, 255, 0.4),
-      0 0 20px rgba(255, 255, 255, 0.3);
-    filter: blur(1.2px);
-    transform: rotate(-5deg);
+      0 0 8px rgba(255, 255, 255, 0.38),
+      0 0 18px rgba(255, 255, 255, 0.28);
+    filter: blur(1.1px);
+    transform: rotate(-6deg);
     mix-blend-mode: overlay;
     z-index: 2;
+    line-height: 0.92;
   }
 }
 
