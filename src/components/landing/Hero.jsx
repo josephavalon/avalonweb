@@ -52,6 +52,25 @@ export default function Hero() {
         {/* Middle band: divider + subhead + CTA pill, grouped with even gap */}
         <div className="flex flex-col items-center w-full gap-5 md:gap-7">
           <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.3 }}
+            className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
+          >
+            <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden">
+              <span className="font-body text-xs tracking-widest text-foreground uppercase px-12 py-5">
+                A new standard in recovery
+              </span>
+              <Link
+                to="/apply"
+                className="apply-now-btn px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
+              >
+                Apply Now
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 1, delay: 1, ease: [0.16, 1, 0.3, 1] }}
@@ -70,25 +89,6 @@ export default function Hero() {
             <p className="font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl px-2">
               Built for athletes, founders, and high-performers who don't have time to slow down.
             </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.3 }}
-            className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
-          >
-            <div className="flex items-center bg-background/40 backdrop-blur-sm border border-foreground/20 rounded-full overflow-hidden">
-              <span className="font-body text-xs tracking-widest text-foreground uppercase px-12 py-5">
-                A new standard in recovery
-              </span>
-              <Link
-                to="/apply"
-                className="apply-now-btn px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
-              >
-                Apply Now
-              </Link>
-            </div>
           </motion.div>
         </div>
       </motion.div>
