@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link as LinkIcon, Dumbbell, Lightbulb, Flame, CircleUser , Syringe, Atom , Scale, HeartPulse, Baby, Activity } from 'lucide-react';
+import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link as LinkIcon, Dumbbell, Lightbulb, Flame, CircleUser, Syringe, Atom, Scale, HeartPulse, Baby, Activity } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 // Ordered for grid layout. Diagnostics sits immediately after the three
@@ -86,7 +86,7 @@ export default function IntroSection() {
           </motion.p>
 
           {/* Mobile: horizontal scroll, 2 rows of 3 visible */}
-          <div className="md:hidden overflow-x-auto py-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="md:hidden overflow-x-auto overflow-y-visible py-3 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="grid grid-rows-2 grid-flow-col gap-3 w-max">
               {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }) => (
                 <div
