@@ -51,7 +51,7 @@ export default function WaitlistSection() {
       id="waitlist"
       className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-16 px-4 border-t border-border"
     >
-      <div className="max-w-3xl mx-auto text-center">
+      <div className="max-w-3xl mx-auto text-left">
         <motion.p
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
