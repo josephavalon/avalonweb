@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, Circle, CircleDot, Sparkles } from 'lucide-react';
 
 const TIER_ICON = {
@@ -140,14 +140,35 @@ function TierCard({ tier, i, billing }) {
       </div>
 
       {/* Shared perks */}
-      <ul className="space-y-1.5 mb-2 pt-3 border-t border-border/60">
-        {tier.perks.slice(0, expanded ? tier.perks.length : visiblePerks).map((perk) => (
-          <li key={perk} className="flex items-start gap-2">
-            <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
-            <span className="font-body text-sm text-muted-foreground leading-tight">{perk}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="mb-2 pt-3 border-t border-border/60">
+        <ul className="space-y-1.5">
+          {tier.perks.slice(0, visiblePerks).map((perk) => (
+            <li key={perk} className="flex items-start gap-2">
+              <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+              <span className="font-body text-xs text-foreground leading-snug">{perk}</span>
+            </li>
+          ))}
+        </ul>
+        <AnimatePresence initial={false}>
+          {expanded && hasMore && (
+            <motion.ul
+              key="more-perks"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-1.5 overflow-hidden"
+            >
+              {tier.perks.slice(visiblePerks).map((perk) => (
+                <li key={perk} className="flex items-start gap-2 pt-1.5">
+                  <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="font-body text-xs text-foreground leading-snug">{perk}</span>
+                </li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
+      </div>
 
       {hasMore && (
         <button
