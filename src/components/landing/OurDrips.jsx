@@ -72,10 +72,10 @@ export default function OurDrips() {
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/20" />
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p className="text-[10px] tracking-[0.25em] text-accent font-body uppercase mb-1">{cat.tag}</p>
-                  <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide mb-1">{cat.label}</h3>
+                  <p className="text-xs md:text-sm tracking-[0.25em] text-accent font-body uppercase mb-2">{cat.tag}</p>
+                  <h3 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-1">{cat.label}</h3>
 
-                  <span className="inline-flex items-center gap-2 text-accent group-hover:text-accent/80 transition-colors text-xs font-body uppercase tracking-wider mt-2">
+                  <span className="inline-flex items-center gap-2 text-accent group-hover:text-accent/80 transition-colors text-sm md:text-base font-body uppercase tracking-wider mt-3">
                     {cat.comingSoon ? 'Apply Now' : 'More'}
                     <ChevronDown className="w-3 h-3" />
                   </span>
