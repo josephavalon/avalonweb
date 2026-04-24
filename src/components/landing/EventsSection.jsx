@@ -59,15 +59,15 @@ export default function EventsSection() {
                   transition={{ delay: i * 0.1 }}
                   className="flex-shrink-0 w-[calc(100vw-5rem)] sm:w-[360px] md:w-[400px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-start"
                 >
-                <p className="text-[9px] tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
+                <p className="text-xs tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
                 <div>
-                  <h3 className="font-heading text-2xl text-foreground tracking-wide mb-1">{event.title}</h3>
-                  <p className="font-body text-[10px] tracking-widest text-foreground uppercase">{event.location}</p>
+                  <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-1">{event.title}</h3>
+                  <p className="font-body text-xs tracking-widest text-foreground uppercase">{event.location}</p>
                 </div>
-                <p className="font-body text-[11px] text-foreground leading-relaxed flex-1">{event.desc}</p>
+                <p className="font-body text-sm md:text-base text-foreground leading-relaxed flex-1">{event.desc}</p>
                 <Link
                   to={`/events/${event.slug}`}
-                  className="text-[10px] tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
+                  className="text-xs md:text-sm tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
                 >
                   Details →
                 </Link>
