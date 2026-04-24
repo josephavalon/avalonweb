@@ -11,7 +11,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
+      className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
     >
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110 pointer-events-none">
