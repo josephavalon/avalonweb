@@ -57,7 +57,7 @@ export default function WaitlistSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="text-[10px] tracking-[0.35em] text-accent font-body uppercase mb-4"
+          className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
         >
           Not Ready to Apply?
         </motion.p>
@@ -161,7 +161,7 @@ export default function WaitlistSection() {
               <button
                 type="submit"
                 disabled={status === 'submitting'}
-                className="inline-flex items-center justify-center gap-2 bg-foreground text-background font-body text-[11px] tracking-widest uppercase font-semibold px-6 py-3 rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold px-6 py-3 rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {status === 'submitting' ? (
                   <>
@@ -177,7 +177,7 @@ export default function WaitlistSection() {
             {status === 'error' && errorMsg && (
               <p
                 role="alert"
-                className="mt-3 font-body text-[11px] text-destructive"
+                className="mt-3 font-body text-xs text-destructive"
               >
                 {errorMsg}
               </p>
