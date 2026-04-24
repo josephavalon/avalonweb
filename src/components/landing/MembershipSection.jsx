@@ -82,7 +82,7 @@ function TierCard({ tier, i, billing }) {
 
   // Headline price = lowest option in the tier; shown as "from $X".
   const minPrice = Math.min(...tier.options.map((o) => o.price));
-  const displayHeadline = billing === 'annual' ? minPrice * 12 : minPrice;
+  const displayHeadline = billing === 'annual' ? Math.round(minPrice * 12 * 0.75) : minPrice;
 
   const fmt = (n) => `$${n.toLocaleString()}`;
 
@@ -92,7 +92,7 @@ function TierCard({ tier, i, billing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.1, duration: 0.7 }}
-      className="flex-shrink-0 w-[calc(100vw-14rem)] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-border bg-card"
+      className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-border bg-card"
     >
 
       {/* Tier name row */}
@@ -118,7 +118,7 @@ function TierCard({ tier, i, billing }) {
           Choose your protocol
         </p>
         {tier.options.map((opt) => {
-          const optPrice = billing === 'annual' ? opt.price * 12 : opt.price;
+          const optPrice = billing === 'annual' ? Math.round(opt.price * 12 * 0.75) : opt.price;
           const optRegular = billing === 'annual' ? opt.regularPrice * 12 : opt.regularPrice;
           return (
             <div key={opt.category} className="flex items-baseline justify-between gap-3">
@@ -162,8 +162,7 @@ function TierCard({ tier, i, billing }) {
 
       <a
         href={APPLY_URL}
-        className={`block text-center py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto ${
-'border border-foreground/30 text-foreground hover:border-foreground'}`}
+        className={`block text-center py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto ${tier.isMostPopular ? 'bg-foreground text-background hover:bg-foreground/90' : 'border border-foreground/30 text-foreground hover:border-foreground'}`}
       >
         Apply for Membership
       </a>
@@ -227,7 +226,7 @@ export default function MembershipSection() {
               onClick={() => setBilling('annual')}
               className={`px-6 py-2 font-body text-xs tracking-widest uppercase rounded-full transition-colors ${billing === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Annual — Save 20%
+              Annual — Save 25%
             </button>
           </div>
         </div>
