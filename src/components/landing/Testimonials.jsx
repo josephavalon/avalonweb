@@ -377,7 +377,7 @@ export default function Testimonials() {
           typical-results language. Required before any paid-media spend;
           currently belt-and-suspenders while paid is inactive. */}
       <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-10">
-        <p className="font-body text-[10px] md:text-[11px] tracking-[0.05em] text-muted-foreground/80 leading-relaxed max-w-3xl">
+        <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground/80 leading-relaxed max-w-3xl">
           Testimonials reflect the individual experience of real Avalon clients.
           Names and handles may be initials or stage names at each client's
           request. Individual experiences vary; results are not typical and are
