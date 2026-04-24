@@ -5,6 +5,7 @@ import CookieConsent from '@/components/CookieConsent';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import Home from './pages/Home';
+const EventPage = lazy(() => import('./pages/EventPage'));
 
 // Home stays eager — it's the landing page, it needs to be instant.
 // Everything else is code-split so the initial bundle is just the marketing shell.
@@ -50,6 +51,7 @@ function AppRoutes() {
             <Route path="/products/iv-vitamins" element={<IVVitaminsCategory />} />
             <Route path="/products/:category/:slug" element={<ProductDetail />} />
             <Route path="/apply" element={<Apply />} />
+            <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/careers" element={<Careers />} />
             {/* Presale phase: /membership redirects to /apply until member portal ships post-launch. */}
             <Route path="/membership" element={<Navigate to="/apply" replace />} />
