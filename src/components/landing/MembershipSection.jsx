@@ -91,7 +91,7 @@ function TierCard({ tier, i, billing }) {
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: i * 0.1, duration: 0.7 }}
+      transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[280px] md:w-auto relative border rounded-3xl p-3 md:p-4 flex flex-col border-border bg-card"
     >
 
@@ -181,14 +181,14 @@ export default function MembershipSection() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           className="text-left mb-4 md:mb-8"
         >
           <motion.p
             initial={{ opacity: 0, y: -10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-2"
           >
             Presale — Limited Availability
@@ -197,7 +197,7 @@ export default function MembershipSection() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap"
           >
             MEMBERSHIP
@@ -206,7 +206,7 @@ export default function MembershipSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="font-body text-sm text-muted-foreground max-w-xl leading-relaxed mt-3"
           >
             Membership by application only. Available soon in the San Francisco Bay Area.
@@ -244,7 +244,7 @@ export default function MembershipSection() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="mt-3 pt-2 text-center"
         >
           <p className="font-body text-xs text-muted-foreground tracking-wider max-w-lg mx-auto leading-relaxed">
