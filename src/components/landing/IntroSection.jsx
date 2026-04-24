@@ -45,14 +45,14 @@ export default function IntroSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-left"
         >
           <motion.p
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             The Platform
@@ -61,7 +61,7 @@ export default function IntroSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8"
           >
             IV THERAPY IS THE BASE
@@ -70,7 +70,7 @@ export default function IntroSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="font-body text-base md:text-lg text-foreground leading-relaxed max-w-2xl mb-5"
           >
             We operate at the protocol layer. IV therapy is the base — every modality is composable on top.
@@ -79,7 +79,7 @@ export default function IntroSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.4 }}
+            transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mb-12"
           >
             Every session compounds into a proprietary longitudinal biology record.
