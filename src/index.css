@@ -262,21 +262,26 @@ body {
 .dubs .hero-root::after {
   content: 'Go Dubs!';
   position: absolute;
-  top: 26%;
+  top: 24%;
   left: 3%;
   font-family: 'Caveat', cursive;
   font-weight: 700;
   font-size: clamp(80px, 13vw, 220px);
-  color: rgba(255, 199, 44, 0.42);
-  text-shadow: 0 0 32px rgba(255, 199, 44, 0.55), 0 0 14px rgba(255, 199, 44, 0.35), 1px 2px 0 rgba(255, 199, 44, 0.18);
-  filter: blur(1px);
-  transform: rotate(-6deg);
+  color: rgba(255, 255, 255, 0.52);
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.45),
+    0 0 10px rgba(255, 255, 255, 0.35),
+    0 0 28px rgba(255, 255, 255, 0.28),
+    0 2px 1px rgba(255, 255, 255, 0.18);
+  filter: blur(1.6px);
+  transform: rotate(-5deg);
   pointer-events: none;
   user-select: none;
   z-index: 2;
   letter-spacing: 0.02em;
   line-height: 1;
-  mix-blend-mode: screen;
+  mix-blend-mode: overlay;
+  opacity: 0.95;
 }
 
 @media (max-width: 768px) {
@@ -284,15 +289,28 @@ body {
     content: "Go Dubs!";
     display: block;
     position: absolute;
-    top: 22%;
+    top: 20%;
     left: 4%;
-    right: 4%;
+    right: auto;
     font-size: clamp(64px, 20vw, 150px);
-    color: rgba(255, 199, 44, 0.55);
-    text-shadow: 0 0 22px rgba(255, 199, 44, 0.6), 0 0 10px rgba(255, 199, 44, 0.35), 1px 2px 0 rgba(255, 199, 44, 0.22);
-    filter: blur(0.8px);
+    color: rgba(255, 255, 255, 0.62);
+    text-shadow:
+      0 0 2px rgba(255, 255, 255, 0.5),
+      0 0 8px rgba(255, 255, 255, 0.4),
+      0 0 20px rgba(255, 255, 255, 0.3);
+    filter: blur(1.2px);
     transform: rotate(-5deg);
-    mix-blend-mode: screen;
+    mix-blend-mode: overlay;
     z-index: 2;
   }
+}
+
+/* Dubs hero title gradient */
+.dubs .hero-root h1 {
+  background: linear-gradient(180deg, hsl(45 90% 92%) 0%, hsl(45 100% 58%) 75%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.38));
 }
