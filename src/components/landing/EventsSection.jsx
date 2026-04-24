@@ -16,14 +16,14 @@ export default function EventsSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-left mb-4 md:mb-8"
         >
           <motion.p
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
           >
             In the Field
@@ -32,7 +32,7 @@ export default function EventsSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap"
           >
             NEWS &amp; EVENTS
@@ -41,7 +41,7 @@ export default function EventsSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-3"
           >
             Where you'll find us in the Bay — from members' dinners to finish lines and founder nights.
@@ -56,7 +56,7 @@ export default function EventsSection() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   className="flex-shrink-0 w-[calc(100vw-5rem)] sm:w-[360px] md:w-[400px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-start"
                 >
                 <p className="text-xs tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
