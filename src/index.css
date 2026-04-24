@@ -260,7 +260,8 @@ body {
 
 /* Dubs theme: gold logo + matching theme toggle button */
 .dubs .av-logo,
-.dubs .theme-toggle-btn {
+.dubs .theme-toggle-btn,
+.dubs .mobile-menu-btn {
   color: hsl(var(--accent));
 }
 
