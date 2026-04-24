@@ -308,12 +308,10 @@ body {
   }
 }
 
-/* Dubs hero title gradient */
+/* Dubs hero title: solid warriors gold */
 .dubs .hero-root h1 {
-  background: linear-gradient(180deg, hsl(45 90% 92%) 0%, hsl(45 100% 58%) 75%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.38));
+  color: hsl(45 100% 58%);
+  -webkit-text-fill-color: hsl(45 100% 58%);
+  background: none;
+  filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.4));
 }
