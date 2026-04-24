@@ -13,8 +13,12 @@ const stats = [
 export default function WhatIsIV() {
   return (
     <section className="py-10 md:py-14 px-4 border-t border-border">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid md:grid-cols-[minmax(320px,380px)_minmax(0,620px)] gap-8 md:gap-10 items-end">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6 md:mb-10">
+          <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
+        </div>
+        <div className="grid md:grid-cols-[minmax(320px,380px)_minmax(0,620px)] gap-8 md:gap-10 items-start">
 
           {/* Image with Title Overlay */}
           <motion.div
@@ -25,8 +29,6 @@ export default function WhatIsIV() {
             className="hidden md:flex relative items-start justify-start pt-8"
           >
             <div className="relative w-full max-w-xs">
-              <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-              <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-8 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
               <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full bg-card">
                 <img
                   src="/bags/immunity.png"
@@ -51,11 +53,6 @@ export default function WhatIsIV() {
             transition={{ duration: 0.8 }}
             className="text-left"
           >
-            <div className="md:hidden mb-6">
-              <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
-              <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-6 md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
-            </div>
-
             <p className="font-body text-sm text-foreground leading-relaxed mb-8">
               IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span>, bypassing the digestive tract entirely. Full bioavailability in a single <span className="text-foreground font-semibold">30–60 minute</span> session — no absorption losses from gut metabolism.
             </p>
