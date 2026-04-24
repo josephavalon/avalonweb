@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Sunset, Flame, Zap } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sunset, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const THEMES = ['dark', 'light', 'golden', 'niners', 'dubs'];
+const THEMES = ['dark', 'light', 'golden', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
 
 const readInitialTheme = () => {
@@ -32,7 +32,7 @@ export default function Navbar() {
   // This fixes the "first click does nothing" bug by guaranteeing the DOM
   // matches the React state before the first user interaction.
   useEffect(() => {
-    document.documentElement.classList.remove('dark', 'golden', 'niners', 'dubs');
+    document.documentElement.classList.remove('dark', 'golden', 'dubs');
     if (theme !== 'light') document.documentElement.classList.add(theme);
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
@@ -45,7 +45,7 @@ export default function Navbar() {
     setTheme(prev => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length]);
   };
 
-  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : theme === 'niners' ? Flame : theme === 'dubs' ? Zap : Sunset;
+  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : theme === 'dubs' ? Zap : Sunset;
 
   // Always route home and scroll to top — even when user is already on "/"
   // (React Router's <Link to="/"> is a no-op from "/"; this forces the reset).
