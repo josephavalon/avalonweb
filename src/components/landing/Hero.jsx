@@ -29,7 +29,7 @@ export default function Hero() {
 
       <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-between md:justify-center gap-6 md:gap-10 w-full h-full md:h-auto">
         {/* Top band: eyebrow + title */}
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center justify-center w-full flex-1 md:flex-none">
           <motion.p
             initial={{ opacity: 0, letterSpacing: '0.1em' }}
             animate={{ opacity: 1, letterSpacing: '0.4em' }}
