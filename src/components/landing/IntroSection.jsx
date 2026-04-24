@@ -117,7 +117,7 @@ export default function IntroSection() {
                     {label}
                   </span>
                   {location && (
-                    <span className="font-body text-xs tracking-widest text-accent uppercase">In Studio</span>
+                    <span className="font-body text-xs tracking-widest text-muted-foreground uppercase">In Studio</span>
                   )}
                   {live && (
                     <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
@@ -146,7 +146,7 @@ export default function IntroSection() {
                   {label}
                 </span>
                 {location && (
-                  <span className="font-body text-xs tracking-widest text-accent uppercase">In Studio</span>
+                  <span className="font-body text-xs tracking-widest text-muted-foreground uppercase">In Studio</span>
                 )}
                 {live && (
                   <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
