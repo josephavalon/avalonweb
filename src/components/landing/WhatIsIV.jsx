@@ -67,7 +67,7 @@ export default function WhatIsIV() {
                   <div key={s.label} className="text-center">
                     <p className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{s.value}</p>
                     <p className="font-body text-[10px] tracking-[0.15em] text-accent uppercase mt-2">{s.label}</p>
-                    <p className="font-body text-[10px] text-foreground mt-2 leading-tight">{s.sub}</p>
+                    <p className="font-body text-xs text-foreground mt-2 leading-tight">{s.sub}</p>
                   </div>
                 ))}
               </div>
