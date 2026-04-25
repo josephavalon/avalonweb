@@ -5,17 +5,6 @@ import { motion } from 'framer-motion';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
 
-const GOALS = [
-  'Energy & Performance',
-  'Anti-Aging & Longevity',
-  'Recovery & Repair',
-  'Mental Clarity & Focus',
-  'Immune Support',
-  'Stress & Sleep',
-  'Weight Management',
-  'General Wellness',
-];
-
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
   'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
@@ -87,12 +76,6 @@ export default function Apply() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
-
-  const toggleGoal = (goal) => {
-    setSelectedGoals(prev =>
-      prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]
-    );
-  };
 
   const updateField = (name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
@@ -378,35 +361,7 @@ export default function Apply() {
           <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
 
-        {/* Wellness goals — multi-select pill grid. No dropdown state = no freeze. */}
-        <div className="pt-1">
-          <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-2 px-1" id="goals-label">
-            Wellness goals — choose all that apply
-          </p>
-          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="goals-label">
-            {GOALS.map(goal => {
-              const active = selectedGoals.includes(goal);
-              return (
-                <button
-                  key={goal}
-                  type="button"
-                  onClick={() => toggleGoal(goal)}
-                  aria-pressed={active}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-body text-xs tracking-wide transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                    active
-                      ? 'bg-foreground text-background border border-foreground'
-                      : 'bg-transparent border border-white/15 text-muted-foreground hover:border-white/35 hover:text-foreground'
-                  }`}
-                >
-                  {active && <Check className="w-3 h-3" strokeWidth={2.5} />}
-                  {goal}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-            {/* Membership tier selection */}
+        {/* Membership tier selection */}
             <div className="pt-2">
               <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-1 px-1" id="tier-label">
                 Select your preferred tier(s) — optional
