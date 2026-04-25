@@ -16,8 +16,8 @@ const APPLY_URL = '/apply';
 // IV count stays consistent within a tier; price reflects which protocol that tier is billed
 // against. Base IV retail: Dehydration $150, CBD $200, Vitamins $250, NAD+ $350.
 // Member prices below = base × count × 0.8 (20% member discount).
-const PROTOCOLS = ['Dehydration', 'CBD', 'Vitamins', 'NAD+'];
-const BASE_IV = { Dehydration: 150, CBD: 200, Vitamins: 250, 'NAD+': 350 };
+const PROTOCOLS = ['CBD', 'Vitamins', 'NAD+'];
+const BASE_IV = { CBD: 200, Vitamins: 250, 'NAD+': 350 };
 const MEMBER_RATE = 0.8;
 const priceFor = (protocol, count) => Math.round(BASE_IV[protocol] * count * MEMBER_RATE);
 
@@ -77,7 +77,7 @@ const ANNUAL_DISCOUNT = 0.75; // 25% off annual
 
 function TierCard({ tier, billing }) {
   const [expanded, setExpanded] = useState(false);
-  const [protocol, setProtocol] = useState('Dehydration');
+  const [protocol, setProtocol] = useState('CBD');
   const visiblePerks = 3;
   const hasMore = tier.perks.length > visiblePerks;
   const TierIcon = TIER_ICON[tier.name] || Circle;
@@ -213,7 +213,7 @@ export default function MembershipSection() {
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Presale — Limited Availability</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">MEMBERSHIP</h2>
           <p className="font-body text-sm md:text-base text-foreground/85 mt-4 max-w-xl">
-            One membership tier. Pick your protocol — Dehydration, CBD, Vitamins, or NAD+. Credits roll over. Apply-only — available soon in the San Francisco Bay Area.
+            One membership tier. Pick your protocol — CBD, Vitamins, or NAD+. Credits roll over. Apply-only — available soon in the San Francisco Bay Area.
           </p>
         </div>
 
