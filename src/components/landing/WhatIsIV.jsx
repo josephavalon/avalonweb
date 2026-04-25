@@ -15,7 +15,7 @@ export default function WhatIsIV() {
     <section className="py-10 md:py-14 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6 md:mb-10">
-          <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-4">The Science</p>
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Science</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
         </div>
         <div className="grid md:grid-cols-[minmax(320px,380px)_minmax(0,620px)] gap-8 md:gap-10 items-start">
@@ -62,7 +62,7 @@ export default function WhatIsIV() {
                 {stats.map((s) => (
                   <div key={s.label} className="text-center">
                     <p className="font-heading text-3xl md:text-4xl text-foreground tracking-wide">{s.value}</p>
-                    <p className="font-body text-xs tracking-[0.15em] text-accent uppercase mt-2">{s.label}</p>
+                    <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">{s.label}</p>
                     <p className="font-body text-xs text-foreground mt-2 leading-tight">{s.sub}</p>
                   </div>
                 ))}
