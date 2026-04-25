@@ -209,7 +209,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Monthly / Annual toggle */}
-        <div className="flex items-center justify-center mb-6 md:mb-8">
+        <div className="flex flex-col items-center mb-6 md:mb-8 gap-3">
           <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-card">
             <button
               type="button"
@@ -226,6 +226,10 @@ export default function MembershipSection() {
               Annual — Save 25%
             </button>
           </div>
+          <p className="font-body text-xs md:text-sm text-accent text-center max-w-md px-4 leading-relaxed">
+            Every membership includes 20% off à la carte pricing on every IV, IM, and treatment.
+            <span className="block text-muted-foreground mt-1">Annual members save an additional 25% on top.</span>
+          </p>
         </div>
 
         {/* Tier cards — horizontal scroll on mobile, 4-col grid on desktop */}
