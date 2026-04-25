@@ -50,7 +50,7 @@ export default function Hero() {
             transition={{ duration: 1.2, delay: 0.3 }}
             className="font-body text-xs tracking-[0.4em] text-accent uppercase mb-5"
           >
-            Presale — Limited Spots
+            Presale · SF Bay Area · Memberships from $120/mo
           </motion.p>
 
           <motion.h1
@@ -100,7 +100,7 @@ export default function Hero() {
             className="px-2 mx-auto flex flex-col items-center gap-3 md:gap-4"
           >
             <div className="font-body text-xs md:text-sm text-foreground tracking-[0.2em] md:tracking-[0.4em] uppercase text-center md:whitespace-nowrap">
-              The Operating System for Human Performance
+              Concierge IV therapy and protocol membership
             </div>
             <p className="font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl px-2">
               Built for athletes, founders, and high-performers who don't have time to slow down.
