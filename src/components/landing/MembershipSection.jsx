@@ -19,7 +19,7 @@ const APPLY_URL = '/apply';
 const PROTOCOLS = ['CBD', 'Vitamins', 'NAD+'];
 const BASE_IV = { CBD: 250, Vitamins: 250, 'NAD+': 350 };
 const MONTHLY_RATE = 0.80; // 20% off retail
-const ANNUAL_RATE = 0.70;  // 30% off retail (multiplied by 12 months)
+const ANNUAL_RATE = 0.75;  // 30% off retail (multiplied by 12 months)
 const priceFor = (protocol, count, billing) => billing === 'annual' ? Math.round(BASE_IV[protocol] * count * 12 * ANNUAL_RATE) : Math.round(BASE_IV[protocol] * count * MONTHLY_RATE);
 
 const TIERS = [
@@ -230,12 +230,12 @@ export default function MembershipSection() {
               onClick={() => setBilling('annual')}
               className={`px-4 py-2 rounded-full text-xs tracking-widest uppercase font-body transition-colors ${billing === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Annual — Save 30%
+              Annual — Save 25%
             </button>
           </div>
           <p className="font-body text-xs md:text-sm text-accent text-center max-w-md px-4 leading-relaxed">
             Members save 20% off à la carte.
-            <span className="block text-muted-foreground mt-1">Annual: 30% off your subscription.</span>
+            <span className="block text-muted-foreground mt-1">Annual: 25% off your subscription.</span>
           </p>
         </div>
 
