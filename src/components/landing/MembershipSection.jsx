@@ -9,7 +9,7 @@ const TIER_ICON = {
   Premium: CircleDot,
   VIP: Sparkles,
   Custom: Wrench,
-  'Founding 100': Star,
+  Founder: Star,
 };
 
 const APPLY_URL = '/apply';
@@ -24,21 +24,18 @@ const priceFor = (protocol, count) => Math.round(BASE_IV[protocol] * count * MEM
 
 const TIERS = [
   {
-    name: 'Founding 100',
+    name: 'Founder',
     isFounding: true,
-    spotsTotal: 100,
-    spotsClaimed: 23,
-    locked: 'Locked-in Premium rate · permanent perks',
+    foundingPrice: 400,
     perks: [
-      'Locked-in Premium rate ($400/mo Vitamins) for life',
+      '$400/mo locked for life',
       '2 IVs per month (any protocol mix)',
       '2 IM injections per month',
-      'Permanent 25% off à la carte (vs. standard 20%)',
-      'Lifetime priority appointment booking',
+      '25% off à la carte (lifetime)',
+      'Lifetime priority booking',
       'Dedicated member concierge',
-      'Founders Wall recognition (optional, with consent)',
-      'First access to every new protocol (Peptides, TRT, Aesthetics)',
-      'Quarterly founders dinners with the Avalon team',
+      'First access to every new protocol',
+      'Quarterly founders dinners',
     ],
   },
   {
@@ -141,12 +138,10 @@ function TierCard({ tier, billing }) {
       {/* Price or tagline */}
       {tier.isFounding ? (
         <div className="mb-4">
-          <div className="flex items-baseline gap-2">
-            <span className="font-heading text-4xl md:text-5xl text-foreground leading-none tracking-tight"><AnimatedNumber value={tier.spotsClaimed} duration={0.8} /></span>
-            <span className="font-body text-xs tracking-widest uppercase text-muted-foreground">/ {tier.spotsTotal} reserved</span>
+          <div className="font-heading text-5xl md:text-6xl text-foreground leading-none tracking-tight">
+            <AnimatedNumber value={tier.foundingPrice} prefix="$" duration={0.6} />
           </div>
-          <p className="font-body text-xs tracking-widest uppercase text-accent mt-2">{tier.locked}</p>
-          <p className="font-body text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed">First 100 members. Permanent benefits. Closes when full.</p>
+          <div className="font-body text-xs tracking-widest uppercase text-accent mt-1">/mo · locked for life</div>
         </div>
       ) : !tier.isCustom ? (
         <div className="mb-4">
@@ -209,10 +204,10 @@ function TierCard({ tier, billing }) {
       {!hasMore && <div className="mb-3" />}
 
       <Link
-        to={tier.isFounding ? '/apply?tier=founding-100' : tier.isCustom ? '/apply?tier=custom' : APPLY_URL}
+        to={tier.isFounding ? '/apply?tier=founder' : tier.isCustom ? '/apply?tier=custom' : APPLY_URL}
         className="block text-center py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
       >
-        {tier.isFounding ? 'Reserve Your Spot' : tier.isCustom ? 'Design Your Protocol' : 'Apply for Membership'}
+        {tier.isFounding ? 'Apply as Founder' : tier.isCustom ? 'Design Your Protocol' : 'Apply for Membership'}
       </Link>
     </div>
   );
