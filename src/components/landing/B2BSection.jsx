@@ -36,8 +36,8 @@ export default function B2BSection() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col justify-center"
           >
-            <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
-              We don&rsquo;t plug in. We integrate.
+            <p className="font-heading text-3xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-5 md:mb-8">
+              We don&rsquo;t plug in.<br />We <span className="text-accent">integrate</span>.
             </p>
             <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
               On rider, on call, or on site — Avalon embeds directly into the production, adapting to whatever the environment demands.
