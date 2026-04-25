@@ -19,7 +19,7 @@ export const events = [
   },
   {
     slug: 'recovery-devices',
-    date: 'Coming Soon',
+    date: 'Fall 2026',
     title: 'RECOVERY DEVICES',
     location: 'San Francisco, CA',
     desc: 'Red light therapy, vagus nerve stimulation, and compression pants. Advanced recovery technology for members.',
@@ -33,7 +33,7 @@ export const events = [
   },
   {
     slug: 'builder-night',
-    date: 'Coming Soon',
+    date: 'Q3 2026',
     title: 'BUILDER NIGHT',
     location: 'San Francisco, CA',
     desc: 'Mixer for founders and builders. Connect with fellow startup leaders over IV therapy and wellness expertise on-site.',
@@ -47,7 +47,7 @@ export const events = [
   },
   {
     slug: 'bay-to-breakers-expo',
-    date: 'Coming Soon',
+    date: 'May 17, 2026',
     title: 'Bay 2 Breakers Expo',
     location: 'Sports Basement, San Francisco',
     desc: 'IM injections and exclusive merchandise sales. Pre-race hydration and IV therapy on-site.',
@@ -61,7 +61,7 @@ export const events = [
   },
   {
     slug: 'bay-to-breakers-finish-line',
-    date: 'Coming Soon',
+    date: 'May 17, 2026',
     title: 'Bay 2 Breakers Finish Line',
     location: 'Near Finish Line, San Francisco',
     desc: 'Exclusive IVs heavily discounted for race participants. Recovery and hydration right at the finish line.',
@@ -75,7 +75,7 @@ export const events = [
   },
   {
     slug: 'vital-ice-influencer-night',
-    date: 'Coming Soon',
+    date: 'Summer 2026',
     title: 'Vital Ice SF Influencer Night',
     location: 'Marina District, San Francisco',
     desc: 'Exclusive event for creators and influencers. Experience cold plunge, sauna, and IV therapy in our studio.',
