@@ -44,7 +44,7 @@ export default function EventsSection() {
             transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-3"
           >
-            Where you'll find us in the Bay — from members' dinners to finish lines and founder nights.
+            Where you'll find us in the Bay — from finish lines to founder nights.
           </motion.p>
         </motion.div>
 
