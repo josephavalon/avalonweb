@@ -38,8 +38,8 @@ export default function Home() {
       <WhatIsIV />
       <HowItWorks />
       <OurDrips />
-      <PlatformStack />
       <MembershipSection />
+      <PlatformStack />
       {/* <GiftCertificates /> — hidden for presale */}
       <EventsSection />
       <B2BSection />
