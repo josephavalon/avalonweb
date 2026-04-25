@@ -61,7 +61,7 @@ const TIERS = [
   {
     name: 'Custom',
     isCustom: true,
-    startingFrom: 1000,
+    startingFrom: 200,
     tagline: 'Build your own protocol',
     description: "A modular membership designed around your routine. Choose protocols, frequencies, and add-ons with our concierge team.",
     perks: [
