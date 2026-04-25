@@ -6,7 +6,7 @@ import { Cpu, Music2, CalendarDays, Building2 } from 'lucide-react';
 // shows up in: tech, live events, festivals, music venues. Copy frames
 // Avalon as a co-producer, not a vendor. Order reflects pipeline priority.
 const channels = [
-  { icon: Cpu,          title: 'Tech Companies',   desc: 'On-site and on-call Protocols for engineering teams, founder offsites, and launch weeks.' },
+  { icon: Cpu,          title: 'Companies',   desc: 'On-site and on-call Protocols for engineering teams, founder offsites, and launch weeks.' },
   { icon: CalendarDays, title: 'Live Events',      desc: 'Activations, after-parties, and media days. Hydration and recovery as part of the production, not a pop-up.' },
   { icon: Music2,       title: 'Festivals',        desc: 'Multi-day festival partnerships — artist trailers, crew villages, and VIP lounges kept running from load-in to strike.' },
   { icon: Building2,    title: 'Music Venues',     desc: 'Residencies with clubs and concert halls. Green-room IV for touring artists and crews, on rider or on call.' },
