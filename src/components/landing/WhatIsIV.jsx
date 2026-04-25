@@ -54,7 +54,7 @@ export default function WhatIsIV() {
             className="text-left"
           >
             <p className="font-body text-base md:text-lg text-foreground leading-snug mb-8">
-              IV bypasses your gut. <span className="text-accent font-normal">100% delivery, in under an hour.</span>
+              IV therapy bypasses your gut for <span className="text-accent font-normal">100% delivery, in under an hour.</span>
             </p>
         {/* Stats grid */}
             <div className="border-t border-border pt-6">
