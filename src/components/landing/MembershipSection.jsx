@@ -17,7 +17,7 @@ const APPLY_URL = '/apply';
 // against. Base IV retail: Dehydration $150, CBD $200, Vitamins $250, NAD+ $350.
 // Member prices below = base × count × 0.8 (20% member discount).
 const PROTOCOLS = ['CBD', 'Vitamins', 'NAD+'];
-const BASE_IV = { CBD: 200, Vitamins: 250, 'NAD+': 350 };
+const BASE_IV = { CBD: 250, Vitamins: 250, 'NAD+': 350 };
 const MEMBER_RATE = 0.8;
 const priceFor = (protocol, count) => Math.round(BASE_IV[protocol] * count * MEMBER_RATE);
 
