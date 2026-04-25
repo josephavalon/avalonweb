@@ -21,7 +21,7 @@ const CLINICAL = [
   },
   {
     name: 'Stephanie Weeks',
-    role: 'Clinical Lead',
+    role: 'Director of Nursing',
     credentials: null,
     bio: 'Years of concierge clinical experience.',
   },
