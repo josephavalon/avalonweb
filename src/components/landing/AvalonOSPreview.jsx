@@ -234,7 +234,7 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.6, ease: EASE }}
               className="text-[11px] md:text-sm tracking-[0.28em] text-accent font-body uppercase mb-3 md:mb-4 leading-tight"
             >
-              Coming Soon —<br />Avalon OS
+              Coming Soon
             </motion.p>
 
             <motion.h2
@@ -242,17 +242,26 @@ export default function AvalonOSPreview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
-              className="font-heading text-[10vw] md:text-6xl lg:text-7xl text-foreground tracking-wide leading-[0.9] uppercase"
+              className="font-heading text-[14vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.9] uppercase"
             >
-              From<br />Delivery<br />To<br />Intelligence<span className="text-accent">.</span>
+              Avalon OS<span className="text-accent">.</span>
             </motion.h2>
 
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
+              transition={{ duration: 0.6, delay: 0.12, ease: EASE }}
+              className="font-heading text-[5vw] md:text-2xl lg:text-3xl text-foreground/85 tracking-wide uppercase leading-tight mt-3 md:mt-5"
+            >
+              Intelligent Delivery
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
-              className="font-body text-[11px] md:text-base text-muted-foreground leading-snug mt-4 md:mt-6 mb-4 md:mb-6"
+              className="font-body text-[10px] md:text-sm text-muted-foreground leading-snug mt-2 md:mt-3 mb-4 md:mb-6"
             >
               Real-time data. Intelligent protocol.<br />Peak every day.
             </motion.p>
