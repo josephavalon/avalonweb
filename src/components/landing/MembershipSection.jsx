@@ -39,7 +39,7 @@ const TIERS = [
     perks: [
       '2 IVs per month (any protocol mix)',
       '2 IM injections per month',
-      '25% off à la carte treatments',
+      '20% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Priority appointment booking',
       'Fast, discreet delivery — straight to your door',
@@ -51,7 +51,7 @@ const TIERS = [
     perks: [
       '4 IVs per month (any protocol mix)',
       '4 IM injections per month',
-      '30% off à la carte treatments',
+      '20% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Priority appointment booking',
       'Dedicated member concierge',
