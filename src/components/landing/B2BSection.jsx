@@ -37,9 +37,6 @@ export default function B2BSection() {
             className="flex flex-col justify-center"
           >
             <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
-              Avalon operates at the point of execution — tech orgs, touring productions, festivals, venues. Protocols delivered where performance happens, not after.
-            </p>
-            <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
               We don&rsquo;t plug in. We integrate.
             </p>
             <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
