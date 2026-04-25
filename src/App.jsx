@@ -45,6 +45,7 @@ function AppRoutes() {
             <Route path="/our-story" element={<OurStory />} />
             <Route path="/team" element={<OurTeam />} />
             <Route path="/medical-direction" element={<Navigate to="/team" replace />} />
+            <Route path="/our-team" element={<Navigate to="/team" replace />} />
             <Route path="/products/dehydration-iv" element={<DehydrationIV />} />
             <Route path="/services/iv-vitamins" element={<IVVitaminsService />} />
             <Route path="/services/nad" element={<NAD />} />
