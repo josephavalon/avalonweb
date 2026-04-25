@@ -5,11 +5,11 @@ import { Check, Droplet, Pill, Syringe, Dumbbell, Moon, ChevronRight, Wifi, Sala
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 5, name: 'Autonomy' },
-  { n: 4, name: 'Intelligence' },
-  { n: 3, name: 'Data' },
-  { n: 2, name: 'Modalities' },
-  { n: 1, name: 'Delivery' },
+  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.' },
+  { n: 4, name: 'Intelligence', desc: 'We learn what works.' },
+  { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.' },
+  { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.' },
+  { n: 1, name: 'Delivery', desc: 'We come to you.' },
 ];
 
 const METRICS = [
@@ -80,7 +80,7 @@ function Sparkline({ color, type, large }) {
   );
 }
 
-function PhoneMockup({ large = false, onClick }) {
+function PhoneMockup({ large = false }) {
   const wrapMax = large ? 'max-w-[320px]' : 'max-w-[155px] sm:max-w-[200px] md:max-w-[280px]';
   const radius = large ? 'rounded-[2.4rem]' : 'rounded-[1.3rem] md:rounded-[2.1rem]';
   const innerRadius = large ? 'rounded-[2rem]' : 'rounded-[1.1rem] md:rounded-[1.8rem]';
@@ -103,18 +103,9 @@ function PhoneMockup({ large = false, onClick }) {
   const tabTx = large ? 'text-[8px]' : 'text-[3.5px] md:text-[6px]';
 
   return (
-    <div className={`relative w-full ${wrapMax} mx-auto`}>
+    <div className={`relative w-full ${wrapMax} mx-auto pointer-events-none`}>
       <div className={`${radius} border border-foreground/30 bg-black p-1 md:p-1.5 shadow-2xl`}>
         <div className={`${innerRadius} bg-black overflow-hidden relative`} style={{ aspectRatio: '9/19.5' }}>
-          {!large && onClick && (
-            <button
-              onClick={onClick}
-              aria-label="Zoom phone"
-              className="absolute top-2 right-2 z-10 w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/20"
-            >
-              <ZoomIn className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" strokeWidth={2} />
-            </button>
-          )}
           <div className={`flex items-center justify-between ${padX} pt-2 pb-1`}>
             <span className={`${txTime} font-medium text-white`}>9:41</span>
             <div className="flex items-center gap-0.5 text-white">
@@ -209,23 +200,22 @@ export default function AvalonOSPreview() {
               className="w-7 md:w-12 h-[2px] md:h-[3px] bg-accent origin-left mt-2 md:mt-4 mb-3 md:mb-5"
             />
 
-            {/* Coming Soon — moved to top, under title */}
+            {/* Coming Soon — full width, no truncate, no chevron, fits */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.55, delay: 0.25, ease: EASE }}
-              className="border border-foreground/15 rounded-md md:rounded-xl px-2 md:px-3.5 py-1.5 md:py-2.5 flex items-center gap-1.5 md:gap-2.5 mb-2.5 md:mb-4"
+              className="border border-foreground/15 rounded-md md:rounded-xl px-2.5 md:px-3.5 py-2 md:py-2.5 flex items-center gap-2 mb-2.5 md:mb-4"
             >
-              <AppleIcon className="w-3 h-3 md:w-4 md:h-4 text-accent shrink-0" />
-              <AndroidIcon className="w-3 h-3 md:w-4 md:h-4 text-accent shrink-0" />
-              <p className="flex-1 font-body text-[8px] md:text-[11px] tracking-[0.18em] text-foreground/85 uppercase leading-tight truncate">
-                Coming Soon · iOS &amp; Android
+              <AppleIcon className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent shrink-0" />
+              <AndroidIcon className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent shrink-0" />
+              <p className="flex-1 font-body text-[9px] md:text-[11px] tracking-[0.15em] text-foreground/85 uppercase leading-snug">
+                Coming Soon<br className="md:hidden" /> iOS &amp; Android
               </p>
-              <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent shrink-0" strokeWidth={1.6} />
             </motion.div>
 
-            {/* 5 layers compact */}
+            {/* 5 layers with one-line description */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -234,16 +224,19 @@ export default function AvalonOSPreview() {
               className="border border-foreground/15 rounded-md md:rounded-xl divide-y divide-border/40"
             >
               {LAYERS.map((l) => (
-                <div key={l.n} className="flex items-center gap-2 md:gap-3 px-2 md:px-3.5 py-1.5 md:py-2.5">
-                  <span className="text-[9px] md:text-[11px] tracking-[0.25em] text-accent font-body uppercase w-5 md:w-7 shrink-0">L{l.n}</span>
-                  <span className="font-heading text-[11px] md:text-base text-foreground tracking-wide uppercase leading-none flex-1 truncate">{l.name}</span>
-                  <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent/60 shrink-0" strokeWidth={1.6} />
+                <div key={l.n} className="flex items-start gap-2 md:gap-3 px-2 md:px-3.5 py-1.5 md:py-2.5">
+                  <span className="text-[9px] md:text-[11px] tracking-[0.25em] text-accent font-body uppercase w-5 md:w-7 shrink-0 pt-0.5">L{l.n}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-heading text-[11px] md:text-base text-foreground tracking-wide uppercase leading-none">{l.name}</p>
+                    <p className="font-body text-[8px] md:text-[11px] text-muted-foreground leading-snug mt-0.5 truncate">{l.desc}</p>
+                  </div>
+                  <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent/60 shrink-0 mt-1" strokeWidth={1.6} />
                 </div>
               ))}
             </motion.div>
           </div>
 
-          {/* RIGHT: phone with zoom */}
+          {/* RIGHT: phone — entire wrapper is the zoom button */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -251,13 +244,22 @@ export default function AvalonOSPreview() {
             transition={{ duration: 0.9, ease: EASE }}
             className="flex flex-col items-center justify-start min-w-0 gap-2"
           >
-            <PhoneMockup onClick={() => setZoomed(true)} />
             <button
+              type="button"
               onClick={() => setZoomed(true)}
-              className="text-[8px] md:text-[10px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1"
+              aria-label="Zoom phone preview"
+              className="block w-full focus:outline-none cursor-zoom-in active:scale-[0.98] transition-transform"
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+            >
+              <PhoneMockup />
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoomed(true)}
+              className="text-[9px] md:text-[10px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1"
             >
               <ZoomIn className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={1.6} />
-              Tap to expand
+              Tap to Zoom
             </button>
           </motion.div>
         </div>
@@ -277,7 +279,7 @@ export default function AvalonOSPreview() {
             <button
               onClick={() => setZoomed(false)}
               aria-label="Close"
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/20"
+              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/20 z-[201]"
             >
               <X className="w-4 h-4" strokeWidth={2} />
             </button>
