@@ -149,6 +149,28 @@ export default function WaitlistSection() {
             className="max-w-xl mx-auto"
             noValidate
           >
+            <div className="flex flex-col sm:flex-row items-stretch gap-2">
+              <label htmlFor="waitlist-email" className="sr-only">Email address</label>
+              <input
+                id="waitlist-email"
+                type="email"
+                name="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                required
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="flex-1 bg-transparent border border-foreground/30 rounded-full px-5 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={status === 'submitting'}
+                className="px-8 py-3 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {status === 'submitting' ? 'Joining…' : 'Join Waitlist'}
+              </button>
+            </div>
             {/* Honeypot */}
             <div
               aria-hidden="true"
