@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Brain, Database, Layers, Truck, Smartphone } from 'lucide-react';
 
 const LAYERS = [
-  { n: 4, name: 'Intelligence', desc: 'AI protocol recommendations · outcome models · personalized re-protocol cadence', icon: Brain },
+  { n: 4, name: 'Intelligence', desc: 'Predicts when and what will move your health forward — across IV, peptides, TRT, aesthetics. Outcome-tuned to your data.', icon: Brain },
   { n: 3, name: 'Data', desc: 'Longitudinal biomarker timeline · wearable feeds · genomics layer (2027)', icon: Database },
   { n: 2, name: 'Modalities', desc: 'IV · NAD+ · CBD · Peptides · TRT · Aesthetics · Ketamine · Exosomes', icon: Layers },
   { n: 1, name: 'Delivery', desc: 'Concierge nurse network · compounding pharmacy partners · in-home & in-studio', icon: Truck },
