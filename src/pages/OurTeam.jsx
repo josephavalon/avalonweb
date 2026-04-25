@@ -23,7 +23,7 @@ const CLINICAL = [
     name: 'Stephanie Weeks',
     role: 'Director of Nursing',
     credentials: null,
-    bio: 'Years of concierge clinical experience.',
+    bio: "Veteran IV nurse. Sets Avalon's standards for safety, sterility, and bedside care — every session, every patient.",
   },
 ];
 
