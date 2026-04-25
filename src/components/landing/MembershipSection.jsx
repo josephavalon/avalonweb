@@ -61,6 +61,7 @@ const TIERS = [
   {
     name: 'Custom',
     isCustom: true,
+    startingFrom: 1000,
     tagline: 'Build your own protocol',
     description: "A modular membership designed around your routine. Choose protocols, frequencies, and add-ons with our concierge team.",
     perks: [
@@ -76,7 +77,7 @@ const ANNUAL_DISCOUNT = 0.75; // 25% off annual
 
 function TierCard({ tier, billing }) {
   const [expanded, setExpanded] = useState(false);
-  const [protocol, setProtocol] = useState('Vitamins');
+  const [protocol, setProtocol] = useState('Dehydration');
   const visiblePerks = 3;
   const hasMore = tier.perks.length > visiblePerks;
   const TierIcon = TIER_ICON[tier.name] || Circle;
@@ -129,6 +130,9 @@ function TierCard({ tier, billing }) {
       ) : (
         <div className="mb-4">
           <p className="font-heading text-2xl md:text-3xl text-foreground leading-tight tracking-wide">{tier.tagline}</p>
+          {tier.startingFrom && (
+            <p className="font-body text-xs tracking-widest uppercase text-accent mt-2">Starting at ${tier.startingFrom.toLocaleString()}/mo</p>
+          )}
           <p className="font-body text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed">{tier.description}</p>
         </div>
       )}
