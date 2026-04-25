@@ -259,8 +259,8 @@ export default function MembershipSection() {
             </button>
           </div>
           <p className="font-body text-xs md:text-sm text-accent text-center max-w-md px-4 leading-relaxed">
-            Every membership includes 20% off à la carte pricing on every IV, IM, and treatment.
-            <span className="block text-muted-foreground mt-1">Annual members save an additional 25% on top.</span>
+            Members save 20% off à la carte.
+            <span className="block text-muted-foreground mt-1">Annual: 25% additional.</span>
           </p>
         </div>
 
