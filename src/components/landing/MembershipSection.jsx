@@ -108,7 +108,7 @@ function TierCard({ tier, billing }) {
 
   return (
     <div
-      className={`flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto relative rounded-3xl p-4 md:p-5 flex flex-col ${tier.isFounding ? 'border-2 border-accent bg-accent/5' : 'border border-border bg-card'}`}
+      className={`flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto snap-center md:snap-align-none relative rounded-3xl p-4 md:p-5 flex flex-col ${tier.isFounding ? 'border-2 border-accent bg-accent/5' : 'border border-border bg-card'}`}
     >
       {/* Tier name row */}
       <div className="flex items-center gap-2 mb-3">
@@ -220,8 +220,13 @@ export default function MembershipSection() {
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    const delta = el.clientWidth * 0.8;
-    el.scrollBy({ left: dir === 'right' ? delta : -delta, behavior: 'smooth' });
+    const card = el.firstElementChild;
+    if (!card) return;
+    const cardW = card.getBoundingClientRect().width;
+    const styles = window.getComputedStyle(el);
+    const gap = parseFloat(styles.columnGap || styles.gap || '16') || 16;
+    const step = cardW + gap;
+    el.scrollBy({ left: dir === 'right' ? step : -step, behavior: 'smooth' });
   };
 
   return (
@@ -279,7 +284,7 @@ export default function MembershipSection() {
           </button>
           <div
             ref={scrollRef}
-            className="overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-5 md:gap-4 lg:gap-5 flex gap-4 pb-3 px-4 md:px-0"
+            className="overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-5 md:gap-4 lg:gap-5 flex gap-4 pb-3 snap-x snap-mandatory md:snap-none scroll-px-[7.5vw] px-[7.5vw] md:px-0"
           >
             {TIERS.map((tier) => (
               <TierCard key={tier.name} tier={tier} billing={billing} />
