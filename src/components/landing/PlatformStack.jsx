@@ -4,26 +4,11 @@ import { Brain, BarChart3, Droplet, Truck, Orbit, ChevronRight } from 'lucide-re
 
 const LAYERS = [
   {
-    n: 5,
-    name: 'Autonomy',
-    icon: Orbit,
-    line1: 'Your protocol runs itself.',
-    line2: 'Avalon delivers it.',
-    line2Accent: true,
-  },
-  {
-    n: 4,
-    name: 'Intelligence',
-    icon: Brain,
-    line1: 'We learn what works.',
-    line2: 'Your protocol gets better over time.',
-  },
-  {
-    n: 3,
-    name: 'Data',
-    icon: BarChart3,
-    line1: 'Everything is tracked.',
-    line2: 'Your history, your biomarkers, your trends.',
+    n: 1,
+    name: 'Delivery',
+    icon: Truck,
+    line1: 'We come to you.',
+    line2: 'At home, at events, or in-studio.',
   },
   {
     n: 2,
@@ -33,11 +18,26 @@ const LAYERS = [
     line2: 'NAD+, CBD, peptides, TRT, and more.',
   },
   {
-    n: 1,
-    name: 'Delivery',
-    icon: Truck,
-    line1: 'We come to you.',
-    line2: 'At home, at events, or in-studio.',
+    n: 3,
+    name: 'Data',
+    icon: BarChart3,
+    line1: 'Everything is tracked.',
+    line2: 'Your history, your biomarkers, your trends.',
+  },
+  {
+    n: 4,
+    name: 'Intelligence',
+    icon: Brain,
+    line1: 'We learn what works.',
+    line2: 'Your protocol gets better over time.',
+  },
+  {
+    n: 5,
+    name: 'Autonomy',
+    icon: Orbit,
+    line1: 'Your protocol runs itself.',
+    line2: 'Avalon delivers it.',
+    line2Accent: true,
   },
 ];
 
