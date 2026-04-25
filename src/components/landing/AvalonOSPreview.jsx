@@ -181,7 +181,7 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.6, ease: EASE }}
               className="text-[11px] md:text-sm tracking-[0.28em] text-accent font-body uppercase mb-3 md:mb-4"
             >
-              Avalon OS · Mobile · Coming Soon
+              Coming Soon — Avalon OS
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 14 }}
