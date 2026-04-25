@@ -33,10 +33,10 @@ export default function Home() {
       <Navbar />
       <Hero />
       <TrustStrip />
-      <IntroSection />
       <WhatIsIV />
-      <HowItWorks />
       <OurDrips />
+      <HowItWorks />
+      <IntroSection />
       <MembershipSection />
       {/* <GiftCertificates /> — hidden for presale */}
       <EventsSection />
