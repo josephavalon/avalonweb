@@ -234,8 +234,8 @@ export default function MembershipSection() {
             </button>
           </div>
           <p className="font-body text-xs md:text-sm text-accent text-center max-w-md px-4 leading-relaxed">
-            Members save 20% off à la carte.
-            <span className="block text-muted-foreground mt-1">Annual: 25% off your subscription.</span>
+            20% off à la carte.
+            <span className="block text-muted-foreground mt-1">25% off annual.</span>
           </p>
         </div>
 
