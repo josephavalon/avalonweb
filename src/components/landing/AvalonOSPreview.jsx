@@ -9,7 +9,7 @@ const LAYERS = [
   { n: 4, name: 'Intelligence', desc: 'We learn what works.', icon: Brain },
   { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
   { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.', icon: Droplet },
-  { n: 1, name: 'Delivery', desc: 'We come to you.', icon: Truck },
+  { n: 1, name: 'Delivery', desc: 'We ship or come to you.', icon: Truck },
 ];
 
 const METRICS = [
