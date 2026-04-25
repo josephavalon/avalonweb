@@ -39,9 +39,6 @@ export default function B2BSection() {
             <p className="font-heading text-3xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-5 md:mb-8">
               We don&rsquo;t plug in.<br />We <span className="text-accent">integrate</span>.
             </p>
-            <p className="font-body text-sm md:text-base text-foreground leading-relaxed mb-4">
-              On rider, on call, or on site — Avalon embeds directly into the production, adapting to whatever the environment demands.
-            </p>
             <div className="flex justify-start mt-4">
               <a
                 href="mailto:support@avalonvitality.co"
