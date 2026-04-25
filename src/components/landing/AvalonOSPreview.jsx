@@ -9,11 +9,11 @@ import {
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 1, name: 'Delivery',     icon: Truck },
-  { n: 2, name: 'Modalities',   icon: Droplet },
-  { n: 3, name: 'Data',         icon: BarChart3 },
-  { n: 4, name: 'Intelligence', icon: Brain },
-  { n: 5, name: 'Autonomy',     icon: Orbit },
+  { n: 1, name: 'Delivery',     desc: 'We ship or come to you.',          icon: Truck },
+  { n: 2, name: 'Modalities',   desc: 'IVs, NAD+, peptides, TRT.',        icon: Droplet },
+  { n: 3, name: 'Data',         desc: 'Everything tracked, end-to-end.',  icon: BarChart3 },
+  { n: 4, name: 'Intelligence', desc: 'We learn what works.',             icon: Brain },
+  { n: 5, name: 'Autonomy',     desc: 'Your protocol runs itself.', accentTail: 'Avalon delivers it.', icon: Orbit },
 ];
 
 const METRICS = [
@@ -47,6 +47,7 @@ const TABS = [
   { name: 'HOME', icon: HomeIcon, active: true },
   { name: 'PROTOCOL', icon: Calendar, active: false },
   { name: 'COACH', icon: Activity, active: false },
+  { name: 'DIET', icon: Salad, active: false },
   { name: 'REPORTS', icon: Chart, active: false },
   { name: 'YOU', icon: User, active: false },
 ];
@@ -241,12 +242,17 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-2.5">
-                    <span className="text-[11px] md:text-[12px] tracking-[0.2em] text-accent font-body uppercase w-4 md:w-5 shrink-0">{l.n}</span>
+                  <div key={l.n} className="flex items-start gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-2.5">
+                    <span className="text-[11px] md:text-[12px] tracking-[0.2em] text-accent font-body uppercase w-4 md:w-5 shrink-0 pt-0.5">{l.n}</span>
                     <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                       <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={1.5} />
                     </div>
-                    <span className="font-heading text-[12px] md:text-sm text-foreground tracking-wide uppercase leading-none flex-1 truncate">{l.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-heading text-[12px] md:text-sm text-foreground tracking-wide uppercase leading-none mb-0.5">{l.name}</p>
+                      <p className="font-body text-[8.5px] md:text-[11px] text-muted-foreground leading-snug">
+                        {l.desc}{l.accentTail && <> <span className="text-accent font-normal">{l.accentTail}</span></>}
+                      </p>
+                    </div>
                     <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-accent/60 shrink-0" strokeWidth={1.6} />
                   </div>
                 );
