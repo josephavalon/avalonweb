@@ -81,7 +81,7 @@ function Sparkline({ color, type, large }) {
 }
 
 function PhoneMockup({ large = false }) {
-  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[155px] sm:max-w-[200px] md:max-w-[280px]';
+  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[185px] sm:max-w-[240px] md:max-w-[320px]';
   const radius = large ? 'rounded-[2.4rem]' : 'rounded-[1.3rem] md:rounded-[2.1rem]';
   const innerRadius = large ? 'rounded-[2rem]' : 'rounded-[1.1rem] md:rounded-[1.8rem]';
   const padX = large ? 'px-5' : 'px-2.5 md:px-4';
@@ -171,7 +171,7 @@ export default function AvalonOSPreview() {
   return (
     <section id="avalon-os" className="py-6 md:py-16 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-[1.05fr_1fr] gap-3 md:gap-10 items-start">
+        <div className="grid grid-cols-[1fr_1.05fr] gap-3 md:gap-10 items-start">
           {/* LEFT */}
           <div className="min-w-0">
             <motion.p
@@ -222,7 +222,7 @@ export default function AvalonOSPreview() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-heading text-[14px] md:text-lg text-foreground tracking-wide uppercase leading-none">{l.name}</p>
-                    <p className="font-body text-[10px] md:text-[12px] text-muted-foreground leading-snug mt-1">{l.desc}{l.accentTail && <> <span className="text-accent">{l.accentTail}</span></>}</p>
+                    <p className="font-body text-[10px] md:text-[12px] text-muted-foreground leading-snug mt-1">{l.desc}{l.accentTail && <> <span className="text-accent font-normal">{l.accentTail}</span></>}</p>
                   </div>
                   <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent/60 shrink-0" strokeWidth={1.6} />
                 </div>
