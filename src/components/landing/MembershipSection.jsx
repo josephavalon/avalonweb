@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ChevronDown, ChevronLeft, ChevronRight, Circle, CircleDot, Sparkles, Wrench } from 'lucide-react';
+import { Plus, ChevronDown, ChevronLeft, ChevronRight, Circle, CircleDot, Sparkles, Wrench, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 
@@ -9,6 +9,7 @@ const TIER_ICON = {
   Premium: CircleDot,
   VIP: Sparkles,
   Custom: Wrench,
+  'Founding 100': Star,
 };
 
 const APPLY_URL = '/apply';
@@ -22,6 +23,24 @@ const MEMBER_RATE = 0.8;
 const priceFor = (protocol, count) => Math.round(BASE_IV[protocol] * count * MEMBER_RATE);
 
 const TIERS = [
+  {
+    name: 'Founding 100',
+    isFounding: true,
+    spotsTotal: 100,
+    spotsClaimed: 23,
+    locked: 'Locked-in Premium rate · permanent perks',
+    perks: [
+      'Locked-in Premium rate ($400/mo Vitamins) for life',
+      '2 IVs per month (any protocol mix)',
+      '2 IM injections per month',
+      'Permanent 25% off à la carte (vs. standard 20%)',
+      'Lifetime priority appointment booking',
+      'Dedicated member concierge',
+      'Founders Wall recognition (optional, with consent)',
+      'First access to every new protocol (Peptides, TRT, Aesthetics)',
+      'Quarterly founders dinners with the Avalon team',
+    ],
+  },
   {
     name: 'Starter',
     ivCount: 1,
@@ -84,7 +103,7 @@ function TierCard({ tier, billing }) {
 
   let displayPrice = null;
   let priceSuffix = '';
-  if (!tier.isCustom) {
+  if (!tier.isCustom && !tier.isFounding) {
     const monthly = priceFor(protocol, tier.ivCount);
     displayPrice = billing === 'annual' ? Math.round(monthly * 12 * ANNUAL_DISCOUNT) : monthly;
     priceSuffix = billing === 'annual' ? '/year' : '/mo';
@@ -92,7 +111,7 @@ function TierCard({ tier, billing }) {
 
   return (
     <div
-      className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto relative border border-border bg-card rounded-3xl p-4 md:p-5 flex flex-col"
+      className={`flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto relative rounded-3xl p-4 md:p-5 flex flex-col ${tier.isFounding ? 'border-2 border-accent bg-accent/5' : 'border border-border bg-card'}`}
     >
       {/* Tier name row */}
       <div className="flex items-center gap-2 mb-3">
@@ -101,7 +120,7 @@ function TierCard({ tier, billing }) {
       </div>
 
       {/* Protocol selector (priced tiers only) */}
-      {!tier.isCustom && (
+      {!tier.isCustom && !tier.isFounding && (
         <div className="mb-3">
           <p className="font-body text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">Protocol</p>
           <div className="grid grid-cols-2 gap-1">
@@ -120,7 +139,16 @@ function TierCard({ tier, billing }) {
       )}
 
       {/* Price or tagline */}
-      {!tier.isCustom ? (
+      {tier.isFounding ? (
+        <div className="mb-4">
+          <div className="flex items-baseline gap-2">
+            <span className="font-heading text-4xl md:text-5xl text-foreground leading-none tracking-tight"><AnimatedNumber value={tier.spotsClaimed} duration={0.8} /></span>
+            <span className="font-body text-xs tracking-widest uppercase text-muted-foreground">/ {tier.spotsTotal} reserved</span>
+          </div>
+          <p className="font-body text-xs tracking-widest uppercase text-accent mt-2">{tier.locked}</p>
+          <p className="font-body text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed">First 100 members. Permanent benefits. Closes when full.</p>
+        </div>
+      ) : !tier.isCustom ? (
         <div className="mb-4">
           <div className="font-heading text-5xl md:text-6xl text-foreground leading-none tracking-tight">
             <AnimatedNumber value={displayPrice} prefix="$" duration={0.6} />
@@ -181,10 +209,10 @@ function TierCard({ tier, billing }) {
       {!hasMore && <div className="mb-3" />}
 
       <Link
-        to={tier.isCustom ? '/apply?tier=custom' : APPLY_URL}
+        to={tier.isFounding ? '/apply?tier=founding-100' : tier.isCustom ? '/apply?tier=custom' : APPLY_URL}
         className="block text-center py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
       >
-        {tier.isCustom ? 'Design Your Protocol' : 'Apply for Membership'}
+        {tier.isFounding ? 'Reserve Your Spot' : tier.isCustom ? 'Design Your Protocol' : 'Apply for Membership'}
       </Link>
     </div>
   );
@@ -256,7 +284,7 @@ export default function MembershipSection() {
           </button>
           <div
             ref={scrollRef}
-            className="overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-4 lg:gap-6 flex gap-4 pb-3 px-4 md:px-0"
+            className="overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-5 md:gap-4 lg:gap-5 flex gap-4 pb-3 px-4 md:px-0"
           >
             {TIERS.map((tier) => (
               <TierCard key={tier.name} tier={tier} billing={billing} />
