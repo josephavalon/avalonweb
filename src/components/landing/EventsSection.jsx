@@ -24,7 +24,7 @@ export default function EventsSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
+            className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4"
           >
             In the Field
           </motion.p>
@@ -59,7 +59,7 @@ export default function EventsSection() {
                   transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   className="flex-shrink-0 w-[calc(100vw-5rem)] sm:w-[360px] md:w-[400px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-start"
                 >
-                <p className="text-xs tracking-[0.3em] text-accent font-body uppercase">{event.date}</p>
+                <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">{event.date}</p>
                 <div>
                   <h3 className="font-heading text-3xl md:text-4xl text-foreground tracking-wide mb-1">{event.title}</h3>
                   <p className="font-body text-xs tracking-widest text-foreground uppercase">{event.location}</p>
@@ -67,7 +67,7 @@ export default function EventsSection() {
                 <p className="font-body text-sm md:text-base text-foreground leading-relaxed flex-1">{event.desc}</p>
                 <Link
                   to={`/events/${event.slug}`}
-                  className="text-xs md:text-sm tracking-[0.2em] text-accent hover:text-accent/70 font-body uppercase transition-colors"
+                  className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4"
                 >
                   Details →
                 </Link>
