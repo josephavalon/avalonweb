@@ -216,7 +216,7 @@ export default function MembershipSection() {
               onClick={() => setBilling('monthly')}
               className={`px-4 py-2 rounded-full text-xs tracking-widest uppercase font-body transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Monthly
+              Monthly — Save 20%
             </button>
             <button
               type="button"
