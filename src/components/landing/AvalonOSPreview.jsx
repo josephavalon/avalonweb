@@ -181,7 +181,7 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.6, ease: EASE }}
               className="text-[11px] md:text-sm tracking-[0.28em] text-accent font-body uppercase mb-3 md:mb-4"
             >
-              Coming Soon — Avalon OS
+              Coming Soon
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 14 }}
@@ -190,15 +190,25 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
               className="font-heading text-[9vw] md:text-6xl lg:text-7xl text-foreground tracking-wide leading-[0.9] uppercase"
             >
-              From Delivery<br />To Intelligence<span className="text-accent">.</span>
+              Avalon OS<span className="text-accent">.</span>
             </motion.h2>
             <motion.div
               initial={{ opacity: 0, scaleX: 0 }}
               whileInView={{ opacity: 1, scaleX: 1 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
-              className="w-9 md:w-14 h-[2px] md:h-[3px] bg-accent origin-left mt-3 md:mt-5 mb-4 md:mb-6"
+              className="w-9 md:w-14 h-[2px] md:h-[3px] bg-accent origin-left mt-3 md:mt-5 mb-3 md:mb-4"
             />
+
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-10%' }}
+              transition={{ duration: 0.55, delay: 0.15, ease: EASE }}
+              className="font-heading text-base md:text-2xl text-foreground/90 tracking-wide uppercase leading-tight mb-3 md:mb-5"
+            >
+              Intelligent Delivery
+            </motion.p>
 
             
 
