@@ -5,7 +5,7 @@ import { Check, Loader2 } from 'lucide-react';
 const EASE = [0.16, 1, 0.3, 1];
 
 export default function WaitlistSection() {
-  const [form, setForm] = useState({ firstName: '', email: '', website: '' });
+  const [form, setForm] = useState({ email: '', website: '' });
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -27,7 +27,7 @@ export default function WaitlistSection() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: form.firstName.trim(),
+          .trim(),
           email,
           website: form.website, // honeypot
           source: 'home-waitlist',
@@ -116,7 +116,7 @@ export default function WaitlistSection() {
                 </svg>
               </motion.span>
               <span className="font-body text-sm md:text-base text-foreground">
-                You're on the list{form.firstName ? `, ${form.firstName}` : ''}.
+                You're on the list.
               </span>
             </div>
             <svg width="220" height="14" viewBox="0 0 220 14" className="mt-1" aria-hidden="true">
@@ -174,47 +174,6 @@ export default function WaitlistSection() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <label htmlFor="waitlist-firstName" className="sr-only">First name (optional)</label>
-              <input
-                id="waitlist-firstName"
-                type="text"
-                name="firstName"
-                autoComplete="given-name"
-                placeholder="First name (optional)"
-                value={form.firstName}
-                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                disabled={status === 'submitting'}
-                className="flex-1 sm:max-w-[40%] bg-transparent border border-border rounded-md px-4 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
-              />
-              <label htmlFor="waitlist-email" className="sr-only">Email address</label>
-              <input
-                id="waitlist-email"
-                type="email"
-                name="email"
-                autoComplete="email"
-                required
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                disabled={status === 'submitting'}
-                className="flex-1 bg-transparent border border-border rounded-full px-5 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={status === 'submitting'}
-                className="inline-flex items-center justify-center gap-2 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold px-6 py-3 rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {status === 'submitting' ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                    <span>Joining</span>
-                  </>
-                ) : (
-                  <span>Join Waitlist</span>
-                )}
-              </button>
-            </div>
 
             {status === 'error' && errorMsg && (
               <p
