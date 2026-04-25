@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Droplet, Pill, Syringe, Dumbbell, Moon, ChevronRight, Wifi, Salad, Sun, X, ZoomIn } from 'lucide-react';
+import { Check, Droplet, Pill, Syringe, Dumbbell, Moon, ChevronRight, Wifi, Salad, Sun, X, ZoomIn, Truck, BarChart3, Brain, Orbit, Smartphone } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.', accentTail: 'Avalon delivers it.' },
-  { n: 4, name: 'Intelligence', desc: 'We learn what works.' },
-  { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.' },
-  { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.' },
-  { n: 1, name: 'Delivery', desc: 'We come to you.' },
+  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.', accentTail: 'Avalon delivers it.', icon: Orbit },
+  { n: 4, name: 'Intelligence', desc: 'We learn what works.', icon: Brain },
+  { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
+  { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.', icon: Droplet },
+  { n: 1, name: 'Delivery', desc: 'We come to you.', icon: Truck },
 ];
 
 const METRICS = [
@@ -181,7 +181,7 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.6, ease: EASE }}
               className="text-[11px] md:text-sm tracking-[0.28em] text-accent font-body uppercase mb-3 md:mb-4"
             >
-              Avalon OS · Mobile · Coming Soon
+              <span className="inline-flex items-center gap-1.5 align-middle"><Smartphone className="w-3 h-3 md:w-3.5 md:h-3.5 inline-block" strokeWidth={1.7} />Avalon OS · Mobile · Coming Soon</span>
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 14 }}
@@ -210,16 +210,24 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.6, delay: 0.3, ease: EASE }}
               className="border border-foreground/15 rounded-md md:rounded-xl divide-y divide-border/40"
             >
-              {LAYERS.map((l) => (
-                <div key={l.n} className="flex items-start gap-2.5 md:gap-3 px-2.5 md:px-4 py-2.5 md:py-3">
-                  <span className="text-[11px] md:text-[12px] tracking-[0.25em] text-accent font-body uppercase w-6 md:w-8 shrink-0 pt-0.5">L{l.n}</span>
+              {LAYERS.map((l) => {
+                const Icon = l.icon;
+                return (
+                <div key={l.n} className="flex items-center gap-2 md:gap-3 px-2.5 md:px-4 py-2.5 md:py-3">
+                  <span className="text-[11px] md:text-[12px] tracking-[0.25em] text-accent font-body uppercase w-5 md:w-7 shrink-0">L{l.n}</span>
+                  {Icon && (
+                    <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/50 flex items-center justify-center text-accent shrink-0">
+                      <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={1.6} />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-heading text-[14px] md:text-lg text-foreground tracking-wide uppercase leading-none">{l.name}</p>
                     <p className="font-body text-[10px] md:text-[12px] text-muted-foreground leading-snug mt-1">{l.desc}{l.accentTail && <> <span className="text-accent">{l.accentTail}</span></>}</p>
                   </div>
-                  <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent/60 shrink-0 mt-1" strokeWidth={1.6} />
+                  <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent/60 shrink-0" strokeWidth={1.6} />
                 </div>
-              ))}
+                );
+              })}
             </motion.div>
           </div>
 
