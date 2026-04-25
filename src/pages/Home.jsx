@@ -1,4 +1,4 @@
-// @push 1777074981746 — static cards
+// @push 1777082415144 — force build
 // @rev 1777073683808 — credits model
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
