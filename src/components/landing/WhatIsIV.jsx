@@ -53,8 +53,8 @@ export default function WhatIsIV() {
             transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="text-left"
           >
-            <p className="font-body text-sm text-foreground leading-relaxed mb-8">
-              IV therapy delivers vitamins and minerals <span className="text-foreground font-semibold">directly into your bloodstream</span>, bypassing the digestive tract entirely. Full bioavailability in a single <span className="text-foreground font-semibold">30–60 minute</span> session — no absorption losses from gut metabolism.
+            <p className="font-body text-base md:text-lg text-foreground leading-snug mb-8">
+              IV bypasses your gut. <span className="text-accent font-normal">100% delivery, in under an hour.</span>
             </p>
         {/* Stats grid */}
             <div className="border-t border-border pt-6">
