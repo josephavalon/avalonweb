@@ -5,7 +5,7 @@ import { Check, Droplet, Pill, Syringe, Dumbbell, Moon, ChevronRight, Wifi, Sala
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.' },
+  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.', accentTail: 'Avalon delivers it.' },
   { n: 4, name: 'Intelligence', desc: 'We learn what works.' },
   { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.' },
   { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.' },
@@ -215,7 +215,7 @@ export default function AvalonOSPreview() {
                   <span className="text-[11px] md:text-[12px] tracking-[0.25em] text-accent font-body uppercase w-6 md:w-8 shrink-0 pt-0.5">L{l.n}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-heading text-[14px] md:text-lg text-foreground tracking-wide uppercase leading-none">{l.name}</p>
-                    <p className="font-body text-[10px] md:text-[12px] text-muted-foreground leading-snug mt-1">{l.desc}</p>
+                    <p className="font-body text-[10px] md:text-[12px] text-muted-foreground leading-snug mt-1">{l.desc}{l.accentTail && <> <span className="text-accent">{l.accentTail}</span></>}</p>
                   </div>
                   <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-accent/60 shrink-0 mt-1" strokeWidth={1.6} />
                 </div>
