@@ -27,7 +27,6 @@ export default function WaitlistSection() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          .trim(),
           email,
           website: form.website, // honeypot
           source: 'home-waitlist',
