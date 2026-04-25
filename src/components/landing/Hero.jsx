@@ -50,7 +50,7 @@ export default function Hero() {
             transition={{ duration: 1.2, delay: 0.3 }}
             className="font-body text-xs tracking-[0.4em] text-accent uppercase mb-5"
           >
-            Presale · SF Bay Area
+            Presale — Coming Soon — SF Bay Area
           </motion.p>
 
           <motion.h1
