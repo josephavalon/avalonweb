@@ -89,7 +89,7 @@ function Sparkline({ color, type, large }) {
 }
 
 function PhoneMockup({ large = false }) {
-  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[170px] sm:max-w-[220px] md:max-w-[300px]';
+  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[140px] sm:max-w-[200px] md:max-w-[300px]';
   const radius = large ? 'rounded-[2.4rem]' : 'rounded-[1.4rem] md:rounded-[2rem]';
   const innerRadius = large ? 'rounded-[2rem]' : 'rounded-[1.2rem] md:rounded-[1.7rem]';
   return (
@@ -226,7 +226,7 @@ export default function AvalonOSPreview() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-10 items-center">
+        <div className="grid grid-cols-[1.3fr_1fr] md:grid-cols-2 gap-3 md:gap-10 items-center">
           {/* LEFT — layers + trust */}
           <div className="min-w-0">
 
@@ -241,13 +241,13 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-center gap-1.5 md:gap-3 px-1.5 md:px-3 py-1 md:py-2">
-                    <span className="text-[8px] md:text-[11px] tracking-[0.2em] text-accent font-body uppercase w-3 md:w-5 shrink-0">{l.n}</span>
-                    <div className="w-5 h-5 md:w-8 md:h-8 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
-                      <Icon className="w-2.5 h-2.5 md:w-4 md:h-4" strokeWidth={1.5} />
+                  <div key={l.n} className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-2.5">
+                    <span className="text-[11px] md:text-[12px] tracking-[0.2em] text-accent font-body uppercase w-4 md:w-5 shrink-0">{l.n}</span>
+                    <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
+                      <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={1.5} />
                     </div>
-                    <span className="font-heading text-[9px] md:text-sm text-foreground tracking-wide uppercase leading-none flex-1 truncate">{l.name}</span>
-                    <ChevronRight className="w-2 h-2 md:w-3.5 md:h-3.5 text-accent/60 shrink-0" strokeWidth={1.6} />
+                    <span className="font-heading text-[12px] md:text-sm text-foreground tracking-wide uppercase leading-none flex-1 truncate">{l.name}</span>
+                    <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-accent/60 shrink-0" strokeWidth={1.6} />
                   </div>
                 );
               })}
@@ -259,10 +259,10 @@ export default function AvalonOSPreview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.55, delay: 0.4, ease: EASE }}
-              className="border border-foreground/15 rounded md:rounded-xl px-1.5 md:px-3 py-1 md:py-2 flex items-center gap-1.5"
+              className="border border-foreground/15 rounded md:rounded-xl px-2 md:px-3 py-2 md:py-2.5 flex items-center gap-2"
             >
-              <ShieldCheck className="w-3 h-3 md:w-4 md:h-4 text-accent shrink-0" strokeWidth={1.5} />
-              <p className="font-body text-[6px] md:text-[10px] tracking-[0.15em] text-foreground/85 uppercase leading-tight truncate flex-1">
+              <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent shrink-0" strokeWidth={1.5} />
+              <p className="font-body text-[9px] md:text-[10px] tracking-[0.15em] text-foreground/85 uppercase leading-tight truncate flex-1">
                 HIPAA · ISO 27001 · SOC 2
               </p>
             </motion.div>
@@ -288,7 +288,7 @@ export default function AvalonOSPreview() {
             <button
               type="button"
               onClick={() => setZoomed(true)}
-              className="text-[8px] md:text-[10px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1"
+              className="text-[10px] md:text-[10px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1"
             >
               <ZoomIn className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={1.6} />
               Tap to Zoom
