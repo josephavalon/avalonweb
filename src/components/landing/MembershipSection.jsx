@@ -19,7 +19,7 @@ const APPLY_URL = '/apply';
 const PROTOCOLS = ['CBD', 'Vitamins', 'NAD+'];
 const BASE_IV = { CBD: 250, Vitamins: 250, 'NAD+': 350 };
 const MONTHLY_RATE = 0.80; // 20% off retail
-const ANNUAL_RATE = 0.75;  // 30% off retail (multiplied by 12 months)
+const ANNUAL_RATE = 0.75;  // 25% off retail (multiplied by 12 months)
 const priceFor = (protocol, count, billing) => billing === 'annual' ? Math.round(BASE_IV[protocol] * count * 12 * ANNUAL_RATE) : Math.round(BASE_IV[protocol] * count * MONTHLY_RATE);
 
 const TIERS = [
