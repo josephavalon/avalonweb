@@ -7,18 +7,18 @@ const EASE = [0.16, 1, 0.3, 1];
 const steps = [
   {
     icon: CalendarCheck,
-    title: 'Book online or by phone',
-    desc: 'Reserve your treatment in minutes — online or via text.',
+    title: 'Book in Minutes',
+    desc: 'Online or by text.',
   },
   {
     icon: MapPin,
     title: 'We Come to You',
-    desc: 'Our nurse arrives at your home, hotel, office, or event — fully equipped.',
+    desc: 'Home, office, hotel, event.',
   },
   {
     icon: Zap,
-    title: 'Recover Fast',
-    desc: 'Feel refreshed within 30–60 minutes of your infusion.',
+    title: 'Feel It Fast',
+    desc: 'Refreshed in 30–60 minutes.',
   },
 ];
 
