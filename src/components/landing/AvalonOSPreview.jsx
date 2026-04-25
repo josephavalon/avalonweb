@@ -95,27 +95,27 @@ function PhoneMockup({ large = false }) {
   return (
     <div className={`relative w-full ${wrapMax} mx-auto`}>
       <div className={`${radius} border border-foreground/30 bg-black p-1 md:p-1.5 shadow-2xl`}>
-        <div className={`${innerRadius} bg-black overflow-hidden relative`} style={{ aspectRatio: '9/19.5' }}>
+        <div className={`${innerRadius} bg-white overflow-hidden relative`} style={{ aspectRatio: '9/19.5' }}>
           {/* Status bar */}
           <div className={`flex items-center justify-between ${large ? 'px-5' : 'px-2.5 md:px-4'} pt-1.5 pb-1`}>
             <span className={large ? 'text-xs' : 'text-[7px] md:text-[10px]'}>9:41</span>
-            <div className="flex items-center gap-0.5 text-white">
+            <div className="flex items-center gap-0.5 text-black">
               <Wifi className={large ? 'w-3.5 h-3.5' : 'w-2 h-2 md:w-3 md:h-3'} strokeWidth={2.5} />
-              <div className={large ? 'w-5 h-2.5 border border-white rounded-sm relative' : 'w-2.5 h-1 md:w-3.5 md:h-1.5 border border-white rounded-sm relative'}>
-                <div className="absolute inset-0.5 bg-white rounded-[1px]" />
+              <div className={large ? 'w-5 h-2.5 border border-black rounded-sm relative' : 'w-2.5 h-1 md:w-3.5 md:h-1.5 border border-black rounded-sm relative'}>
+                <div className="absolute inset-0.5 bg-black rounded-[1px]" />
               </div>
             </div>
           </div>
           {/* Header */}
           <div className={`${large ? 'px-5' : 'px-2 md:px-3.5'} pt-1 grid grid-cols-3 items-center gap-0.5`}>
             <div className="text-left min-w-0">
-              <p className={`${large ? 'text-[9px]' : 'text-[5px] md:text-[7px]'} tracking-[0.3em] text-white/60 uppercase leading-none`}>Today</p>
-              <p className={`font-heading ${large ? 'text-xl' : 'text-[10px] md:text-base'} text-white tracking-wide leading-none mt-0.5`}>APR 24</p>
-              <p className={`${large ? 'text-[8px]' : 'text-[4.5px] md:text-[6px]'} tracking-[0.25em] text-white/50 uppercase leading-none mt-0.5`}>Thursday</p>
+              <p className={`${large ? 'text-[9px]' : 'text-[5px] md:text-[7px]'} tracking-[0.3em] text-black/60 uppercase leading-none`}>Today</p>
+              <p className={`font-heading ${large ? 'text-xl' : 'text-[10px] md:text-base'} text-black tracking-wide leading-none mt-0.5`}>APR 24</p>
+              <p className={`${large ? 'text-[8px]' : 'text-[4.5px] md:text-[6px]'} tracking-[0.25em] text-black/50 uppercase leading-none mt-0.5`}>Thursday</p>
             </div>
             <div className="flex flex-col items-center justify-center">
               <Droplet className={large ? 'w-4 h-4 text-accent mb-0.5' : 'w-2 h-2 md:w-3 md:h-3 text-accent'} strokeWidth={1.5} />
-              <p className={`font-heading ${large ? 'text-sm' : 'text-[7px] md:text-[10px]'} text-white tracking-[0.18em] leading-none mt-0.5`}>
+              <p className={`font-heading ${large ? 'text-sm' : 'text-[7px] md:text-[10px]'} text-black tracking-[0.18em] leading-none mt-0.5`}>
                 AVALON <span className="text-accent">OS</span>
               </p>
             </div>
@@ -124,20 +124,20 @@ function PhoneMockup({ large = false }) {
             </div>
           </div>
           {/* Metric tiles */}
-          <div className={`mx-2 md:mx-3.5 mt-1 md:mt-2 grid grid-cols-4 gap-0.5 md:gap-1 p-1 md:p-1.5 bg-white/5 rounded md:rounded-lg border border-white/10`}>
+          <div className={`mx-2 md:mx-3.5 mt-1 md:mt-2 grid grid-cols-4 gap-0.5 md:gap-1 p-1 md:p-1.5 bg-black/5 rounded md:rounded-lg border border-black/10`}>
             {METRICS.map((m) => (
               <div key={m.label} className="text-center min-w-0">
-                <p className={`${large ? 'text-[8px]' : 'text-[3.5px] md:text-[6px]'} tracking-widest text-white/50 uppercase truncate`}>{m.label}</p>
-                <p className={`${large ? 'text-[12px]' : 'text-[5.5px] md:text-[8px]'} font-semibold text-white truncate`}>{m.value}</p>
+                <p className={`${large ? 'text-[8px]' : 'text-[5px] md:text-[7px]'} tracking-widest text-black/50 uppercase truncate`}>{m.label}</p>
+                <p className={`${large ? 'text-[12px]' : 'text-[6.5px] md:text-[9px]'} font-semibold text-black truncate`}>{m.value}</p>
                 <Sparkline color={m.color} type={m.type} large={large} />
               </div>
             ))}
           </div>
           {/* Live Vitals */}
-          <div className={`mx-2 md:mx-3.5 mt-1 md:mt-1.5 p-1 md:p-1.5 bg-white/5 rounded md:rounded-lg border border-white/10`}>
+          <div className={`mx-2 md:mx-3.5 mt-1 md:mt-1.5 p-1 md:p-1.5 bg-black/5 rounded md:rounded-lg border border-black/10`}>
             <div className="flex items-center justify-between mb-0.5 md:mb-1">
-              <p className={`${large ? 'text-[9px]' : 'text-[4.5px] md:text-[7px]'} tracking-[0.25em] text-accent uppercase font-semibold`}>Live Vitals</p>
-              <p className={`${large ? 'text-[7px]' : 'text-[3.5px] md:text-[5px]'} tracking-[0.15em] text-white/50 uppercase flex items-center gap-1`}>
+              <p className={`${large ? 'text-[9px]' : 'text-[6.5px] md:text-[9px]'} tracking-[0.25em] text-accent uppercase font-semibold`}>Live Vitals</p>
+              <p className={`${large ? 'text-[7px]' : 'text-[3.5px] md:text-[5px]'} tracking-[0.15em] text-black/50 uppercase flex items-center gap-1`}>
                 <span className="hidden md:inline">Apple Watch + WHOOP</span>
                 <span className="md:hidden">AW · WHOOP</span>
                 <span className="w-1 h-1 rounded-full bg-green-400 inline-block animate-pulse" />
@@ -149,8 +149,8 @@ function PhoneMockup({ large = false }) {
                 return (
                   <div key={v.label} className="flex flex-col items-center text-center min-w-0">
                     <Icon className={`${large ? 'w-3 h-3' : 'w-1.5 h-1.5 md:w-2.5 md:h-2.5'} ${v.color} shrink-0`} strokeWidth={1.8} />
-                    <p className={`${large ? 'text-[10px]' : 'text-[4.5px] md:text-[7px]'} font-semibold text-white leading-tight truncate w-full`}>{v.value}</p>
-                    <p className={`${large ? 'text-[6px]' : 'text-[3px] md:text-[4.5px]'} tracking-widest text-white/50 uppercase leading-tight truncate w-full`}>{v.label}</p>
+                    <p className={`${large ? 'text-[10px]' : 'text-[6.5px] md:text-[9px]'} font-semibold text-black leading-tight truncate w-full`}>{v.value}</p>
+                    <p className={`${large ? 'text-[6px]' : 'text-[3px] md:text-[4.5px]'} tracking-widest text-black/50 uppercase leading-tight truncate w-full`}>{v.label}</p>
                   </div>
                 );
               })}
@@ -158,7 +158,7 @@ function PhoneMockup({ large = false }) {
           </div>
           {/* Today's Protocol */}
           <div className={`${large ? 'px-5' : 'px-2 md:px-3.5'} mt-1 md:mt-2`}>
-            <p className={`${large ? 'text-[10px]' : 'text-[4.5px] md:text-[7px]'} tracking-[0.3em] text-accent uppercase mb-0.5 md:mb-1 font-semibold`}>Today's Protocol</p>
+            <p className={`${large ? 'text-[10px]' : 'text-[6.5px] md:text-[9px]'} tracking-[0.3em] text-accent uppercase mb-0.5 md:mb-1 font-semibold`}>Today's Protocol</p>
             <div className="relative">
               <div className={`absolute top-1 bottom-1 ${large ? 'left-[58px]' : 'left-[20px] md:left-[34px]'} w-px bg-white/10`} />
               <div className={`${large ? 'space-y-1.5' : 'space-y-0.5 md:space-y-1'}`}>
@@ -166,16 +166,16 @@ function PhoneMockup({ large = false }) {
                   const Icon = p.icon;
                   return (
                     <div key={p.time + p.name} className="flex items-center gap-1 relative">
-                      <p className={`${large ? 'text-[9px] w-12' : 'text-[3.5px] md:text-[6px] w-5 md:w-8'} text-white/60 shrink-0`}>{p.time}</p>
+                      <p className={`${large ? 'text-[9px] w-12' : 'text-[5px] md:text-[7px] w-5 md:w-8'} text-black/60 shrink-0`}>{p.time}</p>
                       <div className={`${large ? 'w-2 h-2' : 'w-0.5 h-0.5 md:w-1 md:h-1'} rounded-full ${p.dot} shrink-0 z-10`} />
                       <div className={`${large ? 'w-7 h-7' : 'w-3 h-3 md:w-4 md:h-4'} rounded-full border flex items-center justify-center shrink-0 ${p.ring} bg-black`}>
                         <Icon className={large ? 'w-3.5 h-3.5' : 'w-1.5 h-1.5 md:w-2 md:h-2'} strokeWidth={1.6} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`${large ? 'text-[12px]' : 'text-[4.5px] md:text-[7.5px]'} font-medium text-white leading-tight truncate`}>{p.name}</p>
-                        <p className={`${large ? 'text-[10px]' : 'text-[3.5px] md:text-[6px]'} text-white/50 leading-tight truncate`}>{p.detail}</p>
+                        <p className={`${large ? 'text-[12px]' : 'text-[5.5px] md:text-[8.5px]'} font-medium text-black leading-tight truncate`}>{p.name}</p>
+                        <p className={`${large ? 'text-[10px]' : 'text-[5px] md:text-[7px]'} text-black/50 leading-tight truncate`}>{p.detail}</p>
                       </div>
-                      <div className={`${large ? 'w-4 h-4' : 'w-1.5 h-1.5 md:w-2.5 md:h-2.5'} rounded-full border flex items-center justify-center shrink-0 ${p.done ? 'border-green-400 text-green-400' : 'border-white/30'}`}>
+                      <div className={`${large ? 'w-4 h-4' : 'w-1.5 h-1.5 md:w-2.5 md:h-2.5'} rounded-full border flex items-center justify-center shrink-0 ${p.done ? 'border-green-400 text-green-400' : 'border-black/30'}`}>
                         {p.done && <Check className={large ? 'w-2.5 h-2.5' : 'w-1 h-1 md:w-1.5 md:h-1.5'} strokeWidth={3} />}
                       </div>
                     </div>
@@ -185,13 +185,13 @@ function PhoneMockup({ large = false }) {
             </div>
           </div>
           {/* Tab bar */}
-          <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 px-1.5 md:px-2.5 py-0.5 md:py-1 flex justify-between items-end bg-black">
+          <div className="absolute bottom-0 left-0 right-0 border-t border-black/10 px-1.5 md:px-2.5 py-0.5 md:py-1 flex justify-between items-end bg-white">
             {TABS.map((t) => {
               const Icon = t.icon;
               return (
                 <div key={t.name} className="flex flex-col items-center gap-0.5">
-                  <Icon className={`${large ? 'w-3.5 h-3.5' : 'w-2 h-2 md:w-3 md:h-3'} ${t.active ? 'text-accent' : 'text-white/40'}`} strokeWidth={1.7} />
-                  <p className={`${large ? 'text-[7px]' : 'text-[3px] md:text-[5px]'} tracking-[0.15em] ${t.active ? 'text-accent' : 'text-white/40'}`}>{t.name}</p>
+                  <Icon className={`${large ? 'w-3.5 h-3.5' : 'w-2 h-2 md:w-3 md:h-3'} ${t.active ? 'text-accent' : 'text-black/40'}`} strokeWidth={1.7} />
+                  <p className={`${large ? 'text-[7px]' : 'text-[3px] md:text-[5px]'} tracking-[0.15em] ${t.active ? 'text-accent' : 'text-black/40'}`}>{t.name}</p>
                   {t.active && <div className={`${large ? 'w-3 h-[2px]' : 'w-1 h-px md:w-2 md:h-[1.5px]'} bg-accent rounded-full`} />}
                 </div>
               );
