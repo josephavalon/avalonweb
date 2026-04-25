@@ -100,7 +100,7 @@ export default function Hero() {
             className="px-2 mx-auto flex flex-col items-center gap-3 md:gap-4"
           >
             <div className="font-body text-xs md:text-sm text-foreground tracking-[0.2em] md:tracking-[0.4em] uppercase text-center md:whitespace-nowrap">
-              Concierge IV therapy and protocol membership
+              The Operating System for Human Performance
             </div>
             <p className="font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl px-2">
               Built for athletes, founders, and high-performers who don't have time to slow down.
