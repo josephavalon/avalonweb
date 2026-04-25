@@ -17,9 +17,10 @@ const APPLY_URL = '/apply';
 // against. Base IV retail: Dehydration $150, CBD $200, Vitamins $250, NAD+ $350.
 // Member prices below = base × count × 0.8 (20% member discount).
 const PROTOCOLS = ['CBD', 'Vitamins', 'NAD+'];
-const BASE_IV = { CBD: 200, Vitamins: 250, 'NAD+': 350 };
-const MEMBER_RATE = 1;
-const priceFor = (protocol, count) => Math.round(BASE_IV[protocol] * count * MEMBER_RATE);
+const BASE_IV = { CBD: 250, Vitamins: 250, 'NAD+': 350 };
+const MONTHLY_RATE = 0.80; // 20% off retail
+const ANNUAL_RATE = 0.70;  // 30% off retail (multiplied by 12 months)
+const priceFor = (protocol, count, billing) => billing === 'annual' ? Math.round(BASE_IV[protocol] * count * 12 * ANNUAL_RATE) : Math.round(BASE_IV[protocol] * count * MONTHLY_RATE);
 
 const TIERS = [
   {
@@ -28,7 +29,7 @@ const TIERS = [
     perks: [
       '1 IV per month (pick any protocol)',
       '1 IM injection per month',
-      '15% off à la carte treatments',
+      '20% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Fast, discreet delivery — straight to your door',
     ],
@@ -39,7 +40,7 @@ const TIERS = [
     perks: [
       '2 IVs per month (any protocol mix)',
       '2 IM injections per month',
-      '15% off à la carte treatments',
+      '20% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Priority appointment booking',
       'Fast, discreet delivery — straight to your door',
@@ -51,7 +52,7 @@ const TIERS = [
     perks: [
       '4 IVs per month (any protocol mix)',
       '4 IM injections per month',
-      '15% off à la carte treatments',
+      '20% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Priority appointment booking',
       'Dedicated member concierge',
@@ -73,7 +74,6 @@ const TIERS = [
   },
 ];
 
-const ANNUAL_DISCOUNT = 0.75; // 25% off annual
 
 function TierCard({ tier, billing }) {
   const [expanded, setExpanded] = useState(false);
@@ -85,8 +85,7 @@ function TierCard({ tier, billing }) {
   let displayPrice = null;
   let priceSuffix = '';
   if (!tier.isCustom) {
-    const monthly = priceFor(protocol, tier.ivCount);
-    displayPrice = billing === 'annual' ? Math.round(monthly * 12 * ANNUAL_DISCOUNT) : monthly;
+    displayPrice = priceFor(protocol, tier.ivCount, billing);
     priceSuffix = billing === 'annual' ? '/year' : '/mo';
   }
 
@@ -213,8 +212,7 @@ export default function MembershipSection() {
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Presale — Limited Availability</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">MEMBERSHIP</h2>
           <p className="font-body text-sm md:text-base text-foreground/85 mt-4 max-w-xl">
-            One membership tier. Pick your protocol — CBD, Vitamins, or NAD+. Members save 15% on à la carte beyond their tier. Credits roll over. Apply-only — available soon in the San Francisco Bay Area.
-          </p>
+            One membership tier. Pick your protocol — CBD, Vitamins, or NAD+.</p>
         </div>
 
         {/* Monthly / Annual toggle */}
@@ -232,12 +230,12 @@ export default function MembershipSection() {
               onClick={() => setBilling('annual')}
               className={`px-4 py-2 rounded-full text-xs tracking-widest uppercase font-body transition-colors ${billing === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Annual — Save 25%
+              Annual — Save 30%
             </button>
           </div>
           <p className="font-body text-xs md:text-sm text-accent text-center max-w-md px-4 leading-relaxed">
-            Members save 15% off à la carte.
-            <span className="block text-muted-foreground mt-1">Annual: 25% additional.</span>
+            Members save 20% off à la carte.
+            <span className="block text-muted-foreground mt-1">Annual: 30% off your subscription.</span>
           </p>
         </div>
 
