@@ -5,11 +5,11 @@ import { Check, Droplet, Pill, Syringe, Dumbbell, Moon, ChevronRight, Wifi, Sala
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.', accentTail: 'Avalon delivers it.', icon: Orbit },
-  { n: 4, name: 'Intelligence', desc: 'We learn what works.', icon: Brain },
-  { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
-  { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.', icon: Droplet },
   { n: 1, name: 'Delivery', desc: 'We ship or come to you.', icon: Truck },
+  { n: 2, name: 'Modalities', desc: 'IVs, NAD+, peptides, TRT.', icon: Droplet },
+  { n: 3, name: 'Data', desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
+  { n: 4, name: 'Intelligence', desc: 'We learn what works.', icon: Brain },
+  { n: 5, name: 'Autonomy', desc: 'Your protocol runs itself.', accentTail: 'Avalon delivers it.', icon: Orbit },
 ];
 
 const METRICS = [
@@ -81,7 +81,7 @@ function Sparkline({ color, type, large }) {
 }
 
 function PhoneMockup({ large = false }) {
-  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[185px] sm:max-w-[240px] md:max-w-[320px]';
+  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[220px] sm:max-w-[280px] md:max-w-[360px]';
   const radius = large ? 'rounded-[2.4rem]' : 'rounded-[1.3rem] md:rounded-[2.1rem]';
   const innerRadius = large ? 'rounded-[2rem]' : 'rounded-[1.1rem] md:rounded-[1.8rem]';
   const padX = large ? 'px-5' : 'px-2.5 md:px-4';
@@ -171,7 +171,7 @@ export default function AvalonOSPreview() {
   return (
     <section id="avalon-os" className="py-6 md:py-16 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-[1fr_1.05fr] gap-3 md:gap-10 items-start">
+        <div className="grid grid-cols-[1fr_1.1fr] gap-3 md:gap-10 items-center">
           {/* LEFT */}
           <div className="min-w-0">
             <motion.p
@@ -181,7 +181,7 @@ export default function AvalonOSPreview() {
               transition={{ duration: 0.6, ease: EASE }}
               className="text-[11px] md:text-sm tracking-[0.28em] text-accent font-body uppercase mb-3 md:mb-4"
             >
-              <span className="inline-flex items-center gap-1.5 align-middle"><Smartphone className="w-3 h-3 md:w-3.5 md:h-3.5 inline-block" strokeWidth={1.7} />Avalon OS · Mobile · Coming Soon</span>
+              Avalon OS · Mobile · Coming Soon
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 14 }}
@@ -214,7 +214,7 @@ export default function AvalonOSPreview() {
                 const Icon = l.icon;
                 return (
                 <div key={l.n} className="flex items-center gap-2 md:gap-3 px-2.5 md:px-4 py-2.5 md:py-3">
-                  <span className="text-[11px] md:text-[12px] tracking-[0.25em] text-accent font-body uppercase w-5 md:w-7 shrink-0">L{l.n}</span>
+                  <span className="text-[11px] md:text-[12px] tracking-[0.25em] text-accent font-body uppercase w-5 md:w-7 shrink-0">{l.n}</span>
                   {Icon && (
                     <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/50 flex items-center justify-center text-accent shrink-0">
                       <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={1.6} />
