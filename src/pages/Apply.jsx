@@ -20,7 +20,7 @@ const MEMBERSHIP_CATEGORIES = [
   {
     category: 'STARTER (1 IV per month)',
     tiers: [
-      { id: 'starter-cbd', name: 'CBD', price: '$160/mo' },
+      { id: 'starter-cbd', name: 'CBD', price: '$200/mo' },
       { id: 'starter-vitamins', name: 'Vitamins', price: '$200/mo' },
       { id: 'starter-nad', name: 'NAD+', price: '$280/mo' },
     ],
@@ -28,7 +28,7 @@ const MEMBERSHIP_CATEGORIES = [
   {
     category: 'PREMIUM (2 IVs per month)',
     tiers: [
-      { id: 'premium-cbd', name: 'CBD', price: '$320/mo' },
+      { id: 'premium-cbd', name: 'CBD', price: '$400/mo' },
       { id: 'premium-vitamins', name: 'Vitamins', price: '$400/mo' },
       { id: 'premium-nad', name: 'NAD+', price: '$560/mo' },
     ],
@@ -36,7 +36,7 @@ const MEMBERSHIP_CATEGORIES = [
   {
     category: 'VIP (4 IVs per month)',
     tiers: [
-      { id: 'vip-cbd', name: 'CBD', price: '$640/mo' },
+      { id: 'vip-cbd', name: 'CBD', price: '$800/mo' },
       { id: 'vip-vitamins', name: 'Vitamins', price: '$800/mo' },
       { id: 'vip-nad', name: 'NAD+', price: '$1,120/mo' },
     ],
