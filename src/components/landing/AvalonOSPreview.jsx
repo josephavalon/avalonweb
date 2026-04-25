@@ -208,43 +208,27 @@ export default function AvalonOSPreview() {
   return (
     <section id="avalon-os" className="py-6 md:py-16 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
+        {/* HEADER — full width, matches other section title cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-10%' }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="text-left mb-5 md:mb-10"
+        >
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
+          <h2 className="font-heading text-[14vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.92] uppercase">
+            Avalon OS<span className="text-accent">.</span>
+          </h2>
+          <div className="w-10 md:w-14 h-[2px] md:h-[3px] bg-accent mt-3 md:mt-5 mb-3 md:mb-4" />
+          <p className="font-heading text-base md:text-2xl lg:text-3xl text-foreground/85 tracking-wide uppercase leading-tight">
+            Intelligent Delivery
+          </p>
+        </motion.div>
+
         <div className="grid grid-cols-2 gap-3 md:gap-10 items-center">
-          {/* LEFT — text only */}
+          {/* LEFT — layers + trust */}
           <div className="min-w-0">
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.6, ease: EASE }}
-              className="text-[9px] md:text-xs tracking-[0.28em] text-accent font-body uppercase mb-1.5 md:mb-3"
-            >
-              Coming Soon
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
-              className="font-heading text-[10vw] md:text-6xl lg:text-7xl text-foreground tracking-wide leading-[0.9] uppercase"
-            >
-              Avalon OS<span className="text-accent">.</span>
-            </motion.h2>
-            <motion.div
-              initial={{ opacity: 0, scaleX: 0 }}
-              whileInView={{ opacity: 1, scaleX: 1 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
-              className="w-7 md:w-12 h-[2px] md:h-[3px] bg-accent origin-left mt-1.5 md:mt-4 mb-2 md:mb-4"
-            />
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.6, delay: 0.22, ease: EASE }}
-              className="font-heading text-[10px] md:text-xl lg:text-2xl text-foreground/85 tracking-wide uppercase leading-tight mb-2 md:mb-4"
-            >
-              Intelligent Delivery
-            </motion.p>
 
             {/* 5 layers — compact, name only on mobile */}
             <motion.div
