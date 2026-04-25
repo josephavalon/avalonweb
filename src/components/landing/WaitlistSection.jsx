@@ -137,7 +137,7 @@ export default function WaitlistSection() {
               transition={{ duration: 0.6, delay: 1.3, ease: EASE }}
               className="font-body text-xs tracking-wide text-muted-foreground"
             >
-              Check your inbox for confirmation.
+              We'll review within 48 hours and reach out with launch details. Check your inbox for confirmation.
             </motion.span>
           </motion.div>
         ) : (
