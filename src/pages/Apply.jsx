@@ -18,27 +18,36 @@ const US_STATES = [
 
 const MEMBERSHIP_CATEGORIES = [
   {
-    category: 'VITAMINS',
+    category: 'STARTER (1 IV per month)',
     tiers: [
-      { id: 'vitamins-starter', name: 'Starter', price: '$200/mo' },
-      { id: 'vitamins-premium', name: 'Premium — Most Popular', price: '$400/mo' },
-      { id: 'vitamins-vip', name: 'VIP', price: '$700/mo' },
+      { id: 'starter-dehydration', name: 'Dehydration', price: '$120/mo' },
+      { id: 'starter-cbd', name: 'CBD', price: '$160/mo' },
+      { id: 'starter-vitamins', name: 'Vitamins', price: '$200/mo' },
+      { id: 'starter-nad', name: 'NAD+', price: '$280/mo' },
     ],
   },
   {
-    category: 'NAD+',
+    category: 'PREMIUM (2 IVs per month)',
     tiers: [
-      { id: 'nad-starter', name: 'Starter (250mg)', price: '$240/mo' },
-      { id: 'nad-premium', name: 'Premium (500mg) — Most Popular', price: '$440/mo' },
-      { id: 'nad-vip', name: 'VIP (1000mg)', price: '$720/mo' },
+      { id: 'premium-dehydration', name: 'Dehydration', price: '$240/mo' },
+      { id: 'premium-cbd', name: 'CBD', price: '$320/mo' },
+      { id: 'premium-vitamins', name: 'Vitamins', price: '$400/mo' },
+      { id: 'premium-nad', name: 'NAD+', price: '$560/mo' },
     ],
   },
   {
-    category: 'CBD',
+    category: 'VIP (4 IVs per month)',
     tiers: [
-      { id: 'cbd-starter', name: 'Starter (33mg)', price: '$200/mo' },
-      { id: 'cbd-premium', name: 'Premium (66mg) — Most Popular', price: '$240/mo' },
-      { id: 'cbd-vip', name: 'VIP (99mg)', price: '$280/mo' },
+      { id: 'vip-dehydration', name: 'Dehydration', price: '$480/mo' },
+      { id: 'vip-cbd', name: 'CBD', price: '$640/mo' },
+      { id: 'vip-vitamins', name: 'Vitamins', price: '$800/mo' },
+      { id: 'vip-nad', name: 'NAD+', price: '$1,120/mo' },
+    ],
+  },
+  {
+    category: 'CUSTOM',
+    tiers: [
+      { id: 'custom', name: 'Build your own protocol', price: 'Concierge-designed' },
     ],
   },
 ];
