@@ -17,8 +17,8 @@ const APPLY_URL = '/apply';
 // against. Base IV retail: Dehydration $150, CBD $200, Vitamins $250, NAD+ $350.
 // Member prices below = base × count × 0.8 (20% member discount).
 const PROTOCOLS = ['CBD', 'Vitamins', 'NAD+'];
-const BASE_IV = { CBD: 250, Vitamins: 250, 'NAD+': 350 };
-const MEMBER_RATE = 0.8;
+const BASE_IV = { CBD: 200, Vitamins: 250, 'NAD+': 350 };
+const MEMBER_RATE = 1;
 const priceFor = (protocol, count) => Math.round(BASE_IV[protocol] * count * MEMBER_RATE);
 
 const TIERS = [
@@ -28,7 +28,7 @@ const TIERS = [
     perks: [
       '1 IV per month (pick any protocol)',
       '1 IM injection per month',
-      '20% off à la carte treatments',
+      '15% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Fast, discreet delivery — straight to your door',
     ],
@@ -39,7 +39,7 @@ const TIERS = [
     perks: [
       '2 IVs per month (any protocol mix)',
       '2 IM injections per month',
-      '20% off à la carte treatments',
+      '15% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Priority appointment booking',
       'Fast, discreet delivery — straight to your door',
@@ -51,7 +51,7 @@ const TIERS = [
     perks: [
       '4 IVs per month (any protocol mix)',
       '4 IM injections per month',
-      '20% off à la carte treatments',
+      '15% off à la carte treatments',
       'Credits roll over (membership must be active)',
       'Priority appointment booking',
       'Dedicated member concierge',
@@ -213,7 +213,7 @@ export default function MembershipSection() {
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Presale — Limited Availability</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">MEMBERSHIP</h2>
           <p className="font-body text-sm md:text-base text-foreground/85 mt-4 max-w-xl">
-            One membership tier. Pick your protocol — CBD, Vitamins, or NAD+. Credits roll over. Apply-only — available soon in the San Francisco Bay Area.
+            One membership tier. Pick your protocol — CBD, Vitamins, or NAD+. Members save 15% on à la carte beyond their tier. Credits roll over. Apply-only — available soon in the San Francisco Bay Area.
           </p>
         </div>
 
@@ -225,7 +225,7 @@ export default function MembershipSection() {
               onClick={() => setBilling('monthly')}
               className={`px-4 py-2 rounded-full text-xs tracking-widest uppercase font-body transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Monthly — Save 20%
+              Monthly
             </button>
             <button
               type="button"
@@ -236,7 +236,7 @@ export default function MembershipSection() {
             </button>
           </div>
           <p className="font-body text-xs md:text-sm text-accent text-center max-w-md px-4 leading-relaxed">
-            Members save 20% off à la carte.
+            Members save 15% off à la carte.
             <span className="block text-muted-foreground mt-1">Annual: 25% additional.</span>
           </p>
         </div>
