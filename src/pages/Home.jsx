@@ -8,7 +8,6 @@ import IntroSection from '../components/landing/IntroSection';
 import HowItWorks from '../components/landing/HowItWorks';
 import WhatIsIV from '../components/landing/WhatIsIV';
 import OurDrips from '../components/landing/OurDrips';
-import PlatformStack from '../components/landing/PlatformStack';
 import AvalonOSPreview from '../components/landing/AvalonOSPreview';
 import MembershipSection from '../components/landing/MembershipSection';
 // GiftCertificates hidden for presale — Stripe integration deferred post-launch.
@@ -40,7 +39,6 @@ export default function Home() {
       <HowItWorks />
       <OurDrips />
       <MembershipSection />
-      <PlatformStack />
       <AvalonOSPreview />
       {/* <GiftCertificates /> — hidden for presale */}
       <EventsSection />
