@@ -14,6 +14,7 @@ const LAYERS = [
   { n: 3, name: 'Delivery',     desc: 'We ship or come to you.',         icon: Truck },
   { n: 4, name: 'Data',         desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
   { n: 5, name: 'Intelligence', desc: 'We learn what works.',            icon: Brain },
+  { n: 6, name: 'Autonomy',     desc: 'Your protocol runs itself.',     accentTail: 'Avalon delivers it.', icon: Orbit },
 ];
 
 export default function AvalonOSPreview() {
