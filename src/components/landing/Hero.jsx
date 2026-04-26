@@ -24,7 +24,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-root relative h-[100svh] flex flex-col items-center overflow-hidden pt-20 md:pt-24 pb-8 md:pb-10"
+      className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-16 md:pb-20"
     >
       {/* Parallax BG */}
       <div className="absolute inset-0 pointer-events-none">
@@ -41,7 +41,7 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </div>
 
-      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center gap-6 md:gap-10 w-full flex-1">
+      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
           <motion.p
@@ -106,12 +106,12 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      {/* Bottom-of-hero subhead — sits in flex flow, hugs bottom of bg image */}
+      {/* Bottom-of-hero subhead — absolutely positioned at section bottom */}
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 text-center px-4 font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto pb-2"
+        className="absolute bottom-8 md:bottom-12 left-0 right-0 z-20 text-center px-4 font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
       >
         Built for high-performers who don't have time to slow down.
       </motion.p>
