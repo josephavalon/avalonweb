@@ -90,7 +90,7 @@ function Sparkline({ color, type, large }) {
 }
 
 function PhoneMockup({ large = false }) {
-  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[160px] sm:max-w-[210px] md:max-w-[320px]';
+  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[200px] sm:max-w-[230px] md:max-w-[340px]';
   const radius = large ? 'rounded-[2.4rem]' : 'rounded-[1.4rem] md:rounded-[2rem]';
   const innerRadius = large ? 'rounded-[2rem]' : 'rounded-[1.2rem] md:rounded-[1.7rem]';
   return (
@@ -227,7 +227,7 @@ export default function AvalonOSPreview() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-[1.3fr_1fr] md:grid-cols-2 gap-4 md:gap-10 items-center">
+        <div className="grid grid-cols-[1fr_1.05fr] md:grid-cols-2 gap-3 md:gap-10 items-center">
           {/* LEFT — layers + trust */}
           <div className="min-w-0">
 
