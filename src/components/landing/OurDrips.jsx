@@ -44,7 +44,7 @@ export default function OurDrips() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap"
+            className="font-heading text-foreground tracking-wide md:whitespace-nowrap text-[10vw] md:text-7xl lg:text-8xl"
           >
             VITALITY TREATMENTS
           </motion.h2>
