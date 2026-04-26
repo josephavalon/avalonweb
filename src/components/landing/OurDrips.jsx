@@ -36,9 +36,9 @@ export default function OurDrips() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-left mb-4 md:mb-8"
+          className="text-left mb-6 md:mb-10"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Live Protocols</p>
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5">Live Protocols</p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -48,6 +48,7 @@ export default function OurDrips() {
           >
             VITALITY TREATMENTS
           </motion.h2>
+          <div className="w-12 md:w-14 h-[2px] md:h-[3px] bg-accent mt-4 md:mt-5" />
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-3 md:gap-4">
