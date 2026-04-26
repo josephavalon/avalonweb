@@ -80,7 +80,7 @@ export default function AvalonOSPreview() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.9, ease: EASE }}
-            className="flex flex-col items-center justify-center gap-1 min-w-0 h-full self-stretch"
+            className="flex flex-col items-center justify-start gap-1 min-w-0 h-full self-stretch"
           >
             <button
               type="button"
@@ -96,7 +96,11 @@ export default function AvalonOSPreview() {
                 height={1035}
                 loading="lazy"
                 decoding="async"
-                className="block w-auto h-auto mx-auto max-h-[360px] sm:max-h-[400px] md:max-h-[440px] lg:max-h-[480px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
+                className="block w-auto h-auto mx-auto max-h-[440px] sm:max-h-[520px] md:max-h-[600px] lg:max-h-[680px] max-w-[180px] sm:max-w-[210px] md:max-w-[230px] lg:max-w-[250px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
+                style={{
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+                  maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+                }}
               />
             </button>
             <button
