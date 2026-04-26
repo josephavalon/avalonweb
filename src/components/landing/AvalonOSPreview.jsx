@@ -4,6 +4,7 @@ import {
   Check, Droplet, Pill, Syringe, Dumbbell, Moon, ChevronRight, Wifi, Salad, Sun, X, ZoomIn,
   Truck, BarChart3, Brain, Orbit, Heart, Wind, Activity, Thermometer, ShieldCheck, Home as HomeIcon,
   Calendar, BarChart3 as Chart, User
+, Utensils
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
