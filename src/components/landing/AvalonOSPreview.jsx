@@ -5,6 +5,7 @@ import {
   Truck, BarChart3, Brain, Orbit, Heart, Wind, Activity, Thermometer, ShieldCheck, Home as HomeIcon,
   Calendar, BarChart3 as Chart, User
 , Utensils
+, Award
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -119,7 +120,7 @@ function PhoneMockup({ large = false }) {
               <p className={`${large ? 'text-[8px]' : 'text-[4.5px] md:text-[6px]'} tracking-[0.25em] text-black/50 uppercase leading-none mt-0.5`}>Thursday</p>
             </div>
             <div className="flex flex-col items-center justify-center">
-              <Droplet className={large ? 'w-4 h-4 text-accent mb-0.5' : 'w-2 h-2 md:w-3 md:h-3 text-accent'} strokeWidth={1.5} />
+              <Droplet className={large ? 'w-5 h-5 text-black mb-1' : 'w-3 h-3 md:w-4 md:h-4 text-black mb-1'} strokeWidth={1.5} />
               <p className={`font-heading ${large ? 'text-sm' : 'text-[7px] md:text-[10px]'} text-black tracking-[0.18em] leading-none mt-0.5`}>
                 AVALON <span className="text-black/55 font-normal">OS</span>
               </p>
@@ -263,18 +264,35 @@ export default function AvalonOSPreview() {
               })}
             </motion.div>
 
-            {/* Trust card — single line */}
+            {/* Trust card — full version */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.55, delay: 0.4, ease: EASE }}
-              className="border border-foreground/15 rounded-md md:rounded-xl px-3 md:px-4 py-2.5 md:py-3 flex items-center gap-2.5 md:gap-3"
+              className="border border-foreground/15 rounded-md md:rounded-xl px-3 md:px-4 py-3"
             >
-              <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-accent shrink-0" strokeWidth={1.5} />
-              <p className="font-body text-[11px] md:text-xs tracking-[0.15em] text-foreground/85 uppercase leading-tight truncate flex-1">
-                HIPAA · ISO 27001 · SOC 2
-              </p>
+              <div className="flex items-start gap-2.5 md:gap-3 mb-2.5 md:mb-3">
+                <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-body text-[11px] md:text-sm text-foreground leading-snug">Your health. Your data. Our priority.</p>
+                  <p className="font-body text-[9px] md:text-[11px] text-muted-foreground leading-snug mt-0.5">HIPAA-compliant. Bank-level security.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                {CERTS.map((c) => {
+                  const Icon = c.icon;
+                  return (
+                    <div key={c.label} className="flex items-center gap-1.5 px-1.5 md:px-2 py-1.5 border border-foreground/10 rounded">
+                      <Icon className="w-3 h-3 md:w-3.5 md:h-3.5 text-accent/70 shrink-0" strokeWidth={1.5} />
+                      <div className="min-w-0 leading-none">
+                        <p className="font-body text-[8px] md:text-[10px] text-foreground/85 font-semibold tracking-wide uppercase truncate">{c.label}</p>
+                        <p className="font-body text-[6px] md:text-[8px] text-muted-foreground tracking-widest uppercase truncate">{c.sub}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </motion.div>
           </div>
 
