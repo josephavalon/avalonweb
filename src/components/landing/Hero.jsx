@@ -103,7 +103,7 @@ export default function Hero() {
               The Operating System for Human Performance
             </div>
             <p className="font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl px-2">
-              Built for athletes, founders, and high-performers who don't have time to slow down.
+              Built for high-performers who don't have time to slow down.
             </p>
           </motion.div>
         </div>
