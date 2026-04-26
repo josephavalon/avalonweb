@@ -43,9 +43,9 @@ export default function AvalonOSPreview() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-[1.05fr_1fr] gap-3 md:gap-6 items-start">
+        <div className="grid grid-cols-[1.05fr_1fr] gap-3 md:gap-6 items-stretch">
           {/* LEFT — 5 layer cards (canonical site style) */}
-          <div className="min-w-0">
+          <div className="min-w-0 h-full">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -80,7 +80,7 @@ export default function AvalonOSPreview() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.9, ease: EASE }}
-            className="flex flex-col items-center justify-start gap-1 min-w-0"
+            className="flex flex-col items-center justify-center gap-1 min-w-0 h-full self-stretch"
           >
             <button
               type="button"
@@ -96,7 +96,7 @@ export default function AvalonOSPreview() {
                 height={1035}
                 loading="lazy"
                 decoding="async"
-                className="block w-auto h-auto mx-auto max-h-[480px] md:max-h-[560px] lg:max-h-[620px] max-w-[180px] sm:max-w-[200px] md:max-w-[210px] lg:max-w-[220px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
+                className="block w-auto h-auto mx-auto max-h-[360px] sm:max-h-[400px] md:max-h-[440px] lg:max-h-[480px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
               />
             </button>
             <button
