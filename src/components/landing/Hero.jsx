@@ -102,12 +102,19 @@ export default function Hero() {
             <div className="font-body text-xs md:text-sm text-foreground tracking-[0.2em] md:tracking-[0.4em] uppercase text-center md:whitespace-nowrap">
               The Operating System for Human Performance
             </div>
-            <p className="font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl px-2">
-              Built for high-performers who don't have time to slow down.
-            </p>
           </motion.div>
         </div>
       </motion.div>
+
+      {/* Bottom-of-hero subhead — anchored to bottom of background image */}
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute bottom-6 md:bottom-10 left-0 right-0 z-10 text-center px-4 font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
+      >
+        Built for high-performers who don't have time to slow down.
+      </motion.p>
     </section>
   );
 }
