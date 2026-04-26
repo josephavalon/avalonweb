@@ -218,7 +218,7 @@ export default function AvalonOSPreview() {
           className="text-left mb-7 md:mb-12"
         >
           <p className="text-sm md:text-base tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5">Coming Soon</p>
-          <h2 className="font-heading text-[14vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.92] uppercase">
+          <h2 className="font-heading text-foreground tracking-wide leading-[0.92] uppercase text-[10vw] md:text-7xl lg:text-8xl">
             Avalon OS
           </h2>
           <div className="w-10 md:w-14 h-[2px] md:h-[3px] bg-accent mt-3 md:mt-5 mb-3 md:mb-4" />
