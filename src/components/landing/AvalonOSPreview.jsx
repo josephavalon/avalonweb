@@ -18,7 +18,7 @@ const LAYERS = [
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-6 md:py-8 px-4 border-t border-border">
+    <section id="avalon-os" className="py-4 md:py-6 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div
@@ -78,7 +78,7 @@ export default function AvalonOSPreview() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.9, ease: EASE }}
-            className="flex flex-col items-center gap-2 min-w-0"
+            className="flex flex-col items-center justify-start gap-1 min-w-0"
           >
             <button
               type="button"
