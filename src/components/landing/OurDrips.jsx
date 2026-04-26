@@ -29,7 +29,7 @@ const categories = [
 
 export default function OurDrips() {
   return (
-    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-4 md:py-10 px-4 border-t border-border">
+    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-4 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -61,7 +61,7 @@ export default function OurDrips() {
             >
               <Link
                 to={cat.comingSoon ? '/apply' : cat.href}
-                className="group relative block rounded-3xl overflow-hidden border border-border bg-card hover:border-accent/40 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                className="group relative block rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-md hover:border-accent/50 hover:bg-white/[0.06] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                 aria-label={`${cat.label} — ${cat.desc}`}
               >
                 <div className="aspect-[5/2] md:aspect-[9/4] relative overflow-hidden">

@@ -10,7 +10,7 @@ import { events } from '../../data/events';
 
 export default function EventsSection() {
   return (
-    <section id="events" className="py-6 md:py-8 px-4 border-t border-border scroll-mt-24">
+    <section id="events" className="py-6 md:py-8 px-4 scroll-mt-24">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -57,7 +57,7 @@ export default function EventsSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex-shrink-0 w-[calc(100vw-5rem)] sm:w-[360px] md:w-[400px] border border-border rounded-3xl bg-card p-5 flex flex-col gap-3 snap-start"
+                  className="flex-shrink-0 w-[calc(100vw-5rem)] sm:w-[360px] md:w-[400px] border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-5 flex flex-col gap-3 snap-start"
                 >
                 <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">{event.date}</p>
                 <div>

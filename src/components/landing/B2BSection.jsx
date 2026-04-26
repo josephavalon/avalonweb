@@ -14,7 +14,7 @@ const channels = [
 
 export default function B2BSection() {
   return (
-    <section id="b2b" className="py-6 md:py-12 px-4 border-t border-border bg-secondary/30">
+    <section id="b2b" className="py-6 md:py-12 px-4 bg-secondary/30">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -57,7 +57,7 @@ export default function B2BSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="border border-border rounded-2xl bg-card p-4 md:p-6 h-full flex flex-col"
+                className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-4 md:p-6 h-full flex flex-col"
               >
                 <item.icon className="w-6 h-6 md:w-7 md:h-7 text-accent mb-2 md:mb-3" strokeWidth={1.5} />
                 <h3 className="font-heading text-xl md:text-2xl lg:text-3xl text-foreground tracking-wide mb-1.5 md:mb-2">{item.title}</h3>

@@ -76,7 +76,7 @@ const CATEGORIES = ['All', 'General', 'Membership', 'Safety'];
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
     <div
-      className="border border-border/60 rounded-3xl bg-card overflow-hidden cursor-pointer"
+      className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer"
       onClick={onToggle}
     >
       <div className="flex items-center justify-between px-5 py-3 gap-4">
@@ -96,7 +96,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
           >
-            <div className="px-5 pb-3 border-t border-border/40">
+            <div className="px-5 pb-3/40">
                <p className="font-body text-sm text-foreground leading-relaxed pt-2">{faq.a}</p>
              </div>
           </motion.div>
@@ -120,7 +120,7 @@ export default function FAQ() {
   const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <section id="faq" className="py-4 md:py-6 px-4 border-t border-border">
+    <section id="faq" className="py-4 md:py-6 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

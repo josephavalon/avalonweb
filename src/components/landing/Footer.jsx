@@ -4,7 +4,7 @@ import { Mail, Phone, Clock } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border py-6 md:py-10 px-4">
+    <footer className="py-6 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Brand block — full-width on mobile, spans 2 cols on desktop */}
         <div className="mb-6 md:hidden">
@@ -79,14 +79,14 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-6">
+        <div className="pt-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
             <p className="font-body text-xs text-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
             <p className="font-body text-xs text-foreground max-w-md text-center md:text-right">
               IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
             </p>
           </div>
-          <div className="pt-4 border-t border-border/50 mb-6">
+          <div className="pt-4/50 mb-6">
             <p className="font-body text-xs text-foreground leading-relaxed text-center md:text-right">
               The services provided have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure or prevent any disease. The material on this website is provided for informational purposes only and is not medical advice. Always consult your physician before beginning any treatment or therapy program. Any designations or references to therapies are for marketing purposes only and do not represent actual products.
             </p>

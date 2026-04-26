@@ -16,7 +16,7 @@ export default function TrustStrip() {
   return (
     <section
       aria-label="Operational standards"
-      className="border-t border-b border-border bg-background"
+      className="bg-background"
     >
       <motion.div
         initial={{ opacity: 0 }}

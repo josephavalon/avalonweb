@@ -7,7 +7,7 @@ const GIFT_TYPEFORM_URL = 'https://placeholder-typeform-gift.com'; // replace wi
 
 export default function GiftCertificates() {
   return (
-    <section id="gift" className="py-8 md:py-10 px-4 border-t border-border">
+    <section id="gift" className="py-8 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -74,7 +74,7 @@ export default function GiftCertificates() {
             transition={{ duration: 0.9, delay: 0.2 }}
             className="relative hidden md:block"
           >
-            <div className="border border-border rounded-3xl bg-card p-10 relative overflow-hidden">
+            <div className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-10 relative overflow-hidden">
               {/* Background glow */}
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-3xl" />
 
@@ -91,7 +91,7 @@ export default function GiftCertificates() {
                 <p className="font-heading text-6xl text-foreground tracking-wide">$250</p>
               </div>
 
-              <div className="border-t border-border pt-5">
+              <div className="pt-5">
                 <p className="font-body text-xs text-muted-foreground">Valid for any Avalon Vitality service · Never expires</p>
               </div>
 

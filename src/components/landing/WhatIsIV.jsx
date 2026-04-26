@@ -12,7 +12,7 @@ const stats = [
 
 export default function WhatIsIV() {
   return (
-    <section className="py-10 md:py-14 px-4 border-t border-border">
+    <section className="py-10 md:py-14 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6 md:mb-10">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Science</p>
@@ -57,7 +57,7 @@ export default function WhatIsIV() {
               IV therapy bypasses your gut for 100% delivery, in under an hour.
             </p>
         {/* Stats grid */}
-            <div className="border-t border-border pt-6">
+            <div className="pt-6">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 {stats.map((s) => (
                   <div key={s.label} className="text-center">

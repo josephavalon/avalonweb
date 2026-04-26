@@ -39,7 +39,7 @@ export default function IntroSection() {
   const soonItems = verticals.filter(v => !v.live);
 
   return (
-    <section className="py-8 md:py-10 px-4 border-t border-border">
+    <section className="py-8 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

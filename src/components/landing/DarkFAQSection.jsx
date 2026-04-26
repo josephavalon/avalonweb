@@ -59,7 +59,7 @@ export default function DarkFAQSection({ title, faqs, ctaButton }) {
               </AnimatePresence>
 
               {index < faqs.length - 1 && (
-                <div className="mt-6 h-px bg-white/10" />
+                <div className="mt-6" />
               )}
             </motion.div>
           ))}

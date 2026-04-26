@@ -19,7 +19,7 @@ export default function ProofStrip() {
   return (
     <section
       aria-label="Member traction signals"
-      className="py-8 md:py-14 px-4 border-t border-border"
+      className="py-8 md:py-14 px-4"
     >
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-3 divide-x divide-border">

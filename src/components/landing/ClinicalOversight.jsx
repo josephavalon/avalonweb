@@ -40,7 +40,7 @@ export default function ClinicalOversight() {
     <section
       id="clinical-oversight"
       aria-label="Medical oversight and clinical methodology"
-      className="scroll-mt-24 py-8 md:py-12 px-4 border-t border-border"
+      className="scroll-mt-24 py-8 md:py-12 px-4"
     >
       <div className="max-w-6xl mx-auto">
         <motion.div
@@ -95,7 +95,7 @@ export default function ClinicalOversight() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.15 + i * 0.1, ease: EASE }}
-                  className="border border-border rounded-3xl bg-card/40 p-5 md:p-6 flex gap-4 items-start"
+                  className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl p-5 md:p-6 flex gap-4 items-start"
                 >
                   <PillarIcon
                     className="w-5 h-5 text-accent shrink-0 mt-1"

@@ -333,7 +333,7 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-8 md:py-6 px-4 border-t border-border">
+    <section className="py-8 md:py-6 px-4">
       <div className="max-w-6xl mx-auto md:grid md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_420px] md:gap-8 lg:gap-10 md:items-start">
         {/* LEFT COLUMN (desktop) | TOP (mobile): title + disclaimer */}
         <motion.div

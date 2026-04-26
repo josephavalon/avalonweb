@@ -24,7 +24,7 @@ export default function RealResultsReviews() {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   return (
-    <section className="py-16 md:py-20 px-4 md:px-16 border-t border-border">
+    <section className="py-16 md:py-20 px-4 md:px-16">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -44,7 +44,7 @@ export default function RealResultsReviews() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.8 }}
-              className="border-b border-border pb-8"
+              className="pb-8"
             >
               <button
                 onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}

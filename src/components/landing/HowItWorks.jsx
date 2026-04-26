@@ -37,7 +37,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="py-8 md:py-10 px-4 border-t border-border bg-secondary/40 scroll-mt-20"
+      className="py-8 md:py-10 px-4 bg-secondary/40 scroll-mt-20"
     >
       <div className="max-w-6xl mx-auto">
         <motion.div
@@ -99,7 +99,7 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.7, ease: EASE }}
-                className="shrink-0 w-[60vw] sm:w-[45vw] md:w-auto snap-start text-center p-4 md:p-5 border border-border rounded-3xl bg-card"
+                className="shrink-0 w-[60vw] sm:w-[45vw] md:w-auto snap-start text-center p-4 md:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl"
               >
                 <step.icon
                   className="w-6 h-6 text-accent mx-auto mb-2"

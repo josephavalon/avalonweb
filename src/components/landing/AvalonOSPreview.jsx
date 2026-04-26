@@ -20,7 +20,7 @@ const LAYERS = [
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-3 md:py-4 px-4 border-t border-border">
+    <section id="avalon-os" className="py-3 md:py-4 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div
@@ -56,7 +56,7 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2 md:py-2 border border-foreground/15 rounded-xl">
+                  <div key={l.n} className="flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2 md:py-2 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-xl">
                     <span className="text-base md:text-lg tracking-[0.15em] text-accent font-body uppercase w-5 md:w-7 shrink-0 text-center">{l.n}</span>
                     <div className="w-10 h-10 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                       <Icon className="w-4 h-4 md:w-4 md:h-4" strokeWidth={1.5} />

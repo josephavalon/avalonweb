@@ -37,7 +37,7 @@ export default function PlatformStack() {
   const Icon = layer.icon;
 
   return (
-    <section id="operating-system" className="py-10 md:py-16 px-4 border-t border-border">
+    <section id="operating-system" className="py-10 md:py-16 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Title */}
         <motion.div
@@ -79,7 +79,7 @@ export default function PlatformStack() {
           transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
-          className="border border-border rounded-2xl p-5 md:p-7 bg-card/30"
+          className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-7"
         >
           {/* Layer chips */}
           <div className="grid grid-cols-5 gap-1.5 md:gap-3 mb-5 md:mb-6">
@@ -133,7 +133,7 @@ export default function PlatformStack() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between mt-5 md:mt-6 pt-4 md:pt-5 border-t border-border/60">
+          <div className="flex items-center justify-between mt-5 md:mt-6 pt-4 md:pt-5/60">
             <button
               type="button"
               onClick={() => goTo((active - 1 + LAYERS.length) % LAYERS.length)}
