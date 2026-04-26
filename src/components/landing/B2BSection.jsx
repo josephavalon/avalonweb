@@ -24,7 +24,7 @@ export default function B2BSection() {
           className="text-left mb-3 md:mb-6"
         >
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Partnerships</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">PARTNERSHIPS</h2>
+          <h2 className="font-heading text-foreground tracking-wide leading-[0.95] text-[10vw] md:text-7xl lg:text-8xl">PARTNERSHIPS</h2>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
