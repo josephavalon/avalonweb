@@ -206,7 +206,7 @@ export default function MembershipSection() {
   };
 
   return (
-    <section id="membership" className="py-8 md:py-6 px-4 border-t border-border">
+    <section id="membership" className="py-6 md:py-6 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         <div className="text-left mb-4 md:mb-8">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Presale — Limited Availability</p>
