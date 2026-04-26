@@ -28,18 +28,14 @@ export default function AvalonOSPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-1.5 md:mb-3"
+          className="text-left mb-3 md:mb-6"
         >
-          <p className="text-[10px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-1.5 md:mb-2">Coming Soon</p>
-          <h2 className="font-heading text-[9vw] md:text-5xl lg:text-6xl text-foreground tracking-wide leading-[0.92] uppercase">
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
             Avalon OS
           </h2>
-          <div className="w-10 md:w-12 h-[2px] md:h-[2px] bg-accent mt-2 md:mt-3 mb-2 md:mb-3" />
-          <p className="font-heading text-base md:text-xl lg:text-2xl text-foreground/85 tracking-wide uppercase leading-tight">
-            Intelligent Delivery
-          </p>
-          <p className="font-body text-[11px] md:text-xs text-muted-foreground leading-snug max-w-xl mt-1 md:mt-3">
-            Real-time data. Intelligent protocol. Peak every day.
+          <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl mt-3 md:mt-5">
+            Intelligent delivery. Real-time data. Peak every day.
           </p>
         </motion.div>
 
