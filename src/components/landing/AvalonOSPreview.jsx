@@ -20,7 +20,7 @@ const LAYERS = [
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-3 md:py-4 px-4">
+    <section id="avalon-os" className="py-2 md:py-4 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div
@@ -28,17 +28,17 @@ export default function AvalonOSPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-2 md:mb-3"
+          className="text-left mb-1.5 md:mb-3"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-2 md:mb-2">Coming Soon</p>
-          <h2 className="font-heading text-[14vw] md:text-5xl lg:text-6xl text-foreground tracking-wide leading-[0.92] uppercase">
+          <p className="text-[10px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-1.5 md:mb-2">Coming Soon</p>
+          <h2 className="font-heading text-[9vw] md:text-5xl lg:text-6xl text-foreground tracking-wide leading-[0.92] uppercase">
             Avalon OS
           </h2>
           <div className="w-10 md:w-12 h-[2px] md:h-[2px] bg-accent mt-2 md:mt-3 mb-2 md:mb-3" />
-          <p className="font-heading text-xl md:text-xl lg:text-2xl text-foreground/85 tracking-wide uppercase leading-tight">
+          <p className="font-heading text-base md:text-xl lg:text-2xl text-foreground/85 tracking-wide uppercase leading-tight">
             Intelligent Delivery
           </p>
-          <p className="font-body text-sm md:text-xs text-muted-foreground leading-snug max-w-xl mt-2 md:mt-3">
+          <p className="font-body text-[11px] md:text-xs text-muted-foreground leading-snug max-w-xl mt-1 md:mt-3">
             Real-time data. Intelligent protocol. Peak every day.
           </p>
         </motion.div>
@@ -56,14 +56,14 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2 md:py-2 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-xl">
-                    <span className="text-base md:text-lg tracking-[0.15em] text-accent font-body uppercase w-5 md:w-7 shrink-0 text-center">{l.n}</span>
-                    <div className="w-10 h-10 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
+                  <div key={l.n} className="flex items-center gap-2 md:gap-4 px-2 md:px-4 py-1.5 md:py-2 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-xl">
+                    <span className="text-xs md:text-lg tracking-[0.15em] text-accent font-body uppercase w-4 md:w-7 shrink-0 text-center">{l.n}</span>
+                    <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                       <Icon className="w-4 h-4 md:w-4 md:h-4" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-heading text-base md:text-sm text-foreground tracking-wide uppercase leading-none mb-1">{l.name}</p>
-                      <p className="font-body text-sm md:text-xs text-muted-foreground leading-snug">
+                      <p className="font-heading text-[11px] md:text-sm text-foreground tracking-wide uppercase leading-none mb-0.5 md:mb-1">{l.name}</p>
+                      <p className="font-body text-[10px] leading-tight md:text-xs md:leading-snug text-muted-foreground">
                         {l.desc}{l.accentTail && <> <span className="text-accent font-normal">{l.accentTail}</span></>}
                       </p>
                     </div>
@@ -96,10 +96,10 @@ export default function AvalonOSPreview() {
                 height={1035}
                 loading="lazy"
                 decoding="async"
-                className="block w-auto h-auto mx-auto max-h-[440px] sm:max-h-[520px] md:max-h-[600px] lg:max-h-[680px] max-w-[180px] sm:max-w-[210px] md:max-w-[230px] lg:max-w-[250px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
+                className="block w-auto h-auto mx-auto max-h-[320px] sm:max-h-[440px] md:max-h-[560px] lg:max-h-[640px] max-w-[130px] sm:max-w-[180px] md:max-w-[220px] lg:max-w-[240px] rounded-[1.25rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
                 style={{
-                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
-                  maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
+                  maskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
                 }}
               />
             </button>
