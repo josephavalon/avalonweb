@@ -94,7 +94,7 @@ export default function AvalonOSPreview() {
                 height={1035}
                 loading="lazy"
                 decoding="async"
-                className="block w-full h-auto mx-auto max-w-[180px] sm:max-w-[230px] md:max-w-[320px]"
+                className="block w-full h-auto mx-auto max-w-[180px] sm:max-w-[230px] md:max-w-[320px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
               />
             </button>
             <button
@@ -134,7 +134,7 @@ export default function AvalonOSPreview() {
               exit={{ scale: 0.92, opacity: 0 }}
               transition={{ duration: 0.35, ease: EASE }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[92vh] w-auto"
+              className="max-h-[92vh] w-auto rounded-[2rem]"
             />
           </motion.div>
         )}
