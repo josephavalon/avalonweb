@@ -25,10 +25,9 @@ export default function Hero() {
     <section
       ref={ref}
       className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-10 md:pb-14"
-      onMouseMove={handleCursor}
     >
       {/* Parallax BG */}
-      <motion.div style={{ y, x: cx, translateY: cy }} className="absolute inset-0 scale-110 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <img
           src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
           alt="Avalon Vitality IV therapy"
@@ -39,7 +38,7 @@ export default function Hero() {
         <div className="absolute inset-0 bg-background/50" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
-      </motion.div>
+      </div>
 
       <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}

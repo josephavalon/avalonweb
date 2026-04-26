@@ -19,7 +19,7 @@ const verticals = [
   { label: 'Peptides', icon: LinkIcon, live: false },
   { label: 'Hormone Optimization', icon: Heart, live: false },
   { label: 'Supplements', icon: Pill, live: false },
-  { label: 'Regenerative Aesthetics', icon: CircleUser, live: false },
+  { label: 'Biosensor Data', icon: Activity, live: false },
   { label: 'Nutrition', icon: Apple, live: false },
   { label: 'Contrast Therapy', icon: Flame, live: false, location: 'studio' },
   { label: 'Recovery Devices', icon: Lightbulb, live: false },
@@ -29,7 +29,7 @@ const verticals = [
   { label: 'Weight Loss', icon: Scale, live: false },
   { label: 'Sexual Health', icon: HeartPulse, live: false },
   { label: 'Fertility', icon: Baby, live: false },
-  { label: 'Biosensor Data', icon: Activity, live: false },
+  { label: 'Regenerative Aesthetics', icon: CircleUser, live: false },
 ];
 
 export default function IntroSection() {
