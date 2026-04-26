@@ -41,7 +41,7 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </div>
 
-      <motion.div style={{ opacity }} className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
           <motion.p
@@ -104,7 +104,7 @@ export default function Hero() {
             </div>
           </motion.div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Bottom-of-hero subhead — absolutely positioned at section bottom */}
       <motion.p
