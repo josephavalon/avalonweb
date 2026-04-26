@@ -14,7 +14,7 @@ const channels = [
 
 export default function B2BSection() {
   return (
-    <section id="b2b" className="py-6 md:py-12 px-4 bg-secondary/30">
+    <section id="b2b" className="py-6 md:py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

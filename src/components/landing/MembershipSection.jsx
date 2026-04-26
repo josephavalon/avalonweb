@@ -217,7 +217,7 @@ export default function MembershipSection() {
 
         {/* Monthly / Annual toggle */}
         <div className="flex flex-col items-center mb-3 md:mb-6 gap-2 md:gap-3">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-card">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md">
             <button
               type="button"
               onClick={() => setBilling('monthly')}

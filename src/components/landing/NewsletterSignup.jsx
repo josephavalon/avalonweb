@@ -20,7 +20,7 @@ export default function NewsletterSignup() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
-        className="max-w-3xl mx-auto bg-secondary rounded-3xl p-8 md:p-12"
+        className="max-w-3xl mx-auto border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 md:p-12"
       >
         <h2 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide mb-8 text-center">
           SIGN UP FOR EXCLUSIVE EVENTS & UPDATES

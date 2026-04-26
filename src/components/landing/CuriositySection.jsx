@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export default function CuriositySection() {
   return (
-    <section className="py-16 md:py-20 px-6 md:px-16 bg-secondary/30">
+    <section className="py-16 md:py-20 px-6 md:px-16">
       <div className="max-w-2xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
