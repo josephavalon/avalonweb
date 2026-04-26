@@ -32,22 +32,19 @@ const VITALS = [
 ];
 
 const PROTOCOL = [
-  { time: '7:00', name: 'Hydration', detail: 'Electrolyte · 500ml', icon: Droplet, ring: 'border-green-400/40 text-green-400', dot: 'bg-green-400', done: true },
-  { time: '8:00', name: 'Vitamin Stack', detail: 'Multi · D3 · Omega-3', icon: Pill, ring: 'border-amber-400/40 text-amber-400', dot: 'bg-amber-400', done: true },
-  { time: '8:30', name: 'NMN', detail: '500mg', icon: Pill, ring: 'border-orange-400/40 text-orange-400', dot: 'bg-orange-400', done: true },
-  { time: '9:30', name: 'Diet', detail: 'Protein · greens', icon: Salad, ring: 'border-green-400/40 text-green-400', dot: 'bg-green-400', done: true },
-  { time: '10:00', name: 'BPC Injection', detail: '250mcg', icon: Syringe, ring: 'border-purple-400/40 text-purple-400', dot: 'bg-purple-400', done: true },
-  { time: '12:30', name: 'Water', detail: '1L · electrolytes', icon: Droplet, ring: 'border-cyan-400/40 text-cyan-400', dot: 'bg-cyan-400', done: true },
-  { time: '1:00', name: 'Training', detail: 'Strength', icon: Dumbbell, ring: 'border-orange-400/40 text-orange-400', dot: 'bg-orange-400', done: true },
-  { time: '6:00', name: 'NAD+ + Red Light', detail: 'Clinic · 30 min', icon: Sun, ring: 'border-blue-400/40 text-blue-400', dot: 'bg-blue-400', done: false },
-  { time: '9:00', name: 'Recovery', detail: 'Magnesium · Glycine', icon: Moon, ring: 'border-purple-400/40 text-purple-400', dot: 'bg-purple-400', done: true },
+  { time: '7:00 AM',  name: 'Hydration',              detail: 'Electrolyte water · 500ml',   icon: Droplet,   ring: 'border-green-400/40 text-green-400',     dot: 'bg-green-400',   done: true  },
+  { time: '7:30 AM',  name: 'Vitamin Stack',          detail: 'Multi · D3 · Omega-3',         icon: Pill,      ring: 'border-orange-400/40 text-orange-400',   dot: 'bg-orange-400',  done: true  },
+  { time: '8:00 AM',  name: 'Sun exposure',           detail: '12 min',                       icon: Sun,       ring: 'border-orange-400/40 text-orange-400',   dot: 'bg-orange-400',  done: true  },
+  { time: '8:30 AM',  name: 'High protein breakfast', detail: 'Protein 40g · greens',         icon: Utensils,  ring: 'border-green-400/40 text-green-400',     dot: 'bg-green-400',   done: true  },
+  { time: '9:00 AM',  name: 'NAD IV+',                detail: '',                             icon: Droplet,   ring: 'border-blue-400/40 text-blue-400',       dot: 'bg-blue-400',    done: true  },
+  { time: '9:00 AM',  name: 'Red light therapy',      detail: '',                             icon: Sun,       ring: 'border-purple-400/40 text-purple-400',   dot: 'bg-purple-400',  done: true  },
+  { time: '10:30 AM', name: 'Training',               detail: '',                             icon: Dumbbell,  ring: 'border-purple-400/40 text-purple-400',   dot: 'bg-purple-400',  done: true  },
 ];
 
 const TABS = [
   { name: 'HOME', icon: HomeIcon, active: true },
   { name: 'PROTOCOL', icon: Calendar, active: false },
   { name: 'COACH', icon: Activity, active: false },
-  { name: 'DIET', icon: Salad, active: false },
   { name: 'REPORTS', icon: Chart, active: false },
   { name: 'YOU', icon: User, active: false },
 ];
@@ -157,9 +154,9 @@ function PhoneMockup({ large = false }) {
               })}
             </div>
           </div>
-          {/* Today's Protocol */}
+          {/* Morning Protocol */}
           <div className={`${large ? 'px-5' : 'px-2 md:px-3.5'} mt-1 md:mt-2`}>
-            <p className={`${large ? 'text-[10px]' : 'text-[6.5px] md:text-[9px]'} tracking-[0.3em] text-accent uppercase mb-0.5 md:mb-1 font-semibold`}>Today's Protocol</p>
+            <p className={`${large ? 'text-[10px]' : 'text-[6.5px] md:text-[9px]'} tracking-[0.3em] text-accent uppercase mb-0.5 md:mb-1 font-semibold`}>Morning Protocol</p>
             <div className="relative">
               <div className={`absolute top-1 bottom-1 ${large ? 'left-[58px]' : 'left-[20px] md:left-[34px]'} w-px bg-white/10`} />
               <div className={`${large ? 'space-y-1.5' : 'space-y-0.5 md:space-y-1'}`}>
