@@ -23,11 +23,11 @@ export default function B2BSection() {
           transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="text-left mb-3 md:mb-6"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Partnerships</p>
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Built In, Not Bolted On</p>
           <h2 className="font-heading text-foreground tracking-wide leading-[0.95] text-[10vw] md:text-7xl lg:text-8xl">PARTNERSHIPS</h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
+        <div className="grid md:grid-cols-[1fr_1.1fr] gap-6 md:gap-12 items-stretch">
 
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -36,7 +36,7 @@ export default function B2BSection() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col justify-center"
           >
-            <p className="font-heading text-2xl md:text-4xl lg:text-5xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-6">
+            <p className="font-heading text-2xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-8">
               We don&rsquo;t plug in.<br />We <span className="text-accent">integrate</span>.
             </p>
             <div className="flex justify-start mt-4">
@@ -49,7 +49,7 @@ export default function B2BSection() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             {channels.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -57,11 +57,11 @@ export default function B2BSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="border border-border rounded-2xl bg-card p-3 md:p-4"
+                className="border border-border rounded-2xl bg-card p-4 md:p-6 h-full flex flex-col"
               >
-                <item.icon className="w-5 h-5 text-accent mb-2" strokeWidth={1.5} />
-                <h3 className="font-heading text-xl md:text-3xl text-foreground tracking-wide mb-1">{item.title}</h3>
-                <p className="font-body text-xs md:text-sm text-foreground leading-snug">{item.desc}</p>
+                <item.icon className="w-6 h-6 md:w-7 md:h-7 text-accent mb-2 md:mb-3" strokeWidth={1.5} />
+                <h3 className="font-heading text-xl md:text-2xl lg:text-3xl text-foreground tracking-wide mb-1.5 md:mb-2">{item.title}</h3>
+                <p className="font-body text-xs md:text-sm text-foreground/85 leading-snug flex-1">{item.desc}</p>
               </motion.div>
             ))}
           </div>
