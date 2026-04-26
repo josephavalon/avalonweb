@@ -137,7 +137,7 @@ function TierCard({ tier, billing }) {
       )}
 
       {/* Perks */}
-      <div className="mb-3 pt-3 border-t border-border/60">
+      <div className="mb-2 pt-2 md:mb-3 md:pt-3 border-t border-border/60">
         <ul className="space-y-1.5">
           {tier.perks.slice(0, visiblePerks).map((perk) => (
             <li key={perk} className="flex items-start gap-2">
@@ -181,7 +181,7 @@ function TierCard({ tier, billing }) {
 
       <Link
         to={tier.isCustom ? '/apply?tier=custom' : APPLY_URL}
-        className="block text-center py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
+        className="block text-center py-2.5 md:py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
       >
         {tier.isCustom ? 'Design Your Protocol' : 'Apply for Membership'}
       </Link>
@@ -208,20 +208,20 @@ export default function MembershipSection() {
   return (
     <section id="membership" className="py-6 md:py-6 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
-        <div className="text-left mb-4 md:mb-8">
+        <div className="text-left mb-3 md:mb-6">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Presale — Limited Availability</p>
           <h2 className="font-heading text-foreground tracking-wide md:whitespace-nowrap text-[10vw] md:text-7xl lg:text-8xl">MEMBERSHIP</h2>
-          <p className="font-body text-sm md:text-base text-foreground/85 mt-4 max-w-xl">
+          <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
             One membership tier. Pick your protocol — CBD, Vitamins, or NAD+.</p>
         </div>
 
         {/* Monthly / Annual toggle */}
-        <div className="flex flex-col items-center mb-6 md:mb-8 gap-3">
+        <div className="flex flex-col items-center mb-3 md:mb-6 gap-2 md:gap-3">
           <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-card">
             <button
               type="button"
               onClick={() => setBilling('monthly')}
-              className={`px-4 py-2 rounded-full text-xs tracking-widest uppercase font-body transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3.5 py-1.5 md:px-4 md:py-2 rounded-full text-xs tracking-widest uppercase font-body transition-colors ${billing === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Monthly
             </button>
@@ -267,7 +267,7 @@ export default function MembershipSection() {
           </div>
         </div>
 
-        <p className="font-body text-xs text-muted-foreground/80 text-center mt-6 md:mt-8 max-w-2xl mx-auto leading-relaxed">
+        <p className="font-body text-xs text-muted-foreground/80 text-center mt-4 md:mt-8 max-w-2xl mx-auto leading-relaxed">
           3-month minimum commitment. Credits roll over month-to-month as long as your membership remains active. Presale spots are limited — membership subject to approval.
         </p>
       </div>
