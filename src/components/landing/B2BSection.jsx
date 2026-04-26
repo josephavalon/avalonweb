@@ -36,10 +36,10 @@ export default function B2BSection() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col justify-center"
           >
-            <p className="font-heading text-2xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-8 text-center">
+            <p className="font-heading text-2xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-8 text-left">
               We don&rsquo;t plug in.<br />We <span className="text-accent">integrate</span>.
             </p>
-            <div className="flex justify-center mt-4">
+            <div className="flex justify-start mt-4">
               <a
                 href="mailto:support@avalonvitality.co"
                 className="px-6 py-3 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"

@@ -37,6 +37,7 @@ export default function Hero() {
         />
         <div className="absolute inset-0 bg-background/50" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
+        <div className="absolute bottom-0 inset-x-0 h-2/3 bg-gradient-to-b from-transparent via-background/60 to-background pointer-events-none" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </div>
 

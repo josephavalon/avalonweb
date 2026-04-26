@@ -4,6 +4,11 @@ import { Plus, Minus } from 'lucide-react';
 
 const REVIEWS = [
   {
+    title: 'I code 20 hours a day now',
+    quote: '"I\'m a founder building an AI company. NAD+ is what makes 20-hour days possible without crashing. Mental clarity holds, recovery is faster, and I show up the next morning sharper than before. Avalon is part of how I operate now."',
+    initials: 'J.G.',
+  },
+  {
     title: 'Within weeks, my muscle definition sharpened',
     quote: '"After years of training, I thought I had hit a plateau. Within weeks, my muscle definition sharpened, recovery sped up, and I started looking leaner while still putting on size. It feels like I unlocked another level in the gym, stronger, more efficient, and more motivated than ever."',
     initials: 'K.L.',
