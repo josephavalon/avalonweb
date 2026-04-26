@@ -36,7 +36,7 @@ export default function B2BSection() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col justify-center"
           >
-            <p className="font-heading text-2xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-8">
+            <p className="font-heading text-2xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-8 text-center">
               We don&rsquo;t plug in.<br />We <span className="text-accent">integrate</span>.
             </p>
             <div className="flex justify-center mt-4">
