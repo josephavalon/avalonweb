@@ -48,7 +48,6 @@ export default function OurDrips() {
           >
             VITALITY TREATMENTS
           </motion.h2>
-          <div className="w-12 md:w-14 h-[2px] md:h-[3px] bg-accent mt-4 md:mt-5" />
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-3 md:gap-4">
