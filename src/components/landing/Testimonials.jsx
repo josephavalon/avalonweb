@@ -301,6 +301,12 @@ export default function Testimonials() {
   const scrollRef = useRef(null);
   const [paused, setPaused] = useState(false);
 
+  // Force carousel to start at leftmost (J.G. → Diplo) on mount.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = 0;
+  }, []);
+
   // Auto-advance testimonials every 4.5s (pauses on hover or when tab is hidden).
   useEffect(() => {
     if (paused) return;
@@ -386,7 +392,7 @@ export default function Testimonials() {
               className="flex gap-5 md:gap-8 pb-2 items-start px-[calc(50%-140px)] md:px-[calc(50%-180px)]"
             >
               {testimonials.map((t, i) => (
-                <div key={i} className="snap-center shrink-0">
+                <div key={i} className="snap-start shrink-0">
                   <IPhoneMockup testimonial={t} />
                 </div>
               ))}
