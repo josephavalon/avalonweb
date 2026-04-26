@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Droplet, BarChart3, Brain, Orbit,
-  ChevronRight, ZoomIn, X
+  ChevronRight, ZoomIn, X, ClipboardCheck, Sparkles
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 1, name: 'Delivery',     desc: 'We ship or come to you.',         icon: Truck },
-  { n: 2, name: 'Modalities',   desc: 'IVs, NAD+, peptides, TRT.',       icon: Droplet },
-  { n: 3, name: 'Data',         desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
-  { n: 4, name: 'Intelligence', desc: 'We learn what works.',            icon: Brain },
-  { n: 5, name: 'Autonomy',     desc: 'Your protocol runs itself.',      accentTail: 'Avalon delivers it.', icon: Orbit },
+  { n: 0, name: 'Input',        desc: 'Tell us your goals.',             icon: ClipboardCheck },
+  { n: 1, name: 'Modalities',   desc: 'IVs, NAD+, peptides, TRT.',       icon: Droplet },
+  { n: 2, name: 'Protocol',     desc: 'We design what\'s right for you.', icon: Sparkles },
+  { n: 3, name: 'Delivery',     desc: 'We ship or come to you.',         icon: Truck },
+  { n: 4, name: 'Data',         desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
+  { n: 5, name: 'Intelligence', desc: 'We learn what works.',            icon: Brain },
 ];
 
 export default function AvalonOSPreview() {
