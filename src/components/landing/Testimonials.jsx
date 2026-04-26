@@ -365,7 +365,7 @@ export default function Testimonials() {
 
         {/* RIGHT COLUMN (desktop) | MIDDLE (mobile): single-phone carousel */}
         <div className="relative md:col-start-2 md:row-start-1 md:row-span-2 md:w-[360px] lg:w-[420px] md:justify-self-end">
-          <div className="overflow-x-auto no-scrollbar overflow-y-hidden relative group snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollBehavior: "smooth" }}>
+          <div ref={scrollRef} className="overflow-x-auto no-scrollbar overflow-y-hidden relative group snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollBehavior: "smooth" }}>
             <button
               onClick={() => scroll("left")}
               className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
@@ -381,7 +381,6 @@ export default function Testimonials() {
               <ChevronRight className="w-5 h-5 text-foreground" />
             </button>
             <div
-              ref={scrollRef}
               onMouseEnter={() => setPaused(true)}
               onMouseLeave={() => setPaused(false)}
               className="flex gap-5 md:gap-8 pb-2 items-start px-[calc(50%-140px)] md:px-[calc(50%-180px)]"
