@@ -38,7 +38,7 @@ const PROTOCOL = [
   { time: '8:00 AM',  name: 'Sun exposure',           detail: '12 min',                       icon: Sun,       ring: 'border-orange-400/40 text-orange-400',   dot: 'bg-orange-400',  done: true  },
   { time: '8:30 AM',  name: 'High protein breakfast', detail: 'Protein 40g · greens',         icon: Utensils,  ring: 'border-green-400/40 text-green-400',     dot: 'bg-green-400',   done: true  },
   { time: '9:00 AM',  name: 'NAD IV+',                detail: '',                             icon: Droplet,   ring: 'border-blue-400/40 text-blue-400',       dot: 'bg-blue-400',    done: true  },
-  { time: '9:00 AM',  name: 'Red light therapy',      detail: '',                             icon: Sun,       ring: 'border-purple-400/40 text-purple-400',   dot: 'bg-purple-400',  done: true  },
+  { time: '9:00 AM',  name: 'Red light therapy',      detail: '',                             icon: Sun,       ring: 'border-red-400/40 text-red-400',         dot: 'bg-red-400',     done: true  },
   { time: '10:30 AM', name: 'Training',               detail: '',                             icon: Dumbbell,  ring: 'border-purple-400/40 text-purple-400',   dot: 'bg-purple-400',  done: true  },
 ];
 
@@ -48,6 +48,12 @@ const TABS = [
   { name: 'COACH', icon: Activity, active: false },
   { name: 'REPORTS', icon: Chart, active: false },
   { name: 'YOU', icon: User, active: false },
+];
+
+const CERTS = [
+  { label: 'HIPAA', sub: 'COMPLIANT', icon: ShieldCheck },
+  { label: 'ISO',   sub: '27001',     icon: Award },
+  { label: 'SOC 2', sub: 'TYPE II',   icon: ShieldCheck },
 ];
 
 function ComplianceRing({ percent, size = 'sm' }) {
@@ -115,7 +121,7 @@ function PhoneMockup({ large = false }) {
             <div className="flex flex-col items-center justify-center">
               <Droplet className={large ? 'w-4 h-4 text-accent mb-0.5' : 'w-2 h-2 md:w-3 md:h-3 text-accent'} strokeWidth={1.5} />
               <p className={`font-heading ${large ? 'text-sm' : 'text-[7px] md:text-[10px]'} text-black tracking-[0.18em] leading-none mt-0.5`}>
-                AVALON <span className="text-accent">OS</span>
+                AVALON <span className="text-black/55 font-normal">OS</span>
               </p>
             </div>
             <div className="flex justify-end">
