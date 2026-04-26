@@ -13,7 +13,7 @@ const LAYERS = [
   { n: 2, name: 'Protocol',     desc: 'We design what\'s right for you.', icon: Sparkles },
   { n: 3, name: 'Delivery',     desc: 'We ship or come to you.',         icon: Truck },
   { n: 4, name: 'Data',         desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
-  { n: 5, name: 'Intelligence', desc: 'We learn what works.',            icon: Brain },
+  { n: 5, name: 'Intelligence', desc: 'We learn what works and what doesn't.', icon: Brain },
   { n: 6, name: 'Autonomy',     desc: 'Your protocol runs itself.',     accentTail: 'Avalon delivers it.', icon: Orbit },
 ];
 
