@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Droplet, BarChart3, Brain, Orbit,
-  ChevronRight, ShieldCheck, Award, ZoomIn, X
+  ChevronRight, ZoomIn, X
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -15,18 +15,12 @@ const LAYERS = [
   { n: 5, name: 'Autonomy',     desc: 'Your protocol runs itself.',      accentTail: 'Avalon delivers it.', icon: Orbit },
 ];
 
-const CERTS = [
-  { label: 'HIPAA', sub: 'COMPLIANT', icon: ShieldCheck },
-  { label: 'ISO',   sub: '27001',     icon: Award },
-  { label: 'SOC 2', sub: 'TYPE II',   icon: ShieldCheck },
-];
-
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
     <section id="avalon-os" className="py-10 md:py-20 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
-        {/* Section title block — matches site canonical pattern */}
+        {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -34,19 +28,22 @@ export default function AvalonOSPreview() {
           transition={{ duration: 0.7, ease: EASE }}
           className="text-left mb-6 md:mb-10"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon — Avalon OS</p>
-          <h2 className="font-heading text-[10vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.92] uppercase">
-            Intelligent Delivery
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
+          <h2 className="font-heading text-[14vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.92] uppercase">
+            Avalon OS
           </h2>
           <div className="w-12 md:w-14 h-[2px] md:h-[3px] bg-accent mt-4 md:mt-5 mb-4 md:mb-5" />
-          <p className="font-body text-sm md:text-base text-foreground/85 leading-snug max-w-xl">
+          <p className="font-heading text-xl md:text-2xl lg:text-3xl text-foreground/85 tracking-wide uppercase leading-tight">
+            Intelligent Delivery
+          </p>
+          <p className="font-body text-sm md:text-base text-muted-foreground leading-snug max-w-xl mt-3 md:mt-4">
             Real-time data. Intelligent protocol. Peak every day.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-[1.05fr_1fr] gap-3 md:gap-10 items-center">
-          {/* LEFT — layers + trust card (canonical site style) */}
-          <div className="min-w-0 space-y-2.5 md:space-y-3">
+          {/* LEFT — 5 layer cards (canonical site style) */}
+          <div className="min-w-0">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -73,40 +70,9 @@ export default function AvalonOSPreview() {
                 );
               })}
             </motion.div>
-
-            {/* Trust card */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.55, delay: 0.3, ease: EASE }}
-              className="border border-foreground/15 rounded-md md:rounded-xl px-3 md:px-4 py-3"
-            >
-              <div className="flex items-start gap-2.5 md:gap-3 mb-2.5 md:mb-3">
-                <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-body text-[11px] md:text-sm text-foreground leading-snug">Your health. Your data. Our priority.</p>
-                  <p className="font-body text-[9px] md:text-[11px] text-muted-foreground leading-snug mt-0.5">HIPAA-compliant. Bank-level security.</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5 md:gap-2">
-                {CERTS.map((c) => {
-                  const Icon = c.icon;
-                  return (
-                    <div key={c.label} className="flex items-center gap-1.5 px-1.5 md:px-2 py-1.5 border border-foreground/10 rounded">
-                      <Icon className="w-3 h-3 md:w-3.5 md:h-3.5 text-accent/70 shrink-0" strokeWidth={1.5} />
-                      <div className="min-w-0 leading-none">
-                        <p className="font-body text-[8px] md:text-[10px] text-foreground/85 font-semibold tracking-wide uppercase truncate">{c.label}</p>
-                        <p className="font-body text-[6px] md:text-[8px] text-muted-foreground tracking-widest uppercase truncate">{c.sub}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
           </div>
 
-          {/* RIGHT — exact phone screenshot, no React rebuild */}
+          {/* RIGHT — exact phone screenshot, tightly cropped */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -125,7 +91,7 @@ export default function AvalonOSPreview() {
                 src="/avalon-os-phone.webp"
                 alt="Avalon OS — mobile preview of today's morning protocol"
                 width={360}
-                height={910}
+                height={1035}
                 loading="lazy"
                 decoding="async"
                 className="block w-full h-auto mx-auto max-w-[180px] sm:max-w-[230px] md:max-w-[320px]"
