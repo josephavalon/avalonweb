@@ -39,7 +39,7 @@ export default function B2BSection() {
             <p className="font-heading text-2xl md:text-5xl lg:text-6xl text-foreground tracking-wide uppercase leading-[0.95] mb-4 md:mb-8">
               We don&rsquo;t plug in.<br />We <span className="text-accent">integrate</span>.
             </p>
-            <div className="flex justify-start mt-4">
+            <div className="flex justify-center mt-4">
               <a
                 href="mailto:support@avalonvitality.co"
                 className="px-6 py-3 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full"
