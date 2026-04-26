@@ -149,7 +149,7 @@ export default function DehydrationIV() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="border border-border rounded-3xl p-8 bg-card flex flex-col"
+                className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl p-8 flex flex-col"
               >
                 <div className="mb-8">
                   <p className="text-[9px] tracking-[0.3em] text-muted-foreground font-body uppercase mb-3">
@@ -187,7 +187,7 @@ export default function DehydrationIV() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="border border-accent/60 rounded-3xl p-8 bg-card flex flex-col"
+                className="border border-accent/60 bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 flex flex-col"
               >
                 <div className="absolute -top-px left-0 right-0 h-px bg-accent" />
                 

@@ -29,7 +29,7 @@ export default function WhatIsIV() {
             className="hidden md:flex relative items-start justify-start pt-8"
           >
             <div className="relative w-full max-w-xs">
-              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full bg-card">
+              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/10 bg-white/[0.03] backdrop-blur-md">
                 <img
                   src="/bags/immunity.png"
                   alt="Avalon Vitality vitamin IV bag"

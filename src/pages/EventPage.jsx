@@ -45,7 +45,7 @@ export default function EventPage() {
           <div className="grid md:grid-cols-[1fr_360px] gap-8 md:gap-12">
             {/* LEFT: cover poster + body */}
             <div>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE }} className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-border mb-8 bg-card">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE }} className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-md mb-8">
                 <img src={cover} alt={event.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
@@ -64,7 +64,7 @@ export default function EventPage() {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.15, ease: EASE }} className="mt-10 pt-8 border-t border-border">
                 <p className="font-body text-xs tracking-[0.35em] text-accent uppercase mb-5">Hosted by</p>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full border border-foreground/25 bg-secondary flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-md flex items-center justify-center">
                     <span className="font-heading text-sm text-accent tracking-widest">AV</span>
                   </div>
                   <div>
@@ -77,7 +77,7 @@ export default function EventPage() {
 
             {/* RIGHT: details card + CTA */}
             <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: EASE }} className="md:sticky md:top-28 self-start">
-              <div className="border border-border rounded-3xl bg-card p-6 md:p-7">
+              <div className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-7">
                 <div className="space-y-5 mb-6">
                   <div className="flex items-start gap-3">
                     <Calendar className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />

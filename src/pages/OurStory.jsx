@@ -105,7 +105,7 @@ export default function OurStory() {
         <div className="max-w-content mx-auto grid md:grid-cols-2 gap-rhythm-4">
           <motion.div
             {...REVEAL}
-            className="border border-border rounded-2xl p-8 md:p-10 bg-card"
+            className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
           >
             <p className="text-eyebrow text-accent font-body uppercase mb-5">
               Why We Built Avalon
@@ -128,7 +128,7 @@ export default function OurStory() {
           <motion.div
             {...REVEAL}
             transition={{ ...REVEAL.transition, delay: 0.15 }}
-            className="border border-border rounded-2xl p-8 md:p-10 bg-card"
+            className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
           >
             <p className="text-eyebrow text-accent font-body uppercase mb-5">Our Mission</p>
             <h3 className="font-heading text-h3 text-foreground tracking-wide mb-6">
@@ -195,7 +195,7 @@ export default function OurStory() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.08, duration: 0.6, ease: EASE }}
-                className="flex flex-col items-center justify-center gap-3 border border-foreground/25 rounded-2xl p-5 md:p-6 bg-card min-h-[120px]"
+                className="flex flex-col items-center justify-center gap-3 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6 min-h-[120px]"
               >
                 <Icon className="w-5 h-5 text-accent" strokeWidth={1.5} />
                 <span className="font-body text-micro uppercase text-foreground text-center">
@@ -231,9 +231,9 @@ export default function OurStory() {
           <div className="grid md:grid-cols-2 gap-rhythm-4">
             <motion.div
               {...REVEAL}
-              className="border border-border rounded-2xl p-8 md:p-10 bg-card"
+              className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
             >
-              <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center mb-6">
+              <div className="w-14 h-14 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-md flex items-center justify-center mb-6">
                 <span className="font-heading text-xl text-accent tracking-wider">JW</span>
               </div>
               <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">
@@ -252,9 +252,9 @@ export default function OurStory() {
             <motion.div
               {...REVEAL}
               transition={{ ...REVEAL.transition, delay: 0.15 }}
-              className="border border-border rounded-2xl p-8 md:p-10 bg-card"
+              className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
             >
-              <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center mb-6">
+              <div className="w-14 h-14 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-md flex items-center justify-center mb-6">
                 <span className="font-heading text-xl text-accent tracking-wider">SW</span>
               </div>
               <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">

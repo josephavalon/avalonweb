@@ -68,7 +68,7 @@ export default function ClinicalOversight() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
-            className="border border-foreground/25 rounded-3xl bg-card p-6 md:p-8 flex flex-col"
+            className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-8 flex flex-col"
           >
             <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">
               {MEDICAL_DIRECTOR.title}

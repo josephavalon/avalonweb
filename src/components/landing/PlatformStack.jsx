@@ -63,7 +63,7 @@ export default function PlatformStack() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.6, delay: 0.05, ease: EASE }}
-          className="flex items-center gap-3 mb-5 px-3 py-2.5 border border-foreground/15 rounded-lg"
+          className="flex items-center gap-3 mb-5 px-3 py-2.5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-lg"
         >
           <Smartphone className="w-4 h-4 text-accent shrink-0" strokeWidth={1.7} />
           <p className="text-[10px] md:text-[11px] tracking-[0.3em] text-accent font-body uppercase">

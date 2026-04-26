@@ -74,8 +74,8 @@ function PersonCard({ person, i, anchor }) {
       transition={{ duration: 0.7, delay: 0.1 + i * 0.08, ease: EASE }}
       className={`rounded-3xl p-6 md:p-8 flex flex-col ${
         anchor
-          ? 'border border-foreground/25 bg-card'
-          : 'border border-border bg-card/40'
+          ? 'border border-white/15 bg-white/[0.05] backdrop-blur-md'
+          : 'border border-white/10 bg-white/[0.02] backdrop-blur-sm'
       }`}
     >
       <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">

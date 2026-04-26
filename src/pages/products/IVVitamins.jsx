@@ -46,7 +46,7 @@ export default function IVVitaminsCategory() {
               >
                 <Link
                   to={`/products/iv-vitamins/${slugify(t.name)}`}
-                  className="group block h-full border border-border rounded-3xl overflow-hidden bg-card hover:border-accent/40 transition-all duration-500"
+                  className="group block h-full border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden hover:border-accent/50 hover:bg-white/[0.06] transition-all duration-500"
                 >
                   <div className="aspect-square relative overflow-hidden">
                     <img

@@ -139,7 +139,7 @@ export default function ServicePageLayout({
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.06 }}
-                    className="border border-border rounded-3xl bg-card overflow-hidden group hover:border-accent/40 transition-colors"
+                    className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden group hover:border-accent/50 hover:bg-white/[0.06] transition-all"
                   >
                     {href ? (
                       <Link to={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-3xl">

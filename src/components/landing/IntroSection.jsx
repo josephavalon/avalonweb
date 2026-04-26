@@ -94,8 +94,8 @@ export default function IntroSection() {
                   style={{ width: 'calc((100vw - 2rem) / 3)' }}
                   className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[104px] transition-colors ${
                     live
-                      ? 'border-foreground/25 bg-card text-foreground'
-                      : 'border-border bg-card/40 text-muted-foreground/70'
+                      ? 'border-white/15 bg-white/[0.06] backdrop-blur-md text-foreground'
+                      : 'border-white/10 bg-white/[0.02] backdrop-blur-sm text-muted-foreground/70'
                   }`}
                 >
                   <Icon
@@ -126,8 +126,8 @@ export default function IntroSection() {
                 key={label}
                 className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[120px] transition-colors ${
                   live
-                    ? 'border-foreground/25 bg-card text-foreground'
-                    : 'border-border bg-card/40 text-muted-foreground/70'
+                    ? 'border-white/15 bg-white/[0.06] backdrop-blur-md text-foreground'
+                    : 'border-white/10 bg-white/[0.02] backdrop-blur-sm text-muted-foreground/70'
                 }`}
               >
                 <Icon

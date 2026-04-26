@@ -126,7 +126,7 @@ export default function ProductDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE }}
-              className="aspect-square rounded-3xl overflow-hidden border border-border bg-card"
+              className="aspect-square rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-md"
             >
               {t.image && (
                 <img src={t.image} alt={t.name} className="w-full h-full object-contain bg-black" />
@@ -155,7 +155,7 @@ export default function ProductDetail() {
                 <PricingRows t={t} />
               </div>
 
-              <div className="flex items-center gap-3 mb-10 pb-8 border-b border-border/60">
+              <div className="flex items-center gap-3 mb-10 pb-8">
                 <Droplet className="w-4 h-4 text-accent" strokeWidth={1.5} />
                 <span className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground">
                   Direct IV · Administered by a licensed clinician
