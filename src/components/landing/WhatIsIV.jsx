@@ -16,7 +16,7 @@ export default function WhatIsIV() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-6 md:mb-10">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Science</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">WHAT IS IV THERAPY?</h2>
+          <h2 className="font-heading text-foreground tracking-wide md:whitespace-nowrap text-[10vw] md:text-7xl lg:text-8xl">WHAT IS IV THERAPY?</h2>
         </div>
         <div className="grid md:grid-cols-[minmax(320px,380px)_minmax(0,620px)] gap-8 md:gap-10 items-start">
 
