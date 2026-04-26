@@ -11,7 +11,7 @@ export default function CuriositySection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="font-heading text-5xl md:text-6xl text-foreground tracking-wide mb-6">
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
             CURIOUS BUT NOT QUITE READY TO DIVE IN?
           </h2>
           

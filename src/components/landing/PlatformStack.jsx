@@ -48,7 +48,7 @@ export default function PlatformStack() {
           className="text-left mb-5 md:mb-8"
         >
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-3">Operating System</p>
-          <h2 className="font-heading text-[9vw] md:text-6xl lg:text-7xl text-foreground tracking-wide leading-[0.95]">
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
             FROM DELIVERY<br className="md:hidden" /> TO INTELLIGENCE
           </h2>
           <div className="w-10 h-[2px] bg-accent mt-3 mb-4" />
@@ -66,7 +66,7 @@ export default function PlatformStack() {
           className="flex items-center gap-3 mb-5 px-3 py-2.5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-lg"
         >
           <Smartphone className="w-4 h-4 text-accent shrink-0" strokeWidth={1.7} />
-          <p className="text-[10px] md:text-[11px] tracking-[0.3em] text-accent font-body uppercase">
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">
             Avalon OS · Mobile · Coming Soon · iOS &amp; Android
           </p>
         </motion.div>
