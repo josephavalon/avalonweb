@@ -90,7 +90,7 @@ function Sparkline({ color, type, large }) {
 }
 
 function PhoneMockup({ large = false }) {
-  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[140px] sm:max-w-[200px] md:max-w-[300px]';
+  const wrapMax = large ? 'max-w-[320px]' : 'max-w-[160px] sm:max-w-[210px] md:max-w-[320px]';
   const radius = large ? 'rounded-[2.4rem]' : 'rounded-[1.4rem] md:rounded-[2rem]';
   const innerRadius = large ? 'rounded-[2rem]' : 'rounded-[1.2rem] md:rounded-[1.7rem]';
   return (
@@ -207,7 +207,7 @@ function PhoneMockup({ large = false }) {
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-6 md:py-16 px-4 border-t border-border">
+    <section id="avalon-os" className="py-10 md:py-20 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         {/* HEADER — full width, matches other section title cards */}
         <motion.div
@@ -215,19 +215,19 @@ export default function AvalonOSPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-5 md:mb-10"
+          className="text-left mb-7 md:mb-12"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
+          <p className="text-sm md:text-base tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5">Coming Soon</p>
           <h2 className="font-heading text-[14vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.92] uppercase">
             Avalon OS
           </h2>
           <div className="w-10 md:w-14 h-[2px] md:h-[3px] bg-accent mt-3 md:mt-5 mb-3 md:mb-4" />
-          <p className="font-heading text-base md:text-2xl lg:text-3xl text-foreground/85 tracking-wide uppercase leading-tight">
+          <p className="font-heading text-xl md:text-2xl lg:text-3xl text-foreground/85 tracking-wide uppercase leading-tight">
             Intelligent Delivery
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-[1.3fr_1fr] md:grid-cols-2 gap-3 md:gap-10 items-center">
+        <div className="grid grid-cols-[1.3fr_1fr] md:grid-cols-2 gap-4 md:gap-10 items-center">
           {/* LEFT — layers + trust */}
           <div className="min-w-0">
 
@@ -242,18 +242,18 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-start gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-2.5">
-                    <span className="text-[11px] md:text-[12px] tracking-[0.2em] text-accent font-body uppercase w-4 md:w-5 shrink-0 pt-0.5">{l.n}</span>
-                    <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
-                      <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={1.5} />
+                  <div key={l.n} className="flex items-start gap-2.5 md:gap-3 px-3 md:px-4 py-3 md:py-3.5">
+                    <span className="text-[13px] md:text-[14px] tracking-[0.2em] text-accent font-body uppercase w-5 md:w-6 shrink-0 pt-0.5">{l.n}</span>
+                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
+                      <Icon className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-heading text-[12px] md:text-sm text-foreground tracking-wide uppercase leading-none mb-0.5">{l.name}</p>
-                      <p className="font-body text-[8.5px] md:text-[11px] text-muted-foreground leading-snug">
+                      <p className="font-heading text-[14px] md:text-base text-foreground tracking-wide uppercase leading-none mb-1">{l.name}</p>
+                      <p className="font-body text-[11px] md:text-[13px] text-muted-foreground leading-snug">
                         {l.desc}{l.accentTail && <> <span className="text-accent font-normal">{l.accentTail}</span></>}
                       </p>
                     </div>
-                    <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-accent/60 shrink-0" strokeWidth={1.6} />
+                    <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent/60 shrink-0" strokeWidth={1.6} />
                   </div>
                 );
               })}
@@ -265,10 +265,10 @@ export default function AvalonOSPreview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.55, delay: 0.4, ease: EASE }}
-              className="border border-foreground/15 rounded md:rounded-xl px-2 md:px-3 py-2 md:py-2.5 flex items-center gap-2"
+              className="border border-foreground/15 rounded-md md:rounded-xl px-3 md:px-4 py-2.5 md:py-3 flex items-center gap-2.5 md:gap-3"
             >
-              <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent shrink-0" strokeWidth={1.5} />
-              <p className="font-body text-[9px] md:text-[10px] tracking-[0.15em] text-foreground/85 uppercase leading-tight truncate flex-1">
+              <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-accent shrink-0" strokeWidth={1.5} />
+              <p className="font-body text-[11px] md:text-xs tracking-[0.15em] text-foreground/85 uppercase leading-tight truncate flex-1">
                 HIPAA · ISO 27001 · SOC 2
               </p>
             </motion.div>
@@ -294,9 +294,9 @@ export default function AvalonOSPreview() {
             <button
               type="button"
               onClick={() => setZoomed(true)}
-              className="text-[10px] md:text-[10px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1"
+              className="text-[11px] md:text-xs tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1"
             >
-              <ZoomIn className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={1.6} />
+              <ZoomIn className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={1.6} />
               Tap to Zoom
             </button>
           </motion.div>
