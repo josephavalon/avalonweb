@@ -8,8 +8,8 @@ import {
 const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
-  { n: 0, name: 'Input',        desc: 'Tell us your goals.',             icon: ClipboardCheck },
-  { n: 1, name: 'Modalities',   desc: 'IVs, NAD+, peptides, TRT.',       icon: Droplet },
+  { n: 0, name: 'Input',        desc: 'Share your goals and data.',      icon: ClipboardCheck },
+  { n: 1, name: 'Modalities',   desc: 'IVs, IMs, SCs, NAD+, CBD, Peptides, HRT, Supplements, Diet.', icon: Droplet },
   { n: 2, name: 'Protocol',     desc: 'We design what\'s right for you.', icon: Sparkles },
   { n: 3, name: 'Delivery',     desc: 'We ship or come to you.',         icon: Truck },
   { n: 4, name: 'Data',         desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
@@ -20,7 +20,7 @@ const LAYERS = [
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-4 md:py-6 px-4 border-t border-border">
+    <section id="avalon-os" className="py-3 md:py-4 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div
@@ -28,9 +28,9 @@ export default function AvalonOSPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-4 md:mb-5"
+          className="text-left mb-2 md:mb-3"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-2 md:mb-2">Coming Soon</p>
           <h2 className="font-heading text-[14vw] md:text-5xl lg:text-6xl text-foreground tracking-wide leading-[0.92] uppercase">
             Avalon OS
           </h2>
@@ -51,7 +51,7 @@ export default function AvalonOSPreview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
-              className="space-y-2 md:space-y-1.5"
+              className="h-full flex flex-col justify-between gap-2 md:gap-2"
             >
               {LAYERS.map((l) => {
                 const Icon = l.icon;
@@ -96,7 +96,7 @@ export default function AvalonOSPreview() {
                 height={1035}
                 loading="lazy"
                 decoding="async"
-                className="block w-full h-auto mx-auto max-w-[180px] sm:max-w-[220px] md:max-w-[240px] lg:max-w-[260px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
+                className="block w-auto h-auto mx-auto max-h-[480px] md:max-h-[560px] lg:max-h-[620px] max-w-[180px] sm:max-w-[200px] md:max-w-[210px] lg:max-w-[220px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
               />
             </button>
             <button
