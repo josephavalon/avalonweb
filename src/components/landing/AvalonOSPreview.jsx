@@ -18,7 +18,7 @@ const LAYERS = [
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-6 md:py-8 px-4 border-t border-border md:max-h-[calc(100vh-80px)] md:overflow-hidden md:flex md:flex-col md:justify-center">
+    <section id="avalon-os" className="py-8 md:py-14 px-4 border-t border-border">
       <div className="max-w-6xl mx-auto">
         {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div
@@ -29,7 +29,7 @@ export default function AvalonOSPreview() {
           className="text-left mb-4 md:mb-5"
         >
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
-          <h2 className="font-heading text-[14vw] md:text-5xl lg:text-6xl text-foreground tracking-wide leading-[0.92] uppercase">
+          <h2 className="font-heading text-[14vw] md:text-7xl lg:text-8xl text-foreground tracking-wide leading-[0.92] uppercase">
             Avalon OS
           </h2>
           <div className="w-12 md:w-14 h-[2px] md:h-[3px] bg-accent mt-3 md:mt-4 mb-3 md:mb-4" />
@@ -41,7 +41,7 @@ export default function AvalonOSPreview() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-[1.05fr_1fr] gap-3 md:gap-6 items-center">
+        <div className="grid grid-cols-[1.05fr_1fr] gap-3 md:gap-8 items-start">
           {/* LEFT — 5 layer cards (canonical site style) */}
           <div className="min-w-0">
             <motion.div
@@ -94,7 +94,7 @@ export default function AvalonOSPreview() {
                 height={1035}
                 loading="lazy"
                 decoding="async"
-                className="block w-full h-auto mx-auto max-w-[180px] sm:max-w-[220px] md:max-w-[240px] lg:max-w-[260px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
+                className="block w-full h-auto mx-auto max-w-[180px] sm:max-w-[220px] md:max-w-[280px] lg:max-w-[320px] rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-foreground/10"
               />
             </button>
             <button
