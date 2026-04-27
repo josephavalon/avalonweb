@@ -8,7 +8,7 @@ const steps = [
   {
     icon: CalendarCheck,
     title: 'Book in Minutes',
-    desc: 'Online or by text.',
+    desc: 'Online, phone, or text.',
   },
   {
     icon: MapPin,
