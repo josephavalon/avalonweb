@@ -5,7 +5,7 @@ const SECTIONS = [
   {
     h: 'Who we are',
     p: [
-      'Avalon Vitality, Inc. ("Avalon," "we," "us," "our") is a California-licensed mobile health and longevity service operating exclusively in California. We provide in-home and concierge IV therapy, intramuscular and subcutaneous injections, NAD+, peptides (where available), supplements, and software-driven protocol design via the Avalon OS platform.',
+      'Avalon Vitality ("Avalon," "we," "us," "our") is a California-licensed mobile health and longevity service operating exclusively in California. We provide in-home and concierge IV therapy, intramuscular and subcutaneous injections, NAD+, peptides (where available), supplements, and software-driven protocol design via the Avalon OS platform.',
       'This Privacy Policy explains how we collect, use, share, and protect your personal information when you visit avalonvitality.co, use the Avalon OS application, or engage our clinical services.',
     ],
   },
@@ -128,7 +128,7 @@ const SECTIONS = [
     p: [
       'Privacy questions or rights requests: privacy@avalonvitality.co',
       'General inquiries: support@avalonvitality.co · (415) 980-7708',
-      'Avalon Vitality, Inc. · San Francisco, California · United States',
+      'Avalon Vitality · San Francisco, California · United States',
     ],
   },
 ];

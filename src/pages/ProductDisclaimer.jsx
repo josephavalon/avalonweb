@@ -5,7 +5,7 @@ const SECTIONS = [
   {
     h: 'FDA disclaimer',
     p: [
-      'Statements made by Avalon Vitality, Inc. about its services, products, IV therapies, intramuscular injections, subcutaneous injections, NAD+, peptides, supplements, and any related items have not been evaluated by the U.S. Food and Drug Administration. Avalon\'s services and products are not intended to diagnose, treat, cure, or prevent any disease.',
+      'Statements made by Avalon Vitality about its services, products, IV therapies, intramuscular injections, subcutaneous injections, NAD+, peptides, supplements, and any related items have not been evaluated by the U.S. Food and Drug Administration. Avalon\'s services and products are not intended to diagnose, treat, cure, or prevent any disease.',
     ],
   },
   {

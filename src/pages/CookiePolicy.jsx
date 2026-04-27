@@ -6,7 +6,7 @@ const SECTIONS = [
     h: 'What cookies are',
     p: [
       'Cookies are small text files placed on your device when you visit a website. They allow the site to recognize your device and remember things about your visit (such as your settings, login state, and how you arrived at the site).',
-      'This Cookie Policy describes how Avalon Vitality, Inc. ("Avalon," "we," "us") uses cookies and similar technologies on avalonvitality.co and within Avalon OS.',
+      'This Cookie Policy describes how Avalon Vitality ("Avalon," "we," "us") uses cookies and similar technologies on avalonvitality.co and within Avalon OS.',
     ],
   },
   {

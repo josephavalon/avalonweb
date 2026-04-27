@@ -6,13 +6,13 @@ const SECTIONS = [
     h: 'Your rights',
     p: [
       'This Notice describes how medical information about you may be used and disclosed and how you can get access to this information. Please review it carefully.',
-      'Avalon Vitality, Inc. is required by law to protect the privacy of your protected health information ("PHI"), provide you with this Notice of our legal duties and privacy practices, and follow the terms of the Notice currently in effect.',
+      'Avalon Vitality is required by law to protect the privacy of your protected health information ("PHI"), provide you with this Notice of our legal duties and privacy practices, and follow the terms of the Notice currently in effect.',
     ],
   },
   {
     h: 'Who follows this notice',
     p: [
-      'This Notice applies to Avalon Vitality, Inc. and all employees, clinicians, contractors, and business associates who provide healthcare services on Avalon\'s behalf in California.',
+      'This Notice applies to Avalon Vitality and all employees, clinicians, contractors, and business associates who provide healthcare services on Avalon\'s behalf in California.',
     ],
   },
   {
@@ -82,7 +82,7 @@ const SECTIONS = [
   {
     h: 'Contact our Privacy Officer',
     p: [
-      'Avalon Vitality, Inc. · Attn: Privacy Officer',
+      'Avalon Vitality · Attn: Privacy Officer',
       'San Francisco, California',
       'privacy@avalonvitality.co · (415) 980-7708',
     ],

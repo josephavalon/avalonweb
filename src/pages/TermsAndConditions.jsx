@@ -12,7 +12,7 @@ const SECTIONS = [
   {
     h: '2. Who we are and where we operate',
     p: [
-      'Avalon Vitality, Inc. is a California corporation. The Services are offered exclusively to California residents physically located in California at the time of service. We do not currently provide services outside California.',
+      'Avalon Vitality is a California corporation. The Services are offered exclusively to California residents physically located in California at the time of service. We do not currently provide services outside California.',
       'All clinical services are provided by California-licensed physicians, nurse practitioners, registered nurses, and other healthcare professionals operating within their California scope of practice.',
     ],
   },
@@ -86,7 +86,7 @@ const SECTIONS = [
   {
     h: '13. Intellectual property',
     p: [
-      'Avalon, Avalon Vitality, Avalon OS, the Avalon logo and word marks, and all content of the Services are owned by Avalon Vitality, Inc. or its licensors. Nothing in these Terms grants you any right in or to our intellectual property except a limited, revocable, non-exclusive license to use the Services as intended.',
+      'Avalon, Avalon Vitality, Avalon OS, the Avalon logo and word marks, and all content of the Services are owned by Avalon Vitality or its licensors. Nothing in these Terms grants you any right in or to our intellectual property except a limited, revocable, non-exclusive license to use the Services as intended.',
     ],
   },
   {
@@ -158,7 +158,7 @@ const SECTIONS = [
   {
     h: '24. Contact',
     p: [
-      'Avalon Vitality, Inc. · San Francisco, California',
+      'Avalon Vitality · San Francisco, California',
       'support@avalonvitality.co · (415) 980-7708',
     ],
   },

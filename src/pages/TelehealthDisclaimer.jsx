@@ -5,7 +5,7 @@ const SECTIONS = [
   {
     h: 'Scope',
     p: [
-      'Avalon Vitality, Inc. provides certain services via telehealth to California residents physically located in California at the time of service. Telehealth services are provided in accordance with California Business and Professions Code §2290.5 and other applicable California law.',
+      'Avalon Vitality provides certain services via telehealth to California residents physically located in California at the time of service. Telehealth services are provided in accordance with California Business and Professions Code §2290.5 and other applicable California law.',
     ],
   },
   {
