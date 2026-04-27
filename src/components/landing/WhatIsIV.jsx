@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const stats = [
   { value: 'Full', label: 'Bioavailability', sub: 'vs. ~10–20% from oral supplementation' },
-  { value: '30min', label: 'Average Session', sub: 'typical infusion time, door-to-door' },
+  { value: '30min', label: 'Average Session', sub: 'typical infusion time' },
   { value: '0%', label: 'Digestive Loss', sub: 'bypasses the gut entirely' },
   { value: 'MD', label: 'Physician Supervised', sub: 'all protocols reviewed by a licensed physician' },
   { value: '100%', label: 'Customizable', sub: 'formulas tailored to your preferences' },

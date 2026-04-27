@@ -29,10 +29,26 @@ const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (hash) {
+      // Section anchor — wait for lazy components to mount, then scroll into view
+      const id = hash.slice(1);
+      let attempts = 0;
+      const tryScroll = () => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (attempts < 12) {
+          attempts += 1;
+          setTimeout(tryScroll, 80);
+        }
+      };
+      tryScroll();
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
   return null;
 };
 

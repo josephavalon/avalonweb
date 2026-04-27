@@ -83,10 +83,10 @@ export default function Navbar() {
 
         {/* Center links */}
         <div className="flex items-center gap-10">
-          <a href="/#how-it-works" className={linkClass}>How It Works</a>
-          <a href="/#treatments" className={linkClass}>Treatments</a>
-          <a href="/#membership" className={linkClass}>Membership</a>
-          <a href="/#events" className={linkClass}>News & Events</a>
+          <Link to="/#how-it-works" className={linkClass}>How It Works</Link>
+          <Link to="/#treatments" className={linkClass}>Treatments</Link>
+          <Link to="/#membership" className={linkClass}>Membership</Link>
+          <Link to="/#events" className={linkClass}>News & Events</Link>
         </div>
 
         {/* Theme toggle and Login far right */}
@@ -137,10 +137,10 @@ export default function Navbar() {
             className="md:hidden backdrop-blur-md bg-background/30 border-t border-white/10 overflow-hidden"
           >
             <div className="px-6 py-6 space-y-5">
-              <a href="/#how-it-works" className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How It Works</a>
-              <a href="/#treatments" className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</a>
-              <a href="/#membership" className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</a>
-              <a href="/#events" className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">News & Events</a>
+              <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How It Works</Link>
+              <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
+              <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
+              <Link to="/#events" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">News & Events</Link>
               <Link to="/apply" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Apply</Link>
             </div>
           </motion.div>
