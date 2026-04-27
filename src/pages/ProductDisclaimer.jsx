@@ -1,104 +1,72 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import Navbar from '../components/landing/Navbar';
-import Footer from '../components/landing/Footer';
+import LegalPageShell from '../components/landing/LegalPageShell';
+
+const SECTIONS = [
+  {
+    h: 'FDA disclaimer',
+    p: [
+      'Statements made by Avalon Vitality, Inc. about its services, products, IV therapies, intramuscular injections, subcutaneous injections, NAD+, peptides, supplements, and any related items have not been evaluated by the U.S. Food and Drug Administration. Avalon\'s services and products are not intended to diagnose, treat, cure, or prevent any disease.',
+    ],
+  },
+  {
+    h: 'Educational purpose',
+    p: [
+      'Information provided through avalonvitality.co, the Avalon OS application, and our marketing materials is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician or other qualified healthcare provider.',
+      'Always seek the advice of your physician or other qualified healthcare provider with any questions you may have regarding a medical condition or treatment.',
+    ],
+  },
+  {
+    h: 'Individual results vary',
+    p: [
+      'Individual experience and outcomes vary. Testimonials, reviews, and case studies presented on the Services reflect the personal experience of specific individuals and are not a guarantee of results for any other person.',
+      'No clinical service or wellness protocol can guarantee a specific outcome. Your results will depend on many factors, including baseline health, adherence to recommendations, lifestyle, and biology.',
+    ],
+  },
+  {
+    h: 'Compounded medications and peptides',
+    p: [
+      'Where Avalon offers compounded medications or peptides, those preparations are dispensed only after evaluation by a California-licensed clinician and are compounded by licensed compounding pharmacies. Compounded products are not FDA-approved.',
+      'Discuss any clinical concerns, allergies, drug interactions, and medical history thoroughly with your clinician before beginning any therapy.',
+    ],
+  },
+  {
+    h: 'Supplements and nutrition',
+    p: [
+      'Dietary supplements and nutritional products offered through Avalon are subject to the Dietary Supplement Health and Education Act and the FDA disclaimer above. They are not drugs and are not intended to diagnose, treat, cure, or prevent any disease.',
+    ],
+  },
+  {
+    h: 'Risks and contraindications',
+    p: [
+      'Every clinical service carries risk. Your Avalon clinician will discuss material risks specific to your situation, including but not limited to bruising, infection, allergic reaction, and rare adverse events. Inform your clinician of all medications, supplements, allergies, and pre-existing conditions before any service.',
+    ],
+  },
+  {
+    h: 'No guarantee',
+    p: [
+      'Nothing on the Services constitutes a warranty or guarantee of any specific medical, aesthetic, or wellness outcome.',
+    ],
+  },
+  {
+    h: 'Contact',
+    p: [
+      'Clinical questions: support@avalonvitality.co · (415) 980-7708',
+    ],
+  },
+];
 
 export default function ProductDisclaimer() {
   return (
-    <div className="bg-background min-h-screen">
-      <Navbar />
-      
-      <section className="py-12 md:py-16 px-6 md:px-16 border-b border-border">
-        <div className="max-w-3xl mx-auto">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="font-heading text-6xl md:text-7xl text-foreground tracking-wide mb-3"
-          >
-            PRODUCT DISCLAIMER
-          </motion.h1>
-          <p className="font-body text-sm text-muted-foreground">Last updated: April 2026</p>
-        </div>
-      </section>
-
-      <section className="py-12 px-6 md:px-16">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="space-y-4"
-          >
-            <h2 className="font-heading text-2xl text-foreground tracking-wide">Medical Disclaimer</h2>
-            <p className="font-body text-muted-foreground leading-relaxed">
-              The information provided on this website and through our services is for educational purposes only and should not be considered medical advice. IV therapy and nutritional supplements are not intended to diagnose, treat, cure, or prevent any disease.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="space-y-4"
-          >
-            <h2 className="font-heading text-2xl text-foreground tracking-wide">Professional Consultation</h2>
-            <p className="font-body text-muted-foreground leading-relaxed">
-              Before receiving any IV therapy or nutritional treatment, you should consult with a qualified healthcare provider to determine if it is appropriate for your individual health situation. Our medical team will conduct a comprehensive assessment, but ultimate responsibility for your health decisions rests with you.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="space-y-4"
-          >
-            <h2 className="font-heading text-2xl text-foreground tracking-wide">Ingredient Information</h2>
-            <p className="font-body text-muted-foreground leading-relaxed">
-              All ingredients used in our IV formulations are pharmaceutical-grade and meet FDA standards. However, individual reactions to ingredients may vary. Please disclose all allergies, sensitivities, and current medications during your consultation.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="space-y-4"
-          >
-            <h2 className="font-heading text-2xl text-foreground tracking-wide">Results Vary</h2>
-            <p className="font-body text-muted-foreground leading-relaxed">
-              Individual results from IV therapy vary based on personal health status, lifestyle factors, and overall wellness practices. We cannot guarantee specific outcomes, and testimonials on our website represent individual experiences and should not be construed as guaranteed results.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="space-y-4"
-          >
-            <h2 className="font-heading text-2xl text-foreground tracking-wide">Contraindications</h2>
-            <p className="font-body text-muted-foreground leading-relaxed">
-              Certain medical conditions may contraindicate IV therapy. These include but are not limited to: kidney disease, heart failure, severe allergies, and certain autoimmune conditions. Our medical team will screen for contraindications during your assessment.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="space-y-4"
-          >
-            <h2 className="font-heading text-2xl text-foreground tracking-wide">Contact Us</h2>
-            <p className="font-body text-muted-foreground leading-relaxed">
-              If you have questions about our products or this disclaimer, please contact us at support@avalonvitality.co.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      <Footer />
-    </div>
+    <LegalPageShell
+      eyebrow="Legal"
+      title="Product Disclaimer"
+      lastUpdated="April 26, 2026"
+      sections={SECTIONS}
+      related={[
+        { to: '/terms-and-conditions', label: 'Terms of Service' },
+        { to: '/telehealth-disclaimer', label: 'Telehealth Consent' },
+        { to: '/notice-of-privacy-practices', label: 'Notice of Privacy Practices' },
+      ]}
+    />
   );
 }

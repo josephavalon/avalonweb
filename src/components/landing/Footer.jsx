@@ -1,32 +1,77 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, Clock } from 'lucide-react';
+import { Mail, Phone, Clock, ChevronDown } from 'lucide-react';
+
+const LEGAL = [
+  { label: 'Terms of Service', to: '/terms-and-conditions' },
+  { label: 'Privacy Policy', to: '/privacy-policy' },
+  { label: 'Notice of Privacy Practices', to: '/notice-of-privacy-practices' },
+  { label: 'Cookie Policy', to: '/cookie-policy' },
+  { label: 'Telehealth Consent', to: '/telehealth-disclaimer' },
+  { label: 'Product Disclaimer', to: '/product-disclaimer' },
+];
+
+function LegalDropdown() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      {/* Header — clickable on mobile, static label on desktop */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="md:cursor-default md:pointer-events-none w-full flex items-center justify-between text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4"
+      >
+        <span>Legal</span>
+        <ChevronDown
+          className={`w-4 h-4 text-foreground/70 md:hidden transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          strokeWidth={1.6}
+        />
+      </button>
+
+      {/* Links — collapsed on mobile until tapped, always visible on desktop */}
+      <div className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:!max-h-none md:!opacity-100 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:opacity-100'}`}>
+        <div className="space-y-2 md:space-y-2.5 pt-1 md:pt-0">
+          {LEGAL.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Footer() {
   return (
     <footer className="py-6 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Brand block — full-width on mobile, spans 2 cols on desktop */}
+        {/* Brand block — full-width on mobile */}
         <div className="mb-6 md:hidden">
           <div className="mb-2">
             <div className="font-heading text-2xl tracking-widest">AVALON</div>
             <div className="text-xs tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
           </div>
           <p className="font-body text-xs text-foreground leading-snug text-left max-w-sm">
-            Mobile therapy, delivered. Hydration, NAD+, and CBD infusions administered by licensed nurses throughout the San Francisco Bay Area.
+            Mobile longevity, delivered. Hydration, NAD+, peptides, and intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
           </p>
         </div>
 
-        {/* Desktop grid: brand (2) + Services + Company + About = 5 cols
-            Mobile: 3-col grid — Services | Company | About Us on one row */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-x-3 md:gap-x-4 gap-y-6 md:gap-8 mb-6 md:mb-8">
-          <div className="hidden md:block md:col-span-2">
+        {/* Desktop: brand (2) + Services + Company + Legal + About = 6 cols
+            Mobile: 2-col grid where Legal becomes a dropdown spanning width */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-6 md:gap-8 mb-6 md:mb-8">
+          <div className="col-span-2 hidden md:block md:col-span-2">
             <div className="mb-3">
               <div className="font-heading text-2xl tracking-widest">AVALON</div>
               <div className="text-xs tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
             </div>
             <p className="font-body text-xs text-foreground leading-tight max-w-xs text-left">
-              Mobile therapy, delivered. Hydration, NAD+, and CBD infusions administered by licensed nurses throughout the San Francisco Bay Area.
+              Mobile longevity, delivered. Hydration, NAD+, peptides, and intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
             </p>
           </div>
 
@@ -38,7 +83,7 @@ export default function Footer() {
                 { label: 'NAD+', href: '/services/nad' },
                 { label: 'IV CBD', href: '/services/cbd' },
               ].map((l) => (
-                <Link key={l.href} to={l.href} className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">
+                <Link key={l.href} to={l.href} className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">
                   {l.label}
                 </Link>
               ))}
@@ -48,50 +93,53 @@ export default function Footer() {
           <div>
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Company</p>
             <div className="space-y-2 md:space-y-2.5">
-              <a href="/#membership" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Membership</a>
-              <Link to="/our-story" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Story</Link>
-              <Link to="/team" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Our Team</Link>
-              <Link to="/faq" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">FAQ</Link>
-              <a href="/#events" className="block text-xs text-foreground hover:text-foreground transition-colors font-body uppercase tracking-wider">Events</a>
+              <a href="/#membership" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Membership</a>
+              <Link to="/our-story" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Our Story</Link>
+              <Link to="/team" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Our Team</Link>
+              <Link to="/faq" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">FAQ</Link>
+              <a href="/#events" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Events</a>
             </div>
           </div>
 
-          <div>
+          {/* Legal — dropdown on mobile, expanded on desktop */}
+          <div className="col-span-2 md:col-span-1">
+            <LegalDropdown />
+          </div>
+
+          <div className="col-span-2 md:col-span-1">
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">About Us</p>
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-2 md:gap-3">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <a href="mailto:support@avalonvitality.co" className="text-[11px] md:text-xs text-foreground hover:text-foreground transition-colors font-body whitespace-nowrap">support@avalonvitality.co</a>
+                <a href="mailto:support@avalonvitality.co" className="text-[11px] md:text-xs text-foreground hover:text-accent transition-colors font-body whitespace-nowrap">support@avalonvitality.co</a>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <a href="tel:+14159807708" className="text-xs md:text-xs text-foreground hover:text-foreground transition-colors font-body">(415) 980-7708</a>
+                <a href="tel:+14159807708" className="text-xs md:text-xs text-foreground hover:text-accent transition-colors font-body">(415) 980-7708</a>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
                 <span className="text-xs md:text-xs text-foreground font-body">Mon–Sun · 8AM–8PM</span>
               </div>
               <div className="flex items-start gap-2 md:gap-3">
-                <span className="text-xs md:text-xs text-foreground font-body">San Francisco Bay Area</span>
+                <span className="text-xs md:text-xs text-foreground font-body">San Francisco Bay Area · California</span>
               </div>
-              {/* Social links hidden until real handles are live. */}
             </div>
           </div>
         </div>
 
         <div className="pt-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
-            <p className="font-body text-xs text-foreground">© 2026 Avalon Vitality. All rights reserved.</p>
+            <p className="font-body text-xs text-foreground">© 2026 Avalon Vitality, Inc. All rights reserved.</p>
             <p className="font-body text-xs text-foreground max-w-md text-center md:text-right">
-              IV therapy supports wellness and is not intended to diagnose, treat, cure, or prevent any disease. Services administered by licensed registered nurses under physician supervision.
+              Avalon services are provided exclusively to California residents physically located in California at the time of service.
             </p>
           </div>
-          <div className="pt-4/50 mb-6">
-            <p className="font-body text-xs text-foreground leading-relaxed text-center md:text-right">
-              The services provided have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure or prevent any disease. The material on this website is provided for informational purposes only and is not medical advice. Always consult your physician before beginning any treatment or therapy program. Any designations or references to therapies are for marketing purposes only and do not represent actual products.
+          <div className="pt-4 mb-6">
+            <p className="font-body text-xs text-foreground/80 leading-relaxed text-center md:text-right">
+              Statements made by Avalon Vitality, Inc. about its services and products have not been evaluated by the U.S. Food and Drug Administration. The Services are not intended to diagnose, treat, cure, or prevent any disease. Information provided is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician. Individual results vary. Always consult your physician before beginning any therapy.
             </p>
           </div>
-
         </div>
       </div>
     </footer>

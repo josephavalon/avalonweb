@@ -24,6 +24,8 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 const TelehealthDisclaimer = lazy(() => import('./pages/TelehealthDisclaimer'));
 const ProductDisclaimer = lazy(() => import('./pages/ProductDisclaimer'));
+const NoticeOfPrivacyPractices = lazy(() => import('./pages/NoticeOfPrivacyPractices'));
+const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
 
 const ScrollToTop = () => {
@@ -62,6 +64,10 @@ function AppRoutes() {
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
             <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
+            <Route path="/notice-of-privacy-practices" element={<NoticeOfPrivacyPractices />} />
+            <Route path="/hipaa-notice" element={<NoticeOfPrivacyPractices />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>
