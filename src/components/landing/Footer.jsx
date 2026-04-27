@@ -14,29 +14,33 @@ const LEGAL = [
 function LegalDropdown() {
   const [open, setOpen] = useState(false);
   return (
-    <div>
-      {/* Header — clickable on mobile, static label on desktop */}
+    <div className="pt-1">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="md:cursor-default md:pointer-events-none w-full flex items-center justify-between text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4"
+        className="w-full flex items-center justify-between gap-2 text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider"
       >
-        <span>Legal</span>
-        <ChevronDown
-          className={`w-4 h-4 text-foreground/70 md:hidden transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
-          strokeWidth={1.6}
-        />
+        <span className="flex items-center gap-1">
+          Legal
+          <ChevronDown
+            className={`w-3.5 h-3.5 text-foreground/70 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+            strokeWidth={1.6}
+          />
+        </span>
       </button>
 
-      {/* Links — collapsed on mobile until tapped, always visible on desktop */}
-      <div className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:!max-h-none md:!opacity-100 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:opacity-100'}`}>
-        <div className="space-y-2 md:space-y-2.5 pt-1 md:pt-0">
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          open ? 'max-h-96 opacity-100 mt-2.5' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="space-y-2 md:space-y-2.5 pl-3 border-l border-white/10">
           {LEGAL.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider"
+              className="block text-[11px] md:text-xs text-muted-foreground hover:text-accent transition-colors font-body uppercase tracking-wider"
             >
               {l.label}
             </Link>
@@ -62,10 +66,10 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Desktop: brand (2) + Services + Company + Legal + About = 6 cols
-            Mobile: 2-col grid where Legal becomes a dropdown spanning width */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-6 md:gap-8 mb-6 md:mb-8">
-          <div className="col-span-2 hidden md:block md:col-span-2">
+        {/* Desktop grid: brand (2) + Services + Company + About = 5 cols
+            Mobile: 3-col grid — Services | Company | About Us */}
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-x-3 md:gap-x-4 gap-y-6 md:gap-8 mb-6 md:mb-8">
+          <div className="hidden md:block md:col-span-2">
             <div className="mb-3">
               <div className="font-heading text-2xl tracking-widest">AVALON</div>
               <div className="text-xs tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
@@ -98,15 +102,12 @@ export default function Footer() {
               <Link to="/team" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Our Team</Link>
               <Link to="/faq" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">FAQ</Link>
               <a href="/#events" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Events</a>
+              {/* Legal sits as last item under Company, expandable */}
+              <LegalDropdown />
             </div>
           </div>
 
-          {/* Legal — dropdown on mobile, expanded on desktop */}
-          <div className="col-span-2 md:col-span-1">
-            <LegalDropdown />
-          </div>
-
-          <div className="col-span-2 md:col-span-1">
+          <div>
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">About Us</p>
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-2 md:gap-3">
@@ -115,14 +116,14 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <a href="tel:+14159807708" className="text-xs md:text-xs text-foreground hover:text-accent transition-colors font-body">(415) 980-7708</a>
+                <a href="tel:+14159807708" className="text-xs text-foreground hover:text-accent transition-colors font-body">(415) 980-7708</a>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <span className="text-xs md:text-xs text-foreground font-body">Mon–Sun · 8AM–8PM</span>
+                <span className="text-xs text-foreground font-body">Mon–Sun · 8AM–8PM</span>
               </div>
               <div className="flex items-start gap-2 md:gap-3">
-                <span className="text-xs md:text-xs text-foreground font-body">San Francisco Bay Area · California</span>
+                <span className="text-xs text-foreground font-body">San Francisco Bay Area · CA</span>
               </div>
             </div>
           </div>
