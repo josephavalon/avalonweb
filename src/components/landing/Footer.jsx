@@ -11,7 +11,13 @@ const LEGAL = [
   { label: 'Product Disclaimer', to: '/product-disclaimer' },
 ];
 
-function LegalDropdown() {
+const ABOUT = [
+  { label: 'Our Story', to: '/our-story' },
+  { label: 'Our Team', to: '/team' },
+];
+
+// Reusable inline expandable group used inside the Company column
+function CollapsibleGroup({ label, items }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="pt-1">
@@ -22,7 +28,7 @@ function LegalDropdown() {
         className="w-full flex items-center justify-between gap-2 text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider"
       >
         <span className="flex items-center gap-1">
-          Legal
+          {label}
           <ChevronDown
             className={`w-3.5 h-3.5 text-foreground/70 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
             strokeWidth={1.6}
@@ -36,7 +42,7 @@ function LegalDropdown() {
         }`}
       >
         <div className="space-y-2 md:space-y-2.5 pl-3 border-l border-white/10">
-          {LEGAL.map((l) => (
+          {items.map((l) => (
             <Link
               key={l.to}
               to={l.to}
@@ -98,17 +104,15 @@ export default function Footer() {
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Company</p>
             <div className="space-y-2 md:space-y-2.5">
               <a href="/#membership" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Membership</a>
-              <Link to="/our-story" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Our Story</Link>
-              <Link to="/team" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Our Team</Link>
+              <CollapsibleGroup label="About Us" items={ABOUT} />
               <Link to="/faq" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">FAQ</Link>
               <a href="/#events" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Events</a>
-              {/* Legal sits as last item under Company, expandable */}
-              <LegalDropdown />
+              <CollapsibleGroup label="Legal" items={LEGAL} />
             </div>
           </div>
 
           <div>
-            <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">About Us</p>
+            <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Contact</p>
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-2 md:gap-3">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
