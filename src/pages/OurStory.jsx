@@ -9,6 +9,9 @@ import {
   Hotel,
   Users,
   Calendar,
+  Star,
+  HeartPulse,
+  Sparkles,
 } from 'lucide-react';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
@@ -65,6 +68,70 @@ export default function OurStory() {
             <br />
             THE GOLDEN STATE
           </motion.h1>
+        </div>
+      </section>
+
+      {/* What makes us different — 4-tile glass grid */}
+      <section className="px-6 md:px-16 py-section-sm md:py-section">
+        <div className="max-w-content mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-10%' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="text-left mb-8 md:mb-12"
+          >
+            <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Standards</p>
+            <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+              What makes us different
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+            {[
+              {
+                Icon: Star,
+                title: 'Endorsed by Diplo',
+                desc: '5-star review from a Grammy-winning founder of culture.',
+              },
+              {
+                Icon: Stethoscope,
+                title: 'Expert medical team',
+                desc: 'Board-certified clinicians, RNs, and longevity-trained nurses.',
+              },
+              {
+                Icon: HeartPulse,
+                title: 'Comprehensive care',
+                desc: 'IV, IM, SC, NAD+, peptides, HRT, supplements, and diet — under one protocol.',
+              },
+              {
+                Icon: Sparkles,
+                title: 'Custom protocols',
+                desc: 'Designed to your goals, your data, your biology — not a menu.',
+              },
+            ].map(({ Icon, title, desc }, i) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-10%' }}
+                transition={{ duration: 0.6, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-7 flex flex-col items-start gap-4"
+              >
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
+                  <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="font-heading text-base md:text-lg text-foreground tracking-wide uppercase leading-tight mb-2">
+                    {title}
+                  </p>
+                  <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed">
+                    {desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
