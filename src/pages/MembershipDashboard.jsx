@@ -108,7 +108,7 @@ export default function MembershipDashboard() {
             <p className="text-center font-body text-xs text-muted-foreground/75 pt-1">
               Don't have an account?{' '}
               <Link to="/apply" className="text-foreground font-semibold hover:underline">
-                Apply Now
+                Start Now
               </Link>
             </p>
 

@@ -76,7 +76,7 @@ export default function OurDrips() {
                   <h3 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-1">{cat.label}</h3>
 
                   <span className="inline-flex items-center gap-2 text-accent group-hover:text-accent/80 transition-colors text-sm md:text-base font-body uppercase tracking-wider mt-3">
-                    {cat.comingSoon ? 'Apply Now' : 'More'}
+                    {cat.comingSoon ? 'Start Now' : 'More'}
                     <ChevronDown className="w-3 h-3" />
                   </span>
                 </div>

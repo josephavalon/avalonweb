@@ -44,15 +44,6 @@ export default function Hero() {
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
-          <motion.p
-            initial={{ opacity: 0, letterSpacing: '0.1em' }}
-            animate={{ opacity: 1, letterSpacing: '0.4em' }}
-            transition={{ duration: 1.2, delay: 0.3 }}
-            className="font-body text-xs tracking-[0.4em] text-accent uppercase mb-5"
-          >
-            Coming Soon — SF Bay Area
-          </motion.p>
-
           <motion.h1
             initial={{ opacity: 0, y: 60, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -80,7 +71,7 @@ export default function Hero() {
                   to="/apply"
                   className="apply-now-btn inline-block px-10 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap shrink-0"
                 >
-                  Apply Now
+                  Start Now
                 </Link>
               </MagneticButton>
             </div>
