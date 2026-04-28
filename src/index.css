@@ -354,3 +354,28 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ===== Cross-browser display fixes ===== */
+/* Fallback for browsers without backdrop-filter (older Edge, some Microsoft browsers) — slightly bump glass opacity so cards aren't invisible */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [class*="backdrop-blur"] {
+    background-color: rgb(255 255 255 / 0.07) !important;
+  }
+}
+
+/* Ensure backdrop-filter has webkit prefix for older Microsoft Edge / iOS Safari */
+[class*="backdrop-blur-md"] {
+  -webkit-backdrop-filter: blur(12px);
+}
+[class*="backdrop-blur-sm"] {
+  -webkit-backdrop-filter: blur(4px);
+}
+[class*="backdrop-blur-xl"] {
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* 100svh fallback for browsers that don't support svh units (older Edge, older Chromium) */
+@supports not (height: 100svh) {
+  .min-h-\[100svh\] { min-height: 100vh; }
+  .h-\[100svh\] { height: 100vh; }
+}

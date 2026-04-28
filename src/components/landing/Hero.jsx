@@ -24,7 +24,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-root relative h-[100svh] flex items-center justify-center overflow-hidden pt-20 md:pt-24 pb-16 md:pb-20"
+      className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden pt-20 md:pt-24 pb-8 md:pb-12"
     >
       {/* Parallax BG */}
       <div className="absolute inset-0 pointer-events-none">
@@ -41,7 +41,7 @@ export default function Hero() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
       </div>
 
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center gap-6 md:gap-10 w-full flex-1">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
           <motion.p
@@ -90,23 +90,23 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Glass divider above bottom subhead */}
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-20 md:bottom-24 left-0 right-0 z-20 h-px bg-foreground/20 mx-auto max-w-xs md:max-w-md origin-center"
-      />
-
-      {/* Bottom-of-hero subhead — absolutely positioned at section bottom */}
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-8 md:bottom-12 left-0 right-0 z-20 text-center px-4 font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
-      >
-        Built for high-performers who don't have time to slow down.
-      </motion.p>
+      {/* Bottom band: glass divider + subhead in normal flow (prevents overlap on any viewport/browser) */}
+      <div className="relative z-10 w-full px-4 flex flex-col items-center gap-4 md:gap-6 pb-2">
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 1, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          className="h-px bg-foreground/20 w-full max-w-xs md:max-w-md origin-center"
+        />
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
+        >
+          Built for high-performers who don't have time to slow down.
+        </motion.p>
+      </div>
     </section>
   );
 }
