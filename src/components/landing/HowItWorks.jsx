@@ -50,7 +50,7 @@ export default function HowItWorks() {
           <div className="text-left max-w-3xl">
             <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Process</p>
             <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
-              HOW IT WORKS
+              HOW AVALON WORKS
             </h2>
             <p className="font-body text-sm text-foreground mt-4 max-w-2xl">
               <a href="/#membership" className="text-accent hover:text-accent/80 underline">
