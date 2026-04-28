@@ -210,7 +210,7 @@ export default function MembershipSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-left mb-3 md:mb-6">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Presale — Limited Availability</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">MEMBERSHIP</h2>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">VITALITY MEMBERSHIP</h2>
           <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
             One membership tier. Pick your protocol — CBD, Vitamins, or NAD+.</p>
         </div>

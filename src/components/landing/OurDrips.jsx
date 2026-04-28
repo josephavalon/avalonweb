@@ -1,90 +1,126 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { Droplets, Zap, Plus } from 'lucide-react';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
-const categories = [
+const EASE = [0.16, 1, 0.3, 1];
+
+const treatments = [
   {
-    label: 'Vitamins',
+    label: 'IV Vitamins',
     href: '/services/iv-vitamins',
-    tag: 'FROM $150 — WELLNESS FOUNDATION',
-    desc: 'Dehydration, Myers\' Cocktail, Recovery, Athletic, Glow & more.',
-    image: '/bags/immunity.png',
+    icon: Droplets,
+    price: 150,
+    suffix: '/ session',
+    tag: 'Wellness Foundation',
+    perks: [
+      'Dehydration · Myers’ Cocktail · Recovery',
+      'Athletic · Glow · Immunity',
+      'B-complex, magnesium, glutathione options',
+      'In-home or concierge',
+    ],
   },
   {
-    label: 'NAD+',
+    label: 'NAD+ IV',
     href: '/services/nad',
-    tag: 'FROM $350 — NAD+ INFUSION',
-    desc: 'A coenzyme found in every cell. Dose-graded protocols from 250mg to 1500mg.',
-    image: '/bags/nad-1000.png',
+    icon: Zap,
+    price: 350,
+    suffix: '/ session',
+    tag: 'Cellular Repair',
+    perks: [
+      'Coenzyme found in every cell',
+      '250mg → 1500mg dose-graded',
+      'Avalon clinician on-site',
+      'Pairs with peptide protocols',
+    ],
   },
   {
-    label: 'CBD',
+    label: 'CBD IV',
     href: '/services/cbd',
-    tag: 'FROM $250 — ZERO THC',
-    desc: 'A non-psychoactive cannabinoid infusion. 33mg to 99mg formulas.',
-    image: '/bags/cbd-99.png',
+    icon: CannabisLeaf,
+    price: 250,
+    suffix: '/ session',
+    tag: 'Recovery & Calm',
+    perks: [
+      '33mg → 99mg formulas',
+      'Zero THC, full bioavailability',
+      'Delivered by Avalon’s nurses',
+      'Same-day booking available',
+    ],
   },
 ];
 
 export default function OurDrips() {
   return (
-    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-4 md:py-10 px-4">
+    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-6 md:py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-left mb-8 md:mb-12"
+          viewport={{ once: true, margin: '-10%' }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="text-left mb-6 md:mb-10"
         >
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Live Protocols</p>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-foreground tracking-wide md:whitespace-nowrap text-[10vw] md:text-7xl lg:text-8xl"
-          >
-            VITALITY TREATMENTS
-          </motion.h2>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+            Vitality Treatments
+          </h2>
+          <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl mt-3 md:mt-5">
+            One-time sessions, delivered by Avalon&rsquo;s nurses across the San Francisco Bay Area. No insurance, no surprises.
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-3 md:gap-4">
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6 }}
-            >
-              <Link
-                to={cat.comingSoon ? '/apply' : cat.href}
-                className="group relative block rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-md hover:border-accent/50 hover:bg-white/[0.06] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
-                aria-label={`${cat.label} — ${cat.desc}`}
+        <div className="grid md:grid-cols-3 gap-3 md:gap-5">
+          {treatments.map((t, i) => {
+            const Icon = t.icon;
+            return (
+              <motion.div
+                key={t.label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-10%' }}
+                transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
+                className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-5 md:p-6 flex flex-col"
               >
-                <div className="aspect-[5/2] md:aspect-[9/4] relative overflow-hidden">
-                  <img
-                    src={cat.image}
-                    alt={cat.label}
-                    className="w-full h-full object-cover object-[center_70%] group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-80"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/20" />
+                {/* Tier name row */}
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
+                  <h3 className="font-heading text-xl tracking-wide text-foreground uppercase">{t.label}</h3>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h3 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-1">{cat.label}</h3>
 
-                  <span className="inline-flex items-center gap-2 text-accent group-hover:text-accent/80 transition-colors text-sm md:text-base font-body uppercase tracking-wider mt-3">
-                    {cat.comingSoon ? 'Start Now' : 'More'}
-                    <ChevronDown className="w-3 h-3" />
-                  </span>
+                {/* Tag */}
+                <p className="font-body text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-4">{t.tag}</p>
+
+                {/* Price */}
+                <div className="mb-5">
+                  <div className="font-heading text-5xl md:text-6xl text-foreground leading-none tracking-tight">
+                    ${t.price}
+                  </div>
+                  <div className="font-body text-xs tracking-widest uppercase text-muted-foreground mt-1">{t.suffix}</div>
                 </div>
-              </Link>
-            </motion.div>
-          ))}
+
+                {/* Perks */}
+                <ul className="space-y-1.5 mb-5 flex-1">
+                  {t.perks.map((perk) => (
+                    <li key={perk} className="flex items-start gap-2">
+                      <Plus className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
+                      <span className="font-body text-xs text-foreground leading-snug">{perk}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <Link
+                  to={t.href}
+                  className="block text-center py-2.5 md:py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
+                >
+                  Book Now
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
-
       </div>
     </section>
   );
