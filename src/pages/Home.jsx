@@ -32,9 +32,9 @@ export default function Home() {
     <div className="app-shell bg-background min-h-screen w-full" style={{ touchAction: 'pan-y' }}>
       <Navbar />
       <Hero />
+      <TrustStrip />
       <OurDrips />
       <MembershipSection />
-      <TrustStrip />
       <WhatIsIV />
       <HowItWorks />
       <AvalonOSPreview />
