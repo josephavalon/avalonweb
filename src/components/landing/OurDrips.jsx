@@ -71,17 +71,17 @@ export default function OurDrips() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-3 md:gap-5">
+        <div
+          className="overflow-x-auto overflow-y-visible no-scrollbar pb-3 -mx-4 px-4"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <div className="flex gap-3 md:gap-5 w-max snap-x snap-mandatory">
           {treatments.map((t, i) => {
             const Icon = t.icon;
             return (
-              <motion.div
+              <div
                 key={t.label}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-10%' }}
-                transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
-                className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-5 md:p-6 flex flex-col"
+                className="snap-start shrink-0 w-[260px] md:w-[300px] border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-5 md:p-6 flex flex-col"
               >
                 {/* Tier name row */}
                 <div className="flex items-center gap-2 mb-3">
@@ -117,9 +117,10 @@ export default function OurDrips() {
                 >
                   Book Now
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
+          </div>
         </div>
       </div>
     </section>
