@@ -41,12 +41,12 @@ function YelpIcon({ className }) {
 
 const PLATFORMS = [
   { label: 'Instagram',    href: 'https://instagram.com/avalonvitality',           Icon: Instagram },
+  { label: 'Facebook',     href: 'https://facebook.com/avalonvitality',            Icon: Facebook },
+  { label: 'YouTube',      href: 'https://youtube.com/@avalonvitality',            Icon: Youtube },
   { label: 'TikTok',       href: 'https://tiktok.com/@avalonvitality',             Icon: TikTokIcon },
   { label: 'X',            href: 'https://x.com/avalonvitality',                   Icon: XIcon },
   { label: 'Threads',      href: 'https://threads.net/@avalonvitality',            Icon: ThreadsIcon },
-  { label: 'Facebook',     href: 'https://facebook.com/avalonvitality',            Icon: Facebook },
   { label: 'LinkedIn',     href: 'https://linkedin.com/company/avalonvitality',    Icon: Linkedin },
-  { label: 'YouTube',      href: 'https://youtube.com/@avalonvitality',            Icon: Youtube },
   { label: 'Google',       href: 'https://g.page/avalonvitality',                  Icon: GoogleIcon },
   { label: 'Yelp',         href: 'https://yelp.com/biz/avalonvitality-san-francisco', Icon: YelpIcon },
 ];
