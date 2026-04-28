@@ -75,11 +75,7 @@ export default function ServicePageLayout({
       ) : (
         <section className="py-8 md:py-16 px-6 md:px-16">
           <div className="max-w-6xl mx-auto">
-            <div className="mb-6 md:mb-10 flex flex-col items-start gap-3">
-              <p className="text-xs tracking-[0.3em] text-accent font-body uppercase">
-                Presale — Limited Spots
-              </p>
-            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {treatments.map((t, i) => {
                 const href = categorySlug ? `/products/${categorySlug}/${slugify(t.name)}` : null;

@@ -55,11 +55,11 @@ const EASE = [0.16, 1, 0.3, 1];
 
 export default function SocialLinks() {
   return (
-    <div className="mt-10 md:mt-14 max-w-3xl mx-auto">
-      <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5 text-center">
+    <div className="mt-10 md:mt-14 max-w-3xl">
+      <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5 text-left">
         Follow Avalon
       </p>
-      <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+      <div className="flex flex-wrap justify-start gap-3 md:gap-4">
         {PLATFORMS.map(({ label, href, Icon }, i) => (
           <motion.a
             key={label}
