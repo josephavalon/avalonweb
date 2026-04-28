@@ -33,12 +33,12 @@ export default function Home() {
     <div className="app-shell bg-background min-h-screen w-full" style={{ touchAction: 'pan-y' }}>
       <Navbar />
       <Hero />
+      <OurDrips />
+      <MembershipSection />
       <TrustStrip />
       <IntroSection />
       <WhatIsIV />
       <HowItWorks />
-      <OurDrips />
-      <MembershipSection />
       <AvalonOSPreview />
       {/* <GiftCertificates /> — hidden for presale */}
       <EventsSection />

@@ -43,7 +43,7 @@ export default function IntroSection() {
         >
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Platform</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
-            What&rsquo;s Live Now
+            Live Now
           </h2>
           <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-4 md:mt-5">
             Three modalities live today. Every future modality is composable on top — every session compounds into one longitudinal record.
@@ -63,12 +63,12 @@ export default function IntroSection() {
             >
               <span className="absolute top-3 right-3 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                <span className="font-body text-[9px] md:text-[10px] tracking-[0.25em] text-accent uppercase">Live</span>
+                <span className="font-body text-[10px] md:text-xs tracking-[0.25em] text-accent uppercase">Live</span>
               </span>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-accent/55 flex items-center justify-center text-accent">
-                <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full border border-accent/55 flex items-center justify-center text-accent">
+                <Icon className="w-6 h-6 md:w-8 md:h-8" strokeWidth={1.5} />
               </div>
-              <span className="font-heading text-sm md:text-lg text-foreground tracking-wide uppercase leading-tight text-center">
+              <span className="font-heading text-base md:text-2xl text-foreground tracking-wide uppercase leading-tight text-center">
                 {label}
               </span>
             </motion.div>
@@ -87,7 +87,7 @@ export default function IntroSection() {
               Coming Soon
             </p>
             <p className="text-[10px] md:text-xs tracking-[0.25em] text-muted-foreground/60 font-body uppercase hidden sm:block">
-              Scroll &rarr;
+              Swipe to explore
             </p>
           </div>
 
@@ -97,12 +97,8 @@ export default function IntroSection() {
           >
             <div className="flex gap-3 md:gap-4 w-max pr-6">
               {soonItems.map(({ label, icon: Icon, location }, i) => (
-                <motion.div
+                <div
                   key={label}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-15%' }}
-                  transition={{ duration: 0.5, delay: i * 0.03, ease: EASE }}
                   className="shrink-0 w-[140px] md:w-[170px] border border-white/10 bg-white/[0.02] backdrop-blur-sm rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center gap-2.5 md:gap-3 min-h-[120px] md:min-h-[140px]"
                 >
                   <Icon className="w-5 h-5 md:w-5 md:h-5 text-muted-foreground/70" strokeWidth={1.5} />
@@ -113,7 +109,7 @@ export default function IntroSection() {
                     <span className="font-body text-[9px] md:text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase">In Studio</span>
                   )}
                   <span className="font-body text-[9px] md:text-[10px] tracking-[0.2em] text-muted-foreground/50 uppercase">Soon</span>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

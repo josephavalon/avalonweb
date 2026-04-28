@@ -44,6 +44,15 @@ export default function Hero() {
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-6 md:gap-10 w-full">
         {/* Top band: eyebrow + title */}
         <div className="flex flex-col items-center w-full">
+          <motion.p
+            initial={{ opacity: 0, letterSpacing: '0.1em' }}
+            animate={{ opacity: 1, letterSpacing: '0.4em' }}
+            transition={{ duration: 1.2, delay: 0.3 }}
+            className="font-body text-xs tracking-[0.4em] text-accent uppercase mb-5"
+          >
+            SF Bay Area
+          </motion.p>
+
           <motion.h1
             initial={{ opacity: 0, y: 60, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

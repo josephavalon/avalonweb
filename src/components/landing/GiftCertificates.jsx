@@ -30,7 +30,7 @@ export default function GiftCertificates() {
           {/* Left */}
           <div>
             <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
-              Elite mobile IV therapy, delivered to their door. Any denomination. Never expires.
+              Avalon Vitality, delivered to their door. Any denomination. Never expires.
             </p>
             {/* Denomination buttons */}
              <div className="flex flex-wrap md:flex-nowrap gap-2 mb-5 justify-center">

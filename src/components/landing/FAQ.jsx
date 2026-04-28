@@ -51,8 +51,8 @@ const faqs = [
   },
   {
     category: 'Safety',
-    q: "Is IV therapy safe for everyone?",
-    a: "IV therapy is safe for most people, but not suitable for those with certain medical conditions like heart failure, kidney disease, or severe allergies. Always disclose your full medical history during consultation."
+    q: "Is Avalon safe for everyone?",
+    a: "Avalon is safe for most people, but not suitable for those with certain medical conditions like heart failure, kidney disease, or severe allergies. Always disclose your full medical history during consultation with our clinical team."
   },
   {
     category: 'Safety',
