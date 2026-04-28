@@ -93,7 +93,7 @@ function TreatmentCard({ t }) {
         to={t.href}
         className="block text-center py-2.5 md:py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
       >
-        Explore
+        Book Now
       </Link>
     </div>
   );
