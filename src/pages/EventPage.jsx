@@ -113,7 +113,7 @@ export default function EventPage() {
                   to="/apply"
                   className="mt-3 block text-center border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase font-semibold rounded-full py-3.5 hover:border-foreground transition-colors"
                 >
-                  Apply for Membership
+                  Start Now
                 </Link>
 
                 <p className="font-body text-xs text-muted-foreground leading-relaxed mt-5 text-center">

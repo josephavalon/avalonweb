@@ -402,7 +402,7 @@ export default function OurStory() {
             href="/apply"
             className="inline-block mt-8 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-10 py-4 hover:bg-foreground/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Apply for Membership
+            Start Now
           </a>
         </motion.div>
       </section>

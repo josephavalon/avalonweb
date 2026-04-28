@@ -83,7 +83,7 @@ export default function DehydrationIV() {
               to="/apply"
               className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-4 hover:bg-foreground/90 transition-colors mb-6"
             >
-              Apply for Membership
+              Start Now
             </Link>
 
             <div className="flex gap-4">
@@ -217,7 +217,7 @@ export default function DehydrationIV() {
                   href="/apply"
                   className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
                 >
-                  Apply for Membership
+                  Start Now
                 </a>
               </motion.div>
             )}

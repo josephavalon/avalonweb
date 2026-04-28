@@ -166,7 +166,7 @@ export default function ProductDetail() {
                 to="/apply"
                 className="inline-block w-full text-center px-8 py-4 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
               >
-                Apply for Membership
+                Start Now
               </Link>
             </motion.div>
           </div>

@@ -183,7 +183,7 @@ function TierCard({ tier, billing }) {
         to={tier.isCustom ? '/apply?tier=custom' : APPLY_URL}
         className="block text-center py-2.5 md:py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
       >
-        {tier.isCustom ? 'Design Your Protocol' : 'Apply for Membership'}
+        {tier.isCustom ? 'Design Your Protocol' : 'Start Now'}
       </Link>
     </div>
   );
