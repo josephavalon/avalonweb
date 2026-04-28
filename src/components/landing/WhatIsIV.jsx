@@ -54,7 +54,7 @@ export default function WhatIsIV() {
             className="text-left"
           >
             <p className="font-body text-base md:text-lg text-foreground leading-snug mb-8">
-              Avalon bypasses your gut for 100% delivery, in under an hour.
+              Avalon's nurses deploy fluids into your bloodstream for 100% delivery.
             </p>
         {/* Stats grid */}
             <div className="pt-6">
