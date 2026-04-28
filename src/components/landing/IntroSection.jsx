@@ -1,16 +1,8 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Droplets, Zap, TestTube, Heart, Pill, Apple, Link as LinkIcon, Dumbbell, Lightbulb, Flame, CircleUser, Syringe, Atom, Scale, HeartPulse, Baby, Activity } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
-// Ordered for grid layout. Diagnostics sits immediately after the three
-// live verticals because biomarkers are the foundation beneath every future
-// Protocol — they're the primitive that makes personalization real.
-// The Protocol registry (src/lib/protocol/verticals.js) is the data-level
-// source of truth; this array is the presentation order for the grid.
-// Launch quarters mirror src/lib/protocol/verticals.js — keep in sync. A
-// change here is a public commitment change, so don't quietly edit quarters
-// without also updating the Protocol registry and ensuring ops can ship.
 const verticals = [
   { label: 'IV Vitamins', icon: Droplets, live: true },
   { label: 'NAD+', icon: Zap, live: true },
@@ -32,131 +24,101 @@ const verticals = [
   { label: 'Regenerative Aesthetics', icon: CircleUser, live: false },
 ];
 
-export default function IntroSection() {
+const EASE = [0.16, 1, 0.3, 1];
 
-  // Live items
+export default function IntroSection() {
   const liveItems = verticals.filter(v => v.live);
   const soonItems = verticals.filter(v => !v.live);
 
   return (
     <section className="py-8 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Title block */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="text-left"
+          viewport={{ once: true, margin: '-10%' }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="text-left mb-8 md:mb-10"
         >
-          <motion.p
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4"
-          >
-            The Platform
-          </motion.p>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading text-foreground tracking-wide mb-4 md:mb-8 text-[10vw] md:text-7xl lg:text-8xl"
-          >
-            IV THERAPY IS THE BASE
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="font-body text-base md:text-lg text-foreground leading-relaxed max-w-2xl mb-5"
-          >
-            We operate at the protocol layer. IV therapy is the base — every modality is composable on top.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mb-12"
-          >
-            Every session compounds into a proprietary longitudinal biology record.
-          </motion.p>
+          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Platform</p>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+            What&rsquo;s Live Now
+          </h2>
+          <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-4 md:mt-5">
+            Three modalities live today. Every future modality is composable on top — every session compounds into one longitudinal record.
+          </p>
+        </motion.div>
 
-          {/* Mobile: horizontal scroll, 2 rows of 3 visible */}
-          <div className="md:hidden overflow-x-auto overflow-y-visible py-3 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="grid grid-rows-2 grid-flow-col gap-3 w-max">
-              {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }) => (
-                <div
+        {/* LIVE NOW — 3 featured cards */}
+        <div className="grid grid-cols-3 gap-3 md:gap-5 mb-10 md:mb-14">
+          {liveItems.map(({ label, icon: Icon }, i) => (
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-10%' }}
+              transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
+              className="relative border border-white/15 bg-white/[0.06] backdrop-blur-md rounded-3xl p-5 md:p-7 flex flex-col items-center justify-center gap-3 md:gap-4 min-h-[140px] md:min-h-[180px]"
+            >
+              <span className="absolute top-3 right-3 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <span className="font-body text-[9px] md:text-[10px] tracking-[0.25em] text-accent uppercase">Live</span>
+              </span>
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-accent/55 flex items-center justify-center text-accent">
+                <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+              </div>
+              <span className="font-heading text-sm md:text-lg text-foreground tracking-wide uppercase leading-tight text-center">
+                {label}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* COMING SOON — horizontal scroll row */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-10%' }}
+          transition={{ duration: 0.6, ease: EASE }}
+        >
+          <div className="flex items-center justify-between mb-4 md:mb-5">
+            <p className="text-xs md:text-sm tracking-[0.3em] text-muted-foreground/80 font-body uppercase">
+              Coming Soon
+            </p>
+            <p className="text-[10px] md:text-xs tracking-[0.25em] text-muted-foreground/60 font-body uppercase hidden sm:block">
+              Scroll &rarr;
+            </p>
+          </div>
+
+          <div
+            className="overflow-x-auto overflow-y-visible py-2 no-scrollbar"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <div className="flex gap-3 md:gap-4 w-max pr-6">
+              {soonItems.map(({ label, icon: Icon, location }, i) => (
+                <motion.div
                   key={label}
-                  style={{ width: 'calc((100vw - 2rem) / 3)' }}
-                  className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[104px] transition-colors ${
-                    live
-                      ? 'border-white/15 bg-white/[0.06] backdrop-blur-md text-foreground'
-                      : 'border-white/10 bg-white/[0.02] backdrop-blur-sm text-muted-foreground/70'
-                  }`}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-15%' }}
+                  transition={{ duration: 0.5, delay: i * 0.03, ease: EASE }}
+                  className="shrink-0 w-[140px] md:w-[170px] border border-white/10 bg-white/[0.02] backdrop-blur-sm rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center gap-2.5 md:gap-3 min-h-[120px] md:min-h-[140px]"
                 >
-                  <Icon
-                    className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/60'}`}
-                    strokeWidth={1.5}
-                  />
-                  <span className="font-body text-xs tracking-[0.15em] uppercase leading-tight text-center">
+                  <Icon className="w-5 h-5 md:w-5 md:h-5 text-muted-foreground/70" strokeWidth={1.5} />
+                  <span className="font-body text-[11px] md:text-xs tracking-[0.15em] uppercase leading-tight text-center text-muted-foreground/85">
                     {label}
                   </span>
                   {location && (
-                    <span className="font-body text-xs tracking-widest text-muted-foreground uppercase">In Studio</span>
+                    <span className="font-body text-[9px] md:text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase">In Studio</span>
                   )}
-                  {live && (
-                    <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
-                  )}
-                    {!live && (
-                      <span className="mt-1 block font-body text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase">Soon</span>
-                    )}
-                </div>
+                  <span className="font-body text-[9px] md:text-[10px] tracking-[0.2em] text-muted-foreground/50 uppercase">Soon</span>
+                </motion.div>
               ))}
             </div>
           </div>
-
-          {/* Desktop: original 6-col grid */}
-          <div className="hidden md:grid gap-4 w-full md:grid-cols-6">
-            {[...liveItems, ...soonItems].map(({ label, icon: Icon, live, location }) => (
-              <div
-                key={label}
-                className={`relative flex flex-col items-center justify-center gap-2 border rounded-3xl p-4 min-h-[120px] transition-colors ${
-                  live
-                    ? 'border-white/15 bg-white/[0.06] backdrop-blur-md text-foreground'
-                    : 'border-white/10 bg-white/[0.02] backdrop-blur-sm text-muted-foreground/70'
-                }`}
-              >
-                <Icon
-                  className={`w-5 h-5 ${live ? 'text-accent' : 'text-muted-foreground/60'}`}
-                  strokeWidth={1.5}
-                />
-                <span className="font-body text-xs tracking-[0.15em] uppercase leading-tight text-center">
-                  {label}
-                </span>
-                {location && (
-                  <span className="font-body text-xs tracking-widest text-muted-foreground uppercase">In Studio</span>
-                )}
-                {live && (
-                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-accent" />
-                )}
-                {!live && (
-                  <span className="mt-1 block font-body text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase">Soon</span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-6 text-center font-body text-xs tracking-widest text-muted-foreground/70 uppercase">
-            <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2 align-middle" />
-            Live at launch
-          </p>
-          
-          </motion.div>
-          </div>
-          </section>
+        </motion.div>
+      </div>
+    </section>
   );
 }
