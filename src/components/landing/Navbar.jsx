@@ -86,7 +86,7 @@ export default function Navbar() {
           <Link to="/#how-it-works" className={linkClass}>How Avalon Works</Link>
           <Link to="/#treatments" className={linkClass}>Treatments</Link>
           <Link to="/#membership" className={linkClass}>Membership</Link>
-          <Link to="/#events" className={linkClass}>News & Events</Link>
+          <Link to="/#events" className={linkClass}>Avalon Launches</Link>
         </div>
 
         {/* Theme toggle and Login far right */}
@@ -140,7 +140,7 @@ export default function Navbar() {
               <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How Avalon Works</Link>
               <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
               <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
-              <Link to="/#events" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">News & Events</Link>
+              <Link to="/#events" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Avalon Launches</Link>
               <Link to="/apply" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Apply</Link>
             </div>
           </motion.div>

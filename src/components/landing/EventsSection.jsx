@@ -35,7 +35,7 @@ export default function EventsSection() {
             transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className="font-heading text-foreground tracking-wide md:whitespace-nowrap text-[10vw] md:text-7xl lg:text-8xl"
           >
-            NEWS &amp; EVENTS
+            AVALON LAUNCHES
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
