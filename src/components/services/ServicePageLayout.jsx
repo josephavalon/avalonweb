@@ -67,15 +67,9 @@ export default function ServicePageLayout({
             <h2 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-5 leading-none">
               Not yet available
             </h2>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
-              {comingSoonNote || "This protocol isn't part of our launch menu. Apply for membership now — we'll open access once it's live."}
+            <p className="font-body text-sm text-muted-foreground leading-relaxed">
+              {comingSoonNote || "This protocol isn't part of our launch menu yet. Browse the live treatments to see what's available today."}
             </p>
-            <Link
-              to="/apply"
-              className="inline-block px-8 py-3 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
-            >
-              Apply for Membership
-            </Link>
           </div>
         </section>
       ) : (
@@ -85,12 +79,6 @@ export default function ServicePageLayout({
               <p className="text-xs tracking-[0.3em] text-accent font-body uppercase">
                 Presale — Limited Spots
               </p>
-              <Link
-                to="/apply"
-                className="inline-block px-8 py-3 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
-              >
-                Apply for Membership
-              </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {treatments.map((t, i) => {
