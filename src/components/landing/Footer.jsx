@@ -46,7 +46,7 @@ function CollapsibleGroup({ label, items }) {
             <Link
               key={l.to}
               to={l.to}
-              className="block text-[11px] md:text-xs text-muted-foreground hover:text-accent transition-colors font-body uppercase tracking-wider"
+              className="block text-[11px] md:text-xs text-foreground font-body uppercase tracking-wider"
             >
               {l.label}
             </Link>
@@ -93,7 +93,7 @@ export default function Footer() {
                 { label: 'NAD+', href: '/services/nad' },
                 { label: 'IV CBD', href: '/services/cbd' },
               ].map((l) => (
-                <Link key={l.href} to={l.href} className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">
+                <Link key={l.href} to={l.href} className="block text-xs text-foreground font-body uppercase tracking-wider">
                   {l.label}
                 </Link>
               ))}
@@ -103,10 +103,10 @@ export default function Footer() {
           <div>
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Company</p>
             <div className="space-y-2 md:space-y-2.5">
-              <Link to="/#membership" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Membership</Link>
+              <Link to="/#membership" className="block text-xs text-foreground font-body uppercase tracking-wider">Membership</Link>
               <CollapsibleGroup label="About Us" items={ABOUT} />
-              <Link to="/faq" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">FAQ</Link>
-              <Link to="/#events" className="block text-xs text-foreground hover:text-accent transition-colors font-body uppercase tracking-wider">Events</Link>
+              <Link to="/faq" className="block text-xs text-foreground font-body uppercase tracking-wider">FAQ</Link>
+              <Link to="/#events" className="block text-xs text-foreground font-body uppercase tracking-wider">Events</Link>
               <CollapsibleGroup label="Legal" items={LEGAL} />
             </div>
           </div>
@@ -116,11 +116,11 @@ export default function Footer() {
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-2 md:gap-3">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <a href="mailto:support@avalonvitality.co" className="text-[11px] md:text-xs text-foreground hover:text-accent transition-colors font-body whitespace-nowrap">support@avalonvitality.co</a>
+                <a href="mailto:support@avalonvitality.co" className="text-[11px] md:text-xs text-foreground font-body whitespace-nowrap">support@avalonvitality.co</a>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
-                <a href="tel:+14159807708" className="text-xs text-foreground hover:text-accent transition-colors font-body">(415) 980-7708</a>
+                <a href="tel:+14159807708" className="text-xs text-foreground font-body">(415) 980-7708</a>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
