@@ -4,6 +4,8 @@ import { Check, Loader2 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+import SocialLinks from './SocialLinks';
+
 export default function WaitlistSection() {
   const [form, setForm] = useState({ email: '', website: '' });
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
@@ -211,6 +213,8 @@ export default function WaitlistSection() {
             </p>
           </motion.form>
         )}
+
+        <SocialLinks />
       </div>
     </section>
   );
