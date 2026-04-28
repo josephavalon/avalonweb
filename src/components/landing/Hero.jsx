@@ -86,25 +86,17 @@ export default function Hero() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 1, delay: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="h-px bg-foreground/20 mx-auto max-w-md origin-center w-full"
-          />
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
-            className="px-2 mx-auto flex flex-col items-center gap-3 md:gap-4"
-          >
-            <div className="font-body text-xs md:text-sm text-foreground tracking-[0.2em] md:tracking-[0.4em] uppercase text-center md:whitespace-nowrap">
-              The Operating System for Human Performance
-            </div>
-          </motion.div>
         </div>
       </div>
+
+      {/* Glass divider above bottom subhead */}
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 1, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute bottom-20 md:bottom-24 left-0 right-0 z-20 h-px bg-foreground/20 mx-auto max-w-xs md:max-w-md origin-center"
+      />
 
       {/* Bottom-of-hero subhead — absolutely positioned at section bottom */}
       <motion.p
