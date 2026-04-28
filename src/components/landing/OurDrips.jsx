@@ -12,13 +12,14 @@ const treatments = [
     href: '/services/iv-vitamins',
     icon: Droplets,
     price: 150,
-    suffix: '/ session',
+    priceFrom: true,
+    suffix: 'starting / session',
     tag: 'Wellness Foundation',
     perks: [
-      'Dehydration · Myers’ · Recovery',
-      'Athletic · Glow · Immunity',
-      'B-complex, magnesium, glutathione options',
-      'In-home or concierge',
+      'Dehydration · Myers’ · Recovery · Athletic · Glow · Immunity',
+      'B-complex, magnesium, glutathione, NAD+ add-ons',
+      'IM shot add-ons available — B12, lipo, glutathione',
+      'In-home or concierge across the Bay',
     ],
   },
   {
@@ -26,13 +27,14 @@ const treatments = [
     href: '/services/nad',
     icon: Zap,
     price: 350,
-    suffix: '/ session',
+    priceFrom: true,
+    suffix: 'starting / session',
     tag: 'Cellular Repair',
     perks: [
       'Coenzyme found in every cell',
       '250mg → 1500mg dose-graded',
       'Avalon clinician on-site',
-      'Pairs with peptide protocols',
+      'Stack with IM shots or vitamin add-ons',
     ],
   },
   {
@@ -40,13 +42,14 @@ const treatments = [
     href: '/services/cbd',
     icon: CannabisLeaf,
     price: 250,
-    suffix: '/ session',
+    priceFrom: true,
+    suffix: 'starting / session',
     tag: 'Recovery & Calm',
     perks: [
-      '33mg → 99mg formulas',
+      '33mg → 99mg formulas, dose-graded',
       'Zero THC, full bioavailability',
       'Delivered by Avalon’s nurses',
-      'Same-day booking available',
+      'IM and vitamin add-ons available',
     ],
   },
 ];
@@ -66,8 +69,11 @@ function TreatmentCard({ t }) {
 
       {/* Price */}
       <div className="mb-4">
+        {t.priceFrom && (
+          <div className="font-body text-[10px] tracking-[0.25em] uppercase text-accent mb-1">From</div>
+        )}
         <div className="font-heading text-5xl md:text-6xl text-foreground leading-none tracking-tight">
-          ${t.price}
+          ${t.price}{t.priceFrom && <span className="text-accent">+</span>}
         </div>
         <div className="font-body text-xs tracking-widest uppercase text-muted-foreground mt-1">{t.suffix}</div>
       </div>
