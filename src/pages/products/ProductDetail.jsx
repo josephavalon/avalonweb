@@ -129,7 +129,7 @@ export default function ProductDetail() {
               className="aspect-square rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-md"
             >
               {t.image && (
-                <img src={t.image} alt={t.name} className="w-full h-full object-contain bg-black" />
+                <img src={t.image} alt={t.name} className="w-full h-full object-contain bg-background" />
               )}
             </motion.div>
 

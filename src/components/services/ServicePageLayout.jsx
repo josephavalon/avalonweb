@@ -82,7 +82,7 @@ export default function ServicePageLayout({
                 const CardBody = (
                   <>
                     {t.image && (
-                      <div className="aspect-square overflow-hidden bg-black flex items-center justify-center">
+                      <div className="aspect-square overflow-hidden bg-background flex items-center justify-center">
                         <img
                           src={t.image}
                           alt={t.name}
