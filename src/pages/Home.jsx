@@ -37,11 +37,11 @@ export default function Home() {
       <MembershipSection />
       <WhatIsIV />
       <HowItWorks />
-      <AvalonOSPreview />
       {/* <GiftCertificates /> — hidden for presale */}
       <EventsSection />
       <B2BSection />
       <Testimonials />
+      <AvalonOSPreview />
       <WaitlistSection />
       <Footer />
     </div>

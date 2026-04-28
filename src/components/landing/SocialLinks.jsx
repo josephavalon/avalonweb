@@ -38,6 +38,13 @@ function YelpIcon({ className }) {
     </svg>
   );
 }
+function RedditIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M22 12.07a2.32 2.32 0 0 0-3.93-1.66 11.34 11.34 0 0 0-6.06-1.91l1.03-4.84 3.36.71a1.65 1.65 0 1 0 .17-.93l-3.75-.79a.47.47 0 0 0-.55.36l-1.15 5.45a11.34 11.34 0 0 0-6.13 1.92 2.32 2.32 0 1 0-2.55 3.79 4.51 4.51 0 0 0-.06.74c0 3.78 4.4 6.85 9.83 6.85S21.94 18.7 21.94 14.92a4.5 4.5 0 0 0-.05-.72A2.32 2.32 0 0 0 22 12.07ZM7.04 13.74a1.5 1.5 0 1 1 1.5 1.5 1.5 1.5 0 0 1-1.5-1.5Zm8.74 4.42a5.86 5.86 0 0 1-3.74 1.06 5.86 5.86 0 0 1-3.75-1.06.4.4 0 1 1 .53-.6 5.04 5.04 0 0 0 3.22.86 5.04 5.04 0 0 0 3.21-.86.4.4 0 1 1 .53.6Zm-.27-2.92a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5Z"/>
+    </svg>
+  );
+}
 
 const PLATFORMS = [
   { label: 'Instagram',    href: 'https://instagram.com/avalonvitality',           Icon: Instagram },
@@ -47,6 +54,7 @@ const PLATFORMS = [
   { label: 'X',            href: 'https://x.com/avalonvitality',                   Icon: XIcon },
   { label: 'Threads',      href: 'https://threads.net/@avalonvitality',            Icon: ThreadsIcon },
   { label: 'LinkedIn',     href: 'https://linkedin.com/company/avalonvitality',    Icon: Linkedin },
+  { label: 'Reddit',       href: 'https://reddit.com/user/avalonvitality',         Icon: RedditIcon },
   { label: 'Google',       href: 'https://g.page/avalonvitality',                  Icon: GoogleIcon },
   { label: 'Yelp',         href: 'https://yelp.com/biz/avalonvitality-san-francisco', Icon: YelpIcon },
 ];
