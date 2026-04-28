@@ -4,7 +4,6 @@ import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import TrustStrip from '../components/landing/TrustStrip';
-import IntroSection from '../components/landing/IntroSection';
 import HowItWorks from '../components/landing/HowItWorks';
 import WhatIsIV from '../components/landing/WhatIsIV';
 import OurDrips from '../components/landing/OurDrips';
@@ -36,7 +35,6 @@ export default function Home() {
       <OurDrips />
       <MembershipSection />
       <TrustStrip />
-      <IntroSection />
       <WhatIsIV />
       <HowItWorks />
       <AvalonOSPreview />
