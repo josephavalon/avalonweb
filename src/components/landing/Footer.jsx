@@ -25,7 +25,7 @@ function CollapsibleGroup({ label, items }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-2 text-xs text-foreground transition-colors font-body uppercase tracking-wider"
+        className="w-full flex items-center justify-between gap-2 text-xs text-foreground font-body uppercase tracking-wider focus:outline-none"
       >
         <span className="flex items-center gap-1">
           {label}
