@@ -14,7 +14,7 @@ export default function ManifestoStrip() {
         transition={{ duration: 0.9, ease: EASE }}
         className="max-w-4xl mx-auto text-center font-heading text-2xl md:text-4xl lg:text-5xl text-foreground tracking-wide leading-[1.05] uppercase"
       >
-        Wellness <span className="text-accent">Operating System</span>
+        Wellness gets an <span className="text-accent">Operating System</span>
       </motion.p>
     </section>
   );
