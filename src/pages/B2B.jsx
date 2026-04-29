@@ -75,7 +75,28 @@ export default function B2B() {
     setCouponError('');
   };
 
-  // For Square Payment Links: open the link for the selected base item.
+  // Tracking pixels — fires on Pay-with-Square click. No-op if pixels not loaded.
+  const fireCheckoutEvent = () => {
+    try {
+      if (typeof window === 'undefined') return;
+      const payload = {
+        currency: 'USD',
+        value: total,
+        items: [{ id: product.id, name: product.name, price: product.price }],
+        coupon: appliedCoupon || undefined,
+      };
+      if (typeof window.fbq === 'function') {
+        window.fbq('track', 'InitiateCheckout', payload);
+      }
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'begin_checkout', payload);
+      }
+    } catch (e) {
+      // swallow tracking errors — never block checkout
+    }
+  };
+
+    // For Square Payment Links: open the link for the selected base item.
   // Compression + coupon are noted in the URL params (Square's page reads memo).
   const checkoutUrl = useMemo(() => {
     const url = new URL(product.squareUrl);
@@ -115,6 +136,7 @@ export default function B2B() {
           background-color: #FFFEE4;
           color: #0A0A0A;
         }
+        @media (max-width: 767px) { .b2b-root { padding-bottom: 80px; } }
         .b2b-display {
           font-family: 'Bebas Neue', 'Impact', sans-serif;
           letter-spacing: 0.02em;
@@ -122,6 +144,16 @@ export default function B2B() {
         }
         .b2b-pink { color: #ED7AC3; }
         .b2b-bg-pink { background-color: #ED7AC3; }
+        .b2b-sticky-buy {
+          background-color: #ED7AC3;
+          color: #0A0A0A;
+          border: 2px solid #0A0A0A;
+          box-shadow: 4px 4px 0 #0A0A0A;
+        }
+        .b2b-sticky-buy:active {
+          transform: translate(2px, 2px);
+          box-shadow: 2px 2px 0 #0A0A0A;
+        }
         .b2b-mint { background-color: #80C7D3; }
         .b2b-soft-yellow { background-color: #F8EC82; }
         .b2b-card {
@@ -203,11 +235,18 @@ export default function B2B() {
           <p className="b2b-display b2b-pink text-5xl md:text-7xl mb-2 md:mb-3 tracking-widest text-center mx-auto">Avalon Vitality &times;</p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
           <h1 className="m-0">
-            <img
-              src="/bay-to-breakers-logo.png"
-              alt="Bay to Breakers"
-              className="block mx-auto w-[55vw] max-w-[260px] md:max-w-[340px] h-auto"
-            />
+            <picture>
+              <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
+              <img
+                src="/bay-to-breakers-logo.png"
+                alt="Bay to Breakers"
+                width="1164"
+                height="531"
+                fetchpriority="high"
+                decoding="async"
+                className="block mx-auto w-[55vw] max-w-[260px] md:max-w-[340px] h-auto"
+              />
+            </picture>
           </h1>
           <p className="mt-5 md:mt-7 text-2xl md:text-4xl b2b-display tracking-wide text-center leading-tight">
             Finish-line IV, shots, &amp; recovery.<br />
@@ -374,7 +413,7 @@ export default function B2B() {
       </section>
 
       {/* Order summary + checkout */}
-      <section className="relative z-10 px-5 md:px-10 pb-14 md:pb-20">
+      <section id="b2b-checkout" className="relative z-10 px-5 md:px-10 pb-14 md:pb-20 scroll-mt-20">
         <div className="max-w-3xl mx-auto b2b-card p-6 md:p-8">
           <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-5">Your race day</p>
 
@@ -415,6 +454,7 @@ export default function B2B() {
               href={checkoutUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={fireCheckoutEvent}
               className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2"
             >
               Pay with Square <ArrowRight className="w-4 h-4" />
@@ -427,7 +467,46 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Confetti accent strip — small geometric shapes scattered before footer */}
+            {/* FAQ */}
+      <section className="relative z-10 px-5 md:px-10 pb-12 md:pb-16">
+        <div className="max-w-3xl mx-auto">
+          <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Race-day questions</p>
+          <div className="space-y-3">
+            {[
+              {
+                q: 'Where will Avalon be?',
+                a: 'In the recovery zone at the finish line. Exact GPS pin texted to your phone the morning of the race.',
+              },
+              {
+                q: 'Do I need to schedule a time?',
+                a: 'No. First come, first served once you cross. Slots typically clear in 10–15 minutes during peak.',
+              },
+              {
+                q: 'Can I bring a friend?',
+                a: 'Of course. Friends without a ticket can hang out — service requires a ticket. Group bundles available, email support@avalonvitality.co.',
+              },
+              {
+                q: 'What if I can\'t make it?',
+                a: 'Email support@avalonvitality.co before May 14 for a full refund. After that, ticket transfers only.',
+              },
+              {
+                q: 'Is this medical care?',
+                a: 'No. Avalon delivers IV hydration and intramuscular injections under standing-order medical direction for educational and wellness use. Not for the diagnosis or treatment of any condition.',
+              },
+            ].map((item) => (
+              <details key={item.q} className="b2b-card p-4 md:p-5 group">
+                <summary className="b2b-display text-base md:text-lg uppercase tracking-wide cursor-pointer flex items-center justify-between gap-4 list-none">
+                  <span>{item.q}</span>
+                  <Plus className="w-4 h-4 shrink-0 transition-transform group-open:rotate-45" />
+                </summary>
+                <p className="text-sm md:text-base mt-3 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+{/* Confetti accent strip — small geometric shapes scattered before footer */}
       <div className="relative h-12 md:h-16 overflow-hidden">
         <svg className="absolute left-[5%] top-1 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
         <svg className="absolute left-[20%] top-3 w-6 h-6 fill-current" style={{color:'#F8EC82'}} viewBox="0 0 20 20"><rect width="20" height="20" /></svg>
@@ -449,6 +528,19 @@ export default function B2B() {
           Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Bay to Breakers is not affiliated with Avalon Vitality &mdash; this presale is independently operated.
         </p>
       </footer>
+      {/* Sticky mobile CTA — appears after hero scroll, hidden on desktop */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-3 pt-2 pointer-events-none">
+        <a
+          href="#b2b-checkout"
+          className="b2b-sticky-buy pointer-events-auto flex items-center justify-between gap-3 px-5 py-3 rounded-full shadow-lg"
+        >
+          <span className="b2b-display text-sm uppercase tracking-[0.15em]">{product.name}</span>
+          <span className="flex items-center gap-2">
+            <span className="b2b-display text-lg">${total}</span>
+            <ArrowRight className="w-4 h-4" />
+          </span>
+        </a>
+      </div>
     </div>
   );
 }
