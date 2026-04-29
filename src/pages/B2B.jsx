@@ -221,10 +221,12 @@ export default function B2B() {
         .b2b-pink { color: #ED7AC3; }
         .b2b-bg-pink { background-color: #ED7AC3; }
         .b2b-sticky-buy {
-          background-color: #ED7AC3;
+          background-color: rgba(237, 122, 195, 0.95);
           color: #0A0A0A;
           border: 2px solid #0A0A0A;
           box-shadow: 4px 4px 0 #0A0A0A;
+          backdrop-filter: saturate(140%) blur(6px);
+          -webkit-backdrop-filter: saturate(140%) blur(6px);
         }
         .b2b-sticky-buy:active {
           transform: translate(2px, 2px);
@@ -249,7 +251,7 @@ export default function B2B() {
           box-shadow: 6px 6px 0 0 #ED7AC3;
         }
         .b2b-btn-primary {
-          background-color: #80C7D3;
+          background-color: #ED7AC3;
           color: #0A0A0A;
           border: 2px solid #0A0A0A;
           border-radius: 999px;
@@ -261,8 +263,7 @@ export default function B2B() {
           box-shadow: 4px 4px 0 0 #0A0A0A;
         }
         .b2b-btn-primary:hover {
-          background-color: #ED7AC3;
-          color: #ffffff;
+          background-color: #d96aae;
           transform: translate(-1px, -1px);
           box-shadow: 5px 5px 0 0 #0A0A0A;
         }
@@ -300,7 +301,7 @@ export default function B2B() {
 
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <p className="b2b-display b2b-pink text-5xl md:text-7xl mb-2 md:mb-3 tracking-widest text-center mx-auto">Avalon Vitality &times;</p>
+          <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-3 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
           <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink text-center mb-3 md:mb-4">
             Official Bay to Breakers Recovery Partner
           </p>
@@ -376,7 +377,7 @@ export default function B2B() {
                   type="button"
                   onClick={() => !ivCardSoldOut && setProductId(p.id)}
                   disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[200px] md:min-h-[280px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[160px] md:min-h-[240px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-pressed={active}
                 >
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
