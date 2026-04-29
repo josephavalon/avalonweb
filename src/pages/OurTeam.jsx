@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSeo } from '@/lib/seo';
 import { motion } from 'framer-motion';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
@@ -99,6 +100,11 @@ function PersonCard({ person, i, anchor }) {
 }
 
 export default function OurTeam() {
+  useSeo({
+    title: 'Our Team — Avalon Vitality',
+    description: 'Meet the clinicians and operators behind Avalon Vitality — California-licensed registered nurses, physicians, and longevity advisors.',
+    path: '/team',
+  });
   return (
     <div className="bg-background min-h-screen">
       <Navbar />

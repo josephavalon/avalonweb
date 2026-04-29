@@ -11,29 +11,44 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://avalonvitality.co/team</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://avalonvitality.co/apply</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://avalonvitality.co/services/iv-vitamins</loc>
+    <loc>https://avalonvitality.co/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://avalonvitality.co/services/iv-vitamins</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://avalonvitality.co/services/nad</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://avalonvitality.co/services/cbd</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://avalonvitality.co/products/iv-vitamins</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://avalonvitality.co/products/dehydration-iv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://avalonvitality.co/careers</loc>
@@ -51,6 +66,16 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://avalonvitality.co/notice-of-privacy-practices</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://avalonvitality.co/cookie-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://avalonvitality.co/telehealth-disclaimer</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
@@ -59,5 +84,15 @@
     <loc>https://avalonvitality.co/product-disclaimer</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://avalonvitality.co/events/bay-to-breakers-expo</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://avalonvitality.co/events/bay-to-breakers-finish-line</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>

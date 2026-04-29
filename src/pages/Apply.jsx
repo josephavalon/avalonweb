@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSeo } from '@/lib/seo';
 import { Check, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -69,6 +70,11 @@ const validators = {
 };
 
 export default function Apply() {
+  useSeo({
+    title: 'Apply for Membership — Avalon Vitality',
+    description: 'Apply for a Vitality membership. SF Bay Area. RN-administered, MD-supervised concierge IV therapy.',
+    path: '/apply',
+  });
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [selectedMemberships, setSelectedMemberships] = useState({});
   const [form, setForm] = useState({

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSeo } from '@/lib/seo';
 import { motion } from 'framer-motion';
 import {
   MapPin,
@@ -34,6 +35,11 @@ const MEET_YOU = [
 ];
 
 export default function OurStory() {
+  useSeo({
+    title: 'Our Story — Avalon Vitality',
+    description: 'How Avalon Vitality is building the operating system for human performance — starting with mobile IV therapy in the SF Bay Area.',
+    path: '/our-story',
+  });
   return (
     <div className="bg-background min-h-screen">
       <Navbar />
