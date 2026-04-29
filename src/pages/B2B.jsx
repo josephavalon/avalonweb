@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD } from '@/data/b2bProducts';
@@ -29,6 +29,14 @@ export default function B2B() {
   const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
   const b2bIvSoldOut = b2bIvRemaining <= 0;
   const selectedSoldOut = !!(product.consumes?.includes('b2bIv') && b2bIvSoldOut);
+  const productIncludesBoots = !!product.consumes?.includes('boots');
+  // Force-uncheck compression when current selection already includes boots
+  // so users can't double-add (and pay) for it.
+  useEffect(() => {
+    if (productIncludesBoots && compression) {
+      setCompression(false);
+    }
+  }, [productIncludesBoots, compression]);
   const [compression, setCompression] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -252,32 +260,34 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Compression add-on */}
-      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-        <div className="max-w-5xl mx-auto">
-          <button
-            type="button"
-            onClick={() => setCompression((v) => !v)}
-            className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${compression ? 'active' : ''}`}
-            aria-pressed={compression}
-          >
-            <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
-              {compression ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
-            </div>
-            <div className="flex-1">
-              <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+$50 add-on</p>
-              <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{COMPRESSION_ADDON.name}</h3>
-              <p className="text-sm md:text-base mt-1">{COMPRESSION_ADDON.description}</p>
-            </div>
-          </button>
-        </div>
-      </section>
+      {/* Compression add-on — hidden when selected SKU already includes boots */}
+      {!productIncludesBoots && (
+        <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
+          <div className="max-w-5xl mx-auto">
+            <button
+              type="button"
+              onClick={() => setCompression((v) => !v)}
+              className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${compression ? 'active' : ''}`}
+              aria-pressed={compression}
+            >
+              <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
+                {compression ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
+              </div>
+              <div className="flex-1">
+                <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+$50 add-on</p>
+                <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{COMPRESSION_ADDON.name}</h3>
+                <p className="text-sm md:text-base mt-1">{COMPRESSION_ADDON.description}</p>
+              </div>
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-2xl md:text-3xl mb-2 md:mb-3 uppercase tracking-wide">Or save with a package</p>
-          <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Pick one and skip the add-on toggle below.</p>
+          <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Boots already included where listed.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
             {B2B_PRODUCTS.filter((p) => p.kind === 'bundle').map((p) => {
               const active = p.id === productId;

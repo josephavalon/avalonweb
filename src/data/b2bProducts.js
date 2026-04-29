@@ -61,7 +61,7 @@ export const B2B_PRODUCTS = [
     price: 190,
     originalPrice: 210,
     kind: 'bundle',
-    consumes: ['b2bIv'],
+    consumes: ['b2bIv', 'boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-FULL',
   },
   {
@@ -72,6 +72,7 @@ export const B2B_PRODUCTS = [
     price: 380,
     originalPrice: 400,
     kind: 'bundle',
+    consumes: ['boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-COMP',
   },
   {
@@ -82,6 +83,7 @@ export const B2B_PRODUCTS = [
     price: 420,
     originalPrice: 440,
     kind: 'bundle',
+    consumes: ['boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
   },
 ];
