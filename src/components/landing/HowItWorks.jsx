@@ -53,10 +53,11 @@ export default function HowItWorks() {
               HOW AVALON WORKS
             </h2>
             <p className="font-body text-sm text-foreground mt-4 max-w-2xl">
+Book a single session or join a{' '}
               <a href="/#membership" className="text-accent hover:text-accent/80 underline">
-                Apply for membership
-              </a>{' '}
-              now to secure your spot. Mobile platform launching soon — book, reorder, and track in one tap.
+                membership
+              </a>
+              {' '}for 20% off à la carte and 25% off annual. Mobile platform launching soon — book, reorder, and track in one tap.
             </p>
           </div>
 

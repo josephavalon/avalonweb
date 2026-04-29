@@ -13,7 +13,6 @@ export default function HardCloseCTA() {
         transition={{ duration: 0.8, ease: EASE }}
         className="max-w-3xl mx-auto text-center"
       >
-        <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-6">Apply Today</p>
         <h2 className="font-heading text-[10vw] md:text-7xl text-foreground tracking-tight leading-[1.05] uppercase mb-6 md:mb-8">
           Start before<br />everyone else does.
         </h2>
