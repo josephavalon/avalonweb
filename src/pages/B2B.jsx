@@ -254,7 +254,7 @@ export default function B2B() {
           transform: translate(-2px, -2px);
         }
         .b2b-card.active::before {
-          content: '\2713';
+          content: '\u2713';
           position: absolute;
           top: 8px;
           right: 12px;
