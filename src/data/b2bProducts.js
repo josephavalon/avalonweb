@@ -69,7 +69,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-cbd-im-boots',
     name: 'CBD IV + IM + Boots',
     tagline: 'Save $20 — Full premium stack',
-    description: 'CBD IV, intramuscular B-12 shot, and pneumatic compression boots. Top-tier finish-line protocol.',
+    description: 'CBD IV, intramuscular B-12 or glutathione shot, and pneumatic compression boots. Top-tier finish-line protocol.',
     price: 420,
     originalPrice: 440,
     kind: 'bundle',
