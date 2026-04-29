@@ -37,7 +37,7 @@ export const B2B_PRODUCTS = [
   // Bundles — pre-priced with a small bundle discount baked in
   {
     id: 'bundle-iv-compression',
-    name: 'IV + Boots',
+    name: 'B2B IV',
     tagline: 'Save $10 — Bag and pneumatic recovery',
     description: 'Full Bay 2 Bay IV plus a 20-minute compression therapy session. Walk away ready for Sunday brunch.',
     price: 160,
