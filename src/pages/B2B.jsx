@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
-import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS } from '@/data/b2bProducts';
+import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 
 // Visual reference: baytobreakers.com (cream bg, distressed black display, pink stars,
@@ -26,6 +26,9 @@ export default function B2B() {
   });
 
   const [productId, setProductId] = useState(B2B_PRODUCTS[0].id);
+  const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
+  const b2bIvSoldOut = b2bIvRemaining <= 0;
+  const selectedSoldOut = !!(product.consumes?.includes('b2bIv') && b2bIvSoldOut);
   const [compression, setCompression] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -221,18 +224,26 @@ export default function B2B() {
           <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Pick your tier &darr;</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p) => {
+              const showIvCount = p.consumes?.includes('b2bIv');
+              const ivCardSoldOut = showIvCount && b2bIvSoldOut;
               const active = p.id === productId;
               return (
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setProductId(p.id)}
-                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[200px] md:min-h-[280px] ${active ? 'active' : ''}`}
+                  onClick={() => !ivCardSoldOut && setProductId(p.id)}
+                  disabled={ivCardSoldOut}
+                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[200px] md:min-h-[280px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-pressed={active}
                 >
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
                   <h3 className="b2b-display text-lg md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
                   <p className="text-xs md:text-sm leading-snug mb-2 md:mb-4 flex-1">{p.description}</p>
+                  {showIvCount && (
+                    <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
+                      {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
+                    </p>
+                  )}
                   <p className="b2b-display text-4xl md:text-5xl mt-auto leading-none">${p.price}</p>
                 </button>
               );
@@ -271,22 +282,35 @@ export default function B2B() {
             {B2B_PRODUCTS.filter((p) => p.kind === 'bundle').map((p) => {
               const active = p.id === productId;
               const savings = p.originalPrice ? p.originalPrice - p.price : 0;
+              const showIvCount = p.consumes?.includes('b2bIv');
+              const ivCardSoldOut = showIvCount && b2bIvSoldOut;
               return (
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setProductId(p.id)}
-                  className={`b2b-card text-left p-3 md:p-6 ${active ? 'active' : ''} relative`}
+                  onClick={() => !ivCardSoldOut && setProductId(p.id)}
+                  disabled={ivCardSoldOut}
+                  className={`b2b-card text-left p-3 md:p-6 ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
                   aria-pressed={active}
                 >
-                  {savings > 0 && (
+                  {savings > 0 && !ivCardSoldOut && (
                     <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
                       Save ${savings}
+                    </span>
+                  )}
+                  {ivCardSoldOut && (
+                    <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 bg-black text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
+                      Sold out
                     </span>
                   )}
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
                   <h3 className="b2b-display text-base md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
                   <p className="text-xs md:text-base leading-snug mb-2 md:mb-4">{p.description}</p>
+                  {showIvCount && (
+                    <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
+                      {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
+                    </p>
+                  )}
                   <div className="flex items-baseline gap-2 md:gap-3">
                     <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
                     {p.originalPrice && (
@@ -368,14 +392,24 @@ export default function B2B() {
             <span className="b2b-display text-4xl md:text-5xl">${total}</span>
           </div>
 
-          <a
-            href={checkoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2"
-          >
-            Pay with Square <ArrowRight className="w-4 h-4" />
-          </a>
+          {selectedSoldOut ? (
+            <button
+              type="button"
+              disabled
+              className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
+            >
+              Sold out — pick another option
+            </button>
+          ) : (
+            <a
+              href={checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2"
+            >
+              Pay with Square <ArrowRight className="w-4 h-4" />
+            </a>
+          )}
 
           <p className="mt-4 text-xs leading-relaxed text-black/70">
             Payment processed securely by Square. Confirmation email sent immediately. Race-morning text from Avalon with the finish-line drop point.

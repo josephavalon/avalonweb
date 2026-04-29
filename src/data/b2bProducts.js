@@ -5,6 +5,12 @@
 // always points to the BASE price; coupon discount is shown to the
 // buyer in the order summary and noted in the Square checkout title.
 
+// B2B IV inventory — 150 Bay 2 Bay IV bags total for race day.
+// Pool is shared across the single IV + every bundle that contains it.
+// Update B2B_IV_SOLD manually as Square reports sales (or wire a webhook later).
+export const B2B_IV_INVENTORY = 150;
+export const B2B_IV_SOLD = 0;
+
 export const B2B_PRODUCTS = [
   // Singles
   {
@@ -23,6 +29,7 @@ export const B2B_PRODUCTS = [
     description: 'Sodium, potassium, calcium, chloride, lactate, B-12, B-complex, and magnesium. Delivered at the finish line.',
     price: 120,
     kind: 'single',
+    consumes: ['b2bIv'],
     squareUrl: 'https://square.link/u/REPLACE-ME-IV',
   },
   {
@@ -43,6 +50,7 @@ export const B2B_PRODUCTS = [
     price: 150,
     originalPrice: 160,
     kind: 'bundle',
+    consumes: ['b2bIv'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-IV-IM',
   },
   {
@@ -53,6 +61,7 @@ export const B2B_PRODUCTS = [
     price: 190,
     originalPrice: 210,
     kind: 'bundle',
+    consumes: ['b2bIv'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-FULL',
   },
   {
