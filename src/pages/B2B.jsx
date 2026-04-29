@@ -7,9 +7,9 @@ import { useSeo } from '@/lib/seo';
 // Visual reference: baytobreakers.com (cream bg, distressed black display, pink stars,
 // mint accent). Original layout. Avalon brand crossed in via the teardrop + voice.
 
-function StarBurst({ className }) {
+function StarBurst({ className, style }) {
   return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+    <svg viewBox="0 0 100 100" className={className} style={style} aria-hidden="true">
       <path
         d="M50 0 L58 35 L100 30 L65 50 L100 70 L58 65 L50 100 L42 65 L0 70 L35 50 L0 30 L42 35 Z"
         fill="currentColor"
@@ -78,6 +78,27 @@ export default function B2B() {
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
+      {/* Scattered B2B starbursts — decorative, behind content */}
+      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <StarBurst className="absolute b2b-pink"  style={{ top: '4%',   left: '6%',  width: '34px', height: '34px', transform: 'rotate(-14deg)', opacity: 0.85 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '7%',   right: '8%', width: '46px', height: '46px', transform: 'rotate(18deg)',  opacity: 0.95 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '13%',  left: '38%', width: '22px', height: '22px', transform: 'rotate(-6deg)',  opacity: 0.55 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '19%',  left: '2%',  width: '28px', height: '28px', transform: 'rotate(22deg)',  opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '24%',  right: '4%', width: '52px', height: '52px', transform: 'rotate(-22deg)', opacity: 0.75 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '31%',  left: '46%', width: '24px', height: '24px', transform: 'rotate(8deg)',   opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '37%',  left: '4%',  width: '38px', height: '38px', transform: 'rotate(-18deg)', opacity: 0.8  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '43%',  right: '6%', width: '30px', height: '30px', transform: 'rotate(12deg)',  opacity: 0.65 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '50%',  left: '20%', width: '44px', height: '44px', transform: 'rotate(-10deg)', opacity: 0.85 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '56%',  right: '18%',width: '26px', height: '26px', transform: 'rotate(20deg)',  opacity: 0.6  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '62%',  left: '8%',  width: '36px', height: '36px', transform: 'rotate(-24deg)', opacity: 0.75 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '68%',  right: '3%', width: '40px', height: '40px', transform: 'rotate(14deg)',  opacity: 0.8  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '74%',  left: '42%', width: '22px', height: '22px', transform: 'rotate(-4deg)',  opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '80%',  left: '6%',  width: '32px', height: '32px', transform: 'rotate(16deg)',  opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '85%',  right: '10%',width: '48px', height: '48px', transform: 'rotate(-16deg)', opacity: 0.85 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '91%',  left: '30%', width: '26px', height: '26px', transform: 'rotate(10deg)',  opacity: 0.6  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '95%',  right: '24%',width: '30px', height: '30px', transform: 'rotate(-20deg)', opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '98%',  left: '12%', width: '20px', height: '20px', transform: 'rotate(6deg)',   opacity: 0.55 }} />
+      </div>
       <style>{`
         .b2b-root {
           background-color: #FFFEE4;
