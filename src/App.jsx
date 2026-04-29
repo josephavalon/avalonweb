@@ -81,9 +81,9 @@ function AppRoutes() {
             <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
             <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
             <Route path="/notice-of-privacy-practices" element={<NoticeOfPrivacyPractices />} />
-            <Route path="/hipaa-notice" element={<NoticeOfPrivacyPractices />} />
+            <Route path="/hipaa-notice" element={<Navigate to="/notice-of-privacy-practices" replace />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
-            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/cookies" element={<Navigate to="/cookie-policy" replace />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>

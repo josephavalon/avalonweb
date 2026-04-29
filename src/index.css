@@ -379,3 +379,44 @@ body {
   .min-h-\[100svh\] { min-height: 100vh; }
   .h-\[100svh\] { height: 100vh; }
 }
+
+/* ===== Tier 3 partial: shared @layer components for repeated patterns =====
+ * Use these utility shortcuts in JSX instead of repeating long Tailwind class strings.
+ * Adjust the underlying spec in one place; every consumer updates automatically.
+ */
+@layer components {
+  /* Editorial section eyebrow — gold tracking caps used at the top of every section */
+  .av-eyebrow {
+    @apply text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase;
+  }
+
+  /* Canonical section h2 — used on every landing section title */
+  .av-h2 {
+    @apply font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase;
+  }
+
+  /* Tagline body copy that follows the h2 */
+  .av-tagline {
+    @apply font-body text-sm md:text-base text-muted-foreground leading-relaxed;
+  }
+
+  /* Glass surface — primary background for cards across the site */
+  .av-glass {
+    @apply border border-white/10 bg-white/[0.03] backdrop-blur-md;
+  }
+
+  /* Glass surface — heavy variant (Membership tiers, partner cards) */
+  .av-glass-heavy {
+    @apply border border-white/10 bg-white/[0.04] backdrop-blur-md;
+  }
+
+  /* Filled CTA pill — primary action across the site */
+  .av-cta-filled {
+    @apply px-6 py-3 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors;
+  }
+
+  /* Hollow CTA pill — secondary action / membership card buttons */
+  .av-cta-hollow {
+    @apply px-6 py-3 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:border-foreground transition-colors;
+  }
+}
