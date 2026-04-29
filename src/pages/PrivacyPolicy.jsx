@@ -42,7 +42,7 @@ const SECTIONS = [
     h: 'How we use your information',
     p: [
       'To provide the Services you request, including scheduling, in-home or remote consultations, prescribing where authorized by a California-licensed physician, and protocol design.',
-      'To process payments, manage memberships including the Founding 100 cohort, and send transactional and account communications.',
+      'To process payments, manage memberships including our presale cohort, and send transactional and account communications.',
       'To improve clinical outcomes through Avalon OS, by combining outcome and biomarker data (de-identified where possible) to refine future protocols.',
       'To comply with California medical record retention requirements, federal HIPAA obligations, audits, and other legal duties.',
       'To prevent fraud, enforce our Terms of Service, and protect the rights, property, and safety of Avalon, our members, and our staff.',

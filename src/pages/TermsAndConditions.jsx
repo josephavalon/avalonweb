@@ -38,7 +38,7 @@ const SECTIONS = [
   {
     h: '6. Memberships and credits',
     p: [
-      'Avalon offers tiered memberships, including the Founding 100 cohort, with monthly or annual billing. Membership credits accrue per the terms of your selected tier and apply toward eligible services.',
+      'Avalon offers tiered memberships, including our presale cohort, with monthly or annual billing. Membership credits accrue per the terms of your selected tier and apply toward eligible services.',
       'Unused credits may roll over for a limited period as defined in your member agreement. Memberships auto-renew unless cancelled in accordance with the cancellation policy below.',
     ],
   },

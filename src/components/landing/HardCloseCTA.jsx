@@ -13,12 +13,12 @@ export default function HardCloseCTA() {
         transition={{ duration: 0.8, ease: EASE }}
         className="max-w-3xl mx-auto text-center"
       >
-        <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-6">Founding 100</p>
+        <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-6">Apply Today</p>
         <h2 className="font-heading text-[10vw] md:text-7xl text-foreground tracking-tight leading-[1.05] uppercase mb-6 md:mb-8">
           Start before<br />everyone else does.
         </h2>
         <p className="font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-xl mx-auto mb-8 md:mb-10">
-          Avalon opens with a 100-member founding cohort. Locked-in pricing, first nurse pick, first protocol seat.
+          Locked-in presale pricing. First nurse pick. First protocol seat.
         </p>
         <Link
           to="/apply"
