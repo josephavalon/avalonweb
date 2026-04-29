@@ -232,7 +232,7 @@ export default function B2B() {
 
 
       {/* Hero */}
-      <section className="relative z-10 relative px-5 md:px-10 pt-8 md:pt-10 pb-8 md:pb-10 overflow-hidden">
+      <section className="relative z-10 relative px-5 md:px-10 pt-4 md:pt-8 pb-4 md:pb-8 overflow-hidden">
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
@@ -251,39 +251,36 @@ export default function B2B() {
                 height="531"
                 fetchpriority="high"
                 decoding="async"
-                className="block mx-auto w-[55vw] max-w-[260px] md:max-w-[340px] h-auto"
+                className="block mx-auto w-[40vw] max-w-[200px] md:max-w-[300px] h-auto"
               />
             </picture>
           </h1>
-          <p className="mt-5 md:mt-8 b2b-display text-4xl md:text-6xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+          <p className="mt-3 md:mt-5 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
             Sunday &middot; May 17
             <br />
             9 AM &ndash; 2 PM
           </p>
-          <p className="mt-3 md:mt-4 b2b-display text-lg md:text-2xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
+          <p className="mt-2 md:mt-3 b2b-display text-sm md:text-xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
             Finish line &middot; Ocean Beach
           </p>
-          <p className="mt-5 md:mt-7 text-2xl md:text-4xl b2b-display tracking-wide text-center leading-tight">
-            Finish-line IV, shots, &amp; recovery.<br />
-            <span className="b2b-pink inline-flex items-center gap-2 flex-wrap justify-center">
-              Pre-buy and we'll be there when you cross.
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6 md:w-8 md:h-8 b2b-pink inline-block"
-              >
-                <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
-              </svg>
-            </span>
+          <p className="mt-3 md:mt-5 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight inline-flex items-center gap-2 flex-wrap justify-center w-full">
+            <span>Finish-line IV, shots, &amp; recovery.</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-4 h-4 md:w-6 md:h-6 b2b-pink inline-block"
+            >
+              <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
+            </svg>
           </p>
         </div>
       </section>
 
       {/* Singles */}
-      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
+      <section className="relative z-10 px-5 md:px-10 pt-2 pb-8 md:pb-12">
         <div className="max-w-5xl mx-auto">
-          <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Pick your tier &darr;</p>
+          <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Pick your tier &darr;</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p) => {
               const showIvCount = p.consumes?.includes('b2bIv');
