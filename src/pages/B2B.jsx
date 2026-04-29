@@ -198,7 +198,7 @@ export default function B2B() {
               className="block mx-auto w-[55vw] max-w-[260px] md:max-w-[340px] h-auto"
             />
           </h1>
-          <p className="mt-5 md:mt-7 text-base md:text-2xl b2b-display tracking-wide text-center leading-relaxed">
+          <p className="mt-5 md:mt-7 text-2xl md:text-4xl b2b-display tracking-wide text-center leading-tight">
             Finish-line IV, shots, &amp; recovery.<br />
             <span className="b2b-pink inline-flex items-center gap-2 flex-wrap justify-center">
               Pre-buy and we'll be there when you cross.
@@ -206,7 +206,7 @@ export default function B2B() {
                 aria-hidden="true"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="w-5 h-5 md:w-6 md:h-6 b2b-pink inline-block"
+                className="w-6 h-6 md:w-8 md:h-8 b2b-pink inline-block"
               >
                 <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
               </svg>
@@ -378,7 +378,7 @@ export default function B2B() {
           </a>
 
           <p className="mt-4 text-xs leading-relaxed text-black/70">
-            Payment processed securely by Square. You will receive a confirmation email after purchase. Pickup details texted 48 hours before race weekend.
+            Payment processed securely by Square. Confirmation email sent immediately. Race-morning text from Avalon with the finish-line drop point.
           </p>
         </div>
       </section>
