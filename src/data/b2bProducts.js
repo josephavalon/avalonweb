@@ -59,7 +59,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-cbd-compression',
     name: 'CBD + Boots',
     tagline: 'Save $20 — Premium recovery',
-    description: 'CBD IV with compression therapy. The most complete recovery option for hard race effort.',
+    description: 'CBD IV with pneumatic compression boots. Premium recovery pairing for hard race effort.',
     price: 380,
     originalPrice: 400,
     kind: 'bundle',
