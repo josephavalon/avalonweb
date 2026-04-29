@@ -49,13 +49,10 @@ export default function TrustStrip() {
           })}
         </ul>
 
-        {/* Mobile: horizontal scroll, edge-faded, no scrollbar */}
-        <div
-          className="md:hidden overflow-x-auto"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          <ul className="flex items-center gap-0 w-max px-2">
-            {CREDENTIALS.map((item, i) => {
+        {/* Mobile: 3 most important credentials only, no scroll */}
+        <div className="md:hidden">
+          <ul className="flex items-center justify-center gap-0">
+            {CREDENTIALS.slice(0, 3).map((item, i) => {
               const Icon = item.icon;
               return (
                 <li key={item.label} className="flex items-center">

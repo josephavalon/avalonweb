@@ -31,9 +31,7 @@ const treatments = [
     suffix: 'starting / session',
     tag: 'Cellular Repair',
     perks: [
-      'Coenzyme found in every cell',
       '250mg → 1500mg dose-graded',
-      'Avalon clinician on-site',
       'Stack with IM shots or vitamin add-ons',
     ],
   },

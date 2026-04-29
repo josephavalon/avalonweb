@@ -54,20 +54,7 @@ export default function Testimonials() {
     if (el) el.scrollLeft = 0;
   }, []);
 
-  // Auto-advance every 4.5s
-  useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => {
-      const el = scrollRef.current;
-      if (!el || document.hidden) return;
-      const cardW = el.firstElementChild?.firstElementChild?.getBoundingClientRect().width || 320;
-      const gap = 16;
-      const maxLeft = el.scrollWidth - el.clientWidth;
-      const next = Math.abs(el.scrollLeft - maxLeft) < 8 ? 0 : el.scrollLeft + cardW + gap;
-      el.scrollTo({ left: next, behavior: 'smooth' });
-    }, 4500);
-    return () => clearInterval(id);
-  }, [paused]);
+  // Manual scroll only — testimonials should not auto-advance (UX audit: reading is the conversion event)
 
   const scroll = (direction) => {
     if (!scrollRef.current) return;

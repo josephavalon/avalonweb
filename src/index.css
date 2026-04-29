@@ -420,3 +420,15 @@ body {
     @apply px-6 py-3 border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:border-foreground transition-colors;
   }
 }
+
+/* ===== UX audit polish: subtle hover-lift on all glass cards =====
+ * Scoped to .av-glass and .av-glass-heavy utility classes.
+ * Cards that don't use those utilities won't be affected (yet).
+ */
+.av-glass, .av-glass-heavy {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.av-glass:hover, .av-glass-heavy:hover {
+  transform: translateY(-2px);
+  border-color: rgb(255 255 255 / 0.18);
+}

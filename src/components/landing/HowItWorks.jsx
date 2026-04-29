@@ -83,7 +83,7 @@ export default function HowItWorks() {
         {/* Carousel — snap-mandatory with peek on mobile, grid on desktop. */}
         <div
           ref={scrollRef}
-          className="how-it-works-scroll -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible snap-x snap-mandatory"
+          className="how-it-works-scroll md:overflow-visible"
           style={{
             scrollBehavior: 'smooth',
             scrollbarWidth: 'none',
@@ -99,7 +99,7 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.7, ease: EASE }}
-                className="shrink-0 w-[60vw] sm:w-[45vw] md:w-auto snap-start text-center p-4 md:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl"
+                className="w-full text-center p-4 md:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl"
               >
                 <step.icon
                   className="w-6 h-6 text-accent mx-auto mb-2"

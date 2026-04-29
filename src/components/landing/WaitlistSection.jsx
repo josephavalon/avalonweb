@@ -80,7 +80,7 @@ export default function WaitlistSection() {
           transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
           className="font-body text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed mb-3"
         >
-          Presale updates, launch details, and early access to new protocols.
+          Be first when we launch.
         </motion.p>
 
         <div className="mb-8" />
