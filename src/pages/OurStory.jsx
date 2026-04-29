@@ -139,7 +139,7 @@ export default function OurStory() {
       <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
         <div className="max-w-content mx-auto grid md:grid-cols-12 gap-rhythm-6">
           <motion.div {...REVEAL} className="md:col-span-5">
-            <p className="text-eyebrow text-muted-foreground/80 font-body uppercase mb-6">
+            <p className="text-eyebrow text-muted-foreground font-body uppercase mb-6">
               The Thesis
             </p>
             <h2 className="font-heading text-h1 text-foreground tracking-wide">
@@ -151,15 +151,15 @@ export default function OurStory() {
             transition={{ ...REVEAL.transition, delay: 0.15 }}
             className="md:col-span-7 space-y-5 max-w-measure"
           >
-            <p className="font-body text-body text-foreground/90 leading-relaxed">
+            <p className="font-body text-body text-foreground leading-relaxed">
               Living in the Bay Area means operating at full velocity. High performers don't
               guess at recovery — they engineer it.
             </p>
-            <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
+            <p className="font-body text-body text-muted-foreground leading-relaxed">
               From late nights in Silicon Valley to weekends at BottleRock and Burning Man,
               the pace never stops. Recovery shouldn't either.
             </p>
-            <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
+            <p className="font-body text-body text-muted-foreground leading-relaxed">
               We built Avalon to bring clinician-delivered hydration and wellness protocols
               directly to you — so you can stay present for the life you've chosen.
             </p>
@@ -180,12 +180,12 @@ export default function OurStory() {
             <h3 className="font-heading text-h3 text-foreground tracking-wide mb-6">
               The infrastructure never kept pace.
             </h3>
-            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed mb-4">
+            <p className="font-body text-body-sm text-muted-foreground leading-relaxed mb-4">
               California builds everything at the frontier — but recovery was an
               afterthought. Walk-in waits. Generic menus. Nothing calibrated to how Bay
               Area professionals actually live.
             </p>
-            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+            <p className="font-body text-body-sm text-muted-foreground leading-relaxed">
               We believed you deserved something better: care that comes to you, informed by
               your intake assessment, delivered by clinicians who take outcomes as seriously
               as you take your work.
@@ -201,7 +201,7 @@ export default function OurStory() {
             <h3 className="font-heading text-h3 text-foreground tracking-wide mb-6">
               World-leading recovery at reasonable cost.
             </h3>
-            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+            <p className="font-body text-body-sm text-muted-foreground leading-relaxed">
               Clinician-supervised hydration and wellness therapies, delivered to you —
               priced to reward membership. Whether you're bouncing back from a pitch or
               recharging after a weekend on your feet.
@@ -227,11 +227,11 @@ export default function OurStory() {
             transition={{ ...REVEAL.transition, delay: 0.15 }}
             className="md:col-span-7 max-w-measure"
           >
-            <p className="font-body text-body-lg text-foreground/90 leading-relaxed mb-5">
+            <p className="font-body text-body-lg text-foreground leading-relaxed mb-5">
               Years of clinical and operational collaboration, pointed at one problem:
               world-class recovery that works when you need it and doesn't cost a fortune.
             </p>
-            <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+            <p className="font-body text-body-sm text-muted-foreground leading-relaxed">
               We're here to support creators, founders, and performers with the kind of care
               that fits how they actually work.
             </p>
@@ -249,7 +249,7 @@ export default function OurStory() {
             <h2 className="font-heading text-h2 text-foreground tracking-wide">
               Your place. Your pace.
             </h2>
-            <p className="font-body text-body text-muted-foreground/90 leading-relaxed mt-4 max-w-measure">
+            <p className="font-body text-body text-muted-foreground leading-relaxed mt-4 max-w-measure">
               Under expert clinical guidance, licensed clinicians deliver hydration and
               wellness protocols wherever you are across the Bay Area.
             </p>
@@ -288,7 +288,7 @@ export default function OurStory() {
             <h2 className="font-heading text-h1 text-foreground tracking-wide mb-4">
               Care that travels with credentials.
             </h2>
-            <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
+            <p className="font-body text-body text-muted-foreground leading-relaxed">
               Every visit is supervised by our medical director and delivered by a
               California-licensed clinician — at home, at work, in hotels, in green rooms,
               and at events across the Bay Area.
@@ -309,7 +309,7 @@ export default function OurStory() {
               <p className="text-micro tracking-[0.2em] text-accent font-body uppercase mb-5">
                 Founder &amp; Medical Director
               </p>
-              <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+              <p className="font-body text-body-sm text-muted-foreground leading-relaxed">
                 Medical doctor with a background in internal medicine and performance-focused
                 wellness. Dr. Weir built Avalon around a new standard: on-demand clinical
                 care, tailored to the people who move the Bay Area forward.
@@ -330,7 +330,7 @@ export default function OurStory() {
               <p className="text-micro tracking-[0.2em] text-accent font-body uppercase mb-5">
                 Lead Registered Nurse
               </p>
-              <p className="font-body text-body-sm text-muted-foreground/90 leading-relaxed">
+              <p className="font-body text-body-sm text-muted-foreground leading-relaxed">
                 Veteran IV nurse and co-clinical lead. Stephanie sets Avalon's standards for
                 safety, sterility, and bedside care — so every session meets the same bar,
                 whether it's your first or your fortieth.

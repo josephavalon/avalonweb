@@ -45,7 +45,7 @@ export default function DayInTheLife() {
                 <Clock className="w-3 h-3" strokeWidth={1.5} />
                 {s.time}
               </p>
-              <p className="font-body text-base md:text-lg text-foreground/90 leading-relaxed">{s.text}</p>
+              <p className="font-body text-base md:text-lg text-foreground leading-relaxed">{s.text}</p>
             </motion.li>
           ))}
         </ol>

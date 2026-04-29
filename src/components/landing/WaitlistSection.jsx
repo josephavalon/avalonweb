@@ -163,7 +163,7 @@ export default function WaitlistSection() {
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="flex-1 bg-transparent border border-foreground/30 rounded-full px-5 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground transition-colors"
+                className="flex-1 bg-transparent border border-foreground/30 rounded-full px-5 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
               />
               <button
                 type="submit"
@@ -207,7 +207,7 @@ export default function WaitlistSection() {
               </p>
             )}
 
-            <p className="mt-4 font-body text-xs text-muted-foreground/80 leading-relaxed">
+            <p className="mt-4 font-body text-xs text-muted-foreground leading-relaxed">
               By joining, you agree to receive occasional updates from Avalon Vitality.
               Unsubscribe any time.
             </p>

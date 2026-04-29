@@ -20,7 +20,7 @@ const LAYERS = [
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
   return (
-    <section id="avalon-os" className="py-2 md:py-4 px-4">
+    <section id="avalon-os" className="py-12 md:py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Title block — Coming Soon eyebrow → AVALON OS title → divider → Intelligent Delivery sub-subtitle */}
         <motion.div

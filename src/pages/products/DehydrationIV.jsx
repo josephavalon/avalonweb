@@ -229,11 +229,11 @@ export default function DehydrationIV() {
       <section className="py-12 px-4 md:px-16 border-t border-border">
         <div className="max-w-3xl mx-auto">
           <div className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-8">
-            <p className="font-body text-xs text-muted-foreground/70 leading-relaxed">
+            <p className="font-body text-xs text-muted-foreground leading-relaxed">
               <span className="font-semibold text-foreground block mb-3">Clinical Support:</span>
               Performed by California-licensed nurses under physician supervision.
             </p>
-            <p className="font-body text-xs text-muted-foreground/70 leading-relaxed mt-4">
+            <p className="font-body text-xs text-muted-foreground leading-relaxed mt-4">
               <span className="font-semibold text-foreground block mb-3">Disclaimer:</span>
               For general wellness only. Not intended to diagnose, treat, cure, or prevent any condition.
             </p>

@@ -33,14 +33,14 @@ export default function Home() {
       <Navbar />
       <Hero />
       <TrustStrip />
+      <WhatIsIV />
       <OurDrips />
       <MembershipSection />
-      <WhatIsIV />
       <HowItWorks />
       {/* <GiftCertificates /> — hidden for presale */}
       <EventsSection />
-      <B2BSection />
       <Testimonials />
+      <B2BSection />
       <AvalonOSPreview />
       <WaitlistSection />
       <Footer />

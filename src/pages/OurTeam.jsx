@@ -90,7 +90,7 @@ function PersonCard({ person, i, anchor }) {
         </p>
       )}
       {person.bio && (
-        <p className={`font-body text-sm text-foreground/85 leading-relaxed ${person.credentials ? '' : 'mt-4'}`}>
+        <p className={`font-body text-sm text-foreground/70 leading-relaxed ${person.credentials ? '' : 'mt-4'}`}>
           {person.bio}
         </p>
       )}

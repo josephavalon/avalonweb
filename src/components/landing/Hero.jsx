@@ -99,7 +99,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
+          className="text-center font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
         >
           Built for high-performers who don't have time to slow down.
         </motion.p>

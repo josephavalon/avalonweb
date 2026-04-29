@@ -36,7 +36,7 @@ function TestimonialCard({ t, active = false }) {
       {/* Words — the quote, large and quotable */}
       <div className="relative pl-4">
         <span className="absolute left-0 top-1 text-accent/50 font-heading text-2xl leading-none">&ldquo;</span>
-        <p className="font-body text-sm md:text-base text-foreground/90 leading-relaxed">
+        <p className="font-body text-sm md:text-base text-foreground leading-relaxed">
           {t.quote}
         </p>
       </div>
@@ -87,7 +87,7 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-14 md:py-22 px-4">
+    <section className="py-12 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -157,7 +157,7 @@ export default function Testimonials() {
         </div>
 
         <div className="mt-8 md:mt-10 max-w-2xl">
-          <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground/80 leading-relaxed">
+          <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground leading-relaxed">
             Testimonials reflect the individual experience of real Avalon clients. Names and handles may be initials or stage names at each client&rsquo;s request. Individual experiences vary; results are not typical and are not guaranteed. No clients were compensated in cash for these statements; some received complimentary sessions. Educational information only — not medical advice.
           </p>
         </div>

@@ -65,7 +65,7 @@ export default function WhyAvalon() {
               transition={{ duration: 0.4, delay: i * 0.04, ease: EASE }}
               className="grid grid-cols-[1.5fr_repeat(4,1fr)] gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-white/5 last:border-b-0 items-center"
             >
-              <span className="font-body text-xs md:text-sm text-foreground/85 leading-snug">
+              <span className="font-body text-xs md:text-sm text-foreground/70 leading-snug">
                 {row.feature}
               </span>
               {row.values.map((v, j) => (

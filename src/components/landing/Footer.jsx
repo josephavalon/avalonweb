@@ -141,7 +141,7 @@ export default function Footer() {
             </p>
           </div>
           <div className="pt-4 mb-6">
-            <p className="font-body text-xs text-foreground/80 leading-relaxed text-center md:text-right">
+            <p className="font-body text-xs text-foreground/70 leading-relaxed text-center md:text-right">
               Statements made by Avalon Vitality about its services and products have not been evaluated by the U.S. Food and Drug Administration. The Services are not intended to diagnose, treat, cure, or prevent any disease. Information provided is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician. Individual results vary. Always consult your physician before beginning any therapy.
             </p>
           </div>

@@ -13,7 +13,7 @@ const EASE = [0.16, 1, 0.3, 1];
 
 export default function B2BSection() {
   return (
-    <section id="b2b" className="py-14 md:py-24 px-4">
+    <section id="b2b" className="py-12 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-8 md:gap-12 items-start">
 
@@ -56,7 +56,7 @@ export default function B2BSection() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-heading text-base md:text-lg text-foreground tracking-wide uppercase leading-tight mb-1.5">{item.title}</h3>
-                  <p className="font-body text-xs md:text-sm text-foreground/80 leading-snug">{item.desc}</p>
+                  <p className="font-body text-xs md:text-sm text-foreground/70 leading-snug">{item.desc}</p>
                 </div>
               </motion.div>
             ))}

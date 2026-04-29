@@ -214,7 +214,7 @@ export default function Apply() {
             </p>
             <p className="font-body text-xs text-muted-foreground/75 leading-relaxed mb-10 max-w-md mx-auto">
               Check your inbox (and spam) for a confirmation from{' '}
-              <span className="text-foreground/80">team@avalonvitality.co</span>.
+              <span className="text-foreground/70">team@avalonvitality.co</span>.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

@@ -79,7 +79,7 @@ export default function ClinicalOversight() {
             <p className="font-body text-xs tracking-[0.25em] uppercase text-accent mb-5">
               {MEDICAL_DIRECTOR.credentials}
             </p>
-            <p className="font-body text-sm text-foreground/85 leading-relaxed">
+            <p className="font-body text-sm text-foreground/70 leading-relaxed">
               {MEDICAL_DIRECTOR.bio}
             </p>
           </motion.div>

@@ -190,7 +190,7 @@ export default function ProductDetail() {
       {/* Disclaimer */}
       <section className="py-12 px-6 md:px-16">
         <div className="max-w-4xl mx-auto">
-          <p className="font-body text-[11px] text-muted-foreground/60 text-center leading-relaxed">
+          <p className="font-body text-[11px] text-muted-foreground text-center leading-relaxed">
             Educational content only — not intended to diagnose, treat, cure, or prevent any condition.
             Administered by California-licensed clinicians under physician supervision.
           </p>

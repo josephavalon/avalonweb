@@ -59,7 +59,7 @@ export default function BloodstreamPath() {
         {/* Divider axis */}
         <line x1="30" y1="125" x2="360" y2="125" stroke="hsl(var(--foreground))" strokeWidth="0.5" opacity="0.12" />
       </svg>
-      <p className="absolute bottom-1 right-2 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-body">Educational</p>
+      <p className="absolute bottom-1 right-2 text-[10px] uppercase tracking-widest text-muted-foreground font-body">Educational</p>
     </div>
   );
 }

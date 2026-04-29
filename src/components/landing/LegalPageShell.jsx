@@ -32,7 +32,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
             {intro && (
               <div className="mt-6 space-y-3">
                 {intro.map((p, i) => (
-                  <p key={i} className="font-body text-sm md:text-base text-foreground/85 leading-relaxed">{p}</p>
+                  <p key={i} className="font-body text-sm md:text-base text-foreground/70 leading-relaxed">{p}</p>
                 ))}
               </div>
             )}
@@ -53,12 +53,12 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                 </h2>
                 <div className="space-y-3">
                   {s.p.map((para, j) => (
-                    <p key={j} className="font-body text-sm md:text-base text-foreground/85 leading-relaxed">
+                    <p key={j} className="font-body text-sm md:text-base text-foreground/70 leading-relaxed">
                       {para}
                     </p>
                   ))}
                   {s.list && (
-                    <ul className="font-body text-sm md:text-base text-foreground/85 leading-relaxed list-disc pl-5 space-y-1">
+                    <ul className="font-body text-sm md:text-base text-foreground/70 leading-relaxed list-disc pl-5 space-y-1">
                       {s.list.map((li, k) => <li key={k}>{li}</li>)}
                     </ul>
                   )}

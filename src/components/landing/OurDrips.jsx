@@ -119,7 +119,7 @@ export default function OurDrips() {
   };
 
   return (
-    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-20 px-4">
+    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -133,7 +133,7 @@ export default function OurDrips() {
             Vitality Treatments
           </h2>
           <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
-          <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
+          <p className="font-body text-sm md:text-base text-foreground/70 mt-2 md:mt-4 max-w-xl">
             Delivered by Avalon&rsquo;s nurses across the Bay.
           </p>
         </motion.div>

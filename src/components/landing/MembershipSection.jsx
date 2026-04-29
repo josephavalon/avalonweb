@@ -206,13 +206,13 @@ export default function MembershipSection() {
   };
 
   return (
-    <section id="membership" className="py-12 md:py-20 px-4">
+    <section id="membership" className="py-12 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-left mb-3 md:mb-6">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Vitality Tiers</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">VITALITY MEMBERSHIP</h2>
           <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
-          <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
+          <p className="font-body text-sm md:text-base text-foreground/70 mt-2 md:mt-4 max-w-xl">
             One membership tier. Pick your protocol — CBD, Vitamins, or NAD+.</p>
           <div className="flex items-center gap-2 md:gap-3 mt-5 md:mt-6 flex-wrap">
             <span className="font-body text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-accent">Apply</span>
@@ -275,7 +275,7 @@ export default function MembershipSection() {
           </div>
         </div>
 
-        <p className="font-body text-xs text-muted-foreground/80 text-center mt-4 md:mt-8 max-w-2xl mx-auto leading-relaxed">
+        <p className="font-body text-xs text-muted-foreground text-center mt-4 md:mt-8 max-w-2xl mx-auto leading-relaxed">
           3-month minimum commitment. Credits roll over month-to-month as long as your membership remains active. Membership subject to clinical approval.
         </p>
       </div>
