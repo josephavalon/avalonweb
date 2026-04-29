@@ -161,23 +161,23 @@ export default function B2B() {
       </header>
 
       {/* Hero */}
-      <section className="relative px-5 md:px-10 pt-12 md:pt-16 pb-10 md:pb-14 overflow-hidden">
+      <section className="relative px-5 md:px-10 pt-8 md:pt-10 pb-8 md:pb-10 overflow-hidden">
         {/* Star accents */}
-        <StarBurst className="absolute top-8 left-6 w-10 h-10 b2b-pink rotate-12" />
-        <StarBurst className="absolute top-20 right-8 w-14 h-14 b2b-pink -rotate-12" />
+        <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
+        <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <p className="b2b-display b2b-pink text-xl md:text-3xl mb-4 tracking-widest">Avalon Vitality &times;</p>
+          <p className="b2b-display b2b-pink text-sm md:text-lg mb-3 tracking-widest">Avalon Vitality &times;</p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
           <h1 className="m-0">
             <img
               src="/bay-to-breakers-logo.png"
               alt="Bay to Breakers"
-              className="block mx-auto w-[80vw] max-w-[480px] md:max-w-[600px] h-auto"
+              className="block mx-auto w-[55vw] max-w-[260px] md:max-w-[340px] h-auto"
             />
           </h1>
-          <p className="mt-8 md:mt-12 text-lg md:text-2xl b2b-display tracking-wide text-center">
+          <p className="mt-5 md:mt-7 text-sm md:text-lg b2b-display tracking-wide text-center">
             Finish-line IV, shots, &amp; recovery.<br />
             <span className="b2b-pink inline-flex items-center gap-2 flex-wrap justify-center">
               Pre-buy and we'll be there when you cross.
