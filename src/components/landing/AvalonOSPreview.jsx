@@ -28,7 +28,7 @@ export default function AvalonOSPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-3 md:mb-6"
+          className="text-left mb-6 md:mb-10"
         >
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
@@ -52,14 +52,14 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-center gap-2 md:gap-4 px-2 md:px-4 py-1.5 md:py-2 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-xl">
+                  <div key={l.n} className="flex items-center gap-2 md:gap-4 px-2 md:px-4 py-1.5 md:py-2 border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-xl">
                     <span className="text-xs md:text-lg tracking-[0.15em] text-accent font-body uppercase w-4 md:w-7 shrink-0 text-center">{l.n}</span>
                     <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                       <Icon className="w-4 h-4 md:w-4 md:h-4" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-heading text-[11px] md:text-sm text-foreground tracking-wide uppercase leading-none mb-0.5 md:mb-1">{l.name}</p>
-                      <p className="font-body text-[10px] leading-tight md:text-xs md:leading-snug text-muted-foreground">
+                      <p className="font-body text-[10px] leading-tight md:text-xs md:leading-relaxed text-muted-foreground">
                         {l.desc}{l.accentTail && <> <span className="text-accent font-normal">{l.accentTail}</span></>}
                       </p>
                     </div>

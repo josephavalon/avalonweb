@@ -372,7 +372,7 @@ export default function Apply() {
               <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-1 px-1" id="tier-label">
                 Select your preferred tier(s) — optional
               </p>
-              <p className="font-body text-xs text-muted-foreground/75 mb-3 px-1 leading-snug">
+              <p className="font-body text-xs text-muted-foreground/75 mb-3 px-1 leading-relaxed">
                 You can pick one protocol or combine across Vitamins, NAD+, and CBD. We'll confirm on your intake call.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2" role="group" aria-labelledby="tier-label">

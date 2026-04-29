@@ -56,7 +56,7 @@ function TreatmentCard({ t }) {
   const Icon = t.icon;
   return (
     <div
-      className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto snap-center md:snap-align-none border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-4 md:p-5 flex flex-col"
+      className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto snap-center md:snap-align-none border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-3xl p-4 md:p-5 flex flex-col"
     >
       {/* Tier name row */}
       <div className="flex items-center gap-2 mb-3">
@@ -83,7 +83,7 @@ function TreatmentCard({ t }) {
         {t.perks.map((perk) => (
           <li key={perk} className="flex items-start gap-2">
             <Plus className="w-3 h-3 text-accent shrink-0 mt-0.5" strokeWidth={2.5} />
-            <span className="font-body text-xs text-foreground leading-snug">{perk}</span>
+            <span className="font-body text-xs text-foreground leading-relaxed">{perk}</span>
           </li>
         ))}
       </ul>
@@ -117,7 +117,7 @@ export default function OurDrips() {
   return (
     <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-left mb-3 md:mb-6">
+        <div className="text-left mb-6 md:mb-10">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Live Protocols</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
             Vitality Treatments

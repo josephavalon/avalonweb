@@ -67,7 +67,7 @@ export default function Footer() {
             <div className="font-heading text-2xl tracking-widest">AVALON</div>
             <div className="text-xs tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
           </div>
-          <p className="font-body text-xs text-foreground leading-snug text-left max-w-sm">
+          <p className="font-body text-xs text-foreground leading-relaxed text-left max-w-sm">
             Mobile longevity, delivered. Hydration, NAD+, peptides, and intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
           </p>
         </div>

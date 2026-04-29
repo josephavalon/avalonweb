@@ -48,7 +48,7 @@ export default function ClinicalOversight() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="text-left mb-8 md:mb-12"
+          className="text-left mb-6 md:mb-10"
         >
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">
             Clinical Oversight
@@ -68,7 +68,7 @@ export default function ClinicalOversight() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
-            className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-8 flex flex-col"
+            className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-8 flex flex-col"
           >
             <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">
               {MEDICAL_DIRECTOR.title}
@@ -95,7 +95,7 @@ export default function ClinicalOversight() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.15 + i * 0.1, ease: EASE }}
-                  className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl p-5 md:p-6 flex gap-4 items-start"
+                  className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-3xl p-5 md:p-6 flex gap-4 items-start"
                 >
                   <PillarIcon
                     className="w-5 h-5 text-accent shrink-0 mt-1"

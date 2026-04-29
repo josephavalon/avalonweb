@@ -99,7 +99,7 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.7, ease: EASE }}
-                className="w-full text-center p-4 md:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl"
+                className="w-full text-center p-4 md:p-5 border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-3xl"
               >
                 <step.icon
                   className="w-6 h-6 text-accent mx-auto mb-2"

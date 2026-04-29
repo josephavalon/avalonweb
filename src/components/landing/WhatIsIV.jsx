@@ -29,7 +29,7 @@ export default function WhatIsIV() {
             className="hidden md:flex relative items-start justify-start pt-8"
           >
             <div className="relative w-full max-w-xs">
-              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/10 bg-white/[0.03] backdrop-blur-md">
+              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/15 bg-white/[0.03] backdrop-blur-md">
                 <img
                   src="/bags/immunity.png"
                   alt="Avalon Vitality vitamin IV bag"
@@ -53,7 +53,7 @@ export default function WhatIsIV() {
             transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="text-left"
           >
-            <p className="font-body text-base md:text-lg text-foreground leading-snug mb-8">
+            <p className="font-body text-base md:text-lg text-foreground leading-relaxed mb-8">
               Avalon's nurses deploy fluids into your bloodstream for 100% delivery.
             </p>
         {/* Stats grid */}

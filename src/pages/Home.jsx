@@ -38,7 +38,7 @@ export default function Home() {
       <MembershipSection />
       <HowItWorks />
       {/* <GiftCertificates /> — hidden for presale */}
-      <EventsSection />
+      {/* <EventsSection /> — hidden on homepage until launch week, only 2 events scheduled */}
       <Testimonials />
       <B2BSection />
       <AvalonOSPreview />

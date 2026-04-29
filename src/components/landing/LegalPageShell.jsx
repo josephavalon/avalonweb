@@ -18,7 +18,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE }}
-            className="text-left mb-10 md:mb-14"
+            className="text-left mb-6 md:mb-10"
           >
             <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">{eyebrow}</p>
             <h1 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
@@ -46,7 +46,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-10%' }}
                 transition={{ duration: 0.5, delay: 0.04 + i * 0.02, ease: EASE }}
-                className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-6 md:p-8"
+                className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6"
               >
                 <h2 className="font-heading text-lg md:text-xl text-foreground tracking-wide uppercase mb-4">
                   {s.h}

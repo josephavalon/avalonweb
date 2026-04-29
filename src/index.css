@@ -402,12 +402,12 @@ body {
 
   /* Glass surface — primary background for cards across the site */
   .av-glass {
-    @apply border border-white/10 bg-white/[0.03] backdrop-blur-md;
+    @apply border border-white/15 bg-white/[0.03] backdrop-blur-md;
   }
 
   /* Glass surface — heavy variant (Membership tiers, partner cards) */
   .av-glass-heavy {
-    @apply border border-white/10 bg-white/[0.04] backdrop-blur-md;
+    @apply border border-white/15 bg-white/[0.04] backdrop-blur-md;
   }
 
   /* Filled CTA pill — primary action across the site */
@@ -551,4 +551,37 @@ a:focus-visible,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== 8. max-w-prose on body paragraphs for readable line lengths on desktop ===== */
+/* Targeted: paragraphs inside main landing sections that aren't already constrained */
+section p:not([class*="max-w-"]):not([class*="text-center"]) {
+  max-width: 65ch;
+}
+
+/* ===== 9. Eyebrow primary anchor — bump to 13px ===== */
+/* Applies to .av-eyebrow utility class only (used as Tailwind shortcut); inline classes keep their size */
+.av-eyebrow {
+  font-size: 13px;
+}
+@media (min-width: 768px) {
+  .av-eyebrow {
+    font-size: 14px;
+  }
+}
+
+/* ===== 11. Hero CTA — subtle glow ring + chevron affordance ===== */
+.apply-now-btn {
+  box-shadow: 0 0 0 0 hsl(var(--accent) / 0), 0 4px 16px 0 hsl(var(--accent) / 0.15);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.apply-now-btn:hover {
+  box-shadow: 0 0 0 1px hsl(var(--accent) / 0.4), 0 6px 24px 0 hsl(var(--accent) / 0.25);
+}
+
+/* ===== 12. Treatment scroll hint — bump opacity, use accent gradient ===== */
+.av-scroll-hint::after {
+  width: 80px;
+  background: linear-gradient(to left, hsl(var(--background)) 0%, hsl(var(--background) / 0.95) 40%, transparent 100%);
+  opacity: 1;
 }

@@ -79,7 +79,7 @@ export default function OurStory() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="text-left mb-8 md:mb-12"
+            className="text-left mb-6 md:mb-10"
           >
             <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Standards</p>
             <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
@@ -116,7 +116,7 @@ export default function OurStory() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-10%' }}
                 transition={{ duration: 0.6, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-7 flex flex-col items-start gap-4"
+                className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-7 flex flex-col items-start gap-4"
               >
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                   <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
@@ -172,7 +172,7 @@ export default function OurStory() {
         <div className="max-w-content mx-auto grid md:grid-cols-2 gap-rhythm-4">
           <motion.div
             {...REVEAL}
-            className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
+            className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
           >
             <p className="text-eyebrow text-accent font-body uppercase mb-5">
               Why We Built Avalon
@@ -195,7 +195,7 @@ export default function OurStory() {
           <motion.div
             {...REVEAL}
             transition={{ ...REVEAL.transition, delay: 0.15 }}
-            className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
+            className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
           >
             <p className="text-eyebrow text-accent font-body uppercase mb-5">Our Mission</p>
             <h3 className="font-heading text-h3 text-foreground tracking-wide mb-6">
@@ -262,7 +262,7 @@ export default function OurStory() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.08, duration: 0.6, ease: EASE }}
-                className="flex flex-col items-center justify-center gap-3 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6 min-h-[120px]"
+                className="flex flex-col items-center justify-center gap-3 border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6 min-h-[120px]"
               >
                 <Icon className="w-5 h-5 text-accent" strokeWidth={1.5} />
                 <span className="font-body text-micro uppercase text-foreground text-center">
@@ -298,9 +298,9 @@ export default function OurStory() {
           <div className="grid md:grid-cols-2 gap-rhythm-4">
             <motion.div
               {...REVEAL}
-              className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
+              className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
             >
-              <div className="w-14 h-14 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-md flex items-center justify-center mb-6">
+              <div className="w-14 h-14 rounded-full border border-white/15 bg-white/[0.05] backdrop-blur-md flex items-center justify-center mb-6">
                 <span className="font-heading text-xl text-accent tracking-wider">JW</span>
               </div>
               <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">
@@ -319,9 +319,9 @@ export default function OurStory() {
             <motion.div
               {...REVEAL}
               transition={{ ...REVEAL.transition, delay: 0.15 }}
-              className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
+              className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-2xl p-8 md:p-10"
             >
-              <div className="w-14 h-14 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-md flex items-center justify-center mb-6">
+              <div className="w-14 h-14 rounded-full border border-white/15 bg-white/[0.05] backdrop-blur-md flex items-center justify-center mb-6">
                 <span className="font-heading text-xl text-accent tracking-wider">SW</span>
               </div>
               <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">

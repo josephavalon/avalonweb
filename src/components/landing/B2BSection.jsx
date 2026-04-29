@@ -49,14 +49,14 @@ export default function B2BSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-10%' }}
                 transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
-                className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-4 md:p-5 flex items-start gap-3 md:gap-4"
+                className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-2xl p-4 md:p-5 flex items-start gap-3 md:gap-4"
               >
                 <div className="w-11 h-11 md:w-12 md:h-12 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                   <item.icon className="w-5 h-5 md:w-5 md:h-5" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-heading text-base md:text-lg text-foreground tracking-wide uppercase leading-tight mb-1.5">{item.title}</h3>
-                  <p className="font-body text-xs md:text-sm text-foreground/70 leading-snug">{item.desc}</p>
+                  <p className="font-body text-xs md:text-sm text-foreground/70 leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}

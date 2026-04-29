@@ -72,7 +72,7 @@ export default function DehydrationIV() {
               </p>
             </div>
 
-            <div className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-6 mb-10">
+            <div className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-2xl p-6 mb-10">
               <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-4">
                 Duration
               </p>
@@ -118,7 +118,7 @@ export default function DehydrationIV() {
 
           {/* Toggle */}
           <div className="flex justify-center mb-12">
-            <div className="flex items-center border border-white/10 bg-white/[0.05] backdrop-blur-md rounded-full p-1 gap-1">
+            <div className="flex items-center border border-white/15 bg-white/[0.05] backdrop-blur-md rounded-full p-1 gap-1">
               <button
                 onClick={() => setSelectedOption('onetime')}
                 className={`px-8 py-3 font-body text-sm tracking-widest uppercase rounded-full transition-colors font-semibold ${
@@ -149,7 +149,7 @@ export default function DehydrationIV() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl p-8 flex flex-col"
+                className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-3xl p-8 flex flex-col"
               >
                 <div className="mb-8">
                   <p className="text-[9px] tracking-[0.3em] text-muted-foreground font-body uppercase mb-3">
@@ -228,7 +228,7 @@ export default function DehydrationIV() {
       {/* Disclaimer */}
       <section className="py-12 px-4 md:px-16 border-t border-border">
         <div className="max-w-3xl mx-auto">
-          <div className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-2xl p-8">
+          <div className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-2xl p-8">
             <p className="font-body text-xs text-muted-foreground leading-relaxed">
               <span className="font-semibold text-foreground block mb-3">Clinical Support:</span>
               Performed by California-licensed nurses under physician supervision.

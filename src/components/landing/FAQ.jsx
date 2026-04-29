@@ -76,7 +76,7 @@ const CATEGORIES = ['All', 'General', 'Membership', 'Safety'];
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
     <div
-      className="border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer"
+      className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer"
       onClick={onToggle}
     >
       <div className="flex items-center justify-between px-5 py-3 gap-4">

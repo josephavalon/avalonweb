@@ -14,7 +14,7 @@ export default function GiftCertificates() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-left mb-4 md:mb-8"
+          className="text-left mb-6 md:mb-10"
         >
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">Give The Gift of Recovery</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide md:whitespace-nowrap">GIFT CERTIFICATES</h2>
@@ -74,7 +74,7 @@ export default function GiftCertificates() {
             transition={{ duration: 0.9, delay: 0.2 }}
             className="relative hidden md:block"
           >
-            <div className="border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-10 relative overflow-hidden">
+            <div className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-3xl p-10 relative overflow-hidden">
               {/* Background glow */}
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-3xl" />
 
