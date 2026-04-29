@@ -26,7 +26,7 @@ export default function B2BSection() {
             className="text-left md:sticky md:top-28"
           >
             <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Built In, Not Bolted On</p>
-            <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase mb-4 md:mb-6">
+            <h2 className="font-heading text-[9vw] md:text-6xl lg:text-7xl text-foreground tracking-tight leading-[0.95] uppercase mb-4 md:mb-6 whitespace-nowrap">
               Partnerships
             </h2>
             <p className="font-heading text-xl md:text-3xl lg:text-4xl text-foreground tracking-wide uppercase leading-[1.05] mb-5 md:mb-7">
