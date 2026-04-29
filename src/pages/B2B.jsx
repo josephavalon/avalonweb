@@ -26,6 +26,13 @@ export default function B2B() {
   });
 
   const [productId, setProductId] = useState(B2B_PRODUCTS[0].id);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  useEffect(() => {
+    const handler = () => setShowStickyCta(window.scrollY > 280);
+    handler();
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
   const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
   const b2bIvSoldOut = b2bIvRemaining <= 0;
   const selectedSoldOut = !!(product.consumes?.includes('b2bIv') && b2bIvSoldOut);
@@ -135,6 +142,10 @@ export default function B2B() {
         .b2b-root {
           background-color: #FFFEE4;
           color: #0A0A0A;
+          scroll-behavior: smooth;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .b2b-root, .b2b-root * { scroll-behavior: auto !important; }
         }
         @media (max-width: 767px) { .b2b-root { padding-bottom: 80px; } }
         .b2b-display {
@@ -262,6 +273,20 @@ export default function B2B() {
               </svg>
             </span>
           </p>
+          <p className="mt-4 md:mt-6 text-xs md:text-sm b2b-display tracking-[0.3em] uppercase text-center text-black/70">
+            Sunday · May 17, 2026 · Finish line · Ocean Beach
+          </p>
+        </div>
+      </section>
+
+      {/* Trust pills */}
+      <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10">
+        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-2 md:gap-3">
+          {['RN administered', 'MD supervised', 'HIPAA secure', 'Fully insured'].map((t) => (
+            <span key={t} className="b2b-display text-[10px] md:text-xs uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-black/40 bg-white/60">
+              {t}
+            </span>
+          ))}
         </div>
       </section>
 
@@ -325,6 +350,7 @@ export default function B2B() {
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
+          <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-2">{B2B_IV_INVENTORY - b2bIvRemaining} of {B2B_IV_INVENTORY} B2B IV spots claimed</p>
           <p className="b2b-display text-2xl md:text-3xl mb-2 md:mb-3 uppercase tracking-wide">Or save with a package</p>
           <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Boots already included where listed.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
@@ -382,7 +408,7 @@ export default function B2B() {
               <Tag className="w-5 h-5 b2b-pink" />
               <div className="flex-1">
                 <p className="b2b-display text-lg uppercase">{appliedCoupon} applied</p>
-                <p className="text-sm">{COUPONS[appliedCoupon].label} &mdash; saves ${discount}</p>
+                <p className="text-sm">{COUPONS[appliedCoupon].label} &mdash; ${discount} off at the finish line. Show your confirmation email to redeem.</p>
               </div>
               <button
                 type="button"
@@ -529,13 +555,19 @@ export default function B2B() {
         </p>
       </footer>
       {/* Sticky mobile CTA — appears after hero scroll, hidden on desktop */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-3 pt-2 pointer-events-none">
+      <div
+        className={`md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-3 pt-2 pointer-events-none transition-all duration-300 ${
+          showStickyCta ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+        style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+        aria-hidden={!showStickyCta}
+      >
         <a
           href="#b2b-checkout"
           className="b2b-sticky-buy pointer-events-auto flex items-center justify-between gap-3 px-5 py-3 rounded-full shadow-lg"
         >
-          <span className="b2b-display text-sm uppercase tracking-[0.15em]">{product.name}</span>
-          <span className="flex items-center gap-2">
+          <span className="b2b-display text-sm uppercase tracking-[0.15em] truncate">{product.name}</span>
+          <span className="flex items-center gap-2 shrink-0">
             <span className="b2b-display text-lg">${total}</span>
             <ArrowRight className="w-4 h-4" />
           </span>
