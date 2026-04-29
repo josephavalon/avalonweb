@@ -67,7 +67,7 @@ export default function SocialLinks() {
       <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5 text-left">
         Follow Avalon
       </p>
-      <div className="flex flex-wrap justify-start gap-3 md:gap-4">
+      <div className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar -mx-1 px-1">
         {PLATFORMS.map(({ label, href, Icon }, i) => (
           <motion.a
             key={label}
@@ -79,9 +79,9 @@ export default function SocialLinks() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.5, delay: i * 0.04, ease: EASE }}
-            className="group relative w-16 h-16 md:w-20 md:h-20 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md flex items-center justify-center text-foreground/80 hover:text-accent hover:border-accent/50 hover:bg-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="group relative shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md flex items-center justify-center text-foreground/80 hover:text-accent hover:border-accent/50 hover:bg-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
           >
-            <Icon className="w-6 h-6 md:w-8 md:h-8" />
+            <Icon className="w-5 h-5 md:w-6 md:h-6" />
             <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-body opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
               {label}
             </span>
