@@ -23,19 +23,6 @@ const treatments = [
     ],
   },
   {
-    label: 'IV NAD+',
-    href: '/services/nad',
-    icon: Zap,
-    price: 350,
-    priceFrom: true,
-    suffix: 'starting / session',
-    tag: 'Cellular Repair',
-    perks: [
-      '250mg → 1500mg dose-graded',
-      'Stack with IM shots or vitamin add-ons',
-    ],
-  },
-  {
     label: 'IV CBD',
     href: '/services/cbd',
     icon: CannabisLeaf,
@@ -48,6 +35,19 @@ const treatments = [
       'Zero THC, full bioavailability',
       'Delivered by Avalon’s nurses',
       'IM and vitamin add-ons available',
+    ],
+  },
+  {
+    label: 'IV NAD+',
+    href: '/services/nad',
+    icon: Zap,
+    price: 350,
+    priceFrom: true,
+    suffix: 'starting / session',
+    tag: 'Cellular Repair',
+    perks: [
+      '250mg → 1500mg dose-graded',
+      'Stack with IM shots or vitamin add-ons',
     ],
   },
 ];
