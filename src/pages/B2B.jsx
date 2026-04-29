@@ -501,7 +501,7 @@ export default function B2B() {
               },
               {
                 q: 'What if I can\'t make it?',
-                a: 'Email support@avalonvitality.co before May 14 for a full refund. After that, ticket transfers only.',
+                a: 'Email support@avalonvitality.co before May 14 for a full refund.',
               },
               {
                 q: 'Is this medical care?',
