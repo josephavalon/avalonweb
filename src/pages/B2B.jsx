@@ -77,7 +77,25 @@ export default function B2B() {
   }, [product.squareUrl, compression, appliedCoupon, total]);
 
   return (
-    <div className="b2b-root min-h-screen flex flex-col">
+    <div className="b2b-root min-h-screen flex flex-col relative">
+      {/* Atmospheric race-day background — heavily filtered Unsplash marathon image */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1920&q=70&auto=format&fit=crop)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.18,
+          filter: 'grayscale(0.4) contrast(0.85)',
+        }}
+      />
+      {/* Cream wash overlay — keeps the page readable */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{ backgroundColor: '#FFFEE4', opacity: 0.55, mixBlendMode: 'normal' }}
+      />
       <style>{`
         .b2b-root {
           background-color: #FFFEE4;
@@ -152,7 +170,7 @@ export default function B2B() {
       `}</style>
 
       {/* Top bar — back to avalon, brand crossover */}
-      <header className="px-5 md:px-10 py-5 md:py-6 flex items-center justify-between border-b-2 border-black">
+      <header className="relative z-10 px-5 md:px-10 py-5 md:py-6 flex items-center justify-between border-b-2 border-black">
         <Link to="/" className="inline-flex items-center gap-2 text-black hover:text-[#ED7AC3] transition-colors text-sm tracking-[0.2em] uppercase">
           <ArrowLeft className="w-4 h-4" />
           Avalon
@@ -161,7 +179,7 @@ export default function B2B() {
       </header>
 
       {/* Hero */}
-      <section className="relative px-5 md:px-10 pt-8 md:pt-10 pb-8 md:pb-10 overflow-hidden">
+      <section className="relative z-10 relative px-5 md:px-10 pt-8 md:pt-10 pb-8 md:pb-10 overflow-hidden">
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
@@ -195,7 +213,7 @@ export default function B2B() {
       </section>
 
       {/* Singles */}
-      <section className="px-5 md:px-10 pb-10 md:pb-14">
+      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Pick your tier &darr;</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
@@ -221,7 +239,7 @@ export default function B2B() {
       </section>
 
       {/* Compression add-on */}
-      <section className="px-5 md:px-10 pb-10 md:pb-14">
+      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
           <button
             type="button"
@@ -242,7 +260,7 @@ export default function B2B() {
       </section>
 
       {/* Bundles */}
-      <section className="px-5 md:px-10 pb-10 md:pb-14">
+      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-2xl md:text-3xl mb-2 md:mb-3 uppercase tracking-wide">Or save with a package</p>
           <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Pick one and skip the add-on toggle below.</p>
@@ -280,7 +298,7 @@ export default function B2B() {
       </section>
 
       {/* Coupon */}
-      <section className="px-5 md:px-10 pb-10 md:pb-14">
+      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-xl md:text-2xl mb-4 uppercase tracking-wide">Got a code?</p>
           {appliedCoupon ? (
@@ -319,7 +337,7 @@ export default function B2B() {
       </section>
 
       {/* Order summary + checkout */}
-      <section className="px-5 md:px-10 pb-14 md:pb-20">
+      <section className="relative z-10 px-5 md:px-10 pb-14 md:pb-20">
         <div className="max-w-3xl mx-auto b2b-card p-6 md:p-8">
           <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-5">Your race day</p>
 
@@ -373,7 +391,7 @@ export default function B2B() {
       </div>
 
       {/* Footer / disclaimer */}
-      <footer className="px-5 md:px-10 py-6 md:py-8 border-t-2 border-black mt-auto">
+      <footer className="relative z-10 px-5 md:px-10 py-6 md:py-8 border-t-2 border-black mt-auto">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-xs uppercase tracking-[0.2em]">Avalon Vitality &middot; California-licensed clinicians</p>
           <p className="text-xs uppercase tracking-[0.2em]">
