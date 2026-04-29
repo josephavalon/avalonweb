@@ -23,7 +23,7 @@ const treatments = [
     ],
   },
   {
-    label: 'NAD+ IV',
+    label: 'IV NAD+',
     href: '/services/nad',
     icon: Zap,
     price: 350,
@@ -38,7 +38,7 @@ const treatments = [
     ],
   },
   {
-    label: 'CBD IV',
+    label: 'IV CBD',
     href: '/services/cbd',
     icon: CannabisLeaf,
     price: 250,
@@ -129,7 +129,7 @@ export default function OurDrips() {
             Vitality Treatments
           </h2>
           <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
-            One-time sessions, delivered by Avalon&rsquo;s nurses across the San Francisco Bay Area.
+            Delivered by Avalon&rsquo;s nurses across the Bay.
           </p>
         </motion.div>
 
