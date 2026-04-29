@@ -489,7 +489,7 @@ export default function B2B() {
             {[
               {
                 q: 'Where will Avalon be?',
-                a: 'In the recovery zone at the finish line. Exact GPS pin texted to your phone the morning of the race.',
+                a: 'At the finish line with limited space. A second site is TBD and will be announced soon. Exact GPS pin texted to your phone the morning of the race.',
               },
               {
                 q: 'Do I need to schedule a time?',
