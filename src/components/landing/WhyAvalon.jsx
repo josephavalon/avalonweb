@@ -14,7 +14,6 @@ const COLUMNS = [
 
 const ROWS = [
   { feature: 'Comes to you',                      values: [true, false, false, false] },
-  { feature: 'Same nurse every visit',            values: [true, false, false, false] },
   { feature: 'Personalized protocol',             values: [true, false, true, false] },
   { feature: 'Tracked over time',                 values: [true, false, false, false] },
   { feature: 'No insurance hassle',               values: [true, true, false, true] },
