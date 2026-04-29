@@ -18,13 +18,25 @@ export default function FoundingBar() {
     try { sessionStorage.setItem('founding-bar-dismissed', '1'); } catch (_) {}
   };
   return (
-    <div className="fixed top-0 inset-x-0 z-[55] bg-foreground text-background pointer-events-none">
+    <div className="founding-bar-shell fixed top-0 inset-x-0 z-[55] bg-foreground text-background pointer-events-none">
       <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-3 pointer-events-auto">
         <Link
           to="/apply"
-          className="font-body text-[11px] md:text-xs tracking-[0.25em] uppercase font-semibold hover:opacity-80 transition-opacity"
+          className="flex-1 flex items-center gap-3 md:gap-4 font-body text-[11px] md:text-xs tracking-[0.25em] uppercase font-semibold hover:opacity-80 transition-opacity"
         >
-          <span className="text-accent">{CLAIMED}</span> / 100 Founding spots claimed · <span className="underline underline-offset-4 decoration-accent">Claim yours</span>
+          <span className="shrink-0">
+            <span className="text-accent">{CLAIMED}</span> / 100 Founding
+          </span>
+          <span className="flex-1 h-[3px] bg-background/20 rounded-full overflow-hidden max-w-[200px] md:max-w-[300px]">
+            <span
+              className="block h-full bg-accent rounded-full origin-left"
+              style={{
+                transform: `scaleX(${CLAIMED / 100})`,
+                transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            />
+          </span>
+          <span className="shrink-0 hidden sm:inline underline underline-offset-4 decoration-accent">Claim yours</span>
         </Link>
         <button
           type="button"

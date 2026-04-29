@@ -511,3 +511,44 @@ select:focus-visible {
   box-shadow: 0 0 0 2px hsl(var(--accent) / 0.25);
   transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ===== Mobile UX polish: safe-area-inset for notch / home indicator ===== */
+@supports (padding: max(0px)) {
+  .av-safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+  .av-safe-top    { padding-top: max(env(safe-area-inset-top), 0px); }
+  /* Footer extra bottom padding so home indicator never sits on top of content */
+  footer { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+  /* Founding bar respects notch */
+  .founding-bar-shell { padding-top: max(env(safe-area-inset-top), 0px); }
+}
+
+/* ===== Touch target minimum: 44x44 for any interactive element under 44px ===== */
+@media (hover: none) {
+  button, a, [role="button"] {
+    min-height: 32px;
+  }
+}
+
+/* ===== A11y: visible focus states for keyboard navigation across all interactives ===== */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ===== Performance: contain layout shifts during scroll-driven animations ===== */
+.av-glass, .av-glass-heavy, [class*="motion-"] {
+  contain: layout style;
+}
+
+/* ===== Reduced motion preference ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
