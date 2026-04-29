@@ -20,7 +20,7 @@ function StarBurst({ className }) {
 
 export default function B2B() {
   useSeo({
-    title: 'Bay 2 Breakers Presale — Avalon Vitality',
+    title: 'B2B Presale — Avalon Vitality',
     description: 'Race-day IV, shots, and recovery for Bay to Breakers 2026. Pre-buy at the expo and hit the finish line dialed.',
     path: '/b2b',
   });
