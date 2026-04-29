@@ -75,7 +75,7 @@ export default function Hero() {
               <MagneticButton strength={14}>
                 <Link
                   to="/apply"
-                  className="apply-now-btn inline-flex items-center gap-2 px-10 py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold hover:bg-foreground/90 transition-colors whitespace-nowrap"
+                  className="apply-now-btn inline-flex items-center gap-2 px-10 py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold hover:bg-foreground/90 transition-colors whitespace-nowrap rounded-full"
                 >
                   Start Now
                   <span aria-hidden="true">&rarr;</span>
