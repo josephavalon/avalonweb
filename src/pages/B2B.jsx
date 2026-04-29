@@ -255,6 +255,12 @@ export default function B2B() {
               />
             </picture>
           </h1>
+          <p className="mt-5 md:mt-8 b2b-display text-xl md:text-3xl tracking-[0.18em] md:tracking-[0.22em] uppercase text-center leading-tight">
+            Sunday &middot; May 17, 2026
+            <br className="md:hidden" />
+            <span className="hidden md:inline"> &middot; </span>
+            Finish line &middot; Ocean Beach
+          </p>
           <p className="mt-5 md:mt-7 text-2xl md:text-4xl b2b-display tracking-wide text-center leading-tight">
             Finish-line IV, shots, &amp; recovery.<br />
             <span className="b2b-pink inline-flex items-center gap-2 flex-wrap justify-center">
@@ -268,9 +274,6 @@ export default function B2B() {
                 <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
               </svg>
             </span>
-          </p>
-          <p className="mt-4 md:mt-6 text-xs md:text-sm b2b-display tracking-[0.3em] uppercase text-center text-black/70">
-            Sunday · May 17, 2026 · Finish line · Ocean Beach
           </p>
         </div>
       </section>
