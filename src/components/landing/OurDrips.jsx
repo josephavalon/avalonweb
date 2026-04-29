@@ -102,6 +102,28 @@ function TreatmentCard({ t }) {
 export default function OurDrips() {
   const scrollRef = useRef(null);
 
+  // Keyboard nav: arrows scroll one card
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onKey = (e) => {
+      if (!el.contains(document.activeElement) && document.activeElement !== el) return;
+      const card = el.firstElementChild?.firstElementChild;
+      if (!card) return;
+      const cardW = card.getBoundingClientRect().width;
+      const styles = window.getComputedStyle(el.firstElementChild);
+      const gap = parseFloat(styles.columnGap || styles.gap || '16') || 16;
+      const step = cardW + gap;
+      if (e.key === 'ArrowRight') { e.preventDefault(); el.scrollBy({ left: step, behavior: 'smooth' }); }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); el.scrollBy({ left: -step, behavior: 'smooth' }); }
+    };
+    el.tabIndex = 0;
+    el.setAttribute('role', 'region');
+    el.setAttribute('aria-label', 'Vitality treatments — use arrow keys to navigate');
+    el.addEventListener('keydown', onKey);
+    return () => el.removeEventListener('keydown', onKey);
+  }, []);
+
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;

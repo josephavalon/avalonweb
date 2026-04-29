@@ -71,8 +71,28 @@ export default function Testimonials() {
       });
     };
     el.addEventListener('scroll', onScroll, { passive: true });
+
+    // Keyboard nav: left/right arrows scroll the carousel by one card
+    const onKey = (e) => {
+      if (!el.contains(document.activeElement) && document.activeElement !== el) return;
+      const cardW = el.firstElementChild?.firstElementChild?.getBoundingClientRect().width || 320;
+      const gap = 16;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        el.scrollBy({ left: cardW + gap, behavior: 'smooth' });
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        el.scrollBy({ left: -(cardW + gap), behavior: 'smooth' });
+      }
+    };
+    el.tabIndex = 0;
+    el.setAttribute('role', 'region');
+    el.setAttribute('aria-label', 'Testimonials carousel — use arrow keys to navigate');
+    el.addEventListener('keydown', onKey);
+
     return () => {
       el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('keydown', onKey);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);

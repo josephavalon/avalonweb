@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Droplet, BarChart3, Brain, Orbit,
@@ -19,6 +19,26 @@ const LAYERS = [
 
 export default function AvalonOSPreview() {
   const [zoomed, setZoomed] = useState(false);
+  const closeRef = useRef(null);
+
+  // Focus trap + Escape key for modal
+  useEffect(() => {
+    if (!zoomed) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setZoomed(false);
+    };
+    document.addEventListener('keydown', onKey);
+    // Focus close button when modal opens
+    const t = setTimeout(() => closeRef.current?.focus(), 50);
+    // Lock body scroll
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      clearTimeout(t);
+      document.body.style.overflow = prev;
+    };
+  }, [zoomed]);
   return (
     <section id="avalon-os" className="py-12 md:py-20 px-4">
       <div className="max-w-6xl mx-auto">
@@ -114,6 +134,9 @@ export default function AvalonOSPreview() {
       <AnimatePresence>
         {zoomed && (
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Avalon OS phone preview"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -122,8 +145,9 @@ export default function AvalonOSPreview() {
             onClick={() => setZoomed(false)}
           >
             <button
+              ref={closeRef}
               onClick={() => setZoomed(false)}
-              aria-label="Close"
+              aria-label="Close zoom"
               className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/20 z-[201]"
             >
               <X className="w-4 h-4" strokeWidth={2} />

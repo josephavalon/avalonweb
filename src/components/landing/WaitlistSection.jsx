@@ -201,6 +201,7 @@ export default function WaitlistSection() {
             {status === 'error' && errorMsg && (
               <p
                 role="alert"
+                aria-live="assertive"
                 className="mt-3 font-body text-xs text-destructive"
               >
                 {errorMsg}
