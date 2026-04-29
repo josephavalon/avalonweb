@@ -8,15 +8,6 @@
 export const B2B_PRODUCTS = [
   // Singles
   {
-    id: 'bay2bay-iv',
-    name: 'Bay 2 Bay IV',
-    tagline: 'Race-day hydration, full bag',
-    description: 'Lactated Ringer’s solution — sodium, potassium, calcium, chloride, lactate — with B-12, B-complex, and magnesium. Delivered at the finish line.',
-    price: 120,
-    kind: 'single',
-    squareUrl: 'https://square.link/u/REPLACE-ME-IV',
-  },
-  {
     id: 'bay2bay-shot',
     name: 'Bay 2 Bay IM Shot',
     tagline: 'Five-minute finish-line shot',
@@ -24,6 +15,15 @@ export const B2B_PRODUCTS = [
     price: 40,
     kind: 'single',
     squareUrl: 'https://square.link/u/REPLACE-ME-SHOT',
+  },
+  {
+    id: 'bay2bay-iv',
+    name: 'Bay 2 Bay IV',
+    tagline: 'Race-day hydration, full bag',
+    description: 'Lactated Ringer’s solution — sodium, potassium, calcium, chloride, lactate — with B-12, B-complex, and magnesium. Delivered at the finish line.',
+    price: 120,
+    kind: 'single',
+    squareUrl: 'https://square.link/u/REPLACE-ME-IV',
   },
   {
     id: 'bay2bay-cbd',
