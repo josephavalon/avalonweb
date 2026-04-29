@@ -39,6 +39,7 @@ export const B2B_PRODUCTS = [
     description: 'Premium CBD infusion (zero THC) for post-race recovery. 99mg therapeutic dose.',
     price: 350,
     kind: 'single',
+    consumes: ['cbdIv'],
     squareUrl: 'https://square.link/u/REPLACE-ME-CBD',
   },
   // Bundles — pre-priced with a small bundle discount baked in
@@ -72,7 +73,7 @@ export const B2B_PRODUCTS = [
     price: 380,
     originalPrice: 400,
     kind: 'bundle',
-    consumes: ['boots'],
+    consumes: ['cbdIv', 'boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-COMP',
   },
   {
@@ -83,7 +84,7 @@ export const B2B_PRODUCTS = [
     price: 420,
     originalPrice: 440,
     kind: 'bundle',
-    consumes: ['boots'],
+    consumes: ['cbdIv', 'boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
   },
 ];
@@ -94,6 +95,14 @@ export const COMPRESSION_ADDON = {
   description: 'Pneumatic compression boots, 20-minute session. Add to any IV or shot.',
   price: 50,
   squareUrl: 'https://square.link/u/REPLACE-ME-COMPRESSION',
+};
+
+export const EXTRA_FLUID_ADDON = {
+  id: 'extra-fluid',
+  name: 'Extra fluid bag',
+  description: 'Add a second IV bag for deeper hydration after a hard race. +500 mL on top of your base bag.',
+  price: 50,
+  squareUrl: 'https://square.link/u/REPLACE-ME-EXTRA-FLUID',
 };
 
 // Coupon codes — manage manually here. Apply % off or flat amount.
