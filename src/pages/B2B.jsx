@@ -25,34 +25,38 @@ export default function B2B() {
     path: '/b2b',
   });
 
+  // ---- state ----
   const [productId, setProductId] = useState(B2B_PRODUCTS[0].id);
+  const [compression, setCompression] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
   const [showStickyCta, setShowStickyCta] = useState(false);
+
+  // ---- derived ----
+  const product = useMemo(
+    () => B2B_PRODUCTS.find((p) => p.id === productId),
+    [productId]
+  );
+  const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
+  const b2bIvSoldOut = b2bIvRemaining <= 0;
+  const selectedSoldOut = !!(product?.consumes?.includes('b2bIv') && b2bIvSoldOut);
+  const productIncludesBoots = !!product?.consumes?.includes('boots');
+
+  // ---- effects ----
+  // Sticky mobile buy bar — only after hero scroll
   useEffect(() => {
     const handler = () => setShowStickyCta(window.scrollY > 280);
     handler();
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
-  const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
-  const b2bIvSoldOut = b2bIvRemaining <= 0;
-  const selectedSoldOut = !!(product.consumes?.includes('b2bIv') && b2bIvSoldOut);
-  const productIncludesBoots = !!product.consumes?.includes('boots');
   // Force-uncheck compression when current selection already includes boots
-  // so users can't double-add (and pay) for it.
   useEffect(() => {
     if (productIncludesBoots && compression) {
       setCompression(false);
     }
   }, [productIncludesBoots, compression]);
-  const [compression, setCompression] = useState(false);
-  const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [couponError, setCouponError] = useState('');
-
-  const product = useMemo(
-    () => B2B_PRODUCTS.find((p) => p.id === productId),
-    [productId]
-  );
   const subtotal = product.price + (compression ? COMPRESSION_ADDON.price : 0);
   const discount = useMemo(() => {
     if (!appliedCoupon) return 0;
