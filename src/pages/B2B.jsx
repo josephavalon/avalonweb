@@ -210,7 +210,8 @@ export default function B2B() {
           scroll-behavior: smooth;
         }
         @media (prefers-reduced-motion: reduce) {
-          .b2b-root, .b2b-root * { scroll-behavior: auto !important; }
+          .b2b-root, .b2b-root * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+          .b2b-card.active { transform: none !important; }
         }
         @media (max-width: 767px) { .b2b-root { padding-bottom: 80px; } }
         .b2b-display {
@@ -248,7 +249,26 @@ export default function B2B() {
         .b2b-card.active {
           background-color: #FFE9F2;
           border-color: #ED7AC3;
+          border-width: 3px;
           box-shadow: 6px 6px 0 0 #ED7AC3;
+          transform: translate(-2px, -2px);
+        }
+        .b2b-card.active::before {
+          content: '\2713';
+          position: absolute;
+          top: 8px;
+          right: 12px;
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background-color: #ED7AC3;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: 14px;
+          z-index: 1;
         }
         .b2b-btn-primary {
           background-color: #ED7AC3;
@@ -377,7 +397,7 @@ export default function B2B() {
                   type="button"
                   onClick={() => !ivCardSoldOut && setProductId(p.id)}
                   disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[160px] md:min-h-[240px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[160px] md:min-h-[240px] relative ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-pressed={active}
                 >
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
@@ -440,7 +460,7 @@ export default function B2B() {
                   className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[240px] md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
                   aria-pressed={active}
                 >
-                  {savings > 0 && !ivCardSoldOut && (
+                  {savings > 0 && !ivCardSoldOut && !active && (
                     <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
                       Save ${savings}
                     </span>

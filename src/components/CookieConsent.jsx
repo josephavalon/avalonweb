@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
+  const location = useLocation();
+  // Suppress on B2B presale routes — friction-free purchase flow.
+  const isB2BRoute = location.pathname.startsWith('/b2b');
+  if (isB2BRoute) return null;
 
   useEffect(() => {
     const consentGiven = localStorage.getItem('cookieConsent');
