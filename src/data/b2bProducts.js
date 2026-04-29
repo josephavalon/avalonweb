@@ -48,9 +48,9 @@ export const B2B_PRODUCTS = [
   {
     id: 'bundle-full-recovery',
     name: 'Full Recovery',
-    tagline: 'Save $25 — Shot + IV + Boots',
+    tagline: 'Save $20 — Shot + IV + Boots',
     description: 'The whole protocol at the finish line: IM shot, Bay 2 Bay IV, and pneumatic compression. Three steps, dialed.',
-    price: 185,
+    price: 190,
     originalPrice: 210,
     kind: 'bundle',
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-FULL',
@@ -64,16 +64,6 @@ export const B2B_PRODUCTS = [
     originalPrice: 400,
     kind: 'bundle',
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-COMP',
-  },
-  {
-    id: 'bundle-crew-of-4',
-    name: 'Crew of 4 IVs',
-    tagline: 'Save $80 — Run with your team',
-    description: 'Four Bay 2 Bay IVs for your crew. Same delivery slot, same nurse, single booking. $400 instead of $480.',
-    price: 400,
-    originalPrice: 480,
-    kind: 'bundle',
-    squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CREW',
   },
 ];
 
