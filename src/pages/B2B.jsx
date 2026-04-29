@@ -96,11 +96,7 @@ export default function B2B() {
       setCompression(false);
     }
   }, [productIncludesBoots, compression]);
-  useEffect(() => {
-    if (!productIncludesIv && extraFluid) {
-      setExtraFluid(false);
-    }
-  }, [productIncludesIv, extraFluid]);
+
   const subtotal = product.price + (compression ? COMPRESSION_ADDON.price : 0) + (extraFluid ? EXTRA_FLUID_ADDON.price : 0);
   const discount = useMemo(() => {
     if (!appliedCoupon) return 0;
@@ -380,47 +376,43 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Add-ons — compression hidden when SKU includes boots; extra fluid hidden when SKU has no IV */}
-      {(!productIncludesBoots || productIncludesIv) && (
-        <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-          <div className="max-w-5xl mx-auto space-y-3 md:space-y-4">
-            {!productIncludesBoots && (
-              <button
-                type="button"
-                onClick={() => setCompression((v) => !v)}
-                className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${compression ? 'active' : ''}`}
-                aria-pressed={compression}
-              >
-                <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
-                  {compression ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
-                </div>
-                <div className="flex-1">
-                  <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+$50 add-on</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{COMPRESSION_ADDON.name}</h3>
-                  <p className="text-sm md:text-base mt-1">{COMPRESSION_ADDON.description}</p>
-                </div>
-              </button>
-            )}
-            {productIncludesIv && (
-              <button
-                type="button"
-                onClick={() => setExtraFluid((v) => !v)}
-                className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${extraFluid ? 'active' : ''}`}
-                aria-pressed={extraFluid}
-              >
-                <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${extraFluid ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
-                  {extraFluid ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
-                </div>
-                <div className="flex-1">
-                  <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+${EXTRA_FLUID_ADDON.price} add-on</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{EXTRA_FLUID_ADDON.name}</h3>
-                  <p className="text-sm md:text-base mt-1">{EXTRA_FLUID_ADDON.description}</p>
-                </div>
-              </button>
-            )}
-          </div>
-        </section>
-      )}
+      {/* Add-ons — compression hidden when SKU includes boots; extra fluid always visible */}
+      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
+        <div className="max-w-5xl mx-auto space-y-3 md:space-y-4">
+          {!productIncludesBoots && (
+            <button
+              type="button"
+              onClick={() => setCompression((v) => !v)}
+              className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${compression ? 'active' : ''}`}
+              aria-pressed={compression}
+            >
+              <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
+                {compression ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
+              </div>
+              <div className="flex-1">
+                <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+$50 add-on</p>
+                <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{COMPRESSION_ADDON.name}</h3>
+                <p className="text-sm md:text-base mt-1">{COMPRESSION_ADDON.description}</p>
+              </div>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setExtraFluid((v) => !v)}
+            className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${extraFluid ? 'active' : ''}`}
+            aria-pressed={extraFluid}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${extraFluid ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
+              {extraFluid ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
+            </div>
+            <div className="flex-1">
+              <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+${EXTRA_FLUID_ADDON.price} add-on</p>
+              <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{EXTRA_FLUID_ADDON.name}</h3>
+              <p className="text-sm md:text-base mt-1">{EXTRA_FLUID_ADDON.description}</p>
+            </div>
+          </button>
+        </div>
+      </section>
 
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
