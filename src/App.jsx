@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'r
 import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
+import StickyMobileCTA from '@/components/landing/StickyMobileCTA';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import Home from './pages/Home';
@@ -26,6 +27,8 @@ const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 const TelehealthDisclaimer = lazy(() => import('./pages/TelehealthDisclaimer'));
 const ProductDisclaimer = lazy(() => import('./pages/ProductDisclaimer'));
 const NoticeOfPrivacyPractices = lazy(() => import('./pages/NoticeOfPrivacyPractices'));
+const Partners = lazy(() => import('./pages/Partners'));
+const Platform = lazy(() => import('./pages/Platform'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
 
@@ -85,6 +88,8 @@ function AppRoutes() {
             <Route path="/hipaa-notice" element={<Navigate to="/notice-of-privacy-practices" replace />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route path="/cookies" element={<Navigate to="/cookie-policy" replace />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/platform" element={<Platform />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>
@@ -99,6 +104,7 @@ function App() {
       <Router>
         <ScrollToTop />
         <ScrollProgress />
+        <StickyMobileCTA />
         <AppRoutes />
       </Router>
       <Toaster />

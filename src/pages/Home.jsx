@@ -7,12 +7,12 @@ import TrustStrip from '../components/landing/TrustStrip';
 import HowItWorks from '../components/landing/HowItWorks';
 import WhatIsIV from '../components/landing/WhatIsIV';
 import OurDrips from '../components/landing/OurDrips';
-import AvalonOSPreview from '../components/landing/AvalonOSPreview';
 import MembershipSection from '../components/landing/MembershipSection';
+import HomeFAQ from '../components/landing/HomeFAQ';
+import HardCloseCTA from '../components/landing/HardCloseCTA';
 // GiftCertificates hidden for presale — Stripe integration deferred post-launch.
 // import GiftCertificates from '../components/landing/GiftCertificates';
 import EventsSection from '../components/landing/EventsSection';
-import B2BSection from '../components/landing/B2BSection';
 import Testimonials from '../components/landing/Testimonials';
 import WaitlistSection from '../components/landing/WaitlistSection';
 import Footer from '../components/landing/Footer';
@@ -34,14 +34,12 @@ export default function Home() {
       <Hero />
       <TrustStrip />
       <WhatIsIV />
+      <HowItWorks />
       <OurDrips />
       <MembershipSection />
-      <HowItWorks />
-      {/* <GiftCertificates /> — hidden for presale */}
-      {/* <EventsSection /> — hidden on homepage until launch week, only 2 events scheduled */}
       <Testimonials />
-      <B2BSection />
-      <AvalonOSPreview />
+      <HomeFAQ />
+      <HardCloseCTA />
       <WaitlistSection />
       <Footer />
     </div>

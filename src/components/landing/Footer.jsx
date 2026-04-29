@@ -5,10 +5,7 @@ import { Mail, Phone, Clock, ChevronDown } from 'lucide-react';
 const LEGAL = [
   { label: 'Terms of Service', to: '/terms-and-conditions' },
   { label: 'Privacy Policy', to: '/privacy-policy' },
-  { label: 'Notice of Privacy Practices', to: '/notice-of-privacy-practices' },
-  { label: 'Cookie Policy', to: '/cookie-policy' },
-  { label: 'Telehealth Consent', to: '/telehealth-disclaimer' },
-  { label: 'Product Disclaimer', to: '/product-disclaimer' },
+  { label: 'More Disclosures', to: '/notice-of-privacy-practices' },
 ];
 
 const ABOUT = [

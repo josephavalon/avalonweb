@@ -221,6 +221,9 @@ export default function MembershipSection() {
             <span className="font-body text-foreground/40">→</span>
             <span className="font-body text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-accent">Home Visit</span>
           </div>
+          <p className="mt-5 md:mt-6 font-body text-sm md:text-base text-foreground/70">
+            <span className="text-accent">Free 15-min consult</span> before you commit. <a href="tel:+14159807708" className="underline underline-offset-4 decoration-accent/40 hover:decoration-accent transition-colors">Text us</a> or apply.
+          </p>
         </div>
 
         {/* Monthly / Annual toggle — HIDDEN during presale (UX audit: show prices on default state) */}
