@@ -178,8 +178,8 @@ export default function B2B() {
             />
           </h1>
           <p className="mt-8 md:mt-12 text-lg md:text-2xl b2b-display tracking-wide">
-            Race-day IV, shots, &amp; recovery.<br />
-            <span className="b2b-pink">Pre-buy and hit the finish line dialed.</span>
+            Finish-line IV, shots, &amp; recovery.<br />
+            <span className="b2b-pink">Pre-buy and we'll be there when you cross.</span>
           </p>
         </div>
       </section>
