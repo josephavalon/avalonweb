@@ -58,7 +58,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-full-recovery',
     name: 'B2B IV + IM + Boots',
     tagline: 'Save $20 — IV + shot + boots',
-    description: 'The whole protocol at the finish line: Bay 2 Bay IV, intramuscular B-12 or glutathione shot, and pneumatic compression. Three steps, dialed.',
+    description: 'The whole protocol at the finish line: Bay 2 Bay IV, intramuscular B-12 or glutathione shot, and Normatec compression. Three steps, dialed.',
     price: 190,
     originalPrice: 210,
     kind: 'bundle',
@@ -69,7 +69,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-cbd-compression',
     name: 'CBD IV + Boots',
     tagline: 'Save $20 — Premium recovery',
-    description: 'CBD IV with pneumatic compression boots. Premium recovery pairing for hard race effort.',
+    description: 'CBD IV with Normatec compression boots. Premium recovery pairing for hard race effort.',
     price: 380,
     originalPrice: 400,
     kind: 'bundle',
@@ -80,7 +80,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-cbd-im-boots',
     name: 'CBD IV + IM + Boots',
     tagline: 'Save $20 — Full premium stack',
-    description: 'CBD IV, intramuscular B-12 or glutathione shot, and pneumatic compression boots. Top-tier finish-line protocol.',
+    description: 'CBD IV, intramuscular B-12 or glutathione shot, and Normatec compression boots. Top-tier finish-line protocol.',
     price: 420,
     originalPrice: 440,
     kind: 'bundle',
@@ -91,8 +91,8 @@ export const B2B_PRODUCTS = [
 
 export const COMPRESSION_ADDON = {
   id: 'compression',
-  name: 'Compression therapy',
-  description: 'Pneumatic compression boots, 20-minute session. Add to any IV or shot.',
+  name: 'Normatec compression boots',
+  description: 'Normatec compression boots, 20-minute session. Add to any IV or shot.',
   price: 50,
   squareUrl: 'https://square.link/u/REPLACE-ME-COMPRESSION',
 };
