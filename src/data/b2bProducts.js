@@ -47,7 +47,7 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bundle-full-recovery',
-    name: 'Full Recovery',
+    name: 'IV + IM + Boots',
     tagline: 'Save $20 — Shot + IV + Boots',
     description: 'The whole protocol at the finish line: IM shot, Bay 2 Bay IV, and pneumatic compression. Three steps, dialed.',
     price: 190,
@@ -67,7 +67,7 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bundle-cbd-im-boots',
-    name: 'CBD + B-12 + Boots',
+    name: 'CBD IV + IM + Boots',
     tagline: 'Save $20 — Full premium stack',
     description: 'CBD IV, intramuscular B-12 shot, and pneumatic compression boots. Top-tier finish-line protocol.',
     price: 420,
