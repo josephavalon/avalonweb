@@ -47,11 +47,34 @@ function TestimonialCard({ t }) {
 export default function Testimonials() {
   const scrollRef = useRef(null);
   const [paused, setPaused] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Force load on first card (J.G. / Diplo)
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollLeft = 0;
+  }, []);
+
+  // Track active index by scroll position (for dot indicators).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const cardW = el.firstElementChild?.firstElementChild?.getBoundingClientRect().width || 320;
+        const gap = 16;
+        const idx = Math.round(el.scrollLeft / (cardW + gap));
+        setActiveIndex(Math.max(0, Math.min(testimonials.length - 1, idx)));
+      });
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   // Manual scroll only — testimonials should not auto-advance (UX audit: reading is the conversion event)
@@ -110,6 +133,27 @@ export default function Testimonials() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Pagination dots */}
+        <div className="flex items-center justify-center gap-2 mt-5 md:mt-6">
+          {testimonials.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Go to testimonial ${i + 1}`}
+              onClick={() => {
+                const el = scrollRef.current;
+                if (!el) return;
+                const cardW = el.firstElementChild?.firstElementChild?.getBoundingClientRect().width || 320;
+                const gap = 16;
+                el.scrollTo({ left: i * (cardW + gap), behavior: 'smooth' });
+              }}
+              className={`h-1.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                i === activeIndex ? 'w-6 bg-accent' : 'w-1.5 bg-white/20 hover:bg-white/40'
+              }`}
+            />
+          ))}
         </div>
 
         <div className="mt-8 md:mt-10 max-w-2xl">

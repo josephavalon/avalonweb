@@ -82,7 +82,7 @@ export default function AvalonOSPreview() {
               type="button"
               onClick={() => setZoomed(true)}
               aria-label="Zoom Avalon OS phone preview"
-              className="block w-full focus:outline-none cursor-zoom-in active:scale-[0.98] transition-transform"
+              className="avalon-os-phone-wrap block w-full focus:outline-none cursor-zoom-in active:scale-[0.98] transition-transform"
               style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
               <img

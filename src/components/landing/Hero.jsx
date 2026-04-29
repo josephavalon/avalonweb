@@ -47,7 +47,7 @@ export default function Hero() {
           <motion.p
             initial={{ opacity: 0, letterSpacing: '0.1em' }}
             animate={{ opacity: 1, letterSpacing: '0.4em' }}
-            transition={{ duration: 1.2, delay: 0.3 }}
+            transition={{ duration: 1.2, delay: 0.15 }}
             className="font-body text-xs tracking-[0.4em] text-accent uppercase mb-5"
           >
             SF Bay Area
@@ -56,7 +56,7 @@ export default function Hero() {
           <motion.h1
             initial={{ opacity: 0, y: 60, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1.2, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="font-heading text-7xl md:text-7xl lg:text-[7rem] leading-[0.95] tracking-[0.06em] md:tracking-wide text-foreground uppercase"
           >
             AVALON<br />VITALITY
@@ -68,7 +68,7 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.3 }}
+            transition={{ duration: 0.8, delay: 0.5.3 }}
             className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
           >
             <MagneticButton strength={14}>
@@ -90,13 +90,13 @@ export default function Hero() {
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ duration: 1, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, delay: 0.5.4, ease: [0.16, 1, 0.3, 1] }}
           className="h-px bg-foreground/20 w-full max-w-xs md:max-w-md origin-center"
         />
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.5.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
         >
           Built for high-performers who don't have time to slow down.

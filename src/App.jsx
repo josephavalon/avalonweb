@@ -2,6 +2,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
+import ScrollProgress from '@/components/landing/ScrollProgress';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import Home from './pages/Home';
@@ -97,6 +98,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <ScrollToTop />
+        <ScrollProgress />
         <AppRoutes />
       </Router>
       <Toaster />

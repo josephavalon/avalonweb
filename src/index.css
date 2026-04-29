@@ -454,3 +454,60 @@ body {
 .apply-now-btn:active {
   transform: scale(0.97);
 }
+
+/* ===== Animation 10/10 pass ===== */
+
+/* 5. AvalonOS phone — subtle pulse glow behind the static screenshot to make it feel "alive" */
+.avalon-os-phone-wrap {
+  position: relative;
+}
+.avalon-os-phone-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 2.5rem;
+  background: radial-gradient(circle at 50% 30%, hsl(var(--accent) / 0.18), transparent 65%);
+  filter: blur(20px);
+  opacity: 0.7;
+  z-index: -1;
+  animation: avalon-os-pulse 4.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes avalon-os-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50%      { opacity: 0.9;  transform: scale(1.02); }
+}
+
+/* 6. Cursor hint on horizontal scrollers — fading right-edge gradient suggests "more to scroll" */
+.av-scroll-hint {
+  position: relative;
+}
+.av-scroll-hint::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 64px;
+  background: linear-gradient(to left, hsl(var(--background)), transparent);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* 7. Hero h1 CSS-keyframe fallback — if framer fails to mount, content still appears via animation. */
+@keyframes hero-h1-reveal {
+  from { opacity: 0; transform: translateY(40px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hero-root h1 {
+  animation: hero-h1-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+}
+
+/* 8. Form input focus rings — gold accent border replaces browser default focus */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: hsl(var(--accent)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--accent) / 0.25);
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}

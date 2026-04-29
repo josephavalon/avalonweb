@@ -52,10 +52,16 @@ const treatments = [
   },
 ];
 
-function TreatmentCard({ t }) {
+function TreatmentCard({ t, index = 0 }) {
   const Icon = t.icon;
   return (
-    <div className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto snap-center md:snap-align-none border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-4 md:p-5 flex flex-col">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-10%' }}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto snap-center md:snap-align-none border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-4 md:p-5 flex flex-col"
+    >
       {/* Tier name row */}
       <div className="flex items-center gap-2 mb-3">
         <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
@@ -93,7 +99,7 @@ function TreatmentCard({ t }) {
       >
         Book Now
       </Link>
-    </div>
+    </motion.div>
   );
 }
 
@@ -151,10 +157,10 @@ export default function OurDrips() {
           </button>
           <div
             ref={scrollRef}
-            className="overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-3 md:gap-4 lg:gap-6 flex gap-4 pb-3 snap-x snap-mandatory md:snap-none scroll-px-[7.5vw] px-[7.5vw] md:px-0"
+            className="av-scroll-hint md:[&]:!relative overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-3 md:gap-4 lg:gap-6 flex gap-4 pb-3 snap-x snap-mandatory md:snap-none scroll-px-[7.5vw] px-[7.5vw] md:px-0"
           >
-            {treatments.map((t) => (
-              <TreatmentCard key={t.label} t={t} />
+            {treatments.map((t, i) => (
+              <TreatmentCard key={t.label} t={t} index={i} />
             ))}
           </div>
         </div>
