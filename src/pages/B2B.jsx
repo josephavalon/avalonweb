@@ -493,7 +493,7 @@ export default function B2B() {
               },
               {
                 q: 'Do I need to schedule a time?',
-                a: 'No. First come, first served once you cross. Slots typically clear in 10–15 minutes during peak.',
+                a: 'No. First come, first served once you cross. Slots typically clear in 20–30 minutes during peak.',
               },
               {
                 q: 'Can I bring a friend?',
