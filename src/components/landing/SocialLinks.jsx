@@ -66,7 +66,7 @@ export default function SocialLinks() {
       <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5 text-left">
         Follow Avalon
       </p>
-      <div className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar -mx-1 px-1">
+      <div className="grid grid-cols-5 md:flex md:flex-nowrap md:items-center gap-3 md:gap-4">
         {PLATFORMS.map(({ label, href, Icon }, i) => (
           <a
             key={label}
