@@ -23,6 +23,31 @@ export default function B2B() {
     title: 'B2B Presale — Avalon Vitality',
     description: 'Race-day IV, shots, and recovery for Bay to Breakers 2026. Pre-buy at the expo and hit the finish line dialed.',
     path: '/b2b',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'Bay to Breakers — Avalon Vitality Recovery',
+      startDate: '2026-05-17T09:00:00-07:00',
+      endDate: '2026-05-17T14:00:00-07:00',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: {
+        '@type': 'Place',
+        name: 'Finish line · Ocean Beach',
+        address: { '@type': 'PostalAddress', addressLocality: 'San Francisco', addressRegion: 'CA', addressCountry: 'US' },
+      },
+      image: ['https://avalonvitality.co/og-b2b.png'],
+      description: 'Race-day IV, shots, and recovery for Bay to Breakers 2026.',
+      offers: {
+        '@type': 'Offer',
+        url: 'https://avalonvitality.co/b2b',
+        price: '150.00',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+        validFrom: '2026-04-29T00:00:00-07:00',
+      },
+      organizer: { '@type': 'Organization', name: 'Avalon Vitality', url: 'https://avalonvitality.co' },
+    },
   });
 
   // ---- state ----
@@ -32,6 +57,9 @@ export default function B2B() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [showStickyCta, setShowStickyCta] = useState(false);
+  const [isGift, setIsGift] = useState(false);
+  const [giftRecipientName, setGiftRecipientName] = useState('');
+  const [giftRecipientEmail, setGiftRecipientEmail] = useState('');
 
   // ---- derived ----
   const product = useMemo(
@@ -44,6 +72,15 @@ export default function B2B() {
   const productIncludesBoots = !!product?.consumes?.includes('boots');
 
   // ---- effects ----
+  // Fire PageView for retargeting on /b2b mount
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      if (typeof window.fbq === 'function') window.fbq('track', 'PageView');
+      if (typeof window.gtag === 'function') window.gtag('event', 'page_view', { page_path: '/b2b', page_title: 'B2B Presale' });
+    } catch (e) {}
+  }, []);
+
   // Sticky mobile buy bar — only after hero scroll
   useEffect(() => {
     const handler = () => setShowStickyCta(window.scrollY > 280);
@@ -114,10 +151,11 @@ export default function B2B() {
     const memo = [];
     if (compression) memo.push('+ Compression boots ($50)');
     if (appliedCoupon) memo.push(`Coupon ${appliedCoupon} (${COUPONS[appliedCoupon].label})`);
+    if (isGift) memo.push(`Gift for ${giftRecipientName || '(name not provided)'} <${giftRecipientEmail || 'email not provided'}>`);
     memo.push(`Total: $${total}`);
     if (memo.length) url.searchParams.set('memo', memo.join(' · '));
     return url.toString();
-  }, [product.squareUrl, compression, appliedCoupon, total]);
+  }, [product.squareUrl, compression, appliedCoupon, total, isGift, giftRecipientName, giftRecipientEmail]);
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
@@ -240,6 +278,9 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto text-center">
           <p className="b2b-display b2b-pink text-5xl md:text-7xl mb-2 md:mb-3 tracking-widest text-center mx-auto">Avalon Vitality &times;</p>
+          <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink text-center mb-3 md:mb-4">
+            Official Bay to Breakers Recovery Partner
+          </p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
           <h1 className="m-0">
             <picture>
@@ -274,6 +315,26 @@ export default function B2B() {
               <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
             </svg>
           </p>
+        </div>
+      </section>
+
+      {/* How it works — 3 steps */}
+      <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10 pt-2 md:pt-4">
+        <div className="max-w-5xl mx-auto">
+          <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">How it works</p>
+          <div className="grid grid-cols-3 gap-3 md:gap-5">
+            {[
+              { n: '01', t: 'Pre-buy', d: 'Lock your slot now. Confirmation email + race-morning text from Avalon.' },
+              { n: '02', t: 'Run your race', d: 'Cross the line. Walk to the Avalon recovery zone (location texted that morning).' },
+              { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human. ~30 min.' },
+            ].map((s) => (
+              <div key={s.n} className="b2b-card p-3 md:p-5">
+                <p className="b2b-display text-2xl md:text-4xl b2b-pink leading-none mb-1 md:mb-2">{s.n}</p>
+                <p className="b2b-display text-base md:text-2xl uppercase mb-1 md:mb-2 leading-tight">{s.t}</p>
+                <p className="text-xs md:text-sm leading-snug">{s.d}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -425,7 +486,53 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Order summary + checkout */}
+      {/* Your visit — what to expect on race day */}
+      <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
+        <div className="max-w-5xl mx-auto">
+          <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Your visit</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+            {[
+              { t: 'Time on chair', d: 'IM shot ~5 min. IV ~30 min. Compression boots 20 min. Stack to taste.' },
+              { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
+              { t: 'Personalized', d: 'Your nurse adjusts electrolytes and dose to how dehydrated you actually are post-race.' },
+              { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
+            ].map((v) => (
+              <div key={v.t} className="b2b-card p-3 md:p-5">
+                <p className="b2b-display text-base md:text-xl uppercase mb-1 leading-tight">{v.t}</p>
+                <p className="text-sm md:text-base leading-snug">{v.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials — pulled from the main site, event-relevant picks */}
+      <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
+        <div className="max-w-5xl mx-auto">
+          <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Real Avalon recoveries</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+            {[
+              {
+                quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.',
+                name: 'G.B.', tag: 'Event recovery',
+              },
+              {
+                quote: 'That IV did digits.',
+                name: 'Larry June', tag: 'Recovery IV',
+              },
+            ].map((t) => (
+              <figure key={t.name} className="b2b-card p-4 md:p-5">
+                <blockquote className="text-sm md:text-base leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</blockquote>
+                <figcaption className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink">
+                  &mdash; {t.name} &middot; {t.tag}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+            {/* Order summary + checkout */}
       <section id="b2b-checkout" className="relative z-10 px-5 md:px-10 pb-14 md:pb-20 scroll-mt-20">
         <div className="max-w-3xl mx-auto b2b-card p-6 md:p-8">
           <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-5">Your race day</p>
@@ -449,10 +556,47 @@ export default function B2B() {
             )}
           </div>
 
-          <div className="flex justify-between items-baseline border-t-2 border-black pt-4 mb-6">
+          {/* Gift toggle */}
+          <div className="border-t-2 border-black pt-4 mb-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isGift}
+                onChange={(e) => setIsGift(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-[#ED7AC3]"
+              />
+              <span className="text-sm md:text-base leading-snug">
+                <span className="b2b-display uppercase tracking-wide">This is a gift for a runner</span>
+                <span className="block text-xs md:text-sm text-black/70 mt-0.5">We&rsquo;ll send the confirmation to them. Pickup-name will be the recipient.</span>
+              </span>
+            </label>
+            {isGift && (
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="Recipient name"
+                  value={giftRecipientName}
+                  onChange={(e) => setGiftRecipientName(e.target.value)}
+                  className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm md:text-base bg-white focus:outline-none focus:ring-2 focus:ring-[#ED7AC3]"
+                />
+                <input
+                  type="email"
+                  placeholder="Recipient email"
+                  value={giftRecipientEmail}
+                  onChange={(e) => setGiftRecipientEmail(e.target.value)}
+                  className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm md:text-base bg-white focus:outline-none focus:ring-2 focus:ring-[#ED7AC3]"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between items-baseline border-t-2 border-black pt-4 mb-3">
             <span className="b2b-display text-2xl md:text-3xl uppercase">Total</span>
             <span className="b2b-display text-4xl md:text-5xl">${total}</span>
           </div>
+          <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-4 md:mb-5">
+            Full refund before May 14
+          </p>
 
           {selectedSoldOut ? (
             <button
@@ -532,13 +676,16 @@ export default function B2B() {
       {/* Footer / disclaimer */}
       <footer className="relative z-10 px-5 md:px-10 py-6 md:py-8 border-t-2 border-black mt-auto">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-xs uppercase tracking-[0.2em]">Avalon Vitality &middot; California-licensed clinicians</p>
+          <div className="text-xs uppercase tracking-[0.2em]">
+            <p>Avalon Vitality &middot; California-licensed clinicians</p>
+            <p className="normal-case tracking-normal text-black/70 mt-1">San Francisco's mobile IV therapy + longevity platform. RN-administered, physician-supervised.</p>
+          </div>
           <p className="text-xs uppercase tracking-[0.2em]">
             <Link to="/" className="hover:b2b-pink transition-colors">Back to avalonvitality.co</Link>
           </p>
         </div>
         <p className="max-w-3xl mx-auto mt-4 text-[11px] leading-relaxed text-black/60 text-center">
-          Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Bay to Breakers is not affiliated with Avalon Vitality &mdash; this presale is independently operated.
+          Avalon Vitality is the official Bay to Breakers Recovery Partner for 2026. Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Need accessibility accommodations? Email support@avalonvitality.co before May 14 and we&rsquo;ll arrange them.
         </p>
       </footer>
       {/* Sticky mobile CTA — appears after hero scroll, hidden on desktop */}
