@@ -44,6 +44,7 @@ export const COMPRESSION_ADDON = {
 // Codes are case-insensitive at runtime.
 export const COUPONS = {
   'BAYTOBAY10':   { kind: 'percent', value: 10, label: '10% off' },
+  'NOFAKESWEAT':  { kind: 'percent', value: 20, label: '20% off' },
   'FOUNDER25':    { kind: 'percent', value: 25, label: '25% off' },
   'CREW50':       { kind: 'flat',    value: 50, label: '$50 off' },
   'PRESS':        { kind: 'percent', value: 100, label: 'Press comp' },
