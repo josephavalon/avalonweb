@@ -275,17 +275,6 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Trust pills */}
-      <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-2 md:gap-3">
-          {['RN administered', 'MD supervised', 'HIPAA secure', 'Fully insured'].map((t) => (
-            <span key={t} className="b2b-display text-[10px] md:text-xs uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-black/40 bg-white/60">
-              {t}
-            </span>
-          ))}
-        </div>
-      </section>
-
       {/* Singles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
