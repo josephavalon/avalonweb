@@ -78,24 +78,6 @@ export default function B2B() {
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
-      {/* Atmospheric race-day background — heavily filtered Unsplash marathon image */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1920&q=70&auto=format&fit=crop)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.18,
-          filter: 'grayscale(0.4) contrast(0.85)',
-        }}
-      />
-      {/* Cream wash overlay — keeps the page readable */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{ backgroundColor: '#FFFEE4', opacity: 0.55, mixBlendMode: 'normal' }}
-      />
       <style>{`
         .b2b-root {
           background-color: #FFFEE4;
