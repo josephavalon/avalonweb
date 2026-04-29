@@ -80,7 +80,7 @@ export default function B2B() {
     <div className="b2b-root min-h-screen flex flex-col">
       <style>{`
         .b2b-root {
-          background-color: #FBF6CB;
+          background-color: #FFFEE4;
           color: #0A0A0A;
         }
         .b2b-display {
@@ -88,10 +88,10 @@ export default function B2B() {
           letter-spacing: 0.02em;
           font-weight: 400;
         }
-        .b2b-pink { color: #FF66B0; }
-        .b2b-bg-pink { background-color: #FF66B0; }
-        .b2b-mint { background-color: #5BC4D2; }
-        .b2b-soft-yellow { background-color: #F5DC4D; }
+        .b2b-pink { color: #ED7AC3; }
+        .b2b-bg-pink { background-color: #ED7AC3; }
+        .b2b-mint { background-color: #80C7D3; }
+        .b2b-soft-yellow { background-color: #F8EC82; }
         .b2b-card {
           background-color: #ffffff;
           border: 2px solid #0A0A0A;
@@ -105,11 +105,11 @@ export default function B2B() {
         }
         .b2b-card.active {
           background-color: #FFE9F2;
-          border-color: #FF66B0;
-          box-shadow: 6px 6px 0 0 #FF66B0;
+          border-color: #ED7AC3;
+          box-shadow: 6px 6px 0 0 #ED7AC3;
         }
         .b2b-btn-primary {
-          background-color: #5BC4D2;
+          background-color: #80C7D3;
           color: #0A0A0A;
           border: 2px solid #0A0A0A;
           border-radius: 999px;
@@ -121,7 +121,7 @@ export default function B2B() {
           box-shadow: 4px 4px 0 0 #0A0A0A;
         }
         .b2b-btn-primary:hover {
-          background-color: #FF66B0;
+          background-color: #ED7AC3;
           color: #ffffff;
           transform: translate(-1px, -1px);
           box-shadow: 5px 5px 0 0 #0A0A0A;
@@ -148,12 +148,12 @@ export default function B2B() {
           font-size: 0.95rem;
           color: #0A0A0A;
         }
-        .b2b-input:focus { outline: 2px solid #FF66B0; outline-offset: 2px; }
+        .b2b-input:focus { outline: 2px solid #ED7AC3; outline-offset: 2px; }
       `}</style>
 
       {/* Top bar — back to avalon, brand crossover */}
       <header className="px-5 md:px-10 py-5 md:py-6 flex items-center justify-between border-b-2 border-black">
-        <Link to="/" className="inline-flex items-center gap-2 text-black hover:text-[#FF66B0] transition-colors text-sm tracking-[0.2em] uppercase">
+        <Link to="/" className="inline-flex items-center gap-2 text-black hover:text-[#ED7AC3] transition-colors text-sm tracking-[0.2em] uppercase">
           <ArrowLeft className="w-4 h-4" />
           Avalon
         </Link>
@@ -317,11 +317,11 @@ export default function B2B() {
       {/* Confetti accent strip — small geometric shapes scattered before footer */}
       <div className="relative h-12 md:h-16 overflow-hidden">
         <svg className="absolute left-[5%] top-1 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
-        <svg className="absolute left-[20%] top-3 w-6 h-6 fill-current" style={{color:'#F5DC4D'}} viewBox="0 0 20 20"><rect width="20" height="20" /></svg>
+        <svg className="absolute left-[20%] top-3 w-6 h-6 fill-current" style={{color:'#F8EC82'}} viewBox="0 0 20 20"><rect width="20" height="20" /></svg>
         <svg className="absolute left-[35%] top-5 w-7 h-7 fill-current" style={{color:'#FF6347'}} viewBox="0 0 20 20"><polygon points="10,0 20,10 10,20 0,10" /></svg>
         <svg className="absolute left-[55%] top-2 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" /></svg>
-        <svg className="absolute left-[72%] top-4 w-6 h-6 fill-current" style={{color:'#5BC4D2'}} viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
-        <svg className="absolute left-[88%] top-1 w-7 h-7 fill-current" style={{color:'#F5DC4D'}} viewBox="0 0 20 20"><rect width="20" height="20" transform="rotate(15 10 10)" /></svg>
+        <svg className="absolute left-[72%] top-4 w-6 h-6 fill-current" style={{color:'#80C7D3'}} viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
+        <svg className="absolute left-[88%] top-1 w-7 h-7 fill-current" style={{color:'#F8EC82'}} viewBox="0 0 20 20"><rect width="20" height="20" transform="rotate(15 10 10)" /></svg>
       </div>
 
       {/* Footer / disclaimer */}
