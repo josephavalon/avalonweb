@@ -52,14 +52,10 @@ const treatments = [
   },
 ];
 
-function TreatmentCard({ t, index = 0 }) {
+function TreatmentCard({ t }) {
   const Icon = t.icon;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-10%' }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+    <div
       className="flex-shrink-0 w-[85vw] max-w-[340px] sm:w-[300px] md:w-auto snap-center md:snap-align-none border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-4 md:p-5 flex flex-col"
     >
       {/* Tier name row */}
@@ -99,7 +95,7 @@ function TreatmentCard({ t, index = 0 }) {
       >
         Book Now
       </Link>
-    </motion.div>
+    </div>
   );
 }
 
@@ -121,13 +117,7 @@ export default function OurDrips() {
   return (
     <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-10%' }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-3 md:mb-6"
-        >
+        <div className="text-left mb-3 md:mb-6">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Live Protocols</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
             Vitality Treatments
@@ -136,7 +126,7 @@ export default function OurDrips() {
           <p className="font-body text-sm md:text-base text-foreground/70 mt-2 md:mt-4 max-w-xl">
             Delivered by Avalon&rsquo;s nurses across the Bay.
           </p>
-        </motion.div>
+        </div>
 
         {/* Treatment cards — horizontal scroll on mobile, 3-col grid on desktop (mirrors Membership pattern) */}
         <div className="relative">
@@ -160,8 +150,8 @@ export default function OurDrips() {
             ref={scrollRef}
             className="av-scroll-hint md:[&]:!relative overflow-x-auto overflow-y-visible no-scrollbar md:overflow-visible md:grid md:grid-cols-3 md:gap-4 lg:gap-6 flex gap-4 pb-3 snap-x snap-mandatory md:snap-none scroll-px-[7.5vw] px-[7.5vw] md:px-0"
           >
-            {treatments.map((t, i) => (
-              <TreatmentCard key={t.label} t={t} index={i} />
+            {treatments.map((t) => (
+              <TreatmentCard key={t.label} t={t} />
             ))}
           </div>
         </div>
