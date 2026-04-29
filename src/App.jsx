@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'r
 import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
-import StickyMobileCTA from '@/components/landing/StickyMobileCTA';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import Home from './pages/Home';
@@ -106,7 +105,6 @@ function App() {
       <Router>
         <ScrollToTop />
         <ScrollProgress />
-        <StickyMobileCTA />
         <AppRoutes />
       </Router>
       <Toaster />

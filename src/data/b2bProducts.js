@@ -65,6 +65,16 @@ export const B2B_PRODUCTS = [
     kind: 'bundle',
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-COMP',
   },
+  {
+    id: 'bundle-cbd-im-boots',
+    name: 'CBD + B-12 + Boots',
+    tagline: 'Save $20 — Full premium stack',
+    description: 'CBD IV, intramuscular B-12 shot, and pneumatic compression boots. Top-tier finish-line protocol.',
+    price: 420,
+    originalPrice: 440,
+    kind: 'bundle',
+    squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
+  },
 ];
 
 export const COMPRESSION_ADDON = {
