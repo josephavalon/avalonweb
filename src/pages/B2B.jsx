@@ -168,7 +168,7 @@ export default function B2B() {
 
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <p className="b2b-display b2b-pink text-sm md:text-lg mb-3 tracking-widest">Avalon Vitality &times;</p>
+          <p className="b2b-display b2b-pink text-2xl md:text-4xl mb-4 md:mb-6 tracking-widest text-center">Avalon Vitality &times;</p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
           <h1 className="m-0">
             <img
