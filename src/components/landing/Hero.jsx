@@ -68,7 +68,7 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5.3 }}
+            transition={{ duration: 0.8, delay: 0.65 }}
             className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
           >
             <MagneticButton strength={14}>
@@ -90,13 +90,13 @@ export default function Hero() {
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ duration: 1, delay: 0.5.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="h-px bg-foreground/20 w-full max-w-xs md:max-w-md origin-center"
         />
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-center font-body text-sm md:text-base text-foreground/85 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
         >
           Built for high-performers who don't have time to slow down.
