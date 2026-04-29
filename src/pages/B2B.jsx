@@ -180,6 +180,28 @@ export default function B2B() {
         <StarBurst className="absolute b2b-pink"  style={{ top: '91%',  left: '30%', width: '26px', height: '26px', transform: 'rotate(10deg)',  opacity: 0.6  }} />
         <StarBurst className="absolute b2b-pink"  style={{ top: '95%',  right: '24%',width: '30px', height: '30px', transform: 'rotate(-20deg)', opacity: 0.7  }} />
         <StarBurst className="absolute b2b-pink"  style={{ top: '98%',  left: '12%', width: '20px', height: '20px', transform: 'rotate(6deg)',   opacity: 0.55 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '2%',   left: '24%', width: '24px', height: '24px', transform: 'rotate(11deg)',  opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '6%',   left: '60%', width: '30px', height: '30px', transform: 'rotate(-19deg)', opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '11%',  right: '32%',width: '20px', height: '20px', transform: 'rotate(7deg)',   opacity: 0.45 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '16%',  right: '14%',width: '36px', height: '36px', transform: 'rotate(-9deg)',  opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '21%',  left: '52%', width: '28px', height: '28px', transform: 'rotate(15deg)',  opacity: 0.65 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '27%',  left: '14%', width: '20px', height: '20px', transform: 'rotate(-2deg)',  opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '33%',  right: '22%',width: '34px', height: '34px', transform: 'rotate(13deg)',  opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '40%',  left: '64%', width: '28px', height: '28px', transform: 'rotate(-11deg)', opacity: 0.6  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '46%',  left: '2%',  width: '22px', height: '22px', transform: 'rotate(19deg)',  opacity: 0.55 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '53%',  right: '36%',width: '24px', height: '24px', transform: 'rotate(-7deg)',  opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '59%',  left: '58%', width: '30px', height: '30px', transform: 'rotate(21deg)',  opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '65%',  left: '28%', width: '20px', height: '20px', transform: 'rotate(-15deg)', opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '71%',  right: '12%',width: '32px', height: '32px', transform: 'rotate(9deg)',   opacity: 0.65 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '77%',  right: '40%',width: '24px', height: '24px', transform: 'rotate(-23deg)', opacity: 0.55 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '83%',  left: '54%', width: '36px', height: '36px', transform: 'rotate(17deg)',  opacity: 0.7  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '88%',  right: '32%',width: '22px', height: '22px', transform: 'rotate(-5deg)',  opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '93%',  left: '62%', width: '28px', height: '28px', transform: 'rotate(13deg)',  opacity: 0.6  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '15%',  left: '18%', width: '18px', height: '18px', transform: 'rotate(3deg)',   opacity: 0.45 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '35%',  left: '32%', width: '22px', height: '22px', transform: 'rotate(-13deg)', opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '52%',  left: '88%', width: '20px', height: '20px', transform: 'rotate(7deg)',   opacity: 0.55 }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '70%',  left: '52%', width: '20px', height: '20px', transform: 'rotate(-3deg)',  opacity: 0.5  }} />
+        <StarBurst className="absolute b2b-pink"  style={{ top: '86%',  left: '36%', width: '24px', height: '24px', transform: 'rotate(11deg)',  opacity: 0.55 }} />
       </div>
       <style>{`
         .b2b-root {
