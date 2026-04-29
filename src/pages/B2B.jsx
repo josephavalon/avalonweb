@@ -169,32 +169,14 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto text-center">
           <p className="b2b-display b2b-pink text-xl md:text-3xl mb-4 tracking-widest">Avalon Vitality &times;</p>
-          {/* Distressed BAY TO BREAKERS wordmark — re-created for crossover, with pink wavy underline through BREAKERS */}
-          <div className="relative inline-block">
-            <h1 className="b2b-display text-[14vw] md:text-[9rem] leading-[0.85] uppercase select-none" style={{
-              textShadow: '0 0 0 #0A0A0A',
-              transform: 'rotate(-1deg)',
-            }}>
-              <span style={{ display: 'block', transform: 'rotate(0.5deg) translateX(-2%)' }}>Bay To</span>
-              <span className="relative inline-block" style={{ transform: 'rotate(-0.5deg)' }}>
-                Breakers
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 600 50"
-                  className="absolute left-0 right-0 top-[78%] w-[105%] -translate-x-[2%]"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M 5 30 Q 60 8, 130 26 T 270 22 T 410 28 T 560 18"
-                    fill="none"
-                    stroke="#FF66B0"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-            </h1>
-          </div>
+          {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
+          <h1 className="m-0">
+            <img
+              src="/bay-to-breakers-logo.png"
+              alt="Bay to Breakers"
+              className="block mx-auto w-[80vw] max-w-[480px] md:max-w-[600px] h-auto"
+            />
+          </h1>
           <p className="mt-8 md:mt-12 text-lg md:text-2xl b2b-display tracking-wide">
             Race-day IV, shots, &amp; recovery.<br />
             <span className="b2b-pink">Pre-buy and hit the finish line dialed.</span>
