@@ -528,7 +528,7 @@ export default function B2B() {
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Your visit</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
             {[
-              { t: 'Time on chair', d: 'IM shot 5&ndash;10 min. IV 20&ndash;30 min. Compression boots 20 min. Stack to taste.' },
+              { t: 'Time on chair', d: 'IM shot 5–10 min. IV 20–30 min. Compression boots 20 min. Stack to taste.' },
               { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
               { t: 'Personalized', d: 'Your nurse adjusts electrolytes and dose to how dehydrated you actually are post-race.' },
               { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
