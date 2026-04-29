@@ -177,7 +177,7 @@ export default function B2B() {
               className="block mx-auto w-[55vw] max-w-[260px] md:max-w-[340px] h-auto"
             />
           </h1>
-          <p className="mt-5 md:mt-7 text-sm md:text-lg b2b-display tracking-wide text-center">
+          <p className="mt-5 md:mt-7 text-base md:text-2xl b2b-display tracking-wide text-center leading-relaxed">
             Finish-line IV, shots, &amp; recovery.<br />
             <span className="b2b-pink inline-flex items-center gap-2 flex-wrap justify-center">
               Pre-buy and we'll be there when you cross.
