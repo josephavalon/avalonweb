@@ -18,10 +18,10 @@ function getInitials(name) {
   return parts.map(p => p[0]).join('').slice(0, 2).toUpperCase();
 }
 
-function TestimonialCard({ t }) {
+function TestimonialCard({ t, active = false }) {
   const initials = getInitials(t.name);
   return (
-    <div className="w-[280px] sm:w-[320px] md:w-[340px] border border-white/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-7 flex flex-col gap-5">
+    <div className={`w-[280px] sm:w-[320px] md:w-[340px] border bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-7 flex flex-col gap-5 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${active ? "border-accent/60" : "border-white/10"}`}>
       {/* Face bubble — circular avatar with gold accent ring */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-accent/60 bg-white/[0.08] flex items-center justify-center shrink-0">
@@ -128,7 +128,7 @@ export default function Testimonials() {
             <div className="flex gap-4 md:gap-5 pr-4">
               {testimonials.map((t, i) => (
                 <div key={i} className="snap-start shrink-0">
-                  <TestimonialCard t={t} />
+                  <TestimonialCard t={t} active={i === activeIndex} />
                 </div>
               ))}
             </div>

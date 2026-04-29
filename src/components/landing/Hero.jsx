@@ -71,14 +71,19 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.65 }}
             className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
           >
-            <MagneticButton strength={14}>
-              <Link
-                to="/apply"
-                className="apply-now-btn inline-block px-12 py-5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap"
-              >
-                Start Now
-              </Link>
-            </MagneticButton>
+            <div className="flex flex-col items-center gap-3 md:gap-4">
+              <MagneticButton strength={14}>
+                <Link
+                  to="/apply"
+                  className="apply-now-btn inline-block px-10 py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold hover:bg-foreground/90 transition-colors whitespace-nowrap"
+                >
+                  Start Now
+                </Link>
+              </MagneticButton>
+              <p className="font-body text-[11px] md:text-xs tracking-[0.2em] text-foreground/70 italic">
+                &ldquo;That was awesome.&rdquo; — Diplo
+              </p>
+            </div>
           </motion.div>
 
 

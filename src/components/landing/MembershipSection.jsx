@@ -211,8 +211,16 @@ export default function MembershipSection() {
         <div className="text-left mb-3 md:mb-6">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Vitality Tiers</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">VITALITY MEMBERSHIP</h2>
+          <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
           <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
             One membership tier. Pick your protocol — CBD, Vitamins, or NAD+.</p>
+          <div className="flex items-center gap-2 md:gap-3 mt-5 md:mt-6 flex-wrap">
+            <span className="font-body text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-accent">Apply</span>
+            <span className="font-body text-foreground/40">→</span>
+            <span className="font-body text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-accent">Match</span>
+            <span className="font-body text-foreground/40">→</span>
+            <span className="font-body text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-accent">Home Visit</span>
+          </div>
         </div>
 
         {/* Monthly / Annual toggle — HIDDEN during presale (UX audit: show prices on default state) */}

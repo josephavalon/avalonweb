@@ -132,6 +132,7 @@ export default function OurDrips() {
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
             Vitality Treatments
           </h2>
+          <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
           <p className="font-body text-sm md:text-base text-foreground/85 mt-2 md:mt-4 max-w-xl">
             Delivered by Avalon&rsquo;s nurses across the Bay.
           </p>

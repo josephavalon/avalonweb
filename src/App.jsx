@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'r
 import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
+import FoundingBar from '@/components/landing/FoundingBar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import Home from './pages/Home';
@@ -98,6 +99,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <ScrollToTop />
+        <FoundingBar />
         <ScrollProgress />
         <AppRoutes />
       </Router>
