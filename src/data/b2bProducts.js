@@ -17,6 +17,15 @@ export const B2B_PRODUCTS = [
     squareUrl: 'https://square.link/u/REPLACE-ME-SHOT',
   },
   {
+    id: 'bay2bay-glutathione',
+    name: 'Glutathione Shot',
+    tagline: 'Antioxidant push',
+    description: 'Master antioxidant intramuscular shot. Liver support, oxidative stress recovery, glow factor.',
+    price: 60,
+    kind: 'single',
+    squareUrl: 'https://square.link/u/REPLACE-ME-GLUTATHIONE',
+  },
+  {
     id: 'bay2bay-iv',
     name: 'Bay 2 Bay IV',
     tagline: 'Race-day hydration, full bag',

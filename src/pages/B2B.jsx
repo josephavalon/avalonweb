@@ -198,7 +198,7 @@ export default function B2B() {
       <section className="px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Pick your tier &darr;</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p) => {
               const active = p.id === productId;
               return (
@@ -206,13 +206,13 @@ export default function B2B() {
                   key={p.id}
                   type="button"
                   onClick={() => setProductId(p.id)}
-                  className={`b2b-card text-left p-5 md:p-6 ${active ? 'active' : ''}`}
+                  className={`b2b-card text-left p-5 md:p-6 flex flex-col h-full min-h-[280px] ${active ? 'active' : ''}`}
                   aria-pressed={active}
                 >
                   <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-3xl md:text-4xl uppercase mb-3 leading-tight">{p.name}</h3>
-                  <p className="text-sm md:text-base leading-relaxed mb-4">{p.description}</p>
-                  <p className="b2b-display text-4xl md:text-5xl">${p.price}</p>
+                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-3 leading-tight">{p.name}</h3>
+                  <p className="text-sm leading-relaxed mb-4 flex-1">{p.description}</p>
+                  <p className="b2b-display text-3xl md:text-4xl mt-auto">${p.price}</p>
                 </button>
               );
             })}
