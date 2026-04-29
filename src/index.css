@@ -432,3 +432,25 @@ body {
   transform: translateY(-2px);
   border-color: rgb(255 255 255 / 0.18);
 }
+
+/* ===== Animation polish pass ===== */
+/* Subtle press-in on filled CTAs */
+.av-cta-filled {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.av-cta-filled:active {
+  transform: scale(0.98);
+}
+
+/* Hollow CTA hover gets a slight inward border tighten */
+.av-cta-hollow:hover {
+  border-color: hsl(var(--foreground));
+}
+
+/* Apply Now buttons keep the existing animation but feel more responsive on click */
+.apply-now-btn {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.apply-now-btn:active {
+  transform: scale(0.97);
+}

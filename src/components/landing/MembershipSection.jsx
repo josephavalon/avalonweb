@@ -215,8 +215,8 @@ export default function MembershipSection() {
             One membership tier. Pick your protocol — CBD, Vitamins, or NAD+.</p>
         </div>
 
-        {/* Monthly / Annual toggle */}
-        <div className="flex flex-col items-center mb-3 md:mb-6 gap-2 md:gap-3">
+        {/* Monthly / Annual toggle — HIDDEN during presale (UX audit: show prices on default state) */}
+        {false && (<div className="flex flex-col items-center mb-3 md:mb-6 gap-2 md:gap-3">
           <div className="inline-flex items-center gap-1 p-1 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md">
             <button
               type="button"
@@ -237,7 +237,7 @@ export default function MembershipSection() {
             20% off à la carte.
             <span className="block text-muted-foreground mt-1">25% off annual.</span>
           </p>
-        </div>
+        </div>)}
 
         {/* Tier cards — horizontal scroll on mobile, 4-col grid on desktop */}
         <div className="relative">
