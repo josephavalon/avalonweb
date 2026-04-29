@@ -444,6 +444,23 @@ export default function B2B() {
               );
             })}
           </div>
+
+          {/* Team rates contact card — full-width below bundle grid */}
+          <a
+            href="mailto:rob@avalonvitality.co?subject=Bay%20to%20Breakers%20team%20rate&body=Hi%20Rob%2C%0A%0AWe%27re%20a%20team%20of%20%5B%5D%20heading%20to%20Bay%20to%20Breakers.%20Curious%20about%20group%20rates%20for%20IV%20%2B%20shots%20%2B%20boots%20at%20the%20finish%20line.%0A%0AThanks%21"
+            className="b2b-card mt-5 md:mt-6 p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-5 hover:translate-x-[-2px] hover:translate-y-[-2px] transition-transform"
+            style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+          >
+            <div className="flex-1">
+              <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-1.5 md:mb-2">Team rates</p>
+              <h3 className="b2b-display text-xl md:text-3xl uppercase mb-1 md:mb-2 leading-tight">Got a team? Contact us for special rates.</h3>
+              <p className="text-sm md:text-base">Centipede crews, corporate teams, sponsors. Email Rob and we&rsquo;ll build you a finish-line package.</p>
+            </div>
+            <span className="b2b-display text-sm md:text-base tracking-[0.2em] uppercase b2b-pink inline-flex items-center gap-2 shrink-0">
+              rob@avalonvitality.co
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+            </span>
+          </a>
         </div>
       </section>
 

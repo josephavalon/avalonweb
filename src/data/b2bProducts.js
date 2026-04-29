@@ -86,18 +86,6 @@ export const B2B_PRODUCTS = [
     consumes: ['boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
   },
-  {
-    id: 'bundle-crew-10',
-    name: 'Crew of 10',
-    tagline: 'Save $200 — IV + IM × 10',
-    description: 'Ten Bay 2 Bay IV + IM finish-line slots for your Centipede or corporate team. Designate runners after checkout.',
-    price: 1300,
-    originalPrice: 1500,
-    kind: 'bundle',
-    consumes: ['b2bIv'],
-    quantityOf: 10,
-    squareUrl: 'https://square.link/u/REPLACE-ME-CREW-10',
-  },
 ];
 
 export const COMPRESSION_ADDON = {
