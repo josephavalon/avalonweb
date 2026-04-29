@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
+import { ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 
@@ -230,14 +230,6 @@ export default function B2B() {
         .b2b-input:focus { outline: 2px solid #ED7AC3; outline-offset: 2px; }
       `}</style>
 
-      {/* Top bar — back to avalon, brand crossover */}
-      <header className="relative z-10 px-5 md:px-10 py-5 md:py-6 flex items-center justify-between border-b-2 border-black">
-        <Link to="/" className="inline-flex items-center gap-2 text-black hover:text-[#ED7AC3] transition-colors text-sm tracking-[0.2em] uppercase">
-          <ArrowLeft className="w-4 h-4" />
-          Avalon
-        </Link>
-        <span className="text-sm tracking-[0.25em] uppercase">May 15&ndash;18, 2026</span>
-      </header>
 
       {/* Hero */}
       <section className="relative z-10 relative px-5 md:px-10 pt-8 md:pt-10 pb-8 md:pb-10 overflow-hidden">
