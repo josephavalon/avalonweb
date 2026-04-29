@@ -165,7 +165,14 @@ export default function B2B() {
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-10 h-10 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-14 h-14 b2b-pink -rotate-12" />
-        <StarBurst className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 b2b-pink" />
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 b2b-pink"
+        >
+          <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
+        </svg>
 
         <div className="relative max-w-4xl mx-auto text-center">
           <p className="b2b-display b2b-pink text-xl md:text-3xl mb-4 tracking-widest">Avalon Vitality &times;</p>
