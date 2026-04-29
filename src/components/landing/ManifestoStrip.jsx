@@ -12,9 +12,9 @@ export default function ManifestoStrip() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-15%' }}
         transition={{ duration: 0.9, ease: EASE }}
-        className="max-w-4xl mx-auto text-center font-heading text-2xl md:text-4xl lg:text-5xl text-foreground/85 tracking-tight leading-[1.15]"
+        className="max-w-4xl mx-auto text-center font-heading text-2xl md:text-4xl lg:text-5xl text-foreground tracking-wide leading-[1.05] uppercase"
       >
-        Wellness becomes <span className="text-accent">operating system</span>.
+        Wellness <span className="text-accent">Operating System</span>
       </motion.p>
     </section>
   );
