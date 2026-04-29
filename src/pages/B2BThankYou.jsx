@@ -13,7 +13,7 @@ DTSTART;TZID=America/Los_Angeles:20260517T080000
 DTEND;TZID=America/Los_Angeles:20260517T140000
 SUMMARY:Bay to Breakers — Avalon Recovery
 LOCATION:Finish line · Ocean Beach · San Francisco
-DESCRIPTION:Your Avalon Vitality finish-line IV / shot / boots is reserved. We will text you on race morning with the exact GPS pin. Bring your confirmation email.
+DESCRIPTION:Your Avalon Vitality finish-line IV / shot / boots is reserved. We will text you on race morning with the location. Bring your confirmation email.
 END:VEVENT
 END:VCALENDAR`;
 
@@ -54,7 +54,7 @@ export default function B2BThankYou() {
           <p className="ty-display ty-pink text-xs md:text-sm tracking-[0.3em] uppercase mb-3">You&rsquo;re in</p>
           <h1 className="ty-display text-5xl md:text-7xl uppercase leading-[0.95] mb-4">See you at the finish line.</h1>
           <p className="text-base md:text-lg leading-relaxed mb-2">Your Avalon recovery slot is reserved for <strong>Sunday, May 17</strong>.</p>
-          <p className="text-sm md:text-base leading-relaxed text-black/70 mb-8">Confirmation email is on its way. We&rsquo;ll text the exact GPS pin race morning.</p>
+          <p className="text-sm md:text-base leading-relaxed text-black/70 mb-8">Confirmation email is on its way. We&rsquo;ll text the location race morning.</p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-10">
             <button type="button" onClick={downloadIcs} className="ty-btn-primary inline-flex items-center justify-center gap-2">
@@ -68,7 +68,7 @@ export default function B2BThankYou() {
           <div className="border-t-2 border-black pt-6 text-left space-y-1.5 text-sm md:text-base leading-relaxed">
             <p className="ty-display ty-pink text-[10px] md:text-xs tracking-[0.3em] uppercase mb-2">What&rsquo;s next</p>
             <p>1. Save the date and run your race.</p>
-            <p>2. Watch your phone race morning for the finish-line pin.</p>
+            <p>2. Watch your phone race morning for the location.</p>
             <p>3. Cross the line, walk to our station, show your confirmation. Hydrate. Recover.</p>
           </div>
 

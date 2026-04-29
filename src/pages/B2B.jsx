@@ -476,7 +476,7 @@ export default function B2B() {
           )}
 
           <p className="mt-4 text-xs leading-relaxed text-black/70">
-            Payment processed securely by Square. Confirmation email sent immediately. Race-morning text from Avalon with the finish-line drop point.
+            Payment processed securely by Square. Confirmation email sent immediately. Race-morning text from Avalon with the location.
           </p>
         </div>
       </section>
@@ -489,7 +489,7 @@ export default function B2B() {
             {[
               {
                 q: 'Where will Avalon be?',
-                a: 'At the finish line with limited space. A second site is TBD and will be announced soon. Exact GPS pin texted to your phone the morning of the race.',
+                a: 'At the finish line with limited space. A second site is TBD and will be announced soon. Location texted to your phone the morning of the race.',
               },
               {
                 q: 'Do I need to schedule a time?',
