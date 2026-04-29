@@ -5,6 +5,7 @@ import { Check, Loader2 } from 'lucide-react';
 const EASE = [0.16, 1, 0.3, 1];
 
 import SocialLinks from './SocialLinks';
+import SocialFeed from './SocialFeed';
 
 export default function WaitlistSection() {
   const [form, setForm] = useState({ email: '', website: '' });
@@ -215,6 +216,7 @@ export default function WaitlistSection() {
         )}
 
         <SocialLinks />
+        <SocialFeed />
       </div>
     </section>
   );
