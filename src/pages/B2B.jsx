@@ -255,10 +255,12 @@ export default function B2B() {
               />
             </picture>
           </h1>
-          <p className="mt-5 md:mt-8 b2b-display text-xl md:text-3xl tracking-[0.18em] md:tracking-[0.22em] uppercase text-center leading-tight">
-            Sunday &middot; May 17, 2026
-            <br className="md:hidden" />
-            <span className="hidden md:inline"> &middot; </span>
+          <p className="mt-5 md:mt-8 b2b-display text-4xl md:text-6xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+            Sunday &middot; May 17
+            <br />
+            9 AM &ndash; 2 PM
+          </p>
+          <p className="mt-3 md:mt-4 b2b-display text-lg md:text-2xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
             Finish line &middot; Ocean Beach
           </p>
           <p className="mt-5 md:mt-7 text-2xl md:text-4xl b2b-display tracking-wide text-center leading-tight">
