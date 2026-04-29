@@ -12,7 +12,7 @@ const stats = [
 
 export default function WhatIsIV() {
   return (
-    <section className="py-10 md:py-14 px-4">
+    <section className="py-16 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6 md:mb-10">
           <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Science</p>

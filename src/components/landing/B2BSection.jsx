@@ -13,7 +13,7 @@ const EASE = [0.16, 1, 0.3, 1];
 
 export default function B2BSection() {
   return (
-    <section id="b2b" className="py-8 md:py-14 px-4">
+    <section id="b2b" className="py-14 md:py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-[0.9fr_1.1fr] gap-8 md:gap-14 items-start">
 

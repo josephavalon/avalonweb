@@ -50,7 +50,7 @@ export default function WaitlistSection() {
   return (
     <section
       id="waitlist"
-      className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-16 px-4"
+      className="scroll-mt-20 md:scroll-mt-28 py-16 md:py-28 px-4"
     >
       <div className="max-w-6xl mx-auto text-left">
         <motion.p
