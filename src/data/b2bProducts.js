@@ -97,14 +97,6 @@ export const COMPRESSION_ADDON = {
   squareUrl: 'https://square.link/u/REPLACE-ME-COMPRESSION',
 };
 
-export const EXTRA_FLUID_ADDON = {
-  id: 'extra-fluid',
-  name: 'Extra fluid bag',
-  description: 'Add a second IV bag for deeper hydration after a hard race. +500 mL on top of your base bag.',
-  price: 50,
-  squareUrl: 'https://square.link/u/REPLACE-ME-EXTRA-FLUID',
-};
-
 // Coupon codes — manage manually here. Apply % off or flat amount.
 // Codes are case-insensitive at runtime.
 export const COUPONS = {

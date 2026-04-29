@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
-import { B2B_PRODUCTS, COMPRESSION_ADDON, EXTRA_FLUID_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD } from '@/data/b2bProducts';
+import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 
 // Visual reference: baytobreakers.com (cream bg, distressed black display, pink stars,
@@ -53,7 +53,6 @@ export default function B2B() {
   // ---- state ----
   const [productId, setProductId] = useState(B2B_PRODUCTS[0].id);
   const [compression, setCompression] = useState(false);
-  const [extraFluid, setExtraFluid] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
@@ -71,7 +70,6 @@ export default function B2B() {
   const b2bIvSoldOut = b2bIvRemaining <= 0;
   const selectedSoldOut = !!(product?.consumes?.includes('b2bIv') && b2bIvSoldOut);
   const productIncludesBoots = !!product?.consumes?.includes('boots');
-  const productIncludesIv = !!(product?.consumes?.includes('b2bIv') || product?.consumes?.includes('cbdIv'));
 
   // ---- effects ----
   // Fire PageView for retargeting on /b2b mount
@@ -97,7 +95,7 @@ export default function B2B() {
     }
   }, [productIncludesBoots, compression]);
 
-  const subtotal = product.price + (compression ? COMPRESSION_ADDON.price : 0) + (extraFluid ? EXTRA_FLUID_ADDON.price : 0);
+  const subtotal = product.price + (compression ? COMPRESSION_ADDON.price : 0);
   const discount = useMemo(() => {
     if (!appliedCoupon) return 0;
     const c = COUPONS[appliedCoupon];
@@ -152,14 +150,13 @@ export default function B2B() {
   const checkoutUrl = useMemo(() => {
     const url = new URL(product.squareUrl);
     const memo = [];
-    if (extraFluid) memo.push(`+ ${EXTRA_FLUID_ADDON.name}`);
     if (compression) memo.push('+ Compression boots ($50)');
     if (appliedCoupon) memo.push(`Coupon ${appliedCoupon} (${COUPONS[appliedCoupon].label})`);
     if (isGift) memo.push(`Gift for ${giftRecipientName || '(name not provided)'} <${giftRecipientEmail || 'email not provided'}>`);
     memo.push(`Total: $${total}`);
     if (memo.length) url.searchParams.set('memo', memo.join(' · '));
     return url.toString();
-  }, [product.squareUrl, compression, extraFluid, appliedCoupon, total, isGift, giftRecipientName, giftRecipientEmail]);
+  }, [product.squareUrl, compression, appliedCoupon, total, isGift, giftRecipientName, giftRecipientEmail]);
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
@@ -376,10 +373,10 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Add-ons — compression hidden when SKU includes boots; extra fluid always visible */}
-      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-        <div className="max-w-5xl mx-auto space-y-3 md:space-y-4">
-          {!productIncludesBoots && (
+      {/* Compression add-on — hidden when selected SKU already includes boots */}
+      {!productIncludesBoots && (
+        <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
+          <div className="max-w-5xl mx-auto">
             <button
               type="button"
               onClick={() => setCompression((v) => !v)}
@@ -395,24 +392,9 @@ export default function B2B() {
                 <p className="text-sm md:text-base mt-1">{COMPRESSION_ADDON.description}</p>
               </div>
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setExtraFluid((v) => !v)}
-            className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${extraFluid ? 'active' : ''}`}
-            aria-pressed={extraFluid}
-          >
-            <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${extraFluid ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
-              {extraFluid ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
-            </div>
-            <div className="flex-1">
-              <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+${EXTRA_FLUID_ADDON.price} add-on</p>
-              <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{EXTRA_FLUID_ADDON.name}</h3>
-              <p className="text-sm md:text-base mt-1">{EXTRA_FLUID_ADDON.description}</p>
-            </div>
-          </button>
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
@@ -582,12 +564,6 @@ export default function B2B() {
               <div className="flex justify-between gap-4">
                 <span className="text-sm md:text-base">+ {COMPRESSION_ADDON.name}</span>
                 <span className="b2b-display text-lg md:text-xl">${COMPRESSION_ADDON.price}</span>
-              </div>
-            )}
-            {extraFluid && (
-              <div className="flex justify-between gap-4">
-                <span className="text-sm md:text-base">+ {EXTRA_FLUID_ADDON.name}</span>
-                <span className="b2b-display text-lg md:text-xl">${EXTRA_FLUID_ADDON.price}</span>
               </div>
             )}
             {appliedCoupon && (
