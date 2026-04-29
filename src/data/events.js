@@ -5,7 +5,7 @@ export const events = [
 
   {
     slug: 'bay-to-breakers-expo',
-    date: 'May 17, 2026',
+    date: 'May 15–18, 2026',
     title: 'Bay 2 Breakers Expo',
     location: 'Sports Basement, San Francisco',
     desc: 'IM injections and exclusive merchandise sales. Pre-race hydration and IV therapy on-site.',
