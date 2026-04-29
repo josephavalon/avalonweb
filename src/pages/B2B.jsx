@@ -88,9 +88,10 @@ export default function B2B() {
           letter-spacing: 0.02em;
           font-weight: 400;
         }
-        .b2b-pink { color: #FF3F8C; }
-        .b2b-bg-pink { background-color: #FF3F8C; }
-        .b2b-mint { background-color: #9DD9D2; }
+        .b2b-pink { color: #FF66B0; }
+        .b2b-bg-pink { background-color: #FF66B0; }
+        .b2b-mint { background-color: #5BC4D2; }
+        .b2b-soft-yellow { background-color: #F5DC4D; }
         .b2b-card {
           background-color: #ffffff;
           border: 2px solid #0A0A0A;
@@ -104,23 +105,23 @@ export default function B2B() {
         }
         .b2b-card.active {
           background-color: #FFE9F2;
-          border-color: #FF3F8C;
-          box-shadow: 6px 6px 0 0 #FF3F8C;
+          border-color: #FF66B0;
+          box-shadow: 6px 6px 0 0 #FF66B0;
         }
         .b2b-btn-primary {
-          background-color: #0A0A0A;
-          color: #FBF6CB;
+          background-color: #5BC4D2;
+          color: #0A0A0A;
           border: 2px solid #0A0A0A;
           border-radius: 999px;
           font-family: 'Bebas Neue', 'Impact', sans-serif;
           letter-spacing: 0.15em;
           padding: 1rem 2rem;
-          font-size: 1.05rem;
+          font-size: 1.1rem;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 4px 4px 0 0 #FF3F8C;
+          box-shadow: 4px 4px 0 0 #0A0A0A;
         }
         .b2b-btn-primary:hover {
-          background-color: #FF3F8C;
+          background-color: #FF66B0;
           color: #ffffff;
           transform: translate(-1px, -1px);
           box-shadow: 5px 5px 0 0 #0A0A0A;
@@ -147,12 +148,12 @@ export default function B2B() {
           font-size: 0.95rem;
           color: #0A0A0A;
         }
-        .b2b-input:focus { outline: 2px solid #FF3F8C; outline-offset: 2px; }
+        .b2b-input:focus { outline: 2px solid #FF66B0; outline-offset: 2px; }
       `}</style>
 
       {/* Top bar — back to avalon, brand crossover */}
       <header className="px-5 md:px-10 py-5 md:py-6 flex items-center justify-between border-b-2 border-black">
-        <Link to="/" className="inline-flex items-center gap-2 text-black hover:text-[#FF3F8C] transition-colors text-sm tracking-[0.2em] uppercase">
+        <Link to="/" className="inline-flex items-center gap-2 text-black hover:text-[#FF66B0] transition-colors text-sm tracking-[0.2em] uppercase">
           <ArrowLeft className="w-4 h-4" />
           Avalon
         </Link>
@@ -167,11 +168,34 @@ export default function B2B() {
         <StarBurst className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 b2b-pink" />
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <p className="b2b-display b2b-pink text-2xl md:text-4xl mb-4">Avalon Vitality &times;</p>
-          <h1 className="b2b-display text-[14vw] md:text-[10rem] leading-[0.9] uppercase">
-            Bay 2 <br /> Breakers
-          </h1>
-          <p className="mt-6 md:mt-8 text-lg md:text-2xl b2b-display tracking-wide">
+          <p className="b2b-display b2b-pink text-xl md:text-3xl mb-4 tracking-widest">Avalon Vitality &times;</p>
+          {/* Distressed BAY TO BREAKERS wordmark — re-created for crossover, with pink wavy underline through BREAKERS */}
+          <div className="relative inline-block">
+            <h1 className="b2b-display text-[14vw] md:text-[9rem] leading-[0.85] uppercase select-none" style={{
+              textShadow: '0 0 0 #0A0A0A',
+              transform: 'rotate(-1deg)',
+            }}>
+              <span style={{ display: 'block', transform: 'rotate(0.5deg) translateX(-2%)' }}>Bay To</span>
+              <span className="relative inline-block" style={{ transform: 'rotate(-0.5deg)' }}>
+                Breakers
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 600 50"
+                  className="absolute left-0 right-0 top-[78%] w-[105%] -translate-x-[2%]"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M 5 30 Q 60 8, 130 26 T 270 22 T 410 28 T 560 18"
+                    fill="none"
+                    stroke="#FF66B0"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </h1>
+          </div>
+          <p className="mt-8 md:mt-12 text-lg md:text-2xl b2b-display tracking-wide">
             Race-day IV, shots, &amp; recovery.<br />
             <span className="b2b-pink">Pre-buy and hit the finish line dialed.</span>
           </p>
@@ -307,6 +331,16 @@ export default function B2B() {
           </p>
         </div>
       </section>
+
+      {/* Confetti accent strip — small geometric shapes scattered before footer */}
+      <div className="relative h-12 md:h-16 overflow-hidden">
+        <svg className="absolute left-[5%] top-1 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
+        <svg className="absolute left-[20%] top-3 w-6 h-6 fill-current" style={{color:'#F5DC4D'}} viewBox="0 0 20 20"><rect width="20" height="20" /></svg>
+        <svg className="absolute left-[35%] top-5 w-7 h-7 fill-current" style={{color:'#FF6347'}} viewBox="0 0 20 20"><polygon points="10,0 20,10 10,20 0,10" /></svg>
+        <svg className="absolute left-[55%] top-2 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" /></svg>
+        <svg className="absolute left-[72%] top-4 w-6 h-6 fill-current" style={{color:'#5BC4D2'}} viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
+        <svg className="absolute left-[88%] top-1 w-7 h-7 fill-current" style={{color:'#F5DC4D'}} viewBox="0 0 20 20"><rect width="20" height="20" transform="rotate(15 10 10)" /></svg>
+      </div>
 
       {/* Footer / disclaimer */}
       <footer className="px-5 md:px-10 py-6 md:py-8 border-t-2 border-black mt-auto">
