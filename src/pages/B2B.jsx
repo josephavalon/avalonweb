@@ -7,6 +7,26 @@ import { useSeo } from '@/lib/seo';
 // Visual reference: baytobreakers.com (cream bg, distressed black display, pink stars,
 // mint accent). Original layout. Avalon brand crossed in via the teardrop + voice.
 
+function FAQItem({ q, a }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="border-2 border-black bg-white/95 rounded-2xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full text-left px-5 md:px-6 py-4 md:py-5 flex items-center justify-between gap-4"
+        aria-expanded={open}
+      >
+        <span className="b2b-display text-base md:text-xl uppercase">{q}</span>
+        <span className="b2b-display text-2xl shrink-0">{open ? '−' : '+'}</span>
+      </button>
+      <div className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${open ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <p className="px-5 md:px-6 pb-5 md:pb-6 text-sm md:text-base leading-relaxed">{a}</p>
+      </div>
+    </div>
+  );
+}
+
 function StarBurst({ className }) {
   return (
     <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
@@ -84,8 +104,8 @@ export default function B2B() {
           color: #0A0A0A;
         }
         .b2b-display {
-          font-family: 'Bebas Neue', 'Impact', sans-serif;
-          letter-spacing: 0.02em;
+          font-family: 'Frijole', 'Bebas Neue', 'Impact', sans-serif;
+          letter-spacing: 0.04em;
           font-weight: 400;
         }
         .b2b-pink { color: #ED7AC3; }
@@ -113,8 +133,8 @@ export default function B2B() {
           color: #0A0A0A;
           border: 2px solid #0A0A0A;
           border-radius: 999px;
-          font-family: 'Bebas Neue', 'Impact', sans-serif;
-          letter-spacing: 0.15em;
+          font-family: 'Frijole', 'Bebas Neue', 'Impact', sans-serif;
+          letter-spacing: 0.05em;
           padding: 1rem 2rem;
           font-size: 1.1rem;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -132,8 +152,8 @@ export default function B2B() {
           border: 2px solid #0A0A0A;
           border-radius: 999px;
           padding: 0.6rem 1.4rem;
-          font-family: 'Bebas Neue', 'Impact', sans-serif;
-          letter-spacing: 0.18em;
+          font-family: 'Frijole', 'Bebas Neue', 'Impact', sans-serif;
+          letter-spacing: 0.06em;
           font-size: 0.85rem;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -143,8 +163,8 @@ export default function B2B() {
           border: 2px solid #0A0A0A;
           border-radius: 999px;
           padding: 0.75rem 1.25rem;
-          font-family: 'Bebas Neue', 'Impact', sans-serif;
-          letter-spacing: 0.18em;
+          font-family: 'Frijole', 'Bebas Neue', 'Impact', sans-serif;
+          letter-spacing: 0.06em;
           font-size: 0.95rem;
           color: #0A0A0A;
         }
@@ -356,6 +376,30 @@ export default function B2B() {
           <p className="mt-4 text-xs leading-relaxed text-black/70">
             Payment processed securely by Square. You will receive a confirmation email after purchase. Pickup details texted 48 hours before race weekend.
           </p>
+        </div>
+      </section>
+
+      {/* FAQ section — green bg with star accents, accordion */}
+      <section className="px-5 md:px-10 py-14 md:py-20" style={{ backgroundColor: '#A8E063', borderTop: '2px solid #0A0A0A', borderBottom: '2px solid #0A0A0A' }}>
+        <div className="max-w-3xl mx-auto relative">
+          <StarBurst className="absolute -top-2 -left-4 md:-left-12 w-10 h-10 text-black" />
+          <StarBurst className="absolute -top-2 -right-4 md:-right-12 w-12 h-12 text-black -rotate-12" />
+          <h2 className="b2b-display text-center text-6xl md:text-8xl uppercase mb-10 md:mb-14">FAQ</h2>
+
+          <div className="space-y-3 md:space-y-4">
+            {[
+              { q: 'Where do I pick up?', a: 'Avalon will be set up at the finish line on race day. Exact location and tent details are texted to you 48 hours before the race.' },
+              { q: 'What time should I arrive?', a: 'IVs and shots are administered on a rolling basis as soon as you cross the finish line. No appointment needed once you’ve pre-purchased.' },
+              { q: 'What’s your refund policy?', a: 'Full refund up to 7 days before race day. After that, your purchase rolls into a credit usable at any future Avalon event or session.' },
+              { q: 'What if I can’t make it?', a: 'Email support@avalonvitality.co at least 7 days before May 17. We’ll refund or convert to credit. Day-of cancellations get credit only.' },
+              { q: 'Can I share my pre-buy with someone else?', a: 'Yes. Pre-buys are transferable. Just let us know who’s using it when you check in at the tent.' },
+              { q: 'Do I need a membership?', a: 'No. The Bay 2 Breakers presale is open to everyone. Memberships are separate at avalonvitality.co/apply.' },
+              { q: 'What is the compression therapy?', a: 'Pneumatic compression boots — 20 minutes — that flush legs of lactic acid and accelerate recovery. Pairs with any IV or shot.' },
+              { q: 'Can I add to my order later?', a: 'Yes. Buy any additional service through this page anytime before May 17. Day-of add-ons available at the tent if we have inventory.' },
+            ].map((item, i) => (
+              <FAQItem key={i} q={item.q} a={item.a} />
+            ))}
+          </div>
         </div>
       </section>
 
