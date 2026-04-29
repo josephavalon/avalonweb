@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 // Brand marks not in lucide — minimal inline SVGs
@@ -69,23 +68,19 @@ export default function SocialLinks() {
       </p>
       <div className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar -mx-1 px-1">
         {PLATFORMS.map(({ label, href, Icon }, i) => (
-          <motion.a
+          <a
             key={label}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Avalon Vitality on ${label}`}
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-10%' }}
-            transition={{ duration: 0.5, delay: i * 0.04, ease: EASE }}
-            className="group relative shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md flex items-center justify-center text-foreground/80 hover:text-accent hover:border-accent/50 hover:bg-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="group relative shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md flex items-center justify-center text-foreground/80 hover:text-accent hover:border-accent/50 hover:bg-white/[0.08] transition-colors"
           >
             <Icon className="w-5 h-5 md:w-6 md:h-6" />
             <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-body opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
               {label}
             </span>
-          </motion.a>
+          </a>
         ))}
       </div>
     </div>
