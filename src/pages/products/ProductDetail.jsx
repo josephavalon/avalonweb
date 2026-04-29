@@ -126,7 +126,7 @@ export default function ProductDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE }}
-              className="aspect-square rounded-3xl overflow-hidden border border-white/15 bg-white/[0.03] backdrop-blur-md"
+              className="aspect-square rounded-3xl overflow-hidden border border-white/20 bg-white/[0.03] backdrop-blur-md"
             >
               {t.image && (
                 <img src={t.image} alt={t.name} className="w-full h-full object-contain bg-background" />

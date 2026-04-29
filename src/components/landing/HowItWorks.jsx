@@ -48,7 +48,7 @@ export default function HowItWorks() {
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4 md:mb-8"
         >
           <div className="text-left max-w-3xl">
-            <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Process</p>
+            <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Process</p>
             <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
               HOW AVALON WORKS
             </h2>
@@ -99,7 +99,7 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12, duration: 0.7, ease: EASE }}
-                className="w-full text-center p-4 md:p-5 border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-3xl"
+                className="w-full text-center p-4 md:p-5 border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl"
               >
                 <step.icon
                   className="w-6 h-6 text-accent mx-auto mb-2"

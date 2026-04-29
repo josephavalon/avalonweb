@@ -23,7 +23,7 @@ export default function DayInTheLife() {
           transition={{ duration: 0.7, ease: EASE }}
           className="text-left mb-6 md:mb-10"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">A Tuesday with Avalon</p>
+          <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">A Tuesday with Avalon</p>
           <h2 className="font-heading text-[9vw] md:text-7xl text-foreground tracking-wide leading-[0.95] uppercase">
             What it looks like
           </h2>

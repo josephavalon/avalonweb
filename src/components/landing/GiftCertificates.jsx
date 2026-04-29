@@ -74,7 +74,7 @@ export default function GiftCertificates() {
             transition={{ duration: 0.9, delay: 0.2 }}
             className="relative hidden md:block"
           >
-            <div className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-3xl p-10 relative overflow-hidden">
+            <div className="border border-white/20 bg-white/[0.04] backdrop-blur-md rounded-3xl p-10 relative overflow-hidden">
               {/* Background glow */}
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-3xl" />
 

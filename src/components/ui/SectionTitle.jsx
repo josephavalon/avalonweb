@@ -24,7 +24,7 @@ export default function SectionTitle({
       className={`${alignClass} mb-6 md:mb-10 ${className}`}
     >
       {eyebrow && (
-        <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">
+        <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">
           {eyebrow}
         </p>
       )}

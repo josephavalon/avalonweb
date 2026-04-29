@@ -63,7 +63,7 @@ const EASE = [0.16, 1, 0.3, 1];
 export default function SocialLinks() {
   return (
     <div className="mt-10 md:mt-14 max-w-3xl">
-      <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5 text-left">
+      <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-4 md:mb-5 text-left">
         Follow Avalon
       </p>
       <div className="grid grid-cols-5 md:flex md:flex-nowrap md:items-center gap-3 md:gap-4">
@@ -74,7 +74,7 @@ export default function SocialLinks() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Avalon Vitality on ${label}`}
-            className="group relative shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-md flex items-center justify-center text-foreground/70 hover:text-accent hover:border-accent/50 hover:bg-white/[0.08] transition-colors"
+            className="group relative shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/20 bg-white/[0.04] backdrop-blur-md flex items-center justify-center text-foreground/70 hover:text-accent hover:border-accent/50 hover:bg-white/[0.08] transition-colors"
           >
             <Icon className="w-5 h-5 md:w-6 md:h-6" />
             <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-body opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">

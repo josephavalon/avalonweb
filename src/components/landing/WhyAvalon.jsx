@@ -32,14 +32,14 @@ export default function WhyAvalon() {
           transition={{ duration: 0.7, ease: EASE }}
           className="text-left mb-6 md:mb-10"
         >
-          <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Why Avalon</p>
+          <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Why Avalon</p>
           <h2 className="font-heading text-[9vw] md:text-7xl text-foreground tracking-wide leading-[0.95] uppercase">
             How we compare
           </h2>
           <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
         </motion.div>
 
-        <div className="border border-white/15 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden">
+        <div className="border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden">
           {/* Column headers */}
           <div className="grid grid-cols-[1.5fr_repeat(4,1fr)] gap-2 md:gap-4 px-3 md:px-6 py-4 md:py-5 border-b border-white/10">
             <span className="font-body text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground">Feature</span>

@@ -25,7 +25,7 @@ export default function B2BSection() {
             transition={{ duration: 0.8, ease: EASE }}
             className="text-left md:sticky md:top-28"
           >
-            <p className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Built In, Not Bolted On</p>
+            <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Built In, Not Bolted On</p>
             <h2 className="font-heading text-[10vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase mb-4 md:mb-6">
               Partnerships
             </h2>
@@ -49,7 +49,7 @@ export default function B2BSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-10%' }}
                 transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
-                className="border border-white/15 bg-white/[0.04] backdrop-blur-md rounded-2xl p-4 md:p-5 flex items-start gap-3 md:gap-4"
+                className="border border-white/20 bg-white/[0.04] backdrop-blur-md rounded-2xl p-4 md:p-5 flex items-start gap-3 md:gap-4"
               >
                 <div className="w-11 h-11 md:w-12 md:h-12 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                   <item.icon className="w-5 h-5 md:w-5 md:h-5" strokeWidth={1.5} />

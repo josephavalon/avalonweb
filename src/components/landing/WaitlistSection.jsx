@@ -58,7 +58,7 @@ export default function WaitlistSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4"
+          className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4"
         >
           Not Ready to Apply?
         </motion.p>

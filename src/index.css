@@ -402,12 +402,12 @@ body {
 
   /* Glass surface — primary background for cards across the site */
   .av-glass {
-    @apply border border-white/15 bg-white/[0.03] backdrop-blur-md;
+    @apply border border-white/20 bg-white/[0.03] backdrop-blur-md;
   }
 
   /* Glass surface — heavy variant (Membership tiers, partner cards) */
   .av-glass-heavy {
-    @apply border border-white/15 bg-white/[0.04] backdrop-blur-md;
+    @apply border border-white/20 bg-white/[0.04] backdrop-blur-md;
   }
 
   /* Filled CTA pill — primary action across the site */
