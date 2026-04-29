@@ -206,13 +206,13 @@ export default function B2B() {
                   key={p.id}
                   type="button"
                   onClick={() => setProductId(p.id)}
-                  className={`b2b-card text-left p-5 md:p-6 flex flex-col h-full min-h-[280px] ${active ? 'active' : ''}`}
+                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[200px] md:min-h-[280px] ${active ? 'active' : ''}`}
                   aria-pressed={active}
                 >
-                  <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-3 leading-tight">{p.name}</h3>
-                  <p className="text-sm leading-relaxed mb-4 flex-1">{p.description}</p>
-                  <p className="b2b-display text-3xl md:text-4xl mt-auto">${p.price}</p>
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
+                  <h3 className="b2b-display text-lg md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
+                  <p className="text-xs md:text-sm leading-snug mb-2 md:mb-4 flex-1">{p.description}</p>
+                  <p className="b2b-display text-4xl md:text-5xl mt-auto leading-none">${p.price}</p>
                 </button>
               );
             })}
@@ -234,21 +234,21 @@ export default function B2B() {
                   key={p.id}
                   type="button"
                   onClick={() => setProductId(p.id)}
-                  className={`b2b-card text-left p-5 md:p-6 ${active ? 'active' : ''} relative`}
+                  className={`b2b-card text-left p-3 md:p-6 ${active ? 'active' : ''} relative`}
                   aria-pressed={active}
                 >
                   {savings > 0 && (
-                    <span className="b2b-display absolute top-4 right-4 b2b-bg-pink text-white text-xs tracking-[0.2em] uppercase px-3 py-1 rounded-full">
+                    <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
                       Save ${savings}
                     </span>
                   )}
-                  <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-3 leading-tight pr-20">{p.name}</h3>
-                  <p className="text-sm md:text-base leading-relaxed mb-4">{p.description}</p>
-                  <div className="flex items-baseline gap-3">
-                    <p className="b2b-display text-4xl md:text-5xl">${p.price}</p>
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
+                  <h3 className="b2b-display text-base md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
+                  <p className="text-xs md:text-base leading-snug mb-2 md:mb-4">{p.description}</p>
+                  <div className="flex items-baseline gap-2 md:gap-3">
+                    <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
                     {p.originalPrice && (
-                      <p className="b2b-display text-xl md:text-2xl line-through opacity-60">${p.originalPrice}</p>
+                      <p className="b2b-display text-base md:text-2xl line-through opacity-60">${p.originalPrice}</p>
                     )}
                   </div>
                 </button>
