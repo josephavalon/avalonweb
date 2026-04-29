@@ -80,9 +80,6 @@ export default function Hero() {
                   Start Now
                 </Link>
               </MagneticButton>
-              <p className="font-body text-[11px] md:text-xs tracking-[0.2em] text-foreground/70 italic">
-                &ldquo;That was awesome.&rdquo; — Diplo
-              </p>
             </div>
           </motion.div>
 
