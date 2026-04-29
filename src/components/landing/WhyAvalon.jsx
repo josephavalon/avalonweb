@@ -18,6 +18,7 @@ const ROWS = [
   { feature: 'Tracked over time',                 values: [true, false, false, false] },
   { feature: 'No insurance hassle',               values: [true, true, false, true] },
   { feature: 'Concierge response time',           values: [true, false, false, false] },
+  { feature: 'Lowest cost, highest care',          values: [true, false, false, false] },
 ];
 
 export default function WhyAvalon() {
