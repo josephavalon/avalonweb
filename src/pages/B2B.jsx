@@ -325,6 +325,16 @@ export default function B2B() {
           .b2b-card.active { transform: none !important; }
         }
 
+        /* Scroll cue — gentle bob to indicate more content below */
+        @keyframes b2b-bob {
+          0%, 100% { transform: translateY(0); opacity: 0.85; }
+          50% { transform: translateY(6px); opacity: 1; }
+        }
+        .b2b-scroll-cue svg { animation: b2b-bob 2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .b2b-scroll-cue svg { animation: none; }
+        }
+
         /* Skeleton + shimmer — premium loading flourish */
         @keyframes b2b-shimmer {
           0% { background-position: -200% 0; }
@@ -536,7 +546,7 @@ export default function B2B() {
 
 
       {/* Hero */}
-      <section className="relative z-10 px-5 md:px-10 pt-4 md:pt-8 pb-4 md:pb-8 overflow-hidden">
+      <section className="relative z-10 px-5 md:px-10 pt-3 md:pt-6 pb-2 md:pb-4 overflow-hidden">
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
@@ -558,10 +568,10 @@ export default function B2B() {
               />
             </picture>
           </h1>
-          <p className="mt-4 md:mt-6 b2b-display text-base md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
+          <p className="mt-3 md:mt-5 b2b-display text-base md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
             Official Bay to Breakers Recovery Partner
           </p>
-          <p className="mt-3 md:mt-5 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+          <p className="mt-2 md:mt-4 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
             Sunday &middot; May 17
             <br />
             9 AM &ndash; 2 PM
@@ -569,7 +579,7 @@ export default function B2B() {
           <p className="mt-2 md:mt-3 b2b-display text-sm md:text-xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
             Finish line &middot; Ocean Beach
           </p>
-          <p className="mt-3 md:mt-5 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight">
+          <p className="mt-2 md:mt-4 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight">
             Finish-line IV, shots, &amp; recovery
             <svg
               aria-hidden="true"
@@ -580,6 +590,14 @@ export default function B2B() {
               <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
             </svg>
           </p>
+        </div>
+        {/* Scroll cue — pulses gently to nudge the user down to How It Works */}
+        <div className="b2b-scroll-cue mt-4 md:mt-6 flex flex-col items-center pointer-events-none">
+          <span className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-2 opacity-80">Scroll</span>
+          <svg width="14" height="20" viewBox="0 0 14 20" fill="none" stroke="#ED7AC3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="2 8 7 14 12 8" />
+            <polyline points="2 2 7 8 12 2" opacity="0.5" />
+          </svg>
         </div>
       </section>
 
