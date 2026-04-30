@@ -38,7 +38,7 @@ export const B2B_PRODUCTS = [
     kind: 'single',
     consumes: ['b2bIv'],
     flair: { line1: '60% OFF', line2: 'ONE DAY ONLY' },
-    squareUrl: 'https://square.link/u/REPLACE-ME-IV',
+    squareUrl: 'https://square.link/u/5Mqez7ub',
   },
   {
     id: 'bay2bay-cbd',
