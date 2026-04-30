@@ -370,7 +370,7 @@ export default function B2B() {
             {[
               { n: '01', t: 'Pre-buy', d: 'Lock your slot now. Confirmation email + race-morning text from Avalon.' },
               { n: '02', t: 'Run your race', d: 'Cross the line. Walk to the Avalon recovery zone (location texted that morning).' },
-              { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human. ~30 min.' },
+              { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human.' },
             ].map((s) => (
               <div key={s.n} className="b2b-card p-3 md:p-5">
                 <p className="b2b-display text-2xl md:text-4xl b2b-pink leading-none mb-1 md:mb-2">{s.n}</p>
