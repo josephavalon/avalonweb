@@ -413,6 +413,11 @@ export default function B2B() {
                       {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
                     </p>
                   )}
+                  {showImCount && (
+                    <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
+                      {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
+                    </p>
+                  )}
                   <p className="b2b-display text-4xl md:text-5xl mt-auto leading-none">${p.price}</p>
                 </button>
               );
@@ -481,11 +486,6 @@ export default function B2B() {
                   {showIvCount && (
                     <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
                       {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
-                    </p>
-                  )}
-                  {showImCount && (
-                    <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
-                      {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
                     </p>
                   )}
                   <div className="flex items-baseline gap-2 md:gap-3 mt-auto">
