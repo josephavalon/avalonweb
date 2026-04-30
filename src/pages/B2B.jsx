@@ -90,12 +90,12 @@ function CardSkeleton({ variant = 'single' }) {
   );
 }
 
-function RevealCard({ children, index = 0, delayBase = 0.06, className = '' }) {
+function RevealCard({ children, index = 0, delayBase = 0.10, className = '' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: REVEAL_EASE, delay: index * delayBase }}
+      transition={{ duration: 0.7, ease: REVEAL_EASE, delay: index * delayBase + 0.05 }}
       className={className}
     >
       {children}
@@ -178,7 +178,7 @@ export default function B2B() {
 
   // Premium loading flourish — skeleton on mount, real cards reveal after one paint
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 280);
+    const t = setTimeout(() => setIsLoading(false), 650);
     return () => clearTimeout(t);
   }, []);
 
