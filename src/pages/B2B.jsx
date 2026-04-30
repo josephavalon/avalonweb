@@ -989,18 +989,21 @@ export default function B2B() {
         <svg className="absolute left-[88%] top-1 w-7 h-7 fill-current" style={{color:'#F8EC82'}} viewBox="0 0 20 20"><rect width="20" height="20" transform="rotate(15 10 10)" /></svg>
       </div>
 
-      {/* Footer / disclaimer */}
-      <footer className="relative z-10 px-5 md:px-10 py-6 md:py-8 border-t-2 border-black mt-auto">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="text-xs uppercase tracking-[0.2em]">
-            <p>Avalon Vitality &middot; California-licensed clinicians</p>
-            <p className="normal-case tracking-normal text-black/70 mt-1">San Francisco's mobile IV therapy + longevity platform. RN-administered, physician-supervised.</p>
-          </div>
-          <p className="text-xs uppercase tracking-[0.2em]">
-            <Link to="/" className="hover:b2b-pink transition-colors">Back to avalonvitality.co</Link>
+      {/* Footer / disclaimer — centered, generously spaced */}
+      <footer className="relative z-10 px-5 md:px-10 py-10 md:py-14 border-t-2 border-black mt-auto">
+        <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-5 md:gap-6">
+          <p className="b2b-display text-sm md:text-base uppercase tracking-[0.3em]">
+            Avalon Vitality &middot; California-licensed clinicians
           </p>
+          <p className="text-sm md:text-base leading-relaxed text-black/70 max-w-xl">
+            San Francisco&rsquo;s mobile IV therapy + longevity platform. RN-administered, physician-supervised.
+          </p>
+          <Link to="/" className="b2b-display text-xs md:text-sm uppercase tracking-[0.25em] hover:b2b-pink transition-colors inline-flex items-center gap-2">
+            Back to avalonvitality.co
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
-        <p className="max-w-3xl mx-auto mt-4 text-[11px] leading-relaxed text-black/60 text-center">
+        <p className="max-w-3xl mx-auto mt-8 md:mt-10 text-[11px] md:text-xs leading-relaxed text-black/55 text-center">
           Avalon Vitality is the official Bay to Breakers Recovery Partner for 2026. Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Need accessibility accommodations? Email support@avalonvitality.co before May 14 and we&rsquo;ll arrange them.
         </p>
       </footer>
