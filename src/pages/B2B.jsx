@@ -90,13 +90,19 @@ function CardSkeleton({ variant = 'single' }) {
   );
 }
 
-function RevealCard({ children, index = 0, delayBase = 0.08, className = '' }) {
+function RevealCard({ children, index = 0, delayBase = 0.13, className = '' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -8% 0px' }}
-      transition={{ duration: 0.65, ease: REVEAL_EASE, delay: index * delayBase }}
+      initial={{ opacity: 0, y: 28, scale: 0.96, filter: 'blur(6px)' }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+      transition={{
+        duration: 1.0,
+        ease: REVEAL_EASE,
+        delay: index * delayBase,
+        opacity: { duration: 0.9 },
+        filter: { duration: 0.7 },
+      }}
       className={className}
     >
       {children}
