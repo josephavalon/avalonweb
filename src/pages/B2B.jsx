@@ -700,7 +700,7 @@ export default function B2B() {
                 style={{ aspectRatio: '1 / 1' }}
               >
                 <p className="b2b-display text-xs md:text-sm tracking-[0.25em] uppercase mb-1 b2b-pink">+ Add-on</p>
-                <h3 className="b2b-display text-xl md:text-2xl uppercase mb-2 leading-tight">{COMPRESSION_ADDON.name}</h3>
+                <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{COMPRESSION_ADDON.name}</h3>
                 <p className="text-xs md:text-sm leading-snug mb-2 max-w-[80%]">Normatec compression boots, 20-min session.</p>
                 {COMPRESSION_ADDON.originalPrice && (
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase mb-1">
