@@ -237,6 +237,19 @@ export default function B2B() {
         }
         .b2b-mint { background-color: #80C7D3; }
         .b2b-soft-yellow { background-color: #F8EC82; }
+        .b2b-flair {
+          background-color: #F8EC82;
+          color: #0A0A0A;
+          border: 2px solid #0A0A0A;
+          letter-spacing: 0.04em;
+          font-weight: 400;
+          transform: rotate(-8deg);
+          transform-origin: top left;
+          box-shadow: 3px 3px 0 #0A0A0A;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .b2b-flair { transform: none; }
+        }
         .b2b-card {
           background-color: #ffffff;
           border: 2px solid #0A0A0A;
@@ -405,6 +418,12 @@ export default function B2B() {
                   className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${cardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-pressed={active}
                 >
+                  {p.flair && !active && (
+                    <span className="b2b-flair absolute -top-3 -left-3 md:-top-4 md:-left-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
+                      <span className="block text-base md:text-lg leading-none">{p.flair.line1}</span>
+                      <span className="block text-[9px] md:text-[10px] tracking-[0.15em] mt-0.5">{p.flair.line2}</span>
+                    </span>
+                  )}
                   <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
                   <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
                   <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>

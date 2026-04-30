@@ -34,6 +34,7 @@ export const B2B_PRODUCTS = [
     price: 120,
     kind: 'single',
     consumes: ['b2bIv'],
+    flair: { line1: '50% OFF', line2: 'ONE DAY ONLY' },
     squareUrl: 'https://square.link/u/REPLACE-ME-IV',
   },
   {
