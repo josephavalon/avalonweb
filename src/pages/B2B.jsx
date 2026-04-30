@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
@@ -15,6 +16,90 @@ function StarBurst({ className, style }) {
         fill="currentColor"
       />
     </svg>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Skeleton + reveal primitives (Apple-polish, premium-medical feel)
+// ----------------------------------------------------------------------------
+const REVEAL_EASE = [0.22, 1, 0.36, 1];
+
+function SkeletonBar({ className = '', extraClass = '' }) {
+  return <div className={`skeleton-bar rounded-md ${className} ${extraClass}`} aria-hidden="true" />;
+}
+
+function CardSkeleton({ variant = 'single' }) {
+  if (variant === 'step') {
+    return (
+      <div className="b2b-card p-3 md:p-5" aria-hidden="true">
+        <SkeletonBar className="w-10 h-7 md:h-8 mb-2" />
+        <SkeletonBar className="w-20 h-5 mb-3" />
+        <SkeletonBar className="w-full h-3 mb-1.5" />
+        <SkeletonBar className="w-11/12 h-3 mb-1.5" />
+        <SkeletonBar className="w-2/3 h-3" />
+      </div>
+    );
+  }
+  if (variant === 'visit') {
+    return (
+      <div className="b2b-card p-3 md:p-5" aria-hidden="true">
+        <SkeletonBar className="w-24 h-5 mb-2" />
+        <SkeletonBar className="w-full h-3 mb-1.5" />
+        <SkeletonBar className="w-3/4 h-3" />
+      </div>
+    );
+  }
+  if (variant === 'testimonial') {
+    return (
+      <div className="b2b-card p-4 md:p-5" aria-hidden="true">
+        <SkeletonBar className="w-full h-3 mb-2" />
+        <SkeletonBar className="w-11/12 h-3 mb-2" />
+        <SkeletonBar className="w-5/6 h-3 mb-4" />
+        <SkeletonBar className="w-1/2 h-3" />
+      </div>
+    );
+  }
+  if (variant === 'bundle') {
+    return (
+      <div className="b2b-card p-4 md:p-6 flex flex-col h-full md:min-h-[300px]" aria-hidden="true">
+        <SkeletonBar className="w-32 h-3 mb-3" />
+        <SkeletonBar className="w-3/4 h-7 md:h-8 mb-3" />
+        <SkeletonBar className="w-full h-3 mb-1.5" />
+        <SkeletonBar className="w-11/12 h-3 mb-1.5" />
+        <SkeletonBar className="w-3/4 h-3 mb-4" />
+        <SkeletonBar className="w-20 h-3 mb-2 mt-auto" />
+        <div className="flex items-baseline gap-2 md:gap-3">
+          <SkeletonBar className="w-20 md:w-24 h-10 md:h-12" />
+          <SkeletonBar className="w-12 h-6" />
+        </div>
+      </div>
+    );
+  }
+  // single (default)
+  return (
+    <div className="b2b-card p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative" aria-hidden="true">
+      <SkeletonBar className="w-28 h-3 mb-3" />
+      <SkeletonBar className="w-3/4 h-7 md:h-8 mb-3" />
+      <SkeletonBar className="w-full h-3 mb-1.5" />
+      <SkeletonBar className="w-5/6 h-3 mb-1.5" />
+      <SkeletonBar className="w-2/3 h-3 mb-3" />
+      <div className="flex items-baseline gap-2 mt-auto">
+        <SkeletonBar className="w-20 md:w-24 h-10 md:h-12" />
+      </div>
+    </div>
+  );
+}
+
+function RevealCard({ children, index = 0, delayBase = 0.06, className = '' }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: REVEAL_EASE, delay: index * delayBase }}
+      className={className}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -57,6 +142,14 @@ export default function B2B() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [showStickyCta, setShowStickyCta] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [quantities, setQuantities] = useState(() => {
+    const q = {};
+    B2B_PRODUCTS.forEach((p) => { q[p.id] = 1; });
+    return q;
+  });
+  const setQuantity = (id, n) => setQuantities((prev) => ({ ...prev, [id]: Math.max(1, Math.min(25, parseInt(n, 10) || 1)) }));
+  const productQty = quantities[productId] || 1;
   const [isGift, setIsGift] = useState(false);
   const [giftRecipientName, setGiftRecipientName] = useState('');
   const [giftRecipientEmail, setGiftRecipientEmail] = useState('');
@@ -83,6 +176,12 @@ export default function B2B() {
     } catch (e) {}
   }, []);
 
+  // Premium loading flourish — skeleton on mount, real cards reveal after one paint
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 280);
+    return () => clearTimeout(t);
+  }, []);
+
   // Sticky mobile buy bar — only after hero scroll
   useEffect(() => {
     const handler = () => setShowStickyCta(window.scrollY > 280);
@@ -97,7 +196,7 @@ export default function B2B() {
     }
   }, [productIncludesBoots, compression]);
 
-  const subtotal = product.price + (compression ? COMPRESSION_ADDON.price : 0);
+  const subtotal = (product.price * productQty) + (compression ? COMPRESSION_ADDON.price : 0);
   const discount = useMemo(() => {
     if (!appliedCoupon) return 0;
     const c = COUPONS[appliedCoupon];
@@ -152,13 +251,14 @@ export default function B2B() {
   const checkoutUrl = useMemo(() => {
     const url = new URL(product.squareUrl);
     const memo = [];
+    if (productQty > 1) memo.push(`Quantity: ${productQty}`);
     if (compression) memo.push('+ Normatec compression boots ($50)');
     if (appliedCoupon) memo.push(`Coupon ${appliedCoupon} (${COUPONS[appliedCoupon].label})`);
     if (isGift) memo.push(`Gift for ${giftRecipientName || '(name not provided)'} <${giftRecipientEmail || 'email not provided'}>`);
     memo.push(`Total: $${total}`);
     if (memo.length) url.searchParams.set('memo', memo.join(' · '));
     return url.toString();
-  }, [product.squareUrl, compression, appliedCoupon, total, isGift, giftRecipientName, giftRecipientEmail]);
+  }, [product.squareUrl, compression, appliedCoupon, total, isGift, giftRecipientName, giftRecipientEmail, productQty]);
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
@@ -214,6 +314,44 @@ export default function B2B() {
         @media (prefers-reduced-motion: reduce) {
           .b2b-root, .b2b-root * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
           .b2b-card.active { transform: none !important; }
+        }
+
+        /* Skeleton + shimmer — premium loading flourish */
+        @keyframes b2b-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .skeleton-bar {
+          background: linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.10) 50%, rgba(0,0,0,0.04) 100%);
+          background-size: 200% 100%;
+          animation: b2b-shimmer 1.6s ease-in-out infinite;
+          border-radius: 6px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .skeleton-bar { animation: none; background: rgba(0,0,0,0.06); }
+        }
+
+        /* Quantity dropdown — minimal native select restyled */
+        .b2b-qty {
+          appearance: none;
+          -webkit-appearance: none;
+          background-color: #ffffff;
+          color: #0A0A0A;
+          border: 2px solid #0A0A0A;
+          border-radius: 8px;
+          padding: 4px 28px 4px 10px;
+          font-family: 'Bebas Neue', 'Impact', sans-serif;
+          font-size: 14px;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230A0A0A' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          transition: border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .b2b-qty:focus { outline: none; border-color: #ED7AC3; }
+        @media (prefers-reduced-motion: reduce) {
+          .b2b-qty { transition: none; }
         }
         @media (max-width: 767px) { .b2b-root { padding-bottom: 80px; } }
         .b2b-display {
@@ -381,17 +519,21 @@ export default function B2B() {
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">How it works</p>
           <div className="grid grid-cols-3 gap-3 md:gap-5">
-            {[
-              { n: '01', t: 'Pre-buy', d: 'Lock your slot now. Confirmation email + race-morning text from Avalon.' },
-              { n: '02', t: 'Run your race', d: 'Cross the line. Walk to the Avalon recovery zone (location texted that morning).' },
-              { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human.' },
-            ].map((s) => (
-              <div key={s.n} className="b2b-card p-3 md:p-5">
-                <p className="b2b-display text-2xl md:text-4xl b2b-pink leading-none mb-1 md:mb-2">{s.n}</p>
-                <p className="b2b-display text-base md:text-2xl uppercase mb-1 md:mb-2 leading-tight">{s.t}</p>
-                <p className="text-xs md:text-sm leading-snug">{s.d}</p>
-              </div>
-            ))}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-h-${i}`} variant="step" />)
+              : [
+                  { n: '01', t: 'Pre-buy', d: 'Lock your slot now. Confirmation email + race-morning text from Avalon.' },
+                  { n: '02', t: 'Run your race', d: 'Cross the line. Walk to the Avalon recovery zone (location texted that morning).' },
+                  { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human.' },
+                ].map((s, i) => (
+                  <RevealCard key={s.n} index={i}>
+                    <div className="b2b-card p-3 md:p-5">
+                      <p className="b2b-display text-2xl md:text-4xl b2b-pink leading-none mb-1 md:mb-2">{s.n}</p>
+                      <p className="b2b-display text-base md:text-2xl uppercase mb-1 md:mb-2 leading-tight">{s.t}</p>
+                      <p className="text-xs md:text-sm leading-snug">{s.d}</p>
+                    </div>
+                  </RevealCard>
+                ))}
           </div>
         </div>
       </section>
@@ -401,50 +543,72 @@ export default function B2B() {
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Pick your tier &darr;</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-            {B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p) => {
-              const showIvCount = p.consumes?.includes('b2bIv');
-              const ivCardSoldOut = showIvCount && b2bIvSoldOut;
-              const showImCount = !showIvCount && p.consumes?.includes('imShot');
-              const imCardSoldOut = showImCount && imShotSoldOut;
-              const cardSoldOut = ivCardSoldOut || imCardSoldOut;
-              const active = p.id === productId;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => !ivCardSoldOut && setProductId(p.id)}
-                  disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${cardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  aria-pressed={active}
-                >
-                  {p.flair && !active && (
-                    <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
-                      <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
-                      <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
-                    </span>
-                  )}
-                  <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
-                  <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
-                  {showIvCount && (
-                    <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
-                      {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
-                    </p>
-                  )}
-                  {showImCount && (
-                    <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
-                      {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
-                    </p>
-                  )}
-                  <div className="flex items-baseline gap-2 md:gap-3 mt-auto">
-                    <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
-                    {p.originalPrice && (
-                      <p className="b2b-display text-2xl md:text-3xl line-through opacity-50 leading-none">${p.originalPrice}</p>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-s-${i}`} variant="single" />)
+              : B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p, i) => {
+                  const showIvCount = p.consumes?.includes('b2bIv');
+                  const ivCardSoldOut = showIvCount && b2bIvSoldOut;
+                  const showImCount = !showIvCount && p.consumes?.includes('imShot');
+                  const imCardSoldOut = showImCount && imShotSoldOut;
+                  const cardSoldOut = ivCardSoldOut || imCardSoldOut;
+                  const active = p.id === productId;
+                  const handleSelect = () => { if (!cardSoldOut) setProductId(p.id); };
+                  return (
+                    <RevealCard key={p.id} index={i}>
+                      <div
+                        role="button"
+                        tabIndex={cardSoldOut ? -1 : 0}
+                        onClick={handleSelect}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect(); } }}
+                        className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${cardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        aria-pressed={active}
+                      >
+                        {p.flair && !active && (
+                          <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
+                            <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
+                            <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
+                          </span>
+                        )}
+                        <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
+                        <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
+                        <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
+                        {showIvCount && (
+                          <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
+                            {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
+                          </p>
+                        )}
+                        {showImCount && (
+                          <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
+                            {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
+                          </p>
+                        )}
+                        <div className="flex items-baseline gap-2 md:gap-3 mt-auto mb-3">
+                          <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
+                          {p.originalPrice && (
+                            <p className="b2b-display text-2xl md:text-3xl line-through opacity-50 leading-none">${p.originalPrice}</p>
+                          )}
+                        </div>
+                        {!cardSoldOut && (
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <label className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase text-black/60" htmlFor={`qty-${p.id}`}>Qty</label>
+                            <select
+                              id={`qty-${p.id}`}
+                              className="b2b-qty"
+                              value={quantities[p.id] || 1}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              onChange={(e) => { setQuantity(p.id, e.target.value); if (!active) setProductId(p.id); }}
+                            >
+                              {Array.from({ length: 25 }, (_, n) => n + 1).map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </RevealCard>
+                  );
+                })}
           </div>
         </div>
       </section>
@@ -479,47 +643,69 @@ export default function B2B() {
           <p className="b2b-display text-2xl md:text-3xl mb-2 md:mb-3 uppercase tracking-wide">Or save with a package</p>
           <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Boots already included where listed.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-            {B2B_PRODUCTS.filter((p) => p.kind === 'bundle').map((p) => {
-              const active = p.id === productId;
-              const savings = p.originalPrice ? p.originalPrice - p.price : 0;
-              const showIvCount = p.consumes?.includes('b2bIv');
-              const ivCardSoldOut = showIvCount && b2bIvSoldOut;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => !ivCardSoldOut && setProductId(p.id)}
-                  disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
-                  aria-pressed={active}
-                >
-                  {savings > 0 && !ivCardSoldOut && !active && (
-                    <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
-                      Save ${savings}
-                    </span>
-                  )}
-                  {ivCardSoldOut && (
-                    <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 bg-black text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
-                      Sold out
-                    </span>
-                  )}
-                  <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
-                  <p className="text-sm md:text-base leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
-                  {showIvCount && (
-                    <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
-                      {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
-                    </p>
-                  )}
-                  <div className="flex items-baseline gap-2 md:gap-3 mt-auto">
-                    <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
-                    {p.originalPrice && (
-                      <p className="b2b-display text-base md:text-2xl line-through opacity-60">${p.originalPrice}</p>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+            {isLoading
+              ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={`sk-b-${i}`} variant="bundle" />)
+              : B2B_PRODUCTS.filter((p) => p.kind === 'bundle').map((p, i) => {
+                  const active = p.id === productId;
+                  const savings = p.originalPrice ? p.originalPrice - p.price : 0;
+                  const showIvCount = p.consumes?.includes('b2bIv');
+                  const ivCardSoldOut = showIvCount && b2bIvSoldOut;
+                  const handleSelect = () => { if (!ivCardSoldOut) setProductId(p.id); };
+                  return (
+                    <RevealCard key={p.id} index={i}>
+                      <div
+                        role="button"
+                        tabIndex={ivCardSoldOut ? -1 : 0}
+                        onClick={handleSelect}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect(); } }}
+                        className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
+                        aria-pressed={active}
+                      >
+                        {savings > 0 && !ivCardSoldOut && !active && (
+                          <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
+                            Save ${savings}
+                          </span>
+                        )}
+                        {ivCardSoldOut && (
+                          <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 bg-black text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
+                            Sold out
+                          </span>
+                        )}
+                        <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
+                        <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
+                        <p className="text-sm md:text-base leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
+                        {showIvCount && (
+                          <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
+                            {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
+                          </p>
+                        )}
+                        <div className="flex items-baseline gap-2 md:gap-3 mt-auto mb-3">
+                          <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
+                          {p.originalPrice && (
+                            <p className="b2b-display text-base md:text-2xl line-through opacity-60">${p.originalPrice}</p>
+                          )}
+                        </div>
+                        {!ivCardSoldOut && (
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <label className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase text-black/60" htmlFor={`qty-${p.id}`}>Qty</label>
+                            <select
+                              id={`qty-${p.id}`}
+                              className="b2b-qty"
+                              value={quantities[p.id] || 1}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              onChange={(e) => { setQuantity(p.id, e.target.value); if (!active) setProductId(p.id); }}
+                            >
+                              {Array.from({ length: 25 }, (_, n) => n + 1).map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </RevealCard>
+                  );
+                })}
           </div>
 
           {/* Team rates contact card — full-width below bundle grid */}
@@ -585,16 +771,20 @@ export default function B2B() {
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Your visit</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
-            {[
-              { t: 'Time on chair', d: 'IM shot 5–10 min. IV 20–30 min. Normatec compression boots 20 min.' },
-              { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
-              { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
-            ].map((v) => (
-              <div key={v.t} className="b2b-card p-3 md:p-5">
-                <p className="b2b-display text-base md:text-xl uppercase mb-1 leading-tight">{v.t}</p>
-                <p className="text-sm md:text-base leading-snug">{v.d}</p>
-              </div>
-            ))}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-v-${i}`} variant="visit" />)
+              : [
+                  { t: 'Time on chair', d: 'IM shot 5–10 min. IV 20–30 min. Normatec compression boots 20 min.' },
+                  { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
+                  { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
+                ].map((v, i) => (
+                  <RevealCard key={v.t} index={i}>
+                    <div className="b2b-card p-3 md:p-5">
+                      <p className="b2b-display text-base md:text-xl uppercase mb-1 leading-tight">{v.t}</p>
+                      <p className="text-sm md:text-base leading-snug">{v.d}</p>
+                    </div>
+                  </RevealCard>
+                ))}
           </div>
         </div>
       </section>
@@ -604,27 +794,22 @@ export default function B2B() {
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Real Avalon recoveries</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
-            {[
-              {
-                quote: 'That was awesome.',
-                name: 'Diplo', tag: 'Energy IV',
-              },
-              {
-                quote: 'That IV did digits.',
-                name: 'Larry June', tag: 'Recovery IV',
-              },
-              {
-                quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.',
-                name: 'G.B.', tag: 'Event recovery',
-              },
-            ].map((t) => (
-              <figure key={t.name} className="b2b-card p-4 md:p-5">
-                <blockquote className="text-sm md:text-base leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</blockquote>
-                <figcaption className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink">
-                  &mdash; {t.name} &middot; {t.tag}
-                </figcaption>
-              </figure>
-            ))}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-t-${i}`} variant="testimonial" />)
+              : [
+                  { quote: 'That was awesome.', name: 'Diplo', tag: 'Energy IV' },
+                  { quote: 'That IV did digits.', name: 'Larry June', tag: 'Recovery IV' },
+                  { quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.', name: 'G.B.', tag: 'Event recovery' },
+                ].map((t, i) => (
+                  <RevealCard key={t.name} index={i}>
+                    <figure className="b2b-card p-4 md:p-5">
+                      <blockquote className="text-sm md:text-base leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</blockquote>
+                      <figcaption className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink">
+                        &mdash; {t.name} &middot; {t.tag}
+                      </figcaption>
+                    </figure>
+                  </RevealCard>
+                ))}
           </div>
         </div>
       </section>
@@ -636,8 +821,8 @@ export default function B2B() {
 
           <div className="space-y-3 mb-5">
             <div className="flex justify-between gap-4">
-              <span className="text-sm md:text-base">{product.name}</span>
-              <span className="b2b-display text-lg md:text-xl">${product.price}</span>
+              <span className="text-sm md:text-base">{product.name}{productQty > 1 ? ` × ${productQty}` : ''}</span>
+              <span className="b2b-display text-lg md:text-xl">${product.price * productQty}</span>
             </div>
             {compression && (
               <div className="flex justify-between gap-4">
