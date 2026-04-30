@@ -243,7 +243,7 @@ export default function B2B() {
           border: 2.5px solid #0A0A0A;
           letter-spacing: 0.04em;
           font-weight: 400;
-          transform: rotate(-10deg);
+          transform: rotate(8deg);
           transform-origin: center;
           box-shadow: 4px 4px 0 #0A0A0A;
         }
@@ -418,7 +418,7 @@ export default function B2B() {
                   aria-pressed={active}
                 >
                   {p.flair && !active && (
-                    <span className="b2b-flair absolute -top-3 -left-3 md:-top-4 md:-left-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
+                    <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
                       <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
                       <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
                     </span>
