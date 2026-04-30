@@ -582,7 +582,12 @@ export default function B2B() {
                             {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
                           </p>
                         )}
-                        <div className="flex items-baseline gap-2 md:gap-3 mt-auto mb-3">
+                        {p.originalPrice && (
+                          <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
+                            {Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}% off · save ${p.originalPrice - p.price}
+                          </p>
+                        )}
+                        <div className={`flex items-baseline gap-2 md:gap-3 mb-3 ${p.originalPrice ? '' : 'mt-auto'}`}>
                           <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
                           {p.originalPrice && (
                             <p className="b2b-display text-2xl md:text-3xl line-through opacity-50 leading-none">${p.originalPrice}</p>
@@ -663,7 +668,7 @@ export default function B2B() {
                       >
                         {savings > 0 && !ivCardSoldOut && !active && (
                           <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
-                            Save ${savings}
+                            {Math.round((savings / p.originalPrice) * 100)}% off
                           </span>
                         )}
                         {ivCardSoldOut && (
@@ -679,7 +684,12 @@ export default function B2B() {
                             {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
                           </p>
                         )}
-                        <div className="flex items-baseline gap-2 md:gap-3 mt-auto mb-3">
+                        {p.originalPrice && savings > 0 && (
+                          <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
+                            Save ${savings} · {Math.round((savings / p.originalPrice) * 100)}% off
+                          </p>
+                        )}
+                        <div className={`flex items-baseline gap-2 md:gap-3 mb-3 ${p.originalPrice && savings > 0 ? '' : 'mt-auto'}`}>
                           <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
                           {p.originalPrice && (
                             <p className="b2b-display text-base md:text-2xl line-through opacity-60">${p.originalPrice}</p>
