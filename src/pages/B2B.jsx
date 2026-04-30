@@ -90,12 +90,13 @@ function CardSkeleton({ variant = 'single' }) {
   );
 }
 
-function RevealCard({ children, index = 0, delayBase = 0.10, className = '' }) {
+function RevealCard({ children, index = 0, delayBase = 0.08, className = '' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: REVEAL_EASE, delay: index * delayBase + 0.05 }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '0px 0px -8% 0px' }}
+      transition={{ duration: 0.65, ease: REVEAL_EASE, delay: index * delayBase }}
       className={className}
     >
       {children}
@@ -142,7 +143,7 @@ export default function B2B() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [showStickyCta, setShowStickyCta] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false); // skeletons retired in favor of scroll-reveal
   const [quantities, setQuantities] = useState(() => {
     const q = {};
     B2B_PRODUCTS.forEach((p) => { q[p.id] = 1; });
@@ -174,12 +175,6 @@ export default function B2B() {
       if (typeof window.fbq === 'function') window.fbq('track', 'PageView');
       if (typeof window.gtag === 'function') window.gtag('event', 'page_view', { page_path: '/b2b', page_title: 'B2B Presale' });
     } catch (e) {}
-  }, []);
-
-  // Premium loading flourish — skeleton on mount, real cards reveal after one paint
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 650);
-    return () => clearTimeout(t);
   }, []);
 
   // Sticky mobile buy bar — only after hero scroll

@@ -48,7 +48,7 @@ export const B2B_PRODUCTS = [
     originalPrice: 350,
     kind: 'single',
     consumes: ['cbdIv'],
-    flair: { line1: 'SAVE $150', line2: 'ONE DAY ONLY' },
+    flair: { line1: '43% OFF', line2: 'ONE DAY ONLY' },
     squareUrl: 'https://square.link/u/REPLACE-ME-CBD',
   },
   // Bundles — pre-priced with a small bundle discount baked in
