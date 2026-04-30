@@ -26,7 +26,7 @@ export const B2B_PRODUCTS = [
     id: 'bay2bay-iv',
     name: 'Bay 2 Bay IV',
     tagline: 'Race-day hydration, full bag',
-    description: 'Sodium, potassium, calcium, chloride, lactate, B-12, B-complex, and magnesium. Delivered at the finish line.',
+    description: 'Sodium, potassium, calcium chloride, lactate, B-12, B-complex, and magnesium. Delivered at the finish line.',
     price: 120,
     kind: 'single',
     consumes: ['b2bIv'],
