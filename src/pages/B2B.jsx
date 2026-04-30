@@ -543,9 +543,6 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-3 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
-          <p className="b2b-display text-sm md:text-base tracking-[0.3em] uppercase b2b-pink text-center mb-3 md:mb-4">
-            Official Bay to Breakers Recovery Partner
-          </p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
           <h1 className="m-0">
             <picture>
@@ -579,6 +576,9 @@ export default function B2B() {
             >
               <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
             </svg>
+          </p>
+          <p className="mt-4 md:mt-6 b2b-display text-sm md:text-base tracking-[0.3em] uppercase b2b-pink text-center">
+            Official Bay to Breakers Recovery Partner
           </p>
         </div>
       </section>
