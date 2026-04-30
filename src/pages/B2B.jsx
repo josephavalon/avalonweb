@@ -558,6 +558,9 @@ export default function B2B() {
               />
             </picture>
           </h1>
+          <p className="mt-4 md:mt-6 b2b-display text-base md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
+            Official Bay to Breakers Recovery Partner
+          </p>
           <p className="mt-3 md:mt-5 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
             Sunday &middot; May 17
             <br />
@@ -576,9 +579,6 @@ export default function B2B() {
             >
               <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
             </svg>
-          </p>
-          <p className="mt-4 md:mt-6 b2b-display text-sm md:text-base tracking-[0.3em] uppercase b2b-pink text-center">
-            Official Bay to Breakers Recovery Partner
           </p>
         </div>
       </section>
