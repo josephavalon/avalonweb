@@ -546,13 +546,13 @@ export default function B2B() {
 
 
       {/* Hero */}
-      <section className="relative z-10 px-5 md:px-10 pt-3 md:pt-6 pb-2 md:pb-4 overflow-hidden">
+      <section className="relative z-10 px-5 md:px-10 pt-2 md:pt-4 pb-2 md:pb-3 overflow-hidden">
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
-          <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-3 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
+          <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-2 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
           <h1 className="m-0">
             <picture>
@@ -568,18 +568,18 @@ export default function B2B() {
               />
             </picture>
           </h1>
-          <p className="mt-3 md:mt-5 b2b-display text-base md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
+          <p className="mt-2 md:mt-4 b2b-display text-base md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
             Official Bay to Breakers Recovery Partner
           </p>
-          <p className="mt-2 md:mt-4 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+          <p className="mt-2 md:mt-3 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
             Sunday &middot; May 17
             <br />
             9 AM &ndash; 2 PM
           </p>
-          <p className="mt-2 md:mt-3 b2b-display text-sm md:text-xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
+          <p className="mt-1.5 md:mt-2 b2b-display text-sm md:text-xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
             Finish line &middot; Ocean Beach
           </p>
-          <p className="mt-2 md:mt-4 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight">
+          <p className="mt-2 md:mt-3 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight">
             Finish-line IV, shots, &amp; recovery
             <svg
               aria-hidden="true"
@@ -592,7 +592,7 @@ export default function B2B() {
           </p>
         </div>
         {/* Scroll cue — pulses gently to nudge the user down to How It Works */}
-        <div className="b2b-scroll-cue mt-4 md:mt-6 flex flex-col items-center pointer-events-none">
+        <div className="b2b-scroll-cue mt-3 md:mt-4 flex flex-col items-center pointer-events-none">
           <span className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-2 opacity-80">Scroll</span>
           <svg width="14" height="20" viewBox="0 0 14 20" fill="none" stroke="#ED7AC3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="2 8 7 14 12 8" />
@@ -711,7 +711,7 @@ export default function B2B() {
                   style={{ aspectRatio: '1 / 1' }}
                 >
                   <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase mb-2 b2b-pink">+ Add-on</p>
-                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">Normatec Boots</h3>
+                  <h3 className="b2b-display text-3xl md:text-5xl uppercase mb-2 md:mb-3 leading-[0.95]">Normatec Boots</h3>
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase mb-2 opacity-80">17% Off</p>
                   <div className="flex items-baseline gap-2 mb-2">
                     <p className="b2b-display text-4xl md:text-5xl leading-none">${COMPRESSION_ADDON.price}</p>
