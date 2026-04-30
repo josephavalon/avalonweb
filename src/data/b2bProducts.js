@@ -44,7 +44,7 @@ export const B2B_PRODUCTS = [
     id: 'bay2bay-cbd',
     name: 'CBD IV',
     tagline: 'Full-body recovery',
-    description: 'Premium CBD infusion (zero THC) for post-race recovery. 99mg therapeutic dose.',
+    description: '500 mL. Premium CBD infusion (zero THC) for post-race recovery. 99mg therapeutic dose.',
     price: 200,
     originalPrice: 350,
     kind: 'single',
