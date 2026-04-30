@@ -371,8 +371,8 @@ export default function B2B() {
         .b2b-mint { background-color: #80C7D3; }
         .b2b-soft-yellow { background-color: #F8EC82; }
         .b2b-flair {
-          background-color: #F8EC82;
-          color: #0A0A0A;
+          background-color: #ED7AC3;
+          color: #ffffff;
           border: 2.5px solid #0A0A0A;
           letter-spacing: 0.04em;
           font-weight: 400;
@@ -661,9 +661,10 @@ export default function B2B() {
                         className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
                         aria-pressed={active}
                       >
-                        {savings > 0 && !ivCardSoldOut && !active && (
-                          <span className="b2b-display absolute top-2 md:top-4 right-2 md:right-4 b2b-bg-pink text-white text-[10px] md:text-xs tracking-[0.15em] uppercase px-2 py-0.5 md:px-3 md:py-1 rounded-full">
-                            {Math.round((savings / p.originalPrice) * 100)}% off
+                        {p.flair && !ivCardSoldOut && !active && (
+                          <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
+                            <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
+                            <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
                           </span>
                         )}
                         {ivCardSoldOut && (

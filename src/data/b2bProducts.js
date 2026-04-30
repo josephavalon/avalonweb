@@ -62,6 +62,7 @@ export const B2B_PRODUCTS = [
     originalPrice: 360,
     kind: 'bundle',
     consumes: ['b2bIv', 'imShot'],
+    flair: { line1: '58% OFF', line2: 'ONE DAY ONLY' },
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-IV-IM',
   },
   {
@@ -73,6 +74,7 @@ export const B2B_PRODUCTS = [
     originalPrice: 410,
     kind: 'bundle',
     consumes: ['b2bIv', 'imShot', 'boots'],
+    flair: { line1: '54% OFF', line2: 'ONE DAY ONLY' },
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-FULL',
   },
   {
@@ -84,6 +86,7 @@ export const B2B_PRODUCTS = [
     originalPrice: 400,
     kind: 'bundle',
     consumes: ['cbdIv', 'boots'],
+    flair: { line1: 'SAVE $20', line2: 'ONE DAY ONLY' },
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-COMP',
   },
   {
@@ -95,6 +98,7 @@ export const B2B_PRODUCTS = [
     originalPrice: 460,
     kind: 'bundle',
     consumes: ['cbdIv', 'imShot', 'boots'],
+    flair: { line1: 'SAVE $40', line2: 'ONE DAY ONLY' },
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
   },
 ];
