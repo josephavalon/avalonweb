@@ -521,8 +521,8 @@ export default function B2B() {
                   { n: '02', t: 'Run your race', d: 'Cross the line. Walk to the Avalon recovery zone (location texted that morning).' },
                   { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human.' },
                 ].map((s, i) => (
-                  <RevealCard key={s.n} index={i}>
-                    <div className="b2b-card p-3 md:p-5">
+                  <RevealCard key={s.n} index={i} className="h-full">
+                    <div className="b2b-card p-3 md:p-5 h-full flex flex-col">
                       <p className="b2b-display text-2xl md:text-4xl b2b-pink leading-none mb-1 md:mb-2">{s.n}</p>
                       <p className="b2b-display text-base md:text-2xl uppercase mb-1 md:mb-2 leading-tight">{s.t}</p>
                       <p className="text-xs md:text-sm leading-snug">{s.d}</p>
@@ -784,8 +784,8 @@ export default function B2B() {
                   { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
                   { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
                 ].map((v, i) => (
-                  <RevealCard key={v.t} index={i}>
-                    <div className="b2b-card p-3 md:p-5">
+                  <RevealCard key={v.t} index={i} className="h-full">
+                    <div className="b2b-card p-3 md:p-5 h-full flex flex-col">
                       <p className="b2b-display text-base md:text-xl uppercase mb-1 leading-tight">{v.t}</p>
                       <p className="text-sm md:text-base leading-snug">{v.d}</p>
                     </div>
@@ -807,8 +807,8 @@ export default function B2B() {
                   { quote: 'That IV did digits.', name: 'Larry June', tag: 'Recovery IV' },
                   { quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.', name: 'G.B.', tag: 'Event recovery' },
                 ].map((t, i) => (
-                  <RevealCard key={t.name} index={i}>
-                    <figure className="b2b-card p-4 md:p-5">
+                  <RevealCard key={t.name} index={i} className="h-full">
+                    <figure className="b2b-card p-4 md:p-5 h-full flex flex-col">
                       <blockquote className="text-sm md:text-base leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</blockquote>
                       <figcaption className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink">
                         &mdash; {t.name} &middot; {t.tag}
