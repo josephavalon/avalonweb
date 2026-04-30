@@ -636,7 +636,7 @@ export default function B2B() {
                     <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{COMPRESSION_ADDON.flair.line2}</span>
                   </span>
                 )}
-                <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">+ Add-on</p>
+                <p className="b2b-display text-sm md:text-base tracking-[0.25em] uppercase b2b-pink mb-2 md:mb-3">+ Add-on</p>
                 <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{COMPRESSION_ADDON.name}</h3>
                 <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{COMPRESSION_ADDON.description}</p>
                 {COMPRESSION_ADDON.originalPrice && (
