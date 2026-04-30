@@ -405,7 +405,7 @@ export default function B2B() {
           content: '\u2713';
           position: absolute;
           top: 8px;
-          right: 12px;
+          left: 12px;
           width: 28px;
           height: 28px;
           border-radius: 999px;
@@ -558,7 +558,7 @@ export default function B2B() {
                         className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${cardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                         aria-pressed={active}
                       >
-                        {p.flair && !active && (
+                        {p.flair && (
                           <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
                             <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
                             <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
@@ -661,7 +661,7 @@ export default function B2B() {
                         className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
                         aria-pressed={active}
                       >
-                        {p.flair && !ivCardSoldOut && !active && (
+                        {p.flair && !ivCardSoldOut && (
                           <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
                             <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
                             <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
