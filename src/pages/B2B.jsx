@@ -580,7 +580,7 @@ export default function B2B() {
       <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Real Avalon recoveries</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
             {[
               {
                 quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.',
@@ -589,6 +589,10 @@ export default function B2B() {
               {
                 quote: 'That IV did digits.',
                 name: 'Larry June', tag: 'Recovery IV',
+              },
+              {
+                quote: 'That was awesome.',
+                name: 'Diplo', tag: 'Energy IV',
               },
             ].map((t) => (
               <figure key={t.name} className="b2b-card p-4 md:p-5">
