@@ -469,7 +469,7 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-3 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
-          <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink text-center mb-3 md:mb-4">
+          <p className="b2b-display text-sm md:text-base tracking-[0.3em] uppercase b2b-pink text-center mb-3 md:mb-4">
             Official Bay to Breakers Recovery Partner
           </p>
           {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
