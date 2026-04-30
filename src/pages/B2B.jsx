@@ -565,7 +565,6 @@ export default function B2B() {
             {[
               { t: 'Time on chair', d: 'IM shot 5–10 min. IV 20–30 min. Normatec compression boots 20 min.' },
               { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
-              { t: 'Personalized', d: 'Your nurse adjusts electrolytes and dose to how dehydrated you actually are post-race.' },
               { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
             ].map((v) => (
               <div key={v.t} className="b2b-card p-3 md:p-5">
