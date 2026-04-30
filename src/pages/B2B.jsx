@@ -397,12 +397,12 @@ export default function B2B() {
                   type="button"
                   onClick={() => !ivCardSoldOut && setProductId(p.id)}
                   disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[160px] md:min-h-[240px] relative ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-pressed={active}
                 >
-                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-lg md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
-                  <p className="text-xs md:text-sm leading-snug mb-2 md:mb-4 flex-1">{p.description}</p>
+                  <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
+                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
+                  <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
                   {showIvCount && (
                     <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
                       {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
@@ -457,7 +457,7 @@ export default function B2B() {
                   type="button"
                   onClick={() => !ivCardSoldOut && setProductId(p.id)}
                   disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-3 md:p-6 flex flex-col h-full min-h-[240px] md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
+                  className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[300px] ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''} relative`}
                   aria-pressed={active}
                 >
                   {savings > 0 && !ivCardSoldOut && !active && (
@@ -470,11 +470,11 @@ export default function B2B() {
                       Sold out
                     </span>
                   )}
-                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">{p.tagline}</p>
-                  <h3 className="b2b-display text-base md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
-                  <p className="text-xs md:text-base leading-snug mb-2 md:mb-4 flex-1">{p.description}</p>
+                  <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
+                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
+                  <p className="text-sm md:text-base leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
                   {showIvCount && (
-                    <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
+                    <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
                       {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
                     </p>
                   )}
