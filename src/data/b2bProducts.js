@@ -11,6 +11,9 @@
 export const B2B_IV_INVENTORY = 150;
 export const B2B_IV_SOLD = 0;
 
+export const IM_SHOT_INVENTORY = 1000;
+export const IM_SHOT_SOLD = 0;
+
 export const B2B_PRODUCTS = [
   // Singles
   {
@@ -20,6 +23,7 @@ export const B2B_PRODUCTS = [
     description: 'Quick intramuscular shot at the finish line — choose B-12 or glutathione. Recovery in a hurry.',
     price: 40,
     kind: 'single',
+    consumes: ['imShot'],
     squareUrl: 'https://square.link/u/REPLACE-ME-SHOT',
   },
   {
@@ -51,7 +55,7 @@ export const B2B_PRODUCTS = [
     price: 150,
     originalPrice: 160,
     kind: 'bundle',
-    consumes: ['b2bIv'],
+    consumes: ['b2bIv', 'imShot'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-IV-IM',
   },
   {
@@ -62,7 +66,7 @@ export const B2B_PRODUCTS = [
     price: 190,
     originalPrice: 210,
     kind: 'bundle',
-    consumes: ['b2bIv', 'boots'],
+    consumes: ['b2bIv', 'imShot', 'boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-FULL',
   },
   {
@@ -84,7 +88,7 @@ export const B2B_PRODUCTS = [
     price: 420,
     originalPrice: 440,
     kind: 'bundle',
-    consumes: ['cbdIv', 'boots'],
+    consumes: ['cbdIv', 'imShot', 'boots'],
     squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
   },
 ];

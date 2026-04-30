@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
-import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD } from '@/data/b2bProducts';
+import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 
 // Visual reference: baytobreakers.com (cream bg, distressed black display, pink stars,
@@ -68,6 +68,8 @@ export default function B2B() {
   );
   const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
   const b2bIvSoldOut = b2bIvRemaining <= 0;
+  const imShotRemaining = Math.max(0, IM_SHOT_INVENTORY - IM_SHOT_SOLD);
+  const imShotSoldOut = imShotRemaining <= 0;
   const selectedSoldOut = !!(product?.consumes?.includes('b2bIv') && b2bIvSoldOut);
   const productIncludesBoots = !!product?.consumes?.includes('boots');
 
@@ -390,6 +392,9 @@ export default function B2B() {
             {B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p) => {
               const showIvCount = p.consumes?.includes('b2bIv');
               const ivCardSoldOut = showIvCount && b2bIvSoldOut;
+              const showImCount = !showIvCount && p.consumes?.includes('imShot');
+              const imCardSoldOut = showImCount && imShotSoldOut;
+              const cardSoldOut = ivCardSoldOut || imCardSoldOut;
               const active = p.id === productId;
               return (
                 <button
@@ -397,7 +402,7 @@ export default function B2B() {
                   type="button"
                   onClick={() => !ivCardSoldOut && setProductId(p.id)}
                   disabled={ivCardSoldOut}
-                  className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${ivCardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${cardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-pressed={active}
                 >
                   <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
@@ -478,6 +483,11 @@ export default function B2B() {
                       {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
                     </p>
                   )}
+                  {showImCount && (
+                    <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
+                      {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
+                    </p>
+                  )}
                   <div className="flex items-baseline gap-2 md:gap-3 mt-auto">
                     <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
                     {p.originalPrice && (
@@ -553,7 +563,7 @@ export default function B2B() {
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Your visit</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
             {[
-              { t: 'Time on chair', d: 'IM shot 5–10 min. IV 20–30 min. Normatec compression boots 20 min. Stack to taste.' },
+              { t: 'Time on chair', d: 'IM shot 5–10 min. IV 20–30 min. Normatec compression boots 20 min.' },
               { t: 'Setup', d: 'Sit upright in a recovery chair. Shade, water, towels on hand. Privacy curtain available.' },
               { t: 'Personalized', d: 'Your nurse adjusts electrolytes and dose to how dehydrated you actually are post-race.' },
               { t: 'Walk out', d: 'No queueing for a follow-up. You leave the moment your bag empties or your timer hits 20.' },
