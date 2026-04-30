@@ -263,6 +263,14 @@ export default function B2B() {
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
+      {/* Heart clip-path used by Normatec compression card */}
+      <svg width="0" height="0" aria-hidden="true" style={{ position: 'absolute' }}>
+        <defs>
+          <clipPath id="b2b-heart-clip" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,1 C 0.5,1 0,0.7 0,0.35 C 0,0.13 0.18,0 0.32,0 C 0.42,0 0.48,0.06 0.5,0.16 C 0.52,0.06 0.58,0 0.68,0 C 0.82,0 1,0.13 1,0.35 C 1,0.7 0.5,1 0.5,1 Z" />
+          </clipPath>
+        </defs>
+      </svg>
       {/* Scattered B2B starbursts — decorative, behind content */}
       <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <StarBurst className="absolute b2b-pink"  style={{ top: '4%',   left: '6%',  width: '34px', height: '34px', transform: 'rotate(-14deg)', opacity: 0.85 }} />
@@ -376,6 +384,36 @@ export default function B2B() {
         }
         .b2b-mint { background-color: #80C7D3; }
         .b2b-soft-yellow { background-color: #F8EC82; }
+        .b2b-heart-card {
+          position: relative;
+          background-color: #FFE9F2;
+          color: #0A0A0A;
+          padding: 18% 18% 25% 18%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          clip-path: url(#b2b-heart-clip);
+          transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
+          border: none;
+          font: inherit;
+        }
+        .b2b-heart-card:hover {
+          background-color: #FCD9E8;
+          transform: scale(1.01);
+        }
+        .b2b-heart-card.active {
+          background-color: #ED7AC3;
+          color: #ffffff;
+        }
+        .b2b-heart-card.active * { color: inherit !important; }
+        @media (prefers-reduced-motion: reduce) {
+          .b2b-heart-card { transition: none; }
+          .b2b-heart-card:hover { transform: none; }
+        }
+
         .b2b-flair {
           background-color: #ED7AC3;
           color: #ffffff;
@@ -387,7 +425,37 @@ export default function B2B() {
           box-shadow: 4px 4px 0 #0A0A0A;
         }
         @media (prefers-reduced-motion: reduce) {
-          .b2b-flair { transform: none; }
+          .b2b-heart-card {
+          position: relative;
+          background-color: #FFE9F2;
+          color: #0A0A0A;
+          padding: 18% 18% 25% 18%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          clip-path: url(#b2b-heart-clip);
+          transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
+          border: none;
+          font: inherit;
+        }
+        .b2b-heart-card:hover {
+          background-color: #FCD9E8;
+          transform: scale(1.01);
+        }
+        .b2b-heart-card.active {
+          background-color: #ED7AC3;
+          color: #ffffff;
+        }
+        .b2b-heart-card.active * { color: inherit !important; }
+        @media (prefers-reduced-motion: reduce) {
+          .b2b-heart-card { transition: none; }
+          .b2b-heart-card:hover { transform: none; }
+        }
+
+        .b2b-flair { transform: none; }
         }
         .b2b-card {
           background-color: #ffffff;
@@ -619,7 +687,7 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Compression add-on — vertical card to match singles/bundles, hidden when SKU includes boots */}
+      {/* Compression add-on — heart-shaped card (Normatec love), hidden when SKU includes boots */}
       {!productIncludesBoots && (
         <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
           <div className="max-w-md mx-auto">
@@ -627,37 +695,27 @@ export default function B2B() {
               <button
                 type="button"
                 onClick={() => setCompression((v) => !v)}
-                className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative w-full ${compression ? 'active' : ''}`}
+                className={`b2b-heart-card text-center w-full ${compression ? 'active' : ''}`}
                 aria-pressed={compression}
+                style={{ aspectRatio: '1 / 1' }}
               >
-                {COMPRESSION_ADDON.flair && (
-                  <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
-                    <span className="block text-xl md:text-2xl leading-none font-extrabold">{COMPRESSION_ADDON.flair.line1}</span>
-                    <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{COMPRESSION_ADDON.flair.line2}</span>
-                  </span>
-                )}
-                <p className="b2b-display text-sm md:text-base tracking-[0.25em] uppercase b2b-pink mb-2 md:mb-3">+ Add-on</p>
-                <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{COMPRESSION_ADDON.name}</h3>
-                <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{COMPRESSION_ADDON.description}</p>
+                <p className="b2b-display text-xs md:text-sm tracking-[0.25em] uppercase mb-1 b2b-pink">+ Add-on</p>
+                <h3 className="b2b-display text-xl md:text-2xl uppercase mb-2 leading-tight">{COMPRESSION_ADDON.name}</h3>
+                <p className="text-xs md:text-sm leading-snug mb-2 max-w-[80%]">Normatec compression boots, 20-min session.</p>
                 {COMPRESSION_ADDON.originalPrice && (
-                  <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
-                    {Math.round(((COMPRESSION_ADDON.originalPrice - COMPRESSION_ADDON.price) / COMPRESSION_ADDON.originalPrice) * 100)}% off · save ${COMPRESSION_ADDON.originalPrice - COMPRESSION_ADDON.price}
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase mb-1">
+                    {Math.round(((COMPRESSION_ADDON.originalPrice - COMPRESSION_ADDON.price) / COMPRESSION_ADDON.originalPrice) * 100)}% off
                   </p>
                 )}
-                <div className="flex items-baseline gap-2 md:gap-3 mb-3">
+                <div className="flex items-baseline gap-2 mb-2">
                   <p className="b2b-display text-4xl md:text-5xl leading-none">${COMPRESSION_ADDON.price}</p>
                   {COMPRESSION_ADDON.originalPrice && (
-                    <p className="b2b-display text-2xl md:text-3xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
+                    <p className="b2b-display text-xl md:text-2xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-9 h-9 rounded-full border-2 border-black flex items-center justify-center shrink-0 transition-colors ${compression ? 'b2b-bg-pink text-white' : 'bg-white text-[#ED7AC3]'}`}>
-                    <Heart className="w-4 h-4" fill={compression ? 'currentColor' : 'none'} strokeWidth={compression ? 0 : 2} />
-                  </div>
-                  <span className="b2b-display text-xs md:text-sm tracking-[0.15em] uppercase">
-                    {compression ? 'Added with love' : 'Tap to add'}
-                  </span>
-                </div>
+                <span className="b2b-display text-[10px] md:text-xs tracking-[0.15em] uppercase">
+                  {compression ? '♥ Added with love' : 'Tap to add'}
+                </span>
               </button>
             </RevealCard>
           </div>
