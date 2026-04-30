@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Tag, X as XIcon, Plus } from 'lucide-react';
+import { ArrowRight, Tag, X as XIcon, Plus, Heart } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 
@@ -651,11 +651,11 @@ export default function B2B() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
-                    {compression ? <Plus className="w-4 h-4 rotate-45" /> : <Plus className="w-4 h-4" />}
+                  <div className={`w-9 h-9 rounded-full border-2 border-black flex items-center justify-center shrink-0 transition-colors ${compression ? 'b2b-bg-pink text-white' : 'bg-white text-[#ED7AC3]'}`}>
+                    <Heart className="w-4 h-4" fill={compression ? 'currentColor' : 'none'} strokeWidth={compression ? 0 : 2} />
                   </div>
                   <span className="b2b-display text-xs md:text-sm tracking-[0.15em] uppercase">
-                    {compression ? 'Added' : 'Tap to add'}
+                    {compression ? 'Added with love' : 'Tap to add'}
                   </span>
                 </div>
               </button>
