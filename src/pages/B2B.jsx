@@ -583,16 +583,16 @@ export default function B2B() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
             {[
               {
-                quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.',
-                name: 'G.B.', tag: 'Event recovery',
+                quote: 'That was awesome.',
+                name: 'Diplo', tag: 'Energy IV',
               },
               {
                 quote: 'That IV did digits.',
                 name: 'Larry June', tag: 'Recovery IV',
               },
               {
-                quote: 'That was awesome.',
-                name: 'Diplo', tag: 'Energy IV',
+                quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.',
+                name: 'G.B.', tag: 'Event recovery',
               },
             ].map((t) => (
               <figure key={t.name} className="b2b-card p-4 md:p-5">
