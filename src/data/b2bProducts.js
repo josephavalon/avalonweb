@@ -108,6 +108,8 @@ export const COMPRESSION_ADDON = {
   name: 'Normatec compression boots',
   description: 'Normatec compression boots, 20-minute session. Add to any IV or shot.',
   price: 50,
+  originalPrice: 60,
+  flair: { line1: '17% OFF', line2: 'ONE DAY ONLY' },
   squareUrl: 'https://square.link/u/REPLACE-ME-COMPRESSION',
 };
 

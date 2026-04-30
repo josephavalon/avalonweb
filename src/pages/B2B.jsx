@@ -613,25 +613,47 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Compression add-on — hidden when selected SKU already includes boots */}
+      {/* Compression add-on — vertical card to match singles/bundles, hidden when SKU includes boots */}
       {!productIncludesBoots && (
         <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-          <div className="max-w-5xl mx-auto">
-            <button
-              type="button"
-              onClick={() => setCompression((v) => !v)}
-              className={`w-full text-left b2b-card p-5 md:p-6 flex items-center gap-5 ${compression ? 'active' : ''}`}
-              aria-pressed={compression}
-            >
-              <div className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
-                {compression ? <Plus className="w-5 h-5 rotate-45" /> : <Plus className="w-5 h-5" />}
-              </div>
-              <div className="flex-1">
-                <p className="b2b-display text-xs tracking-[0.25em] uppercase b2b-pink mb-1">+$50 add-on</p>
-                <h3 className="b2b-display text-2xl md:text-3xl uppercase leading-tight">{COMPRESSION_ADDON.name}</h3>
-                <p className="text-sm md:text-base mt-1">{COMPRESSION_ADDON.description}</p>
-              </div>
-            </button>
+          <div className="max-w-md mx-auto">
+            <RevealCard className="h-full">
+              <button
+                type="button"
+                onClick={() => setCompression((v) => !v)}
+                className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative w-full ${compression ? 'active' : ''}`}
+                aria-pressed={compression}
+              >
+                {COMPRESSION_ADDON.flair && (
+                  <span className="b2b-flair absolute -top-3 -right-3 md:-top-4 md:-right-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
+                    <span className="block text-xl md:text-2xl leading-none font-extrabold">{COMPRESSION_ADDON.flair.line1}</span>
+                    <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{COMPRESSION_ADDON.flair.line2}</span>
+                  </span>
+                )}
+                <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">+ Add-on</p>
+                <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{COMPRESSION_ADDON.name}</h3>
+                <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{COMPRESSION_ADDON.description}</p>
+                {COMPRESSION_ADDON.originalPrice && (
+                  <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
+                    {Math.round(((COMPRESSION_ADDON.originalPrice - COMPRESSION_ADDON.price) / COMPRESSION_ADDON.originalPrice) * 100)}% off · save ${COMPRESSION_ADDON.originalPrice - COMPRESSION_ADDON.price}
+                  </p>
+                )}
+                <div className="flex items-baseline gap-2 md:gap-3 mb-3">
+                  <p className="b2b-display text-4xl md:text-5xl leading-none">${COMPRESSION_ADDON.price}</p>
+                  {COMPRESSION_ADDON.originalPrice && (
+                    <p className="b2b-display text-2xl md:text-3xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${compression ? 'b2b-bg-pink text-white' : 'bg-white'}`}>
+                    {compression ? <Plus className="w-4 h-4 rotate-45" /> : <Plus className="w-4 h-4" />}
+                  </div>
+                  <span className="b2b-display text-xs md:text-sm tracking-[0.15em] uppercase">
+                    {compression ? 'Added' : 'Tap to add'}
+                  </span>
+                </div>
+              </button>
+            </RevealCard>
           </div>
         </section>
       )}
