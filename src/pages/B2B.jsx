@@ -388,7 +388,7 @@ export default function B2B() {
           position: relative;
           background-color: #FFE9F2;
           color: #0A0A0A;
-          padding: 18% 18% 25% 18%;
+          padding: 14% 12% 22% 12%;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -429,7 +429,7 @@ export default function B2B() {
           position: relative;
           background-color: #FFE9F2;
           color: #0A0A0A;
-          padding: 18% 18% 25% 18%;
+          padding: 14% 12% 22% 12%;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -683,44 +683,31 @@ export default function B2B() {
                     </RevealCard>
                   );
                 })}
+            {!isLoading && !productIncludesBoots && (
+              <RevealCard index={3} className="h-full">
+                <button
+                  type="button"
+                  onClick={() => setCompression((v) => !v)}
+                  className={`b2b-heart-card text-center w-full h-full ${compression ? 'active' : ''}`}
+                  aria-pressed={compression}
+                  style={{ aspectRatio: '1 / 1' }}
+                >
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.22em] uppercase mb-1 b2b-pink">+ Add-on</p>
+                  <h3 className="b2b-display text-base md:text-xl uppercase mb-1 leading-[0.95]">Normatec Boots</h3>
+                  <p className="b2b-display text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1 opacity-80">17% Off</p>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <p className="b2b-display text-2xl md:text-3xl leading-none">${COMPRESSION_ADDON.price}</p>
+                    <p className="b2b-display text-sm md:text-base line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
+                  </div>
+                  <span className="b2b-display text-[9px] md:text-[10px] tracking-[0.15em] uppercase">
+                    {compression ? '♥ Added' : 'Tap'}
+                  </span>
+                </button>
+              </RevealCard>
+            )}
           </div>
         </div>
       </section>
-
-      {/* Compression add-on — heart-shaped card (Normatec love), hidden when SKU includes boots */}
-      {!productIncludesBoots && (
-        <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-          <div className="max-w-md mx-auto">
-            <RevealCard className="h-full">
-              <button
-                type="button"
-                onClick={() => setCompression((v) => !v)}
-                className={`b2b-heart-card text-center w-full ${compression ? 'active' : ''}`}
-                aria-pressed={compression}
-                style={{ aspectRatio: '1 / 1' }}
-              >
-                <p className="b2b-display text-xs md:text-sm tracking-[0.25em] uppercase mb-1 b2b-pink">+ Add-on</p>
-                <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{COMPRESSION_ADDON.name}</h3>
-                <p className="text-xs md:text-sm leading-snug mb-2 max-w-[80%]">Normatec compression boots, 20-min session.</p>
-                {COMPRESSION_ADDON.originalPrice && (
-                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase mb-1">
-                    {Math.round(((COMPRESSION_ADDON.originalPrice - COMPRESSION_ADDON.price) / COMPRESSION_ADDON.originalPrice) * 100)}% off
-                  </p>
-                )}
-                <div className="flex items-baseline gap-2 mb-2">
-                  <p className="b2b-display text-4xl md:text-5xl leading-none">${COMPRESSION_ADDON.price}</p>
-                  {COMPRESSION_ADDON.originalPrice && (
-                    <p className="b2b-display text-xl md:text-2xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
-                  )}
-                </div>
-                <span className="b2b-display text-[10px] md:text-xs tracking-[0.15em] uppercase">
-                  {compression ? '♥ Added with love' : 'Tap to add'}
-                </span>
-              </button>
-            </RevealCard>
-          </div>
-        </section>
-      )}
 
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
