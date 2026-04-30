@@ -240,12 +240,12 @@ export default function B2B() {
         .b2b-flair {
           background-color: #F8EC82;
           color: #0A0A0A;
-          border: 2px solid #0A0A0A;
+          border: 2.5px solid #0A0A0A;
           letter-spacing: 0.04em;
           font-weight: 400;
-          transform: rotate(-8deg);
-          transform-origin: top left;
-          box-shadow: 3px 3px 0 #0A0A0A;
+          transform: rotate(-10deg);
+          transform-origin: center;
+          box-shadow: 4px 4px 0 #0A0A0A;
         }
         @media (prefers-reduced-motion: reduce) {
           .b2b-flair { transform: none; }
@@ -329,13 +329,12 @@ export default function B2B() {
 
 
       {/* Hero */}
-      <section className="relative z-10 relative px-5 md:px-10 pt-4 md:pt-8 pb-4 md:pb-8 overflow-hidden">
+      <section className="relative z-10 px-5 md:px-10 pt-4 md:pt-8 pb-4 md:pb-8 overflow-hidden">
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
-
-        <div className="relative max-w-4xl mx-auto text-center">
+        <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-3 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
           <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink text-center mb-3 md:mb-4">
             Official Bay to Breakers Recovery Partner
@@ -363,13 +362,13 @@ export default function B2B() {
           <p className="mt-2 md:mt-3 b2b-display text-sm md:text-xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
             Finish line &middot; Ocean Beach
           </p>
-          <p className="mt-3 md:mt-5 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight inline-flex items-center gap-2 flex-wrap justify-center w-full">
-            <span>Finish-line IV, shots, &amp; recovery.</span>
+          <p className="mt-3 md:mt-5 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight">
+            Finish-line IV, shots, &amp; recovery
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="w-4 h-4 md:w-6 md:h-6 b2b-pink inline-block"
+              className="w-4 h-4 md:w-6 md:h-6 b2b-pink inline-block align-middle ml-2"
             >
               <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
             </svg>
@@ -420,8 +419,8 @@ export default function B2B() {
                 >
                   {p.flair && !active && (
                     <span className="b2b-flair absolute -top-3 -left-3 md:-top-4 md:-left-4 b2b-display text-center px-3 py-2 md:px-4 md:py-2.5 rounded-lg shadow-md z-10">
-                      <span className="block text-base md:text-lg leading-none">{p.flair.line1}</span>
-                      <span className="block text-[9px] md:text-[10px] tracking-[0.15em] mt-0.5">{p.flair.line2}</span>
+                      <span className="block text-xl md:text-2xl leading-none font-extrabold">{p.flair.line1}</span>
+                      <span className="block text-[10px] md:text-xs tracking-[0.18em] mt-1 font-bold">{p.flair.line2}</span>
                     </span>
                   )}
                   <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
@@ -437,7 +436,12 @@ export default function B2B() {
                       {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
                     </p>
                   )}
-                  <p className="b2b-display text-4xl md:text-5xl mt-auto leading-none">${p.price}</p>
+                  <div className="flex items-baseline gap-2 md:gap-3 mt-auto">
+                    <p className="b2b-display text-4xl md:text-5xl leading-none">${p.price}</p>
+                    {p.originalPrice && (
+                      <p className="b2b-display text-2xl md:text-3xl line-through opacity-50 leading-none">${p.originalPrice}</p>
+                    )}
+                  </div>
                 </button>
               );
             })}
