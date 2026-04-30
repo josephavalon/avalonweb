@@ -388,7 +388,7 @@ export default function B2B() {
           position: relative;
           background-color: #FFE9F2;
           color: #0A0A0A;
-          padding: 14% 12% 22% 12%;
+          padding: 12% 8% 22% 8%;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -429,7 +429,7 @@ export default function B2B() {
           position: relative;
           background-color: #FFE9F2;
           color: #0A0A0A;
-          padding: 14% 12% 22% 12%;
+          padding: 12% 8% 22% 8%;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -692,14 +692,14 @@ export default function B2B() {
                   aria-pressed={compression}
                   style={{ aspectRatio: '1 / 1' }}
                 >
-                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.22em] uppercase mb-1 b2b-pink">+ Add-on</p>
-                  <h3 className="b2b-display text-base md:text-xl uppercase mb-1 leading-[0.95]">Normatec Boots</h3>
-                  <p className="b2b-display text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1 opacity-80">17% Off</p>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <p className="b2b-display text-2xl md:text-3xl leading-none">${COMPRESSION_ADDON.price}</p>
-                    <p className="b2b-display text-sm md:text-base line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
+                  <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase mb-2 b2b-pink">+ Add-on</p>
+                  <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">Normatec Boots</h3>
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase mb-2 opacity-80">17% Off</p>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <p className="b2b-display text-4xl md:text-5xl leading-none">${COMPRESSION_ADDON.price}</p>
+                    <p className="b2b-display text-xl md:text-2xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
                   </div>
-                  <span className="b2b-display text-[9px] md:text-[10px] tracking-[0.15em] uppercase">
+                  <span className="b2b-display text-xs md:text-sm tracking-[0.15em] uppercase">
                     {compression ? '♥ Added' : 'Tap'}
                   </span>
                 </button>
