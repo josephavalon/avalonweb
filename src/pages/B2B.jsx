@@ -604,7 +604,7 @@ export default function B2B() {
 
           {/* Urgency stat line — capped quantities + presale deadline */}
           <p className="mt-3 md:mt-4 b2b-display text-[10px] md:text-xs tracking-[0.32em] uppercase text-center text-black/60">
-            200 IV slots &middot; 1,000 shots &middot; presale ends may 14
+            200 IV slots &middot; 1,000 shots &middot; presale ends may 16th
           </p>
         </div>
       </section>
@@ -955,7 +955,7 @@ export default function B2B() {
             <span className="b2b-display text-4xl md:text-5xl">${total}</span>
           </div>
           <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-4 md:mb-5">
-            Full refund before May 14
+            Full refund before May 16
           </p>
 
           {selectedSoldOut ? (
@@ -1004,7 +1004,7 @@ export default function B2B() {
               },
               {
                 q: 'What if I can\'t make it?',
-                a: 'Email support@avalonvitality.co before May 14 for a full refund.',
+                a: 'Email support@avalonvitality.co before May 16 for a full refund.',
               },
               {
                 q: 'Is this medical care?',
@@ -1048,7 +1048,7 @@ export default function B2B() {
           </Link>
         </div>
         <p className="max-w-3xl mx-auto mt-8 md:mt-10 text-[11px] md:text-xs leading-relaxed text-black/55 text-center">
-          Avalon Vitality is the official Bay to Breakers Recovery Partner for 2026. Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Need accessibility accommodations? Email support@avalonvitality.co before May 14 and we&rsquo;ll arrange them.
+          Avalon Vitality is the official Bay to Breakers Recovery Partner for 2026. Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Need accessibility accommodations? Email support@avalonvitality.co before May 16 and we&rsquo;ll arrange them.
         </p>
       </footer>
       {/* Sticky mobile CTA — appears after hero scroll, hidden on desktop */}
