@@ -552,11 +552,15 @@ export default function B2B() {
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center">
-          {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3">
+          {/* Avalon brand mark — clickable, links home */}
+          <a
+            href="/"
+            aria-label="Avalon Vitality home"
+            className="flex items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3 hover:opacity-70 transition-opacity"
+          >
             <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12" aria-hidden="true" />
             <span className="b2b-display text-3xl md:text-5xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
-          </div>
+          </a>
 
           {/* Bay to Breakers co-brand wordmark — supporting partnership badge */}
           <div className="flex items-center justify-center gap-3 mb-1 md:mb-2">
