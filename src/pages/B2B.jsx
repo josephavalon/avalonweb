@@ -537,20 +537,20 @@ export default function B2B() {
 
 
       {/* Hero */}
-      <section className="relative z-10 px-5 md:px-10 pt-2 md:pt-3 pb-1 md:pb-2 overflow-hidden">
+      <section className="relative z-10 px-5 md:px-10 pt-1 md:pt-2 pb-0 overflow-hidden">
         {/* Star accents */}
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-1 md:mb-2">
-            <img src="/favicon.png" alt="" width="32" height="32" className="w-6 h-6 md:w-7 md:h-7" aria-hidden="true" />
-            <span className="b2b-display text-lg md:text-2xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-1">
+            <img src="/favicon.png" alt="" width="32" height="32" className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
+            <span className="b2b-display text-base md:text-xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
           </div>
 
           {/* Bay to Breakers co-brand wordmark — supporting partnership badge */}
-          <div className="flex items-center justify-center gap-3 mb-2 md:mb-3">
+          <div className="flex items-center justify-center gap-3 mb-1 md:mb-2">
             <span className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
             <picture>
               <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
@@ -560,52 +560,44 @@ export default function B2B() {
                 width="1164"
                 height="531"
                 decoding="async"
-                className="block h-14 md:h-20 w-auto"
+                className="block h-12 md:h-16 w-auto"
               />
             </picture>
           </div>
 
           {/* H1 — Post Race Recovery Lounge */}
-          <h1 className="m-0 b2b-display text-4xl md:text-7xl uppercase leading-[0.85] text-center">
-            <span className="block b2b-pink text-xl md:text-3xl tracking-[0.18em] mb-1">Post Race</span>
+          <h1 className="m-0 b2b-display text-4xl md:text-6xl uppercase leading-[0.85] text-center">
+            <span className="block b2b-pink text-lg md:text-2xl tracking-[0.18em] mb-0.5 md:mb-1">Post Race</span>
             Recovery Lounge
           </h1>
 
           {/* Official partner — small caps eyebrow */}
-          <p className="mt-3 md:mt-4 b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center">
+          <p className="mt-2 md:mt-3 b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center">
             Official Bay to Breakers Recovery Partner
           </p>
 
           {/* Date / Time */}
-          <p className="mt-2 md:mt-3 b2b-display text-xl md:text-3xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+          <p className="mt-1 md:mt-2 b2b-display text-xl md:text-2xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
             Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
           </p>
 
           {/* Location pin */}
-          <p className="mt-2 b2b-display text-sm md:text-base tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-4 h-4 md:w-5 md:h-5 inline-block" aria-hidden="true">
+          <p className="mt-1 md:mt-2 b2b-display text-xs md:text-sm tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-3.5 h-3.5 md:w-4 md:h-4 inline-block" aria-hidden="true">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
             Right next to the finish line
           </p>
 
           {/* Hero CTA — anchor jump to checkout */}
-          <a href="#b2b-checkout" className="b2b-btn-primary mt-4 md:mt-5 inline-flex items-center justify-center gap-2 text-sm md:text-base">
+          <a href="#b2b-checkout" className="b2b-btn-primary mt-3 md:mt-4 inline-flex items-center justify-center gap-2 text-sm md:text-base">
             Reserve my slot <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
           </a>
-        </div>
-        {/* Scroll cue — pulses gently to nudge the user down to How It Works */}
-        <div className="b2b-scroll-cue mt-2 md:mt-3 flex flex-col items-center pointer-events-none">
-          <span className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-1 opacity-80">Scroll</span>
-          <svg width="14" height="20" viewBox="0 0 14 20" fill="none" stroke="#ED7AC3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polyline points="2 8 7 14 12 8" />
-            <polyline points="2 2 7 8 12 2" opacity="0.5" />
-          </svg>
         </div>
       </section>
 
       {/* How it works — 3 steps */}
-      <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10 pt-2 md:pt-4">
+      <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10 pt-3 md:pt-5">
         <div className="max-w-5xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">How it works</p>
           <div className="grid grid-cols-3 gap-3 md:gap-5">
