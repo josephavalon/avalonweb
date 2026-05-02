@@ -532,9 +532,25 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-3 md:mb-4">
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-2 md:mb-3">
             <img src="/favicon.png" alt="" width="32" height="32" className="w-7 h-7 md:w-9 md:h-9" aria-hidden="true" />
             <span className="b2b-display text-xl md:text-3xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
+          </div>
+
+          {/* Bay to Breakers co-brand wordmark — restored, sized small as supporting partnership badge */}
+          <div className="flex items-center justify-center gap-3 mb-3 md:mb-4">
+            <span className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
+            <picture>
+              <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
+              <img
+                src="/bay-to-breakers-logo.png"
+                alt="Bay to Breakers"
+                width="1164"
+                height="531"
+                decoding="async"
+                className="block h-6 md:h-8 w-auto"
+              />
+            </picture>
           </div>
 
           {/* H1 — Post Race Recovery Lounge (poster headline) */}
