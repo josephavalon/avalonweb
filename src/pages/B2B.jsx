@@ -169,6 +169,18 @@ export default function B2B() {
   const productIncludesBoots = !!product?.consumes?.includes('boots');
 
   // ---- effects ----
+  // Force scroll to top on page load — disables browser auto-restore on reload
+  // unless URL has a hash (#b2b-checkout, etc.), in which case let the browser jump there
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.history && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   // Fire PageView for retargeting on /b2b mount
   useEffect(() => {
     try {
