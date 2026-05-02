@@ -167,6 +167,8 @@ export default function B2B() {
   const imShotSoldOut = imShotRemaining <= 0;
   const selectedSoldOut = !!(product?.consumes?.includes('b2bIv') && b2bIvSoldOut);
   const productIncludesBoots = !!product?.consumes?.includes('boots');
+  const productIncludesIv = !!(product?.consumes?.includes('b2bIv') || product?.consumes?.includes('cbdIv'));
+  const canAddCompression = productIncludesIv && !productIncludesBoots;
 
   // ---- effects ----
   // Force scroll to top on page load — disables browser auto-restore on reload
@@ -206,12 +208,13 @@ export default function B2B() {
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
-  // Force-uncheck compression when current selection already includes boots
+  // Force-uncheck compression when current selection can't accept it
+  // (already includes boots, OR isn't an IV — e.g. IM Shot)
   useEffect(() => {
-    if (productIncludesBoots && compression) {
+    if (!canAddCompression && compression) {
       setCompression(false);
     }
-  }, [productIncludesBoots, compression]);
+  }, [canAddCompression, compression]);
 
   const subtotal = (product.price * productQty) + (compression ? COMPRESSION_ADDON.price : 0);
   const discount = useMemo(() => {
@@ -710,10 +713,13 @@ export default function B2B() {
               <RevealCard index={3} className="h-full">
                 <button
                   type="button"
-                  onClick={() => setCompression((v) => !v)}
-                  className={`b2b-heart-card text-center w-full h-full ${compression ? 'active' : ''}`}
+                  onClick={() => { if (canAddCompression) setCompression((v) => !v); }}
+                  disabled={!canAddCompression}
+                  className={`b2b-heart-card text-center w-full h-full ${compression ? 'active' : ''} ${!canAddCompression ? 'opacity-60 cursor-not-allowed' : ''}`}
                   aria-pressed={compression}
+                  aria-disabled={!canAddCompression}
                   style={{ aspectRatio: '1 / 1' }}
+                  title={canAddCompression ? '' : 'Boots can only be added to an IV. Pick an IV tier first.'}
                 >
                   <p className="b2b-display text-xs md:text-sm tracking-[0.32em] uppercase mb-3 b2b-pink">IV Add-On Only</p>
                   <h3 className="b2b-display text-3xl md:text-5xl uppercase mb-2 md:mb-3 leading-[0.95]">Normatec Boots</h3>
@@ -723,7 +729,7 @@ export default function B2B() {
                     <p className="b2b-display text-xl md:text-2xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
                   </div>
                   <span className="b2b-display text-xs md:text-sm tracking-[0.18em] uppercase">
-                    {compression ? '♥ Added' : 'Tap to add'}
+                    {!canAddCompression ? 'Pick an IV' : compression ? '♥ Added' : 'Tap to add'}
                   </span>
                 </button>
               </RevealCard>
