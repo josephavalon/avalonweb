@@ -711,7 +711,7 @@ export default function B2B() {
                 <button
                   type="button"
                   onClick={() => setCompression((v) => !v)}
-                  className={`b2b-heart-card text-center w-full h-full ${compression ? 'active' : ''} flex flex-col items-center justify-center px-6 pt-[18%] pb-[12%]`}
+                  className={`b2b-heart-card text-center w-full h-full ${compression ? 'active' : ''} flex flex-col items-center justify-center px-6 pt-20 md:pt-24 pb-12 md:pb-16`}
                   aria-pressed={compression}
                   style={{ aspectRatio: '1 / 1' }}
                 >
