@@ -645,16 +645,6 @@ export default function B2B() {
                         <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
                         <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
                         <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
-                        {showIvCount && (
-                          <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
-                            {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
-                          </p>
-                        )}
-                        {showImCount && (
-                          <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-1.5 md:mb-2">
-                            {imCardSoldOut ? 'Sold out' : `${imShotRemaining} / ${IM_SHOT_INVENTORY} left`}
-                          </p>
-                        )}
                         {p.originalPrice && (
                           <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
                             {Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}% off · save ${p.originalPrice - p.price}
@@ -716,7 +706,6 @@ export default function B2B() {
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-5xl mx-auto">
-          <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-2">{B2B_IV_INVENTORY - b2bIvRemaining} of {B2B_IV_INVENTORY} B2B IV spots claimed</p>
           <p className="b2b-display text-2xl md:text-3xl mb-2 md:mb-3 uppercase tracking-wide">Or save with a package</p>
           <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Boots already included where listed.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
@@ -759,11 +748,6 @@ export default function B2B() {
                         <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
                         <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
                         <p className="text-sm md:text-base leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
-                        {showIvCount && (
-                          <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2">
-                            {ivCardSoldOut ? 'Sold out' : `${b2bIvRemaining} / ${B2B_IV_INVENTORY} left`}
-                          </p>
-                        )}
                         {p.originalPrice && savings > 0 && (
                           <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
                             Save ${savings} · {Math.round((savings / p.originalPrice) * 100)}% off
