@@ -560,7 +560,7 @@ export default function B2B() {
                 width="1164"
                 height="531"
                 decoding="async"
-                className="block h-12 md:h-16 w-auto"
+                className="block h-16 md:h-24 w-auto"
               />
             </picture>
           </div>
