@@ -3,12 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Scroll-restoration: never auto-restore scroll position on reload.
-      // Set as early as possible so the browser respects it before any auto-scroll.
-      if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
-      window.addEventListener('pageshow', function() {
-        if (window.location.hash) { try { history.replaceState(null, '', window.location.pathname); } catch(e){} } window.scrollTo(0, 0);
-      });
+      // Hard scroll-to-top on every load — beats iOS Safari's auto-restore.
+      // Strategy: disable browser restore, then force scroll on every lifecycle hook.
+      (function () {
+        try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+        function stripHashAndTop() {
+          try {
+            if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+          } catch (e) {}
+          window.scrollTo(0, 0);
+          if (document.documentElement) document.documentElement.scrollTop = 0;
+          if (document.body) document.body.scrollTop = 0;
+        }
+        // 1) immediately
+        stripHashAndTop();
+        // 2) after DOM parsed
+        document.addEventListener('DOMContentLoaded', stripHashAndTop);
+        // 3) after pageshow (covers bfcache too)
+        window.addEventListener('pageshow', stripHashAndTop);
+        // 4) after full load
+        window.addEventListener('load', stripHashAndTop);
+        // 5) two rAF ticks after first paint, to outrun Safari's restore
+        requestAnimationFrame(function () {
+          requestAnimationFrame(stripHashAndTop);
+        });
+      })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A0A0A" />

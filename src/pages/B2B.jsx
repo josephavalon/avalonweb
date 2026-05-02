@@ -176,11 +176,18 @@ export default function B2B() {
     if (window.history && 'scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    // Always force top on reload — strip any lingering hash
-    if (window.location.hash) {
-      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
-    }
-    window.scrollTo(0, 0);
+    const stripAndTop = () => {
+      try {
+        if (window.location.hash) window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) {}
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    };
+    stripAndTop();
+    requestAnimationFrame(() => requestAnimationFrame(stripAndTop));
+    window.addEventListener('load', stripAndTop);
+    return () => window.removeEventListener('load', stripAndTop);
   }, []);
 
   // Fire PageView for retargeting on /b2b mount
