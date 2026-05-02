@@ -589,10 +589,6 @@ export default function B2B() {
             Right next to the finish line
           </p>
 
-          {/* Hero CTA — anchor jump to checkout */}
-          <a href="#b2b-checkout" className="b2b-btn-primary mt-3 md:mt-4 inline-flex items-center justify-center gap-2 text-sm md:text-base">
-            Reserve my slot <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-          </a>
         </div>
       </section>
 
