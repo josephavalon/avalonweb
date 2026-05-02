@@ -26,7 +26,7 @@ export const B2B_PRODUCTS = [
     kind: 'single',
     consumes: ['imShot'],
     flair: { line1: '33% OFF', line2: 'ONE DAY ONLY' },
-    squareUrl: 'https://square.link/u/REPLACE-ME-SHOT',
+    squareUrl: 'https://square.link/u/xpooOvYi',
   },
   {
     id: 'bay2bay-iv',
