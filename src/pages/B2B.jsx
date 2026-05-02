@@ -715,15 +715,15 @@ export default function B2B() {
                   aria-pressed={compression}
                   style={{ aspectRatio: '1 / 1' }}
                 >
-                  <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase mb-2 b2b-pink">+ Add-on</p>
+                  <p className="b2b-display text-sm md:text-base tracking-[0.32em] uppercase mb-3 b2b-pink">Add-On Only</p>
                   <h3 className="b2b-display text-3xl md:text-5xl uppercase mb-2 md:mb-3 leading-[0.95]">Normatec Boots</h3>
-                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase mb-2 opacity-80">17% Off</p>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <p className="b2b-display text-4xl md:text-5xl leading-none">${COMPRESSION_ADDON.price}</p>
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.18em] uppercase mb-3 opacity-70 max-w-[14rem] mx-auto leading-snug">Add to any IV at checkout. Not sold on its own.</p>
+                  <div className="flex items-baseline justify-center gap-2 mb-3">
+                    <p className="b2b-display text-4xl md:text-5xl leading-none">+${COMPRESSION_ADDON.price}</p>
                     <p className="b2b-display text-xl md:text-2xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
                   </div>
-                  <span className="b2b-display text-xs md:text-sm tracking-[0.15em] uppercase">
-                    {compression ? '♥ Added' : 'Tap'}
+                  <span className="b2b-display text-xs md:text-sm tracking-[0.18em] uppercase">
+                    {compression ? '♥ Added' : 'Tap to add'}
                   </span>
                 </button>
               </RevealCard>
