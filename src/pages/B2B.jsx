@@ -531,43 +531,34 @@ export default function B2B() {
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
-          <p className="b2b-display b2b-pink text-3xl md:text-6xl mb-1 md:mb-2 tracking-widest text-center mx-auto leading-none">Avalon Vitality &times;</p>
-          {/* Official Bay to Breakers wordmark — drop file at /public/bay-to-breakers-logo.png (or .svg) */}
-          <h1 className="m-0">
-            <picture>
-              <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
-              <img
-                src="/bay-to-breakers-logo.png"
-                alt="Bay to Breakers"
-                width="1164"
-                height="531"
-                fetchpriority="high"
-                decoding="async"
-                className="block mx-auto w-[40vw] max-w-[200px] md:max-w-[300px] h-auto"
-              />
-            </picture>
+          {/* Avalon brand mark — confident, restrained, top */}
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-3 md:mb-4">
+            <img src="/favicon.png" alt="" width="32" height="32" className="w-7 h-7 md:w-9 md:h-9" aria-hidden="true" />
+            <span className="b2b-display text-xl md:text-3xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
+          </div>
+
+          {/* H1 — Post Race Recovery Lounge (poster headline) */}
+          <h1 className="m-0 b2b-display text-5xl md:text-8xl uppercase leading-[0.85] text-center">
+            <span className="block b2b-pink text-2xl md:text-4xl tracking-[0.18em] mb-1 md:mb-2">Post Race</span>
+            Recovery Lounge
           </h1>
-          <p className="mt-2 md:mt-4 b2b-display text-base md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
+
+          {/* Official partner — small caps eyebrow, BTB co-branding lives here now */}
+          <p className="mt-4 md:mt-6 b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center">
             Official Bay to Breakers Recovery Partner
           </p>
-          <p className="mt-2 md:mt-3 b2b-display text-3xl md:text-5xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
-            Sunday &middot; May 17
-            <br />
-            9 AM &ndash; 2 PM
+
+          {/* Date / Time */}
+          <p className="mt-3 md:mt-5 b2b-display text-2xl md:text-4xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+            Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
           </p>
-          <p className="mt-1.5 md:mt-2 b2b-display text-sm md:text-xl tracking-[0.22em] uppercase text-center text-black/70 leading-tight">
-            Finish line &middot; Ocean Beach
-          </p>
-          <p className="mt-2 md:mt-3 text-base md:text-2xl b2b-display tracking-wide text-center leading-tight">
-            Finish-line IV, shots, &amp; recovery
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-4 h-4 md:w-6 md:h-6 b2b-pink inline-block align-middle ml-2"
-            >
-              <path d="M12 21s-7.5-4.5-9.6-9.5C.9 7.6 3.5 4 7 4c2 0 3.7 1 5 2.5C13.3 5 15 4 17 4c3.5 0 6.1 3.6 4.6 7.5C19.5 16.5 12 21 12 21z" />
+
+          {/* Location pin — matches poster exactly */}
+          <p className="mt-2 md:mt-3 b2b-display text-sm md:text-lg tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-4 h-4 md:w-5 md:h-5 inline-block" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
+            Right next to the finish line
           </p>
         </div>
         {/* Scroll cue — pulses gently to nudge the user down to How It Works */}
