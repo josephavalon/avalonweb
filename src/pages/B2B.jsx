@@ -600,7 +600,7 @@ export default function B2B() {
 
           {/* Urgency stat line — capped quantities + presale deadline */}
           <p className="mt-3 md:mt-4 b2b-display text-[10px] md:text-xs tracking-[0.32em] uppercase text-center text-black/60">
-            150 IV slots &middot; 1,000 shots &middot; presale ends may 14
+            200 IV slots &middot; 1,000 shots &middot; presale ends may 14
           </p>
         </div>
       </section>

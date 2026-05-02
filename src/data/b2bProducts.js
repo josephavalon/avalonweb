@@ -8,7 +8,7 @@
 // B2B IV inventory — 150 Bay 2 Bay IV bags total for race day.
 // Pool is shared across the single IV + every bundle that contains it.
 // Update B2B_IV_SOLD manually as Square reports sales (or wire a webhook later).
-export const B2B_IV_INVENTORY = 150;
+export const B2B_IV_INVENTORY = 200;
 export const B2B_IV_SOLD = 0;
 
 export const IM_SHOT_INVENTORY = 1000;
