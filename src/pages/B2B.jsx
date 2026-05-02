@@ -176,9 +176,11 @@ export default function B2B() {
     if (window.history && 'scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    if (!window.location.hash) {
-      window.scrollTo(0, 0);
+    // Always force top on reload — strip any lingering hash
+    if (window.location.hash) {
+      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
     }
+    window.scrollTo(0, 0);
   }, []);
 
   // Fire PageView for retargeting on /b2b mount
@@ -544,7 +546,7 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-3 md:gap-4 mb-2 md:mb-3">
+          <div className="flex items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3">
             <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12" aria-hidden="true" />
             <span className="b2b-display text-3xl md:text-5xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
           </div>

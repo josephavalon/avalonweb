@@ -7,7 +7,7 @@
       // Set as early as possible so the browser respects it before any auto-scroll.
       if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
       window.addEventListener('pageshow', function() {
-        if (!window.location.hash) { window.scrollTo(0, 0); }
+        if (window.location.hash) { try { history.replaceState(null, '', window.location.pathname); } catch(e){} } window.scrollTo(0, 0);
       });
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
