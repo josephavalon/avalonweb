@@ -5,7 +5,7 @@
 // always points to the BASE price; coupon discount is shown to the
 // buyer in the order summary and noted in the Square checkout title.
 
-// B2B IV inventory — 150 Bay 2 Bay IV bags total for race day.
+// B2B IV inventory — 200 B2B IV bags total for race day.
 // Pool is shared across the single IV + every bundle that contains it.
 // Update B2B_IV_SOLD manually as Square reports sales (or wire a webhook later).
 export const B2B_IV_INVENTORY = 200;
@@ -18,7 +18,7 @@ export const B2B_PRODUCTS = [
   // Singles
   {
     id: 'bay2bay-shot',
-    name: 'Bay 2 Bay IM Shot',
+    name: 'B2B IM Shot',
     tagline: 'Finish-line shot',
     description: 'Quick intramuscular shot at the finish line — choose B-12 or glutathione. Recovery in a hurry.',
     price: 40,
@@ -30,7 +30,7 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bay2bay-iv',
-    name: 'Bay 2 Bay IV',
+    name: 'B2B IV',
     tagline: 'Race-day hydration, full bag',
     description: "500 mL. Classic Myers' Cocktail. Magnesium, calcium gluconate, B-complex, B-12, and high-dose Vitamin C. Delivered at the finish line.",
     price: 120,
@@ -57,7 +57,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-iv-im',
     name: 'B2B IV + IM',
     tagline: 'Save $10 — IV + shot',
-    description: 'Full Bay 2 Bay IV plus an intramuscular B-12 or glutathione shot at the finish line.',
+    description: 'Full B2B IV plus an intramuscular B-12 or glutathione shot at the finish line.',
     price: 150,
     originalPrice: 160,
     kind: 'bundle',
@@ -69,7 +69,7 @@ export const B2B_PRODUCTS = [
     id: 'bundle-full-recovery',
     name: 'B2B IV + IM + Boots',
     tagline: 'Save $20 — IV + shot + boots',
-    description: 'The whole protocol at the finish line: Bay 2 Bay IV, intramuscular B-12 or glutathione shot, and Normatec compression. Three steps, dialed.',
+    description: 'The whole protocol at the finish line: B2B IV, intramuscular B-12 or glutathione shot, and Normatec compression. Three steps, dialed.',
     price: 190,
     originalPrice: 210,
     kind: 'bundle',
