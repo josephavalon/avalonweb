@@ -51,6 +51,15 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/((?!assets/|favicon|.*\\.(?:js|css|png|jpg|jpeg|webp|svg|ico|json|xml|txt|woff|woff2|mp4)).*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
     }
   ]
 }
