@@ -168,7 +168,7 @@ export default function B2B() {
   const selectedSoldOut = !!(product?.consumes?.includes('b2bIv') && b2bIvSoldOut);
   const productIncludesBoots = !!product?.consumes?.includes('boots');
   const productIncludesIv = !!(product?.consumes?.includes('b2bIv') || product?.consumes?.includes('cbdIv'));
-  const canAddCompression = productIncludesIv && !productIncludesBoots;
+  const canAddCompression = product?.kind === 'single' && productIncludesIv && !productIncludesBoots;
 
   // ---- effects ----
   // Force scroll to top on page load — disables browser auto-restore on reload
