@@ -30,7 +30,7 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bay2bay-iv',
-    name: "Myers' Cocktail",
+    name: 'Bay 2 Bay IV',
     tagline: 'Race-day hydration, full bag',
     description: "500 mL. Classic Myers' Cocktail. Magnesium, calcium gluconate, B-complex, B-12, and high-dose Vitamin C. Delivered at the finish line.",
     price: 120,
