@@ -552,13 +552,13 @@ export default function B2B() {
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center">
-          {/* Avalon brand mark — clickable, links home */}
+          {/* Avalon brand mark — full-width clickable band, links home */}
           <a
             href="/"
             aria-label="Avalon Vitality home"
-            className="flex items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3 hover:opacity-70 transition-opacity"
+            className="group flex w-full items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3 py-3 md:py-4 -my-1 hover:opacity-70 transition-opacity cursor-pointer"
           >
-            <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12" aria-hidden="true" />
+            <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12 transition-transform group-hover:scale-105" aria-hidden="true" />
             <span className="b2b-display text-3xl md:text-5xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
           </a>
 
