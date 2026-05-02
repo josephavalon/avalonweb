@@ -779,7 +779,7 @@ export default function B2B() {
                         <p className="text-sm md:text-base leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
                         {p.originalPrice && savings > 0 && (
                           <p className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink mb-1 mt-auto">
-                            Save ${savings} · {Math.round((savings / p.originalPrice) * 100)}% off
+                            Save ${savings}
                           </p>
                         )}
                         <div className={`flex items-baseline gap-2 md:gap-3 mb-3 ${p.originalPrice && savings > 0 ? '' : 'mt-auto'}`}>
