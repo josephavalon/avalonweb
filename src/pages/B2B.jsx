@@ -291,7 +291,7 @@ export default function B2B() {
         </defs>
       </svg>
       {/* Scattered B2B starbursts — decorative, behind content */}
-      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
         <StarBurst className="absolute b2b-pink"  style={{ top: '4%',   left: '6%',  width: '34px', height: '34px', transform: 'rotate(-14deg)', opacity: 0.85 }} />
         <StarBurst className="absolute b2b-pink"  style={{ top: '7%',   right: '8%', width: '46px', height: '46px', transform: 'rotate(18deg)',  opacity: 0.95 }} />
         <StarBurst className="absolute b2b-pink"  style={{ top: '13%',  left: '38%', width: '22px', height: '22px', transform: 'rotate(-6deg)',  opacity: 0.55 }} />
