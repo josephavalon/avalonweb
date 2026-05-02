@@ -95,7 +95,7 @@ function RevealCard({ children, index = 0, delayBase = 0.10, className = '' }) {
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+      viewport={{ once: true, amount: 0.05 }}
       transition={{ duration: 0.8, ease: REVEAL_EASE, delay: index * delayBase }}
       style={{ willChange: 'transform, opacity' }}
       className={className}
@@ -143,7 +143,7 @@ export default function B2B() {
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
-  const [showStickyCta, setShowStickyCta] = useState(false);
+  const [showStickyCta, setShowStickyCta] = useState(true);
   const [isLoading] = useState(false); // skeletons retired in favor of scroll-reveal
   const [quantities, setQuantities] = useState(() => {
     const q = {};
@@ -201,7 +201,7 @@ export default function B2B() {
 
   // Sticky mobile buy bar — only after hero scroll
   useEffect(() => {
-    const handler = () => setShowStickyCta(window.scrollY > 280);
+    const handler = () => setShowStickyCta(true);
     handler();
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
@@ -551,7 +551,7 @@ export default function B2B() {
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
-        <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
+        <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center">
           {/* Avalon brand mark — confident, restrained, top */}
           <div className="flex items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3">
             <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12" aria-hidden="true" />
@@ -586,7 +586,7 @@ export default function B2B() {
           </p>
 
           {/* Date / Time */}
-          <p className="mt-1 md:mt-2 b2b-display text-2xl md:text-8xl tracking-[0.04em] md:tracking-[0.06em] uppercase text-center leading-[0.85] whitespace-nowrap">
+          <p className="mt-1 md:mt-2 b2b-display text-2xl md:text-6xl tracking-[0.04em] md:tracking-[0.08em] uppercase text-center leading-[0.85] whitespace-nowrap">
             Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
           </p>
 
@@ -598,12 +598,16 @@ export default function B2B() {
             Right next to the finish line
           </p>
 
+          {/* Urgency stat line — capped quantities + presale deadline */}
+          <p className="mt-3 md:mt-4 b2b-display text-[10px] md:text-xs tracking-[0.32em] uppercase text-center text-black/60">
+            150 IV slots &middot; 1,000 shots &middot; presale ends may 14
+          </p>
         </div>
       </section>
 
       {/* How it works — 3 steps */}
       <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10 pt-3 md:pt-5">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">How it works</p>
           <div className="grid grid-cols-3 gap-3 md:gap-5">
             {isLoading
@@ -627,7 +631,7 @@ export default function B2B() {
 
       {/* Singles */}
       <section className="relative z-10 px-5 md:px-10 pt-2 pb-8 md:pb-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Pick your tier &darr;</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {isLoading
@@ -726,7 +730,7 @@ export default function B2B() {
 
       {/* Bundles */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-2xl md:text-3xl mb-2 md:mb-3 uppercase tracking-wide">Or save with a package</p>
           <p className="text-sm md:text-base mb-5 md:mb-7">Pre-bundled combos. Boots already included where listed.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
@@ -824,7 +828,7 @@ export default function B2B() {
 
       {/* Coupon */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-xl md:text-2xl mb-4 uppercase tracking-wide">Got a code?</p>
           {appliedCoupon ? (
             <div className="b2b-card p-4 md:p-5 flex items-center gap-4">
@@ -863,7 +867,7 @@ export default function B2B() {
 
       {/* Your visit — what to expect on race day */}
       <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Your visit</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
             {isLoading
@@ -878,31 +882,6 @@ export default function B2B() {
                       <p className="b2b-display text-base md:text-xl uppercase mb-1 leading-tight">{v.t}</p>
                       <p className="text-sm md:text-base leading-snug">{v.d}</p>
                     </div>
-                  </RevealCard>
-                ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials — pulled from the main site, event-relevant picks */}
-      <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
-        <div className="max-w-5xl mx-auto">
-          <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Real Avalon recoveries</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
-            {isLoading
-              ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-t-${i}`} variant="testimonial" />)
-              : [
-                  { quote: 'That was awesome.', name: 'Diplo', tag: 'Energy IV' },
-                  { quote: 'That IV did digits.', name: 'Larry June', tag: 'Recovery IV' },
-                  { quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.', name: 'G.B.', tag: 'Event recovery' },
-                ].map((t, i) => (
-                  <RevealCard key={t.name} index={i} className="h-full">
-                    <figure className="b2b-card p-4 md:p-5 h-full flex flex-col">
-                      <blockquote className="text-sm md:text-base leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</blockquote>
-                      <figcaption className="b2b-display text-xs md:text-sm tracking-[0.2em] uppercase b2b-pink">
-                        &mdash; {t.name} &middot; {t.tag}
-                      </figcaption>
-                    </figure>
                   </RevealCard>
                 ))}
           </div>
