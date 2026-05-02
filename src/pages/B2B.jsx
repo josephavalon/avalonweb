@@ -530,54 +530,26 @@ export default function B2B() {
         <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
-        <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
-          {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-2 md:mb-3">
-            <img src="/favicon.png" alt="" width="32" height="32" className="w-7 h-7 md:w-9 md:h-9" aria-hidden="true" />
-            <span className="b2b-display text-xl md:text-3xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
-          </div>
+        <div className="relative max-w-2xl mx-auto flex flex-col items-center text-center">
+          {/* SR-only H1 for SEO + accessibility — the visual hero is the poster image below */}
+          <h1 className="sr-only">Post Race Recovery Lounge — Avalon Vitality × Bay to Breakers · May 17, 2026 · Right next to the finish line</h1>
 
-          {/* Bay to Breakers co-brand wordmark — restored, sized small as supporting partnership badge */}
-          <div className="flex items-center justify-center gap-3 mb-3 md:mb-4">
-            <span className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
-            <picture>
-              <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
-              <img
-                src="/bay-to-breakers-logo.png"
-                alt="Bay to Breakers"
-                width="1164"
-                height="531"
-                decoding="async"
-                className="block h-6 md:h-8 w-auto"
-              />
-            </picture>
-          </div>
+          {/* Hero poster — full-bleed brand identity (Avalon mark + POST RACE RECOVERY LOUNGE + 3 photos + pricing + location) */}
+          <picture>
+            <source srcSet="/recovery-lounge-hero.webp" type="image/webp" />
+            <img
+              src="/recovery-lounge-hero.jpg"
+              alt="Avalon Vitality Post Race Recovery Lounge — IV Therapy $120 Myers' Cocktail, IM Shots B12 $40, Normatec Compression +$50. Right next to the Bay to Breakers finish line, Sunday May 17."
+              width="1023"
+              height="1537"
+              fetchpriority="high"
+              decoding="async"
+              className="block w-full h-auto rounded-2xl shadow-lg border-2 border-black"
+            />
+          </picture>
 
-          {/* H1 — Post Race Recovery Lounge (poster headline) */}
-          <h1 className="m-0 b2b-display text-5xl md:text-8xl uppercase leading-[0.85] text-center">
-            <span className="block b2b-pink text-2xl md:text-4xl tracking-[0.18em] mb-1 md:mb-2">Post Race</span>
-            Recovery Lounge
-          </h1>
-
-          {/* Official partner — small caps eyebrow, BTB co-branding lives here now */}
-          <p className="mt-4 md:mt-6 b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center">
-            Official Bay to Breakers Recovery Partner
-          </p>
-
-          {/* Date / Time */}
-          <p className="mt-3 md:mt-5 b2b-display text-2xl md:text-4xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
-            Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
-          </p>
-
-          {/* Location pin — matches poster exactly */}
-          <p className="mt-2 md:mt-3 b2b-display text-sm md:text-lg tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-4 h-4 md:w-5 md:h-5 inline-block" aria-hidden="true">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-            </svg>
-            Right next to the finish line
-          </p>
-          {/* Hero CTA — anchor jump to checkout, lets impatient buyers commit without scrolling */}
-          <a href="#b2b-checkout" className="b2b-btn-primary mt-5 md:mt-7 inline-flex items-center justify-center gap-2 text-sm md:text-base">
+          {/* Hero CTA — Reserve my slot, anchor jump to checkout */}
+          <a href="#b2b-checkout" className="b2b-btn-primary mt-5 md:mt-7 inline-flex items-center justify-center gap-2 text-base md:text-lg">
             Reserve my slot <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
           </a>
         </div>
