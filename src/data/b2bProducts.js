@@ -99,7 +99,7 @@ export const B2B_PRODUCTS = [
     kind: 'bundle',
     consumes: ['cbdIv', 'imShot', 'boots'],
     flair: { line1: 'SAVE $20', line2: 'VS SINGLES' },
-    squareUrl: 'https://square.link/u/REPLACE-ME-BUNDLE-CBD-IM-COMP',
+    squareUrl: 'https://square.link/u/VGk7yHA8',
   },
 ];
 
