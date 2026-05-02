@@ -566,24 +566,24 @@ export default function B2B() {
           </div>
 
           {/* H1 — Post Race Recovery Lounge */}
-          <h1 className="m-0 b2b-display text-4xl md:text-6xl uppercase leading-[0.85] text-center">
-            <span className="block b2b-pink text-lg md:text-2xl tracking-[0.18em] mb-0.5 md:mb-1">Post Race</span>
+          <h1 className="m-0 b2b-display text-5xl md:text-8xl uppercase leading-[0.85] text-center">
+            <span className="block b2b-pink text-2xl md:text-4xl tracking-[0.18em] mb-0.5 md:mb-1">Post Race</span>
             Recovery Lounge
           </h1>
 
           {/* Official partner — small caps eyebrow */}
-          <p className="mt-2 md:mt-3 b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center">
+          <p className="mt-2 md:mt-3 b2b-display text-sm md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
             Official Bay to Breakers Recovery Partner
           </p>
 
           {/* Date / Time */}
-          <p className="mt-1 md:mt-2 b2b-display text-xl md:text-2xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
+          <p className="mt-1 md:mt-2 b2b-display text-2xl md:text-4xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
             Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
           </p>
 
           {/* Location pin */}
-          <p className="mt-1 md:mt-2 b2b-display text-xs md:text-sm tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-3.5 h-3.5 md:w-4 md:h-4 inline-block" aria-hidden="true">
+          <p className="mt-1 md:mt-2 b2b-display text-sm md:text-lg tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-4 h-4 md:w-5 md:h-5 inline-block" aria-hidden="true">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
             Right next to the finish line
