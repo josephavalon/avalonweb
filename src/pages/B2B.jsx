@@ -715,7 +715,7 @@ export default function B2B() {
                   aria-pressed={compression}
                   style={{ aspectRatio: '1 / 1' }}
                 >
-                  <p className="b2b-display text-sm md:text-base tracking-[0.32em] uppercase mb-3 b2b-pink">Add-On Only</p>
+                  <p className="b2b-display text-sm md:text-base tracking-[0.32em] uppercase mb-3 b2b-pink">IV Add-On Only</p>
                   <h3 className="b2b-display text-3xl md:text-5xl uppercase mb-2 md:mb-3 leading-[0.95]">Normatec Boots</h3>
                   <p className="b2b-display text-[10px] md:text-xs tracking-[0.18em] uppercase mb-3 opacity-70 max-w-[14rem] mx-auto leading-snug">Add to any IV at checkout. Not sold on its own.</p>
                   <div className="flex items-baseline justify-center gap-2 mb-3">
