@@ -629,18 +629,20 @@ export default function B2B() {
                         className={`b2b-card text-left p-4 md:p-6 flex flex-col h-full md:min-h-[240px] relative ${active ? 'active' : ''} ${cardSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                         aria-pressed={active}
                       >
+                        {active && (
+                          <span className="absolute -top-2 -left-2 md:-top-3 md:-left-3 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full b2b-bg-pink text-white border-2 border-black shadow-md z-20" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 md:w-4 md:h-4">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                        )}
                         {p.flair && (
                           <span className="b2b-flair absolute -top-2 -right-2 md:-top-3 md:-right-3 b2b-display text-center px-2 py-1 md:px-3 md:py-1.5 rounded-md shadow-md z-10">
                             <span className="block text-sm md:text-base leading-none font-extrabold">{p.flair.line1}</span>
                             <span className="block text-[8px] md:text-[10px] tracking-[0.15em] mt-0.5 font-bold">{p.flair.line2}</span>
                           </span>
                         )}
-                        <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2 inline-flex items-center gap-2">
-                          <span>{p.tagline}</span>
-                          {active && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full b2b-bg-pink text-white text-[10px] font-bold shrink-0">✓</span>
-                          )}
-                        </p>
+                        <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
                         <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight">{p.name}</h3>
                         <p className="text-sm md:text-sm leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
                         {showIvCount && (
@@ -747,12 +749,7 @@ export default function B2B() {
                             Sold out
                           </span>
                         )}
-                        <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2 inline-flex items-center gap-2">
-                          <span>{p.tagline}</span>
-                          {active && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full b2b-bg-pink text-white text-[10px] font-bold shrink-0">✓</span>
-                          )}
-                        </p>
+                        <p className="b2b-display text-xs md:text-xs tracking-[0.2em] uppercase b2b-pink mb-2 md:mb-2">{p.tagline}</p>
                         <h3 className="b2b-display text-2xl md:text-3xl uppercase mb-2 md:mb-3 leading-tight pr-14 md:pr-20">{p.name}</h3>
                         <p className="text-sm md:text-base leading-snug mb-3 md:mb-4 flex-1">{p.description}</p>
                         {showIvCount && (
