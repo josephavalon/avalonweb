@@ -830,42 +830,23 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Coupon */}
+      {/* Press / partner contact (replaces broken self-serve coupon entry — codes routed manually until Square Online migration) */}
       <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
         <div className="max-w-6xl mx-auto">
-          <p className="b2b-display text-xl md:text-2xl mb-4 uppercase tracking-wide">Got a code?</p>
-          {appliedCoupon ? (
-            <div className="b2b-card p-4 md:p-5 flex items-center gap-4">
-              <Tag className="w-5 h-5 b2b-pink" />
-              <div className="flex-1">
-                <p className="b2b-display text-lg uppercase">{appliedCoupon} applied</p>
-                <p className="text-sm">{COUPONS[appliedCoupon].label} &mdash; ${discount} off at the finish line. Show your confirmation email to redeem.</p>
-              </div>
-              <button
-                type="button"
-                onClick={clearCoupon}
-                className="w-9 h-9 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                aria-label="Remove coupon"
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
+          <a
+            href="mailto:rob@avalonvitality.co?subject=B2B%20press%20%2F%20partner%20code"
+            className="b2b-card p-5 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 hover:bg-black hover:text-white transition-colors"
+          >
+            <div>
+              <p className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink mb-2">Press &middot; Partners &middot; Crew</p>
+              <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide">Have a code? Email Rob.</p>
+              <p className="text-sm md:text-base mt-1 opacity-80">We&rsquo;ll send a custom checkout link.</p>
             </div>
-          ) : (
-            <form onSubmit={handleCoupon} className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder="ENTER CODE"
-                className="b2b-input flex-1"
-                aria-label="Coupon code"
-              />
-              <button type="submit" className="b2b-btn-secondary">
-                Apply
-              </button>
-            </form>
-          )}
-          {couponError && <p className="mt-2 text-sm b2b-pink">{couponError}</p>}
+            <span className="b2b-display text-sm md:text-base tracking-[0.2em] uppercase b2b-pink inline-flex items-center gap-2 shrink-0">
+              rob@avalonvitality.co
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+            </span>
+          </a>
         </div>
       </section>
 
