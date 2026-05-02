@@ -544,14 +544,14 @@ export default function B2B() {
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-1">
-            <img src="/favicon.png" alt="" width="32" height="32" className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
-            <span className="b2b-display text-base md:text-xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
+          <div className="flex items-center justify-center gap-3 md:gap-4 mb-2 md:mb-3">
+            <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12" aria-hidden="true" />
+            <span className="b2b-display text-3xl md:text-5xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
           </div>
 
           {/* Bay to Breakers co-brand wordmark — supporting partnership badge */}
           <div className="flex items-center justify-center gap-3 mb-1 md:mb-2">
-            <span className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
+            <span className="b2b-display text-base md:text-xl tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
             <picture>
               <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
               <img
@@ -560,7 +560,7 @@ export default function B2B() {
                 width="1164"
                 height="531"
                 decoding="async"
-                className="block h-12 md:h-16 w-auto"
+                className="block h-20 md:h-32 w-auto"
               />
             </picture>
           </div>
