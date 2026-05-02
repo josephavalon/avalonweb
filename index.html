@@ -2,6 +2,14 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Scroll-restoration: never auto-restore scroll position on reload.
+      // Set as early as possible so the browser respects it before any auto-scroll.
+      if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+      window.addEventListener('pageshow', function() {
+        if (!window.location.hash) { window.scrollTo(0, 0); }
+      });
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A0A0A" />
 
