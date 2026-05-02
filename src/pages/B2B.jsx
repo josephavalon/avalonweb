@@ -586,7 +586,7 @@ export default function B2B() {
           </p>
 
           {/* Date / Time */}
-          <p className="mt-1 md:mt-2 b2b-display text-5xl md:text-8xl tracking-[0.04em] md:tracking-[0.06em] uppercase text-center leading-[0.85]">
+          <p className="mt-1 md:mt-2 b2b-display text-2xl md:text-8xl tracking-[0.04em] md:tracking-[0.06em] uppercase text-center leading-[0.85] whitespace-nowrap">
             Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
           </p>
 
