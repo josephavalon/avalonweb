@@ -543,38 +543,36 @@ export default function B2B() {
         <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
-          {/* Avalon brand mark — confident, restrained, top */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-2 md:mb-3">
-            <img src="/favicon.png" alt="" width="32" height="32" className="w-7 h-7 md:w-9 md:h-9" aria-hidden="true" />
-            <span className="b2b-display text-xl md:text-3xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
-          </div>
+          {/* SR-only H1 for SEO + accessibility */}
+          <h1 className="sr-only">Avalon Vitality × Bay to Breakers — Post Race Recovery Lounge · May 17, 2026 · Right next to the finish line</h1>
 
-          {/* Bay to Breakers co-brand wordmark — supporting partnership badge */}
-          <div className="flex items-center justify-center gap-3 mb-3 md:mb-4">
-            <span className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
-            <picture>
-              <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
-              <img
-                src="/bay-to-breakers-logo.png"
-                alt="Bay to Breakers"
-                width="1164"
-                height="531"
-                decoding="async"
-                className="block h-16 md:h-24 w-auto"
-              />
-            </picture>
+          {/* AVALON VITALITY × — big pink banner with pink teardrop mark next to wordmark */}
+          <div className="flex items-center justify-center gap-3 md:gap-5 mb-3 md:mb-4">
+            <svg viewBox="0 0 24 32" className="w-10 h-12 md:w-16 md:h-20 b2b-pink" aria-hidden="true">
+              <path d="M12 1 L23 18 Q23 31 12 31 Q1 31 1 18 Z" stroke="currentColor" strokeWidth="2.5" fill="none" />
+              <path d="M12 9 L18 19 Q18 25 12 25 Q6 25 6 19 Z" fill="currentColor" />
+            </svg>
+            <span className="b2b-display b2b-pink text-4xl md:text-7xl tracking-[0.05em] uppercase leading-none">Avalon Vitality &times;</span>
           </div>
-
-          {/* H1 — Post Race Recovery Lounge */}
-          <h1 className="m-0 b2b-display text-5xl md:text-8xl uppercase leading-[0.85] text-center">
-            <span className="block b2b-pink text-2xl md:text-4xl tracking-[0.18em] mb-1 md:mb-2">Post Race</span>
-            Recovery Lounge
-          </h1>
 
           {/* Official partner — small caps eyebrow */}
-          <p className="mt-4 md:mt-6 b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center">
+          <p className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink text-center mb-4 md:mb-6">
             Official Bay to Breakers Recovery Partner
           </p>
+
+          {/* Big BTB wordmark — visual centerpiece */}
+          <picture>
+            <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
+            <img
+              src="/bay-to-breakers-logo.png"
+              alt="Bay to Breakers"
+              width="1164"
+              height="531"
+              decoding="async"
+              fetchpriority="high"
+              className="block h-24 md:h-40 w-auto mb-3 md:mb-5"
+            />
+          </picture>
 
           {/* Date / Time */}
           <p className="mt-3 md:mt-5 b2b-display text-2xl md:text-4xl tracking-[0.14em] md:tracking-[0.18em] uppercase text-center leading-[0.95]">
