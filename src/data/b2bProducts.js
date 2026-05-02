@@ -80,13 +80,13 @@ export const B2B_PRODUCTS = [
   {
     id: 'bundle-cbd-compression',
     name: 'CBD IV + Boots',
-    tagline: 'Save $20 vs singles — Premium recovery',
+    tagline: 'Save $10 vs singles — Premium recovery',
     description: 'CBD IV with Normatec compression boots. Premium recovery pairing for hard race effort.',
-    price: 230,
+    price: 240,
     originalPrice: 250,
     kind: 'bundle',
     consumes: ['cbdIv', 'boots'],
-    flair: { line1: 'SAVE $20', line2: 'VS SINGLES' },
+    flair: { line1: 'SAVE $10', line2: 'VS SINGLES' },
     squareUrl: 'https://square.link/u/b7Ni8IYl',
   },
   {
