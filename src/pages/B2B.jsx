@@ -560,6 +560,10 @@ export default function B2B() {
             </svg>
             Right next to the finish line
           </p>
+          {/* Hero CTA — anchor jump to checkout, lets impatient buyers commit without scrolling */}
+          <a href="#b2b-checkout" className="b2b-btn-primary mt-5 md:mt-7 inline-flex items-center justify-center gap-2 text-sm md:text-base">
+            Reserve my slot <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+          </a>
         </div>
         {/* Scroll cue — pulses gently to nudge the user down to How It Works */}
         <div className="b2b-scroll-cue mt-3 md:mt-4 flex flex-col items-center pointer-events-none">
@@ -961,12 +965,12 @@ export default function B2B() {
               onClick={fireCheckoutEvent}
               className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2"
             >
-              Pay with Square <ArrowRight className="w-4 h-4" />
+              Reserve my slot <ArrowRight className="w-4 h-4" />
             </a>
           )}
 
           <p className="mt-4 text-xs leading-relaxed text-black/70">
-            Payment processed securely by Square. Confirmation email sent immediately. Race-morning text from Avalon with the location.
+            Slot reserved instantly. Payment processed securely by Square. Race-morning text from Avalon with the location.
           </p>
         </div>
       </section>
