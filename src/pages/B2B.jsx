@@ -836,26 +836,6 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Press / partner contact (replaces broken self-serve coupon entry — codes routed manually until Square Online migration) */}
-      <section className="relative z-10 px-5 md:px-10 pb-10 md:pb-14">
-        <div className="max-w-6xl mx-auto">
-          <a
-            href="mailto:rob@avalonvitality.co?subject=B2B%20press%20%2F%20partner%20code"
-            className="b2b-card p-5 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 hover:bg-black hover:text-white transition-colors"
-          >
-            <div>
-              <p className="b2b-display text-xs md:text-sm tracking-[0.3em] uppercase b2b-pink mb-2">Press &middot; Partners &middot; Crew</p>
-              <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide">Have a code? Email Rob.</p>
-              <p className="text-sm md:text-base mt-1 opacity-80">We&rsquo;ll send a custom checkout link.</p>
-            </div>
-            <span className="b2b-display text-sm md:text-base tracking-[0.2em] uppercase b2b-pink inline-flex items-center gap-2 shrink-0">
-              rob@avalonvitality.co
-              <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-            </span>
-          </a>
-        </div>
-      </section>
-
       {/* Your visit — what to expect on race day */}
       <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
         <div className="max-w-6xl mx-auto">
