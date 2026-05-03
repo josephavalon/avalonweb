@@ -18,8 +18,7 @@ const treatments = [
     perks: [
       'Dehydration · Myers’ · Recovery · Athletic · Glow · Immunity',
       'B-complex, magnesium, glutathione, NAD+ add-ons',
-      'IM shot add-ons available — B12, lipo, glutathione',
-      'In-home or concierge across the Bay',
+      'IM shot add-ons available — B12, glutathione',
     ],
   },
   {
