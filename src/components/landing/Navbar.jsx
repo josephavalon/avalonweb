@@ -12,11 +12,11 @@ const Thirty = (props) => (
 const THEMES = ['dark', 'light', 'golden', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
 
-const readInitialTheme = () => {
-  if (typeof window === 'undefined') return 'light';
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return THEMES.includes(stored) ? stored : 'light';
-};
+// Every visitor lands on light theme on every page load. We ignore any previously
+// stored preference so the brand entry experience is consistent. Users can still
+// cycle to other themes via the navbar toggle, but the choice does not persist
+// across reloads.
+const readInitialTheme = () => 'light';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
