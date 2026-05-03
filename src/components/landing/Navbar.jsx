@@ -13,9 +13,9 @@ const THEMES = ['dark', 'light', 'golden', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
 
 const readInitialTheme = () => {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return THEMES.includes(stored) ? stored : 'golden';
+  return THEMES.includes(stored) ? stored : 'light';
 };
 
 export default function Navbar() {
