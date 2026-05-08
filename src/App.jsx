@@ -33,6 +33,7 @@ const Platform = lazy(() => import('./pages/Platform'));
 const B2B = lazy(() => import('./pages/B2B'));
 const Book = lazy(() => import('./pages/Book'));
 const Cart = lazy(() => import('./pages/Cart'));
+const Store = lazy(() => import('./pages/Store'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const B2BThankYou = lazy(() => import('./pages/B2BThankYou'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
@@ -100,8 +101,8 @@ function AppRoutes() {
             <Route path="/book" element={<Book />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/menu" element={<Navigate to="/book" replace />} />
-            <Route path="/store" element={<Navigate to="/book" replace />} />
+            <Route path="/menu" element={<Store />} />
+            <Route path="/store" element={<Store />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>

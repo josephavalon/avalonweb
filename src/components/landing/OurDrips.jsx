@@ -9,7 +9,7 @@ const EASE = [0.16, 1, 0.3, 1];
 const treatments = [
   {
     label: 'IV Vitamins',
-    href: '/services/iv-vitamins',
+    href: '/store#iv-vitamins',
     icon: Droplets,
     price: 150,
     priceFrom: true,
@@ -23,7 +23,7 @@ const treatments = [
   },
   {
     label: 'IV CBD',
-    href: '/services/cbd',
+    href: '/store#iv-cbd',
     icon: CannabisLeaf,
     price: 250,
     priceFrom: true,
@@ -38,7 +38,7 @@ const treatments = [
   },
   {
     label: 'IV NAD+',
-    href: '/services/nad',
+    href: '/store#iv-nad',
     icon: Zap,
     price: 350,
     priceFrom: true,
@@ -90,9 +90,9 @@ function TreatmentCard({ t }) {
       {/* CTA */}
       <Link
         to={t.href}
-        className="block text-center py-2.5 md:py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto border border-foreground/30 text-foreground hover:border-foreground"
+        className="block text-center py-2.5 md:py-3 font-body text-sm tracking-widest uppercase font-semibold rounded-full transition-colors mt-auto bg-foreground text-background hover:opacity-85"
       >
-        Book Now
+        Build & add to cart
       </Link>
     </div>
   );
