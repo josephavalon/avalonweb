@@ -29,6 +29,7 @@ const NoticeOfPrivacyPractices = lazy(() => import('./pages/NoticeOfPrivacyPract
 const Partners = lazy(() => import('./pages/Partners'));
 const Platform = lazy(() => import('./pages/Platform'));
 const B2B = lazy(() => import('./pages/B2B'));
+const Book = lazy(() => import('./pages/Book'));
 const B2BThankYou = lazy(() => import('./pages/B2BThankYou'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
@@ -92,6 +93,9 @@ function AppRoutes() {
             <Route path="/partners" element={<Partners />} />
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
+            <Route path="/book" element={<Book />} />
+            <Route path="/menu" element={<Navigate to="/book" replace />} />
+            <Route path="/store" element={<Navigate to="/book" replace />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
