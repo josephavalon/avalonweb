@@ -17,26 +17,26 @@ import Testimonials from '../components/landing/Testimonials';
 import WaitlistSection from '../components/landing/WaitlistSection';
 import Footer from '../components/landing/Footer';
 
-// Section order is intentional — read as a VC funnel:
+// Section order — buy-first funnel:
 // 1. Hero: category promise
-// 2. TrustStrip: operational credentials
-// 3. IntroSection: platform thesis + roadmap with dated quarters
-// 4. WhatIsIV / HowItWorks / OurDrips: product tour
-// 5. MembershipSection: pricing ask
-// 6. EventsSection + B2BSection (Partnerships): cultural + channel moats
+// 2. HowItWorks: clarify the offer in three steps
+// 3. OurDrips: Treatments (the menu, the buy)
+// 4. MembershipSection: pricing ask
+// 5. TrustStrip: operational credentials reassurance after the buy decision
+// 6. WhatIsIV: deeper education for considerers
 // 7. Testimonials + FAQ: objections handled
-// 8. WaitlistSection: secondary capture with waitlist count as proof
-// Medical Direction: now lives at /medical-direction, linked from Footer.
+// 8. HardCloseCTA + WaitlistSection: secondary capture
+// Medical Direction: lives at /medical-direction, linked from Footer.
 export default function Home() {
   return (
     <div className="app-shell bg-background min-h-screen w-full" style={{ touchAction: 'pan-y' }}>
       <Navbar />
       <Hero />
-      <TrustStrip />
-      <WhatIsIV />
       <HowItWorks />
       <OurDrips />
       <MembershipSection />
+      <TrustStrip />
+      <WhatIsIV />
       <Testimonials />
       <HomeFAQ />
       <HardCloseCTA />
