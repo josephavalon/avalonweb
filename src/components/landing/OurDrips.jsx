@@ -136,7 +136,7 @@ export default function OurDrips() {
   };
 
   return (
-    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 py-12 md:py-24 px-4">
+    <section id="treatments" className="scroll-mt-24 md:scroll-mt-32 py-10 md:py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-left mb-6 md:mb-10">
           <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Live Protocols</p>
