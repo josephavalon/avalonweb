@@ -74,7 +74,7 @@ export default function Hero() {
             <div className="flex flex-col items-center gap-3 md:gap-4">
               <MagneticButton strength={14}>
                 <Link
-                  to="/apply"
+                  to="/store"
                   className="apply-now-btn inline-flex items-center gap-2 px-10 py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold hover:bg-foreground/90 transition-colors whitespace-nowrap rounded-full"
                 >
                   Start Now
