@@ -5,6 +5,8 @@ import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
+import { CartProvider } from '@/contexts/CartContext';
+import StickyCartBar from '@/components/store/StickyCartBar';
 import Home from './pages/Home';
 const EventPage = lazy(() => import('./pages/EventPage'));
 
@@ -30,6 +32,8 @@ const Partners = lazy(() => import('./pages/Partners'));
 const Platform = lazy(() => import('./pages/Platform'));
 const B2B = lazy(() => import('./pages/B2B'));
 const Book = lazy(() => import('./pages/Book'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
 const B2BThankYou = lazy(() => import('./pages/B2BThankYou'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
@@ -94,6 +98,8 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/book" element={<Book />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/menu" element={<Navigate to="/book" replace />} />
             <Route path="/store" element={<Navigate to="/book" replace />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
@@ -109,9 +115,12 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <ScrollToTop />
-        <ScrollProgress />
-        <AppRoutes />
+        <CartProvider>
+          <ScrollToTop />
+          <ScrollProgress />
+          <AppRoutes />
+          <StickyCartBar />
+        </CartProvider>
       </Router>
       <Toaster />
       <CookieConsent />

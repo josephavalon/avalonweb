@@ -1,28 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Clock, ChevronRight } from 'lucide-react';
+import { ArrowRight, Clock, ChevronRight, Plus, Check } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { CATEGORIES, ALL_TREATMENTS, buildAcuityUrl, ACUITY_OWNER_ID } from '@/data/acuityCatalog';
 
 const EASE = [0.16, 1, 0.3, 1];
 
-function TreatmentCard({ treatment }) {
-  const url = buildAcuityUrl(treatment.appointmentTypeId);
+function TreatmentCard({ treatment, categoryName }) {
+  const { addItem, items } = useCart();
+  const inCart = items.some(i => i.productId === treatment.id);
+  const handleAdd = (e) => {
+    e.preventDefault();
+    addItem({
+      productId: treatment.id,
+      name: treatment.name,
+      displayName: treatment.name,
+      price: treatment.price,
+      duration: treatment.duration,
+      appointmentTypeId: treatment.appointmentTypeId || '',
+      categoryName: categoryName || '',
+      kind: 'treatment',
+    });
+  };
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative block rounded-2xl border border-foreground/15 bg-background p-6 md:p-7 transition-colors hover:border-foreground/40 focus:outline-none focus:ring-2 focus:ring-foreground/40"
-    >
+    <div className="group relative flex flex-col rounded-2xl border border-foreground/15 bg-background p-6 md:p-7 transition-colors hover:border-foreground/40">
       <div className="flex items-start justify-between gap-3 mb-3">
         <h3 className="font-display text-2xl md:text-3xl uppercase tracking-tight leading-none">{treatment.name}</h3>
-        <ArrowRight className="w-5 h-5 text-foreground/50 transition-transform group-hover:translate-x-1 group-hover:text-foreground shrink-0 mt-1" strokeWidth={1.5} />
       </div>
       <p className="text-sm md:text-base text-foreground/75 mb-5 leading-snug min-h-[2.75rem]">{treatment.blurb}</p>
-      <div className="flex items-end justify-between pt-4 border-t border-foreground/10">
+      <div className="flex items-end justify-between pt-4 border-t border-foreground/10 mb-4">
         <div className="flex flex-col gap-1">
           <span className="font-display text-3xl md:text-4xl leading-none">${treatment.price}</span>
           <span className="text-xs uppercase tracking-[0.2em] text-foreground/50">/ session</span>
@@ -32,7 +41,14 @@ function TreatmentCard({ treatment }) {
           {treatment.duration}
         </span>
       </div>
-    </a>
+      <button
+        type="button"
+        onClick={handleAdd}
+        className={`mt-auto inline-flex items-center justify-center gap-2 rounded-full font-body text-xs md:text-sm tracking-[0.2em] uppercase px-5 py-3 transition-colors ${inCart ? 'bg-foreground/[0.07] text-foreground/80 border-2 border-foreground/20 hover:border-foreground/40' : 'bg-foreground text-background hover:opacity-85'}`}
+      >
+        {inCart ? (<><Check className="w-4 h-4" strokeWidth={2} /> Added — add another</>) : (<><Plus className="w-4 h-4" strokeWidth={2} /> Add to cart</>)}
+      </button>
+    </div>
   );
 }
 
@@ -52,7 +68,7 @@ function CategoryBlock({ category, index }) {
         <p className="text-base md:text-lg text-foreground/70 max-w-2xl">{category.description}</p>
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-        {category.treatments.map((t) => <TreatmentCard key={t.id} treatment={t} />)}
+        {category.treatments.map((t) => <TreatmentCard key={t.id} treatment={t} categoryName={category.name} />)}
       </div>
     </motion.section>
   );
