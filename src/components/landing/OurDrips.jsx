@@ -136,15 +136,15 @@ export default function OurDrips() {
   };
 
   return (
-    <section id="treatments" className="scroll-mt-24 md:scroll-mt-32 py-10 md:py-16 px-4">
+    <section id="treatments" className="scroll-mt-24 md:scroll-mt-32 py-8 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-left mb-6 md:mb-10">
-          <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Live Protocols</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+        <div className="text-left mb-4 md:mb-5">
+          <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-2">Live Protocols</p>
+          <h2 className="font-heading text-[9vw] md:text-5xl lg:text-6xl text-foreground tracking-wide leading-[0.95] uppercase">
             Vitality Treatments
           </h2>
-          <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
-          <p className="font-body text-sm md:text-base text-foreground/70 mt-2 md:mt-4 max-w-xl">
+          <div className="w-12 md:w-16 h-[2px] bg-accent mt-2 md:mt-3" />
+          <p className="font-body text-sm md:text-base text-foreground/70 mt-2 md:mt-3 max-w-xl">
             Delivered by Avalon&rsquo;s nurses across the Bay.
           </p>
         </div>
