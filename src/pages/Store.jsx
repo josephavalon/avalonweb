@@ -193,12 +193,22 @@ export default function Store() {
               ))}
             </div>
 
-            <StepEyebrow n="2" title="Stack add-ons" subtitle={compatibleAddons.length === 0 ? 'No add-ons available for this base.' : 'Optional. Pick any combination.'} />
+            <StepEyebrow n="2" title="Stack add-ons" subtitle={compatibleAddons.length === 0 ? 'No add-ons available for this base.' : 'Optional. Pick any combination — extra meds in your IV, stacked shots, or recovery extras.'} />
             {compatibleAddons.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-10 md:mb-12">
-                {compatibleAddons.map((a) => (
-                  <AddOnRow key={a.id} addon={a} checked={selectedAddons.includes(a.id)} onToggle={() => toggleAddon(a.id)} />
-                ))}
+              <div className="space-y-6 md:space-y-8 mb-10 md:mb-12">
+                {Array.from(new Set(compatibleAddons.map(a => a.group || 'Add-ons'))).map((groupName) => {
+                  const groupAddons = compatibleAddons.filter(a => (a.group || 'Add-ons') === groupName);
+                  return (
+                    <div key={groupName}>
+                      <p className="font-body text-[11px] md:text-xs tracking-[0.3em] uppercase text-foreground/55 mb-3">{groupName}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        {groupAddons.map((a) => (
+                          <AddOnRow key={a.id} addon={a} checked={selectedAddons.includes(a.id)} onToggle={() => toggleAddon(a.id)} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

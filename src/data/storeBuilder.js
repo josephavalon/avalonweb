@@ -51,15 +51,31 @@ export const BASE_CATEGORIES = [
   },
 ];
 
-// Add-ons stack with any IV. Some are also valid alongside an IM-only base.
-// `compatibleBaseCategories` controls whether the add-on shows for the picked base.
+// Add-ons. Two flavors:
+//   1) Extra IV meds — in-bag boosts that stack with any IV base.
+//   2) Stack-able IM shots + physical add-ons that work alongside any visit
+//      (some valid even with IM-only).
+// `compatibleBaseCategories` filters which bases each add-on appears for.
+// `group` lets the UI render them under section headers.
 export const ADD_ONS = [
-  { id: 'normatec',       name: 'Normatec compression',     price: 60, sub: '20 min legs-only compression therapy.', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
-  { id: 'extra-fluid',    name: 'Extra fluid bag',          price: 75, sub: 'Second 500 mL bag during your IV.',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
-  { id: 'add-im-b12',     name: 'Add B-12 IM shot',         price: 60, sub: 'Stack onto your visit.',                 compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
-  { id: 'add-im-gluta',   name: 'Add glutathione shot',     price: 80, sub: 'Master antioxidant.',                    compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
-  { id: 'add-im-vitd',    name: 'Add Vitamin D shot',       price: 60, sub: 'Stack onto your visit.',                 compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
-  { id: 'add-nad-push',   name: 'NAD+ push (50 mg)',        price: 150, sub: 'Quick push during your IV.',            compatibleBaseCategories: ['iv-vitamins', 'iv-cbd'] },
+  // --- Extra IV meds (in-bag boosts; IV bases only) -----------------------
+  { id: 'extra-mag',      name: 'Extra magnesium',          price: 25, sub: '+200 mg in-bag boost.',                  group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-bcx',      name: 'Extra B-complex',          price: 20, sub: 'Full spectrum B vitamins added to bag.',  group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-b12',      name: 'Extra B-12 (in IV)',       price: 20, sub: '+1 mg methylcobalamin in-bag.',           group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-vitc',     name: 'Extra Vitamin C',          price: 30, sub: '+5 g high-dose Vitamin C in-bag.',        group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-gluta',    name: 'Extra glutathione push',   price: 40, sub: '+200 mg push during your IV.',            group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-zinc',     name: 'Extra zinc',               price: 20, sub: '+5 mg in-bag boost.',                     group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-amino',    name: 'Amino acid blend',         price: 35, sub: 'L-carnitine, taurine, lysine in-bag.',    group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'extra-nad-push', name: 'NAD+ push (50 mg)',        price: 150, sub: 'NAD+ push during your IV.',              group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-cbd'] },
+
+  // --- Stack-able IM shots (work with any base, including IM-only) -------
+  { id: 'add-im-b12',     name: 'Add B-12 IM shot',         price: 60, sub: 'Methylcobalamin shot.',                   group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
+  { id: 'add-im-gluta',   name: 'Add glutathione shot',     price: 80, sub: 'Master antioxidant push.',                group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
+  { id: 'add-im-vitd',    name: 'Add Vitamin D shot',       price: 60, sub: 'For documented deficiency.',              group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
+
+  // --- Physical add-ons (IV bases only) ----------------------------------
+  { id: 'extra-fluid',    name: 'Extra fluid bag',          price: 75, sub: 'Second 500 mL bag during your IV.',       group: 'Recovery',          compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'normatec',       name: 'Normatec compression',     price: 60, sub: '20 min legs-only compression therapy.',   group: 'Recovery',          compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
 ];
 
 export const findOption = (categoryId, optionId) => {
