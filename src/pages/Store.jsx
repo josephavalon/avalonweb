@@ -6,7 +6,6 @@ import {
   Droplets,
   Zap,
   Sparkles,
-  Syringe,
   HeartPulse,
   HelpCircle,
   Battery,
@@ -22,8 +21,8 @@ const EASE = [0.16, 1, 0.3, 1];
 // Intent → recommended treatment categories (highest-affinity first)
 const INTENTS = [
   { id: 'hydration',  label: 'Hydration',  icon: Droplets,    matches: ['iv-vitamins'] },
-  { id: 'energy',     label: 'Energy',     icon: Battery,     matches: ['iv-nad', 'im-shots', 'iv-vitamins'] },
-  { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  matches: ['iv-cbd', 'iv-vitamins', 'im-shots'] },
+  { id: 'energy',     label: 'Energy',     icon: Battery,     matches: ['iv-nad', 'iv-vitamins'] },
+  { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  matches: ['iv-cbd', 'iv-vitamins'] },
   { id: 'longevity',  label: 'Longevity',  icon: Zap,         matches: ['iv-nad'] },
   { id: 'unsure',     label: 'Not sure',   icon: HelpCircle,  matches: null /* show all */ },
 ];
@@ -56,15 +55,6 @@ const TREATMENTS = [
     cta: 'Book CBD',
     drawerCategoryId: 'iv-cbd',
     icon: Leaf,
-  },
-  {
-    id: 'im-shots',
-    name: 'IM Shots',
-    blurb: 'Quick vitamin injections.',
-    fromPrice: 60,
-    cta: 'Book Shot',
-    drawerCategoryId: null, // shots route to popular treatments quick-add
-    icon: Syringe,
   },
 ];
 
