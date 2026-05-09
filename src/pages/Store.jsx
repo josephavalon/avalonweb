@@ -324,14 +324,7 @@ export default function Store() {
   useEffect(() => { document.title = 'Store — Avalon Vitality'; }, []);
 
   const openDrawer = (treatment) => {
-    if (!treatment.drawerCategoryId) {
-      // IM Shots — scroll to its anchor section instead (or open a dedicated flow later)
-      // For now, route to /book#im-shots concept: open default first IV shot drawer? Better: just open IV Vitamins as default
-      // Actually, for IM Shots, just route to /cart with a guidance state via cart helper for now: open IV Vitamins fallback
-      setDrawerCategoryId('iv-vitamins');
-      setDrawerOpen(true);
-      return;
-    }
+    if (!treatment.drawerCategoryId) return;
     setDrawerCategoryId(treatment.drawerCategoryId);
     setDrawerOpen(true);
   };
