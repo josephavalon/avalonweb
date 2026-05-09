@@ -99,7 +99,7 @@ export default function Navbar() {
           >
             <ThemeIcon className="w-7 h-7 md:w-4 md:h-4" />
           </button>
-          <Link to="/apply" className={linkClass}>Apply</Link>
+          <Link to="/login" className={linkClass}>Login</Link>
         </div>
       </div>
 
@@ -141,7 +141,7 @@ export default function Navbar() {
               <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
               <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Store</Link>
               <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
-              <Link to="/apply" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Apply</Link>
+              <Link to="/login" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Login</Link>
             </div>
           </motion.div>
         )}
