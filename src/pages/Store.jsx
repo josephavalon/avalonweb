@@ -125,12 +125,13 @@ const CATEGORY_CARDS = [
     targetCategoryId: 'iv-cbd',
   },
   {
-    id: 'im-only',
+    id: 'im-shots',
     icon: Syringe,
     name: 'IM Shots',
-    blurb: 'Fast vitamin injections without the IV.',
+    blurb: 'Quick vitamin injections. Stack with any IV or book solo.',
     fromPrice: 60,
-    targetCategoryId: 'im-only',
+    targetCategoryId: null,
+    targetAnchor: 'popular',
   },
   {
     id: 'add-ons',
@@ -155,12 +156,13 @@ function CategoryCards({ onSelect }) {
           {CATEGORY_CARDS.map((c, i) => {
             const Icon = c.icon;
             const handleClick = (e) => {
+              e.preventDefault();
               if (c.targetCategoryId) {
-                e.preventDefault();
                 onSelect(c.targetCategoryId);
                 document.getElementById('builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else if (c.targetAnchor) {
+                document.getElementById(c.targetAnchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               } else {
-                e.preventDefault();
                 document.getElementById('builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
             };
@@ -197,7 +199,7 @@ function CategoryCards({ onSelect }) {
 // How Avalon works — 4 step section
 // =====================================================================
 const STEPS = [
-  { n: '01', t: 'Choose your treatment',    d: 'Browse the menu, pick your base IV or shot, stack add-ons if you want.' },
+  { n: '01', t: 'Choose your treatment',    d: 'Browse the menu, pick your IV, stack add-ons or shots if you want.' },
   { n: '02', t: 'Book your time',            d: 'Pick a date, time, and address. Card authorized at booking.' },
   { n: '03', t: 'Complete clinical clearance', d: 'Quick intake form. We confirm contraindications before your visit.' },
   { n: '04', t: 'RN arrives',                d: 'Avalon RN at your door within your booked window. 20–60 minutes total.' },
@@ -430,12 +432,12 @@ function Configurator({ activeCat, setActiveCat }) {
         <header className="mb-10 md:mb-14 max-w-3xl">
           <p className="font-body text-[11px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-3">Build your visit</p>
           <h2 className="font-display text-4xl md:text-6xl uppercase tracking-tight leading-[0.95]">Customize the protocol.</h2>
-          <p className="text-base md:text-lg text-foreground/70 mt-4 leading-relaxed">Pick your base. Stack add-ons. Add the visit to cart. Repeat for additional sessions.</p>
+          <p className="text-base md:text-lg text-foreground/70 mt-4 leading-relaxed">Pick your IV. Stack add-ons. Add the visit to cart. Repeat for additional sessions.</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 lg:gap-10">
           <div>
-            <StepEyebrow n="1" title="Pick your base" subtitle={cat?.description} />
+            <StepEyebrow n="1" title="Pick your IV" subtitle={cat?.description} />
             <CategoryTabs active={activeCat} onSelect={setActiveCat} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-10 md:mb-12">
               {cat?.options.map((opt) => (

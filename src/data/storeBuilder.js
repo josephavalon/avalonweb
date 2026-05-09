@@ -38,17 +38,6 @@ export const BASE_CATEGORIES = [
       { id: 'cbd-66', name: 'CBD 66 mg', price: 400, sub: 'Higher dose for chronic recovery.' },
     ],
   },
-  {
-    id: 'im-only',
-    name: 'IM Shots only',
-    description: 'No IV. Quick targeted boost — 5–10 min visit.',
-    blurb: 'Choose any combination of intramuscular shots. Fast in, fast out.',
-    options: [
-      { id: 'im-b12',         name: 'B-12 Shot',         price: 60, sub: 'Energy, focus. Methylcobalamin.' },
-      { id: 'im-glutathione', name: 'Glutathione Shot',  price: 80, sub: 'Master antioxidant push.' },
-      { id: 'im-vitd',        name: 'Vitamin D Shot',    price: 60, sub: 'For documented deficiency.' },
-    ],
-  },
 ];
 
 // Add-ons. Two flavors:
@@ -69,9 +58,9 @@ export const ADD_ONS = [
   { id: 'extra-nad-push', name: 'NAD+ push (50 mg)',        price: 150, sub: 'NAD+ push during your IV.',              group: 'Extra IV meds', compatibleBaseCategories: ['iv-vitamins', 'iv-cbd'] },
 
   // --- Stack-able IM shots (work with any base, including IM-only) -------
-  { id: 'add-im-b12',     name: 'Add B-12 IM shot',         price: 60, sub: 'Methylcobalamin shot.',                   group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
-  { id: 'add-im-gluta',   name: 'Add glutathione shot',     price: 80, sub: 'Master antioxidant push.',                group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
-  { id: 'add-im-vitd',    name: 'Add Vitamin D shot',       price: 60, sub: 'For documented deficiency.',              group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd', 'im-only'] },
+  { id: 'add-im-b12',     name: 'Add B-12 IM shot',         price: 60, sub: 'Methylcobalamin shot.',                   group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'add-im-gluta',   name: 'Add glutathione shot',     price: 80, sub: 'Master antioxidant push.',                group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'add-im-vitd',    name: 'Add Vitamin D shot',       price: 60, sub: 'For documented deficiency.',              group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
 
   // --- Physical add-ons (IV bases only) ----------------------------------
   { id: 'extra-fluid',    name: 'Extra fluid bag',          price: 75, sub: 'Second 500 mL bag during your IV.',       group: 'Recovery',          compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
