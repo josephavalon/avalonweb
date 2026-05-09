@@ -46,14 +46,14 @@ function Hero() {
               href="#treatments"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background font-body text-xs md:text-sm tracking-[0.3em] uppercase px-9 py-4 hover:opacity-85 transition-opacity"
             >
-              Book now <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              One-time purchase <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </a>
-            <a
-              href="#popular"
+            <Link
+              to="/apply"
               className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-foreground/35 font-body text-xs md:text-sm tracking-[0.3em] uppercase px-9 py-4 hover:border-foreground transition-colors"
             >
-              View treatments
-            </a>
+              Membership
+            </Link>
           </div>
 
           <p className="font-body text-[11px] md:text-xs tracking-[0.32em] uppercase text-foreground/55">
