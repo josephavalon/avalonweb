@@ -80,7 +80,7 @@ function Hero() {
             Book your<br />recovery.
           </h1>
           <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed">
-            Choose a treatment, pick your time, complete clinical clearance, and an Avalon RN comes to you.
+            Choose a treatment, pick your time, complete clearance, and an Avalon RN comes to you.
           </p>
         </motion.div>
       </div>
@@ -209,7 +209,7 @@ function HowItWorks() {
     { n: '01', t: 'Choose what you need',     d: 'Pick the result you want — hydration, energy, recovery.' },
     { n: '02', t: 'Pick a treatment',          d: 'We surface the best fit. One tap to book.' },
     { n: '03', t: 'Schedule time and address', d: 'Pick a slot that works. Card authorized at booking.' },
-    { n: '04', t: 'Complete clinical clearance', d: 'Quick intake. We confirm contraindications.' },
+    { n: '04', t: 'Complete clearance', d: 'Quick intake. We confirm contraindications.' },
     { n: '05', t: 'RN arrives',                d: 'Avalon RN at your door. 20–60 minutes start to finish.' },
   ];
   return (
