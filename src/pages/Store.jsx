@@ -84,28 +84,56 @@ const TREATMENTS = [
 
 // =====================================================================
 function Hero() {
+  // Cascading reveal: each line has its own delay so the hero unfolds line-by-line.
+  const reveal = (delay) => ({
+    initial: { opacity: 0, y: 28, filter: 'blur(8px)' },
+    animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    transition: { duration: 0.95, ease: EASE, delay },
+  });
   return (
-    <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 px-5 md:px-10">
-      <div className="max-w-5xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE }}>
-          <h1 className="font-display text-[44px] sm:text-[64px] md:text-[88px] lg:text-[104px] uppercase leading-[0.92] tracking-tight mb-7 md:mb-9">
-            Book your<br />recovery.
-          </h1>
-          <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed mb-7 md:mb-9">
-            Choose a treatment, pick your time, and an Avalon RN comes to you.
-          </p>
-          <div className="flex flex-wrap items-center gap-x-7 gap-y-3 max-w-3xl">
-            {[
-              { icon: ShieldCheck,    label: 'Licensed RNs' },
-              { icon: Stethoscope,    label: 'Physician-Supervised' },
-              { icon: MapPin,         label: 'Bay Area Mobile Service' },
-            ].map(({ icon: I, label }) => (
-              <span key={label} className="inline-flex items-center gap-2 font-body text-[10px] md:text-xs tracking-[0.28em] uppercase text-foreground/65">
-                <I className="w-3.5 h-3.5" strokeWidth={1.5} />
-                {label}
-              </span>
-            ))}
-          </div>
+    <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 px-5 md:px-10 overflow-hidden">
+      {/* Soft animated aura glow behind hero — premium, slow */}
+      <motion.div
+        aria-hidden="true"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 0.35, scale: 1 }}
+        transition={{ duration: 1.6, ease: EASE, delay: 0.1 }}
+        className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-foreground/[0.04] to-transparent blur-3xl pointer-events-none"
+      />
+      <div className="max-w-5xl mx-auto relative">
+        <motion.h1
+          {...reveal(0.05)}
+          className="font-display text-[44px] sm:text-[64px] md:text-[88px] lg:text-[104px] uppercase leading-[0.92] tracking-tight mb-7 md:mb-9"
+        >
+          <motion.span {...reveal(0.05)} className="block">Book your</motion.span>
+          <motion.span {...reveal(0.18)} className="block">recovery.</motion.span>
+        </motion.h1>
+        <motion.p
+          {...reveal(0.32)}
+          className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed mb-7 md:mb-9"
+        >
+          Choose a treatment, pick your time, and an Avalon RN comes to you.
+        </motion.p>
+        <motion.div
+          {...reveal(0.44)}
+          className="flex flex-wrap items-center gap-x-7 gap-y-3 max-w-3xl"
+        >
+          {[
+            { icon: ShieldCheck,    label: 'Licensed RNs' },
+            { icon: Stethoscope,    label: 'Physician-Supervised' },
+            { icon: MapPin,         label: 'Bay Area Mobile Service' },
+          ].map(({ icon: I, label }, i) => (
+            <motion.span
+              key={label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.55 + i * 0.07 }}
+              className="inline-flex items-center gap-2 font-body text-[10px] md:text-xs tracking-[0.28em] uppercase text-foreground/65"
+            >
+              <I className="w-3.5 h-3.5" strokeWidth={1.5} />
+              {label}
+            </motion.span>
+          ))}
         </motion.div>
       </div>
     </section>
@@ -133,10 +161,16 @@ function IntentSelector({ active, onSelect }) {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, ease: EASE, delay: i * 0.05 }}
-                className={`intent-tile group flex flex-col items-center justify-center gap-3 px-4 py-7 md:py-9 rounded-2xl border transition-all ${isActive ? 'border-foreground bg-foreground text-background shadow-lg' : 'border-foreground/15 hover:border-foreground/45 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-8px_hsl(var(--foreground)/0.18)]'}`}
+                className={`intent-tile group flex flex-col items-center justify-center gap-3 px-4 py-7 md:py-9 rounded-2xl border transition-[transform,box-shadow,background-color,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isActive ? 'border-foreground bg-foreground text-background shadow-[0_18px_40px_-12px_hsl(var(--foreground)/0.35)] -translate-y-0.5' : 'border-foreground/15 hover:border-foreground/45 hover:-translate-y-1 hover:shadow-[0_18px_40px_-12px_hsl(var(--foreground)/0.18)]'}`}
                 aria-pressed={isActive}
               >
-                <Icon className={`w-6 h-6 ${isActive ? 'text-background' : 'text-foreground/75 group-hover:text-foreground'}`} strokeWidth={1.5} />
+                <motion.span
+                  animate={isActive ? { scale: 1.1 } : { scale: 1 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                  className={`inline-flex items-center justify-center transition-colors duration-500 ${isActive ? 'text-background' : 'text-foreground/75 group-hover:text-foreground'}`}
+                >
+                  <Icon className="w-6 h-6" strokeWidth={1.5} />
+                </motion.span>
                 <span className="font-body text-sm md:text-base tracking-[0.3em] uppercase">{it.label}</span>
                 {it.desc && (
                   <span className={`text-[11px] md:text-xs leading-snug max-w-[14rem] ${isActive ? 'text-background/85' : 'text-foreground/55'}`}>{it.desc}</span>
@@ -194,7 +228,7 @@ function TreatmentGrid({ activeIntent, onBook }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, ease: EASE, delay: i * 0.04 }}
-                className={`treatment-tile rounded-2xl p-7 md:p-9 flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-12px_hsl(var(--foreground)/0.18)] relative ${t.featured ? 'border-2 border-foreground' : 'border border-foreground/15'} ${matched ? '' : 'opacity-60'}`}
+                className={`treatment-tile rounded-2xl p-7 md:p-9 flex flex-col transition-[transform,box-shadow,opacity] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 relative ${t.featured ? 'treatment-tile--featured border-2 border-foreground hover:shadow-[0_30px_70px_-15px_hsl(var(--foreground)/0.28)]' : 'border border-foreground/15 hover:shadow-[0_24px_60px_-14px_hsl(var(--foreground)/0.2)]'} ${matched ? '' : 'opacity-60'}`}
               >
                 {t.featured && (
                   <span className="absolute -top-3 right-6 inline-flex items-center font-body text-[10px] tracking-[0.3em] uppercase bg-foreground text-background rounded-full px-3 py-1">Most flexible</span>
@@ -225,6 +259,25 @@ function TreatmentGrid({ activeIntent, onBook }) {
             background: hsl(var(--background) / 0.7);
             backdrop-filter: saturate(150%) blur(14px);
             -webkit-backdrop-filter: saturate(150%) blur(14px);
+          }
+          /* Featured tile: subtle outer glow that breathes — premium accent */
+          .treatment-tile--featured::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, hsl(var(--foreground) / 0.18), transparent 50%, hsl(var(--foreground) / 0.06));
+            opacity: 0.5;
+            z-index: -1;
+            animation: treatment-breathe 4.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            pointer-events: none;
+          }
+          @keyframes treatment-breathe {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50%      { opacity: 0.75; transform: scale(1.012); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .treatment-tile--featured::before { animation: none; }
           }
         `}</style>
       </div>
@@ -369,14 +422,21 @@ function WhyAvalon() {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-7">
-          {WHY_FEATURES.map(({ icon: I, label, desc }) => (
-            <div key={label} className="flex flex-col items-center text-center">
+          {WHY_FEATURES.map(({ icon: I, label, desc }, i) => (
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.7, ease: EASE, delay: 0.1 + i * 0.08 }}
+              className="flex flex-col items-center text-center"
+            >
               <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-foreground/[0.06] mb-3">
                 <I className="w-4 h-4 text-foreground/70" strokeWidth={1.5} />
               </span>
               <p className="font-body text-[10px] md:text-xs tracking-[0.28em] uppercase text-foreground/85 mb-1">{label}</p>
               <p className="text-[11px] md:text-xs text-foreground/55 leading-snug">{desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -389,7 +449,12 @@ function WhyAvalon() {
 // =====================================================================
 function ClearanceBar() {
   return (
-    <div className="fixed bottom-3 md:bottom-4 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:right-auto md:max-w-[680px] z-20 pointer-events-none">
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.9, ease: EASE, delay: 1.2 }}
+      className="fixed bottom-3 md:bottom-4 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:right-auto md:max-w-[680px] z-20 pointer-events-none"
+    >
       <div className="clearance-bar pointer-events-auto flex items-center gap-3 rounded-full px-4 py-3 md:px-5 md:py-3.5">
         <Lock className="w-4 h-4 text-foreground/70 shrink-0" strokeWidth={1.5} />
         <p className="text-[11px] md:text-xs text-foreground/75 leading-snug">
@@ -405,7 +470,7 @@ function ClearanceBar() {
           box-shadow: 0 14px 36px -12px hsl(var(--foreground) / 0.18);
         }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
 
