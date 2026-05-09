@@ -26,6 +26,8 @@ export const BASE_CATEGORIES = [
       { id: 'nad-250',  name: 'NAD+ 250 mg',  price: 350,  sub: 'Entry / maintenance dose.' },
       { id: 'nad-500',  name: 'NAD+ 500 mg',  price: 600,  sub: 'Standard therapeutic dose.' },
       { id: 'nad-1000', name: 'NAD+ 1000 mg', price: 1100, sub: 'High dose. Protocol patients.' },
+      { id: 'nad-1250', name: 'NAD+ 1250 mg', price: 1300, sub: 'Extended high dose. Sit back — ~3 hr.' },
+      { id: 'nad-1500', name: 'NAD+ 1500 mg', price: 1500, sub: 'Maximum dose. For experienced protocol patients.' },
     ],
   },
   {
@@ -72,7 +74,9 @@ export const ADD_ONS = [
 
   // --- Stack-able IM shots (work with any base, including IM-only) -------
   { id: 'add-im-b12',     name: 'Add B-12 IM shot',         price: 60, sub: 'Methylcobalamin shot.',                   group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
-  { id: 'add-im-gluta',   name: 'Add glutathione shot',     price: 80, sub: 'Master antioxidant push.',                group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'add-im-gluta-200',  name: 'Glutathione shot 200 mg',  price: 50, sub: 'IM injection. Light antioxidant boost.',     group: 'Stack a shot',  compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'add-im-gluta-400',  name: 'Glutathione shot 400 mg',  price: 80, sub: 'IM injection. The standard request.',         group: 'Stack a shot',  compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
+  { id: 'add-im-gluta-600',  name: 'Glutathione shot 600 mg',  price: 110, sub: 'IM injection. Higher therapeutic dose.',       group: 'Stack a shot',  compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
   { id: 'add-im-vitd',    name: 'Add Vitamin D shot',       price: 60, sub: 'For documented deficiency.',              group: 'Stack a shot',     compatibleBaseCategories: ['iv-vitamins', 'iv-nad', 'iv-cbd'] },
 
   // --- Physical add-ons (IV bases only) ----------------------------------
