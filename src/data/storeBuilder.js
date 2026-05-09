@@ -38,6 +38,16 @@ export const BASE_CATEGORIES = [
       { id: 'cbd-66', name: 'CBD 66 mg', price: 400, sub: 'Higher dose for chronic recovery.' },
     ],
   },
+  {
+    id: 'everything',
+    name: 'Everything IV',
+    description: 'Every base ingredient + every add-on, packaged.',
+    blurb: 'Maxed Myers + every in-bag boost + an IM shot + Normatec + extra fluid bag. ~90 minutes. The Works.',
+    options: [
+      { id: 'works',     name: 'The Works',          price: 599, sub: 'Myers + extra mag, B-complex, B-12, Vit C, glutathione, zinc, amino blend + Normatec + extra fluid + 1 IM shot.' },
+      { id: 'works-nad', name: 'The Works + NAD+',   price: 749, sub: 'Everything above + 50 mg NAD+ push. Cellular reset on top.' },
+    ],
+  },
 ];
 
 // Add-ons. Two flavors:

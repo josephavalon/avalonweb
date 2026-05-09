@@ -10,6 +10,7 @@ import {
   HelpCircle,
   Battery,
   Leaf,
+  Star,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -24,6 +25,7 @@ const INTENTS = [
   { id: 'energy',     label: 'Energy',     icon: Battery,     matches: ['iv-nad', 'iv-vitamins'] },
   { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  matches: ['iv-cbd', 'iv-vitamins'] },
   { id: 'longevity',  label: 'Longevity',  icon: Zap,         matches: ['iv-nad'] },
+  { id: 'everything', label: 'Everything', icon: Star,        matches: ['everything'] },
   { id: 'unsure',     label: 'Not sure',   icon: HelpCircle,  matches: null /* show all */ },
 ];
 
@@ -55,6 +57,16 @@ const TREATMENTS = [
     cta: 'Book CBD',
     drawerCategoryId: 'iv-cbd',
     icon: Leaf,
+  },
+  {
+    id: 'everything',
+    name: 'Everything IV',
+    blurb: 'Every IV med + every add-on. The Works.',
+    fromPrice: 599,
+    cta: 'Book the Works',
+    drawerCategoryId: 'everything',
+    icon: Star,
+    featured: true,
   },
 ];
 
