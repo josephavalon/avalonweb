@@ -11,6 +11,14 @@ import {
   Battery,
   Leaf,
   Star,
+  ShieldCheck,
+  Stethoscope,
+  MapPin,
+  Syringe,
+  Home,
+  CalendarClock,
+  Lock,
+  UserCog,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -21,12 +29,12 @@ const EASE = [0.16, 1, 0.3, 1];
 
 // Intent → recommended treatment categories (highest-affinity first)
 const INTENTS = [
-  { id: 'hydration',  label: 'Hydration',  icon: Droplets,    matches: ['iv-vitamins'] },
-  { id: 'energy',     label: 'Energy',     icon: Battery,     matches: ['iv-nad', 'iv-vitamins'] },
-  { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  matches: ['iv-cbd', 'iv-vitamins'] },
-  { id: 'longevity',  label: 'Longevity',  icon: Zap,         matches: ['iv-nad'] },
-  { id: 'everything', label: 'Everything', icon: Star,        matches: ['everything'] },
-  { id: 'unsure',     label: 'Not sure',   icon: HelpCircle,  matches: null /* show all */ },
+  { id: 'hydration',  label: 'Hydration',  icon: Droplets,    desc: 'Replenish fluids, electrolytes, and essential nutrients.', matches: ['iv-vitamins'] },
+  { id: 'energy',     label: 'Energy',     icon: Battery,     desc: 'Boost energy and fight fatigue at the cellular level.',    matches: ['iv-nad', 'iv-vitamins'] },
+  { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  desc: 'Support your body and recover faster, feel better.',       matches: ['iv-cbd', 'iv-vitamins'] },
+  { id: 'longevity',  label: 'Longevity',  icon: Zap,         desc: 'Support healthy aging and cellular optimization.',         matches: ['iv-nad'] },
+  { id: 'shots',      label: 'Shots',      icon: Syringe,     desc: 'Quick vitamin shots for immediate support — stacked with your IV or solo.', matches: null },
+  { id: 'unsure',     label: 'Not sure',   icon: HelpCircle,  desc: 'We\'ll help you find the right treatment.',                 matches: null },
 ];
 
 // Treatment cards (4 — kept simple per spec)
@@ -83,9 +91,21 @@ function Hero() {
           <h1 className="font-display text-[44px] sm:text-[64px] md:text-[88px] lg:text-[104px] uppercase leading-[0.92] tracking-tight mb-7 md:mb-9">
             Book your<br />recovery.
           </h1>
-          <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed">
+          <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed mb-7 md:mb-9">
             Choose a treatment, pick your time, and an Avalon RN comes to you.
           </p>
+          <div className="flex flex-wrap items-center gap-x-7 gap-y-3 max-w-3xl">
+            {[
+              { icon: ShieldCheck,    label: 'Licensed RNs' },
+              { icon: Stethoscope,    label: 'Physician-Supervised' },
+              { icon: MapPin,         label: 'Bay Area Mobile Service' },
+            ].map(({ icon: I, label }) => (
+              <span key={label} className="inline-flex items-center gap-2 font-body text-[10px] md:text-xs tracking-[0.28em] uppercase text-foreground/65">
+                <I className="w-3.5 h-3.5" strokeWidth={1.5} />
+                {label}
+              </span>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>
@@ -117,7 +137,10 @@ function IntentSelector({ active, onSelect }) {
                 aria-pressed={isActive}
               >
                 <Icon className={`w-6 h-6 ${isActive ? 'text-background' : 'text-foreground/75 group-hover:text-foreground'}`} strokeWidth={1.5} />
-                <span className="font-body text-xs md:text-sm tracking-[0.3em] uppercase">{it.label}</span>
+                <span className="font-body text-sm md:text-base tracking-[0.3em] uppercase">{it.label}</span>
+                {it.desc && (
+                  <span className={`text-[11px] md:text-xs leading-snug max-w-[14rem] ${isActive ? 'text-background/85' : 'text-foreground/55'}`}>{it.desc}</span>
+                )}
               </motion.button>
             );
           })}
@@ -322,6 +345,71 @@ function ClosingCTA({ onBook }) {
 }
 
 // =====================================================================
+// WHY AVALON — premium care positioning
+// =====================================================================
+const WHY_FEATURES = [
+  { icon: Home,           label: 'We come to you',     desc: 'Home, hotel, office, or event.' },
+  { icon: CalendarClock,  label: 'Flexible scheduling', desc: 'Pick a window that works.' },
+  { icon: Lock,           label: 'Secure & private',    desc: 'Encrypted intake. HIPAA-aligned.' },
+  { icon: UserCog,        label: 'Personalized care',   desc: 'Same Avalon RN team, every visit.' },
+];
+
+function WhyAvalon() {
+  return (
+    <section className="px-5 md:px-10 py-12 md:py-16 border-t border-foreground/10">
+      <div className="max-w-5xl mx-auto rounded-2xl border border-foreground/12 bg-foreground/[0.025] p-6 md:p-9">
+        <div className="flex items-start gap-4 mb-7 md:mb-9">
+          <span className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-foreground/[0.06] shrink-0">
+            <Sparkles className="w-5 h-5 text-foreground/75" strokeWidth={1.5} />
+          </span>
+          <div>
+            <p className="font-body text-[10px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-1">Why Avalon?</p>
+            <h2 className="font-display text-2xl md:text-4xl uppercase tracking-tight leading-none mb-2">Premium care, delivered.</h2>
+            <p className="text-sm md:text-base text-foreground/65 leading-relaxed">Personalized treatments. Expert care. Wherever you are.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-7">
+          {WHY_FEATURES.map(({ icon: I, label, desc }) => (
+            <div key={label} className="flex flex-col items-center text-center">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-foreground/[0.06] mb-3">
+                <I className="w-4 h-4 text-foreground/70" strokeWidth={1.5} />
+              </span>
+              <p className="font-body text-[10px] md:text-xs tracking-[0.28em] uppercase text-foreground/85 mb-1">{label}</p>
+              <p className="text-[11px] md:text-xs text-foreground/55 leading-snug">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// =====================================================================
+// Sticky bottom safety/clearance bar — informational only.
+// =====================================================================
+function ClearanceBar() {
+  return (
+    <div className="fixed bottom-3 md:bottom-4 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:right-auto md:max-w-[680px] z-20 pointer-events-none">
+      <div className="clearance-bar pointer-events-auto flex items-center gap-3 rounded-full px-4 py-3 md:px-5 md:py-3.5">
+        <Lock className="w-4 h-4 text-foreground/70 shrink-0" strokeWidth={1.5} />
+        <p className="text-[11px] md:text-xs text-foreground/75 leading-snug">
+          All treatments require clinical clearance and provider approval for your safety.
+        </p>
+      </div>
+      <style>{`
+        .clearance-bar {
+          background: hsl(var(--background) / 0.85);
+          backdrop-filter: saturate(160%) blur(20px);
+          -webkit-backdrop-filter: saturate(160%) blur(20px);
+          border: 1px solid hsl(var(--foreground) / 0.15);
+          box-shadow: 0 14px 36px -12px hsl(var(--foreground) / 0.18);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// =====================================================================
 export default function Store() {
   const [activeIntent, setActiveIntent] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -346,10 +434,12 @@ export default function Store() {
       <Hero />
       <IntentSelector active={activeIntent} onSelect={setActiveIntent} />
       <TreatmentGrid activeIntent={activeIntent} onBook={openDrawer} />
+      <WhyAvalon />
       <HowItWorks />
       <ClosingCTA onBook={openDefaultBooking} />
       <Footer />
 
+      <ClearanceBar />
       <StickyBookingBar onBookClick={openDefaultBooking} />
       <BookingDrawer
         open={drawerOpen}

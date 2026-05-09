@@ -11,12 +11,19 @@ const Thirty = (props) => (
 
 const THEMES = ['dark', 'light', 'golden', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
+const THEME_SESSION_KEY = 'avalon.theme.session';
 
-// Every visitor lands on light theme on every page load. We ignore any previously
-// stored preference so the brand entry experience is consistent. Users can still
-// cycle to other themes via the navbar toggle, but the choice does not persist
-// across reloads.
-const readInitialTheme = () => 'light';
+// Default: every visitor lands on 'light' on a fresh page load (no localStorage).
+// But within a session (tab open), the cycled theme persists across page navigation
+// via sessionStorage — so jumping from / to /store keeps the same theme.
+const readInitialTheme = () => {
+  if (typeof window === 'undefined') return 'light';
+  try {
+    const stored = window.sessionStorage.getItem(THEME_SESSION_KEY);
+    if (stored && THEMES.includes(stored)) return stored;
+  } catch {}
+  return 'light';
+};
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -42,8 +49,10 @@ export default function Navbar() {
     if (theme !== 'light') document.documentElement.classList.add(theme);
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+      // Session-scoped — persists across page navigation in same tab, resets on close
+      window.sessionStorage.setItem(THEME_SESSION_KEY, theme);
     } catch {
-      // localStorage may be unavailable (private mode, SSR) — non-fatal.
+      // storage may be unavailable (private mode, SSR) — non-fatal.
     }
   }, [theme]);
 

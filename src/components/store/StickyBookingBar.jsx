@@ -23,7 +23,7 @@ export default function StickyBookingBar({ onBookClick }) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="md:hidden fixed bottom-3 left-3 right-3 z-30"
+          className="md:hidden fixed bottom-20 left-3 right-3 z-30"
         >
           <button
             type="button"
