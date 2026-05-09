@@ -25,7 +25,6 @@ const INTENTS = [
   { id: 'energy',     label: 'Energy',     icon: Battery,     matches: ['iv-nad', 'im-shots', 'iv-vitamins'] },
   { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  matches: ['iv-cbd', 'iv-vitamins', 'im-shots'] },
   { id: 'longevity',  label: 'Longevity',  icon: Zap,         matches: ['iv-nad'] },
-  { id: 'shots',      label: 'Shots',      icon: Syringe,     matches: ['im-shots'] },
   { id: 'unsure',     label: 'Not sure',   icon: HelpCircle,  matches: null /* show all */ },
 ];
 
