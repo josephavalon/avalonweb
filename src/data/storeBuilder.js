@@ -42,8 +42,8 @@ export const BASE_CATEGORIES = [
   },
   {
     id: 'everything',
-    name: 'Custom IV',
-    description: 'Build your own protocol — pick a tier and stack any add-on.',
+    name: 'Everything',
+    description: 'Every IV med + every add-on. The Works.',
     blurb: 'Maxed Myers + every in-bag boost + an IM shot + Normatec + extra fluid bag. ~90 minutes. The Works.',
     options: [
       { id: 'works',     name: 'The Works',          price: 599, sub: 'Myers + extra mag, B-complex, B-12, Vit C, glutathione, zinc, amino blend + Normatec + extra fluid + 1 IM shot.' },

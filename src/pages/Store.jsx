@@ -71,10 +71,10 @@ const TREATMENTS = [
   },
   {
     id: 'everything',
-    name: 'Custom IV',
+    name: 'Everything',
     blurb: 'Build the protocol. Every base, every add-on.',
     fromPrice: 599,
-    cta: 'Customize',
+    cta: 'Book Everything',
     drawerCategoryId: 'everything',
     icon: Star,
     eyebrow: 'Build your own',
