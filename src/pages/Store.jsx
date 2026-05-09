@@ -31,9 +31,6 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
-          <p className="font-body text-[11px] md:text-xs tracking-[0.4em] uppercase text-foreground/55 mb-5 md:mb-7">
-            Avalon Vitality · Recovery Lounge
-          </p>
           <h1 className="font-display text-[44px] sm:text-[64px] md:text-[88px] lg:text-[112px] uppercase leading-[0.92] tracking-tight mb-2 md:mb-3">
             Mobile IV Therapy.
           </h1>
