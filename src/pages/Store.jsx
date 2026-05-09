@@ -77,11 +77,8 @@ function Hero() {
           <h1 className="font-display text-[44px] sm:text-[64px] md:text-[88px] lg:text-[104px] uppercase leading-[0.92] tracking-tight mb-7 md:mb-9">
             Book your<br />recovery.
           </h1>
-          <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed mb-7 md:mb-9">
+          <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed">
             Choose a treatment, pick your time, complete clinical clearance, and an Avalon RN comes to you.
-          </p>
-          <p className="font-body text-[11px] md:text-xs tracking-[0.32em] uppercase text-foreground/55">
-            Licensed RNs · Physician-Supervised · Bay Area Mobile Service
           </p>
         </motion.div>
       </div>
