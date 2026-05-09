@@ -54,7 +54,7 @@ function EmptyCart() {
       <ShoppingBag className="w-10 h-10 mx-auto text-foreground/40 mb-4" strokeWidth={1.5} />
       <h2 className="font-display text-2xl md:text-3xl uppercase tracking-tight mb-2">Your cart is empty</h2>
       <p className="text-foreground/70 mb-6">Pick a treatment to get started.</p>
-      <Link to="/book" className="inline-flex items-center gap-2 rounded-full bg-foreground text-background font-body text-sm tracking-[0.2em] uppercase px-6 py-3 hover:opacity-85 transition-opacity">
+      <Link to="/store" className="inline-flex items-center gap-2 rounded-full bg-foreground text-background font-body text-sm tracking-[0.2em] uppercase px-6 py-3 hover:opacity-85 transition-opacity">
         Browse the menu <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
       </Link>
     </motion.div>
@@ -107,7 +107,7 @@ function CartContents({ items, subtotal, onRemove, onQty, onClear }) {
 
       {/* Add more */}
       <Link
-        to="/book"
+        to="/store"
         className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-foreground/25 py-5 md:py-6 font-body text-sm md:text-base tracking-[0.2em] uppercase text-foreground/70 hover:border-foreground/60 hover:text-foreground transition-colors"
       >
         <Plus className="w-4 h-4" strokeWidth={2} />
@@ -125,7 +125,7 @@ function CartContents({ items, subtotal, onRemove, onQty, onClear }) {
 
       {/* CTA row */}
       <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:gap-4">
-        <Link to="/book" className="inline-flex items-center justify-center gap-2 font-body text-sm tracking-[0.2em] uppercase text-foreground/70 hover:text-foreground transition-colors">
+        <Link to="/store" className="inline-flex items-center justify-center gap-2 font-body text-sm tracking-[0.2em] uppercase text-foreground/70 hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
           Continue shopping
         </Link>

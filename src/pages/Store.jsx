@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Stethoscope,
   MapPin,
-  Syringe,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -28,7 +27,6 @@ const INTENTS = [
   { id: 'energy',     label: 'Energy',     icon: Battery,     desc: 'Boost energy and fight fatigue at the cellular level.',    matches: ['iv-nad', 'iv-vitamins'] },
   { id: 'recovery',   label: 'Recovery',   icon: HeartPulse,  desc: 'Support your body and recover faster, feel better.',       matches: ['iv-cbd', 'iv-vitamins'] },
   { id: 'longevity',  label: 'Longevity',  icon: Zap,         desc: 'Support healthy aging and cellular optimization.',         matches: ['iv-nad'] },
-  { id: 'shots',      label: 'Shots',      icon: Syringe,     desc: 'Quick vitamin shots for immediate support — stacked with your IV or solo.', matches: null },
   { id: 'unsure',     label: 'Not sure',   icon: HelpCircle,  desc: 'We\'ll help you find the right treatment.',                 matches: null },
 ];
 

@@ -64,17 +64,6 @@ export const CATEGORIES = [
     ],
   },
   {
-    id: 'im-shots',
-    name: 'IM Shots',
-    eyebrow: 'Quick targeted boost',
-    description: 'Intramuscular injection. 5–10 minutes. Stack with any IV or solo.',
-    treatments: [
-      { id: 'im-b12',         name: 'B-12',         duration: '10 min', price: 60, blurb: 'Energy, focus, methylcobalamin form.', appointmentTypeId: '' },
-      { id: 'im-glutathione', name: 'Glutathione',  duration: '10 min', price: 80, blurb: 'Master antioxidant push.', appointmentTypeId: '' },
-      { id: 'im-vitd',        name: 'Vitamin D',    duration: '10 min', price: 60, blurb: 'For documented deficiency. Bring labs.', appointmentTypeId: '' },
-    ],
-  },
-  {
     id: 'add-ons',
     name: 'Add-ons',
     eyebrow: 'Stack onto any IV',

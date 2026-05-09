@@ -19,7 +19,7 @@ export default function Checkout() {
   useEffect(() => { document.title = 'Checkout — Avalon Vitality'; }, []);
 
   // Auto-redirect empty cart back to /book
-  useEffect(() => { if (items.length === 0) navigate('/book', { replace: true }); }, [items, navigate]);
+  useEffect(() => { if (items.length === 0) navigate('/store', { replace: true }); }, [items, navigate]);
 
   const acuityUrl = useMemo(() => {
     if (!ACUITY_OWNER_ID) return ACUITY_BOOKING_BASE;
