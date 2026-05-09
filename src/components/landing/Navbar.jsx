@@ -139,10 +139,10 @@ export default function Navbar() {
           >
             <div className="px-6 py-6 space-y-5">
               <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
+              <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Store</Link>
               <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How it works</Link>
               <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
               <Link to="/events/race" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Events</Link>
-              <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Store</Link>
               <Link to="/login" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Login</Link>
             </div>
           </motion.div>
