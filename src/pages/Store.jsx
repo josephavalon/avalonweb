@@ -39,6 +39,7 @@ const TREATMENTS = [
     cta: 'Book IV',
     drawerCategoryId: 'iv-vitamins',
     icon: Droplets,
+    eyebrow: 'Hydration',
   },
   {
     id: 'iv-nad',
@@ -48,6 +49,7 @@ const TREATMENTS = [
     cta: 'Book NAD+',
     drawerCategoryId: 'iv-nad',
     icon: Zap,
+    eyebrow: 'Cellular repair',
   },
   {
     id: 'iv-cbd',
@@ -57,6 +59,7 @@ const TREATMENTS = [
     cta: 'Book CBD',
     drawerCategoryId: 'iv-cbd',
     icon: Leaf,
+    eyebrow: 'Recovery',
   },
   {
     id: 'everything',
@@ -66,6 +69,7 @@ const TREATMENTS = [
     cta: 'Customize',
     drawerCategoryId: 'everything',
     icon: Star,
+    eyebrow: 'Build your own',
     featured: true,
   },
 ];
@@ -156,7 +160,7 @@ function TreatmentGrid({ activeIntent, onBook }) {
             {intent ? `Recommended for ${intent.label.toLowerCase()}` : 'Pick a treatment'}
           </h2>
         </header>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
           {ordered.map((t, i) => {
             const Icon = t.icon;
             const matched = isMatched(t.id);
@@ -167,26 +171,28 @@ function TreatmentGrid({ activeIntent, onBook }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, ease: EASE, delay: i * 0.04 }}
-                className={`treatment-tile rounded-2xl border p-6 md:p-7 transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-12px_hsl(var(--foreground)/0.18)] ${matched ? 'border-foreground/25' : 'border-foreground/12 opacity-65'}`}
+                className={`treatment-tile rounded-2xl p-7 md:p-9 flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-12px_hsl(var(--foreground)/0.18)] relative ${t.featured ? 'border-2 border-foreground' : 'border border-foreground/15'} ${matched ? '' : 'opacity-60'}`}
               >
-                <div className="flex items-start justify-between mb-5">
-                  <Icon className="w-5 h-5 text-foreground/70" strokeWidth={1.5} />
-                  {intent && matched && (
-                    <span className="font-body text-[9px] tracking-[0.3em] uppercase rounded-full border border-foreground/20 px-2 py-0.5 text-foreground/65">Recommended</span>
-                  )}
-                </div>
-                <h3 className="font-display text-2xl md:text-3xl uppercase tracking-tight leading-none mb-2">{t.name}</h3>
-                <p className="text-sm md:text-base text-foreground/65 leading-snug mb-5 min-h-[2.5rem]">{t.blurb}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-foreground/10">
-                  <span className="font-body text-[10px] md:text-xs tracking-[0.32em] uppercase text-foreground/55">From ${t.fromPrice}</span>
-                  <button
-                    type="button"
-                    onClick={() => onBook(t)}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-foreground text-background font-body text-[10px] md:text-xs tracking-[0.3em] uppercase px-4 py-2.5 hover:opacity-85 transition-opacity"
-                  >
-                    {t.cta} <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
-                  </button>
-                </div>
+                {t.featured && (
+                  <span className="absolute -top-3 right-6 inline-flex items-center font-body text-[10px] tracking-[0.3em] uppercase bg-foreground text-background rounded-full px-3 py-1">Most flexible</span>
+                )}
+                {intent && matched && !t.featured && (
+                  <span className="absolute -top-3 right-6 inline-flex items-center font-body text-[10px] tracking-[0.3em] uppercase bg-background border border-foreground/25 rounded-full px-3 py-1">Recommended</span>
+                )}
+                <p className="font-body text-[10px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-4 inline-flex items-center gap-2">
+                  <Icon className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  {t.eyebrow || 'IV protocol'}
+                </p>
+                <h3 className="font-display text-3xl md:text-4xl uppercase tracking-tight leading-none mb-3">{t.name}</h3>
+                <p className="text-sm md:text-base text-foreground/65 leading-relaxed mb-7 flex-1">{t.blurb}</p>
+                <p className="font-body text-[10px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-4">From ${t.fromPrice}</p>
+                <button
+                  type="button"
+                  onClick={() => onBook(t)}
+                  className={`w-full inline-flex items-center justify-center gap-2 rounded-full font-body text-xs md:text-sm tracking-[0.3em] uppercase px-7 py-4 transition-colors ${t.featured ? 'border-2 border-foreground hover:bg-foreground hover:text-background' : 'bg-foreground text-background hover:opacity-85'}`}
+                >
+                  {t.cta} <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+                </button>
               </motion.div>
             );
           })}
