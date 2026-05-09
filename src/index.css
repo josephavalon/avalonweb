@@ -481,17 +481,7 @@ body {
 .av-scroll-hint {
   position: relative;
 }
-.av-scroll-hint::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 64px;
-  background: linear-gradient(to left, hsl(var(--background)), transparent);
-  pointer-events: none;
-  opacity: 0.85;
-}
+/* fade gradient removed per design — solid edges only */
 
 /* 7. Hero h1 CSS-keyframe fallback — if framer fails to mount, content still appears via animation. */
 @keyframes hero-h1-reveal {
@@ -579,9 +569,4 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   box-shadow: 0 0 0 1px hsl(var(--accent) / 0.4), 0 6px 24px 0 hsl(var(--accent) / 0.25);
 }
 
-/* ===== 12. Treatment scroll hint — bump opacity, use accent gradient ===== */
-.av-scroll-hint::after {
-  width: 80px;
-  background: linear-gradient(to left, hsl(var(--background)) 0%, hsl(var(--background) / 0.95) 40%, transparent 100%);
-  opacity: 1;
-}
+/* ===== 12. Treatment scroll hint — fade gradient removed ===== */
