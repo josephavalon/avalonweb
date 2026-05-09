@@ -242,22 +242,75 @@ function HowItWorks() {
 function ClosingCTA({ onBook }) {
   return (
     <section className="px-5 md:px-10 py-14 md:py-20 border-t border-foreground/10">
-      <div className="max-w-3xl mx-auto text-center">
-        <h2 className="font-display text-3xl md:text-5xl uppercase tracking-tight leading-tight mb-5">Ready to recover?</h2>
-        <p className="text-base md:text-lg text-foreground/65 mb-8 max-w-xl mx-auto">An Avalon RN can be at your door this week. Pick the treatment that fits.</p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            type="button"
-            onClick={onBook}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background font-body text-xs md:text-sm tracking-[0.3em] uppercase px-9 py-4 hover:opacity-85 transition-opacity"
+      <div className="max-w-5xl mx-auto">
+        <header className="text-center mb-10 md:mb-14">
+          <p className="font-body text-[11px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-3">Ready to recover?</p>
+          <h2 className="font-display text-3xl md:text-5xl uppercase tracking-tight leading-tight mb-3">Two ways to book.</h2>
+          <p className="text-sm md:text-base text-foreground/65 max-w-lg mx-auto">Pick what fits — single visit or recurring care.</p>
+        </header>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          {/* LEFT — One-time */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.5, ease: EASE }}
+            className="closing-tile rounded-2xl border border-foreground/15 p-7 md:p-9 flex flex-col"
           >
-            Book now <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-          </button>
-          <Link to="/apply" className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-foreground/35 font-body text-xs md:text-sm tracking-[0.3em] uppercase px-9 py-4 hover:border-foreground transition-colors">
-            See memberships
-          </Link>
+            <p className="font-body text-[10px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-4">Pay-as-you-go</p>
+            <h3 className="font-display text-3xl md:text-4xl uppercase tracking-tight leading-none mb-3">Book one time</h3>
+            <p className="text-sm md:text-base text-foreground/65 leading-relaxed mb-7 flex-1">
+              Single visit. No commitment. From $150 — pay only when you book.
+            </p>
+            <ul className="text-xs md:text-sm text-foreground/65 space-y-1.5 mb-8">
+              <li>· Pay per visit</li>
+              <li>· Cancel any time</li>
+              <li>· Same Avalon RNs</li>
+            </ul>
+            <button
+              type="button"
+              onClick={onBook}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background font-body text-xs md:text-sm tracking-[0.3em] uppercase px-7 py-4 hover:opacity-85 transition-opacity"
+            >
+              Book one-time <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+          </motion.div>
+
+          {/* RIGHT — Membership */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.5, ease: EASE, delay: 0.1 }}
+            className="closing-tile rounded-2xl border-2 border-foreground p-7 md:p-9 flex flex-col relative"
+          >
+            <span className="absolute -top-3 right-6 inline-flex items-center font-body text-[10px] tracking-[0.3em] uppercase bg-foreground text-background rounded-full px-3 py-1">Best value</span>
+            <p className="font-body text-[10px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-4">Recurring care</p>
+            <h3 className="font-display text-3xl md:text-4xl uppercase tracking-tight leading-none mb-3">Book a membership</h3>
+            <p className="text-sm md:text-base text-foreground/65 leading-relaxed mb-7 flex-1">
+              Lower per-visit pricing, priority slots, credits that roll over.
+            </p>
+            <ul className="text-xs md:text-sm text-foreground/65 space-y-1.5 mb-8">
+              <li>· Save on every visit</li>
+              <li>· Priority booking windows</li>
+              <li>· Credits roll month-to-month</li>
+            </ul>
+            <Link
+              to="/apply"
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-foreground font-body text-xs md:text-sm tracking-[0.3em] uppercase px-7 py-4 hover:bg-foreground hover:text-background transition-colors"
+            >
+              Join membership <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+            </Link>
+          </motion.div>
         </div>
       </div>
+      <style>{`
+        .closing-tile {
+          background: hsl(var(--background) / 0.7);
+          backdrop-filter: saturate(150%) blur(14px);
+          -webkit-backdrop-filter: saturate(150%) blur(14px);
+        }
+      `}</style>
     </section>
   );
 }
