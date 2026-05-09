@@ -60,10 +60,10 @@ const TREATMENTS = [
   },
   {
     id: 'everything',
-    name: 'Everything IV',
-    blurb: 'Every IV med + every add-on. The Works.',
+    name: 'Custom IV',
+    blurb: 'Build the protocol. Every base, every add-on.',
     fromPrice: 599,
-    cta: 'Book the Works',
+    cta: 'Customize',
     drawerCategoryId: 'everything',
     icon: Star,
     featured: true,

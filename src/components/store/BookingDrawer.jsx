@@ -130,7 +130,7 @@ export default function BookingDrawer({ open, categoryId, onClose }) {
                   {compatibleAddons.length > 0 && (
                     <>
                       <p className="font-body text-[10px] tracking-[0.32em] uppercase text-foreground/55 mb-3">Add-ons (optional)</p>
-                      <div className="space-y-2 mb-7 max-h-[260px] overflow-y-auto pr-1">
+                      <div className="drawer-scroll space-y-2 mb-7 max-h-[260px] overflow-y-auto pr-1">
                         {compatibleAddons.map((a) => {
                           const checked = addonIds.includes(a.id);
                           return (
@@ -219,6 +219,12 @@ export default function BookingDrawer({ open, categoryId, onClose }) {
               -webkit-backdrop-filter: saturate(160%) blur(28px);
               box-shadow: -30px 0 80px -20px hsl(var(--foreground) / 0.20);
             }
+            /* Light, subtle scrollbar to match the rest of the menu */
+            .drawer-scroll { scrollbar-width: thin; scrollbar-color: hsl(var(--foreground) / 0.18) transparent; }
+            .drawer-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+            .drawer-scroll::-webkit-scrollbar-track { background: transparent; }
+            .drawer-scroll::-webkit-scrollbar-thumb { background-color: hsl(var(--foreground) / 0.22); border-radius: 999px; }
+            .drawer-scroll::-webkit-scrollbar-thumb:hover { background-color: hsl(var(--foreground) / 0.4); }
           `}</style>
         </>
       )}
