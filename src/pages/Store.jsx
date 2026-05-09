@@ -80,7 +80,7 @@ function Hero() {
             Book your<br />recovery.
           </h1>
           <p className="text-base md:text-xl text-foreground/75 max-w-2xl leading-relaxed">
-            Choose a treatment, pick your time, complete clearance, and an Avalon RN comes to you.
+            Choose a treatment, pick your time, and an Avalon RN comes to you.
           </p>
         </motion.div>
       </div>
@@ -209,8 +209,7 @@ function HowItWorks() {
     { n: '01', t: 'Choose what you need',     d: 'Pick the result you want — hydration, energy, recovery.' },
     { n: '02', t: 'Pick a treatment',          d: 'We surface the best fit. One tap to book.' },
     { n: '03', t: 'Schedule time and address', d: 'Pick a slot that works. Card authorized at booking.' },
-    { n: '04', t: 'Complete clearance', d: 'Quick intake. We confirm contraindications.' },
-    { n: '05', t: 'RN arrives',                d: 'Avalon RN at your door. 20–60 minutes start to finish.' },
+    { n: '04', t: 'RN arrives',                d: 'Avalon RN at your door. 20–60 minutes start to finish.' },
   ];
   return (
     <section id="how-it-works" className="px-5 md:px-10 py-14 md:py-20 border-t border-foreground/10 scroll-mt-20">
@@ -219,7 +218,7 @@ function HowItWorks() {
           <p className="font-body text-[11px] md:text-xs tracking-[0.32em] uppercase text-foreground/55 mb-3">The flow</p>
           <h2 className="font-display text-3xl md:text-5xl uppercase tracking-tight leading-[0.95]">How Avalon works.</h2>
         </header>
-        <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-7 md:gap-8">
+        <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7 md:gap-8">
           {steps.map((s, i) => (
             <motion.li
               key={s.n}
