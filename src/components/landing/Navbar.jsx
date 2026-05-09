@@ -86,7 +86,7 @@ export default function Navbar() {
           <Link to="/#treatments" className={linkClass}>Treatments</Link>
           <Link to="/#how-it-works" className={linkClass}>How it works</Link>
           <Link to="/#membership" className={linkClass}>Membership</Link>
-          <Link to="/events/race" className={linkClass}>Events</Link>
+          <Link to="/#events" className={linkClass}>Events</Link>
           <Link to="/store" className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-foreground text-background font-body text-[11px] tracking-[0.3em] uppercase px-4 py-2 hover:opacity-85 transition-opacity">Store</Link>
         </div>
 
@@ -142,7 +142,7 @@ export default function Navbar() {
               <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Store</Link>
               <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How it works</Link>
               <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
-              <Link to="/events/race" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Events</Link>
+              <Link to="/#events" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Events</Link>
               <Link to="/login" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Login</Link>
             </div>
           </motion.div>
