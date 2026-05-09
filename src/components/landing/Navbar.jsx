@@ -83,10 +83,11 @@ export default function Navbar() {
 
         {/* Center links */}
         <div className="flex items-center gap-10">
-          <Link to="/#how-it-works" className={linkClass}>How Avalon Works</Link>
           <Link to="/#treatments" className={linkClass}>Treatments</Link>
+          <Link to="/#how-it-works" className={linkClass}>How it works</Link>
           <Link to="/#membership" className={linkClass}>Membership</Link>
-          <Link to="/store" className={linkClass}>Store</Link>
+          <Link to="/events/race" className={linkClass}>Events</Link>
+          <Link to="/store" className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-foreground text-background font-body text-[11px] tracking-[0.3em] uppercase px-4 py-2 hover:opacity-85 transition-opacity">Book now</Link>
         </div>
 
         {/* Theme toggle and Login far right */}
@@ -137,10 +138,11 @@ export default function Navbar() {
             className="md:hidden backdrop-blur-md bg-background/30 border-t border-white/10 overflow-hidden"
           >
             <div className="px-6 py-6 space-y-5">
-              <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How Avalon Works</Link>
               <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
+              <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How it works</Link>
               <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
-              <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Store</Link>
+              <Link to="/events/race" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Events</Link>
+              <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Book now</Link>
               <Link to="/login" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Login</Link>
             </div>
           </motion.div>
