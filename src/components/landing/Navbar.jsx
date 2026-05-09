@@ -85,6 +85,7 @@ export default function Navbar() {
         <div className="flex items-center gap-10">
           <Link to="/#how-it-works" className={linkClass}>How Avalon Works</Link>
           <Link to="/#treatments" className={linkClass}>Treatments</Link>
+          <Link to="/store" className={linkClass}>Store</Link>
           <Link to="/#membership" className={linkClass}>Membership</Link>
         </div>
 
@@ -138,6 +139,7 @@ export default function Navbar() {
             <div className="px-6 py-6 space-y-5">
               <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How Avalon Works</Link>
               <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
+              <Link to="/store" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Store</Link>
               <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
               <Link to="/apply" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Apply</Link>
             </div>
