@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, User, Phone, MessageSquare, Shield, Package,
@@ -309,7 +309,18 @@ function NurseSection({ label, nurses, color, requests, onAssign }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
+const Skeleton = () => (
+  <div className="p-6 space-y-4 animate-pulse">
+    {[1,2,3,4].map(i => (
+      <div key={i} className="h-14 rounded-xl bg-foreground/[0.06]" />
+    ))}
+  </div>
+);
+
 export default function Staff() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
+
   const [nurses, setNurses]     = useState(NURSES);
   const [requests, setRequests] = useState(REQUESTS);
 
@@ -332,6 +343,12 @@ export default function Staff() {
 
   const kitsReady = nurses.filter(n => n.kitStatus === 'Ready').length;
   const visitsToday = nurses.reduce((s, n) => s + (n.visitsToday || 0), 0);
+
+  if (loading) return (
+    <AdminLayout>
+      <Skeleton />
+    </AdminLayout>
+  );
 
   return (
     <AdminLayout>

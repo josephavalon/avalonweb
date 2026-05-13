@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { track } from '@/lib/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -19,6 +20,18 @@ import {
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
+
+const GOAL_DRIP_MAP = {
+  recover:     ['Hangover', 'Recovery', 'Hydration', "Myers' Cocktail"],
+  energy:      ['Energy', 'Athletic', 'NAD'],
+  immunity:    ['Immunity', 'Immune'],
+  performance: ['Athletic', 'Performance', 'NAD'],
+  beauty:      ['Glow', 'Beauty', 'Radiance'],
+  travel:      ['Jet Lag', 'Hydration', "Myers' Cocktail"],
+  hangover:    ['Hangover', 'Recovery'],
+  // map store chip keys to above
+  recovery:    ['Hangover', 'Recovery', 'Hydration', "Myers' Cocktail"],
+};
 
 /* ─── QtyControl: compact +/- stepper ───────────────────────── */
 function QtyControl({ qty, onInc, onDec, max = 3 }) {
@@ -245,6 +258,7 @@ export default function Store() {
 
   // Auto-open checkout when navigated from mobile cart bar
   const [searchParams] = useSearchParams();
+  const fromProtocol = searchParams.get('from') === 'protocol';
   useEffect(() => {
     if (searchParams.get('checkout') === '1' && cart.length > 0) {
       setCheckoutOpen(true);
@@ -295,24 +309,34 @@ export default function Store() {
 
   // One-tap book from RecommendedCard
   const handleBookRecommended = (sess) => {
-    if (!cart.some((i) => i.cartKey === sess.key))
+    if (!cart.some((i) => i.cartKey === sess.key)) {
       addItem({ cartKey: sess.key, label: sess.label, price: sess.price, type: 'iv' });
+      track('item_added', { label: sess.label, price: sess.price });
+    }
+    track('checkout_opened', { item_count: cart.length + 1 });
     setCheckoutOpen(true);
   };
 
   const handleBookIV = () => {
-    if (!cart.some((i) => i.cartKey === session.key))
+    if (!cart.some((i) => i.cartKey === session.key)) {
       addItem({ cartKey: session.key, label: session.label, price: session.price, type: 'iv' });
+      track('item_added', { label: session.label, price: session.price });
+    }
     selIM.forEach((s) => {
-      if (!cart.some((i) => i.cartKey === `im-${s.label}`))
+      if (!cart.some((i) => i.cartKey === `im-${s.label}`)) {
         addItem({ cartKey: `im-${s.label}`, label: `IM · ${s.label}`, price: s.price, type: 'im' });
+        track('item_added', { label: `IM · ${s.label}`, price: s.price });
+      }
     });
     selIV.forEach((a) => {
-      if (!cart.some((i) => i.cartKey === `iv-${a.label}`))
+      if (!cart.some((i) => i.cartKey === `iv-${a.label}`)) {
         addItem({ cartKey: `iv-${a.label}`, label: a.label, price: a.price, type: 'addon' });
+        track('item_added', { label: a.label, price: a.price });
+      }
     });
     setImSelected(new Set());
     setIvSelected(new Set());
+    track('checkout_opened', { item_count: cart.length });
     setCheckoutOpen(true);
   };
 
@@ -359,6 +383,12 @@ export default function Store() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+
+      {fromProtocol && cart.length > 0 && (
+        <div className="sticky top-16 z-30 bg-accent/10 border-b border-accent/20 px-4 py-2 text-center">
+          <span className="font-body text-xs tracking-widest uppercase text-accent">Your protocol is ready — review below</span>
+        </div>
+      )}
 
       <div className="max-w-5xl mx-auto px-5 md:px-8 pt-24 pb-36">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-8">
@@ -416,6 +446,7 @@ export default function Store() {
                     setActiveTab(chip.tab);
                     if (chip.cat !== null) setIvCategory(chip.cat);
                     setShowAllSessions(false);
+                    track('goal_selected', { goal: chip.key });
                   }}
                   className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full border font-body text-[10px] tracking-[0.15em] uppercase font-semibold transition-all ${
                     isActive
@@ -496,7 +527,12 @@ export default function Store() {
 
               {/* Session card grid */}
               <div className="grid grid-cols-2 gap-2">
-                {visibleSessions.map((s) => (
+                {visibleSessions.map((s) => {
+                  const goalTerms = activeGoal && GOAL_DRIP_MAP[activeGoal];
+                  const isRecommended = goalTerms && goalTerms.some(term =>
+                    s.label.toLowerCase().includes(term.toLowerCase())
+                  );
+                  return (
                   <button
                     key={s.key}
                     type="button"
@@ -509,14 +545,20 @@ export default function Store() {
                           : 'border-foreground/[0.12] hover:border-foreground/25 hover:bg-foreground/[0.02]'
                     }`}
                   >
+                    {/* Recommended badge */}
+                    {isRecommended && (
+                      <div className="absolute top-2 right-2 font-body text-[8px] tracking-[0.15em] uppercase text-accent">
+                        ⬥ Recommended
+                      </div>
+                    )}
                     {/* Elite badge */}
-                    {s.elite && (
+                    {s.elite && !isRecommended && (
                       <div className="absolute top-2 right-2 font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30">
                         ELITE
                       </div>
                     )}
                     {/* Selected checkmark */}
-                    {selectedKey === s.key && !s.elite && (
+                    {selectedKey === s.key && !s.elite && !isRecommended && (
                       <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-foreground flex items-center justify-center">
                         <Check className="w-2.5 h-2.5 text-background" strokeWidth={3} />
                       </div>
@@ -547,7 +589,8 @@ export default function Store() {
                       <span className="font-body text-[8px] text-foreground/40 tracking-[0.1em] mt-0.5">Add — By Appointment</span>
                     )}
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Show more / Show less */}
@@ -1156,7 +1199,7 @@ export default function Store() {
               </div>
               <div className="flex items-center gap-2.5 shrink-0">
                 <span className="font-heading text-xl text-foreground tracking-wide">${cartTotal.toLocaleString()}</span>
-                <button type="button" onClick={() => setCheckoutOpen(true)}
+                <button type="button" onClick={() => { track('checkout_opened', { item_count: cart.length }); setCheckoutOpen(true); }}
                   className="px-5 py-2 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/85 transition-colors">
                   Review Request
                 </button>
@@ -1172,7 +1215,12 @@ export default function Store() {
 
       <AnimatePresence>
         {checkoutOpen && (
-          <CheckoutSheet cart={cart} onRemove={removeItem} onClose={() => setCheckoutOpen(false)} onConfirm={clearCart} />
+          <CheckoutSheet
+            cart={cart}
+            onRemove={removeItem}
+            onClose={() => setCheckoutOpen(false)}
+            onConfirm={() => { track('checkout_confirmed', { item_count: cart.length }); clearCart(); }}
+          />
         )}
       </AnimatePresence>
     </div>

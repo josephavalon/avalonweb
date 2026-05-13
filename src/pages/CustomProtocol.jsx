@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { track } from '@/lib/analytics';
+import { useCart } from '@/context/CartContext';
 import { Droplets, Zap, Syringe, ChevronDown, ArrowRight, Check, Plus, Minus } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
@@ -147,6 +149,8 @@ function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, chi
 
 export default function CustomProtocol() {
   useSeo({ title: 'Custom Protocol — Avalon Vitality', description: 'Build a fully custom IV therapy protocol with your choice of drip, add-ons, and frequency.', path: '/custom' });
+  const { addItem } = useCart();
+  const navigate = useNavigate();
   // Treatment on/off
   const [vitaminsOn, setVitaminsOn] = useState(true);
   const [cbdOn, setCbdOn]           = useState(false);
@@ -268,7 +272,7 @@ export default function CustomProtocol() {
                 <div className="space-y-2">
                   <StyledSelect
                     value={vitaminsVariant.label}
-                    onChange={val => setVitaminsVariant(VITAMINS_VARIANTS.find(v => v.label === val))}
+                    onChange={val => { setVitaminsVariant(VITAMINS_VARIANTS.find(v => v.label === val)); track('protocol_vitamin_selected', { label: val }); }}
                     options={VITAMINS_VARIANTS.map(v => ({ value: v.label, label: `${v.label}  —  $${v.price}` }))}
                   />
                   <p className="font-body text-[11px] text-foreground/60 pl-1">{vitaminsVariant.desc}</p>
@@ -307,7 +311,7 @@ export default function CustomProtocol() {
                 <div className="space-y-2">
                   <StyledSelect
                     value={nadDose.label}
-                    onChange={val => setNadDose(NAD_DOSES.find(d => d.label === val))}
+                    onChange={val => { setNadDose(NAD_DOSES.find(d => d.label === val)); track('protocol_nad_selected', { dose: val }); }}
                     options={NAD_DOSES.map(d => ({ value: d.label, label: `${d.label}  —  $${d.price}` }))}
                   />
                   <QtyPicker value={nadQty} onChange={setNadQty} />
@@ -472,13 +476,38 @@ export default function CustomProtocol() {
                 </div>
 
                 {/* CTA */}
-                <Link
-                  to={`/apply?${applyParams.toString()}`}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const items = [];
+                    if (vitaminsOn && vitaminsVariant) {
+                      for (let i = 0; i < vitaminsQty; i++)
+                        items.push({ key: 'iv-vitamins', label: vitaminsVariant.label, price: vitaminsVariant.price, type: 'iv' });
+                    }
+                    if (nadOn && nadDose) {
+                      for (let i = 0; i < nadQty; i++)
+                        items.push({ key: 'iv-nad', label: `NAD+ ${nadDose.label}`, price: nadDose.price, type: 'iv' });
+                    }
+                    if (cbdOn && cbdDose) {
+                      for (let i = 0; i < cbdQty; i++)
+                        items.push({ key: 'iv-cbd', label: `CBD ${cbdDose.label}`, price: cbdDose.price, type: 'iv' });
+                    }
+                    imSelected.forEach((key) => {
+                      const shot = IM_OPTIONS.find(s => s.key === key);
+                      if (shot) {
+                        for (let i = 0; i < (imQty[key] || 1); i++)
+                          items.push({ key: `im-${key}`, label: shot.label, price: shot.price, type: 'im' });
+                      }
+                    });
+                    items.forEach(item => addItem?.(item));
+                    track('protocol_completed', { item_count: items.length });
+                    navigate('/store?from=protocol');
+                  }}
                   className="flex items-center justify-center gap-2 w-full py-3.5 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
                 >
-                  Apply for this Protocol
+                  Add to Order
                   <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                </button>
 
                 <p className="font-body text-[10px] text-foreground/40 text-center mt-3">
                   Free consult · No commitment

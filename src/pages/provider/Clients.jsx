@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, X, Plus, ChevronRight, Check, Clock,
@@ -516,7 +516,18 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
 }
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
+const Skeleton = () => (
+  <div className="p-6 space-y-4 animate-pulse">
+    {[1,2,3,4].map(i => (
+      <div key={i} className="h-14 rounded-xl bg-foreground/[0.06]" />
+    ))}
+  </div>
+);
+
 export default function Clients() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
+
   const [clients, setClients] = useState(CLIENTS);
   const [search, setSearch] = useState('');
   const [tagFilter, setTagFilter] = useState('All');
@@ -566,6 +577,12 @@ export default function Clients() {
     fontSize: 14,
     outline: 'none',
   };
+
+  if (loading) return (
+    <AdminLayout>
+      <Skeleton />
+    </AdminLayout>
+  );
 
   return (
     <AdminLayout>

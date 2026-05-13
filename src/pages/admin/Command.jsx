@@ -360,6 +360,7 @@ function ActivityFeed() {
 
 // ─── Request Card ─────────────────────────────────────────────────────────────
 function RequestCard({ req, onOpen }) {
+  const displayStatus = localStorage.getItem(`av.visit.status.${req.id}`) || req.status;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -387,7 +388,7 @@ function RequestCard({ req, onOpen }) {
                   {req.priority}
                 </span>
               )}
-              <StatusPill status={req.status} small />
+              <StatusPill status={displayStatus} small />
             </div>
           </div>
 
@@ -443,7 +444,7 @@ const VISIT_STATUSES = [
 ];
 
 function VisitDetailSheet({ req, onClose }) {
-  const [status, setStatus] = useState(req.status);
+  const [status, setStatus] = useState(() => localStorage.getItem(`av.visit.status.${req.id}`) || req.status);
   const [note, setNote] = useState(req.notes || '');
   const [statusOpen, setStatusOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -588,7 +589,7 @@ function VisitDetailSheet({ req, onClose }) {
                       <button
                         key={s}
                         type="button"
-                        onClick={() => { setStatus(s); setStatusOpen(false); }}
+                        onClick={() => { setStatus(s); localStorage.setItem(`av.visit.status.${req.id}`, s); setStatusOpen(false); }}
                         className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl border text-left transition-all ${
                           status === s ? 'border-foreground/30 bg-foreground/[0.06]' : 'border-foreground/[0.06] hover:border-foreground/20'
                         }`}

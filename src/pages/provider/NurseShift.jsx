@@ -99,6 +99,26 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
     consent_signed:   false,
   });
 
+  // ── Visit notes state ─────────────────────────────────────────────────────────
+  const NOTES_KEY = `av.visit.${appt.id}.notes`;
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [visitNote, setVisitNote] = useState(() => {
+    try { const s = localStorage.getItem(NOTES_KEY); return s ? JSON.parse(s).notes || '' : ''; } catch { return ''; }
+  });
+  const [bp, setBp] = useState(() => {
+    try { const s = localStorage.getItem(NOTES_KEY); return s ? JSON.parse(s).bp || '' : ''; } catch { return ''; }
+  });
+  const [hr, setHr] = useState(() => {
+    try { const s = localStorage.getItem(NOTES_KEY); return s ? JSON.parse(s).hr || '' : ''; } catch { return ''; }
+  });
+  const [notesSaved, setNotesSaved] = useState(false);
+
+  function saveNotes() {
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify({ notes: visitNote, bp, hr })); } catch {}
+    setNotesSaved(true);
+    setTimeout(() => setNotesSaved(false), 2000);
+  }
+
   const elapsed = useTimer(timerRunning);
   const client  = getClient(appt.client_id);
   const service = getService(appt.service_id);
@@ -430,6 +450,79 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                   )}
                 </div>
               )}
+
+              {/* ── Visit Notes ───────────────────────────────────────── */}
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setNotesOpen(v => !v)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.06em] transition-colors"
+                  style={{
+                    background: notesOpen ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${notesOpen ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    color: notesOpen ? GOLD : 'rgba(255,255,255,0.55)',
+                  }}
+                >
+                  📋 {notesOpen ? 'Hide Notes' : 'Add Notes'}
+                </button>
+
+                <AnimatePresence>
+                  {notesOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: EASE }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 rounded-xl p-4 space-y-3"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <textarea
+                          value={visitNote}
+                          onChange={e => setVisitNote(e.target.value)}
+                          placeholder="Visit notes..."
+                          rows={3}
+                          className="w-full rounded-lg p-3 text-sm resize-none font-[inherit] outline-none placeholder:text-white/30"
+                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={bp}
+                            onChange={e => setBp(e.target.value)}
+                            placeholder="120/80"
+                            className="flex-1 rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                            aria-label="Blood pressure"
+                          />
+                          <input
+                            type="text"
+                            value={hr}
+                            onChange={e => setHr(e.target.value)}
+                            placeholder="72"
+                            className="flex-1 rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                            aria-label="Heart rate"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={saveNotes}
+                            className="px-4 py-1.5 rounded-lg text-sm font-semibold tracking-[0.06em] transition-colors"
+                            style={{ background: GOLD, color: '#0A0A0A' }}
+                          >
+                            Save
+                          </button>
+                          {notesSaved && (
+                            <span className="text-xs text-emerald-400 font-semibold">Saved ✓</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
             </div>
           </motion.div>

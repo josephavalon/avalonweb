@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, LogOut, Calendar, FlaskConical, UserPlus, Phone,
   MapPin, ChevronRight, CheckCircle2, ArrowRight, Crown,
-  Home, Droplets, User,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
+import { useToast } from '@/components/ui/use-toast';
+import MemberBottomNav from '@/components/landing/MemberBottomNav';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -51,48 +52,11 @@ const HISTORY = [
 const QUICK_ACTIONS = [
   { key: 'book',     icon: Calendar,    label: 'Book a\nSession',      href: '/store' },
   { key: 'protocol', icon: FlaskConical,label: 'View My\nProtocols',   href: '/membership' },
-  { key: 'refer',    icon: UserPlus,    label: 'Refer a\nFriend',      href: null },
-  { key: 'nurse',    icon: Phone,       label: 'Contact My\nNurse',    href: null },
+  { key: 'refer',    icon: UserPlus,    label: 'Refer a\nFriend',      href: '#' },
+  { key: 'nurse',    icon: Phone,       label: 'Contact My\nNurse',    href: 'tel:+14155550101' },
 ];
 
-// ── Bottom Nav ────────────────────────────────────────────────────
-function BottomNav() {
-  const items = [
-    { icon: Home,     label: 'Home',       href: '/',           center: false },
-    { icon: Droplets, label: 'Therapies',  href: '/#treatments',center: false },
-    { icon: Calendar, label: 'Book',       href: '/store',      center: true  },
-    { icon: Crown,    label: 'Membership', href: '/membership', center: false },
-    { icon: User,     label: 'Account',    href: '#',           center: false },
-  ];
-  return (
-    <div className="fixed bottom-0 inset-x-0 z-40"
-      style={{ background: 'rgba(10,10,8,0.97)', borderTop: `1px solid ${BORDER}` }}>
-      <div className="max-w-2xl mx-auto flex items-end justify-around px-4 pb-6 pt-2">
-        {items.map((item) => (
-          <Link key={item.label} to={item.href}
-            className="flex flex-col items-center gap-1"
-            style={{ position: 'relative', top: item.center ? '-20px' : 0 }}
-          >
-            {item.center ? (
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl"
-                  style={{ background: TEXT, border: `3px solid ${BG}` }}>
-                  <item.icon className="w-5 h-5" style={{ color: BG }} strokeWidth={2} />
-                </div>
-                <span className="font-body text-[9px] tracking-widest uppercase" style={{ color: MUTED }}>Start</span>
-              </div>
-            ) : (
-              <>
-                <item.icon className="w-5 h-5" style={{ color: DIMMER }} strokeWidth={1.5} />
-                <span className="font-body text-[9px] tracking-widest uppercase" style={{ color: DIMMER }}>{item.label}</span>
-              </>
-            )}
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
+// BottomNav is extracted to MemberBottomNav component
 
 // ── Section label ─────────────────────────────────────────────────
 function SectionLabel({ children }) {
@@ -107,13 +71,17 @@ function SectionLabel({ children }) {
 export default function MemberDashboard() {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [referToast, setReferToast] = useState(false);
   const [nurseToast, setNurseToast] = useState(false);
 
   const handleSignOut = () => { signOut(); navigate('/members'); };
 
   const handleQuickAction = (key) => {
-    if (key === 'refer') { setReferToast(true); setTimeout(() => setReferToast(false), 2800); }
+    if (key === 'refer') {
+      toast({ title: 'Coming Soon', description: 'Referral program launches with membership.' });
+      setReferToast(true); setTimeout(() => setReferToast(false), 2800);
+    }
     if (key === 'nurse') { setNurseToast(true); setTimeout(() => setNurseToast(false), 2800); }
   };
 
@@ -218,14 +186,15 @@ export default function MemberDashboard() {
           {/* Horizontal scroll on mobile, 4-col on md+ */}
           <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4">
             {QUICK_ACTIONS.map((action) => {
-              const isNav = Boolean(action.href);
+              const isNav = Boolean(action.href) && action.key !== 'refer';
               const El = isNav ? Link : 'button';
               return (
                 <El
                   key={action.key}
                   to={isNav ? action.href : undefined}
+                  href={!isNav && action.href && action.key !== 'refer' ? action.href : undefined}
                   type={isNav ? undefined : 'button'}
-                  onClick={isNav ? undefined : () => handleQuickAction(action.key)}
+                  onClick={action.key === 'refer' ? (e) => { e.preventDefault(); handleQuickAction(action.key); } : (!isNav ? () => handleQuickAction(action.key) : undefined)}
                   className="flex flex-col items-start gap-3 p-4 rounded-2xl transition-opacity active:opacity-60 hover:opacity-80 shrink-0 w-36 md:w-auto"
                   style={{ background: CARD, border: `1px solid ${BORDER2}` }}
                 >
@@ -417,7 +386,7 @@ export default function MemberDashboard() {
       </div>
 
       {/* ── Bottom Nav ───────────────────────────────────────────── */}
-      <BottomNav />
+      <MemberBottomNav />
 
       {/* ── Toast notifications ───────────────────────────────────── */}
       <AnimatePresence>

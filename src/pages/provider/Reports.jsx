@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar, CheckSquare, CheckCircle, DollarSign,
   AlertCircle, Instagram, Syringe, Users,
@@ -172,12 +172,29 @@ function SectionHeader({ label }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+const Skeleton = () => (
+  <div className="p-6 space-y-4 animate-pulse">
+    {[1,2,3,4].map(i => (
+      <div key={i} className="h-14 rounded-xl bg-foreground/[0.06]" />
+    ))}
+  </div>
+);
+
 export default function Reports() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
+
   const today = new Date().toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
+
+  if (loading) return (
+    <AdminLayout>
+      <Skeleton />
+    </AdminLayout>
+  );
 
   return (
     <AdminLayout>

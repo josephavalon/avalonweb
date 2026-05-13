@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Home, Hotel, Building2, Calendar, Star, X,
@@ -686,7 +686,18 @@ function EmptyState({ tab, search }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
+const Skeleton = () => (
+  <div className="p-6 space-y-4 animate-pulse">
+    {[1,2,3,4].map(i => (
+      <div key={i} className="h-14 rounded-xl bg-foreground/[0.06]" />
+    ))}
+  </div>
+);
+
 export default function Appointments() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
+
   const { toast } = useToast();
   const [requests, setRequests] = useState(REQUESTS);
   const [activeFilter, setActiveFilter] = useState('all');
@@ -719,6 +730,12 @@ export default function Appointments() {
     // keep drawer in sync
     setOpenReq(prev => prev && prev.id === id ? { ...prev, ...patch } : prev);
   }
+
+  if (loading) return (
+    <AdminLayout>
+      <Skeleton />
+    </AdminLayout>
+  );
 
   return (
     <AdminLayout>

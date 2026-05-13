@@ -9,9 +9,8 @@ const SESSION_KEY = 'av.session';
 
 // ── Demo accounts (replace with real auth before production) ──────────────
 const DEMO_USERS = {
-  'ADMIN001': { role: 'admin',    name: 'Admin',         redirect: '/admin' },
-  'CLIENT001': { role: 'client',  name: 'Client',        redirect: '/members/dashboard'  },
-  'NURSE001':  { role: 'provider', name: 'Nurse',        redirect: '/provider/dashboard' },
+  'CLIENT001': { role: 'client',   name: 'Client', redirect: '/members/dashboard',  status: 'active' },
+  'NURSE001':  { role: 'provider', name: 'Nurse',  redirect: '/provider/dashboard', status: 'active' },
 };
 const DEMO_PASSWORD = 'JonJones1986';
 // ─────────────────────────────────────────────────────────────────────────
@@ -51,6 +50,8 @@ export function AuthStoreProvider({ children }) {
       }
 
       const profile = DEMO_USERS[usernameKey];
+      if (profile.status === 'suspended') throw new Error('Account suspended. Contact support at hello@avalonvitality.co');
+      if (profile.status === 'archived') throw new Error('This account is no longer active.');
       const sessionUser = {
         id:       crypto.randomUUID(),
         username: usernameKey,
