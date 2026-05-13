@@ -90,14 +90,20 @@ export default function Navbar() {
 
         {/* Center links — absolutely centered */}
         <div className="flex items-center gap-8">
-          <Link to="/#how-it-works" className={linkClass}>How It Works</Link>
+          <Link to="/#how-it-works" className={linkClass}>Process</Link>
           <Link to="/#treatments" className={linkClass}>Therapies</Link>
           <Link to="/membership" className={linkClass}>Membership</Link>
           <Link to="/events" className={linkClass}>Events</Link>
         </div>
 
-        {/* Theme toggle + Login — right */}
-        <div className="flex items-center gap-6 w-[80px] justify-end">
+        {/* Theme toggle + Book Now + Login — right */}
+        <div className="flex items-center gap-4 w-auto justify-end">
+          <Link
+            to="/store"
+            className="bg-[#c9a84c] text-[#0a0a0a] font-bold text-xs px-4 py-1.5 rounded-full hover:bg-[#b8973b] transition-colors"
+          >
+            Book Now
+          </Link>
           <button
             onClick={cycleTheme}
             className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -114,7 +120,7 @@ export default function Navbar() {
       <div className={`md:hidden flex items-center justify-between px-5 transition-all duration-500 ease-editorial ${
         scrolled ? 'h-12' : 'h-14'
       }`}>
-        <Link to="/" onClick={handleLogoClick} className="av-logo font-heading text-[26px] md:text-[15px] leading-none tracking-[0.22em] md:tracking-[0.2em] text-foreground">AV</Link>
+        <Link to="/" onClick={handleLogoClick} className="av-logo font-heading text-[22px] md:text-[15px] leading-none tracking-[0.22em] md:tracking-[0.2em] text-foreground">AV</Link>
         <div className="flex items-center gap-3">
           <button
             onClick={cycleTheme}
@@ -122,7 +128,7 @@ export default function Navbar() {
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
-            <ThemeIcon className="w-7 h-7 md:w-4 md:h-4" />
+            <ThemeIcon className="w-5 h-5 md:w-4 md:h-4" />
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -146,7 +152,7 @@ export default function Navbar() {
               className="bg-background border-t border-white/[0.06]"
             >
               <div className="px-6 py-4 flex flex-col items-end gap-2">
-                <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">How It Works</Link>
+                <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Process</Link>
                 <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Therapies</Link>
                 <Link to="/membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Membership</Link>
                 <Link to="/events" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Events</Link>

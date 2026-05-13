@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Circle, CircleDot, Sparkles, Wrench, ArrowRight } from 'lucide-react';
+import { Circle, CircleDot, Sparkles, SlidersHorizontal, ArrowRight } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -9,7 +9,7 @@ const TIERS = [
   { icon: Circle,    name: 'Starter',  price: 'From $200', unit: '/mo', note: '1 IV per month' },
   { icon: CircleDot, name: 'Premium',  price: 'From $400', unit: '/mo', note: '2 IVs per month' },
   { icon: Sparkles,  name: 'VIP',      price: 'From $800', unit: '/mo', note: '4 IVs per month' },
-  { icon: Wrench,    name: 'Custom',   price: 'Yours',     unit: '',    note: 'Concierge-designed' },
+  { icon: SlidersHorizontal, name: 'Custom', price: 'Yours', unit: '', note: 'Concierge-designed' },
 ];
 
 const CARD = "flex flex-col gap-3 p-4 md:p-5 rounded-2xl border border-foreground/[0.1] hover:border-foreground/25 hover:bg-foreground/[0.02] transition-all duration-200 group h-full min-h-[160px]";
@@ -107,7 +107,7 @@ export default function MembershipSection() {
         </div>
 
         {/* Footer note */}
-        <p className="font-body text-[10px] text-foreground/30 text-center mt-5 tracking-[0.15em]">
+        <p className="font-body text-[10px] text-foreground/60 text-center mt-5 tracking-[0.15em]">
           3-month minimum · credits roll over · subject to clinical approval
         </p>
 

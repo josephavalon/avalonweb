@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, LogOut, Calendar, FlaskConical, UserPlus, Phone,
-  MapPin, ChevronRight, CheckCircle2, ArrowRight, Crown,
+  MapPin, ChevronRight, CheckCircle2, ArrowRight, Crown, CalendarClock,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useToast } from '@/components/ui/use-toast';
@@ -50,10 +50,10 @@ const HISTORY = [
 
 // ── Quick Action cards ────────────────────────────────────────────
 const QUICK_ACTIONS = [
-  { key: 'book',     icon: Calendar,    label: 'Book a\nSession',      href: '/store' },
-  { key: 'protocol', icon: FlaskConical,label: 'View My\nProtocols',   href: '/membership' },
-  { key: 'refer',    icon: UserPlus,    label: 'Refer a\nFriend',      href: '#' },
-  { key: 'nurse',    icon: Phone,       label: 'Contact My\nNurse',    href: 'tel:+14155550101' },
+  { key: 'book',     icon: Calendar,    label: 'Book Session',    href: '/store' },
+  { key: 'protocol', icon: FlaskConical,label: 'Membership',      href: '/membership' },
+  { key: 'refer',    icon: UserPlus,    label: 'Refer a Friend',  href: '#' },
+  { key: 'nurse',    icon: Phone,       label: 'Contact Nurse',   href: 'tel:+14155550101' },
 ];
 
 // BottomNav is extracted to MemberBottomNav component
@@ -158,7 +158,7 @@ export default function MemberDashboard() {
                 Credits Remaining This Month
               </p>
               <div className="flex items-end gap-2">
-                <span className="font-heading text-[72px] leading-none tracking-tight" style={{ color: GOLD, lineHeight: 1 }}>
+                <span className="font-heading text-[56px] leading-none tracking-tight" style={{ color: GOLD, lineHeight: 1 }}>
                   {MEMBER.credits}
                 </span>
                 <span className="font-heading text-2xl leading-none mb-2" style={{ color: DIMMER }}>
@@ -352,15 +352,16 @@ export default function MemberDashboard() {
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-2 mb-5">
               {[
-                { label: 'Credits Used',      value: `${MEMBER.creditsTotal - MEMBER.credits}/${MEMBER.creditsTotal}` },
-                { label: 'Credits Left',      value: String(MEMBER.credits) },
-                { label: 'Member Discount',   value: `${MEMBER.discount}%` },
+                { label: 'Next Renewal',    value: MEMBER.renewal, icon: CalendarClock },
+                { label: 'Credits Left',    value: String(MEMBER.credits) },
+                { label: 'Member Discount', value: `${MEMBER.discount}%` },
               ].map((stat) => (
                 <div
                   key={stat.label}
                   className="rounded-xl p-3 text-center"
                   style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}` }}
                 >
+                  {stat.icon && <stat.icon className="w-3.5 h-3.5 mx-auto mb-1" style={{ color: GOLD }} strokeWidth={1.5} />}
                   <p className="font-heading text-xl leading-none mb-1" style={{ color: TEXT }}>{stat.value}</p>
                   <p className="font-body text-[8px] tracking-[0.12em] uppercase leading-snug" style={{ color: DIMMER }}>
                     {stat.label}

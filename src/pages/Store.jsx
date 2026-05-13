@@ -198,7 +198,7 @@ function RecommendedCard({ session, onBook }) {
       <div className="flex items-center gap-2 mb-1">
         <span className="font-body text-[9px] tracking-[0.25em] uppercase text-accent">Recommended</span>
         {session.tag && (
-          <span className="font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border border-foreground/15 text-foreground/40">
+          <span className="font-body text-[11px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border border-foreground/15 text-foreground/40">
             {session.tag}
           </span>
         )}
@@ -511,7 +511,7 @@ export default function Store() {
                     }`}
                   >
                     With Membership
-                    <span className="ml-1 font-body text-[8px] tracking-[0.1em] normal-case opacity-75">save up to 25%</span>
+                    <span className="ml-1 font-body text-[11px] tracking-[0.1em] normal-case opacity-75">save up to 25%</span>
                   </button>
                 </div>
                 {pricingMode === 'member' && (
@@ -547,13 +547,13 @@ export default function Store() {
                   >
                     {/* Recommended badge */}
                     {isRecommended && (
-                      <div className="absolute top-2 right-2 font-body text-[8px] tracking-[0.15em] uppercase text-accent">
+                      <div className="absolute top-2 right-2 font-body text-[11px] tracking-[0.15em] uppercase text-accent">
                         ⬥ Recommended
                       </div>
                     )}
                     {/* Elite badge */}
                     {s.elite && !isRecommended && (
-                      <div className="absolute top-2 right-2 font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30">
+                      <div className="absolute top-2 right-2 font-body text-[11px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30">
                         ELITE
                       </div>
                     )}
@@ -570,7 +570,7 @@ export default function Store() {
                       </span>
                     </div>
                     {s.tag && (
-                      <span className={`self-start font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border ${
+                      <span className={`self-start font-body text-[11px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border ${
                         s.popular ? 'bg-accent/20 text-accent border-accent/30' : 'bg-foreground/[0.06] text-foreground/40 border-foreground/[0.08]'
                       }`}>
                         {s.tag}
@@ -581,12 +581,12 @@ export default function Store() {
                       <div className="flex flex-col items-end shrink-0">
                         <span className={`font-body text-sm font-semibold ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/50'}`}>${s.price}</span>
                         {s.elite && (
-                          <span className="font-body text-[8px] text-accent/70 leading-tight">Consultation req.</span>
+                          <span className="font-body text-[11px] text-accent/70 leading-tight">Consultation req.</span>
                         )}
                       </div>
                     </div>
                     {s.elite && (
-                      <span className="font-body text-[8px] text-foreground/40 tracking-[0.1em] mt-0.5">Add — By Appointment</span>
+                      <span className="font-body text-[11px] text-foreground/40 tracking-[0.1em] mt-0.5">Add — By Appointment</span>
                     )}
                   </button>
                   );
@@ -712,23 +712,7 @@ export default function Store() {
                   </div>
                 </div>
 
-                {/* Future modalities — locked placeholder */}
-                <div>
-                  <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/20 mb-2 px-1">More Modalities</p>
-                  <div className="space-y-1.5 opacity-40 pointer-events-none select-none">
-                    {[
-                      { label: 'Peptide Therapy', note: "Jul '26" },
-                      { label: 'NAD+ Optimization', note: "Q4 '26" },
-                    ].map(({ label, note }) => (
-                      <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-foreground/[0.07]">
-                        <div className="w-4 h-4 rounded-full border border-foreground/20 shrink-0" />
-                        <p className="flex-1 font-body text-xs text-foreground/50">{label}</p>
-                        <span className="font-body text-[9px] tracking-[0.15em] uppercase text-foreground/30">{note}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+  
               </div>
 
               {/* Group Booking */}
@@ -807,7 +791,6 @@ export default function Store() {
             >
               <div>
                 <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-1">Curated Packages</p>
-                <p className="font-body text-xs text-foreground/50">Pre-built protocols — IV + IM, priced together. Save vs. à la carte.</p>
               </div>
 
               <div className="space-y-3">
@@ -828,7 +811,7 @@ export default function Store() {
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-heading text-lg text-foreground uppercase tracking-wide leading-none">{pkg.label}</h3>
-                              <span className="font-body text-[8px] tracking-[0.15em] uppercase px-1.5 py-0.5 rounded-full bg-foreground/[0.06] text-foreground/50 border border-foreground/10">{pkg.tag}</span>
+                              <span className="font-body text-[11px] tracking-[0.15em] uppercase px-1.5 py-0.5 rounded-full bg-foreground/[0.06] text-foreground/50 border border-foreground/10">{pkg.tag}</span>
                             </div>
                             <p className="font-body text-[10px] text-foreground/45 mt-0.5">{pkg.tagline}</p>
                           </div>
@@ -883,7 +866,6 @@ export default function Store() {
             >
               <div>
                 <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-1">Build Your Own IV Visit</p>
-                <p className="font-body text-xs text-foreground/50">Choose a base drip, dial in your add-ons, pick your IM shots. No guesswork.</p>
               </div>
 
               {/* Base drip selection */}

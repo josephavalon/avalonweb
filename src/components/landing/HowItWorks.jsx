@@ -8,17 +8,17 @@ const steps = [
   {
     icon: CalendarCheck,
     title: 'Build Your Visit',
-    desc: 'Choose your IV drip or IM therapy, drop your location, and pick a time. Our team confirms by text.',
+    desc: 'Choose your drip, drop location, pick a time.',
   },
   {
     icon: MapPin,
     title: 'Avalon Confirms',
-    desc: 'We confirm availability and send your RN details before arrival. No surprises.',
+    desc: 'We confirm and send your RN details. No surprises.',
   },
   {
     icon: Zap,
     title: 'We Come to You',
-    desc: 'A licensed RN arrives with IV and IM therapies — delivered to your home, hotel, office, or event.',
+    desc: 'Licensed RN arrives to your home, hotel, or office.',
   },
 ];
 
@@ -57,9 +57,6 @@ export default function HowItWorks() {
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
             HOW AVALON WORKS
           </h2>
-          <p className="font-body text-sm text-foreground/60 mt-3 max-w-xl">
-            A licensed RN deploys to you with IV drips and IM injections. Your location. Same day.
-          </p>
         </motion.div>
 
         {/* ── Mobile: full-width one-card carousel with arrows ── */}

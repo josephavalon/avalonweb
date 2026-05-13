@@ -58,7 +58,6 @@ const SESSIONS = [
       'Premium IV hydration formula',
       'Electrolytes & essential minerals',
       'Vitamin blend',
-      'Delivered by a licensed RN',
     ],
   },
   {
@@ -72,7 +71,6 @@ const SESSIONS = [
       'B-vitamin complex',
       'Amino acid blend',
       'Magnesium',
-      'Delivered by a licensed RN',
     ],
   },
   {
@@ -86,7 +84,6 @@ const SESSIONS = [
       'High-dose Vitamin C',
       'Zinc & selenium',
       'Glutathione push',
-      'Delivered by a licensed RN',
     ],
   },
   {
@@ -101,7 +98,6 @@ const SESSIONS = [
       "Classic Myers' formula",
       'Magnesium & calcium',
       'Multi-vitamin blend',
-      'Delivered by a licensed RN',
     ],
   },
   {
@@ -115,7 +111,6 @@ const SESSIONS = [
       'Recovery formula blend',
       'Anti-nausea support',
       'Electrolytes & minerals',
-      'Delivered by a licensed RN',
     ],
   },
   {
@@ -129,7 +124,6 @@ const SESSIONS = [
       'Pharmaceutical-grade NAD+',
       'Slow IV infusion protocol',
       'MD-supervised dosing',
-      'Delivered by a licensed RN',
     ],
     doses: [
       { label: '250mg',  price: 350 },
@@ -149,7 +143,6 @@ const SESSIONS = [
       'Pharmaceutical IV CBD',
       'Zero THC formula',
       'Magnesium blend',
-      'Delivered by a licensed RN',
     ],
     doses: [
       { label: '33mg',  price: 250 },

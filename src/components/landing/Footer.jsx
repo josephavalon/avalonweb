@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, Clock, ChevronDown } from 'lucide-react';
+import { Mail, Phone, Clock, ChevronDown, MapPin } from 'lucide-react';
 
 const LEGAL = [
   { label: 'Terms of Service', to: '/terms-and-conditions' },
@@ -130,7 +130,8 @@ export default function Footer() {
                 <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground shrink-0" />
                 <span className="text-xs text-foreground font-body">Mon–Sun · 8AM–8PM</span>
               </div>
-              <div className="flex items-start gap-2 md:gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
+                <MapPin className="w-3 h-3 mr-1 inline opacity-60 shrink-0" />
                 <span className="text-xs text-foreground font-body">San Francisco Bay Area · CA</span>
               </div>
             </div>
@@ -151,7 +152,7 @@ export default function Footer() {
           </div>
           <div className="pt-2 mb-6">
             <p className="font-body text-xs text-foreground/70 leading-relaxed text-center md:text-right">
-              Statements made by Avalon Vitality about its services and products have not been evaluated by the U.S. Food and Drug Administration. The Services are not intended to diagnose, treat, cure, or prevent any disease. Information provided is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician. Individual results vary. Always consult your physician before beginning any therapy.
+              These statements have not been evaluated by the FDA. Not intended to diagnose, treat, cure, or prevent any disease.
             </p>
           </div>
         </div>

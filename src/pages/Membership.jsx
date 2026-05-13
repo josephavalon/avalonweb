@@ -29,7 +29,6 @@ const tiers = [
       '20% off all add-ons',
       'Priority booking window',
       'Member scheduling portal',
-      'Cancel after 3-month commitment',
     ],
   },
   {
@@ -46,7 +45,6 @@ const tiers = [
       '1 complimentary IM shot per month',
       'Priority booking window',
       'Member scheduling portal',
-      'Cancel after 3-month commitment',
     ],
   },
   {
@@ -63,7 +61,6 @@ const tiers = [
       'Dedicated registered nurse',
       'Custom protocol design',
       'Household partner sharing',
-      'Cancel after 3-month commitment',
     ],
   },
   {
@@ -143,7 +140,7 @@ function CheckoutDrawer({ tier, onClose }) {
               <div className="mt-3 space-y-1">
                 {tier.perks.slice(0, 3).map(p => (
                   <div key={p} className="flex items-center gap-2">
-                    <span className="text-accent text-xs">—</span>
+                    <Check className="w-4 h-4 text-[#c9a84c] flex-shrink-0" />
                     <span className="font-body text-[10px] text-foreground/50">{p}</span>
                   </div>
                 ))}
@@ -279,7 +276,7 @@ function TierCard({ tier, index, onSelect }) {
       <ul className="space-y-2 flex-1 mb-5">
         {tier.perks.map((perk) => (
           <li key={perk} className="flex items-start gap-2">
-            <span className="text-accent shrink-0 mt-px leading-none text-xs">—</span>
+            <Check className="w-4 h-4 text-[#c9a84c] mr-2 flex-shrink-0 mt-0.5" />
             <span className="font-body text-xs text-foreground/60 leading-snug">{perk}</span>
           </li>
         ))}
@@ -303,17 +300,17 @@ const steps = [
   {
     number: '01',
     title: 'Choose your tier',
-    body: 'Select Member, Inner Circle, or Elite based on your cadence. Upgrade or downgrade anytime.',
+    body: 'Pick Member, Inner Circle, or Elite. Upgrade anytime.',
   },
   {
     number: '02',
     title: 'Schedule sessions',
-    body: 'Book online or via the member portal. Select your location — home, hotel, or office — and your RN arrives.',
+    body: 'Book online. Choose home, hotel, or office. RN arrives.',
   },
   {
     number: '03',
     title: 'Credits auto-apply',
-    body: 'No codes. No friction. Credits are deducted automatically at checkout. Add-on discounts apply in real time.',
+    body: 'No codes. Credits deducted at checkout automatically.',
   },
 ];
 
@@ -351,7 +348,7 @@ export default function Membership() {
       <main className="pt-24 md:pt-28">
 
         {/* Hero */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20">
+        <section className="py-16 md:py-16 px-5 md:px-12 lg:px-20">
           <div className="max-w-5xl mx-auto">
             <motion.p
               className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3"
@@ -599,97 +596,6 @@ export default function Membership() {
               ))}
             </div>
           </div>
-        </Reveal>
-
-        {/* Comparison Table */}
-        <Reveal as="section" className="py-16 md:py-20 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
-          <div className="max-w-5xl mx-auto">
-            <motion.div {...fadeUp} className="mb-10">
-              <p className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-2">Compare Plans</p>
-              <h2 className="font-heading text-4xl md:text-5xl text-foreground uppercase leading-[0.92] tracking-tight">
-                What's Included
-              </h2>
-              <div className="w-10 h-[2px] bg-accent mt-3" />
-            </motion.div>
-
-            <motion.div {...fadeUp} className="overflow-x-auto -mx-5 md:mx-0">
-              <table className="w-full min-w-[560px] border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left pb-4 pr-6 font-body text-[10px] tracking-[0.25em] uppercase text-foreground/30 font-normal w-1/3">
-                      Feature
-                    </th>
-                    {tiers.map((tier, i) => (
-                      <th
-                        key={tier.name}
-                        className="pb-4 px-3 font-heading text-base md:text-lg uppercase tracking-wide text-foreground text-center"
-                      >
-                        <span className={i === 1 ? 'text-accent' : ''}>{tier.name}</span>
-                        <div className="font-body text-[9px] tracking-[0.15em] text-foreground/40 font-normal mt-0.5 normal-case">
-                          {tier.price ? `$${tier.price}/mo` : 'Custom'}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { label: 'Monthly price',        vals: ['$199/mo', '$389/mo', '$899/mo', 'Custom'] },
-                    { label: 'IV credits / mo',      vals: ['1', '2', '4', 'Unlimited'] },
-                    { label: 'Discount on extras',   vals: ['20%', '25%', '30%', 'Custom'] },
-                    { label: 'Free add-on / mo',     vals: ['—', '1 IM shot', '2 IM shots', 'Custom'] },
-                    { label: 'Arrival SLA',          vals: ['Standard', 'Priority', 'Priority', 'Dedicated'] },
-                    { label: 'Shareable',            vals: ['—', '—', '✓', '✓'] },
-                    { label: 'Commitment',           vals: ['3 months', '3 months', '3 months', 'Flexible'] },
-                  ].map((row, i) => (
-                    <tr key={row.label} className={i % 2 === 0 ? 'bg-foreground/[0.015]' : ''}>
-                      <td className="py-3.5 pr-6 font-body text-xs text-foreground/60 border-t border-foreground/[0.06]">
-                        {row.label}
-                      </td>
-                      {row.vals.map((v, j) => (
-                        <td key={j} className="py-3.5 px-3 text-center border-t border-foreground/[0.06]">
-                          <span
-                            className="font-body text-xs font-semibold"
-                            style={{
-                              color: v === '—'
-                                ? 'rgba(var(--foreground-rgb, 255,255,255), 0.18)'
-                                : v === '✓'
-                                  ? '#10b981'
-                                  : j === 1
-                                    ? 'hsl(var(--accent))'
-                                    : 'hsl(var(--foreground))',
-                              opacity: v === '—' ? 0.3 : 0.75,
-                            }}
-                          >
-                            {v}
-                          </span>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </motion.div>
-
-            <motion.p {...fadeUp} className="font-body text-[10px] text-foreground/30 mt-6 tracking-[0.12em]">
-              All plans subject to clinical approval · Pause or cancel after minimum term
-            </motion.p>
-          </div>
-        </Reveal>
-
-        {/* Pause / Cancel Callout */}
-        <Reveal as="section" className="py-8 md:py-12 px-5 md:px-12 lg:px-20">
-          <motion.div
-            className="border-t border-foreground/[0.08] pt-8 mt-8 max-w-xl mx-auto text-center"
-            {...fadeUp}
-          >
-            <h3 className="font-heading text-2xl text-foreground tracking-wide mb-3">
-              No surprises. No traps.
-            </h3>
-            <p className="font-body text-sm text-foreground/50 leading-relaxed">
-              Members may pause once per 3-month term with 7 days notice. Cancel at end of term with 14 days notice. Credits roll over. No hidden fees.
-            </p>
-          </motion.div>
         </Reveal>
 
         {/* Bottom CTA */}

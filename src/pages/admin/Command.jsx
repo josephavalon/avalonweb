@@ -42,40 +42,53 @@ function useAdminTheme() {
 const EASE = [0.16, 1, 0.3, 1];
 const TODAY_LABEL = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', ' ·');
 
-// ─── Status config ────────────────────────────────────────────────────────────
+// ─── Status config — 3 semantic buckets ──────────────────────────────────────
+// GOLD  → active, confirmed, completed, paid
+// WHITE → pending, scheduled, in-progress, processing
+// RED   → cancelled, failed, overdue, urgent, rejected
+const GOLD_CLS  = 'bg-[#c9a84c]/20 text-[#c9a84c] border-[#c9a84c]/30';
+const GOLD_DOT  = 'bg-[#c9a84c]';
+const WHITE_CLS = 'bg-foreground/[0.06] text-[#F0EDE4]/70 border-foreground/[0.1]';
+const WHITE_DOT = 'bg-[#F0EDE4]/40';
+const RED_CLS   = 'bg-red-400/[0.12] text-red-400 border-red-400/30';
+const RED_DOT   = 'bg-red-400';
+
 const ST = {
-  'New Request':     { cls: 'bg-blue-500/15 text-blue-300 border-blue-500/25',         dot: 'bg-blue-400' },
-  'Contacted':       { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400' },
-  'Confirmed':       { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Intake Pending':  { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400' },
-  'Consent Pending': { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400' },
-  'GFE Pending':     { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400' },
-  'Cleared':         { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Nurse Assigned':  { cls: 'bg-teal-500/15 text-teal-300 border-teal-500/25',          dot: 'bg-teal-400' },
-  'Payment Pending': { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400' },
-  'Ready for Visit': { cls: 'bg-green-400/15 text-green-300 border-green-400/25',       dot: 'bg-green-300' },
-  'Completed':       { cls: 'bg-foreground/8 text-foreground/45 border-foreground/10',  dot: 'bg-foreground/30' },
-  'Follow-Up Due':   { cls: 'bg-purple-500/15 text-purple-300 border-purple-500/25',    dot: 'bg-purple-400' },
-  'Cancelled':       { cls: 'bg-red-900/20 text-red-400/60 border-red-900/25',          dot: 'bg-red-700' },
-  'Paid':            { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Link Sent':       { cls: 'bg-blue-500/15 text-blue-300 border-blue-500/25',          dot: 'bg-blue-400' },
-  'Overdue':         { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400' },
-  'Invoice':         { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400' },
-  'Pending':         { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400' },
-  'Available':       { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Assigned':        { cls: 'bg-teal-500/15 text-teal-300 border-teal-500/25',          dot: 'bg-teal-400' },
-  'Off Duty':        { cls: 'bg-foreground/8 text-foreground/45 border-foreground/10',  dot: 'bg-foreground/30' },
-  'Ready':           { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Low Stock':       { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400' },
-  'Restock Needed':  { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400' },
-  'Check Expiry':    { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400' },
-  'Won':             { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Lost':            { cls: 'bg-foreground/8 text-foreground/45 border-foreground/10',  dot: 'bg-foreground/30' },
-  'New':             { cls: 'bg-blue-500/15 text-blue-300 border-blue-500/25',          dot: 'bg-blue-400' },
-  'Proposal Needed': { cls: 'bg-purple-500/15 text-purple-300 border-purple-500/25',    dot: 'bg-purple-400' },
-  'Follow-Up':       { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400' },
-  'Active Placeholder': { cls: 'bg-teal-500/15 text-teal-300 border-teal-500/25',       dot: 'bg-teal-400' },
-  'Interested':      { cls: 'bg-blue-500/15 text-blue-300 border-blue-500/25',          dot: 'bg-blue-400' },
+  // GOLD bucket — active, confirmed, completed, paid
+  'Confirmed':          { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Completed':          { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Paid':               { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Cleared':            { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Ready for Visit':    { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Ready':              { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Available':          { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  'Won':                { cls: GOLD_CLS,  dot: GOLD_DOT  },
+  // WHITE/NEUTRAL bucket — pending, scheduled, in-progress, processing
+  'New Request':        { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Contacted':          { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Intake Pending':     { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Consent Pending':    { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Nurse Assigned':     { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Assigned':           { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Follow-Up Due':      { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Follow-Up':          { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Link Sent':          { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Pending':            { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Invoice':            { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Low Stock':          { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Check Expiry':       { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Off Duty':           { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Lost':               { cls: WHITE_CLS, dot: WHITE_DOT },
+  'New':                { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Proposal Needed':    { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Active Placeholder': { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Interested':         { cls: WHITE_CLS, dot: WHITE_DOT },
+  // RED bucket — cancelled, failed, overdue, urgent, rejected
+  'GFE Pending':        { cls: RED_CLS,   dot: RED_DOT   },
+  'Payment Pending':    { cls: RED_CLS,   dot: RED_DOT   },
+  'Cancelled':          { cls: RED_CLS,   dot: RED_DOT   },
+  'Overdue':            { cls: RED_CLS,   dot: RED_DOT   },
+  'Restock Needed':     { cls: RED_CLS,   dot: RED_DOT   },
 };
 
 function pill(status) {

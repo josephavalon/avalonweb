@@ -23,7 +23,7 @@ const EASE = [0.16, 1, 0.3, 1];
 export default function WhatIsIV() {
   return (
     <section className="py-16 md:py-20 px-4">
-      <div className="max-w-6xl mx-auto space-y-20 md:space-y-28">
+      <div className="max-w-6xl mx-auto space-y-12 md:space-y-16">
 
         {/* ── IV Therapy ── */}
         <div>
@@ -42,7 +42,7 @@ export default function WhatIsIV() {
               className="hidden md:flex relative items-start justify-start pt-8"
             >
               <div className="relative w-full max-w-xs">
-                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/20 bg-white/[0.03] backdrop-blur-md">
+                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/20 bg-white/[0.03] ">
                   <img
                     src="/bags/immunity.png"
                     alt="Avalon Vitality vitamin IV bag"
@@ -50,7 +50,7 @@ export default function WhatIsIV() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
                 </div>
-                <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-6">
+                <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80  rounded-2xl p-6">
                   <p className="font-heading text-5xl text-foreground tracking-wide">100%</p>
                   <p className="font-body text-xs text-accent tracking-widest uppercase mt-3">Absorption — Direct to Bloodstream</p>
                 </div>
@@ -66,7 +66,7 @@ export default function WhatIsIV() {
               className="text-left"
             >
               <p className="font-body text-base md:text-lg text-foreground leading-relaxed mb-8">
-                Direct hydration and nutrient delivery designed for faster recovery, energy support, and performance optimization.
+                Direct nutrient delivery. Faster recovery, energy, performance.
               </p>
               <div className="pt-6">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
@@ -100,7 +100,7 @@ export default function WhatIsIV() {
               className="text-left"
             >
               <p className="font-body text-base md:text-lg text-foreground leading-relaxed mb-8">
-                A concentrated nutrient dose — B12, glutathione, MIC, or NAD+ — injected directly into muscle tissue. No IV line. Under five minutes. Add on to any drip.
+                Concentrated dose injected into muscle. No IV line. Under five minutes.
               </p>
               <div className="pt-6">
                 <div className="grid grid-cols-2 gap-3 md:gap-4">
@@ -124,7 +124,7 @@ export default function WhatIsIV() {
               className="hidden md:flex relative items-start justify-start pt-8"
             >
               <div className="relative w-full max-w-xs">
-                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/20 bg-white/[0.03] backdrop-blur-md">
+                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden w-full border border-white/20 bg-white/[0.03] ">
                   <img
                     src="/bags/nad-250.png"
                     alt="Avalon Vitality IM injection"
@@ -132,7 +132,7 @@ export default function WhatIsIV() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
                 </div>
-                <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80 backdrop-blur-sm rounded-2xl p-6">
+                <div className="absolute bottom-8 left-6 right-6 border border-border/60 bg-background/80  rounded-2xl p-6">
                   <p className="font-heading text-5xl text-foreground tracking-wide">~5min</p>
                   <p className="font-body text-xs text-accent tracking-widest uppercase mt-3">Full Dose — No IV Line Required</p>
                 </div>

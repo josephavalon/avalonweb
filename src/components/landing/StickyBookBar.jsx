@@ -44,8 +44,7 @@ export default function StickyBookBar() {
               to="/store"
               className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background font-body text-[11px] tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
             >
-              Request a Visit
-              <span aria-hidden="true">→</span>
+              Book Now
             </Link>
           </div>
         </motion.div>

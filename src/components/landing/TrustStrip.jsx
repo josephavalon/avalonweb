@@ -5,9 +5,9 @@ import { Shield, UserCheck, Stethoscope, Clock, FlaskConical, Lock } from 'lucid
 // Credentials framed as operational standards, not therapeutic guarantees.
 // Styled editorial (foreground/55, no accent) — not a UI element, a spec sheet.
 const CREDENTIALS = [
-  { icon: UserCheck,    label: 'Licensed Registered Nurses' },
+  { icon: UserCheck,    label: 'Licensed RNs' },
   { icon: Clock,        label: 'Arrives in 60–90 min'       },
-  { icon: Lock,         label: 'Secure Intake'              },
+  { icon: Lock,         label: 'HIPAA Intake'               },
   { icon: FlaskConical, label: 'Lab-Grade Formulations'     },
   { icon: Stethoscope,  label: 'Clinical Oversight'         },
   { icon: Shield,       label: 'HIPAA-Secure'               },

@@ -13,6 +13,7 @@ import {
   MapPin,
   Clock,
   CheckCircle,
+  CheckCircle2,
   Circle,
   Phone,
   AlertCircle,
@@ -256,9 +257,6 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                   {appt.location_notes && (
                     <div className="text-xs text-white mt-0.5">{appt.location_notes}</div>
                   )}
-                  <div className="text-[11px] text-white/40 mt-1 tracking-[0.04em]">
-                    TAP TO OPEN IN MAPS →
-                  </div>
                 </div>
               </a>
 
@@ -701,9 +699,9 @@ export default function NurseShift() {
 
           <div className="flex gap-2 flex-wrap">
             {[
-              { icon: <CheckCircle size={13} className="text-emerald-400" />, label: `${completedCount} completed` },
-              { icon: <Circle      size={13} className="text-white" />,        label: `${remainingCount} remaining` },
-              { icon: <Clock       size={13} className="text-white" />,        label: `Travel est. ${travelEst}` },
+              { icon: <CheckCircle2 size={13} className="text-emerald-400" />, label: `${completedCount} completed` },
+              { icon: <Circle       size={13} className="text-white" />,        label: `${remainingCount} remaining` },
+              { icon: <Clock        size={13} className="text-white" />,        label: `Travel est. ${travelEst}` },
             ].map(({ icon, label }) => (
               <div
                 key={label}

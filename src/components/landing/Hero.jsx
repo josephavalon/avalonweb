@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MapPin, ChevronDown } from 'lucide-react';
+import { MapPin, ChevronDown, ArrowRight } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -38,8 +38,8 @@ export default function Hero() {
         <div className="absolute inset-0 bg-background/65" />
         {/* Stronger left fade so text always pops — especially in dubs/golden */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
-        {/* Bottom fade to page */}
-        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-b from-transparent to-background" />
+        {/* Bottom fade to page — single gradient only */}
+        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0a]" />
       </motion.div>
 
       {/* Scroll-driven darkening — desktop only */}
@@ -72,10 +72,6 @@ export default function Hero() {
             </span>
             <ChevronDown className="w-3 h-3 text-foreground/40" strokeWidth={2} />
           </button>
-          {/* Brand name */}
-          <span className="font-body text-sm tracking-[0.3em] text-foreground/70 uppercase self-start">
-            Avalon Vitality
-          </span>
           {/* Social proof chip */}
           <div className="inline-flex items-center gap-1.5 self-start">
             <span className="text-accent text-[11px]">★★★★★</span>
@@ -136,18 +132,17 @@ export default function Hero() {
             className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/85 transition-colors"
           >
             <span>Start Recovery</span>
-            <span className="text-background">→</span>
+            <ArrowRight className="w-4 h-4 ml-2 inline" />
           </Link>
           <Link
             to="/membership"
-            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full border border-foreground/30 text-foreground hover:bg-foreground/[0.06] hover:border-foreground/60 transition-colors backdrop-blur-sm"
+            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full border border-foreground/30 text-foreground hover:bg-foreground/[0.06] hover:border-foreground/60 transition-colors"
           >
             <span>Membership</span>
-            <span>→</span>
+            <ArrowRight className="w-4 h-4 ml-2 inline" />
           </Link>
         </motion.div>
 
-        {/* Spacer */}
         <div className="flex-1 min-h-[3rem]" />
 
       </div>
