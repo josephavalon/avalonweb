@@ -12,6 +12,7 @@ import {
   REQUESTS, ALL_STATUSES,
 } from '@/data/commandMockData';
 import StatusPill from '@/components/ui/StatusPill';
+import { useToast } from '@/components/ui/use-toast';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,7 @@ const FILTER_TABS = [
   { key: 'cancelled', label: 'Cancelled' },
 ];
 
-const TODAY_DATE = '2026-05-12';
+const TODAY_DATE = new Date().toISOString().slice(0, 10);
 
 function filterRequests(requests, tab) {
   switch (tab) {
@@ -187,7 +188,7 @@ function QBtn({ label, color, onClick }) {
 
 // ── RequestCard ───────────────────────────────────────────────────────────────
 
-function RequestCard({ req, index, onOpen, onStatusChange }) {
+function RequestCard({ req, index, onOpen, onStatusChange, toast }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
@@ -279,13 +280,13 @@ function RequestCard({ req, index, onOpen, onStatusChange }) {
         style={{ borderColor: 'rgba(255,255,255,0.05)' }}
       >
         <QBtn label="Open" color="gold" onClick={() => onOpen(req)} />
-        <QBtn label="Text" color="blue" onClick={() => {}} />
+        <QBtn label="Text" color="blue" onClick={() => toast({ title: 'Text', description: `Message to ${req.client} — coming soon.` })} />
         {req.status === 'New Request' || req.status === 'Contacted'
           ? <QBtn label="Confirm" color="emerald" onClick={() => onStatusChange(req.id, 'Confirmed')} />
           : null
         }
         {!req.nurse
-          ? <QBtn label="Assign Nurse" color="amber" onClick={() => {}} />
+          ? <QBtn label="Assign Nurse" color="amber" onClick={() => toast({ title: 'Assign Nurse', description: 'Nurse assignment — coming soon.' })} />
           : null
         }
         {req.payment === 'Payment Pending' || req.payment === 'Link Sent'
@@ -686,6 +687,7 @@ function EmptyState({ tab, search }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Appointments() {
+  const { toast } = useToast();
   const [requests, setRequests] = useState(REQUESTS);
   const [activeFilter, setActiveFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -749,6 +751,7 @@ export default function Appointments() {
                     index={i}
                     onOpen={r => setOpenReq(r)}
                     onStatusChange={handleStatusChange}
+                    toast={toast}
                   />
                 ))
               )}

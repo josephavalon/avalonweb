@@ -40,7 +40,7 @@ function useAdminTheme() {
 }
 
 const EASE = [0.16, 1, 0.3, 1];
-const TODAY_LABEL = 'Tue · May 12';
+const TODAY_LABEL = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', ' ·');
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const ST = {

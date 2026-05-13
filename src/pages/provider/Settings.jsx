@@ -4,6 +4,7 @@ import {
   Zap, AlertCircle,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { useToast } from '@/components/ui/use-toast';
 
 // ── Toggle data ───────────────────────────────────────────────────────────────
 
@@ -207,9 +208,9 @@ function ToggleRow({ item, value, onChange }) {
 
 // ── IntegrationRow ────────────────────────────────────────────────────────────
 
-function IntegrationRow({ item }) {
+function IntegrationRow({ item, toast }) {
   const handleConfigure = () => {
-    alert('Available after launch.');
+    toast({ title: `${item.service}`, description: 'Integration configuration coming soon.' });
   };
 
   return (
@@ -244,6 +245,7 @@ function IntegrationRow({ item }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Settings() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('launch');
   const [toggleValues, setToggleValues] = useState(() => {
     const map = {};
@@ -392,7 +394,7 @@ export default function Settings() {
             }}
           >
             {INTEGRATIONS.map(item => (
-              <IntegrationRow key={item.id} item={item} />
+              <IntegrationRow key={item.id} item={item} toast={toast} />
             ))}
           </div>
         </div>

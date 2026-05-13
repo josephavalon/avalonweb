@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
-const TODAY_STR = '2026-05-12';
-const TODAY_LABEL = 'Tue · May 12';
+const TODAY_STR = new Date().toISOString().slice(0, 10);
+const TODAY_LABEL = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', ' ·');
 
 // ─── Expiry logic ─────────────────────────────────────────────────────────────
 function daysUntil(dateStr) {

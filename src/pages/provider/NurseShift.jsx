@@ -515,8 +515,8 @@ export default function NurseShift() {
   const [apptStatuses, setApptStatuses] = useState({});
   const [supplyModal,  setSupplyModal]  = useState(false);
 
-  // Demo: show Stephanie's (s2) appointments for today
-  const todayStr = '2026-05-11';
+  // Show Stephanie's (s2) appointments for today (always uses real current date)
+  const todayStr = new Date().toISOString().slice(0, 10);
   const myAppts  = APPOINTMENTS.filter(a => {
     const apptDate    = a.scheduled_at.slice(0, 10);
     const isToday     = apptDate === todayStr;

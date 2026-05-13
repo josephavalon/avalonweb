@@ -4,6 +4,7 @@ import AdminLayout from '@/layouts/AdminLayout';
 import PageShell from '@/components/admin/PageShell';
 import { REQUESTS } from '@/data/commandMockData';
 import { ShieldCheck, AlertTriangle, Clock, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -235,7 +236,7 @@ function OverallPill({ status }) {
 
 // ── Clearance card ────────────────────────────────────────────────────────────
 
-function ClearanceCard({ item, idx, onUpdate }) {
+function ClearanceCard({ item, idx, onUpdate, toast }) {
   const [open, setOpen] = useState(false);
   const status = overallStatus(item);
 
@@ -389,12 +390,12 @@ function ClearanceCard({ item, idx, onUpdate }) {
                   <QBtn
                     label="↑ Escalate"
                     variant="ghost"
-                    onClick={() => {}}
+                    onClick={() => toast({ title: 'Escalation', description: `${item.client} flagged for physician review.` })}
                   />
                   <QBtn
                     label="Contact Client"
                     variant="ghost"
-                    onClick={() => {}}
+                    onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.client} — coming soon.` })}
                   />
                 </div>
               </div>
@@ -419,6 +420,7 @@ function Detail({ label, value, accent }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function Invoicing() {
+  const { toast } = useToast();
   const [items, setItems] = useState(REQUESTS);
   const [activeTab, setActiveTab] = useState('All');
 
@@ -492,6 +494,7 @@ export default function Invoicing() {
                   item={item}
                   idx={idx}
                   onUpdate={handleUpdate}
+                  toast={toast}
                 />
               ))
             )}

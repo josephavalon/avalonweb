@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { MEMBERSHIPS, LEADS } from '@/data/commandMockData';
+import { useToast } from '@/components/ui/use-toast';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ function ActionBtn({ icon: Icon, label, onClick, accent, danger }) {
 
 // ── MemberCard ────────────────────────────────────────────────────────────────
 
-function MemberCard({ item, onStatusChange }) {
+function MemberCard({ item, onStatusChange, toast }) {
   return (
     <div
       className="rounded-xl border p-4 space-y-3"
@@ -142,7 +143,7 @@ function MemberCard({ item, onStatusChange }) {
         <ActionBtn
           icon={Phone}
           label="Contact"
-          onClick={() => alert(`Contacting ${item.name}…`)}
+          onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.name} — coming soon.` })}
         />
         <ActionBtn
           icon={Check}
@@ -158,7 +159,7 @@ function MemberCard({ item, onStatusChange }) {
         <ActionBtn
           icon={PlusCircle}
           label="Add Note"
-          onClick={() => alert(`Add note for ${item.name}…`)}
+          onClick={() => toast({ title: 'Note', description: `Notes for ${item.name} — coming soon.` })}
         />
       </div>
     </div>
@@ -167,7 +168,7 @@ function MemberCard({ item, onStatusChange }) {
 
 // ── LeadCard ──────────────────────────────────────────────────────────────────
 
-function LeadCard({ item, onStatusChange }) {
+function LeadCard({ item, onStatusChange, toast }) {
   const eventDate = item.eventDate || item.event_date;
   const estValue  = item.value || item.est_value;
 
@@ -234,12 +235,12 @@ function LeadCard({ item, onStatusChange }) {
         <ActionBtn
           icon={Mail}
           label="Contact"
-          onClick={() => alert(`Contacting ${item.org}…`)}
+          onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.org} — coming soon.` })}
         />
         <ActionBtn
           icon={PlusCircle}
           label="Add Note"
-          onClick={() => alert(`Add note for ${item.org}…`)}
+          onClick={() => toast({ title: 'Note', description: `Notes for ${item.org} — coming soon.` })}
         />
         <ActionBtn
           label="Mark Proposal Needed"
@@ -265,6 +266,7 @@ function LeadCard({ item, onStatusChange }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Services() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('memberships');
   const [leadFilter, setLeadFilter] = useState('all');
   const [members, setMembers] = useState(MEMBERSHIPS);
@@ -333,7 +335,7 @@ export default function Services() {
             <EmptyState text="No membership records found." />
           ) : (
             members.map(m => (
-              <MemberCard key={m.id} item={m} onStatusChange={handleMemberStatusChange} />
+              <MemberCard key={m.id} item={m} onStatusChange={handleMemberStatusChange} toast={toast} />
             ))
           )}
         </div>
@@ -365,7 +367,7 @@ export default function Services() {
               <EmptyState text="No leads in this filter." />
             ) : (
               filteredLeads.map(l => (
-                <LeadCard key={l.id} item={l} onStatusChange={handleLeadStatusChange} />
+                <LeadCard key={l.id} item={l} onStatusChange={handleLeadStatusChange} toast={toast} />
               ))
             )}
           </div>

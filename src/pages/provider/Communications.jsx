@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { FOLLOWUPS } from '@/data/commandMockData';
+import { useToast } from '@/components/ui/use-toast';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ function ActionBtn({ icon: Icon, label, onClick, accent }) {
 
 // ── FollowUpCard ──────────────────────────────────────────────────────────────
 
-function FollowUpCard({ item, onStatusChange }) {
+function FollowUpCard({ item, onStatusChange, toast }) {
   const dueDate  = item.dueDate  || item.due_date;
   const lastVisit = item.lastVisit || item.last_visit;
   const isOverdue = item.status === 'Overdue';
@@ -155,7 +156,7 @@ function FollowUpCard({ item, onStatusChange }) {
           <ActionBtn
             icon={MessageSquare}
             label="Text"
-            onClick={() => alert(`Texting ${item.client}…`)}
+            onClick={() => toast({ title: `Text queued`, description: `Message to ${item.client} — coming soon.` })}
           />
           <ActionBtn
             icon={Check}
@@ -166,17 +167,17 @@ function FollowUpCard({ item, onStatusChange }) {
           <ActionBtn
             icon={PlusCircle}
             label="Add Note"
-            onClick={() => alert(`Add note for ${item.client}…`)}
+            onClick={() => toast({ title: `Note`, description: `Notes for ${item.client} — coming soon.` })}
           />
           <ActionBtn
             icon={RefreshCw}
             label="Create Rebook"
-            onClick={() => alert(`Creating rebook for ${item.client}…`)}
+            onClick={() => toast({ title: `Rebook`, description: `Rebook flow for ${item.client} — coming soon.` })}
           />
           <ActionBtn
             icon={Star}
             label="Membership Follow-Up"
-            onClick={() => alert(`Opening membership flow for ${item.client}…`)}
+            onClick={() => toast({ title: `Membership`, description: `Follow-up flow for ${item.client} — coming soon.` })}
           />
         </div>
       )}
@@ -211,6 +212,7 @@ function SummaryChip({ label, value, color }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Communications() {
+  const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState('all');
   const [items, setItems] = useState(FOLLOWUPS);
 
@@ -297,6 +299,7 @@ export default function Communications() {
               key={item.id}
               item={item}
               onStatusChange={handleStatusChange}
+              toast={toast}
             />
           ))}
         </div>
