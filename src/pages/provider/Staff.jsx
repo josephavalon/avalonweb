@@ -107,7 +107,7 @@ function AssignModal({ nurse, requests, onAssign, onClose }) {
                   style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}
                 >
                   <div className="min-w-0 flex-1 mr-4">
-                    <p className="text-sm font-medium text-white truncate">{req.clientName}</p>
+                    <p className="text-sm font-medium text-white truncate">{req.client || req.clientName}</p>
                     <p className="text-[11px] text-white mt-0.5 truncate" style={{ color: '#c9a84c' }}>
                       {req.therapy}
                     </p>
@@ -320,7 +320,7 @@ export default function Staff() {
     setNurses(prev =>
       prev.map(n =>
         n.id === nurseId
-          ? { ...n, status: 'Assigned', assignedTo: requests.find(r => r.id === requestId)?.clientName || nurseName }
+          ? { ...n, status: 'Assigned', assignedTo: requests.find(r => r.id === requestId)?.client || requests.find(r => r.id === requestId)?.clientName || nurseName }
           : n
       )
     );

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Fingerprint, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
+import { useToast } from '@/components/ui/use-toast';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -113,6 +114,7 @@ function SubmitBtn({ loading, label, loadingLabel }) {
 function SignInTab({ onSwitchTab }) {
   const navigate = useNavigate();
   const { signIn, loading, error, user } = useAuthStore();
+  const { toast } = useToast();
   const [username, setUsername]         = useState('');
   const [password, setPassword]         = useState('');
   const [showPw, setShowPw]             = useState(false);
@@ -169,11 +171,11 @@ function SignInTab({ onSwitchTab }) {
             {passkeyLoading ? 'Authenticating…' : 'Sign in with Passkey'}
           </button>
         )}
-        <button type="button" onClick={() => alert('Connect your Apple OAuth provider.')}
+        <button type="button" onClick={() => toast({ title: 'Coming soon', description: 'Apple Sign In will be available at launch.' })}
           className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground">
           <AppleLogo className="w-3.5 h-3.5" /> Sign in with Apple
         </button>
-        <button type="button" onClick={() => alert('Connect your Google OAuth provider.')}
+        <button type="button" onClick={() => toast({ title: 'Coming soon', description: 'Google Sign In will be available at launch.' })}
           className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground">
           <GoogleLogo className="w-3.5 h-3.5" /> Sign in with Google
         </button>

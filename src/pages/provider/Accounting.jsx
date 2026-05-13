@@ -109,7 +109,7 @@ function PaymentCard({ payment: initialPayment, index }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-white font-medium text-[15px] truncate">
-                {payment.clientName}
+                {payment.client || payment.clientName}
               </h3>
               <StatusPill status={payment.status} />
             </div>
