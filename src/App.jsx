@@ -21,16 +21,16 @@ const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
 const Login = lazy(() => import('./pages/Login'));
 const MemberDashboard = lazy(() => import('./pages/members/Dashboard'));
 const ProviderDashboard = lazy(() => import('./pages/provider/Dashboard'));
-const ProviderAccounting = lazy(() => import('./pages/Provider/Accounting'));
-const ProviderAppointments = lazy(() => import('./pages/Provider/Appointments'));
-const ProviderClients = lazy(() => import('./pages/Provider/Clients'));
-const ProviderInvoicing = lazy(() => import('./pages/Provider/Invoicing'));
-const ProviderServices = lazy(() => import('./pages/Provider/Services'));
-const ProviderStaff = lazy(() => import('./pages/Provider/Staff'));
-const ProviderCommunications = lazy(() => import('./pages/Provider/Communications'));
-const NurseShift = lazy(() => import('./pages/Provider/NurseShift'));
-const ProviderReports = lazy(() => import('./pages/Provider/Reports'));
-const ProviderSettings = lazy(() => import('./pages/Provider/Settings'));
+const ProviderAccounting = lazy(() => import('./pages/provider/Accounting'));
+const ProviderAppointments = lazy(() => import('./pages/provider/Appointments'));
+const ProviderClients = lazy(() => import('./pages/provider/Clients'));
+const ProviderInvoicing = lazy(() => import('./pages/provider/Invoicing'));
+const ProviderServices = lazy(() => import('./pages/provider/Services'));
+const ProviderStaff = lazy(() => import('./pages/provider/Staff'));
+const ProviderCommunications = lazy(() => import('./pages/provider/Communications'));
+const NurseShift = lazy(() => import('./pages/provider/NurseShift'));
+const ProviderReports = lazy(() => import('./pages/provider/Reports'));
+const ProviderSettings = lazy(() => import('./pages/provider/Settings'));
 const EventPage = lazy(() => import('./pages/EventPage'));
 
 // Home stays eager — it's the landing page, it needs to be instant.
