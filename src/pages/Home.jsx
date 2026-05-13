@@ -6,42 +6,81 @@ import Hero from '../components/landing/Hero';
 import TrustStrip from '../components/landing/TrustStrip';
 import HowItWorks from '../components/landing/HowItWorks';
 import WhatIsIV from '../components/landing/WhatIsIV';
-import OurDrips from '../components/landing/OurDrips';
+import TreatmentsTeaser from '../components/landing/TreatmentsTeaser';
 import MembershipSection from '../components/landing/MembershipSection';
 import HomeFAQ from '../components/landing/HomeFAQ';
-import HardCloseCTA from '../components/landing/HardCloseCTA';
-// GiftCertificates hidden for presale — Stripe integration deferred post-launch.
-// import GiftCertificates from '../components/landing/GiftCertificates';
 import EventsSection from '../components/landing/EventsSection';
-import Testimonials from '../components/landing/Testimonials';
 import WaitlistSection from '../components/landing/WaitlistSection';
 import Footer from '../components/landing/Footer';
+import Reviews from '../components/landing/Reviews';
+import ChannelCards from '../components/landing/ChannelCards';
+import { Reveal } from '../components/ui/Reveal';
 
-// Section order is intentional — read as a VC funnel:
-// 1. Hero: category promise
-// 2. TrustStrip: operational credentials
-// 3. IntroSection: platform thesis + roadmap with dated quarters
-// 4. WhatIsIV / HowItWorks / OurDrips: product tour
+// Section order — conversion funnel:
+// 1. Hero: promise + social proof + dual CTA  (ATF — no reveal, fills 100svh)
+// 2. TrustStrip: operational credentials ticker
+// 3. HowItWorks: remove friction, explain the service
+// 4. TreatmentsTeaser: product tour with pricing
 // 5. MembershipSection: pricing ask
-// 6. EventsSection + B2BSection (Partnerships): cultural + channel moats
-// 7. Testimonials + FAQ: objections handled
-// 8. WaitlistSection: secondary capture with waitlist count as proof
-// Medical Direction: now lives at /medical-direction, linked from Footer.
+// 6. ChannelCards: corporate / events / hotel pathways
+// 7. Reviews: earned trust
+// 8. WhatIsIV: education for skeptics
+// 9. EventsSection: cultural proof
+// 10. HomeFAQ: objection handling
+// 11. WaitlistSection: secondary capture
 export default function Home() {
   return (
-    <div className="app-shell bg-background min-h-screen w-full" style={{ touchAction: 'pan-y' }}>
+    <div className="app-shell bg-background min-h-screen w-full">
       <Navbar />
+
+      {/* ── ATF — fills viewport, no reveal needed ── */}
       <Hero />
-      <TrustStrip />
-      <WhatIsIV />
-      <HowItWorks />
-      <OurDrips />
-      <MembershipSection />
-      <Testimonials />
-      <HomeFAQ />
-      <HardCloseCTA />
-      <WaitlistSection />
-      <Footer />
+
+      {/* ── Below fold — each section materialises on scroll ── */}
+      <Reveal delay={0}    duration={0.7} y={40} scale={0.98} blur={false}>
+        <TrustStrip />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.85} blur={false}>
+        <HowItWorks />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.85} blur={false}>
+        <TreatmentsTeaser />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.9} blur={false}>
+        <MembershipSection />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.85}>
+        <ChannelCards />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.85}>
+        <Reviews />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.85}>
+        <WhatIsIV />
+      </Reveal>
+
+      <Reveal delay={0} duration={0.8}>
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.8}>
+        <HomeFAQ />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.8}>
+        <WaitlistSection />
+      </Reveal>
+
+      <Reveal delay={0}    duration={0.75} y={32} scale={0.99} blur={false}>
+        <div className="pb-24 md:pb-0">
+          <Footer />
+        </div>
+      </Reveal>
     </div>
   );
 }

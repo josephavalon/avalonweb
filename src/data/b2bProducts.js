@@ -106,7 +106,7 @@ export const B2B_PRODUCTS = [
 export const COMPRESSION_ADDON = {
   id: 'compression',
   name: 'Normatec compression boots',
-  description: 'Normatec compression boots, 20-minute session. Add to any IV or shot.',
+  description: 'Normatec compression boots. Add to any IV or shot for full-body recovery.',
   price: 50,
   originalPrice: 60,
   flair: { line1: '17% OFF', line2: 'ONE DAY ONLY' },

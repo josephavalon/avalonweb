@@ -33,7 +33,7 @@ export default function FAQPage() {
   });
 
   return (
-    <div className="app-shell bg-background min-h-screen w-full" style={{ touchAction: 'pan-y' }}>
+    <div className="app-shell bg-background min-h-screen w-full">
       <Navbar />
       <main className="pt-24 md:pt-28">
         <FAQ />

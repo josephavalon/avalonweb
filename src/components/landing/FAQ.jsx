@@ -3,75 +3,125 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Search } from 'lucide-react';
 import { EASE_OUT_EXPO } from '@/lib/motion';
 
-const faqs = [
+const FAQ_SECTIONS = [
   {
-    category: 'General',
-    q: "What's in your IVs?",
-    a: "Every IV is customized and made fresh on-site with medical-grade ingredients like B-complex vitamins, glutathione, magnesium, zinc, and electrolytes — tailored to your needs."
+    title: 'Getting Started',
+    items: [
+      {
+        q: 'What is mobile IV therapy?',
+        a: 'IV therapy delivers vitamins, minerals, and fluids directly into the bloodstream via a small catheter. A licensed nurse comes to your location and administers the drip in 30–90 minutes. No clinic visit required.',
+      },
+      {
+        q: 'How does Avalon work?',
+        a: 'Book online or through our app, choose your protocol, and we dispatch a licensed nurse to your home, office, or hotel. Sessions typically take 30–90 minutes depending on the drip.',
+      },
+      {
+        q: 'What areas do you serve?',
+        a: 'San Francisco and five surrounding Bay Area counties. Enter your address at checkout to confirm availability.',
+      },
+      {
+        q: 'What are your hours?',
+        a: 'Monday through Sunday, 8 AM to 8 PM.',
+      },
+      {
+        q: 'How quickly can a nurse arrive?',
+        a: 'Most sessions are available same-day. Members receive a 90-minute arrival window. Inner Circle and Elite members receive dedicated nurse priority scheduling.',
+      },
+    ],
   },
   {
-    category: 'Membership',
-    q: "How does the membership work?",
-    a: "Membership is by application only. Once approved, you lock in presale pricing with a 3-month minimum commitment. Credits roll over month-to-month as long as your membership stays active."
+    title: 'Treatments',
+    items: [
+      {
+        q: "What's in a Myers' Cocktail?",
+        a: "The Myers' Cocktail is a blend of magnesium, calcium, B vitamins (B1, B2, B3, B5, B6), vitamin C, and saline. It's one of the most studied IV formulations and has been used clinically for decades.",
+      },
+      {
+        q: 'What is NAD+ and who is it for?',
+        a: 'NAD+ (nicotinamide adenine dinucleotide) is a coenzyme found in every cell of the body, associated with cellular energy metabolism. NAD+ IV therapy is popular among individuals focused on longevity and performance. Sessions run 2–4 hours. A brief health screening is required.',
+      },
+      {
+        q: 'What is glutathione?',
+        a: 'Glutathione is a naturally occurring antioxidant produced by the body. IV glutathione is delivered as a push at the end of your session and is associated with skin clarity and antioxidant support.',
+      },
+      {
+        q: 'Can I customize my drip?',
+        a: 'Yes. Every session can be enhanced with add-ons: extra fluids, high-dose Vitamin C, glutathione push, NAD+ (250mg), magnesium boost, and more.',
+      },
+      {
+        q: 'How long does a session take?',
+        a: 'Hydration sessions run 30–45 minutes. Most drips are 45–60 minutes. NAD+ sessions are 2–4 hours. Your nurse will confirm timing when they arrive.',
+      },
+    ],
   },
   {
-    category: 'Membership',
-    q: "Can I pause or cancel my membership?",
-    a: "After the 3-month minimum, you may cancel with 30 days notice. Pausing is available for up to 60 days per year for qualifying circumstances."
+    title: 'Safety & Medical',
+    items: [
+      {
+        q: 'Are your nurses licensed?',
+        a: 'All Avalon nurses are California-licensed registered nurses (RNs) with IV therapy certification and a minimum of two years clinical experience.',
+      },
+      {
+        q: 'Is there a medical director?',
+        a: 'Yes. Avalon operates under the oversight of a California-licensed physician who reviews our protocols, establishes standing orders, and ensures all services meet clinical standards.',
+      },
+      {
+        q: 'What if I have a reaction?',
+        a: 'All Avalon nurses carry emergency supplies and are trained in adverse event response. Our medical director is available for clinical consultation during all service hours.',
+      },
+      {
+        q: 'Do I need a consultation first?',
+        a: 'Standard IV sessions do not require a prior consultation. NAD+, Exosomes, and CBD sessions require a brief health screening completed at booking.',
+      },
+      {
+        q: 'Is IV therapy safe?',
+        a: 'IV therapy administered by licensed nurses under physician oversight is well-established. As with any medical procedure, there are potential risks. We review your health history before each session and our nurses are trained to identify and respond to adverse events.',
+      },
+    ],
   },
   {
-    category: 'Membership',
-    q: "Do credits expire?",
-    a: "Credits roll over indefinitely as long as your membership remains active. If you cancel, any unused credits expire at the end of your final billing cycle."
-  },
-  {
-    category: 'Membership',
-    q: "What's included in each membership tier?",
-    a: "Tiers include monthly IV drips and IM injections ranging from 1–4 treatments per month, depending on the plan. All members get 20% off à la carte services, priority scheduling, and access to exclusive member events. Higher tiers include a dedicated care coordinator."
-  },
-  {
-    category: 'Membership',
-    q: "Can I upgrade or downgrade my membership?",
-    a: "Yes. You may upgrade or downgrade your membership tier at any time. Changes take effect on your next billing cycle. Downgrades may affect your credit allowance; any excess credits will roll over to the next month."
-  },
-  {
-    category: 'Membership',
-    q: "What happens if I don't use my monthly credits?",
-    a: "Monthly credits roll over indefinitely as long as your membership stays active. There's no penalty for not using them — they accumulate and are available whenever you need them."
-  },
-  {
-    category: 'Membership',
-    q: "Can I transfer my membership to someone else?",
-    a: "Memberships are non-transferable and tied to your account. However, we offer corporate and family plans for multiple users — contact partnerships@avalonvitality.co for details."
-  },
-  {
-    category: 'General',
-    q: "What areas do you serve?",
-    a: "We currently serve the entire San Francisco Bay Area, including SF, the Peninsula, East Bay, and Marin. Service area is expanding — join the waitlist for your city."
-  },
-  {
-    category: 'Safety',
-    q: "Is Avalon safe for everyone?",
-    a: "Avalon is safe for most people, but not suitable for those with certain medical conditions like heart failure, kidney disease, or severe allergies. Always disclose your full medical history during consultation with our clinical team."
-  },
-  {
-    category: 'Safety',
-    q: "What are the possible side effects?",
-    a: "Side effects are rare and mild — minor bruising at the injection site, slight lightheadedness, or temporary headache. Serious complications are extremely uncommon with our licensed nurses and protocols."
-  },
-  {
-    category: 'Safety',
-    q: "Are the ingredients FDA-approved and sterile?",
-    a: "Yes. All our ingredients are pharmaceutical-grade and meet strict FDA standards. We use sterile, single-use equipment and maintain rigorous infection control protocols for every session."
-  },
-  {
-    category: 'General',
-    q: "Do you accept insurance?",
-    a: "We do not bill insurance directly. Payment is required at the time of service. However, we provide itemized receipts that you can submit to your insurance provider for potential reimbursement if your policy covers IV wellness therapy."
+    title: 'Membership & Booking',
+    items: [
+      {
+        q: 'How does the membership work?',
+        a: 'Members pay a monthly fee and receive credits redeemable for IV sessions, plus a discount on all add-ons and additional sessions. Credits do not roll over.',
+      },
+      {
+        q: 'Can I pause or cancel?',
+        a: 'Memberships require a 3-month minimum commitment. After that, you can cancel anytime with 30 days notice. Pausing is available once per year for up to 60 days.',
+      },
+      {
+        q: 'Can I share my membership?',
+        a: 'Elite and Private Client members may designate one household partner to share their membership benefits.',
+      },
+      {
+        q: "What's the commitment?",
+        a: '3 months minimum, then month-to-month.',
+      },
+      {
+        q: 'How do I book?',
+        a: 'Book directly through the Avalon app or at avalonvitality.co/store. Same-day appointments are available 8 AM–8 PM.',
+      },
+      {
+        q: 'What payment methods do you accept?',
+        a: 'All major credit and debit cards. Apple Pay and Google Pay accepted. Cash-pay only — we do not bill insurance. HSA/FSA eligibility is under review.',
+      },
+      {
+        q: 'What is your cancellation policy?',
+        a: 'Cancel or reschedule up to 2 hours before your appointment at no charge. Late cancellations (under 2 hours) incur a $50 fee.',
+      },
+      {
+        q: 'Do you accept insurance?',
+        a: 'No. Avalon is cash-pay only. We do not bill insurance or Medicare/Medicaid. HSA/FSA eligibility for certain services is currently under review.',
+      },
+    ],
   },
 ];
 
-const CATEGORIES = ['All', 'General', 'Membership', 'Safety'];
+// Flatten for search
+const ALL_ITEMS = FAQ_SECTIONS.flatMap((s) => s.items.map((item) => ({ ...item, section: s.title })));
+
+const EASE = [0.16, 1, 0.3, 1];
 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
@@ -80,14 +130,14 @@ function FAQItem({ faq, isOpen, onToggle }) {
       onClick={onToggle}
     >
       <div className="flex items-center justify-between px-5 py-3 gap-4">
-         <span className="font-body text-sm text-foreground">{faq.q}</span>
-         <div className="shrink-0 w-5 h-5 flex items-center justify-center">
-           {isOpen
-             ? <Minus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
-             : <Plus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
-           }
-         </div>
-       </div>
+        <span className="font-body text-sm text-foreground">{faq.q}</span>
+        <div className="shrink-0 w-5 h-5 flex items-center justify-center">
+          {isOpen
+            ? <Minus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+            : <Plus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+          }
+        </div>
+      </div>
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
@@ -96,9 +146,9 @@ function FAQItem({ faq, isOpen, onToggle }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
           >
-            <div className="px-5 pb-3/40">
-               <p className="font-body text-sm text-foreground leading-relaxed pt-2">{faq.a}</p>
-             </div>
+            <div className="px-5 pb-4">
+              <p className="font-body text-sm text-foreground/70 leading-relaxed pt-2">{faq.a}</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -108,16 +158,18 @@ function FAQItem({ faq, isOpen, onToggle }) {
 
 export default function FAQ() {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('General');
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openKey, setOpenKey] = useState(null);
 
-  const filtered = faqs.filter(f => {
-    const matchesCategory = f.category === activeCategory;
-    const matchesSearch = !search || f.q.toLowerCase().includes(search.toLowerCase()) || f.a.toLowerCase().includes(search.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const handleToggle = (key) => setOpenKey(openKey === key ? null : key);
 
-  const handleToggle = (i) => setOpenIndex(openIndex === i ? null : i);
+  const isSearching = search.trim().length > 0;
+  const searchResults = isSearching
+    ? ALL_ITEMS.filter(
+        (f) =>
+          f.q.toLowerCase().includes(search.toLowerCase()) ||
+          f.a.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
 
   return (
     <section id="faq" className="py-4 md:py-6 px-4">
@@ -133,55 +185,63 @@ export default function FAQ() {
       </div>
       <div className="max-w-3xl mx-auto">
 
-
         {/* Search */}
-        <div className="relative mb-2">
+        <div className="relative mb-6">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="SEARCH"
             value={search}
-            onChange={e => { setSearch(e.target.value); setOpenIndex(null); }}
+            onChange={(e) => { setSearch(e.target.value); setOpenKey(null); }}
             className="w-full bg-transparent border border-border/60 rounded-2xl pl-12 pr-6 py-2 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
 
-        {/* Category filters */}
-        <div className="mb-2">
-          <p className="font-body text-xs tracking-[0.25em] text-foreground uppercase mb-1">Topic</p>
-          <div className="flex flex-wrap gap-1.5">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => { setActiveCategory(cat); setOpenIndex(null); }}
-                className={`font-body text-sm transition-colors ${
-                  activeCategory === cat
-                    ? 'bg-foreground text-background font-semibold px-3 py-1 rounded-full'
-                    : 'text-muted-foreground hover:text-foreground px-3 py-1 rounded-full'
-                }`}
-              >
-                {cat}
-              </button>
+        {isSearching ? (
+          <div className="space-y-1">
+            {searchResults.length === 0 ? (
+              <p className="font-body text-sm text-foreground/50 py-4 text-center">No results found.</p>
+            ) : (
+              searchResults.map((faq) => (
+                <FAQItem
+                  key={`${faq.section}-${faq.q}`}
+                  faq={faq}
+                  isOpen={openKey === `${faq.section}-${faq.q}`}
+                  onToggle={() => handleToggle(`${faq.section}-${faq.q}`)}
+                />
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {FAQ_SECTIONS.map((section) => (
+              <div key={section.title}>
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                  className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-3"
+                >
+                  {section.title}
+                </motion.p>
+                <div className="space-y-1">
+                  {section.items.map((faq) => {
+                    const key = `${section.title}-${faq.q}`;
+                    return (
+                      <FAQItem
+                        key={key}
+                        faq={faq}
+                        isOpen={openKey === key}
+                        onToggle={() => handleToggle(key)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* FAQ items */}
-        <div className="space-y-1">
-          {filtered.length === 0 ? (
-            <p className="font-body text-sm text-foreground py-4 text-center">No results found.</p>
-          ) : (
-            filtered.map((faq, i) => (
-              <FAQItem
-                key={faq.q}
-                faq={faq}
-                isOpen={openIndex === faq.q}
-                onToggle={() => handleToggle(faq.q)}
-              />
-            ))
-          )}
-        </div>
-
+        )}
       </div>
     </section>
   );

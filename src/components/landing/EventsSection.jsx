@@ -10,7 +10,7 @@ import { events } from '../../data/events';
 
 export default function EventsSection() {
   return (
-    <section id="events" className="py-12 md:py-24 px-4 scroll-mt-24">
+    <section id="events" className="py-12 md:py-20 px-4 scroll-mt-24">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

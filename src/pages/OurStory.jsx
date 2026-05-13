@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
+import { Reveal } from '@/components/ui/Reveal';
 
 // Editorial easing per non-negotiable #5.
 const EASE = [0.16, 1, 0.3, 1];
@@ -52,7 +53,7 @@ export default function OurStory() {
             alt="Golden Gate Bridge at dusk"
             className="w-full h-full object-cover opacity-50"
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         </div>
@@ -142,7 +143,7 @@ export default function OurStory() {
       </section>
 
       {/* Thesis */}
-      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+      <Reveal as="section" className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
         <div className="max-w-content mx-auto grid md:grid-cols-12 gap-rhythm-6">
           <motion.div {...REVEAL} className="md:col-span-5">
             <p className="text-eyebrow text-muted-foreground font-body uppercase mb-6">
@@ -171,10 +172,10 @@ export default function OurStory() {
             </p>
           </motion.div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Why / Mission split */}
-      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+      <Reveal as="section" className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
         <div className="max-w-content mx-auto grid md:grid-cols-2 gap-rhythm-4">
           <motion.div
             {...REVEAL}
@@ -214,10 +215,10 @@ export default function OurStory() {
             </p>
           </motion.div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Founded in San Francisco */}
-      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+      <Reveal as="section" className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
         <div className="max-w-content mx-auto grid md:grid-cols-12 gap-rhythm-6 items-start">
           <motion.div {...REVEAL} className="md:col-span-5">
             <p className="text-eyebrow text-accent font-body uppercase mb-6 inline-flex items-center gap-2">
@@ -243,10 +244,10 @@ export default function OurStory() {
             </p>
           </motion.div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Where we meet you */}
-      <section className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
+      <Reveal as="section" className="px-6 md:px-16 py-section-sm md:py-section border-t border-border">
         <div className="max-w-content mx-auto">
           <motion.div {...REVEAL} className="mb-10">
             <p className="text-eyebrow text-accent font-body uppercase mb-4">
@@ -278,7 +279,7 @@ export default function OurStory() {
             ))}
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Clinical Leadership */}
       <section
@@ -347,7 +348,7 @@ export default function OurStory() {
       </section>
 
       {/* Trust trailer */}
-      <section className="px-6 md:px-16 py-section-sm border-t border-border">
+      <Reveal as="section" className="px-6 md:px-16 py-section-sm border-t border-border">
         <div className="max-w-content mx-auto grid grid-cols-1 md:grid-cols-3 gap-rhythm-4">
           <motion.div
             {...REVEAL}
@@ -391,10 +392,10 @@ export default function OurStory() {
             </p>
           </motion.div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Close */}
-      <section className="px-6 md:px-16 py-section border-t border-border">
+      <Reveal as="section" className="px-6 md:px-16 py-section border-t border-border">
         <motion.div {...REVEAL} className="max-w-content mx-auto text-center">
           <p className="text-eyebrow text-accent font-body uppercase mb-6">This is</p>
           <h2 className="font-heading text-display text-foreground tracking-wide leading-none">
@@ -411,7 +412,7 @@ export default function OurStory() {
             Start Now
           </a>
         </motion.div>
-      </section>
+      </Reveal>
 
       <Footer />
     </div>

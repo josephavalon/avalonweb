@@ -1,31 +1,33 @@
 import React from 'react';
-import { Shield, UserCheck, Stethoscope, MapPin, Clock } from 'lucide-react';
+import { Shield, UserCheck, Stethoscope, Clock, FlaskConical, Lock } from 'lucide-react';
 
 // Vertical-agnostic trust signals. Keep FDA-safe — no structure/function claims.
 // Credentials framed as operational standards, not therapeutic guarantees.
+// Styled editorial (foreground/55, no accent) — not a UI element, a spec sheet.
 const CREDENTIALS = [
-  { icon: UserCheck,   label: 'RN-administered' },
-  { icon: Stethoscope, label: 'MD-supervised' },
-  { icon: Shield,      label: 'HIPAA-secure' },
-  { icon: MapPin,      label: 'SF Bay coverage' },
-  { icon: Clock,       label: 'Rapid response' },
+  { icon: UserCheck,    label: 'Licensed Registered Nurses' },
+  { icon: Clock,        label: 'Arrives in 60–90 min'       },
+  { icon: Lock,         label: 'Secure Intake'              },
+  { icon: FlaskConical, label: 'Lab-Grade Formulations'     },
+  { icon: Stethoscope,  label: 'Clinical Oversight'         },
+  { icon: Shield,       label: 'HIPAA-Secure'               },
 ];
 
 const Dot = () => (
   <span
     aria-hidden="true"
-    className="w-1 h-1 rounded-full bg-border shrink-0 inline-block"
+    className="w-[3px] h-[3px] rounded-full bg-foreground/20 shrink-0 inline-block"
   />
 );
 
 const Item = ({ icon: Icon, label }) => (
-  <span className="inline-flex items-center gap-2.5 whitespace-nowrap shrink-0">
+  <span className="inline-flex items-center gap-2 whitespace-nowrap shrink-0">
     <Icon
-      className="w-3.5 h-3.5 text-accent shrink-0"
+      className="w-3 h-3 text-foreground/35 shrink-0"
       strokeWidth={1.5}
       aria-hidden="true"
     />
-    <span className="font-body text-[11px] md:text-xs tracking-[0.25em] md:tracking-[0.3em] uppercase text-muted-foreground">
+    <span className="font-body text-[10px] md:text-[11px] tracking-[0.28em] md:tracking-[0.32em] uppercase text-foreground/55">
       {label}
     </span>
   </span>

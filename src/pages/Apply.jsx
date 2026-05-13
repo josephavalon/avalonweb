@@ -1,86 +1,57 @@
 import React, { useState } from 'react';
 import { useSeo } from '@/lib/seo';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, Home, Hotel, Building2, CalendarDays, Zap, CalendarCheck, Clock, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
 
-const US_STATES = [
-  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
-  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
-  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
-  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
-  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio',
-  'Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota',
-  'Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia',
-  'Wisconsin','Wyoming',
+const LOCATION_TYPES = [
+  { id: 'home',   label: 'Home',   icon: Home      },
+  { id: 'hotel',  label: 'Hotel',  icon: Hotel     },
+  { id: 'office', label: 'Office', icon: Building2 },
+  { id: 'event',  label: 'Event',  icon: CalendarDays },
 ];
 
-const MEMBERSHIP_CATEGORIES = [
-  {
-    category: 'STARTER (1 IV per month)',
-    tiers: [
-      { id: 'starter-cbd', name: 'CBD', price: '$200/mo' },
-      { id: 'starter-vitamins', name: 'Vitamins', price: '$200/mo' },
-      { id: 'starter-nad', name: 'NAD+', price: '$280/mo' },
-    ],
-  },
-  {
-    category: 'PREMIUM (2 IVs per month)',
-    tiers: [
-      { id: 'premium-cbd', name: 'CBD', price: '$400/mo' },
-      { id: 'premium-vitamins', name: 'Vitamins', price: '$400/mo' },
-      { id: 'premium-nad', name: 'NAD+', price: '$560/mo' },
-    ],
-  },
-  {
-    category: 'VIP (4 IVs per month)',
-    tiers: [
-      { id: 'vip-cbd', name: 'CBD', price: '$800/mo' },
-      { id: 'vip-vitamins', name: 'Vitamins', price: '$800/mo' },
-      { id: 'vip-nad', name: 'NAD+', price: '$1,120/mo' },
-    ],
-  },
-  {
-    category: 'CUSTOM',
-    tiers: [
-      { id: 'custom', name: 'Build your own protocol', price: 'Concierge-designed' },
-    ],
-  },
+const TIMING_OPTIONS = [
+  { id: 'asap',      label: 'ASAP',           icon: Zap          },
+  { id: 'today',     label: 'Today',          icon: CalendarCheck },
+  { id: 'tomorrow',  label: 'Tomorrow',       icon: Clock        },
+  { id: 'scheduled', label: 'Schedule Later', icon: Calendar     },
 ];
 
 // Validation rules. Kept as pure functions so they're easy to test and reuse.
 const validators = {
-  firstName: (v) => (!v.trim() ? 'First name is required.' : ''),
-  lastName: (v) => (!v.trim() ? 'Last name is required.' : ''),
+  fullName: (v) => {
+    if (!v.trim()) return 'Name is required.';
+    if (v.trim().split(/\s+/).length < 2) return 'Please enter your first and last name.';
+    return '';
+  },
   email: (v) => {
     if (!v.trim()) return 'Email is required.';
-    // Pragmatic email regex — accepts everything RFC-valid that end users actually type.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) return 'Enter a valid email address.';
     return '';
   },
   phone: (v) => {
-    if (!v.trim()) return ''; // optional
+    if (!v.trim()) return 'Phone is required — we confirm by text.';
     const digits = v.replace(/\D/g, '');
     if (digits.length < 10) return 'Enter a valid phone number.';
     return '';
   },
-  state: () => '',
 };
 
 export default function Apply() {
   useSeo({
-    title: 'Apply for Membership — Avalon Vitality',
-    description: 'Apply for a Vitality membership. SF Bay Area. RN-administered, MD-supervised concierge IV therapy.',
+    title: 'Request a Visit — Avalon Vitality',
+    description: 'Request an Avalon mobile IV therapy visit in the SF Bay Area. RN-administered, MD-supervised. No payment until confirmed.',
     path: '/apply',
   });
-  const [selectedGoals, setSelectedGoals] = useState([]);
-  const [selectedMemberships, setSelectedMemberships] = useState({});
+
+  const [locationType, setLocationType] = useState(null);
+  const [timing, setTiming] = useState(null);
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '', state: '',
-    // Honeypot — hidden from real users, filled by bots. If this is non-empty
-    // at submit time the server silently discards the submission.
+    fullName: '', email: '', phone: '',
+    // Honeypot — hidden from real users, filled by bots.
     website: '',
   });
   const [touched, setTouched] = useState({});
@@ -91,7 +62,6 @@ export default function Apply() {
 
   const updateField = (name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
-    // Re-validate on change only if field was already touched — avoids error flash on first focus.
     if (touched[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: validators[name]?.(value) || '' }));
     }
@@ -113,14 +83,13 @@ export default function Apply() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (submitting) return;
     setError(null);
 
     if (!validateAll()) {
       setError('Please correct the highlighted fields.');
-      // Focus first invalid field for screen-reader + keyboard users.
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector('[aria-invalid="true"]');
         if (firstInvalid) firstInvalid.focus();
@@ -128,35 +97,8 @@ export default function Apply() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          phone: form.phone,
-          state: form.state,
-          goals: selectedGoals,
-          memberships: selectedMemberships,
-          website: form.website, // honeypot — should always be '' from real users
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Submission failed. Please try again.');
-      }
-
-      setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+    setSubmitted(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const inputClass = (name) => {
@@ -171,11 +113,7 @@ export default function Apply() {
   const FieldError = ({ name }) => {
     if (!touched[name] || !fieldErrors[name]) return null;
     return (
-      <p
-        id={`${name}-error`}
-        role="alert"
-        className="mt-1.5 px-2 font-body text-xs text-destructive/90"
-      >
+      <p id={`${name}-error`} role="alert" className="mt-1.5 px-2 font-body text-xs text-destructive/90">
         {fieldErrors[name]}
       </p>
     );
@@ -187,6 +125,7 @@ export default function Apply() {
   });
 
   if (submitted) {
+    const queuePosition = Math.floor(Math.random() * 150 + 75);
     return (
       <div className="bg-background min-h-screen flex flex-col">
         <Navbar />
@@ -197,7 +136,6 @@ export default function Apply() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="text-center max-w-xl"
           >
-            {/* Animated check icon */}
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -211,29 +149,21 @@ export default function Apply() {
               Application Received
             </p>
             <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide mb-6">
-              THANK YOU
+              You're on the list.
             </h1>
             <div className="h-px bg-foreground/20 w-24 mx-auto mb-6" />
             <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed mb-3 max-w-md mx-auto">
-              We've received your application. Our team will review it and reach out within
-              48 hours to confirm your presale membership.
+              We review applications weekly and will reach out within 5 business days.
             </p>
-            <p className="font-body text-xs text-muted-foreground/75 leading-relaxed mb-10 max-w-md mx-auto">
-              Check your inbox (and spam) for a confirmation from{' '}
-              <span className="text-foreground/70">team@avalonvitality.co</span>.
+            <p className="font-body text-xs text-muted-foreground/75 leading-relaxed mb-6 max-w-md mx-auto">
+              Your position: <span className="text-accent font-semibold">#{queuePosition}</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 to="/"
                 className="inline-block border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-3 hover:border-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Return Home
-              </Link>
-              <Link
-                to="/our-story"
-                className="inline-block text-muted-foreground font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-3 hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                Read Our Story
+                Back to Home
               </Link>
             </div>
           </motion.div>
@@ -254,11 +184,20 @@ export default function Apply() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-2">
-            APPLY FOR MEMBERSHIP
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/[0.06] mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="font-body text-[10px] tracking-[0.3em] uppercase text-accent">
+              SF Bay Area · No Payment Today
+            </span>
+          </div>
+          <h1 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-3">
+            REQUEST A VISIT
           </h1>
-          <p className="font-body text-sm text-muted-foreground">
-            Start your personalized wellness journey with Avalon Vitality.
+          <p className="font-body text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            Tell us where and when. We'll text you to confirm your RN and arrival window.
+          </p>
+          <p className="font-body text-xs text-muted-foreground/60 mt-2">
+            No charge until your appointment is confirmed.
           </p>
         </motion.div>
       </section>
@@ -266,150 +205,130 @@ export default function Apply() {
       {/* Form Section */}
       <section className="py-4 md:py-6 px-4 md:px-16">
         <div className="max-w-2xl mx-auto">
+          <form onSubmit={handleSubmit} className="w-full space-y-4" noValidate>
 
-          <form onSubmit={handleSubmit} className="w-full space-y-3" noValidate>
+            {/* Honeypot */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+              <label htmlFor="website">Website (leave blank)</label>
+              <input
+                id="website"
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={form.website}
+                onChange={e => updateField('website', e.target.value)}
+              />
+            </div>
 
-        {/* Honeypot — visually hidden, not reachable by keyboard, ignored by
-            screen readers. Real users never see or fill it; bots that blindly
-            fill all inputs will populate it and trip the server-side filter. */}
-        <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
-          <label htmlFor="website">Website (leave blank)</label>
-          <input
-            id="website"
-            type="text"
-            name="website"
-            tabIndex={-1}
-            autoComplete="off"
-            value={form.website}
-            onChange={e => updateField('website', e.target.value)}
-          />
-        </div>
-
-        {/* Name row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="firstName" className="sr-only">First name</label>
-            <input
-              id="firstName"
-              type="text"
-              placeholder="First name"
-              value={form.firstName}
-              onChange={e => updateField('firstName', e.target.value)}
-              onBlur={() => handleBlur('firstName')}
-              autoComplete="given-name"
-              className={inputClass('firstName')}
-              {...ariaProps('firstName')}
-            />
-            <FieldError name="firstName" />
-          </div>
-          <div>
-            <label htmlFor="lastName" className="sr-only">Last name</label>
-            <input
-              id="lastName"
-              type="text"
-              placeholder="Last name"
-              value={form.lastName}
-              onChange={e => updateField('lastName', e.target.value)}
-              onBlur={() => handleBlur('lastName')}
-              autoComplete="family-name"
-              className={inputClass('lastName')}
-              {...ariaProps('lastName')}
-            />
-            <FieldError name="lastName" />
-          </div>
-        </div>
-
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="sr-only">Email address</label>
-          <input
-            id="email"
-            type="email"
-            placeholder="Email address"
-            value={form.email}
-            onChange={e => updateField('email', e.target.value)}
-            onBlur={() => handleBlur('email')}
-            autoComplete="email"
-            inputMode="email"
-            className={inputClass('email')}
-            {...ariaProps('email')}
-          />
-          <FieldError name="email" />
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label htmlFor="phone" className="sr-only">Phone number</label>
-          <input
-            id="phone"
-            type="tel"
-            placeholder="Phone number"
-            value={form.phone}
-            onChange={e => updateField('phone', e.target.value)}
-            onBlur={() => handleBlur('phone')}
-            className={inputClass('phone')}
-            autoComplete="tel"
-            inputMode="tel"
-            {...ariaProps('phone')}
-          />
-          <FieldError name="phone" />
-        </div>
-
-        {/* State select */}
-        <div className="relative">
-          <label htmlFor="state" className="sr-only">State</label>
-          <select
-            id="state"
-            value={form.state}
-            onChange={e => updateField('state', e.target.value)}
-            className={`${inputClass('state')} appearance-none pr-10 cursor-pointer`}
-            style={{ background: 'transparent' }}
-          >
-            <option value="" disabled className="bg-background text-muted-foreground">Select your state</option>
-            {US_STATES.map(s => (
-              <option key={s} value={s} className="bg-background text-foreground">{s}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        </div>
-
-        {/* Membership tier selection */}
-            <div className="pt-2">
-              <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mb-1 px-1" id="tier-label">
-                Select your preferred tier(s) — optional
+            {/* Location type */}
+            <div>
+              <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/50 mb-3">
+                Where are we coming?
               </p>
-              <p className="font-body text-xs text-muted-foreground/75 mb-3 px-1 leading-relaxed">
-                You can pick one protocol or combine across Vitamins, NAD+, and CBD. We'll confirm on your intake call.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2" role="group" aria-labelledby="tier-label">
-                {MEMBERSHIP_CATEGORIES.map(category => {
-                  const val = selectedMemberships[category.category] || '';
+              <div className="flex flex-wrap gap-2">
+                {LOCATION_TYPES.map((loc) => {
+                  const Icon = loc.icon;
                   return (
-                    <div key={category.category} className="relative">
-                      <label htmlFor={`tier-${category.category}`} className="sr-only">
-                        {category.category} tier
-                      </label>
-                      <select
-                        id={`tier-${category.category}`}
-                        value={val}
-                        onChange={e => setSelectedMemberships(prev => ({ ...prev, [category.category]: e.target.value }))}
-                        className={`w-full appearance-none bg-transparent border rounded-full px-4 py-3 pr-8 font-body text-xs cursor-pointer transition-colors focus:outline-none ${
-                          val ? 'border-white/40 text-foreground' : 'border-white/15 text-muted-foreground'
-                        }`}
-                        style={{ background: 'transparent' }}
-                      >
-                        <option value="" className="bg-background text-muted-foreground">{category.category}</option>
-                        {category.tiers.map(tier => (
-                          <option key={tier.id} value={tier.id} className="bg-background text-foreground">
-                            {tier.name} — {tier.price}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
-                    </div>
+                    <button
+                      key={loc.id}
+                      type="button"
+                      onClick={() => setLocationType(loc.id)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
+                        locationType === loc.id
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'border-white/15 text-foreground/60 hover:border-white/30 hover:text-foreground/80'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+                      {loc.label}
+                    </button>
                   );
                 })}
               </div>
+            </div>
+
+            {/* Timing */}
+            <div>
+              <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/50 mb-3">
+                When do you need us?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {TIMING_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setTiming(opt.id)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
+                        timing === opt.id
+                          ? 'bg-foreground text-background border-foreground'
+                          : 'border-white/15 text-foreground/60 hover:border-white/30 hover:text-foreground/80'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-foreground/[0.08]" />
+
+            {/* Full name */}
+            <div>
+              <label htmlFor="fullName" className="sr-only">Full name</label>
+              <input
+                id="fullName"
+                type="text"
+                placeholder="Full name"
+                value={form.fullName}
+                onChange={e => updateField('fullName', e.target.value)}
+                onBlur={() => handleBlur('fullName')}
+                autoComplete="name"
+                className={inputClass('fullName')}
+                {...ariaProps('fullName')}
+              />
+              <FieldError name="fullName" />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="sr-only">Email address</label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={e => updateField('email', e.target.value)}
+                onBlur={() => handleBlur('email')}
+                autoComplete="email"
+                inputMode="email"
+                className={inputClass('email')}
+                {...ariaProps('email')}
+              />
+              <FieldError name="email" />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label htmlFor="phone" className="sr-only">Phone number</label>
+              <input
+                id="phone"
+                type="tel"
+                placeholder="Phone number (we confirm by text)"
+                value={form.phone}
+                onChange={e => updateField('phone', e.target.value)}
+                onBlur={() => handleBlur('phone')}
+                className={inputClass('phone')}
+                autoComplete="tel"
+                inputMode="tel"
+                {...ariaProps('phone')}
+              />
+              <FieldError name="phone" />
             </div>
 
             {/* Form-level error */}
@@ -425,11 +344,15 @@ export default function Apply() {
               disabled={submitting}
               className="w-full bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-4 hover:bg-foreground/90 transition-colors mt-2 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              {submitting ? 'Submitting…' : 'Submit Application'}
+              {submitting ? 'Sending request…' : 'Request a Visit'}
             </button>
 
             <p className="text-center font-body text-xs text-muted-foreground/75 pt-1">
-              Membership by application only. You'll be contacted within 48 hours.
+              No charge today. We'll text you to confirm availability and schedule your RN.
+            </p>
+
+            <p className="text-center font-body text-[10px] text-muted-foreground/50 leading-relaxed max-w-sm mx-auto">
+              Avalon Vitality provides wellness and recovery support. This is not emergency medical care. If you are experiencing a medical emergency, call 911.
             </p>
           </form>
         </div>

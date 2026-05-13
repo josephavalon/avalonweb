@@ -43,7 +43,7 @@
     <!-- Icons -->
     <link rel="icon" type="image/png" href="/favicon.png?v=2" />
     <link rel="shortcut icon" type="image/png" href="/favicon.png?v=2" />
-    <link rel="apple-touch-icon" href="/favicon.png?v=2" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph -->
@@ -68,6 +68,10 @@
     <!-- Fonts preconnect (perf) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Hero image CDN — preconnect + preload so it downloads before JS runs -->
+    <link rel="preconnect" href="https://media.base44.com" crossorigin />
+    <link rel="preload" as="image" href="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png" fetchpriority="high" />
     
     <!-- Structured Data: LocalBusiness -->
     <script type="application/ld+json">
@@ -94,17 +98,27 @@
     }
     </script>
 
+    <!-- PWA iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Avalon" />
+    <!-- theme-color for light vs dark OS preference -->
+    <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
+
     <!-- Pre-hydration theme bootstrap. Reads stored theme before React mounts
-         so the first paint already matches user preference. Prevents FOUC. -->
+         so the first paint already matches user preference. Prevents FOUC.
+         NOTE: 'dubs' must be included or switching to dubs then reloading causes FOUC. -->
     <script>
       (function () {
+        var VALID = ['dark', 'light', 'golden', 'dubs'];
         try {
           var stored = window.localStorage.getItem('avalon.theme');
-          var theme = (stored === 'light' || stored === 'dark' || stored === 'golden') ? stored : 'dark';
+          var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
           var cl = document.documentElement.classList;
-          cl.remove('dark', 'golden');
+          cl.remove('dark', 'golden', 'dubs');
           if (theme !== 'light') cl.add(theme);
-        } catch (e) { /* no-op */ }
+        } catch (e) { /* no-op — private mode, WebView, etc. */ }
       })();
     </script>
   </head>

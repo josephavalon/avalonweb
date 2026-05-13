@@ -12,11 +12,15 @@ const Thirty = (props) => (
 const THEMES = ['dark', 'light', 'golden', 'dubs'];
 const THEME_STORAGE_KEY = 'avalon.theme';
 
-// Every visitor lands on light theme on every page load. We ignore any previously
-// stored preference so the brand entry experience is consistent. Users can still
-// cycle to other themes via the navbar toggle, but the choice does not persist
-// across reloads.
-const readInitialTheme = () => 'light';
+// Read from localStorage so theme survives page-to-page navigation.
+// Falls back to 'light' for first-time visitors.
+const readInitialTheme = () => {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored && THEMES.includes(stored)) return stored;
+  } catch {}
+  return 'light';
+};
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -26,7 +30,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -64,11 +68,13 @@ export default function Navbar() {
     }
   };
 
-  const linkClass = "text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap";
+  const linkClass = "inline-flex items-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
 
   return (
-    <nav className={`fixed left-4 right-4 z-40 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden transition-all duration-500 ease-editorial ${
-      scrolled ? 'top-2 bg-background/70 shadow-lg shadow-black/20' : 'top-4 bg-background/30'
+    <nav className={`fixed left-4 right-4 z-40 rounded-3xl transition-all duration-500 ease-editorial ${
+      scrolled
+        ? 'top-2 bg-background/75 backdrop-blur-xl border border-white/[0.08] shadow-lg shadow-black/25'
+        : 'top-4 bg-background/[0.12] backdrop-blur-sm border border-white/[0.05]'
     }`}>
 
       {/* Desktop */}
@@ -76,29 +82,31 @@ export default function Navbar() {
         scrolled ? 'h-14' : 'h-16'
       }`}>
 
-        {/* Logo */}
-        <Link to="/" onClick={handleLogoClick} className="font-heading text-[15px] tracking-[0.25em] text-foreground shrink-0">
-          AV
+        {/* Logo — left */}
+        <Link to="/" onClick={handleLogoClick} className="flex items-center gap-3 shrink-0 w-[180px]">
+          <span className="font-heading text-[15px] tracking-[0.25em] text-foreground">AV</span>
+          <span className="font-heading text-[10px] tracking-[0.22em] text-foreground/55 uppercase">Avalon Vitality</span>
         </Link>
 
-        {/* Center links */}
-        <div className="flex items-center gap-10">
-          <Link to="/#how-it-works" className={linkClass}>How Avalon Works</Link>
-          <Link to="/#treatments" className={linkClass}>Treatments</Link>
-          <Link to="/#membership" className={linkClass}>Membership</Link>
+        {/* Center links — absolutely centered */}
+        <div className="flex items-center gap-8">
+          <Link to="/#how-it-works" className={linkClass}>How It Works</Link>
+          <Link to="/#treatments" className={linkClass}>Therapies</Link>
+          <Link to="/membership" className={linkClass}>Membership</Link>
+          <Link to="/events" className={linkClass}>Events</Link>
         </div>
 
-        {/* Theme toggle and Login far right */}
-        <div className="flex items-center gap-6">
+        {/* Theme toggle + Login — right */}
+        <div className="flex items-center gap-6 w-[80px] justify-end">
           <button
             onClick={cycleTheme}
             className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
-            <ThemeIcon className="w-7 h-7 md:w-4 md:h-4" />
+            <ThemeIcon className="w-4 h-4" />
           </button>
-          <Link to="/apply" className={linkClass}>Apply</Link>
+          <Link to="/login" className={linkClass}>Login</Link>
         </div>
       </div>
 
@@ -126,24 +134,28 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden backdrop-blur-md bg-background/30 border-t border-white/10 overflow-hidden"
-          >
-            <div className="px-6 py-6 space-y-5">
-              <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">How Avalon Works</Link>
-              <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Treatments</Link>
-              <Link to="/#membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground font-body uppercase">Membership</Link>
-              <Link to="/apply" className="block text-sm tracking-widest text-accent hover:text-accent/80 font-body uppercase">Apply</Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Mobile menu — wrapper clips to nav's rounded-3xl corners */}
+      <div className="md:hidden overflow-hidden rounded-b-3xl">
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-background border-t border-white/[0.06]"
+            >
+              <div className="px-6 py-4 flex flex-col items-end gap-2">
+                <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">How It Works</Link>
+                <Link to="/#treatments" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Therapies</Link>
+                <Link to="/membership" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Membership</Link>
+                <Link to="/events" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Events</Link>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Login</Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </nav>
   );
 }

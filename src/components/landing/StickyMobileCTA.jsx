@@ -19,13 +19,14 @@ export default function StickyMobileCTA() {
       }`}
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}
     >
-      <div className="bg-background/85 backdrop-blur-xl border-t border-white/10 px-4 py-3 flex items-center gap-3">
+      <div className="bg-background border-t border-foreground/[0.1] px-4 py-3 flex items-center gap-3">
         <a
           href="tel:+14159807708"
-          aria-label="Text Avalon"
-          className="w-11 h-11 rounded-full border border-white/20 bg-white/[0.04] flex items-center justify-center text-foreground hover:text-accent hover:border-accent/50 transition-colors shrink-0"
+          aria-label="Call or text Avalon"
+          className="flex items-center gap-2 px-4 py-3 rounded-full border border-white/20 bg-white/[0.04] text-foreground hover:text-accent hover:border-accent/50 transition-colors shrink-0"
         >
-          <Phone className="w-4 h-4" strokeWidth={1.6} />
+          <Phone className="w-4 h-4 shrink-0" strokeWidth={1.6} />
+          <span className="font-body text-[10px] tracking-widest uppercase whitespace-nowrap">Call / Text</span>
         </a>
         <Link
           to="/apply"

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Minus } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const EASE = [0.16, 1, 0.3, 1];
 
 const TOP_FAQS = [
   { q: 'What is Avalon Vitality?', a: 'Mobile concierge IV therapy and longevity service for the SF Bay Area. RN-administered, MD-supervised, delivered to your home or office.' },
@@ -13,7 +16,7 @@ const TOP_FAQS = [
 export default function HomeFAQ() {
   const [openIdx, setOpenIdx] = useState(0);
   return (
-    <section className="py-12 md:py-24 px-4">
+    <section className="pt-16 pb-6 md:pt-20 md:pb-8 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="text-left mb-6 md:mb-10">
           <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">FAQ</p>
@@ -27,12 +30,16 @@ export default function HomeFAQ() {
           {TOP_FAQS.map((item, i) => {
             const isOpen = i === openIdx;
             return (
-              <button
+              <motion.button
                 key={i}
                 type="button"
                 onClick={() => setOpenIdx(isOpen ? -1 : i)}
                 className="w-full text-left border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6 transition-colors hover:bg-white/[0.05]"
                 aria-expanded={isOpen}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, ease: EASE, delay: i * 0.07 }}
               >
                 <div className="flex items-center justify-between gap-4">
                   <span className="font-heading text-base md:text-lg text-foreground tracking-wide">{item.q}</span>
@@ -43,7 +50,7 @@ export default function HomeFAQ() {
                 <div className={`overflow-hidden transition-[max-height,margin,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'max-h-40 opacity-100 mt-3 md:mt-4' : 'max-h-0 opacity-0'}`}>
                   <p className="font-body text-sm md:text-base text-foreground/70 leading-relaxed">{item.a}</p>
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>

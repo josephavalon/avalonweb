@@ -145,6 +145,8 @@ export default function B2B() {
   const [couponError, setCouponError] = useState('');
   const [showStickyCta, setShowStickyCta] = useState(true);
   const [isLoading] = useState(false); // skeletons retired in favor of scroll-reveal
+  const [b2bSubmitted, setB2bSubmitted] = useState(false);
+  const b2bRef = useMemo(() => `B2B-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, []);
   const [quantities, setQuantities] = useState(() => {
     const q = {};
     B2B_PRODUCTS.forEach((p) => { q[p.id] = 1; });
@@ -925,7 +927,13 @@ export default function B2B() {
             Full refund before May 16
           </p>
 
-          {selectedSoldOut ? (
+          {b2bSubmitted ? (
+            <div className="rounded-2xl border-2 border-black bg-[#F8EC82] p-6 text-center space-y-3">
+              <p className="b2b-display text-2xl uppercase tracking-wide">We'll be in touch within 24 hours.</p>
+              <p className="text-sm text-black/70">Your inquiry has been received. Our team will reach out to confirm details and payment.</p>
+              <p className="b2b-display text-xs tracking-[0.2em] uppercase text-black/60">Ref: {b2bRef}</p>
+            </div>
+          ) : selectedSoldOut ? (
             <button
               type="button"
               disabled
@@ -934,15 +942,13 @@ export default function B2B() {
               Sold out — pick another option
             </button>
           ) : (
-            <a
-              href={checkoutUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={fireCheckoutEvent}
+            <button
+              type="button"
+              onClick={() => { fireCheckoutEvent(); setB2bSubmitted(true); }}
               className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2"
             >
               Reserve my slot <ArrowRight className="w-4 h-4" />
-            </a>
+            </button>
           )}
 
           <p className="mt-4 text-xs leading-relaxed text-black/70">

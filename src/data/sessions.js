@@ -1,0 +1,243 @@
+// ── Avalon Vitality — Canonical Session Data ──────────────────────────────────
+// Single source of truth for all IV sessions, IM shots, IV add-ons, and packages.
+// Both OurDrips (homepage) and Store (menu page) import from here.
+
+import {
+  Droplets, Zap, ShieldCheck, Sparkles, Heart, Plane,
+  FlaskConical, Moon, Brain, Leaf,
+} from 'lucide-react';
+
+// ── IV Sessions ───────────────────────────────────────────────────────────────
+export const SESSIONS = [
+  {
+    key: 'hydration',
+    label: 'Hydration',
+    price: 150,
+    icon: Droplets,
+    tagline: 'Rehydrate, replenish, and recover fast.',
+    tag: 'Essential',
+    category: 'recovery',
+    duration: '30–45 min',
+    inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals',
+    features: ['Deep hydration', 'Electrolyte balance', 'Nutrient support', 'Overall wellness'],
+  },
+  {
+    key: 'energy',
+    label: 'Energy',
+    price: 250,
+    icon: Zap,
+    tagline: 'Boost energy, sharpen focus, perform.',
+    tag: 'Performance',
+    category: 'energy',
+    duration: '45–60 min',
+    inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C',
+    features: ['High-dose B vitamins', 'Amino acids', 'Metabolic support', 'Mental clarity'],
+  },
+  {
+    key: 'immunity',
+    label: 'Immunity',
+    price: 250,
+    icon: ShieldCheck,
+    tagline: 'Strengthen your defenses, fast.',
+    tag: 'Bestseller',
+    category: 'immunity',
+    duration: '45–60 min',
+    inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline',
+    features: ['High-dose Vitamin C', 'Zinc infusion', 'Antioxidant support', 'Immune modulation'],
+  },
+  {
+    key: 'beauty',
+    label: 'Beauty',
+    price: 250,
+    icon: Sparkles,
+    tagline: 'Glow from within.',
+    tag: 'Glow Favorite',
+    category: 'beauty',
+    duration: '45–60 min',
+    inside: 'Glutathione · Biotin · Vitamin C · B-Complex · Collagen support nutrients · Saline',
+    features: ['Glutathione push', 'Biotin support', 'Vitamin C boost', 'Skin radiance'],
+  },
+  {
+    key: 'recovery',
+    label: 'Recovery',
+    price: 250,
+    icon: Heart,
+    tagline: 'Bounce back faster. Feel better sooner.',
+    tag: 'Same-Day Favorite',
+    category: 'recovery',
+    duration: '45–60 min',
+    inside: 'Saline · Magnesium · B-Complex · Amino acids · Anti-nausea support · Electrolytes',
+    features: ['Anti-inflammatory support', 'Tissue repair', 'Pain reduction', 'Rehydration'],
+  },
+  {
+    key: 'jetlag',
+    label: 'Jet Lag',
+    price: 250,
+    icon: Plane,
+    tagline: 'Land ready. Recover in flight time.',
+    tag: 'Travel Essential',
+    category: 'travel',
+    duration: '45–60 min',
+    inside: 'Saline · Vitamin B12 · Magnesium · B-Complex · Electrolytes · Immune support blend',
+    features: ['Circadian reset', 'Immune support', 'Deep rehydration', 'Energy restoration'],
+  },
+  {
+    key: 'myers',
+    label: "Myers' Cocktail",
+    tabLabel: 'Wellness',
+    price: 250,
+    icon: FlaskConical,
+    tagline: 'The gold standard of IV therapy.',
+    tag: 'Most Popular',
+    category: 'energy',
+    popular: true,
+    duration: '45–60 min',
+    inside: 'Magnesium · Calcium · Vitamins B1 B2 B3 B5 B6 · Vitamin C · Saline',
+    features: ['Magnesium', 'B-complex vitamins', 'Calcium', 'Vitamin C'],
+  },
+  {
+    key: 'postnight',
+    label: 'Post-Night-Out',
+    price: 250,
+    icon: Moon,
+    tagline: 'Back to baseline, fast.',
+    tag: 'Same-Day Favorite',
+    category: 'recovery',
+    duration: '45–60 min',
+    inside: 'Saline · Anti-nausea support · B-Complex · Glutathione · Electrolytes',
+    features: ['Rapid rehydration', 'Anti-nausea blend', 'Liver support', 'B-vitamin replenishment'],
+  },
+  {
+    key: 'nad',
+    label: 'NAD+',
+    price: 350,
+    icon: Brain,
+    tagline: 'Cellular repair and energy at the source.',
+    tag: 'Longevity Protocol',
+    category: 'nad',
+    duration: '90–120 min',
+    inside: 'Pharmaceutical-grade NAD+ · Slow IV infusion · MD-supervised dosing',
+    features: ['Cellular regeneration', 'Cognitive clarity', 'Metabolism boost', 'Anti-aging support'],
+    doses: [
+      { label: '250mg',  price: 350 },
+      { label: '500mg',  price: 500 },
+      { label: '750mg',  price: 600 },
+      { label: '1000mg', price: 800 },
+    ],
+  },
+  {
+    key: 'cbd',
+    label: 'IV CBD',
+    price: 250,
+    icon: Leaf,
+    tagline: 'Recovery and calm at full bioavailability.',
+    tag: 'Recovery',
+    category: 'cbd',
+    duration: '45–60 min',
+    inside: 'Pharmaceutical IV CBD · Zero THC formula · Magnesium blend',
+    features: ['Zero THC', 'Full bioavailability', 'Muscle relaxation', 'Stress response'],
+    doses: [
+      { label: '33mg',  price: 250 },
+      { label: '66mg',  price: 300 },
+      { label: '99mg',  price: 350 },
+      { label: '132mg', price: 400 },
+    ],
+  },
+];
+
+// ── IV Add-Ons ─────────────────────────────────────────────────────────────────
+export const IV_ADDONS = [
+  { label: 'Extra Fluid',         price: 25,  desc: 'Additional 500ml saline'           },
+  { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals & amino boost' },
+  { label: 'High Dose Vitamin C', price: 45,  desc: '5,000mg IV push'                   },
+  { label: 'Glutathione Push',    price: 60,  desc: 'Antioxidant master push · 600mg'   },
+  { label: 'Magnesium Boost',     price: 30,  desc: 'Muscle + nerve support'            },
+];
+
+// ── IM Recovery Shots ─────────────────────────────────────────────────────────
+export const IM_SHOTS = [
+  { label: 'B12',        price: 40, desc: 'Energy + metabolism support' },
+  { label: 'MIC',        price: 50, desc: 'Fat metabolism + liver function' },
+  { label: 'NAD+ IM',   price: 80, desc: 'Quick cellular energy boost',
+    doses: [
+      { label: '100mg', price: 80 },
+      { label: '200mg', price: 120 },
+    ],
+  },
+  {
+    label: 'Glutathione',
+    desc: 'Antioxidant + skin clarity',
+    doses: [
+      { label: '200mg',  price: 50  },
+      { label: '600mg',  price: 80  },
+      { label: '1000mg', price: 120 },
+    ],
+  },
+  {
+    label: 'Vitamin C',
+    desc: 'Immune + antioxidant support',
+    doses: [
+      { label: '500mg',  price: 30 },
+      { label: '1000mg', price: 50 },
+      { label: '2000mg', price: 75 },
+    ],
+  },
+  { label: 'Vitamin D', price: 35, desc: 'Bone, immune & mood support' },
+  { label: 'Biotin',    price: 35, desc: 'Hair, skin & nail support' },
+];
+
+// ── Packages ──────────────────────────────────────────────────────────────────
+export const PACKAGES = [
+  {
+    key: 'hangover',
+    label: 'Hangover Kit',
+    tagline: 'Recover from a rough night — fast.',
+    includes: ['Post-Night-Out IV', 'B12 IM shot', 'Glutathione IM shot'],
+    price: 340, save: 30,
+    icon: Moon, tag: 'Best for Tonight',
+    items: [
+      { cartKey: 'pkg-hangover-iv',   label: 'Post-Night-Out IV',    price: 250, type: 'iv' },
+      { cartKey: 'pkg-hangover-b12',  label: 'IM · B12',             price: 40,  type: 'im' },
+      { cartKey: 'pkg-hangover-glut', label: 'IM · Glutathione 600mg', price: 50, type: 'im' },
+    ],
+  },
+  {
+    key: 'performance',
+    label: 'Performance Bundle',
+    tagline: 'Built for peak output. Before or after.',
+    includes: ['Energy IV', 'NAD+ IM shot', 'MIC IM shot'],
+    price: 380, save: 30,
+    icon: Zap, tag: 'Athlete Favorite',
+    items: [
+      { cartKey: 'pkg-perf-iv',  label: 'Energy IV',    price: 250, type: 'iv' },
+      { cartKey: 'pkg-perf-nad', label: 'IM · NAD+ IM 100mg', price: 80,  type: 'im' },
+      { cartKey: 'pkg-perf-mic', label: 'IM · MIC',     price: 50,  type: 'im' },
+    ],
+  },
+  {
+    key: 'glow',
+    label: 'Glow Stack',
+    tagline: 'Skin, hair, and radiance from within.',
+    includes: ['Beauty IV', 'Glutathione IM shot', 'Biotin IM shot'],
+    price: 335, save: 30,
+    icon: Sparkles, tag: 'Most Requested',
+    items: [
+      { cartKey: 'pkg-glow-iv',    label: 'Beauty IV',               price: 250, type: 'iv' },
+      { cartKey: 'pkg-glow-glut',  label: 'IM · Glutathione 600mg',  price: 80,  type: 'im' },
+      { cartKey: 'pkg-glow-biotin',label: 'IM · Biotin',             price: 35,  type: 'im' },
+    ],
+  },
+  {
+    key: 'reset',
+    label: 'Total Reset',
+    tagline: "The full protocol. Myers' + NAD+ + B12.",
+    includes: ["Myers' Cocktail IV", 'NAD+ IV 250mg', 'B12 IM shot'],
+    price: 640, save: 60,
+    icon: FlaskConical, tag: 'Highest Impact',
+    items: [
+      { cartKey: 'pkg-reset-iv',  label: "Myers' Cocktail IV", price: 250, type: 'iv' },
+      { cartKey: 'pkg-reset-nad', label: 'NAD+ IV · 250mg',    price: 350, type: 'iv' },
+      { cartKey: 'pkg-reset-b12', label: 'IM · B12',           price: 40,  type: 'im' },
+    ],
+  },
+];

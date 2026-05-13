@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarCheck, MapPin, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -7,120 +7,147 @@ const EASE = [0.16, 1, 0.3, 1];
 const steps = [
   {
     icon: CalendarCheck,
-    title: 'Book in Minutes',
-    desc: 'Online, phone, or text.',
+    title: 'Build Your Visit',
+    desc: 'Choose your IV drip or IM therapy, drop your location, and pick a time. Our team confirms by text.',
   },
   {
     icon: MapPin,
-    title: 'We Come to You',
-    desc: 'Home, office, hotel, event.',
+    title: 'Avalon Confirms',
+    desc: 'We confirm availability and send your RN details before arrival. No surprises.',
   },
   {
     icon: Zap,
-    title: 'Feel It Fast',
-    desc: 'Refreshed in 30–60 minutes.',
+    title: 'We Come to You',
+    desc: 'A licensed RN arrives with IV and IM therapies — delivered to your home, hotel, office, or event.',
   },
 ];
 
 export default function HowItWorks() {
   const scrollRef = useRef(null);
+  const [activeStep, setActiveStep] = useState(0);
 
-  const scroll = (direction) => {
-    if (!scrollRef.current) return;
-    const amount = scrollRef.current.clientWidth * 0.85;
-    scrollRef.current.scrollBy({
-      left: direction === 'left' ? -amount : amount,
-      behavior: 'smooth',
-    });
+  const scrollTo = (index) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const cardWidth = container.offsetWidth;
+    container.scrollTo({ left: cardWidth * index, behavior: 'smooth' });
+    setActiveStep(index);
+  };
+
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const index = Math.round(container.scrollLeft / container.offsetWidth);
+    setActiveStep(index);
   };
 
   return (
-    <section
-      id="how-it-works"
-      className="py-12 md:py-24 px-4 scroll-mt-20"
-    >
+    <section id="how-it-works" className="pt-16 pb-10 md:py-20 px-4 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4 md:mb-8"
+          transition={{ duration: 0.6, ease: EASE }}
+          className="mb-6 md:mb-10"
         >
-          <div className="text-left max-w-3xl">
-            <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">The Process</p>
-            <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
-              HOW AVALON WORKS
-            </h2>
-            <p className="font-body text-sm text-foreground mt-4 max-w-2xl">
-Book a single session or join a{' '}
-              <a href="/#membership" className="text-accent hover:text-accent/80 underline">
-                membership
-              </a>
-              {' '}for 20% off à la carte and 25% off annual. Mobile platform launching soon — book, reorder, and track in one tap.
-            </p>
-          </div>
-
-          {/* Desktop-hidden, mobile-visible carousel controls lifted above the cards
-              so they don't overlap card content. */}
-          <div className="hidden items-center gap-2 self-end">
-            <button
-              onClick={() => scroll('left')}
-              className="p-2 rounded-full border border-border bg-card hover:bg-secondary transition-colors"
-              aria-label="Previous step"
-            >
-              <ChevronLeft className="w-4 h-4 text-foreground" strokeWidth={1.75} />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="p-2 rounded-full border border-border bg-card hover:bg-secondary transition-colors"
-              aria-label="Next step"
-            >
-              <ChevronRight className="w-4 h-4 text-foreground" strokeWidth={1.75} />
-            </button>
-          </div>
+          <p className="text-[11px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3">The Process</p>
+          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
+            HOW AVALON WORKS
+          </h2>
+          <p className="font-body text-sm text-foreground/60 mt-3 max-w-xl">
+            A licensed RN deploys to you with IV drips and IM injections. Your location. Same day.
+          </p>
         </motion.div>
 
-        {/* Carousel — snap-mandatory with peek on mobile, grid on desktop. */}
-        <div
-          ref={scrollRef}
-          className="how-it-works-scroll md:overflow-visible"
-          style={{
-            scrollBehavior: 'smooth',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 w-max md:w-full md:justify-start">
-            {steps.map((step, i) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12, duration: 0.7, ease: EASE }}
-                className="w-full text-center p-4 md:p-5 border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl"
-              >
-                <step.icon
-                  className="w-6 h-6 text-accent mx-auto mb-2"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
+        {/* ── Mobile: full-width one-card carousel with arrows ── */}
+        <div className="md:hidden relative">
+          {/* Scroll container — snaps one full card at a time */}
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="overflow-x-auto no-scrollbar w-full"
+            style={{
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x',
+              overscrollBehavior: 'contain',
+            }}
+          >
+            <div className="flex w-full">
+              {steps.map((step, i) => (
+                <div
+                  key={step.title}
+                  className="flex-none w-full p-4 border border-foreground/15 bg-foreground/[0.03] rounded-2xl text-center"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <step.icon className="w-5 h-5 text-accent mx-auto mb-2" strokeWidth={1.5} aria-hidden="true" />
+                  <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-1">Step {i + 1} of {steps.length}</p>
+                  <h3 className="font-heading text-lg text-foreground mb-1.5 tracking-wide">{step.title}</h3>
+                  <p className="font-body text-xs text-foreground/70 leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Arrow + dot controls */}
+          <div className="flex items-center justify-between mt-4 px-1">
+            <button
+              onClick={() => scrollTo(Math.max(0, activeStep - 1))}
+              disabled={activeStep === 0}
+              className="w-8 h-8 rounded-full border border-foreground/15 flex items-center justify-center text-foreground/40 hover:text-foreground hover:border-foreground/35 disabled:opacity-20 transition-all"
+              aria-label="Previous step"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Dots */}
+            <div className="flex items-center gap-2">
+              {steps.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollTo(i)}
+                  aria-label={`Go to step ${i + 1}`}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === activeStep ? 'w-5 h-1.5 bg-foreground' : 'w-1.5 h-1.5 bg-foreground/20'
+                  }`}
                 />
-                <h3 className="font-heading text-lg md:text-xl text-foreground mb-1 tracking-wide">
-                  {step.title}
-                </h3>
-                <p className="font-body text-xs md:text-sm text-foreground leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-            {/* End-of-list spacer keeps the last card from bumping the viewport edge
-                so its right border is visible when snapped. */}
-            <div aria-hidden="true" className="shrink-0 w-4 md:hidden" />
+              ))}
+            </div>
+
+            <button
+              onClick={() => scrollTo(Math.min(steps.length - 1, activeStep + 1))}
+              disabled={activeStep === steps.length - 1}
+              className="w-8 h-8 rounded-full border border-foreground/15 flex items-center justify-center text-foreground/40 hover:text-foreground hover:border-foreground/35 disabled:opacity-20 transition-all"
+              aria-label="Next step"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
-      </div>
 
-      <style>{`.how-it-works-scroll::-webkit-scrollbar { display: none; }`}</style>
+        {/* ── Desktop: 3-col grid ── */}
+        <div className="hidden md:grid grid-cols-3 gap-6">
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: EASE }}
+              className="text-center p-5 border border-foreground/15 bg-foreground/[0.03] rounded-3xl"
+            >
+              <step.icon className="w-6 h-6 text-accent mx-auto mb-3" strokeWidth={1.5} aria-hidden="true" />
+              <h3 className="font-heading text-xl text-foreground mb-2 tracking-wide">{step.title}</h3>
+              <p className="font-body text-sm text-foreground/70 leading-relaxed">{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+
+
+      </div>
     </section>
   );
 }

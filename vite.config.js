@@ -8,39 +8,29 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // react-hook-form ships without its ESM dist in this install — alias
+      // directly to the CJS file so Vite never touches the broken exports map.
+      'react-hook-form': path.resolve(__dirname, './node_modules/react-hook-form/dist/index.cjs.js'),
     },
   },
   plugins: [
     react(),
   ],
-  build: {
-    target: 'es2020',
-    rollupOptions: {
-      output: {
-        // Split the main chunk so the Hero/above-the-fold ships before heavy
-        // below-the-fold sections parse. React + Framer Motion stay in the
-        // entry so transitions don't wait on a second request.
-        manualChunks(id) {
-          if (!id.includes('node_modules')) {
-            // Heavy, below-the-fold landing sections become their own chunk.
-            if (
-              id.includes('/landing/OurDrips') ||
-              id.includes('/landing/MembershipSection') ||
-              id.includes('/landing/Testimonials') ||
-              id.includes('/landing/FAQ')
-            ) {
-              return 'landing-below-fold'
-            }
-            return undefined
-          }
-          // Third-party split: keep Radix primitives out of the entry chunk
-          // (they're only referenced by dialog, toast, accordion — all below
-          // the fold on home).
-          if (id.includes('@radix-ui')) return 'radix'
-          if (id.includes('lucide-react')) return 'icons'
-          return undefined
-        },
-      },
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 300,
     },
+  },
+  optimizeDeps: {
+    include: ['react-hook-form'],
+  },
+  build: {
+    // es2015 + explicit browser floors covers:
+    // - iOS in-app browsers (Instagram, TikTok, Gmail) which run older WKWebView
+    // - Android Chrome 58+ (WebView API level 22)
+    // - Samsung Internet 8+
+    // Slightly larger bundle than es2020 but zero parse failures on the target audience.
+    target: ['es2015', 'chrome58', 'firefox57', 'safari11', 'edge18', 'ios11'],
   },
 });

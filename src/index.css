@@ -56,7 +56,7 @@
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 80%;
     --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 50%;
+    --muted-foreground: 0 0% 96%;
     --accent: 45 90% 55%;
     --accent-foreground: 0 0% 4%;
     --destructive: 0 84.2% 60.2%;
@@ -91,7 +91,7 @@
     --secondary: 26 28% 20%;
     --secondary-foreground: 38 60% 75%;
     --muted: 26 28% 20%;
-    --muted-foreground: 35 40% 55%;
+    --muted-foreground: 38 80% 88%;
     --accent: 38 90% 58%;
     --accent-foreground: 28 35% 12%;
     --destructive: 0 84.2% 60.2%;
@@ -121,7 +121,7 @@
     --secondary: 210 40% 28%;
     --secondary-foreground: 45 90% 94%;
     --muted: 210 40% 28%;
-    --muted-foreground: 45 90% 78%;
+    --muted-foreground: 45 90% 94%;
     --accent: 45 100% 58%;
     --accent-foreground: 218 60% 16%;
     --destructive: 0 84% 60%;
@@ -150,14 +150,30 @@
   }
 }
 
-html { scroll-behavior: smooth; }
+html {
+  /* scroll-behavior: smooth removed — causes ~300ms iOS touch delay */
+  -webkit-overflow-scrolling: touch;
+}
 
 html, body {
-  overscroll-behavior: none;
+  /* Only block horizontal overscroll — vertical must stay native for iOS fluidity */
+  overscroll-behavior-x: none;
   width: 100%;
   max-width: 100vw;
+  /* clip (not hidden) on both html+body — when both use hidden iOS Safari cannot
+     determine the scroll root and freezes vertical scroll on first load.
+     clip achieves the same visual result without establishing a scroll context. */
   overflow-x: clip;
 }
+
+/* iOS tap highlight removal — prevents flash on scroll-tap */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* NOTE: do NOT add global will-change here — over-promoting GPU layers on mobile
+   causes first-paint jank and GPU memory exhaustion. Framer Motion applies
+   will-change per-element during active animation; that's sufficient. */
 
 /* Mobile-first: no section can exceed viewport; text breaks to fit. */
 section, main, footer {
@@ -170,11 +186,26 @@ p, h1, h2, h3, h4, h5, h6 {
   word-break: break-word;
 }
 
+/* Reduce backdrop-blur cost on mobile — heavy blur triggers repaints on scroll */
+@media (max-width: 767px) {
+  .backdrop-blur-md  { backdrop-filter: blur(6px);  -webkit-backdrop-filter: blur(6px);  }
+  .backdrop-blur-xl  { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .backdrop-blur-2xl { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .backdrop-blur-3xl { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+}
+
+/* Touch-action on body: allow vertical pan, block horizontal to prevent
+   conflict with iOS Safari's edge-swipe navigation */
+body {
+  /* manipulation = no tap delay, allows both pan directions, no double-tap zoom */
+  touch-action: manipulation;
+}
+
 /* #root containment — prevent any absolute/fixed children from pushing layout. */
-/* Light theme: no gray text — every foreground-based text renders solid black. */
-html:not(.dark):not(.golden):not(.dubs) [class*="text-foreground/"],
-html:not(.dark):not(.golden):not(.dubs) [class*="text-muted-foreground"],
-html:not(.dark):not(.golden):not(.dubs) .text-muted-foreground {
+/* All themes: no gray text — contrast only. Opacity modifiers on foreground
+   text are stripped; everything renders at full foreground or accent. */
+[class*="text-foreground/"],
+.text-muted-foreground {
   color: hsl(var(--foreground)) !important;
 }
 
@@ -191,10 +222,23 @@ html:not(.dark):not(.golden):not(.dubs) .text-muted-foreground {
   section > div, main > div { max-width: 100vw; }
 }
 
-/* Horizontal-overflow clip lives on a wrapper, not html/body, so middle-click
-   autoscroll still has a real root scroller to anchor on. */
+/* overflow-x: clip (NOT hidden) — critical iOS fix.
+   overflow-x: hidden creates a scroll container; the CSS spec then computes
+   overflow-y as 'auto', making .app-shell the scroll root instead of the document.
+   On iOS Safari this locks the page after ~27px of scroll travel.
+   overflow-x: clip achieves the same visual clipping WITHOUT a scroll container. */
 .app-shell {
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Accessibility: respect user's motion preference globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {
@@ -265,55 +309,6 @@ body {
   color: hsl(var(--accent));
 }
 
-/* Dubs theme: GO DUBS! steam-on-glass background easter egg */
-.dubs .hero-root::after {
-  content: 'Go Dubs!';
-  position: absolute;
-  top: 24%;
-  left: 3%;
-  font-family: 'Caveat', cursive;
-  font-weight: 700;
-  font-size: clamp(80px, 13vw, 220px);
-  color: rgba(255, 255, 255, 0.22);
-  text-shadow:
-    0 0 2px rgba(255, 255, 255, 0.18),
-    0 0 12px rgba(255, 255, 255, 0.14),
-    0 0 26px rgba(255, 255, 255, 0.10);
-  filter: blur(2.2px);
-  transform: rotate(-5deg);
-  pointer-events: none;
-  user-select: none;
-  z-index: 2;
-  letter-spacing: 0.02em;
-  line-height: 1;
-  mix-blend-mode: overlay;
-  opacity: 0.55;
-}
-
-@media (max-width: 768px) {
-  .dubs .hero-root::after {
-    content: "Go\A Dubs!";
-    white-space: pre;
-    display: block;
-    position: absolute;
-    top: 12%;
-    left: 3%;
-    right: auto;
-    max-width: 42vw;
-    font-size: clamp(38px, 11vw, 76px);
-    color: rgba(255, 255, 255, 0.28);
-    text-shadow:
-      0 0 2px rgba(255, 255, 255, 0.2),
-      0 0 8px rgba(255, 255, 255, 0.15),
-      0 0 18px rgba(255, 255, 255, 0.1);
-    filter: blur(1.4px);
-    transform: rotate(-6deg);
-    mix-blend-mode: overlay;
-    z-index: 2;
-    line-height: 0.92;
-    opacity: 0.6;
-  }
-}
 
 /* Dubs hero title: solid warriors gold */
 .dubs .hero-root h1 {
@@ -356,23 +351,38 @@ body {
 }
 
 /* ===== Cross-browser display fixes ===== */
-/* Fallback for browsers without backdrop-filter (older Edge, some Microsoft browsers) — slightly bump glass opacity so cards aren't invisible */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  [class*="backdrop-blur"] {
-    background-color: rgb(255 255 255 / 0.07) !important;
+
+/* overflow-x: clip fallback — clip doesn't create a scroll container (good for sticky),
+   but older iOS Safari <14.5 and some in-app browsers treat it as visible.
+   The hidden fallback below fires first so those browsers still get containment. */
+html, body {
+  overflow-x: hidden; /* fallback for clip-unaware engines */
+}
+@supports (overflow-x: clip) {
+  html, body {
+    overflow-x: clip;
   }
 }
 
-/* Ensure backdrop-filter has webkit prefix for older Microsoft Edge / iOS Safari */
-[class*="backdrop-blur-md"] {
-  -webkit-backdrop-filter: blur(12px);
+/* Fallback for browsers without backdrop-filter (older pre-Chromium Edge,
+   some in-app WebViews, Samsung Internet <12) — bump glass opacity so cards
+   are visually distinct rather than invisible. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [class*="backdrop-blur"] {
+    background-color: hsl(var(--background) / 0.96) !important;
+  }
 }
-[class*="backdrop-blur-sm"] {
-  -webkit-backdrop-filter: blur(4px);
-}
-[class*="backdrop-blur-xl"] {
-  -webkit-backdrop-filter: blur(24px);
-}
+
+/* -webkit-backdrop-filter prefix — required on iOS Safari <15, macOS Safari <14,
+   and older WKWebView-based in-app browsers (Instagram, TikTok, Gmail, etc.).
+   Tailwind's autoprefixer does NOT reliably emit this for utility classes —
+   we handle it explicitly for every blur step used in the design. */
+[class*="backdrop-blur-sm"]  { -webkit-backdrop-filter: blur(4px);  }
+[class*="backdrop-blur-md"]  { -webkit-backdrop-filter: blur(12px); }
+[class*="backdrop-blur-lg"]  { -webkit-backdrop-filter: blur(16px); }
+[class*="backdrop-blur-xl"]  { -webkit-backdrop-filter: blur(24px); }
+[class*="backdrop-blur-2xl"] { -webkit-backdrop-filter: blur(40px); }
+[class*="backdrop-blur-3xl"] { -webkit-backdrop-filter: blur(64px); }
 
 /* 100svh fallback for browsers that don't support svh units (older Edge, older Chromium) */
 @supports not (height: 100svh) {
@@ -522,10 +532,29 @@ select:focus-visible {
   .founding-bar-shell { padding-top: max(env(safe-area-inset-top), 0px); }
 }
 
-/* ===== Touch target minimum: 44x44 for any interactive element under 44px ===== */
+/* ===== Mobile bottom nav page padding ===== */
+@media (max-width: 767px) {
+  .has-bottom-nav #main-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ===== Touch target minimum: 44px for WCAG 2.5.5 compliance ===== */
+/* hover:none targets true touch devices (phones, tablets). */
 @media (hover: none) {
   button, a, [role="button"] {
-    min-height: 32px;
+    min-height: 44px;
+  }
+}
+
+/* ===== iOS Safari input zoom prevention ===== */
+/* iOS Safari zooms the viewport whenever a focused input has font-size < 16px.
+   Force 16px minimum on all form controls on touch devices.
+   Does NOT prevent user-initiated zoom (that requires user-scalable=no, which is
+   a WCAG failure — so we fix the root cause instead). */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea {
+    font-size: max(16px, 1em) !important;
   }
 }
 
@@ -538,9 +567,12 @@ a:focus-visible,
   border-radius: inherit;
 }
 
-/* ===== Performance: contain layout shifts during scroll-driven animations ===== */
-.av-glass, .av-glass-heavy, [class*="motion-"] {
-  contain: layout style;
+/* ===== Performance: style containment only — layout containment breaks Framer Motion ===== */
+/* contain:layout would prevent animated size changes from affecting parent layout,
+   which breaks AnimatePresence height transitions. contain:style is safe and still
+   prevents style recalculation bleed across component boundaries. */
+.av-glass, .av-glass-heavy {
+  contain: style;
 }
 
 /* ===== Reduced motion preference ===== */
@@ -585,3 +617,6 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   background: linear-gradient(to left, hsl(var(--background)) 0%, hsl(var(--background) / 0.95) 40%, transparent 100%);
   opacity: 1;
 }
+
+/* v2 */
+:root { --av-build: 2; }

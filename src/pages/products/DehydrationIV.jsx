@@ -10,7 +10,7 @@ export default function DehydrationIV() {
 
   const oneTimePerks = [
     '1000mL Lactated Ringers',
-    '30-60 min experience',
+    'Delivered to you',
     'California-licensed RNs',
     'Physician supervised',
     'In-home or clinic',
@@ -19,7 +19,7 @@ export default function DehydrationIV() {
   const membershipPerks = [
     '1 IV per month included',
     '1000mL Lactated Ringers per session',
-    '30-60 min experience',
+    'Delivered to you',
     'California-licensed RNs',
     'Physician supervised',
     'Priority scheduling',
@@ -70,13 +70,6 @@ export default function DehydrationIV() {
               <p className="font-body text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">Supports:</span> Hydration · Balance · Wellness
               </p>
-            </div>
-
-            <div className="border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-2xl p-6 mb-10">
-              <p className="font-body text-[10px] tracking-[0.25em] text-muted-foreground uppercase mb-4">
-                Duration
-              </p>
-              <p className="font-heading text-3xl text-foreground">30–60 min</p>
             </div>
 
             <Link

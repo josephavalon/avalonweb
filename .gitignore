@@ -31,3 +31,6 @@ dist-ssr
 .vite
 preview
 vite.sandbox.mjs
+.vercel
+.env*.local
+deploy-to-vercel.command

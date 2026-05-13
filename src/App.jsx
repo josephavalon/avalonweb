@@ -3,9 +3,34 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'r
 import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
+import BottomNav from '@/components/landing/BottomNav';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
+import { CartProvider } from '@/context/CartContext';
+import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
+
+// Guard — redirects to /login if no active session (useAuthStore)
+function RequireAuth({ children }) {
+  const { user } = useAuthStore();
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
 import Home from './pages/Home';
+const Checkout = lazy(() => import('./pages/Checkout'));
+const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
+const Login = lazy(() => import('./pages/Login'));
+const MemberDashboard = lazy(() => import('./pages/members/Dashboard'));
+const ProviderDashboard = lazy(() => import('./pages/provider/Dashboard'));
+const ProviderAccounting = lazy(() => import('./pages/Provider/Accounting'));
+const ProviderAppointments = lazy(() => import('./pages/Provider/Appointments'));
+const ProviderClients = lazy(() => import('./pages/Provider/Clients'));
+const ProviderInvoicing = lazy(() => import('./pages/Provider/Invoicing'));
+const ProviderServices = lazy(() => import('./pages/Provider/Services'));
+const ProviderStaff = lazy(() => import('./pages/Provider/Staff'));
+const ProviderCommunications = lazy(() => import('./pages/Provider/Communications'));
+const NurseShift = lazy(() => import('./pages/Provider/NurseShift'));
+const ProviderReports = lazy(() => import('./pages/Provider/Reports'));
+const ProviderSettings = lazy(() => import('./pages/Provider/Settings'));
 const EventPage = lazy(() => import('./pages/EventPage'));
 
 // Home stays eager — it's the landing page, it needs to be instant.
@@ -30,8 +55,47 @@ const Partners = lazy(() => import('./pages/Partners'));
 const Platform = lazy(() => import('./pages/Platform'));
 const B2B = lazy(() => import('./pages/B2B'));
 const B2BThankYou = lazy(() => import('./pages/B2BThankYou'));
+const CustomProtocol = lazy(() => import('./pages/CustomProtocol'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
+const Store = lazy(() => import('./pages/Store'));
+const BookNow = lazy(() => import('./pages/BookNow'));
+const BookingConfirmation = lazy(() => import('./pages/BookingConfirmation'));
+const Membership = lazy(() => import('./pages/Membership'));
+const Corporate = lazy(() => import('./pages/Corporate'));
+const EventsPage = lazy(() => import('./pages/Events'));
+const Hotel = lazy(() => import('./pages/Hotel'));
+const ServiceArea = lazy(() => import('./pages/ServiceArea'));
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Safety = lazy(() => import('./pages/Safety'));
+const Ingredients = lazy(() => import('./pages/Ingredients'));
+const MedicalDirection = lazy(() => import('./pages/MedicalDirection'));
+const Gift = lazy(() => import('./pages/Gift'));
+const Athlete = lazy(() => import('./pages/Athlete'));
+const Hangover = lazy(() => import('./pages/Hangover'));
+const JetLag = lazy(() => import('./pages/JetLag'));
+const Press = lazy(() => import('./pages/Press'));
+const AdminCommand = lazy(() => import('./pages/admin/Command'));
+const AdminInventory = lazy(() => import('./pages/admin/Inventory'));
+
+const HIDE_BOTTOM_NAV = ['/provider', '/admin', '/members', '/login', '/checkout'];
+
+const BottomNavGate = () => {
+  const { pathname } = useLocation();
+  const hidden = HIDE_BOTTOM_NAV.some((prefix) => pathname.startsWith(prefix));
+
+  useEffect(() => {
+    if (hidden) {
+      document.documentElement.classList.remove('has-bottom-nav');
+    } else {
+      document.documentElement.classList.add('has-bottom-nav');
+    }
+    return () => document.documentElement.classList.remove('has-bottom-nav');
+  }, [hidden]);
+
+  return hidden ? null : <BottomNav />;
+};
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -43,7 +107,7 @@ const ScrollToTop = () => {
       const tryScroll = () => {
         const el = document.getElementById(id);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else if (attempts < 12) {
           attempts += 1;
           setTimeout(tryScroll, 80);
@@ -67,7 +131,7 @@ function AppRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/our-story" element={<OurStory />} />
             <Route path="/team" element={<OurTeam />} />
-            <Route path="/medical-direction" element={<Navigate to="/team" replace />} />
+            <Route path="/medical-direction" element={<MedicalDirection />} />
             <Route path="/our-team" element={<Navigate to="/team" replace />} />
             <Route path="/products/dehydration-iv" element={<DehydrationIV />} />
             <Route path="/services/iv-vitamins" element={<IVVitaminsService />} />
@@ -79,8 +143,11 @@ function AppRoutes() {
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
-            {/* Presale phase: /membership redirects to /apply until member portal ships post-launch. */}
-            <Route path="/membership" element={<Navigate to="/apply" replace />} />
+            <Route path="/membership" element={<Membership />} />
+            <Route path="/corporate" element={<Corporate />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/hotel" element={<Hotel />} />
+            <Route path="/service-area" element={<ServiceArea />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
@@ -93,7 +160,39 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
-            <Route path="*" element={<PageNotFound />} />
+            <Route path="/custom" element={<CustomProtocol />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/book" element={<BookNow />} />
+            <Route path="/store/confirmation" element={<BookingConfirmation />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout/success" element={<CheckoutSuccess />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/members" element={<Navigate to="/login" replace />} />
+            <Route path="/members/dashboard" element={<RequireAuth><MemberDashboard /></RequireAuth>} />
+            <Route path="/provider" element={<Navigate to="/login" replace />} />
+            <Route path="/provider/dashboard" element={<Navigate to="/admin" replace />} />
+            <Route path="/provider/appointments" element={<RequireAuth><ProviderAppointments /></RequireAuth>} />
+            <Route path="/provider/clients" element={<RequireAuth><ProviderClients /></RequireAuth>} />
+            <Route path="/provider/invoicing" element={<RequireAuth><ProviderInvoicing /></RequireAuth>} />
+            <Route path="/provider/accounting" element={<RequireAuth><ProviderAccounting /></RequireAuth>} />
+            <Route path="/provider/services" element={<RequireAuth><ProviderServices /></RequireAuth>} />
+            <Route path="/provider/staff" element={<RequireAuth><ProviderStaff /></RequireAuth>} />
+            <Route path="/provider/communications" element={<RequireAuth><ProviderCommunications /></RequireAuth>} />
+            <Route path="/provider/shift" element={<RequireAuth><NurseShift /></RequireAuth>} />
+            <Route path="/provider/reports" element={<RequireAuth><ProviderReports /></RequireAuth>} />
+            <Route path="/provider/settings" element={<RequireAuth><ProviderSettings /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth><AdminCommand /></RequireAuth>} />
+            <Route path="/admin/inventory" element={<RequireAuth><AdminInventory /></RequireAuth>} />
+            <Route path="/admin/*" element={<RequireAuth><AdminCommand /></RequireAuth>} />
+            <Route path="/safety" element={<Safety />} />
+            <Route path="/ingredients" element={<Ingredients />} />
+            <Route path="/gift" element={<Gift />} />
+            <Route path="/athlete" element={<Athlete />} />
+            <Route path="/hangover" element={<Hangover />} />
+            <Route path="/jet-lag" element={<JetLag />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
@@ -104,13 +203,18 @@ function AppRoutes() {
 function App() {
   return (
     <ErrorBoundary>
-      <Router>
-        <ScrollToTop />
-        <ScrollProgress />
-        <AppRoutes />
-      </Router>
-      <Toaster />
-      <CookieConsent />
+      <AuthStoreProvider>
+      <CartProvider>
+        <Router>
+          <ScrollToTop />
+          <ScrollProgress />
+          <AppRoutes />
+          <BottomNavGate />
+        </Router>
+        <Toaster />
+        <CookieConsent />
+      </CartProvider>
+      </AuthStoreProvider>
     </ErrorBoundary>
   );
 }

@@ -56,16 +56,16 @@ function CollapsibleGroup({ label, items }) {
 
 export default function Footer() {
   return (
-    <footer className="py-6 md:py-10 px-4">
+    <footer className="pt-6 pb-24 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Brand block — full-width on mobile */}
-        <div className="mb-6 md:hidden">
+        <div className="mb-6 md:hidden flex flex-col items-center text-center">
           <div className="mb-2">
             <div className="font-heading text-2xl tracking-widest">AVALON</div>
             <div className="text-xs tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
           </div>
-          <p className="font-body text-xs text-foreground leading-relaxed text-left max-w-sm">
-            Mobile longevity, delivered. Hydration, NAD+, peptides, and intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
+          <p className="font-body text-xs text-foreground leading-relaxed text-center max-w-sm">
+            Intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export default function Footer() {
               <div className="text-xs tracking-[0.3em] text-foreground -mt-1">VITALITY</div>
             </div>
             <p className="font-body text-xs text-foreground leading-tight max-w-xs text-left">
-              Mobile longevity, delivered. Hydration, NAD+, peptides, and intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
+              Intelligent protocols administered by California-licensed clinicians across the San Francisco Bay Area.
             </p>
           </div>
 
@@ -86,9 +86,13 @@ export default function Footer() {
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Services</p>
             <div className="space-y-2 md:space-y-2.5">
               {[
-                { label: 'IV Vitamins', href: '/services/iv-vitamins' },
-                { label: 'NAD+', href: '/services/nad' },
-                { label: 'IV CBD', href: '/services/cbd' },
+                { label: 'Request a Visit', href: '/store' },
+                { label: 'Membership', href: '/membership' },
+                { label: 'Gift Cards', href: '/gift' },
+                { label: 'For Athletes', href: '/athlete' },
+                { label: 'For Teams', href: '/corporate' },
+                { label: 'For Events', href: '/events' },
+                { label: 'Hotel Delivery', href: '/hotel' },
               ].map((l) => (
                 <Link key={l.href} to={l.href} className="block text-xs text-foreground font-body uppercase tracking-wider">
                   {l.label}
@@ -100,10 +104,13 @@ export default function Footer() {
           <div>
             <p className="text-xs tracking-[0.3em] text-foreground uppercase font-body mb-3 md:mb-4">Company</p>
             <div className="space-y-2 md:space-y-2.5">
-              <Link to="/#membership" className="block text-xs text-foreground font-body uppercase tracking-wider">Membership</Link>
               <CollapsibleGroup label="About Us" items={ABOUT} />
+              <Link to="/service-area" className="block text-xs text-foreground font-body uppercase tracking-wider">Service Area</Link>
               <Link to="/faq" className="block text-xs text-foreground font-body uppercase tracking-wider">FAQ</Link>
-              <Link to="/#events" className="block text-xs text-foreground font-body uppercase tracking-wider">Events</Link>
+              <Link to="/safety" className="block text-xs text-foreground font-body uppercase tracking-wider">Safety</Link>
+              <Link to="/ingredients" className="block text-xs text-foreground font-body uppercase tracking-wider">Ingredients</Link>
+              <Link to="/medical-direction" className="block text-xs text-foreground font-body uppercase tracking-wider">Medical Direction</Link>
+              <Link to="/press" className="block text-xs text-foreground font-body uppercase tracking-wider">Press</Link>
               <CollapsibleGroup label="Legal" items={LEGAL} />
             </div>
           </div>
@@ -137,7 +144,12 @@ export default function Footer() {
               Avalon services are provided exclusively to California residents physically located in California at the time of service.
             </p>
           </div>
-          <div className="pt-4 mb-6">
+          <div className="pt-4 mb-3">
+            <p className="font-body text-xs text-foreground/80 leading-relaxed text-center md:text-right font-medium">
+              Avalon Vitality provides wellness and recovery support. This is not emergency medical care. If you are experiencing a medical emergency, call 911 immediately.
+            </p>
+          </div>
+          <div className="pt-2 mb-6">
             <p className="font-body text-xs text-foreground/70 leading-relaxed text-center md:text-right">
               Statements made by Avalon Vitality about its services and products have not been evaluated by the U.S. Food and Drug Administration. The Services are not intended to diagnose, treat, cure, or prevent any disease. Information provided is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician. Individual results vary. Always consult your physician before beginning any therapy.
             </p>

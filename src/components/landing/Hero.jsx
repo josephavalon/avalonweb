@@ -1,110 +1,158 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
-import MagneticButton from '@/components/ui/MagneticButton';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { MapPin, ChevronDown } from 'lucide-react';
+
+const EASE = [0.16, 1, 0.3, 1];
 
 export default function Hero() {
   const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
-  const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  // Cursor-aware parallax — gentle drift toward mouse (luxury micro-motion).
-  const cursorX = useMotionValue(0);
-  const cursorY = useMotionValue(0);
-  const cx = useSpring(cursorX, { stiffness: 40, damping: 22, mass: 0.8 });
-  const cy = useSpring(cursorY, { stiffness: 40, damping: 22, mass: 0.8 });
-  const handleCursor = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const nx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
-    const ny = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-    cursorX.set(nx * 12);
-    cursorY.set(ny * 8);
-  };
+  // Mobile check: evaluated once at mount — never changes within a session.
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Always call hooks (Rules of Hooks), but only attach ref on desktop so
+  // useScroll tracks nothing on mobile — no scroll listener, no rAF overhead.
+  const { scrollYProgress } = useScroll({ target: isMobile ? { current: null } : ref, offset: ['start start', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.6], [0, 0.3]);
 
   return (
     <section
-      ref={ref}
-      className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden pt-20 md:pt-24 pb-8 md:pb-12"
+      ref={isMobile ? null : ref}
+      className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
     >
-      {/* Parallax BG */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Background photo — parallax on desktop only; static div on mobile for performance */}
+      <motion.div
+        style={isMobile ? undefined : { y }}
+        className={`absolute inset-0 pointer-events-none${isMobile ? '' : ' will-change-transform'}`}
+      >
         <img
           src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
           alt="Avalon Vitality IV therapy"
-          className="w-full h-full object-cover brightness-110"
+          className="w-full h-full object-cover"
+          style={{ objectPosition: '30% 55%', transform: 'scale(1.22)', transformOrigin: '38% 62%' }}
           loading="eager"
-          fetchPriority="high"
+          fetchpriority="high"
         />
-        <div className="absolute inset-0 bg-background/50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
-        <div className="absolute bottom-0 inset-x-0 h-2/3 bg-gradient-to-b from-transparent via-background/60 to-background pointer-events-none" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-white/10 blur-3xl opacity-40" />
-      </div>
+        {/* Base wash — unified across all themes */}
+        <div className="absolute inset-0 bg-background/65" />
+        {/* Stronger left fade so text always pops — especially in dubs/golden */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
+        {/* Bottom fade to page */}
+        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-b from-transparent to-background" />
+      </motion.div>
 
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center gap-6 md:gap-10 w-full flex-1">
-        {/* Top band: eyebrow + title */}
-        <div className="flex flex-col items-center w-full">
-          <motion.p
-            initial={{ opacity: 0, letterSpacing: '0.1em' }}
-            animate={{ opacity: 1, letterSpacing: '0.4em' }}
-            transition={{ duration: 1.2, delay: 0.15 }}
-            className="font-body text-xs tracking-[0.4em] text-accent uppercase mb-5"
-          >
-            SF Bay Area
-          </motion.p>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 60, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.2, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading text-7xl md:text-7xl lg:text-[7rem] leading-[0.95] tracking-[0.06em] md:tracking-wide text-foreground uppercase"
-          >
-            AVALON<br />VITALITY
-          </motion.h1>
-        </div>
-
-        {/* Middle band: divider + subhead + CTA pill, grouped with even gap */}
-        <div className="flex flex-col items-center w-full gap-5 md:gap-7">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.65 }}
-            className="flex items-center justify-center w-full max-w-2xl mx-auto px-4"
-          >
-            <div className="flex flex-col items-center gap-3 md:gap-4">
-              <MagneticButton strength={14}>
-                <Link
-                  to="/apply"
-                  className="apply-now-btn inline-flex items-center gap-2 px-10 py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold hover:bg-foreground/90 transition-colors whitespace-nowrap rounded-full"
-                >
-                  Start Now
-                  <span aria-hidden="true">&rarr;</span>
-                </Link>
-              </MagneticButton>
-            </div>
-          </motion.div>
-
-
-        </div>
-      </div>
-
-      {/* Bottom band: glass divider + subhead in normal flow (prevents overlap on any viewport/browser) */}
-      <div className="relative z-10 w-full px-4 flex flex-col items-center gap-4 md:gap-6 pb-2">
+      {/* Scroll-driven darkening — desktop only */}
+      {!isMobile && (
         <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 1, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="h-px bg-foreground/20 w-full max-w-xs md:max-w-md origin-center"
+          style={{ opacity: overlayOpacity }}
+          className="absolute inset-0 bg-background pointer-events-none"
         />
+      )}
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 lg:px-20 pt-28 md:pt-32 pb-0">
+
+        {/* Eyebrow */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
+          className="mb-4 md:mb-5 flex flex-col gap-2.5"
+        >
+          {/* Region chip — expandable to future markets */}
+          <button
+            type="button"
+            title="More regions coming soon"
+            className="inline-flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border border-foreground/[0.15] bg-transparent hover:bg-background/30 transition-colors"
+          >
+            <MapPin className="w-3 h-3 shrink-0 text-accent" strokeWidth={2} />
+            <span className="font-body text-[10px] tracking-[0.25em] text-foreground uppercase">
+              SF Bay Area
+            </span>
+            <ChevronDown className="w-3 h-3 text-foreground/40" strokeWidth={2} />
+          </button>
+          {/* Brand name */}
+          <span className="font-body text-sm tracking-[0.3em] text-foreground/70 uppercase self-start">
+            Avalon Vitality
+          </span>
+          {/* Social proof chip */}
+          <div className="inline-flex items-center gap-1.5 self-start">
+            <span className="text-accent text-[11px]">★★★★★</span>
+            <span className="font-body text-[10px] tracking-[0.2em] text-foreground/55 uppercase">
+              4.9 · 200+ sessions delivered
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.2, ease: EASE }}
+          className="font-heading text-[15vw] sm:text-[12vw] md:text-[9vw] lg:text-[8rem] leading-[0.88] tracking-tight text-foreground uppercase max-w-3xl"
+        >
+          Recovery<br />On Demand
+        </motion.h1>
+
+        {/* Accent divider */}
+        <motion.div
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.35, ease: EASE }}
+          style={{ transformOrigin: 'left' }}
+          className="w-10 h-[2px] bg-accent mt-4"
+        />
+
+        {/* Sub-headline — trust credential, not marketing copy */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-[90vw] md:max-w-xl mx-auto"
+          transition={{ duration: 0.8, delay: 0.45, ease: EASE }}
+          className="font-body text-[11px] md:text-xs tracking-[0.3em] text-foreground/70 uppercase mt-4 md:mt-5"
         >
-          Built for high-performers who don't have time to slow down.
+          Licensed RN · Delivered to you
         </motion.p>
+
+        {/* Price anchor — removes friction for first-timers */}
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.52, ease: EASE }}
+          className="font-body text-[10px] tracking-[0.25em] text-foreground/40 uppercase mt-2"
+        >
+          From $150 · No membership required
+        </motion.p>
+
+        {/* CTA buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.58, ease: EASE }}
+          className="flex flex-col gap-3 mt-7 md:mt-8 w-full max-w-xs"
+        >
+          <Link
+            to="/store"
+            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/85 transition-colors"
+          >
+            <span>Start Recovery</span>
+            <span className="text-background">→</span>
+          </Link>
+          <Link
+            to="/membership"
+            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full border border-foreground/30 text-foreground hover:bg-foreground/[0.06] hover:border-foreground/60 transition-colors backdrop-blur-sm"
+          >
+            <span>Membership</span>
+            <span>→</span>
+          </Link>
+        </motion.div>
+
+        {/* Spacer */}
+        <div className="flex-1 min-h-[3rem]" />
+
       </div>
+
+
     </section>
   );
 }
