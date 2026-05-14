@@ -499,7 +499,7 @@ export default function Store() {
                         : 'text-foreground/50 hover:text-foreground'
                     }`}
                   >
-                    One-Time Session
+                    BUY NOW
                   </button>
                   <button
                     type="button"
@@ -1134,7 +1134,7 @@ export default function Store() {
                 type="button" onClick={handleBookIV} whileTap={{ scale: 0.98 }}
                 className="w-full flex items-center justify-between px-6 py-4 rounded-2xl bg-accent text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-accent/85 transition-colors"
               >
-                <span>Book Now</span>
+                <span>BUY NOW</span>
                 <ArrowRight className="w-4 h-4" strokeWidth={2} />
               </motion.button>
             )}
@@ -1143,7 +1143,7 @@ export default function Store() {
                 type="button" onClick={handleBookCustom} whileTap={{ scale: 0.98 }}
                 className="w-full flex items-center justify-between px-6 py-4 rounded-2xl bg-accent text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-accent/85 transition-colors"
               >
-                <span>Book Now</span>
+                <span>BUY NOW</span>
                 <ArrowRight className="w-4 h-4" strokeWidth={2} />
               </motion.button>
             )}

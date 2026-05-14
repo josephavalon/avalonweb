@@ -53,7 +53,7 @@ export default function GiftCertificates() {
                 rel="noopener noreferrer"
                 className="px-7 py-3.5 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold hover:bg-foreground/90 transition-colors rounded-full text-center"
               >
-                Purchase Online
+                BUY NOW
               </a>
               <a
                 href={GIFT_TYPEFORM_URL}

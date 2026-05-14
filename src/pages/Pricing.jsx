@@ -260,7 +260,7 @@ export default function Pricing() {
                         : 'border border-foreground/20 text-foreground hover:border-foreground/50'
                     }`}
                   >
-                    Get Started
+                    SUBSCRIBE & SAVE
                   </Link>
                 </motion.div>
               ))}
@@ -304,13 +304,13 @@ export default function Pricing() {
                 to="/store"
                 className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-6 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
               >
-                Book One Session <ArrowRight className="w-4 h-4" />
+                BUY NOW <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/apply"
                 className="inline-flex items-center gap-2 border border-foreground/20 text-foreground font-body text-sm tracking-[0.15em] uppercase px-6 py-3.5 rounded-xl hover:border-foreground/50 transition-colors duration-200"
               >
-                Join Membership <ArrowRight className="w-4 h-4" />
+                SUBSCRIBE & SAVE <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
           </div>

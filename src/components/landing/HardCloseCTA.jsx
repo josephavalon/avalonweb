@@ -23,7 +23,7 @@ export default function HardCloseCTA() {
           to="/apply"
           className="apply-now-btn inline-flex items-center gap-2 px-12 py-5 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold hover:bg-foreground/90 transition-colors whitespace-nowrap rounded-full"
         >
-          Start Now <span aria-hidden="true">&rarr;</span>
+          BUY NOW <span aria-hidden="true">&rarr;</span>
         </Link>
       </motion.div>
     </section>

@@ -131,14 +131,14 @@ export default function Hero() {
             to="/store"
             className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/85 transition-colors"
           >
-            <span>Start Recovery</span>
+            <span>BUY NOW</span>
             <ArrowRight className="w-4 h-4 ml-2 inline" />
           </Link>
           <Link
             to="/membership"
             className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full border border-foreground/30 text-foreground hover:bg-foreground/[0.06] hover:border-foreground/60 transition-colors"
           >
-            <span>Membership</span>
+            <span>SUBSCRIBE & SAVE</span>
             <ArrowRight className="w-4 h-4 ml-2 inline" />
           </Link>
         </motion.div>

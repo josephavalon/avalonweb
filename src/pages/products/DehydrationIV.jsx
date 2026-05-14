@@ -76,7 +76,7 @@ export default function DehydrationIV() {
               to="/apply"
               className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-4 hover:bg-foreground/90 transition-colors mb-6"
             >
-              Start Now
+              BUY NOW
             </Link>
 
             <div className="flex gap-4">
@@ -120,7 +120,7 @@ export default function DehydrationIV() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                One Time
+                BUY NOW
               </button>
               <button
                 onClick={() => setSelectedOption('membership')}
@@ -130,7 +130,7 @@ export default function DehydrationIV() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Membership
+                SUBSCRIBE & SAVE
               </button>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function DehydrationIV() {
                    href="/apply"
                    className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
                  >
-                   Order Now
+                   BUY NOW
                  </a>
               </motion.div>
             )}
@@ -210,7 +210,7 @@ export default function DehydrationIV() {
                   href="/apply"
                   className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
                 >
-                  Start Now
+                  SUBSCRIBE & SAVE
                 </a>
               </motion.div>
             )}

@@ -115,7 +115,7 @@ export default function Hangover() {
                 to="/store"
                 className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-8 py-4 rounded-xl hover:bg-accent/90 transition-colors duration-200"
               >
-                Book Now <ArrowRight className="w-4 h-4" />
+                BUY NOW <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
           </div>
@@ -185,7 +185,7 @@ export default function Hangover() {
                   to="/store"
                   className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-7 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
                 >
-                  Book Now <ArrowRight className="w-4 h-4" />
+                  BUY NOW <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </motion.div>
@@ -299,7 +299,7 @@ export default function Hangover() {
               to="/store"
               className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors duration-200 flex items-center gap-1"
             >
-              Book Now <ArrowRight className="w-3.5 h-3.5" />
+              BUY NOW <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </Reveal>

@@ -102,7 +102,7 @@ export default function Navbar() {
             to="/store"
             className="bg-[#c9a84c] text-[#0a0a0a] font-bold text-xs px-4 py-1.5 rounded-full hover:bg-[#b8973b] transition-colors"
           >
-            Book Now
+            BUY NOW
           </Link>
           <button
             onClick={cycleTheme}

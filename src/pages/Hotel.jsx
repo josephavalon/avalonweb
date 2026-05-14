@@ -119,7 +119,7 @@ export default function Hotel() {
                 to="/store"
                 className="inline-block px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
               >
-                Book Now
+                BUY NOW
               </Link>
             </motion.div>
           </div>
