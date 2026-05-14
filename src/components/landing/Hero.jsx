@@ -39,7 +39,7 @@ export default function Hero() {
         {/* Stronger left fade so text always pops — especially in dubs/golden */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
         {/* Bottom fade to page — single gradient only */}
-        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0a]" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent pointer-events-none" />
       </motion.div>
 
       {/* Scroll-driven darkening — desktop only */}
@@ -147,6 +147,17 @@ export default function Hero() {
 
       </div>
 
+
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 1.1, ease: EASE }}
+        className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 pointer-events-none"
+      >
+        <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/30">Scroll</span>
+        <ChevronDown className="w-4 h-4 text-foreground/30 animate-bounce" strokeWidth={1.5} />
+      </motion.div>
 
     </section>
   );

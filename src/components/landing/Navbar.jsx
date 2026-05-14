@@ -73,8 +73,8 @@ export default function Navbar() {
   return (
     <nav className={`fixed left-4 right-4 z-40 rounded-3xl transition-all duration-500 ease-editorial ${
       scrolled
-        ? 'top-2 bg-background/75 backdrop-blur-xl border border-white/[0.08] shadow-lg shadow-black/25'
-        : 'top-4 bg-background/[0.12] backdrop-blur-sm border border-white/[0.05]'
+        ? 'top-2 bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/10 shadow-lg shadow-black/25'
+        : 'top-4 bg-[#0a0a0a]/60 backdrop-blur-2xl border border-white/10'
     }`}>
 
       {/* Desktop */}
@@ -149,7 +149,7 @@ export default function Navbar() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-background border-t border-white/[0.06]"
+              className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-white/10 rounded-2xl"
             >
               <div className="px-6 py-4 flex flex-col items-end gap-2">
                 <Link to="/#how-it-works" onClick={() => setMobileOpen(false)} className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right">Process</Link>

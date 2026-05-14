@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { CalendarCheck, MapPin, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarCheck, MapPin, Zap, ChevronDown } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -23,23 +23,9 @@ const steps = [
 ];
 
 export default function HowItWorks() {
-  const scrollRef = useRef(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [openIndex, setOpenIndex] = useState(0);
 
-  const scrollTo = (index) => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const cardWidth = container.offsetWidth;
-    container.scrollTo({ left: cardWidth * index, behavior: 'smooth' });
-    setActiveStep(index);
-  };
-
-  const handleScroll = () => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const index = Math.round(container.scrollLeft / container.offsetWidth);
-    setActiveStep(index);
-  };
+  const toggle = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
     <section id="how-it-works" className="pt-16 pb-10 md:py-20 px-4 scroll-mt-20">
@@ -59,90 +45,64 @@ export default function HowItWorks() {
           </h2>
         </motion.div>
 
-        {/* ── Mobile: full-width one-card carousel with arrows ── */}
-        <div className="md:hidden relative">
-          {/* Scroll container — snaps one full card at a time */}
-          <div
-            ref={scrollRef}
-            onScroll={handleScroll}
-            className="overflow-x-auto no-scrollbar w-full"
-            style={{
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-x',
-              overscrollBehavior: 'contain',
-            }}
-          >
-            <div className="flex w-full">
-              {steps.map((step, i) => (
-                <div
-                  key={step.title}
-                  className="flex-none w-full p-4 border border-foreground/15 bg-foreground/[0.03] rounded-2xl text-center"
-                  style={{ scrollSnapAlign: 'start' }}
-                >
-                  <step.icon className="w-5 h-5 text-accent mx-auto mb-2" strokeWidth={1.5} aria-hidden="true" />
-                  <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-1">Step {i + 1} of {steps.length}</p>
-                  <h3 className="font-heading text-lg text-foreground mb-1.5 tracking-wide">{step.title}</h3>
-                  <p className="font-body text-xs text-foreground/70 leading-relaxed">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Arrow + dot controls */}
-          <div className="flex items-center justify-between mt-4 px-1">
-            <button
-              onClick={() => scrollTo(Math.max(0, activeStep - 1))}
-              disabled={activeStep === 0}
-              className="w-8 h-8 rounded-full border border-foreground/15 flex items-center justify-center text-foreground/40 hover:text-foreground hover:border-foreground/35 disabled:opacity-20 transition-all"
-              aria-label="Previous step"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {/* Dots */}
-            <div className="flex items-center gap-2">
-              {steps.map((_, i) => (
+        {/* Accordion cards */}
+        <div className="space-y-2">
+          {steps.map((step, i) => {
+            const isOpen = openIndex === i;
+            const StepIcon = step.icon;
+            return (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07, duration: 0.5, ease: EASE }}
+                className="border border-white/10 rounded-2xl overflow-hidden"
+              >
+                {/* Header */}
                 <button
-                  key={i}
-                  onClick={() => scrollTo(i)}
-                  aria-label={`Go to step ${i + 1}`}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === activeStep ? 'w-5 h-1.5 bg-foreground' : 'w-1.5 h-1.5 bg-foreground/20'
-                  }`}
-                />
-              ))}
-            </div>
+                  type="button"
+                  onClick={() => toggle(i)}
+                  className="w-full flex items-center justify-between px-6 py-5 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex items-center flex-1 min-w-0">
+                    <span className="text-[#c9a84c] text-xs font-bold tracking-widest mr-4 shrink-0">
+                      0{i + 1}
+                    </span>
+                    <span className="text-white font-bold text-base flex-1 text-left">{step.title}</span>
+                  </div>
+                  <ChevronDown
+                    className="w-4 h-4 text-white/40 shrink-0 transition-transform duration-300"
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    strokeWidth={2}
+                  />
+                </button>
 
-            <button
-              onClick={() => scrollTo(Math.min(steps.length - 1, activeStep + 1))}
-              disabled={activeStep === steps.length - 1}
-              className="w-8 h-8 rounded-full border border-foreground/15 flex items-center justify-center text-foreground/40 hover:text-foreground hover:border-foreground/35 disabled:opacity-20 transition-all"
-              aria-label="Next step"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+                {/* Body */}
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="body"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.35, ease: EASE }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div className="px-6 pb-6 flex items-start gap-4 border-t border-white/[0.06] pt-4">
+                        <div className="w-8 h-8 rounded-xl bg-[#c9a84c]/10 flex items-center justify-center shrink-0">
+                          <StepIcon className="w-4 h-4 text-[#c9a84c]" strokeWidth={1.5} />
+                        </div>
+                        <p className="text-white/60 text-sm leading-relaxed">{step.desc}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
-
-        {/* ── Desktop: 3-col grid ── */}
-        <div className="hidden md:grid grid-cols-3 gap-6">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.5, ease: EASE }}
-              className="text-center p-5 border border-foreground/15 bg-foreground/[0.03] rounded-3xl"
-            >
-              <step.icon className="w-6 h-6 text-accent mx-auto mb-3" strokeWidth={1.5} aria-hidden="true" />
-              <h3 className="font-heading text-xl text-foreground mb-2 tracking-wide">{step.title}</h3>
-              <p className="font-body text-sm text-foreground/70 leading-relaxed">{step.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-
 
       </div>
     </section>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FlaskConical, Clock, ShieldCheck, Stethoscope, SlidersHorizontal, UserCheck, TrendingUp, Minus } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FlaskConical, Clock, ShieldCheck, Stethoscope, SlidersHorizontal, UserCheck, TrendingUp, Minus, ChevronDown } from 'lucide-react';
 
 const ivStats = [
   { value: 'Full', label: 'Bioavailability', icon: FlaskConical },
@@ -18,7 +18,85 @@ const imStats = [
   { value: 'B12', label: 'Most Popular', icon: FlaskConical },
 ];
 
+const IV_ACCORDION = [
+  {
+    title: 'What is IV therapy?',
+    body: 'Direct nutrient delivery. Faster recovery, energy, performance.',
+  },
+  {
+    title: 'Why not just take supplements?',
+    body: 'Oral supplements lose up to 80% in digestion. IV bypasses the gut entirely — 100% absorption, straight into your bloodstream.',
+  },
+  {
+    title: 'How long does a session take?',
+    body: 'Most sessions run 30–45 minutes. Our licensed RN sets up at your location — home, hotel, or office — with zero waiting room.',
+  },
+  {
+    title: 'Is it safe?',
+    body: 'Every session is MD-supervised and administered by a licensed RN using pharmaceutical-grade nutrients.',
+  },
+];
+
+const IM_ACCORDION = [
+  {
+    title: 'What is an IM shot?',
+    body: 'A concentrated dose injected directly into muscle. No IV line. Under five minutes.',
+  },
+  {
+    title: 'How does it differ from IV?',
+    body: 'IM shots are faster and needle-only — no catheter or drip bag. Ideal for a quick B12 boost or glutathione push without the full session.',
+  },
+  {
+    title: 'What shots do you offer?',
+    body: 'B12, MIC, NAD+ IM, Glutathione, and Vitamin C — each available in multiple concentrations.',
+  },
+];
+
 const EASE = [0.16, 1, 0.3, 1];
+
+function AccordionGroup({ items }) {
+  const [openIndex, setOpenIndex] = useState(0);
+  return (
+    <div className="space-y-2 mt-6">
+      {items.map((item, i) => {
+        const isOpen = openIndex === i;
+        return (
+          <div key={item.title} className="border border-white/10 rounded-2xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+              className="w-full flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+              aria-expanded={isOpen}
+            >
+              <span className="text-white font-bold text-sm text-left flex-1">{item.title}</span>
+              <ChevronDown
+                className="w-4 h-4 text-white/30 shrink-0 transition-transform duration-300 ml-3"
+                style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                strokeWidth={2}
+              />
+            </button>
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  key="body"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.32, ease: EASE }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <p className="px-5 pb-5 pt-1 text-white/60 text-sm leading-relaxed border-t border-white/[0.06]">
+                    {item.body}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function WhatIsIV() {
   return (
@@ -65,20 +143,19 @@ export default function WhatIsIV() {
               transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
               className="text-left"
             >
-              <p className="font-body text-base md:text-lg text-foreground leading-relaxed mb-8">
-                Direct nutrient delivery. Faster recovery, energy, performance.
-              </p>
-              <div className="pt-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                  {ivStats.map((s) => (
-                    <div key={s.label} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.06]">
-                      <s.icon className="w-4 h-4 text-accent mb-1" strokeWidth={1.5} aria-hidden="true" />
-                      <p className="font-heading text-2xl md:text-3xl text-foreground tracking-wide leading-none">{s.value}</p>
-                      <p className="font-body text-[9px] tracking-[0.2em] text-accent uppercase">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {ivStats.map((s) => (
+                  <div key={s.label} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.06]">
+                    <s.icon className="w-4 h-4 text-accent mb-1" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="font-heading text-2xl md:text-3xl text-foreground tracking-wide leading-none">{s.value}</p>
+                    <p className="font-body text-[9px] tracking-[0.2em] text-accent uppercase">{s.label}</p>
+                  </div>
+                ))}
               </div>
+
+              {/* Accordion */}
+              <AccordionGroup items={IV_ACCORDION} />
             </motion.div>
           </div>
         </div>
@@ -99,20 +176,19 @@ export default function WhatIsIV() {
               transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
               className="text-left"
             >
-              <p className="font-body text-base md:text-lg text-foreground leading-relaxed mb-8">
-                Concentrated dose injected into muscle. No IV line. Under five minutes.
-              </p>
-              <div className="pt-6">
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                  {imStats.map((s) => (
-                    <div key={s.label} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.06]">
-                      <s.icon className="w-4 h-4 text-accent mb-1" strokeWidth={1.5} aria-hidden="true" />
-                      <p className="font-heading text-2xl md:text-3xl text-foreground tracking-wide leading-none">{s.value}</p>
-                      <p className="font-body text-[9px] tracking-[0.2em] text-accent uppercase">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                {imStats.map((s) => (
+                  <div key={s.label} className="flex flex-col items-center text-center gap-1 p-3 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.06]">
+                    <s.icon className="w-4 h-4 text-accent mb-1" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="font-heading text-2xl md:text-3xl text-foreground tracking-wide leading-none">{s.value}</p>
+                    <p className="font-body text-[9px] tracking-[0.2em] text-accent uppercase">{s.label}</p>
+                  </div>
+                ))}
               </div>
+
+              {/* Accordion */}
+              <AccordionGroup items={IM_ACCORDION} />
             </motion.div>
 
             {/* Image */}
