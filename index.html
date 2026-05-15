@@ -99,6 +99,7 @@
     </script>
 
     <!-- PWA iOS -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Avalon" />
@@ -121,6 +122,16 @@
         } catch (e) { /* no-op — private mode, WebView, etc. */ }
       })();
     </script>
+    <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
+         module, so there is a paint window where background-color is unset → white flash.
+         These rules apply the correct background immediately from the theme class that
+         the script above already wrote to <html>, before a single pixel paints. -->
+    <style>
+      html, body { background-color: hsl(0,0%,96%); }
+      html.dark, html.dark body { background-color: #0a0a0a; }
+      html.golden, html.golden body { background-color: hsl(28,35%,12%); }
+      html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
+    </style>
   </head>
   <body>
     <div id="root"></div>
