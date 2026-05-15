@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Droplets, Zap, Sparkles, ChevronRight, ArrowRight,
-  X, ShoppingBag, Check,
+  X, Check,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
@@ -117,7 +117,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
 /* ─── Main Section ───────────────────────────────────────────── */
 export default function OurDrips() {
   const navigate = useNavigate();
-  const { items: cart, removeItem: removeFromCart, clearItems: clearCart, itemsTotal: cartTotal } = useCart();
+  const { items: cart, removeItem: removeFromCart } = useCart();
   const [openKey, setOpenKey] = useState(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
@@ -230,57 +230,6 @@ export default function OurDrips() {
         </div>
 
       </div>
-
-      {/* ── Sticky Cart Bar ── */}
-      <AnimatePresence>
-        {cart.length > 0 && !checkoutOpen && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="fixed bottom-0 md:bottom-4 left-0 md:left-1/2 md:-translate-x-1/2 z-50 w-full md:w-[calc(100%-2rem)] md:max-w-xl"
-          >
-            <div className="bg-white/10 backdrop-blur-2xl border-t md:border border-white/20 md:rounded-3xl px-5 py-4 md:py-3.5 shadow-2xl shadow-black/40 flex items-center gap-3">
-              <div className="relative shrink-0">
-                <ShoppingBag className="w-6 h-6 text-foreground" strokeWidth={1.5} />
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent text-background font-body text-[10px] font-bold flex items-center justify-center leading-none">
-                  {cart.length}
-                </span>
-              </div>
-              <div className="flex-1 flex flex-wrap gap-1.5 min-w-0">
-                {cart.slice(0, 3).map((item) => (
-                  <span key={item.cartKey} className="font-body text-xs tracking-widest uppercase text-foreground bg-white/[0.12] border border-white/20 rounded-full px-3 py-1 whitespace-nowrap">
-                    {item.label}
-                  </span>
-                ))}
-                {cart.length > 3 && <span className="font-body text-xs text-foreground/60 px-1 py-1">+{cart.length - 3} more</span>}
-              </div>
-              <div className="flex items-center gap-2.5 shrink-0">
-                <span className="font-heading text-2xl text-foreground tracking-wide">${cartTotal.toLocaleString()}</span>
-                <button
-                  type="button"
-                  onClick={() => navigate('/checkout')}
-                  className="px-6 py-2.5 font-body text-sm tracking-widest uppercase font-semibold rounded-full bg-accent text-background hover:bg-accent/90 transition-colors"
-                >
-                  Review Request
-                </button>
-                <button
-                  type="button"
-                  onClick={clearCart}
-                  aria-label="Clear cart"
-                  className="w-8 h-8 rounded-full border border-white/20 bg-white/[0.06] flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-white/[0.12] hover:border-white/40 transition-colors flex-shrink-0"
-                  title="Clear all items"
-                >
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── Checkout Sheet ── */}
       <AnimatePresence>

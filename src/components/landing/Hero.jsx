@@ -1,17 +1,14 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MapPin, ChevronDown, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
 export default function Hero() {
   const ref = useRef(null);
-  // Mobile check: evaluated once at mount — never changes within a session.
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  // Always call hooks (Rules of Hooks), but only attach ref on desktop so
-  // useScroll tracks nothing on mobile — no scroll listener, no rAF overhead.
   const { scrollYProgress } = useScroll({ target: isMobile ? { current: null } : ref, offset: ['start start', 'end start'] });
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
   const overlayOpacity = useTransform(scrollYProgress, [0, 0.6], [0, 0.3]);
@@ -22,7 +19,6 @@ export default function Hero() {
       className="hero-root relative min-h-0 md:min-h-[100svh] flex flex-col overflow-hidden"
       style={{ position: 'relative' }}
     >
-      {/* Background photo — parallax on desktop only; static div on mobile for performance */}
       <motion.div
         style={isMobile ? undefined : { y }}
         className={`absolute inset-0 pointer-events-none${isMobile ? '' : ' will-change-transform'}`}
@@ -35,15 +31,11 @@ export default function Hero() {
           loading="eager"
           fetchpriority="high"
         />
-        {/* Base wash — unified across all themes */}
         <div className="absolute inset-0 bg-background/65" />
-        {/* Stronger left fade so text always pops — especially in dubs/golden */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
-        {/* Bottom fade to page — single gradient only */}
         <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
       </motion.div>
 
-      {/* Scroll-driven darkening — desktop only */}
       {!isMobile && (
         <motion.div
           style={{ opacity: overlayOpacity }}
@@ -51,48 +43,17 @@ export default function Hero() {
         />
       )}
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 lg:px-20 pt-20 md:pt-32 pb-8 md:pb-0">
 
-        {/* Brand name */}
         <motion.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
-          className="font-heading text-xl md:text-2xl tracking-[0.35em] text-foreground/60 uppercase mb-3"
+          className="font-body text-[11px] tracking-[0.3em] text-accent uppercase mb-4 md:mb-5"
         >
           Avalon Vitality
         </motion.p>
 
-        {/* Eyebrow */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
-          className="mb-3 md:mb-5 flex flex-col gap-2"
-        >
-          {/* Region chip — expandable to future markets */}
-          <button
-            type="button"
-            title="More regions coming soon"
-            className="inline-flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border border-foreground/[0.15] bg-transparent hover:bg-background/30 transition-colors"
-          >
-            <MapPin className="w-3 h-3 shrink-0 text-accent" strokeWidth={2} />
-            <span className="font-body text-[10px] tracking-[0.25em] text-foreground uppercase">
-              SF Bay Area
-            </span>
-            <ChevronDown className="w-3 h-3 text-foreground/40" strokeWidth={2} />
-          </button>
-          {/* Social proof chip */}
-          <div className="inline-flex items-center gap-1.5 self-start">
-            <span className="text-accent text-[11px]">★★★★★</span>
-            <span className="font-body text-[10px] tracking-[0.2em] text-foreground/55 uppercase">
-              4.9 · 200+ sessions delivered
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +63,6 @@ export default function Hero() {
           Recovery<br />On Demand
         </motion.h1>
 
-        {/* Accent divider */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
@@ -111,7 +71,6 @@ export default function Hero() {
           className="w-10 h-[2px] bg-accent mt-4"
         />
 
-        {/* Sub-headline — trust credential, not marketing copy */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -121,7 +80,6 @@ export default function Hero() {
           Licensed RN · Delivered to you
         </motion.p>
 
-        {/* Price anchor — removes friction for first-timers */}
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -131,7 +89,6 @@ export default function Hero() {
           Members save 15–25% · From $150 one-time
         </motion.p>
 
-        {/* CTA buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -163,7 +120,6 @@ export default function Hero() {
         <div className="h-2 md:flex-1" />
 
       </div>
-
     </section>
   );
 }

@@ -250,7 +250,7 @@ export default function Navbar() {
       <div className={`md:hidden flex items-center justify-between px-5 transition-all duration-500 ease-editorial ${
         scrolled ? 'h-12' : 'h-14'
       }`}>
-        <Link to="/" onClick={handleLogoClick} className="av-logo font-heading text-[22px] leading-none tracking-[0.22em] text-foreground">AV</Link>
+        <Link to="/" onClick={handleLogoClick} className="av-logo flex items-center h-full font-heading text-[22px] leading-none tracking-[0.22em] text-foreground translate-y-[1px]">AV</Link>
         <div className="flex items-center gap-3">
           <button
             onClick={cycleTheme}
