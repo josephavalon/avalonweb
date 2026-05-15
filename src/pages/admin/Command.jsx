@@ -1234,6 +1234,72 @@ const BOTTOM_NAV = [
   { screen:'clearance', icon: Shield,          label: 'Clearance' },
 ];
 
+// All screens for desktop sidebar (primary + secondary)
+const SIDEBAR_NAV = [
+  { screen:'command',     icon: LayoutDashboard, label: 'Command',        href: null          },
+  { screen:'requests',    icon: ClipboardList,   label: 'Requests',       href: null          },
+  { screen:'nurses',      icon: Users,           label: 'Nurses',         href: null          },
+  { screen:'clearance',   icon: Shield,          label: 'Clearance',      href: null          },
+  { screen:'payments',    icon: CreditCard,      label: 'Payments',       href: null          },
+  { screen:'followups',   icon: Heart,           label: 'Follow-Ups',     href: null          },
+  { screen:'memberships', icon: Star,            label: 'Memberships',    href: null          },
+  { screen:'events',      icon: Calendar,        label: 'Events / B2B',   href: null          },
+  { screen:'inventory',   icon: Package,         label: 'Inventory',      href: '/admin/inventory' },
+  { screen:'reports',     icon: TrendingUp,      label: 'Reports',        href: null          },
+];
+
+// ─── Desktop Sidebar ──────────────────────────────────────────────────────────
+function DesktopSidebar({ activeScreen, onNav, onSignOut }) {
+  return (
+    <aside className="hidden md:flex flex-col w-52 shrink-0 border-r border-foreground/[0.08] bg-background overflow-y-auto">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-foreground/[0.06] shrink-0">
+        <span className="font-heading text-sm tracking-[0.35em] text-foreground">AV</span>
+        <p className="font-body text-[8px] tracking-[0.15em] uppercase text-foreground/35 mt-0.5">{TODAY_LABEL}</p>
+        <p className="font-heading text-xs tracking-[0.2em] text-foreground uppercase mt-2">AVALON OS</p>
+      </div>
+
+      {/* Nav items */}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+        {SIDEBAR_NAV.map(({ screen, icon: Icon, label, href }) => {
+          const active = activeScreen === screen;
+          const cls = `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
+            active
+              ? 'bg-foreground/[0.08] text-foreground'
+              : 'text-foreground/50 hover:bg-foreground/[0.04] hover:text-foreground/75'
+          }`;
+          const inner = (
+            <>
+              <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2 : 1.5} />
+              <span className={`font-body text-[10px] tracking-[0.1em] uppercase ${active ? 'font-semibold text-foreground' : ''}`}>
+                {label}
+              </span>
+              {active && <span className="ml-auto w-1 h-3 rounded-full bg-accent" />}
+            </>
+          );
+          return href
+            ? <Link key={screen} to={href} className={cls}>{inner}</Link>
+            : <button key={screen} type="button" onClick={() => onNav(screen)} className={cls}>{inner}</button>;
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="px-2 py-3 border-t border-foreground/[0.06] shrink-0 space-y-1">
+        <Link to="/"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground/40 hover:text-foreground/60 transition-colors">
+          <ArrowLeft className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          <span className="font-body text-[10px] tracking-[0.1em] uppercase">Back to Site</span>
+        </Link>
+        <button type="button" onClick={onSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors">
+          <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          <span className="font-body text-[10px] tracking-[0.1em] uppercase">Sign Out</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
 // ─── Main Export ──────────────────────────────────────────────────────────────
 export default function Command() {
   const { signOut }                        = useAuthStore();
@@ -1265,119 +1331,136 @@ export default function Command() {
   const isMainNav = BOTTOM_NAV.find(n => n.screen === screen);
 
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col max-w-[430px] mx-auto overflow-hidden" style={{ height: '100dvh' }}>
+    // Full-screen shell — flex-row on desktop (sidebar + content), flex-col on mobile
+    <div className="h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden" style={{ height: '100dvh' }}>
 
-      {/* ── Top Bar — shrink-0 so it never flexes away; no sticky needed in fixed-height flex-col ── */}
-      <div className="shrink-0 bg-background border-b border-foreground/[0.06]">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-3">
-            {isMoreScreen && (
-              <button type="button" onClick={() => setScreen('command')}
-                className="w-7 h-7 flex items-center justify-center text-foreground/50 hover:text-foreground">
-                <ArrowLeft className="w-4 h-4" strokeWidth={2} />
-              </button>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
+      {/* ── Desktop Sidebar (md+) ────────────────────────────────── */}
+      <DesktopSidebar
+        activeScreen={screen}
+        onNav={(s) => setScreen(s)}
+        onSignOut={handleSignOut}
+      />
+
+      {/* ── Main column ─────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+
+        {/* ── Top Bar ─────────────────────────────────────────────── */}
+        <div className="shrink-0 bg-background border-b border-foreground/[0.06]">
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center gap-3">
+              {/* Back arrow — mobile only, for "more" screens */}
+              {isMoreScreen && (
+                <button type="button" onClick={() => setScreen('command')}
+                  className="md:hidden w-7 h-7 flex items-center justify-center text-foreground/50 hover:text-foreground">
+                  <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+                </button>
+              )}
+              {/* AV logo — mobile only; desktop shows it in sidebar */}
+              <div className="md:hidden">
                 <span className="font-heading text-[13px] tracking-[0.35em] text-foreground">AV</span>
+                <p className="font-body text-[8px] tracking-[0.15em] uppercase text-foreground/35 mt-0.5">{TODAY_LABEL}</p>
               </div>
-              <p className="font-body text-[8px] tracking-[0.15em] uppercase text-foreground/35 mt-0.5">{TODAY_LABEL}</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button type="button"
+                className="relative w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
+                <Bell className="w-4 h-4" strokeWidth={1.5} />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400" />
+              </button>
+              <button type="button" onClick={cycleTheme}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/60 hover:text-foreground transition-colors"
+                aria-label="Cycle theme">
+                <ThemeIcon className="w-4 h-4" />
+              </button>
+              <button type="button"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
+                <User className="w-4 h-4" strokeWidth={1.5} />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <button type="button"
-              className="relative w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
-              <Bell className="w-4 h-4" strokeWidth={1.5} />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400" />
-            </button>
-            <button type="button" onClick={cycleTheme}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/60 hover:text-foreground transition-colors"
-              aria-label="Cycle theme">
-              <ThemeIcon className="w-4 h-4" />
-            </button>
-            <button type="button"
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
-              <User className="w-4 h-4" strokeWidth={1.5} />
+
+          {/* Screen title */}
+          <div className="px-4 pb-2">
+            <h1 className="font-heading text-2xl text-foreground uppercase leading-none tracking-tight">
+              {screenTitles[screen]}
+            </h1>
+          </div>
+        </div>
+
+        {/* ── Screen Content ──────────────────────────────────────── */}
+        <main
+          className="flex-1 overflow-y-auto px-4 md:px-8 pt-1.5"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 5.5rem)' }}
+        >
+          <div className="max-w-3xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={screen}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                {screen === 'command'     && <CommandScreen   onSelectRequest={setSelectedRequest} />}
+                {screen === 'requests'    && <RequestsScreen  onSelectRequest={setSelectedRequest} />}
+                {screen === 'nurses'      && <NursesScreen />}
+                {screen === 'clearance'   && <ClearanceScreen onSelectRequest={setSelectedRequest} />}
+                {screen === 'payments'    && <PaymentsScreen />}
+                {screen === 'followups'   && <FollowUpsScreen />}
+                {screen === 'memberships' && <MembershipsScreen />}
+                {screen === 'events'      && <EventsScreen />}
+                {screen === 'inventory'   && <InventoryScreen />}
+                {screen === 'reports'     && <ReportsScreen />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+
+        {/* ── Mobile Bottom Nav (hidden on desktop) ───────────────── */}
+        <div
+          className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background border-t border-foreground/[0.12]"
+          style={{ paddingBottom:'max(env(safe-area-inset-bottom), 0px)' }}
+        >
+          <div className="flex items-stretch max-w-[430px] mx-auto">
+            {BOTTOM_NAV.map(({ screen: s, icon: Icon, label }) => {
+              const active = screen === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setScreen(s)}
+                  className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 relative transition-colors"
+                  style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.65)' }}
+                >
+                  {active && (
+                    <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-accent" />
+                  )}
+                  {s === 'requests' && (
+                    <span className="absolute top-2 right-1/4 w-4 h-4 rounded-full bg-accent text-background font-body text-[8px] font-bold flex items-center justify-center leading-none">
+                      {REQUESTS.filter(r => r.status === 'New Request').length}
+                    </span>
+                  )}
+                  <Icon className="w-[22px] h-[22px] shrink-0" strokeWidth={active ? 2 : 1.5} />
+                  <span className={`font-body text-[9px] tracking-[0.08em] uppercase leading-none ${active ? 'font-semibold' : ''}`}>{label}</span>
+                </button>
+              );
+            })}
+            {/* More */}
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 relative transition-colors"
+              style={{ color: isMoreScreen ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.65)' }}
+            >
+              {isMoreScreen && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-accent" />
+              )}
+              <MoreHorizontal className="w-[22px] h-[22px] shrink-0" strokeWidth={isMoreScreen ? 2 : 1.5} />
+              <span className={`font-body text-[9px] tracking-[0.08em] uppercase leading-none ${isMoreScreen ? 'font-semibold' : ''}`}>More</span>
             </button>
           </div>
         </div>
 
-        {/* Screen title */}
-        <div className="px-4 pb-2">
-          <h1 className="font-heading text-2xl text-foreground uppercase leading-none tracking-tight">
-            {screenTitles[screen]}
-          </h1>
-        </div>
-      </div>
-
-      {/* ── Screen Content ──────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto px-4 pt-1.5" style={{ paddingBottom:'5.5rem' }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={screen}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25, ease: EASE }}
-          >
-            {screen === 'command'     && <CommandScreen   onSelectRequest={setSelectedRequest} />}
-            {screen === 'requests'    && <RequestsScreen  onSelectRequest={setSelectedRequest} />}
-            {screen === 'nurses'      && <NursesScreen />}
-            {screen === 'clearance'   && <ClearanceScreen onSelectRequest={setSelectedRequest} />}
-            {screen === 'payments'    && <PaymentsScreen />}
-            {screen === 'followups'   && <FollowUpsScreen />}
-            {screen === 'memberships' && <MembershipsScreen />}
-            {screen === 'events'      && <EventsScreen />}
-            {screen === 'inventory'   && <InventoryScreen />}
-            {screen === 'reports'     && <ReportsScreen />}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      {/* ── Bottom Nav ──────────────────────────────────────────── */}
-      <div
-        className="fixed bottom-0 inset-x-0 z-30 bg-background border-t border-foreground/[0.12] max-w-[430px] mx-auto"
-        style={{ paddingBottom:'max(env(safe-area-inset-bottom), 0px)' }}
-      >
-        <div className="flex items-stretch">
-          {BOTTOM_NAV.map(({ screen: s, icon: Icon, label }) => {
-            const active = screen === s;
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setScreen(s)}
-                className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 relative transition-colors"
-                style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.65)' }}
-              >
-                {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-accent" />
-                )}
-                {/* Badge for requests */}
-                {s === 'requests' && (
-                  <span className="absolute top-2 right-1/4 w-4 h-4 rounded-full bg-accent text-background font-body text-[8px] font-bold flex items-center justify-center leading-none">
-                    {REQUESTS.filter(r => r.status === 'New Request').length}
-                  </span>
-                )}
-                <Icon className="w-[22px] h-[22px] shrink-0" strokeWidth={active ? 2 : 1.5} />
-                <span className={`font-body text-[9px] tracking-[0.08em] uppercase leading-none ${active ? 'font-semibold' : ''}`}>{label}</span>
-              </button>
-            );
-          })}
-          {/* More */}
-          <button
-            type="button"
-            onClick={() => setMoreOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 relative transition-colors"
-            style={{ color: isMoreScreen ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.65)' }}
-          >
-            {isMoreScreen && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-accent" />
-            )}
-            <MoreHorizontal className="w-[22px] h-[22px] shrink-0" strokeWidth={isMoreScreen ? 2 : 1.5} />
-            <span className={`font-body text-[9px] tracking-[0.08em] uppercase leading-none ${isMoreScreen ? 'font-semibold' : ''}`}>More</span>
-          </button>
-        </div>
       </div>
 
       {/* ── Visit Detail Sheet ───────────────────────────────────── */}
@@ -1390,7 +1473,7 @@ export default function Command() {
         )}
       </AnimatePresence>
 
-      {/* ── More Menu Sheet ──────────────────────────────────────── */}
+      {/* ── More Menu Sheet (mobile only) ────────────────────────── */}
       <AnimatePresence>
         {moreOpen && (
           <MoreMenuSheet
@@ -1400,6 +1483,7 @@ export default function Command() {
           />
         )}
       </AnimatePresence>
+
     </div>
   );
 }

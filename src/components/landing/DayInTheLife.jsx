@@ -30,7 +30,7 @@ export default function DayInTheLife() {
           <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
         </motion.div>
 
-        <ol className="relative border-l border-white/10 ml-3 md:ml-5 space-y-6 md:space-y-8 pl-6 md:pl-10">
+        <ol className="relative border-l border-foreground/10 ml-3 md:ml-5 space-y-6 md:space-y-8 pl-6 md:pl-10">
           {STEPS.map((s, i) => (
             <motion.li
               key={s.time}

@@ -9,6 +9,7 @@ const SESSION_KEY = 'av.session';
 
 // ── Demo accounts (replace with real auth before production) ──────────────
 const DEMO_USERS = {
+  'ADMIN001':  { role: 'admin',    name: 'Admin',  redirect: '/admin',              status: 'active' },
   'CLIENT001': { role: 'client',   name: 'Client', redirect: '/members/dashboard',  status: 'active' },
   'NURSE001':  { role: 'provider', name: 'Nurse',  redirect: '/provider/dashboard', status: 'active' },
 };

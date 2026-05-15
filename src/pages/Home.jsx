@@ -37,46 +37,37 @@ export default function Home() {
       <Hero />
 
       {/* ── Below fold — each section materialises on scroll ── */}
-      <Reveal delay={0}    duration={0.7} y={40} scale={0.98} blur={false}>
-        <TrustStrip />
-      </Reveal>
+      <TrustStrip />
 
-      <Reveal delay={0}    duration={0.85} blur={false}>
+      <Reveal delay={0}    duration={1.0} y={90} blur={false}>
         <HowItWorks />
       </Reveal>
 
-      <Reveal delay={0}    duration={0.85} blur={false}>
-        <TreatmentsTeaser />
-      </Reveal>
-
-      <Reveal delay={0}    duration={0.9} blur={false}>
+      <Reveal delay={0}    duration={1.0} y={100} blur={false}>
         <MembershipSection />
       </Reveal>
 
-      <Reveal delay={0}    duration={0.85}>
+      <Reveal delay={0}    duration={1.0} y={90} blur={false}>
+        <TreatmentsTeaser />
+      </Reveal>
+
+      <Reveal delay={0}    duration={1.0} y={80} blur={false}>
         <ChannelCards />
       </Reveal>
 
-      <Reveal delay={0}    duration={0.85}>
+      <Reveal delay={0}    duration={1.0} y={80} blur={false}>
         <Reviews />
       </Reveal>
 
-      <Reveal delay={0}    duration={0.85}>
+      <Reveal delay={0}    duration={0.95} y={70} blur={false}>
         <WhatIsIV />
       </Reveal>
 
-      <Reveal delay={0} duration={0.8}>
-      </Reveal>
-
-      <Reveal delay={0}    duration={0.8}>
-        <HomeFAQ />
-      </Reveal>
-
-      <Reveal delay={0}    duration={0.8}>
+      <Reveal delay={0}    duration={0.9} y={60} blur={false}>
         <WaitlistSection />
       </Reveal>
 
-      <Reveal delay={0}    duration={0.75} y={32} scale={0.99} blur={false}>
+      <Reveal delay={0}    duration={0.85} y={40} blur={false}>
         <div className="pb-24 md:pb-0">
           <Footer />
         </div>

@@ -17,25 +17,25 @@ const readInitialTheme = () => {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (stored && THEMES.includes(stored)) return stored;
   } catch {}
-  return 'light';
+  return 'golden';
 };
 
 // Therapy submenu items
 const THERAPY_ITEMS = [
-  { icon: Droplets,    label: 'Hydration',     href: '/store' },
-  { icon: Zap,         label: 'Energy',        href: '/store' },
-  { icon: ShieldCheck, label: 'Immunity',      href: '/store' },
-  { icon: Heart,       label: 'Recovery',      href: '/store' },
-  { icon: Sparkles,    label: 'Beauty',        href: '/store' },
+  { icon: Droplets,    label: 'Hydration',     href: '/newsletter' },
+  { icon: Zap,         label: 'Energy',        href: '/newsletter' },
+  { icon: ShieldCheck, label: 'Immunity',      href: '/newsletter' },
+  { icon: Heart,       label: 'Recovery',      href: '/newsletter' },
+  { icon: Sparkles,    label: 'Beauty',        href: '/newsletter' },
   { icon: FlaskConical, label: 'NAD+',         href: '/services/nad' },
 ];
 
 // Membership submenu items
 const MEMBERSHIP_ITEMS = [
-  { icon: Circle,           label: 'Starter',  sub: '1 IV/mo',   href: '/membership' },
-  { icon: CircleDot,        label: 'Premium',  sub: '2 IVs/mo',  href: '/membership' },
-  { icon: Sparkles,         label: 'VIP',      sub: '4 IVs/mo',  href: '/membership' },
-  { icon: SlidersHorizontal, label: 'Custom',  sub: 'Concierge', href: '/custom' },
+  { icon: Circle,           label: 'Starter',  sub: '1 IV/mo',   href: '/newsletter' },
+  { icon: CircleDot,        label: 'Premium',  sub: '2 IVs/mo',  href: '/newsletter' },
+  { icon: Sparkles,         label: 'VIP',      sub: '4 IVs/mo',  href: '/newsletter' },
+  { icon: SlidersHorizontal, label: 'Custom',  sub: 'Concierge', href: '/newsletter' },
 ];
 
 // Channel submenu items
@@ -292,9 +292,21 @@ export default function Navbar() {
                   Process
                 </Link>
 
-                <MobileExpandable label="Therapies" items={THERAPY_ITEMS} onClose={close} />
-                <MobileExpandable label="Membership" items={MEMBERSHIP_ITEMS} onClose={close} />
-                <MobileExpandable label="Book For" items={CHANNEL_ITEMS} onClose={close} />
+                <Link
+                  to="/newsletter"
+                  onClick={close}
+                  className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
+                >
+                  Therapies
+                </Link>
+
+                <Link
+                  to="/newsletter"
+                  onClick={close}
+                  className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
+                >
+                  Membership
+                </Link>
 
                 <Link
                   to="/login"

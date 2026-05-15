@@ -3,14 +3,27 @@ import { motion } from 'framer-motion';
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState('idle'); // idle | submitting | success | error
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Newsletter submission logic placeholder
-    setSubmitted(true);
-    setEmail('');
-    setTimeout(() => setSubmitted(false), 3000);
+    if (!email.trim() || status === 'submitting') return;
+    setStatus('submitting');
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), source: 'newsletter-signup' }),
+      });
+      if (res.ok) {
+        setStatus('success');
+        setEmail('');
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -20,7 +33,7 @@ export default function NewsletterSignup() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
-        className="max-w-3xl mx-auto border border-white/20 bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 md:p-12"
+        className="max-w-3xl mx-auto border border-foreground/10 bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 md:p-12"
       >
         <h2 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide mb-8 text-center">
           SIGN UP FOR EXCLUSIVE EVENTS & UPDATES
@@ -37,9 +50,10 @@ export default function NewsletterSignup() {
           />
           <button
             type="submit"
-            className="px-10 py-3.5 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap"
+            disabled={status === 'submitting'}
+            className="px-10 py-3.5 bg-foreground text-background font-body text-sm tracking-widest uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors whitespace-nowrap disabled:opacity-60"
           >
-            {submitted ? 'Thanks!' : 'SUBMIT'}
+            {status === 'submitting' ? 'Joining…' : status === 'success' ? 'You\'re in.' : status === 'error' ? 'Try again' : 'Submit'}
           </button>
         </form>
       </motion.div>

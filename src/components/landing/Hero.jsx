@@ -19,7 +19,8 @@ export default function Hero() {
   return (
     <section
       ref={isMobile ? null : ref}
-      className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
+      className="hero-root relative min-h-0 md:min-h-[100svh] flex flex-col overflow-hidden"
+      style={{ position: 'relative' }}
     >
       {/* Background photo — parallax on desktop only; static div on mobile for performance */}
       <motion.div
@@ -39,7 +40,7 @@ export default function Hero() {
         {/* Stronger left fade so text always pops — especially in dubs/golden */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
         {/* Bottom fade to page — single gradient only */}
-        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
       </motion.div>
 
       {/* Scroll-driven darkening — desktop only */}
@@ -51,14 +52,24 @@ export default function Hero() {
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 lg:px-20 pt-28 md:pt-32 pb-0">
+      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 lg:px-20 pt-20 md:pt-32 pb-8 md:pb-0">
+
+        {/* Brand name */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+          className="font-heading text-xl md:text-2xl tracking-[0.35em] text-foreground/60 uppercase mb-3"
+        >
+          Avalon Vitality
+        </motion.p>
 
         {/* Eyebrow */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
-          className="mb-4 md:mb-5 flex flex-col gap-2.5"
+          className="mb-3 md:mb-5 flex flex-col gap-2"
         >
           {/* Region chip — expandable to future markets */}
           <button
@@ -105,7 +116,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.45, ease: EASE }}
-          className="font-body text-[11px] md:text-xs tracking-[0.3em] text-foreground/70 uppercase mt-4 md:mt-5"
+          className="font-body text-[11px] md:text-xs tracking-[0.3em] text-foreground/70 uppercase mt-3 md:mt-5"
         >
           Licensed RN · Delivered to you
         </motion.p>
@@ -117,7 +128,7 @@ export default function Hero() {
           transition={{ duration: 0.7, delay: 0.52, ease: EASE }}
           className="font-body text-[10px] tracking-[0.25em] text-foreground/40 uppercase mt-2"
         >
-          From $150 · No membership required
+          Members save 15–25% · From $150 one-time
         </motion.p>
 
         {/* CTA buttons */}
@@ -125,39 +136,33 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.58, ease: EASE }}
-          className="flex flex-col gap-3 mt-7 md:mt-8 w-full max-w-xs"
+          className="flex flex-col gap-2.5 mt-5 md:mt-8 w-full max-w-xs"
         >
-          <Link
-            to="/store"
-            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/85 transition-colors"
-          >
-            <span>BUY NOW</span>
-            <ArrowRight className="w-4 h-4 ml-2 inline" />
-          </Link>
-          <Link
-            to="/membership"
-            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full border border-foreground/30 text-foreground hover:bg-foreground/[0.06] hover:border-foreground/60 transition-colors"
-          >
-            <span>SUBSCRIBE & SAVE</span>
-            <ArrowRight className="w-4 h-4 ml-2 inline" />
-          </Link>
+          <div>
+            <Link
+              to="/newsletter"
+              className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+            >
+              <span>BUY NOW</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="font-body text-[9px] tracking-[0.15em] text-foreground/35 uppercase mt-1.5 pl-1">One-time visit · from $150</p>
+          </div>
+          <div>
+            <Link
+              to="/newsletter"
+              className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-full bg-accent/15 border border-accent/40 text-accent hover:bg-accent/25 transition-colors"
+            >
+              <span>SUBSCRIBE & SAVE</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="font-body text-[9px] tracking-[0.15em] text-foreground/35 uppercase mt-1.5 pl-1">Membership plans · save 15–25%</p>
+          </div>
         </motion.div>
 
-        <div className="flex-1 min-h-[3rem]" />
+        <div className="h-2 md:flex-1" />
 
       </div>
-
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 1.1, ease: EASE }}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 pointer-events-none"
-      >
-        <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/30">Scroll</span>
-        <ChevronDown className="w-4 h-4 text-foreground/30 animate-bounce" strokeWidth={1.5} />
-      </motion.div>
 
     </section>
   );

@@ -50,40 +50,12 @@ export default function WaitlistSection() {
   return (
     <section
       id="waitlist"
-      className="scroll-mt-20 md:scroll-mt-28 pt-6 pb-16 md:pt-8 md:pb-20 px-4"
+      className="scroll-mt-20 md:scroll-mt-28 pt-6 pb-10 md:pt-8 md:pb-12 px-4"
     >
       <div className="max-w-6xl mx-auto text-left">
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: EASE }}
-          className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4"
-        >
-          Not Ready to Apply?
-        </motion.p>
-
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
-          className="font-heading text-foreground tracking-wide mb-4 md:whitespace-nowrap text-[10vw] md:text-7xl lg:text-8xl"
-        >
-          STAY IN THE LOOP
-        </motion.h2>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
-          className="font-body text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed mb-3"
-        >
-          Be first when we launch.
-        </motion.p>
-
-        <div className="mb-8" />
+        <p className="font-body text-[10px] tracking-[0.3em] text-foreground/35 uppercase mb-4 whitespace-nowrap">
+          Early access &amp; launch updates
+        </p>
 
         {status === 'success' ? (
           <motion.div

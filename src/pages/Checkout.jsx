@@ -349,6 +349,7 @@ function ContactStep({ onNext, onBack, defaultValues }) {
         <label className={labelClass}>Email *</label>
         <input
           type="email"
+          inputMode="email"
           {...register('email', {
             required: 'Email required',
             pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Valid email required' }
@@ -363,6 +364,7 @@ function ContactStep({ onNext, onBack, defaultValues }) {
         <label className={labelClass}>Phone *</label>
         <input
           type="tel"
+          inputMode="tel"
           {...register('phone', { required: 'Phone required' })}
           placeholder="+1 (415) 000-0000"
           className={fieldClass}

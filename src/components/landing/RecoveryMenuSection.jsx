@@ -113,7 +113,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
             <p className="font-body text-sm text-foreground/50">Visit Total</p>
             <p className="font-heading text-2xl text-foreground tracking-tight">${total.toLocaleString()}</p>
           </div>
-          <Link to="/apply"
+          <Link to="/newsletter"
             className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/85 transition-colors">
             Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
@@ -389,7 +389,7 @@ export default function RecoveryMenuSection() {
                 </motion.button>
                 <div className="flex items-center gap-2 px-1">
                   <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Members save 20% ·</span>
-                  <Link to="/membership" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View memberships →</Link>
+                  <Link to="/newsletter" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View memberships →</Link>
                 </div>
               </div>
             </motion.div>
@@ -489,7 +489,7 @@ export default function RecoveryMenuSection() {
               </div>
               <div className="flex items-center gap-2 px-1 pt-1">
                 <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Members save an additional 20% ·</span>
-                <Link to="/membership" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
+                <Link to="/newsletter" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
               </div>
             </motion.div>
           )}

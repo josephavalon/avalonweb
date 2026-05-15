@@ -325,6 +325,7 @@ function ForgotPasswordTab({ onSwitchTab }) {
 const TABS = [
   { id: 'signin',  label: 'Sign In' },
   { id: 'create',  label: 'Create Account' },
+  { id: 'forgot',  label: 'Forgot Password' },
 ];
 
 const TAB_TITLES = {
@@ -339,6 +340,17 @@ export default function Login() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('signin');
 
+  // Inherit the theme that was active on the main site
+  useEffect(() => {
+    try {
+      const THEMES = ['dark', 'light', 'golden', 'dubs'];
+      const stored = window.localStorage.getItem('avalon.theme');
+      const theme = stored && THEMES.includes(stored) ? stored : 'light';
+      document.documentElement.classList.remove('dark', 'golden', 'dubs');
+      if (theme !== 'light') document.documentElement.classList.add(theme);
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (user) navigate(user.redirect || '/members/dashboard', { replace: true });
   }, [user, navigate]);
@@ -347,27 +359,24 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-dvh flex flex-col items-center justify-center px-5 py-6"
+      className="min-h-dvh flex flex-col items-center justify-center px-5 py-10"
       style={{ background: 'var(--background)' }}
     >
-      {/* Logo */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE }}
-        className="mb-5 self-start w-full max-w-sm"
-      >
-        <Link to="/" className="font-heading text-base tracking-[0.3em] text-foreground/50 hover:text-foreground/80 transition-opacity">
-          AVALON VITALITY
-        </Link>
-      </motion.div>
+      {/* Subtle radial glow behind card */}
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
+        <div className="w-[500px] h-[500px] rounded-full bg-white/[0.03] blur-3xl" />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE, delay: 0.06 }}
-        className="w-full max-w-sm"
+        className="relative w-full max-w-sm bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl px-7 py-8 shadow-2xl shadow-black/40"
       >
+        {/* Logo inside card */}
+        <Link to="/" className="font-heading text-[11px] tracking-[0.3em] text-foreground/40 hover:text-foreground/70 transition-colors mb-6 block">
+          AVALON VITALITY
+        </Link>
         {/* Header */}
         <div className="mb-5">
           <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-1">
@@ -378,29 +387,27 @@ export default function Login() {
           </h1>
         </div>
 
-        {/* Tabs — only show for non-forgot flow */}
-        {tab !== 'forgot' && (
-          <div className="flex gap-0 mb-5 border-b border-foreground/[0.08]">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className="relative pb-2.5 mr-5 font-body text-[10px] tracking-[0.2em] uppercase transition-colors"
-                style={{ color: tab === t.id ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.35)' }}
-              >
-                {t.label}
-                {tab === t.id && (
-                  <motion.span
-                    layoutId="tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-foreground"
-                    transition={{ duration: 0.25, ease: EASE }}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Tabs */}
+        <div className="flex gap-0 mb-5 border-b border-foreground/[0.08]">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className="relative pb-2.5 mr-5 font-body text-[10px] tracking-[0.2em] uppercase transition-colors"
+              style={{ color: tab === t.id ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.35)' }}
+            >
+              {t.label}
+              {tab === t.id && (
+                <motion.span
+                  layoutId="tab-underline"
+                  className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-foreground"
+                  transition={{ duration: 0.25, ease: EASE }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* Tab content */}
         <AnimatePresence mode="wait">
@@ -417,11 +424,18 @@ export default function Login() {
           </motion.div>
         </AnimatePresence>
 
-        <div className="mt-5 text-center">
-          <Link to="/" className="inline-block font-body text-[10px] tracking-[0.2em] uppercase text-foreground/35 hover:text-foreground/60 transition-colors">
-            ← Back to Avalon
-          </Link>
-        </div>
+      </motion.div>
+
+      {/* Back link — sits below the glass card */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, ease: EASE, delay: 0.3 }}
+        className="mt-6 text-center"
+      >
+        <Link to="/" className="inline-block font-body text-[10px] tracking-[0.2em] uppercase text-foreground/30 hover:text-foreground/60 transition-colors">
+          ← Back to Avalon
+        </Link>
       </motion.div>
     </div>
   );

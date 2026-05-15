@@ -21,7 +21,7 @@ function getInitials(name) {
 function TestimonialCard({ t, active = false }) {
   const initials = getInitials(t.name);
   return (
-    <div className={`w-[280px] sm:w-[320px] md:w-[340px] border bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-7 flex flex-col gap-5 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${active ? "border-accent/60" : "border-white/10"}`}>
+    <div className={`w-[280px] sm:w-[320px] md:w-[340px] border bg-white/[0.04] backdrop-blur-md rounded-3xl p-6 md:p-7 flex flex-col gap-5 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${active ? "border-accent/60" : "border-foreground/10"}`}>
       {/* Face bubble — circular avatar with gold accent ring */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-accent/60 bg-white/[0.08] flex items-center justify-center shrink-0">
@@ -107,14 +107,14 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-12 md:py-20 px-4">
+    <section className="py-12 md:py-20">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10%' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="text-left mb-6 md:mb-10"
+          className="px-4 text-left mb-6 md:mb-10"
         >
           <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">From our clients</p>
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
@@ -142,12 +142,18 @@ export default function Testimonials() {
             ref={scrollRef}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
-            className="overflow-x-auto no-scrollbar overflow-y-hidden snap-x snap-mandatory pb-3"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
+            style={{
+              overflowX: 'auto',
+              overflowY: 'visible',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollBehavior: 'smooth',
+              paddingBottom: '12px',
+            }}
           >
-            <div className="flex gap-4 md:gap-5 pr-4">
+            <div className="flex gap-4 md:gap-5 px-4 snap-x snap-mandatory">
               {testimonials.map((t, i) => (
-                <div key={i} className="snap-start shrink-0">
+                <div key={i} className="snap-start shrink-0 pt-2">
                   <TestimonialCard t={t} active={i === activeIndex} />
                 </div>
               ))}

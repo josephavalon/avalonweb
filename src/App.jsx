@@ -8,6 +8,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
+import AppLoader from '@/components/AppLoader';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 function RequireAuth({ children, allowedRoles }) {
@@ -85,6 +86,7 @@ const JetLag = lazy(() => import('./pages/JetLag'));
 const Press = lazy(() => import('./pages/Press'));
 const AdminCommand = lazy(() => import('./pages/admin/Command'));
 const AdminInventory = lazy(() => import('./pages/admin/Inventory'));
+const WaitlistPage = lazy(() => import('./pages/WaitlistPage'));
 
 const HIDE_BOTTOM_NAV = ['/provider', '/admin', '/members', '/login', '/checkout'];
 
@@ -199,6 +201,7 @@ function AppRoutes() {
             <Route path="/jet-lag" element={<JetLag />} />
             <Route path="/press" element={<Press />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/newsletter" element={<WaitlistPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -212,7 +215,8 @@ function App() {
     <ErrorBoundary>
       <AuthStoreProvider>
       <CartProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AppLoader />
           <ScrollToTop />
           <ScrollProgress />
           <AppRoutes />

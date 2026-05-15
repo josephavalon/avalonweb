@@ -29,7 +29,7 @@ export default function StickyMobileCTA() {
           <span className="font-body text-[10px] tracking-widest uppercase whitespace-nowrap">Call / Text</span>
         </a>
         <Link
-          to="/apply"
+          to="/newsletter"
           className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold rounded-full"
         >
           BUY NOW <span className="text-foreground/40">·</span> $150+

@@ -25,11 +25,11 @@ export function Reveal({
   children,
   className,
   delay     = 0,
-  duration  = 0.8,
-  y         = 52,
-  scale     = 0.97,
+  duration  = 0.9,
+  y         = 72,
+  scale     = 1,       // ← default 1: scaling a section wrapper clips its children's top/bottom edges
   blur      = false,   // ← OFF by default — blur creates compositing layers that break iOS scroll
-  margin    = '-60px',
+  margin    = '-40px',
   as        = 'div',
   ...rest
 }) {
@@ -41,14 +41,14 @@ export function Reveal({
       initial={{
         opacity: 0,
         y,
-        scale,
+        ...(scale !== 1 ? { scale } : {}),
         pointerEvents: 'none',                        // ← don't eat touches while invisible
-        ...(blur ? { filter: 'blur(6px)' } : {}),
+        ...(blur ? { filter: 'blur(8px)' } : {}),
       }}
       whileInView={{
         opacity: 1,
         y: 0,
-        scale: 1,
+        ...(scale !== 1 ? { scale: 1 } : {}),
         pointerEvents: 'auto',
         ...(blur ? { filter: 'blur(0px)' } : {}),
       }}
@@ -94,10 +94,10 @@ export function RevealGroup({
 export function RevealItem({
   children,
   className,
-  y        = 36,
-  scale    = 0.97,
+  y        = 56,
+  scale    = 1,        // ← default 1: scaling clips children near edges
   blur     = false,   // ← OFF by default
-  duration = 0.75,
+  duration = 0.85,
   as       = 'div',
   ...rest
 }) {
@@ -110,14 +110,14 @@ export function RevealItem({
         hidden:  {
           opacity: 0,
           y,
-          scale,
+          ...(scale !== 1 ? { scale } : {}),
           pointerEvents: 'none',
           ...(blur ? { filter: 'blur(5px)' } : {}),
         },
         visible: {
           opacity: 1,
           y: 0,
-          scale: 1,
+          ...(scale !== 1 ? { scale: 1 } : {}),
           pointerEvents: 'auto',
           ...(blur ? { filter: 'blur(0px)' } : {}),
           transition: { duration, ease: EASE },

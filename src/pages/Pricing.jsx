@@ -301,16 +301,16 @@ export default function Pricing() {
               className="flex flex-wrap justify-center gap-4"
             >
               <Link
-                to="/store"
+                to="/membership"
                 className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-6 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
               >
-                BUY NOW <ArrowRight className="w-4 h-4" />
+                SUBSCRIBE & SAVE <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                to="/apply"
+                to="/store"
                 className="inline-flex items-center gap-2 border border-foreground/20 text-foreground font-body text-sm tracking-[0.15em] uppercase px-6 py-3.5 rounded-xl hover:border-foreground/50 transition-colors duration-200"
               >
-                SUBSCRIBE & SAVE <ArrowRight className="w-4 h-4" />
+                ONE-TIME SESSION <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
           </div>

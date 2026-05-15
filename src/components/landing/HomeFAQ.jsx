@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Minus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Plus, Minus, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -13,25 +13,31 @@ const TOP_FAQS = [
   { q: 'What\'s the membership commitment?', a: '3-month minimum. Credits roll over month-to-month while your membership stays active. Cancel any time after the 3-month window.' },
 ];
 
+const VISIBLE = 3;
+
 export default function HomeFAQ() {
   const [openIdx, setOpenIdx] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+
+  const visible = expanded ? TOP_FAQS : TOP_FAQS.slice(0, VISIBLE);
+
   return (
     <section className="pt-16 pb-6 md:pt-20 md:pb-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-left mb-6 md:mb-10">
-          <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">FAQ</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
-            Common questions
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8 md:mb-10">
+          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">FAQ</p>
+          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
+            Common Questions
           </h2>
-          <div className="w-12 md:w-16 h-[2px] bg-accent mt-3 md:mt-4" />
+          <div className="w-10 h-[2px] bg-accent mt-3" />
         </div>
 
         <div className="space-y-3">
-          {TOP_FAQS.map((item, i) => {
+          {visible.map((item, i) => {
             const isOpen = i === openIdx;
             return (
               <motion.button
-                key={i}
+                key={item.q}
                 type="button"
                 onClick={() => setOpenIdx(isOpen ? -1 : i)}
                 className="w-full text-left border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6 transition-colors hover:bg-white/[0.05]"
@@ -55,9 +61,25 @@ export default function HomeFAQ() {
           })}
         </div>
 
+        {/* Show more / less */}
+        {TOP_FAQS.length > VISIBLE && (
+          <button
+            type="button"
+            onClick={() => setExpanded(v => !v)}
+            className="flex items-center gap-1.5 mt-4 font-body text-xs tracking-[0.25em] uppercase text-foreground/40 hover:text-foreground/70 transition-colors"
+          >
+            {expanded ? 'Show less' : `+${TOP_FAQS.length - VISIBLE} more`}
+            <ChevronDown
+              className="w-3.5 h-3.5 transition-transform duration-300"
+              style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              strokeWidth={2}
+            />
+          </button>
+        )}
+
         <Link
           to="/faq"
-          className="inline-block mt-6 md:mt-8 font-body text-xs tracking-[0.25em] uppercase text-accent hover:text-foreground transition-colors"
+          className="inline-block mt-5 md:mt-6 font-body text-xs tracking-[0.25em] uppercase text-accent hover:text-foreground transition-colors"
         >
           See all FAQs &rarr;
         </Link>

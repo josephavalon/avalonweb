@@ -41,7 +41,7 @@ export default function WhyAvalon() {
 
         <div className="border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden">
           {/* Column headers */}
-          <div className="grid grid-cols-[1.5fr_repeat(4,1fr)] gap-2 md:gap-4 px-3 md:px-6 py-4 md:py-5 border-b border-white/10">
+          <div className="grid grid-cols-[1.5fr_repeat(4,1fr)] gap-2 md:gap-4 px-3 md:px-6 py-4 md:py-5 border-b border-foreground/10">
             <span className="font-body text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground">Feature</span>
             {COLUMNS.map((c) => (
               <span

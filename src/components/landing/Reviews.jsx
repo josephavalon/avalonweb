@@ -3,12 +3,20 @@ import { motion } from 'framer-motion';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+// Clearbit Logo API — returns brand logo from domain, white-filtered for dark bg.
+// onError falls back to the name text so the strip never breaks.
+const CLIENT_LOGOS = [
+  { name: '111 Minna',      src: 'https://logo.clearbit.com/111minna.com' },
+  { name: 'Secret Party',   src: 'https://logo.clearbit.com/secretparty.com' },
+  { name: 'Hereticon',      src: 'https://logo.clearbit.com/hereticon.com' },
+  { name: 'Maxim Magazine', src: 'https://logo.clearbit.com/maxim.com' },
+  { name: 'SF Pride',       src: 'https://logo.clearbit.com/sfpride.org' },
+];
+
 // ── Featured (punchy / notable clients) — shown first ──────────────────────
 const FEATURED = [
   { name: 'J.G.',       tag: 'NAD+ IV',         quote: "I'm a founder who codes 20hrs a day now. NAD+ makes it happen." },
-  { name: 'Diplo',      tag: 'Energy IV',        quote: 'That was awesome.' },
   { name: 'R.D.',       tag: 'NAD+ 1000mg',      quote: "I love NAD+. I knock one out before any big pitch. It's part of my routine now." },
-  { name: 'Larry June', tag: 'Recovery IV',      quote: 'That IV did digits.' },
   { name: 'J.L.',       tag: 'Performance IV',   quote: "I'm an AI founder. Every day I gain new abilities. Avalon holds me down through the storm." },
   { name: 'A.G.',       tag: 'Beauty IV',        quote: 'Beauty IV is my weekly. Glutathione drip, every time.' },
   { name: 'G.B.',       tag: 'Event Recovery',   quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.' },
@@ -65,10 +73,9 @@ function StarRow({ count }) {
 
 // Featured card — compact, punchy, accent-bordered
 function FeaturedCard({ item }) {
-  // Generate initials from name
   const initials = item.name.replace(/\./g, '').trim().split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
   return (
-    <article className="rounded-2xl border border-accent/25 bg-accent/[0.04] p-5 flex flex-col gap-3 w-[240px] shrink-0">
+    <article className="rounded-2xl border border-accent/25 bg-accent/[0.04] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full">
       <div className="flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-full border border-accent/50 flex items-center justify-center bg-accent/[0.08] shrink-0">
           <span className="font-heading text-xs text-foreground tracking-wide">{initials}</span>
@@ -78,7 +85,7 @@ function FeaturedCard({ item }) {
           <span className="font-body text-[9px] tracking-[0.2em] uppercase text-accent/70">{item.tag}</span>
         </div>
       </div>
-      <p className="font-body text-sm text-foreground/70 leading-relaxed flex-1">
+      <p className="font-body text-sm text-foreground/70 leading-relaxed">
         &ldquo;{item.quote}&rdquo;
       </p>
     </article>
@@ -88,9 +95,9 @@ function FeaturedCard({ item }) {
 // Standard review card — longer quote, stars, date
 function ReviewCard({ review }) {
   return (
-    <article className="rounded-2xl bg-foreground/[0.04] border border-foreground/[0.07] p-5 flex flex-col gap-3 w-[280px] shrink-0">
+    <article className="rounded-2xl bg-foreground/[0.04] border border-foreground/[0.07] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full">
       <StarRow count={review.stars} />
-      <p className="font-body text-sm text-foreground/75 leading-relaxed flex-1">
+      <p className="font-body text-sm text-foreground/75 leading-relaxed line-clamp-5">
         &ldquo;{review.quote}&rdquo;
       </p>
       <div className="flex items-center justify-between flex-wrap gap-2 mt-auto">
@@ -106,50 +113,117 @@ function ReviewCard({ review }) {
   );
 }
 
+// Logo item — image with graceful text fallback if Clearbit doesn't have it
+function LogoItem({ logo }) {
+  const [imgFailed, setImgFailed] = React.useState(false);
+  if (imgFailed) {
+    return (
+      <span className="font-heading text-xs tracking-[0.18em] uppercase text-foreground/25 whitespace-nowrap">
+        {logo.name}
+      </span>
+    );
+  }
+  return (
+    <img
+      src={logo.src}
+      alt={logo.name}
+      onError={() => setImgFailed(true)}
+      className="h-5 w-auto object-contain"
+      style={{ filter: 'brightness(0) invert(1)', opacity: 0.35 }}
+      loading="lazy"
+    />
+  );
+}
+
+// Logo marquee row — duplicated for seamless loop
+function LogoRow({ ariaHidden = false }) {
+  return (
+    <ul
+      aria-hidden={ariaHidden}
+      className="flex items-center gap-8 md:gap-12 shrink-0 list-none m-0 p-0"
+    >
+      {CLIENT_LOGOS.map((logo, i) => (
+        <React.Fragment key={`${ariaHidden ? 'b' : 'a'}-${i}`}>
+          {i > 0 && (
+            <li aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/10 shrink-0" />
+          )}
+          <li className="shrink-0 flex items-center">
+            <LogoItem logo={logo} />
+          </li>
+        </React.Fragment>
+      ))}
+      <li aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/10 shrink-0" />
+    </ul>
+  );
+}
+
 export default function Reviews() {
   const scrollRef = useRef(null);
 
   return (
-    <section aria-label="Client reviews" className="py-16 md:py-20">
+    <section aria-label="Client reviews" className="pt-10 pb-6 md:pt-12 md:pb-8 px-4">
       {/* Header */}
-      <div className="px-5 md:px-12 lg:px-20 max-w-6xl mx-auto mb-8 md:mb-10">
+      <div className="max-w-6xl mx-auto mb-8 md:mb-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: EASE }}
         >
-          <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3">
-            Client Experiences
+          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">
+            Client Trust
           </p>
-          <h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-none">
-            What They&rsquo;re Saying
+          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
+            Trusted
           </h2>
+          <p className="font-body text-sm text-foreground/50 leading-relaxed mt-3 max-w-md">
+            For private clients, events, and venues across the Bay Area.
+          </p>
+          <div className="w-10 h-[2px] bg-accent mt-4" />
         </motion.div>
       </div>
 
-      {/* Combined carousel — featured first, then long-form reviews */}
-      <div className="reviews-fade-wrap">
+      {/* "Seen At" logo marquee */}
+      <div className="mb-10 -mx-4">
+        <div className="max-w-6xl mx-auto mb-4 px-4">
+          <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/25">
+            Seen At
+          </p>
+        </div>
+        <div className="logo-strip-wrap">
+          <div className="logo-strip-track">
+            <LogoRow />
+            <LogoRow ariaHidden />
+          </div>
+        </div>
+      </div>
+
+      {/* Combined carousel */}
+      <div className="reviews-fade-wrap -mx-4">
         <div
           ref={scrollRef}
-          className="flex gap-4 px-5 md:px-12 lg:px-20 overflow-x-auto pb-2"
+          className="flex items-stretch gap-4 overflow-x-auto pt-3 pb-3"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
             scrollSnapType: 'x mandatory',
+            scrollPaddingLeft: '16px',
             overscrollBehaviorX: 'none',
+            marginTop: '-12px',
           }}
           role="region"
           aria-label="Reviews carousel — scroll to see more"
         >
+          {/* Left edge spacer — keeps first card from sitting flush against the screen */}
+          <div className="w-4 shrink-0" aria-hidden="true" />
           {FEATURED.map((item, i) => (
-            <div key={`featured-${i}`} style={{ scrollSnapAlign: 'start' }} className="shrink-0">
+            <div key={`featured-${i}`} style={{ scrollSnapAlign: 'start' }} className="shrink-0 flex self-stretch">
               <FeaturedCard item={item} />
             </div>
           ))}
           {REVIEWS.map((review, i) => (
-            <div key={`review-${i}`} style={{ scrollSnapAlign: 'start' }} className="shrink-0">
+            <div key={`review-${i}`} style={{ scrollSnapAlign: 'start' }} className="shrink-0 flex self-stretch">
               <ReviewCard review={review} />
             </div>
           ))}
@@ -157,18 +231,49 @@ export default function Reviews() {
       </div>
 
       {/* Disclaimer */}
-      <div className="px-5 md:px-12 lg:px-20 max-w-6xl mx-auto mt-6">
+      <div className="max-w-6xl mx-auto mt-6">
         <p className="font-body text-[10px] text-foreground/30 leading-relaxed max-w-2xl">
           Testimonials reflect individual client experiences. Names may be initials or stage names at each client&rsquo;s request. Individual results vary and are not guaranteed. No clients were compensated in cash; some received complimentary sessions. Educational information only — not medical advice.
         </p>
       </div>
 
       <style>{`
+        /* Fade right edge only — left padding already frames the first card */
         .reviews-fade-wrap {
-          -webkit-mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%);
-                  mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+                  mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
         }
         .reviews-fade-wrap ::-webkit-scrollbar { display: none; }
+
+        /* Logo marquee */
+        .logo-strip-wrap {
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+                  mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+        }
+        .logo-strip-track {
+          display: flex;
+          align-items: center;
+          width: max-content;
+          flex-wrap: nowrap;
+          gap: 2rem;
+          animation: logo-strip-scroll 14s linear infinite;
+          will-change: transform;
+          padding: 0.25rem 0;
+        }
+        @media (min-width: 768px) {
+          .logo-strip-track { gap: 3rem; animation-duration: 18s; }
+        }
+        @keyframes logo-strip-scroll {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        @media (hover: hover) {
+          .logo-strip-wrap:hover .logo-strip-track { animation-play-state: paused; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .logo-strip-track { animation: none; }
+        }
       `}</style>
     </section>
   );

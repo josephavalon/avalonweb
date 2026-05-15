@@ -71,13 +71,13 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
         className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
         onClick={onClose}
       />
-      <div className="relative bg-background/95 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl overflow-hidden flex flex-col">
+      <div className="relative bg-background/95 backdrop-blur-2xl border-t border-foreground/10 rounded-t-3xl overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/8">
           <div>
             <p className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-0.5">Your Order</p>
             <p className="font-heading text-2xl text-foreground tracking-wide">{cart.length} Item{cart.length !== 1 ? 's' : ''}</p>
           </div>
-          <button type="button" onClick={onClose} className="p-2 rounded-full border border-white/10 text-foreground/50 hover:text-foreground transition-colors focus:outline-none" aria-label="Close cart">
+          <button type="button" onClick={onClose} className="p-2 rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors focus:outline-none" aria-label="Close cart">
             <X className="w-4 h-4" strokeWidth={1.8} />
           </button>
         </div>
@@ -104,7 +104,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
               No charge until your appointment is confirmed.
             </p>
           </div>
-          <Link to="/apply" className="flex items-center justify-center gap-2.5 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors">
+          <Link to="/newsletter" className="flex items-center justify-center gap-2.5 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors">
             Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
           <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">A licensed RN will confirm availability and arrive at your location.</p>
@@ -136,7 +136,7 @@ export default function OurDrips() {
             </h2>
             <div className="w-10 h-[2px] bg-foreground mt-3" />
           </div>
-          <Link to="/store" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
+          <Link to="/newsletter" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
             View All Sessions <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
           </Link>
         </div>
@@ -153,7 +153,7 @@ export default function OurDrips() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07, duration: 0.5, ease: EASE }}
-                className="border border-white/10 rounded-2xl overflow-hidden"
+                className="bg-white/[0.03] backdrop-blur-sm border border-foreground/10 rounded-2xl overflow-hidden"
               >
                 {/* Card header — always visible */}
                 <button
@@ -205,7 +205,7 @@ export default function OurDrips() {
                           </div>
                         ))}
                         <Link
-                          to="/store"
+                          to="/newsletter"
                           className="mt-3 flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-white/40 hover:text-white transition-colors font-body"
                         >
                           View & Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
@@ -222,8 +222,8 @@ export default function OurDrips() {
         {/* CTA */}
         <div className="mt-6">
           <Link
-            to="/store"
-            className="w-full flex items-center justify-center gap-2.5 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-2xl border border-foreground/20 text-foreground hover:bg-foreground/[0.06] hover:border-foreground/40 transition-colors"
+            to="/newsletter"
+            className="w-full flex items-center justify-center gap-2.5 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-foreground/20 text-foreground hover:bg-white/[0.08] hover:border-foreground/40 transition-colors"
           >
             VIEW FULL MENU &amp; BOOK <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>

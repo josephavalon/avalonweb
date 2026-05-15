@@ -106,7 +106,7 @@ export default function Apply() {
     return `w-full bg-transparent border rounded-full px-6 py-4 font-body text-sm text-foreground placeholder:text-muted-foreground/75 focus:outline-none transition-colors ${
       hasError
         ? 'border-destructive/70 focus:border-destructive'
-        : 'border-white/15 focus:border-white/35'
+        : 'border-foreground/20 focus:border-foreground/50'
     }`;
   };
 
@@ -237,7 +237,7 @@ export default function Apply() {
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
                         locationType === loc.id
                           ? 'bg-foreground text-background border-foreground'
-                          : 'border-white/15 text-foreground/60 hover:border-white/30 hover:text-foreground/80'
+                          : 'border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground/80'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -264,7 +264,7 @@ export default function Apply() {
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
                         timing === opt.id
                           ? 'bg-foreground text-background border-foreground'
-                          : 'border-white/15 text-foreground/60 hover:border-white/30 hover:text-foreground/80'
+                          : 'border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground/80'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
