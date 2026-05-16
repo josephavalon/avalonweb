@@ -99,12 +99,6 @@ export default function MembershipSection() {
               Membership
             </h2>
           </div>
-          <Link
-            to="/newsletter"
-            className="self-start md:self-end inline-flex items-center gap-2 font-body text-[11px] tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors"
-          >
-            View Full Details <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
         </motion.div>
 
         {/* Tier accordion rows */}
