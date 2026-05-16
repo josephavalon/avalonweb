@@ -70,28 +70,27 @@ export default function Navbar() {
         : 'top-4 bg-background/60 backdrop-blur-2xl border border-foreground/10'
     }`}>
 
-      {/* Desktop */}
-      <div className={`hidden md:flex items-center px-8 transition-all duration-500 ease-editorial ${
+      {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
+      <div className={`hidden md:grid md:grid-cols-[1fr_auto_1fr] items-center px-8 transition-all duration-500 ease-editorial ${
         scrolled ? 'h-14' : 'h-16'
       }`}>
 
-        {/* Left — flex-1, content left-aligned. Equal flex-1 on both flanks
-            guarantees the center block sits at the true nav midpoint */}
-        <div className="flex-1 flex items-center">
+        {/* Col 1 — logo, left-aligned */}
+        <div className="flex items-center">
           <Link to="/" onClick={handleLogoClick} className="shrink-0">
             <span className="font-heading text-[15px] tracking-[0.25em] text-foreground">AV</span>
           </Link>
         </div>
 
-        {/* Center — natural width, no flex. Perfectly centered because flanks are equal */}
+        {/* Col 2 — nav links, auto width, inherently centered */}
         <div className="flex items-center gap-8">
           <Link to="/#how-it-works" className={linkClass}>Process</Link>
           <Link to="/newsletter" className={linkClass}>Therapies</Link>
           <Link to="/membership" className={linkClass}>Membership</Link>
         </div>
 
-        {/* Right — flex-1, content right-aligned */}
-        <div className="flex-1 flex items-center justify-end gap-4">
+        {/* Col 3 — actions, right-aligned */}
+        <div className="flex items-center justify-end gap-4">
           <button
             onClick={cycleTheme}
             className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-colors text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
