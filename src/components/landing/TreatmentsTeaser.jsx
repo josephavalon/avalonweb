@@ -105,7 +105,7 @@ function SubRow({ sub }) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2.5">
@@ -134,7 +134,7 @@ function SubRow({ sub }) {
                 <Link
                   key={t.label}
                   to="/newsletter"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/15 transition-all group"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/15 transition-all group"
                 >
                   <t.icon className="w-3 h-3 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                   <div className="min-w-0">
@@ -158,17 +158,17 @@ function CategoryRow({ cat, index }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 56, filter: 'blur(6px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 12, scale: 0.96, filter: 'blur(4px)' }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: '-20px' }}
-      transition={{ duration: 0.75, delay: index * 0.12, ease: EASE }}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden"
+      transition={{ duration: 1.0, delay: index * 0.1, ease: EASE }}
+      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl overflow-hidden"
     >
       {/* Header */}
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.03] transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors"
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
@@ -208,7 +208,7 @@ function CategoryRow({ cat, index }) {
                     <Link
                       key={addon.label}
                       to="/newsletter"
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/15 transition-all group"
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/15 transition-all group"
                     >
                       <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                       <div>
@@ -234,16 +234,18 @@ export default function TreatmentsTeaser() {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.95, ease: EASE }}
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10"
+        >
           <div>
             <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Our Menu</p>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Therapies</h2>
-            <div className="w-10 h-[2px] bg-accent mt-3" />
           </div>
-          <Link to="/newsletter" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
-            View Full Menu <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
-          </Link>
-        </div>
+        </motion.div>
 
         {/* Category accordions */}
         <div className="space-y-2 mb-8">
@@ -252,15 +254,29 @@ export default function TreatmentsTeaser() {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="mt-6">
+        {/* CTA card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12, scale: 0.96, filter: 'blur(4px)' }}
+          whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+          viewport={{ once: true, margin: '-20px' }}
+          transition={{ duration: 1.0, delay: 0.3, ease: EASE }}
+        >
           <Link
             to="/newsletter"
-            className="inline-flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors"
+            className="flex items-center justify-between px-5 py-4 rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl hover:bg-white/[0.06] transition-colors group"
           >
-            View full menu <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
+                <ArrowRight className="w-4 h-4 text-accent" strokeWidth={1.5} />
+              </div>
+              <div className="text-left">
+                <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">View Full Menu</p>
+                <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">Browse all drips & pricing</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-foreground/30 group-hover:text-foreground transition-colors shrink-0" strokeWidth={2} />
           </Link>
-        </div>
+        </motion.div>
 
       </div>
     </section>

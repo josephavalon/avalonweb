@@ -57,11 +57,11 @@ function TierRow({ tier, index }) {
   const Icon = tier.icon;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 60, filter: 'blur(6px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 12, scale: 0.96, filter: 'blur(4px)' }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: '-30px' }}
-      transition={{ duration: 0.75, delay: index * 0.12, ease: EASE }}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.03] backdrop-blur-sm px-5 py-4 flex items-center justify-between"
+      transition={{ duration: 1.0, delay: index * 0.1, ease: EASE }}
+      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl px-5 py-4 flex items-center justify-between"
     >
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
@@ -87,10 +87,10 @@ export default function MembershipSection() {
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE }}
+          transition={{ duration: 0.95, ease: EASE }}
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10"
         >
           <div>
@@ -98,7 +98,6 @@ export default function MembershipSection() {
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
               Membership
             </h2>
-            <div className="w-10 h-[2px] bg-accent mt-3" />
           </div>
           <Link
             to="/newsletter"
@@ -120,7 +119,7 @@ export default function MembershipSection() {
             to="/newsletter"
             className="w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground font-body text-xs tracking-[0.2em] uppercase hover:bg-white/[0.06] transition-colors"
           >
-            VIEW MEMBERSHIP
+            VIEW MEMBERSHIPS
           </Link>
         </div>
 

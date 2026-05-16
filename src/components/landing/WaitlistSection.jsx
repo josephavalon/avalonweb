@@ -53,7 +53,7 @@ export default function WaitlistSection() {
       className="scroll-mt-20 md:scroll-mt-28 pt-6 pb-10 md:pt-8 md:pb-12 px-4"
     >
       <div className="max-w-6xl mx-auto text-left">
-        <p className="font-body text-[10px] tracking-[0.3em] text-foreground/35 uppercase mb-4 whitespace-nowrap">
+        <p className="font-body text-[11px] tracking-[0.3em] text-accent uppercase mb-4 whitespace-nowrap">
           Early access &amp; launch updates
         </p>
 

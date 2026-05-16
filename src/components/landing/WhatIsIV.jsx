@@ -90,11 +90,11 @@ const MODALITIES = [
 function FaqItem({ item }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl overflow-hidden">
+    <div className="border border-foreground/10 bg-white/[0.08] rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors"
         aria-expanded={open}
       >
         <span className="font-body text-xs font-semibold text-foreground/80 text-left">{item.title}</span>
@@ -128,16 +128,16 @@ function ModalityRow({ mod, index }) {
   const [open, setOpen] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.08, ease: EASE }}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden"
+      transition={{ duration: 0.85, delay: index * 0.08, ease: EASE }}
+      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl overflow-hidden"
     >
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.03] transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors"
         aria-expanded={open}
       >
         <div className="text-left">
@@ -197,15 +197,14 @@ export default function WhatIsIV() {
       <div className="max-w-6xl mx-auto">
 
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="mb-6"
+          transition={{ duration: 0.95, ease: EASE }}
+          className="mb-6 md:mb-10"
         >
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">The Science</p>
           <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">How It Works</h2>
-          <div className="w-10 h-[2px] bg-accent mt-3" />
         </motion.div>
 
         <div className="space-y-2">

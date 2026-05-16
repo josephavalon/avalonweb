@@ -3,14 +3,16 @@ import { motion } from 'framer-motion';
 
 const EASE = [0.16, 1, 0.3, 1];
 
-// Clearbit Logo API — returns brand logo from domain, white-filtered for dark bg.
-// onError falls back to the name text so the strip never breaks.
+// Venue / partner text strip — pure text, never breaks on load.
 const CLIENT_LOGOS = [
-  { name: '111 Minna',      src: 'https://logo.clearbit.com/111minna.com' },
-  { name: 'Secret Party',   src: 'https://logo.clearbit.com/secretparty.com' },
-  { name: 'Hereticon',      src: 'https://logo.clearbit.com/hereticon.com' },
-  { name: 'Maxim Magazine', src: 'https://logo.clearbit.com/maxim.com' },
-  { name: 'SF Pride',       src: 'https://logo.clearbit.com/sfpride.org' },
+  { name: '111 Minna' },
+  { name: 'Secret Party' },
+  { name: 'Hereticon' },
+  { name: 'Maxim Magazine' },
+  { name: 'SF Pride' },
+  { name: 'The Midway' },
+  { name: 'Club Discourse' },
+  { name: 'The Loom' },
 ];
 
 // ── Featured (punchy / notable clients) — shown first ──────────────────────
@@ -71,41 +73,20 @@ function StarRow({ count }) {
   );
 }
 
-// Featured card — compact, punchy, accent-bordered
-function FeaturedCard({ item }) {
-  const initials = item.name.replace(/\./g, '').trim().split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
-  return (
-    <article className="rounded-2xl border border-accent/25 bg-accent/[0.04] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full">
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-full border border-accent/50 flex items-center justify-center bg-accent/[0.08] shrink-0">
-          <span className="font-heading text-xs text-foreground tracking-wide">{initials}</span>
-        </div>
-        <div>
-          <p className="font-body text-xs font-semibold text-foreground leading-tight">{item.name}</p>
-          <span className="font-body text-[9px] tracking-[0.2em] uppercase text-accent/70">{item.tag}</span>
-        </div>
-      </div>
-      <p className="font-body text-sm text-foreground/70 leading-relaxed">
-        &ldquo;{item.quote}&rdquo;
-      </p>
-    </article>
-  );
-}
-
-// Standard review card — longer quote, stars, date
+// Single unified card — glass, stars, quote, name + tag
 function ReviewCard({ review }) {
   return (
-    <article className="rounded-2xl bg-foreground/[0.04] border border-foreground/[0.07] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full">
-      <StarRow count={review.stars} />
+    <article className="rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full">
+      <StarRow count={review.stars || 5} />
       <p className="font-body text-sm text-foreground/75 leading-relaxed line-clamp-5">
         &ldquo;{review.quote}&rdquo;
       </p>
       <div className="flex items-center justify-between flex-wrap gap-2 mt-auto">
         <div>
           <p className="font-body text-xs font-semibold text-foreground">{review.name}</p>
-          <p className="font-body text-[10px] text-foreground/35 mt-0.5">{review.date}</p>
+          {review.date && <p className="font-body text-[10px] text-foreground/35 mt-0.5">{review.date}</p>}
         </div>
-        <span className="inline-block px-2.5 py-1 rounded-full bg-foreground/[0.06] font-body text-[9px] tracking-[0.2em] uppercase text-foreground/50">
+        <span className="inline-block px-2.5 py-1 rounded-full bg-white/[0.08] font-body text-[9px] tracking-[0.2em] uppercase text-foreground/50">
           {review.tag}
         </span>
       </div>
@@ -113,46 +94,28 @@ function ReviewCard({ review }) {
   );
 }
 
-// Logo item — image with graceful text fallback if Clearbit doesn't have it
-function LogoItem({ logo }) {
-  const [imgFailed, setImgFailed] = React.useState(false);
-  if (imgFailed) {
-    return (
-      <span className="font-heading text-xs tracking-[0.18em] uppercase text-foreground/25 whitespace-nowrap">
-        {logo.name}
-      </span>
-    );
-  }
-  return (
-    <img
-      src={logo.src}
-      alt={logo.name}
-      onError={() => setImgFailed(true)}
-      className="h-5 w-auto object-contain"
-      style={{ filter: 'brightness(0) invert(1)', opacity: 0.35 }}
-      loading="lazy"
-    />
-  );
-}
+const Dot = () => (
+  <span aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/15 shrink-0 inline-block" />
+);
 
-// Logo marquee row — duplicated for seamless loop
+// Text-only marquee row — never breaks due to image load failures
 function LogoRow({ ariaHidden = false }) {
   return (
     <ul
       aria-hidden={ariaHidden}
-      className="flex items-center gap-8 md:gap-12 shrink-0 list-none m-0 p-0"
+      className="flex items-center gap-6 md:gap-9 shrink-0 list-none m-0 p-0 pr-6 md:pr-9"
     >
       {CLIENT_LOGOS.map((logo, i) => (
-        <React.Fragment key={`${ariaHidden ? 'b' : 'a'}-${i}`}>
-          {i > 0 && (
-            <li aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/10 shrink-0" />
-          )}
-          <li className="shrink-0 flex items-center">
-            <LogoItem logo={logo} />
+        <React.Fragment key={`${ariaHidden ? 'b' : 'a'}-${logo.name}`}>
+          {i > 0 && <li aria-hidden="true" className="shrink-0"><Dot /></li>}
+          <li className="shrink-0">
+            <span className="font-heading text-[11px] md:text-xs tracking-[0.22em] uppercase text-foreground/30 whitespace-nowrap">
+              {logo.name}
+            </span>
           </li>
         </React.Fragment>
       ))}
-      <li aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/10 shrink-0" />
+      <li aria-hidden="true" className="shrink-0"><Dot /></li>
     </ul>
   );
 }
@@ -165,10 +128,10 @@ export default function Reviews() {
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8 md:mb-10">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE }}
+          transition={{ duration: 0.95, ease: EASE }}
         >
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">
             Client Trust
@@ -179,7 +142,6 @@ export default function Reviews() {
           <p className="font-body text-sm text-foreground/50 leading-relaxed mt-3 max-w-md">
             For private clients, events, and venues across the Bay Area.
           </p>
-          <div className="w-10 h-[2px] bg-accent mt-4" />
         </motion.div>
       </div>
 
@@ -217,14 +179,9 @@ export default function Reviews() {
         >
           {/* Left edge spacer — keeps first card from sitting flush against the screen */}
           <div className="w-4 shrink-0" aria-hidden="true" />
-          {FEATURED.map((item, i) => (
-            <div key={`featured-${i}`} style={{ scrollSnapAlign: 'start' }} className="shrink-0 flex self-stretch">
-              <FeaturedCard item={item} />
-            </div>
-          ))}
-          {REVIEWS.map((review, i) => (
-            <div key={`review-${i}`} style={{ scrollSnapAlign: 'start' }} className="shrink-0 flex self-stretch">
-              <ReviewCard review={review} />
+          {[...FEATURED, ...REVIEWS].map((item, i) => (
+            <div key={i} style={{ scrollSnapAlign: 'start' }} className="shrink-0 flex self-stretch">
+              <ReviewCard review={item} />
             </div>
           ))}
         </div>
@@ -256,13 +213,13 @@ export default function Reviews() {
           align-items: center;
           width: max-content;
           flex-wrap: nowrap;
-          gap: 2rem;
+          gap: 0;
           animation: logo-strip-scroll 14s linear infinite;
           will-change: transform;
           padding: 0.25rem 0;
         }
         @media (min-width: 768px) {
-          .logo-strip-track { gap: 3rem; animation-duration: 18s; }
+          .logo-strip-track { animation-duration: 18s; }
         }
         @keyframes logo-strip-scroll {
           from { transform: translateX(0); }
