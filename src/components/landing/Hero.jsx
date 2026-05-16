@@ -43,42 +43,45 @@ export default function Hero() {
         />
       )}
 
-      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 lg:px-20 pt-24 md:pt-32">
+      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
 
         {/* Mobile: flex spacer pushes content to lower half */}
         <div className="flex-1 md:hidden" />
 
         <motion.p
-          initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, y: 8, filter: 'blur(6px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.8, delay: 0.15, ease: EASE }}
-          className="font-body text-[16px] tracking-[0.3em] text-foreground/60 uppercase mb-3 md:mb-5"
+          transition={{ duration: 1.4, delay: 0.2, ease: EASE }}
+          className="font-body text-[16px] tracking-[0.3em] uppercase mb-3 md:mb-5"
+          style={{ color: 'hsl(var(--foreground) / 0.5)' }}
         >
           Avalon Vitality
         </motion.p>
 
         <motion.h1
-          initial={{ opacity: 0, y: 64, filter: 'blur(12px)' }}
+          initial={{ opacity: 0, y: 32, filter: 'blur(10px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 1.1, delay: 0.32, ease: EASE }}
+          transition={{ duration: 1.6, delay: 0.42, ease: EASE }}
           className="font-heading text-[15vw] sm:text-[12vw] md:text-[9vw] lg:text-[8rem] leading-[0.88] tracking-tight text-foreground uppercase max-w-3xl"
+          style={{ willChange: 'opacity, transform, filter' }}
         >
           Recovery<br />On Demand
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.9, delay: 0.62, ease: EASE }}
-          className="font-body text-base md:text-lg text-foreground/80 leading-snug mt-4 md:mt-6"
+          transition={{ duration: 1.3, delay: 0.78, ease: EASE }}
+          className="font-body text-base md:text-lg leading-snug mt-4 md:mt-6"
+          style={{ color: 'hsl(var(--foreground) / 0.75)' }}
         >
           Your protocol.<br />Delivered by a licensed RN.
         </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.85, delay: 0.88, ease: EASE }}
+          transition={{ duration: 1.2, delay: 1.05, ease: EASE }}
           className="flex flex-col gap-3 mt-7 md:mt-8 w-full max-w-sm"
         >
           <Link

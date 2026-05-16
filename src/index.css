@@ -503,14 +503,7 @@ html, body {
   opacity: 0.85;
 }
 
-/* 7. Hero h1 CSS-keyframe fallback — if framer fails to mount, content still appears via animation. */
-@keyframes hero-h1-reveal {
-  from { opacity: 0; transform: translateY(40px) scale(0.94); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.hero-root h1 {
-  animation: hero-h1-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
-}
+/* Hero h1 — Framer Motion owns all animation. No CSS fallback to avoid conflicts. */
 
 /* 8. Form input focus rings — gold accent border replaces browser default focus */
 input:focus-visible,
