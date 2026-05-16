@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Sunset, ChevronDown, Droplets, Zap, ShieldCheck, Sparkles, Heart, FlaskConical, Circle, CircleDot, SlidersHorizontal, Building2, Calendar } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sunset } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Thirty = (props) => (
@@ -20,148 +20,6 @@ const readInitialTheme = () => {
   return 'golden';
 };
 
-// Therapy submenu items
-const THERAPY_ITEMS = [
-  { icon: Droplets,    label: 'Hydration',     href: '/newsletter' },
-  { icon: Zap,         label: 'Energy',        href: '/newsletter' },
-  { icon: ShieldCheck, label: 'Immunity',      href: '/newsletter' },
-  { icon: Heart,       label: 'Recovery',      href: '/newsletter' },
-  { icon: Sparkles,    label: 'Beauty',        href: '/newsletter' },
-  { icon: FlaskConical, label: 'NAD+',         href: '/services/nad' },
-];
-
-// Membership submenu items
-const MEMBERSHIP_ITEMS = [
-  { icon: Circle,           label: 'Starter',  sub: '1 IV/mo',   href: '/newsletter' },
-  { icon: CircleDot,        label: 'Premium',  sub: '2 IVs/mo',  href: '/newsletter' },
-  { icon: Sparkles,         label: 'VIP',      sub: '4 IVs/mo',  href: '/newsletter' },
-  { icon: SlidersHorizontal, label: 'Custom',  sub: 'Concierge', href: '/newsletter' },
-];
-
-// Channel submenu items
-const CHANNEL_ITEMS = [
-  { icon: Building2, label: 'Corporate',  sub: 'Teams & offices',      href: '/corporate' },
-  { icon: Calendar,  label: 'Events',     sub: 'Activations & venues', href: '/events'    },
-  { icon: Sparkles,  label: 'VIPs',       sub: 'Performance recovery', href: '/athlete'   },
-];
-
-// Expandable mobile nav item with a glass submenu
-function MobileExpandable({ label, items, onClose }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="w-full">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-end gap-2 text-sm tracking-widest text-foreground font-body uppercase transition-colors"
-        aria-expanded={open}
-      >
-        {label}
-        <ChevronDown
-          className="w-3.5 h-3.5 text-foreground/40 transition-transform duration-300"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-          strokeWidth={2}
-        />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="mt-2 rounded-2xl border border-foreground/10 bg-white/[0.04] backdrop-blur-sm overflow-hidden">
-              {items.map((item, i) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  onClick={onClose}
-                  className={`flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.05] transition-colors ${
-                    i < items.length - 1 ? 'border-b border-white/[0.05]' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <item.icon className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={1.5} />
-                    <span className="font-body text-xs tracking-[0.15em] uppercase text-foreground">{item.label}</span>
-                  </div>
-                  {item.sub && (
-                    <span className="font-body text-[9px] tracking-[0.15em] uppercase text-foreground/35">{item.sub}</span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// Desktop dropdown with hover delay
-function DesktopDropdown({ label, items }) {
-  const [open, setOpen] = useState(false);
-  const closeTimer = useRef(null);
-
-  const handleEnter = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setOpen(true);
-  };
-
-  const handleLeave = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 150);
-  };
-
-  return (
-    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none focus:outline-none"
-      >
-        {label}
-        <ChevronDown
-          className="w-3 h-3 text-foreground/50 transition-transform duration-200"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-          strokeWidth={2}
-        />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            onMouseEnter={handleEnter}
-            onMouseLeave={handleLeave}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-3 min-w-[210px] rounded-2xl border border-foreground/10 bg-background/95 backdrop-blur-xl shadow-2xl shadow-black/40 overflow-hidden z-50"
-          >
-            {items.map((item, i) => (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={`flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors ${
-                  i < items.length - 1 ? 'border-b border-white/[0.05]' : ''
-                }`}
-              >
-                <item.icon className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={1.5} />
-                <div className="flex flex-col">
-                  <span className="font-body text-xs tracking-[0.12em] uppercase text-foreground">{item.label}</span>
-                  {item.sub && (
-                    <span className="font-body text-[9px] text-foreground/40">{item.sub}</span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -228,8 +86,8 @@ export default function Navbar() {
         {/* Center — natural width, no flex. Perfectly centered because flanks are equal */}
         <div className="flex items-center gap-8">
           <Link to="/#how-it-works" className={linkClass}>Process</Link>
-          <DesktopDropdown label="Therapies" items={THERAPY_ITEMS} />
-          <DesktopDropdown label="Membership" items={MEMBERSHIP_ITEMS} />
+          <Link to="/newsletter" className={linkClass}>Therapies</Link>
+          <Link to="/membership" className={linkClass}>Membership</Link>
         </div>
 
         {/* Right — flex-1, content right-aligned */}
