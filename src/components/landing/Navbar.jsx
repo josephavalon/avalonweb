@@ -87,7 +87,7 @@ export default function Navbar() {
           <Link to="/#how-it-works" className={linkClass}>Process</Link>
           <Link to="/newsletter" className={linkClass}>Therapies</Link>
           <Link to="/membership" className={linkClass}>Membership</Link>
-          <Link to="/locations" className={linkClass}>Locations</Link>
+          <Link to="/newsletter" className={linkClass}>Locations</Link>
         </div>
 
         {/* Col 3 — actions, right-aligned */}
@@ -167,7 +167,7 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  to="/locations"
+                  to="/newsletter"
                   onClick={close}
                   className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
                 >
