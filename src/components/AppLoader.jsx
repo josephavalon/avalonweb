@@ -56,8 +56,8 @@ export default function AppLoader() {
         >
           {/* AV logotype — slow, weighted fade-in with gentle lift */}
           <motion.p
-            initial={{ opacity: 0, y: 18, letterSpacing: '0.08em' }}
-            animate={{ opacity: 1, y: 0, letterSpacing: '0.32em' }}
+            initial={{ opacity: 0, y: 18, letterSpacing: '0.08em', paddingLeft: '0.08em' }}
+            animate={{ opacity: 1, y: 0, letterSpacing: '0.32em', paddingLeft: '0.32em' }}
             transition={{ duration: 1.4, ease: EASE, delay: 0.1 }}
             style={{ color: palette.text, fontFamily: 'inherit' }}
             className="font-heading text-[18vw] sm:text-[12vw] md:text-[8vw] leading-none select-none"
