@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Droplets, Zap, Sparkles, ChevronRight, ArrowRight,
-  X, Check,
+  X,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
@@ -54,7 +54,6 @@ const CATEGORIES = [
 
 /* ─── Checkout Sheet ─────────────────────────────────────────── */
 function CheckoutSheet({ cart, onRemove, onClose }) {
-  const navigate = useNavigate();
   const total = cart.reduce((sum, i) => sum + i.price, 0);
   return (
     <motion.div
@@ -104,7 +103,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
               No charge until your appointment is confirmed.
             </p>
           </div>
-          <Link to="/newsletter" className="flex items-center justify-center gap-2.5 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors">
+          <Link to="/book" className="flex items-center justify-center gap-2.5 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors">
             Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
           <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">A licensed RN will confirm availability and arrive at your location.</p>
@@ -116,7 +115,6 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
 
 /* ─── Main Section ───────────────────────────────────────────── */
 export default function OurDrips() {
-  const navigate = useNavigate();
   const { items: cart, removeItem: removeFromCart } = useCart();
   const [openKey, setOpenKey] = useState(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -136,7 +134,7 @@ export default function OurDrips() {
             </h2>
             <div className="w-10 h-[2px] bg-foreground mt-3" />
           </div>
-          <Link to="/newsletter" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
+          <Link to="/book" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
             View All Sessions <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
           </Link>
         </div>
@@ -205,7 +203,7 @@ export default function OurDrips() {
                           </div>
                         ))}
                         <Link
-                          to="/newsletter"
+                          to="/book"
                           className="mt-3 flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-white/40 hover:text-white transition-colors font-body"
                         >
                           View & Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
@@ -222,7 +220,7 @@ export default function OurDrips() {
         {/* CTA */}
         <div className="mt-6">
           <Link
-            to="/newsletter"
+            to="/book"
             className="w-full flex items-center justify-center gap-2.5 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-foreground/20 text-foreground hover:bg-white/[0.08] hover:border-foreground/40 transition-colors"
           >
             VIEW FULL MENU &amp; BOOK <ArrowRight className="w-4 h-4" strokeWidth={2} />

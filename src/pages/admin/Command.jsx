@@ -4,12 +4,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/useAuthStore';
 import {
   Bell, User, Home, Hotel, Building2, Calendar, MapPin,
-  Zap, Droplets, FlaskConical, Sparkles, Syringe, Package,
+  FlaskConical, Syringe, Package,
   Phone, MessageSquare, CheckCircle, AlertTriangle, AlertCircle,
   Clock, DollarSign, Users, FileText, ClipboardList, Shield,
   ChevronDown, X, Plus, ArrowLeft, MoreHorizontal,
   Activity, CreditCard, Send, Edit3,
-  LayoutDashboard, LogOut, Check, RefreshCw,
+  LayoutDashboard, LogOut, RefreshCw,
   Star, TrendingUp, Flame, Heart, ChevronRight,
   Sun, Moon, Sunset,
 } from 'lucide-react';
@@ -262,9 +262,56 @@ function QuickBtn({ icon: Icon, label, accent, onClick }) {
 
 function Card({ children, className = '' }) {
   return (
-    <div className={`rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] ${className}`}>
+    <div className={`rounded-2xl border border-foreground/[0.08] bg-card/[0.58] shadow-[0_18px_60px_hsl(var(--foreground)/0.04)] backdrop-blur-xl ${className}`}>
       {children}
     </div>
+  );
+}
+
+function AdminAccordion({ title, eyebrow, icon: Icon, meta, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+        aria-expanded={open}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          {Icon && (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/[0.08] bg-background/[0.24] text-foreground/55">
+              <Icon className="h-4 w-4" strokeWidth={1.6} />
+            </span>
+          )}
+          <div className="min-w-0">
+            {eyebrow && <p className="font-body text-[8px] uppercase tracking-[0.2em] text-foreground/34">{eyebrow}</p>}
+            <p className="truncate font-body text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/72">
+              {title}
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {meta && <span className="font-body text-[9px] uppercase tracking-[0.14em] text-foreground/40">{meta}</span>}
+          <ChevronDown className={`h-4 w-4 text-foreground/45 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} strokeWidth={1.8} />
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-foreground/[0.06] px-4 py-4">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
   );
 }
 
@@ -285,13 +332,14 @@ function LocIcon({ type, className }) {
 // ─── Status Tile ──────────────────────────────────────────────────────────────
 function StatusTile({ icon: Icon, value, label, sub, urgent }) {
   return (
-    <div className={`flex flex-col gap-1.5 p-3.5 rounded-2xl border shrink-0 ${urgent ? 'border-red-500/30 bg-red-500/[0.06]' : 'border-foreground/[0.08] bg-foreground/[0.03]'} min-w-[104px]`}>
-      <div className={`flex items-center gap-1.5 ${urgent ? 'text-red-400' : 'text-foreground/45'}`}>
-        <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
-        <span className={`font-body text-[9px] tracking-[0.1em] uppercase whitespace-nowrap ${urgent ? 'text-red-400' : 'text-foreground/50'}`}>{label}</span>
+    <div className={`relative overflow-hidden rounded-2xl border p-3.5 transition-colors ${urgent ? 'border-red-500/30 bg-red-500/[0.07]' : 'border-foreground/[0.08] bg-card/[0.62]'}`}>
+      <div className={`mb-3 flex items-start justify-between gap-2 ${urgent ? 'text-red-400' : 'text-foreground/45'}`}>
+        <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+        {urgent && <span className="h-1.5 w-1.5 rounded-full bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.8)]" />}
       </div>
-      <span className={`font-heading text-2xl leading-none ${urgent ? 'text-red-300' : 'text-foreground'}`}>{value}</span>
-      {sub && <span className="font-body text-[9px] text-foreground/40 whitespace-nowrap">{sub}</span>}
+      <span className={`block font-heading text-3xl leading-none ${urgent ? 'text-red-300' : 'text-foreground'}`}>{value}</span>
+      <span className={`mt-1 block font-body text-[8px] font-semibold uppercase tracking-[0.16em] ${urgent ? 'text-red-300/75' : 'text-foreground/55'}`}>{label}</span>
+      {sub && <span className="mt-1 block truncate font-body text-[9px] text-foreground/38">{sub}</span>}
     </div>
   );
 }
@@ -321,22 +369,45 @@ function FilterChips({ options, active, onChange }) {
 // ─── Risk Card ────────────────────────────────────────────────────────────────
 function RiskCard() {
   const risks = [
-    { label:'2 visits need clinical clearance', level:'red' },
-    { label:'4 visits unassigned nurse',         level:'red' },
-    { label:'3 payments pending',                level:'amber' },
-    { label:'1 kit needs restock before visits', level:'amber' },
+    { label:'Clinical clearance', detail:'2 visits blocked', level:'red' },
+    { label:'Nurse assignment',   detail:'4 visits unassigned', level:'red' },
+    { label:'Payments',           detail:'3 pending', level:'amber' },
+    { label:'Inventory',          detail:'1 kit restock before visits', level:'amber' },
   ];
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />
-        <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/40">Launch Risks · Today</p>
-      </div>
-      <div className="space-y-2">
+    <AdminAccordion
+      title="Launch Risks"
+      eyebrow="Today"
+      icon={AlertTriangle}
+      meta="2 critical"
+    >
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {risks.map((r, i) => (
-          <div key={i} className="flex items-center gap-2.5">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.level === 'red' ? 'bg-red-400' : 'bg-amber-400'}`} />
-            <span className="font-body text-xs text-foreground/70">{r.label}</span>
+          <div key={i} className="flex items-center gap-2 rounded-xl border border-foreground/[0.06] bg-background/[0.22] px-3 py-2.5">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${r.level === 'red' ? 'bg-red-400' : 'bg-amber-400'}`} />
+            <div className="min-w-0">
+              <p className="truncate font-body text-xs font-semibold text-foreground/80">{r.label}</p>
+              <p className="truncate font-body text-[10px] text-foreground/42">{r.detail}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </AdminAccordion>
+  );
+}
+
+function CommandPulse() {
+  return (
+    <Card className="overflow-hidden">
+      <div className="grid grid-cols-3 divide-x divide-foreground/[0.06]">
+        {[
+          { label: 'Next visit', value: '2:00 PM', tone: 'text-foreground' },
+          { label: 'Blocked', value: '6', tone: 'text-red-300' },
+          { label: 'Today rev.', value: '$1.28k', tone: 'text-accent' },
+        ].map((item) => (
+          <div key={item.label} className="px-3 py-3">
+            <p className="font-body text-[8px] uppercase tracking-[0.16em] text-foreground/35">{item.label}</p>
+            <p className={`mt-1 font-heading text-2xl leading-none ${item.tone}`}>{item.value}</p>
           </div>
         ))}
       </div>
@@ -352,11 +423,8 @@ const ACT_COLORS = {
 
 function ActivityFeed() {
   return (
-    <Card className="overflow-hidden">
-      <div className="px-4 pt-4 pb-2">
-        <SectionLabel>Activity Feed</SectionLabel>
-      </div>
-      <div className="divide-y divide-foreground/[0.05]">
+    <AdminAccordion title="Activity Feed" icon={Activity} meta={`${ACTIVITY.length} events`}>
+      <div className="-mx-4 -my-4 divide-y divide-foreground/[0.05]">
         {ACTIVITY.map((a) => (
           <div key={a.id} className="flex items-start gap-3 px-4 py-2.5">
             <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ACT_COLORS[a.type]}`} />
@@ -367,84 +435,126 @@ function ActivityFeed() {
           </div>
         ))}
       </div>
-    </Card>
+    </AdminAccordion>
   );
 }
 
 // ─── Request Card ─────────────────────────────────────────────────────────────
 function RequestCard({ req, onOpen }) {
+  const [open, setOpen] = useState(false);
   const displayStatus = localStorage.getItem(`av.visit.status.${req.id}`) || req.status;
+  const blockers = [
+    req.intake !== 'Done' && 'Intake',
+    req.consent !== 'Done' && 'Consent',
+    req.gfe !== 'Cleared' && 'Clearance',
+    req.nurse === 'Unassigned' && 'Nurse',
+    req.payment !== 'Paid' && 'Payment',
+  ].filter(Boolean);
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: EASE }}
     >
-      <button
-        type="button"
-        onClick={() => onOpen(req)}
-        className="w-full text-left"
-      >
-        <Card className="p-4 active:bg-foreground/[0.06] transition-colors">
-          {/* Header row */}
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <LocIcon type={req.locationType} className="w-4 h-4 text-foreground/40 shrink-0" />
+      <Card className="overflow-hidden transition-colors active:bg-foreground/[0.06]">
+        <button
+          type="button"
+          onClick={() => setOpen(v => !v)}
+          className="w-full p-3.5 text-left md:p-4"
+          aria-expanded={open}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-foreground/[0.08] bg-background/[0.24]">
+                <LocIcon type={req.locationType} className="h-4 w-4 text-foreground/45 shrink-0" />
+              </span>
               <div className="min-w-0">
-                <p className="font-body text-sm font-semibold text-foreground leading-tight">{req.client}</p>
+                <p className="font-body text-sm font-semibold leading-tight text-foreground">{req.client}</p>
                 <p className="font-body text-[10px] text-foreground/40 truncate">{req.address}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex shrink-0 items-center gap-1.5">
               {req.priority && (
-                <span className="font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border border-accent/40 text-accent bg-accent/10">
+                <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.15em] text-accent">
                   {req.priority}
                 </span>
               )}
               <StatusPill status={displayStatus} small />
+              <ChevronDown className={`h-4 w-4 text-foreground/45 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} strokeWidth={1.8} />
             </div>
           </div>
+        </button>
 
-          {/* Visit info */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex items-center gap-1 text-foreground/50">
-              <Clock className="w-3 h-3 shrink-0" strokeWidth={1.5} />
-              <span className="font-body text-[10px]">{req.time}</span>
-            </div>
-            <div className="flex items-center gap-1 text-foreground/50">
-              <FlaskConical className="w-3 h-3 shrink-0" strokeWidth={1.5} />
-              <span className="font-body text-[10px] truncate max-w-[120px]">{req.therapy}</span>
-            </div>
-            <div className="flex items-center gap-1 text-foreground/50">
-              <DollarSign className="w-3 h-3 shrink-0" strokeWidth={1.5} />
-              <span className="font-body text-[10px]">${req.total}</span>
-            </div>
-          </div>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-foreground/[0.06] px-3.5 pb-3.5 pt-3 md:px-4 md:pb-4">
+                {/* Visit info */}
+                <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="flex items-center gap-1 text-foreground/50">
+                    <Clock className="w-3 h-3 shrink-0" strokeWidth={1.5} />
+                    <span className="truncate font-body text-[10px]">{req.time}</span>
+                  </div>
+                  <div className="flex min-w-0 items-center gap-1 text-foreground/50">
+                    <FlaskConical className="w-3 h-3 shrink-0" strokeWidth={1.5} />
+                    <span className="truncate font-body text-[10px]">{req.therapy}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-foreground/50">
+                    <DollarSign className="w-3 h-3 shrink-0" strokeWidth={1.5} />
+                    <span className="font-body text-[10px]">${req.total}</span>
+                  </div>
+                </div>
 
-          {/* Progress row */}
-          <div className="flex items-center gap-2 mb-3">
-            <MicroCheck done={req.intake === 'Done'}   label="Intake"   />
-            <MicroCheck done={req.consent === 'Done'}  label="Consent"  />
-            <MicroCheck done={req.gfe === 'Cleared'}   label="Cleared"  />
-            <MicroCheck done={req.nurse !== 'Unassigned'} label="Nurse" />
-            <MicroCheck done={req.payment === 'Paid'}  label="Paid"     />
-          </div>
+                {/* Progress row */}
+                <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                  <MicroCheck done={req.intake === 'Done'}   label="Intake"   />
+                  <MicroCheck done={req.consent === 'Done'}  label="Consent"  />
+                  <MicroCheck done={req.gfe === 'Cleared'}   label="Cleared"  />
+                  <MicroCheck done={req.nurse !== 'Unassigned'} label="Nurse" />
+                  <MicroCheck done={req.payment === 'Paid'}  label="Paid"     />
+                </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="font-body text-[9px] text-foreground/30 tracking-[0.1em] uppercase">{req.source}</span>
-              <span className="text-foreground/20">·</span>
-              <span className="font-body text-[9px] text-foreground/30">{req.created}</span>
-            </div>
-            {req.nurse !== 'Unassigned' ? (
-              <span className="font-body text-[9px] text-teal-400">{req.nurse}</span>
-            ) : (
-              <span className="font-body text-[9px] text-orange-400/70">No nurse yet</span>
-            )}
-          </div>
-        </Card>
-      </button>
+                {blockers.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    {blockers.slice(0, 3).map((b) => (
+                      <span key={b} className="rounded-full border border-red-400/20 bg-red-400/[0.08] px-2 py-0.5 font-body text-[8px] font-semibold uppercase tracking-[0.12em] text-red-300">
+                        {b}
+                      </span>
+                    ))}
+                    {blockers.length > 3 && (
+                      <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.12em] text-foreground/45">
+                        +{blockers.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-body text-[9px] text-foreground/30 tracking-[0.1em] uppercase">{req.source}</span>
+                    <span className="text-foreground/20">·</span>
+                    <span className="font-body text-[9px] text-foreground/30">{req.created}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onOpen(req)}
+                    className="rounded-full border border-foreground/15 px-3 py-1.5 font-body text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/70 transition-colors hover:border-foreground/35 hover:text-foreground"
+                  >
+                    Open Visit
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
     </motion.div>
   );
 }
@@ -696,39 +806,44 @@ function VisitDetailSheet({ req, onClose }) {
 // ─── Command Screen ───────────────────────────────────────────────────────────
 function CommandScreen({ onSelectRequest }) {
   const tiles = [
-    { icon: Plus,          value: '8',    label: 'New Requests',   sub: '2 same-day',      urgent: false },
-    { icon: Clock,         value: '5',    label: 'Pending Confirm',sub: 'awaiting reply',  urgent: false },
-    { icon: Calendar,      value: '3',    label: 'Visits Today',   sub: 'in 6h window',    urgent: false },
-    { icon: Shield,        value: '4',    label: 'Need Clearance', sub: '1 flagged',       urgent: true  },
-    { icon: Users,         value: '4',    label: 'Nurses Avail.',  sub: '2 assigned',      urgent: false },
-    { icon: DollarSign,    value: '$660', label: 'Pmt Pending',    sub: '1 overdue',       urgent: true  },
-    { icon: AlertCircle,   value: '9',    label: 'Follow-Ups Due', sub: '3 high priority', urgent: false },
-    { icon: TrendingUp,    value:'$1,280',label: 'Revenue Today',  sub: '3 completed',     urgent: false },
+    { icon: Plus,          value: '8',    label: 'New',       sub: '2 same-day',      urgent: false },
+    { icon: Shield,        value: '4',    label: 'Clearance', sub: '1 flagged',       urgent: true  },
+    { icon: DollarSign,    value: '$660', label: 'Payments',  sub: '1 overdue',       urgent: true  },
+    { icon: Calendar,      value: '3',    label: 'Today',     sub: 'in 6h window',    urgent: false },
+    { icon: Clock,         value: '5',    label: 'Confirm',   sub: 'awaiting reply',  urgent: false },
+    { icon: Users,         value: '4',    label: 'Nurses',    sub: '2 assigned',      urgent: false },
+    { icon: AlertCircle,   value: '9',    label: 'Follow-Up', sub: '3 high priority', urgent: false },
+    { icon: TrendingUp,    value:'$1.28k',label: 'Revenue',   sub: '3 completed',     urgent: false },
   ];
 
   const urgent = REQUESTS.filter(r => ['GFE Pending','Intake Pending','New Request'].includes(r.status));
 
   return (
-    <div className="space-y-5 pb-6">
+    <div className="space-y-4 pb-6">
+      <CommandPulse />
+
       {/* Metrics strip */}
-      <div className="-mx-4 px-4 flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth:'none' }}>
-        {tiles.map((t) => (
-          <StatusTile key={t.label} {...t} />
-        ))}
-      </div>
+      <AdminAccordion title="Command Metrics" icon={LayoutDashboard} meta="4 priority">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {tiles.map((t, index) => (
+            <div key={t.label} className={index > 3 ? 'hidden sm:block' : ''}>
+              <StatusTile {...t} />
+            </div>
+          ))}
+        </div>
+      </AdminAccordion>
 
       {/* Risk card */}
       <RiskCard />
 
       {/* Needs action now */}
-      <div>
-        <SectionLabel>Needs Action Now</SectionLabel>
+      <AdminAccordion title="Needs Action Now" icon={AlertCircle} meta={`${urgent.length} blocked`} defaultOpen>
         <div className="space-y-2.5">
           {urgent.slice(0, 3).map((r) => (
             <RequestCard key={r.id} req={r} onOpen={onSelectRequest} />
           ))}
         </div>
-      </div>
+      </AdminAccordion>
 
       {/* Activity feed */}
       <ActivityFeed />
@@ -879,7 +994,7 @@ function NursesScreen() {
 }
 
 // ─── Clearance Screen ─────────────────────────────────────────────────────────
-function ClearanceScreen({ onSelectRequest }) {
+function ClearanceScreen() {
   const [filter, setFilter] = useState('All');
   const filters = ['All','Intake Pending','Consent Pending','GFE Pending','Cleared'];
   const items = filter === 'All' ? CLEARANCE_ITEMS : CLEARANCE_ITEMS.filter(c => c.status === filter);
@@ -1328,8 +1443,6 @@ export default function Command() {
   };
 
   const isMoreScreen = !BOTTOM_NAV.find(n => n.screen === screen);
-  const isMainNav = BOTTOM_NAV.find(n => n.screen === screen);
-
   return (
     // Full-screen shell — flex-row on desktop (sidebar + content), flex-col on mobile
     <div className="h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden" style={{ height: '100dvh' }}>
@@ -1345,8 +1458,8 @@ export default function Command() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* ── Top Bar ─────────────────────────────────────────────── */}
-        <div className="shrink-0 bg-background border-b border-foreground/[0.06]">
-          <div className="flex items-center justify-between px-4 py-2">
+        <div className="shrink-0 border-b border-foreground/[0.08] bg-background/92 backdrop-blur-xl">
+          <div className="flex items-center justify-between px-4 py-3 md:px-6">
             <div className="flex items-center gap-3">
               {/* Back arrow — mobile only, for "more" screens */}
               {isMoreScreen && (
@@ -1360,28 +1473,35 @@ export default function Command() {
                 <span className="font-heading text-[13px] tracking-[0.35em] text-foreground">AV</span>
                 <p className="font-body text-[8px] tracking-[0.15em] uppercase text-foreground/35 mt-0.5">{TODAY_LABEL}</p>
               </div>
+              <div className="hidden md:block">
+                <p className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/35">{TODAY_LABEL}</p>
+                <p className="font-body text-[10px] text-foreground/55">Launch command center</p>
+              </div>
             </div>
             <div className="flex items-center gap-1.5">
+              <span className="hidden rounded-full border border-red-400/25 bg-red-400/[0.08] px-2.5 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.14em] text-red-300 sm:inline-flex">
+                6 blocked
+              </span>
               <button type="button"
-                className="relative w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.08] bg-card/[0.68] text-foreground/55">
                 <Bell className="w-4 h-4" strokeWidth={1.5} />
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400" />
               </button>
               <button type="button" onClick={cycleTheme}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/60 hover:text-foreground transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.08] bg-card/[0.68] text-foreground/60 transition-colors hover:text-foreground"
                 aria-label="Cycle theme">
                 <ThemeIcon className="w-4 h-4" />
               </button>
               <button type="button"
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.08] bg-card/[0.68] text-foreground/55">
                 <User className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
           </div>
 
           {/* Screen title */}
-          <div className="px-4 pb-2">
-            <h1 className="font-heading text-2xl text-foreground uppercase leading-none tracking-tight">
+          <div className="px-4 pb-3 md:px-6">
+            <h1 className="font-heading text-3xl text-foreground uppercase leading-none tracking-tight md:text-4xl">
               {screenTitles[screen]}
             </h1>
           </div>
@@ -1389,10 +1509,10 @@ export default function Command() {
 
         {/* ── Screen Content ──────────────────────────────────────── */}
         <main
-          className="flex-1 overflow-y-auto px-4 md:px-8 pt-1.5"
+          className="flex-1 overflow-y-auto px-4 pt-3 md:px-8 md:pt-5"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 5.5rem)' }}
         >
-          <div className="max-w-3xl">
+          <div className="mx-auto max-w-5xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={screen}
@@ -1404,7 +1524,7 @@ export default function Command() {
                 {screen === 'command'     && <CommandScreen   onSelectRequest={setSelectedRequest} />}
                 {screen === 'requests'    && <RequestsScreen  onSelectRequest={setSelectedRequest} />}
                 {screen === 'nurses'      && <NursesScreen />}
-                {screen === 'clearance'   && <ClearanceScreen onSelectRequest={setSelectedRequest} />}
+                {screen === 'clearance'   && <ClearanceScreen />}
                 {screen === 'payments'    && <PaymentsScreen />}
                 {screen === 'followups'   && <FollowUpsScreen />}
                 {screen === 'memberships' && <MembershipsScreen />}
@@ -1418,7 +1538,7 @@ export default function Command() {
 
         {/* ── Mobile Bottom Nav (hidden on desktop) ───────────────── */}
         <div
-          className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background border-t border-foreground/[0.12]"
+          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-foreground/[0.12] bg-background/92 backdrop-blur-xl"
           style={{ paddingBottom:'max(env(safe-area-inset-bottom), 0px)' }}
         >
           <div className="flex items-stretch max-w-[430px] mx-auto">

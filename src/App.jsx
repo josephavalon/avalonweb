@@ -65,8 +65,10 @@ const B2B = lazy(() => import('./pages/B2B'));
 const B2BThankYou = lazy(() => import('./pages/B2BThankYou'));
 const CustomProtocol = lazy(() => import('./pages/CustomProtocol'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
-const Store = lazy(() => import('./pages/Store'));
 const BookNow = lazy(() => import('./pages/BookNow'));
+const Subscribe = lazy(() => import('./pages/Subscribe'));
+const ProtocolPage = lazy(() => import('./pages/therapies/ProtocolPage'));
+const Menu = lazy(() => import('./pages/Menu'));
 const BookingConfirmation = lazy(() => import('./pages/BookingConfirmation'));
 const Membership = lazy(() => import('./pages/Membership'));
 const Corporate = lazy(() => import('./pages/Corporate'));
@@ -86,7 +88,7 @@ const JetLag = lazy(() => import('./pages/JetLag'));
 const Press = lazy(() => import('./pages/Press'));
 const AdminCommand = lazy(() => import('./pages/admin/Command'));
 const AdminInventory = lazy(() => import('./pages/admin/Inventory'));
-const WaitlistPage = lazy(() => import('./pages/WaitlistPage'));
+const AdminBookings = lazy(() => import('./pages/admin/Bookings'));
 
 const HIDE_BOTTOM_NAV = ['/provider', '/admin', '/members', '/login', '/checkout'];
 
@@ -153,12 +155,14 @@ function AppRoutes() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/membership" element={<Membership />} />
+            <Route path="/subscription" element={<Membership />} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/hotel" element={<Hotel />} />
             <Route path="/service-area" element={<ServiceArea />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/terms-of-service" element={<TermsAndConditions />} />
             <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
             <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
             <Route path="/notice-of-privacy-practices" element={<NoticeOfPrivacyPractices />} />
@@ -170,8 +174,10 @@ function AppRoutes() {
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
             <Route path="/custom" element={<CustomProtocol />} />
-            <Route path="/store" element={<Store />} />
             <Route path="/book" element={<BookNow />} />
+            <Route path="/subscribe" element={<Subscribe />} />
+            <Route path="/therapies/:slug" element={<ProtocolPage />} />
+            <Route path="/menu" element={<Menu />} />
             <Route path="/store/confirmation" element={<BookingConfirmation />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
@@ -192,6 +198,7 @@ function AppRoutes() {
             <Route path="/provider/settings" element={<RequireAuth allowedRoles={['provider', 'admin']}><ProviderSettings /></RequireAuth>} />
             <Route path="/admin" element={<RequireAuth allowedRoles={['admin']}><AdminCommand /></RequireAuth>} />
             <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><AdminInventory /></RequireAuth>} />
+            <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin']}><AdminBookings /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminCommand /></RequireAuth>} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/ingredients" element={<Ingredients />} />
@@ -201,7 +208,7 @@ function AppRoutes() {
             <Route path="/jet-lag" element={<JetLag />} />
             <Route path="/press" element={<Press />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/newsletter" element={<WaitlistPage />} />
+            <Route path="/newsletter" element={<Navigate to="/book" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

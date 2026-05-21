@@ -292,35 +292,6 @@ export default function OurTeam() {
         </div>
       </section>
 
-      {/* Leadership */}
-      <section className="py-8 md:py-12 px-6 md:px-16 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: EASE }}
-            className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4"
-          >
-            Leadership
-          </motion.p>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: EASE }}
-            className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-8 md:mb-10"
-          >
-            THE TEAM
-          </motion.h2>
-          <div className="grid md:grid-cols-3 gap-4 md:gap-6 items-start">
-            {LEADERSHIP.map((person, i) => (
-              <PersonCard key={person.name} person={person} i={i} anchor={false} />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Why Avalon */}
       <section className="py-8 md:py-16 px-6 md:px-16 border-t border-border">
         <div className="max-w-6xl mx-auto">

@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-
-const EASE = [0.16, 1, 0.3, 1];
+import { EASE, premiumHover } from '@/lib/motion';
 
 // Venue / partner text strip — pure text, never breaks on load.
 const CLIENT_LOGOS = [
@@ -74,9 +73,16 @@ function StarRow({ count }) {
 }
 
 // Single unified card — glass, stars, quote, name + tag
-function ReviewCard({ review }) {
+function ReviewCard({ review, index }) {
   return (
-    <article className="rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full">
+    <motion.article
+      initial={{ opacity: 0, y: 18, filter: 'blur(7px)' }}
+      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      viewport={{ once: true, margin: '-24px' }}
+      transition={{ duration: 0.85, delay: Math.min(index, 5) * 0.055, ease: EASE }}
+      whileHover={premiumHover}
+      className="rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-white/[0.16] hover:bg-white/[0.105]"
+    >
       <StarRow count={review.stars || 5} />
       <p className="font-body text-sm text-foreground/75 leading-relaxed line-clamp-5">
         &ldquo;{review.quote}&rdquo;
@@ -90,7 +96,7 @@ function ReviewCard({ review }) {
           {review.tag}
         </span>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -124,7 +130,7 @@ export default function Reviews() {
   const scrollRef = useRef(null);
 
   return (
-    <section aria-label="Client reviews" className="pt-10 pb-6 md:pt-12 md:pb-8 px-4">
+    <section aria-label="Client reviews" className="pt-10 pb-10 md:pt-16 md:pb-16 px-4">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8 md:mb-10">
         <motion.div
@@ -142,6 +148,18 @@ export default function Reviews() {
           <p className="font-body text-sm text-foreground/50 leading-relaxed mt-3 max-w-md">
             For private clients, events, and venues across the Bay Area.
           </p>
+          <div className="grid grid-cols-3 gap-2 mt-5 max-w-md">
+            {[
+              ['5.0', 'Client rating'],
+              ['90min', 'Arrival window'],
+              ['RN', 'Administered'],
+            ].map(([value, label]) => (
+              <div key={label} className="rounded-xl border border-foreground/10 bg-white/[0.07] px-3 py-3 backdrop-blur-xl">
+                <p className="font-heading text-2xl text-foreground leading-none tracking-[0.04em]">{value}</p>
+                <p className="font-body text-[9px] text-foreground/40 tracking-[0.16em] uppercase mt-1">{label}</p>
+              </div>
+            ))}
+          </div>
         </motion.div>
       </div>
 
@@ -181,7 +199,7 @@ export default function Reviews() {
           <div className="w-4 shrink-0" aria-hidden="true" />
           {[...FEATURED, ...REVIEWS].map((item, i) => (
             <div key={i} style={{ scrollSnapAlign: 'start' }} className="shrink-0 flex self-stretch">
-              <ReviewCard review={item} />
+              <ReviewCard review={item} index={i} />
             </div>
           ))}
         </div>
@@ -214,12 +232,12 @@ export default function Reviews() {
           width: max-content;
           flex-wrap: nowrap;
           gap: 0;
-          animation: logo-strip-scroll 14s linear infinite;
+          animation: logo-strip-scroll 24s linear infinite;
           will-change: transform;
           padding: 0.25rem 0;
         }
         @media (min-width: 768px) {
-          .logo-strip-track { animation-duration: 18s; }
+          .logo-strip-track { animation-duration: 32s; }
         }
         @keyframes logo-strip-scroll {
           from { transform: translateX(0); }

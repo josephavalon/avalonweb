@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { track } from '@/lib/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight, Check, X, ChevronDown,
   Heart, Zap, Sparkles, Droplets, Syringe,
-  CheckCircle2, Package, Clock, MapPin,
+  Package, Clock, MapPin,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -29,11 +29,6 @@ const GOALS = [
 
 /* ─── Checkout Sheet ─────────────────────────────────────────── */
 function CheckoutSheet({ cart, onRemove, onClose, onConfirm }) {
-  const [confirmed, setConfirmed] = useState(false);
-  const refNumber = useMemo(
-    () => `AV-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-    [],
-  );
   const total = cart.reduce((s, i) => s + i.price, 0);
 
   return (
@@ -53,116 +48,71 @@ function CheckoutSheet({ cart, onRemove, onClose, onConfirm }) {
         onClick={onClose}
       />
       <div className="relative bg-background/95 backdrop-blur-2xl border-t border-foreground/10 rounded-t-3xl flex flex-col overflow-hidden">
-        <AnimatePresence mode="wait">
-          {confirmed ? (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: EASE }}
-              className="flex flex-col px-6 pt-8 pb-8 items-center text-center gap-5"
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.35, ease: EASE }}
+          className="flex flex-col overflow-hidden"
+        >
+          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-foreground/[0.08]">
+            <div>
+              <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-0.5">Your Visit</p>
+              <p className="font-heading text-2xl text-foreground tracking-wide">
+                {cart.length} Item{cart.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="p-2 rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors"
             >
-              <CheckCircle2 className="w-12 h-12 text-accent" strokeWidth={1.5} />
-              <div>
-                <p className="font-heading text-3xl text-foreground tracking-wide mb-2">Request Received</p>
-                <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-xs mx-auto">
-                  Your nurse will confirm within 15 minutes. Expect arrival within 90 minutes.
-                </p>
-              </div>
-              <div className="w-full space-y-1.5 border border-foreground/[0.08] rounded-2xl p-4 bg-foreground/[0.02]">
-                {cart.map((item) => (
-                  <div key={item.cartKey} className="flex items-center justify-between">
-                    <span className="font-body text-xs text-foreground/70">{item.label}</span>
-                    <span className="font-body text-xs text-foreground">${item.price.toLocaleString()}</span>
-                  </div>
-                ))}
-                <div className="flex items-center justify-between border-t border-foreground/[0.06] pt-2 mt-2">
-                  <span className="font-body text-xs font-semibold text-foreground/60">Total</span>
-                  <span className="font-body text-sm font-semibold text-foreground">${total.toLocaleString()}</span>
+              <X className="w-4 h-4" strokeWidth={1.8} />
+            </button>
+          </div>
+          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
+            {cart.map((item) => (
+              <div key={item.cartKey} className="flex items-center gap-3 py-2.5 border-b border-foreground/[0.06]">
+                <div className="p-1.5 rounded-lg bg-foreground/[0.06] shrink-0">
+                  {item.type === 'im'
+                    ? <Syringe className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />
+                    : <Droplets className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />}
                 </div>
-              </div>
-              <div className="space-y-1 text-center">
-                <p className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Ref: {refNumber}</p>
-                <p className="font-body text-[10px] text-foreground/40">Today · 90-min arrival window</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => { onConfirm?.(); onClose(); }}
-                className="w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/85 transition-colors"
-              >
-                Done
-              </button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="cart"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: EASE }}
-              className="flex flex-col overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-foreground/[0.08]">
-                <div>
-                  <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-0.5">Your Visit</p>
-                  <p className="font-heading text-2xl text-foreground tracking-wide">
-                    {cart.length} Item{cart.length !== 1 ? 's' : ''}
+                <div className="flex-1 min-w-0">
+                  <p className="font-body text-xs text-foreground truncate">{item.label}</p>
+                  <p className="font-body text-[10px] text-foreground/40">
+                    {item.type === 'im' ? '/ shot' : '/ session'}
                   </p>
                 </div>
+                <span className="font-body text-sm font-medium text-foreground shrink-0">${item.price.toLocaleString()}</span>
                 <button
                   type="button"
-                  onClick={onClose}
-                  aria-label="Close"
-                  className="p-2 rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors"
+                  onClick={() => onRemove(item.cartKey)}
+                  className="p-1 text-foreground/30 hover:text-foreground transition-colors"
                 >
-                  <X className="w-4 h-4" strokeWidth={1.8} />
+                  <X className="w-3.5 h-3.5" strokeWidth={2} />
                 </button>
               </div>
-              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
-                {cart.map((item) => (
-                  <div key={item.cartKey} className="flex items-center gap-3 py-2.5 border-b border-foreground/[0.06]">
-                    <div className="p-1.5 rounded-lg bg-foreground/[0.06] shrink-0">
-                      {item.type === 'im'
-                        ? <Syringe className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />
-                        : <Droplets className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-body text-xs text-foreground truncate">{item.label}</p>
-                      <p className="font-body text-[10px] text-foreground/40">
-                        {item.type === 'im' ? '/ shot' : '/ session'}
-                      </p>
-                    </div>
-                    <span className="font-body text-sm font-medium text-foreground shrink-0">${item.price.toLocaleString()}</span>
-                    <button
-                      type="button"
-                      onClick={() => onRemove(item.cartKey)}
-                      className="p-1 text-foreground/30 hover:text-foreground transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" strokeWidth={2} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="px-6 pt-4 pb-6 border-t border-foreground/[0.08] space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="font-body text-sm text-foreground/50">Visit Total</p>
-                  <p className="font-heading text-2xl text-foreground tracking-tight">${total.toLocaleString()}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setConfirmed(true)}
-                  className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/85 transition-colors"
-                >
-                  Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
-                </button>
-                <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">
-                  No charge until your RN confirms availability.
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            ))}
+          </div>
+          <div className="px-6 pt-4 pb-6 border-t border-foreground/[0.08] space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="font-body text-sm text-foreground/50">Visit Total</p>
+              <p className="font-heading text-2xl text-foreground tracking-tight">${total.toLocaleString()}</p>
+            </div>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/85 transition-colors"
+            >
+              Continue to Checkout <ArrowRight className="w-4 h-4" strokeWidth={2} />
+            </button>
+            <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">
+              No charge until your RN confirms availability.
+            </p>
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );
@@ -219,7 +169,8 @@ export default function Store() {
     path: '/store',
   });
 
-  const { items: cart, addItem, removeItem, clearItems: clearCart } = useCart();
+  const { items: cart, addItem, removeItem } = useCart();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   /* ── Accordion state ── */
@@ -269,12 +220,6 @@ export default function Store() {
   })();
 
   /* ── Helpers ── */
-  const closeAll = () => {
-    setGoalOpen(false);
-    setTherapyOpen(false);
-    setEnhOpen(false);
-  };
-
   const toggleIV = (label) =>
     setIvSelected((prev) => { const n = new Set(prev); n.has(label) ? n.delete(label) : n.add(label); return n; });
 
@@ -282,6 +227,11 @@ export default function Store() {
     setImSelected((prev) => { const n = new Set(prev); n.has(label) ? n.delete(label) : n.add(label); return n; });
 
   const handleBook = () => {
+    if (purchaseType === 'subscribe') {
+      navigate('/subscription');
+      return;
+    }
+
     if (!cart.some((i) => i.cartKey === session.key))
       addItem({ cartKey: session.key, label: session.label, price: session.price, type: 'iv' });
     selIV.forEach((a) => {
@@ -308,10 +258,26 @@ export default function Store() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-5 pt-28 pb-36 space-y-3">
+      <div className="max-w-lg mx-auto px-5 pt-24 pb-36 space-y-3">
+
+        {/* ── Store header ─────────────────────────────────────── */}
+        <motion.header
+          initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="pt-2 pb-2"
+        >
+          <p className="font-body text-[10px] tracking-[0.32em] uppercase text-accent mb-3">Store</p>
+          <h1 className="font-heading text-[3.6rem] leading-[0.82] tracking-tight uppercase text-foreground">
+            Build<br />Your Visit
+          </h1>
+          <p className="font-body text-sm leading-relaxed text-foreground/60 mt-4 max-w-sm">
+            Choose a protocol, add boosters, and continue to secure checkout when the visit is ready.
+          </p>
+        </motion.header>
 
         {/* ── Trust bar (rule of 3) ─────────────────────────────── */}
-        <div className="flex items-center justify-center py-3">
+        <div className="flex items-center justify-center py-2">
           <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/45">RN</span>
           <div className="w-px h-3 bg-foreground/20 mx-4" />
           <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/45">Clinical</span>
@@ -569,8 +535,8 @@ export default function Store() {
             transition={{ duration: 0.2, ease: EASE }}
             className="font-body text-[10px] text-center text-accent/70 tracking-[0.05em]"
           >
-            Save 15–25% with a membership.{' '}
-            <Link to="/membership" className="underline underline-offset-2 hover:text-accent transition-colors">
+            Save 15–25% with a subscription.{' '}
+            <Link to="/subscription" className="underline underline-offset-2 hover:text-accent transition-colors">
               View plans →
             </Link>
           </motion.p>
@@ -603,13 +569,13 @@ export default function Store() {
           whileTap={{ scale: 0.98 }}
           className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-foreground text-background font-body text-sm tracking-[0.22em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
         >
-          Book Now <ArrowRight className="w-4 h-4" strokeWidth={2} />
+          {purchaseType === 'subscribe' ? 'View Plans' : 'Add to Visit'} <ArrowRight className="w-4 h-4" strokeWidth={2} />
         </motion.button>
 
-        {/* ── Members note ─────────────────────────────────────── */}
+        {/* ── Subscribers note ─────────────────────────────────── */}
         <p className="font-body text-[10px] text-center text-foreground/30 tracking-[0.05em]">
-          Members save 15–25% on every visit.{' '}
-          <Link to="/membership" className="text-foreground/50 hover:text-foreground/70 transition-colors underline underline-offset-2">
+          Subscribers save 15–25% on every visit.{' '}
+          <Link to="/subscription" className="text-foreground/50 hover:text-foreground/70 transition-colors underline underline-offset-2">
             Join →
           </Link>
         </p>
@@ -726,7 +692,7 @@ export default function Store() {
             cart={cart}
             onRemove={removeItem}
             onClose={() => setCheckoutOpen(false)}
-            onConfirm={clearCart}
+            onConfirm={() => navigate('/checkout')}
           />
         )}
       </AnimatePresence>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Loader2 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -50,7 +49,7 @@ export default function WaitlistSection() {
   return (
     <section
       id="waitlist"
-      className="scroll-mt-20 md:scroll-mt-28 pt-6 pb-10 md:pt-8 md:pb-12 px-4"
+      className="scroll-mt-20 md:scroll-mt-28 pt-10 pb-14 md:pt-16 md:pb-20 px-4"
     >
       <div className="max-w-6xl mx-auto text-left">
         <p className="font-body text-[11px] tracking-[0.3em] text-accent uppercase mb-4 whitespace-nowrap">

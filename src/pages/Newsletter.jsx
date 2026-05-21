@@ -10,7 +10,7 @@ const EASE = [0.16, 1, 0.3, 1];
 export default function Newsletter() {
   useSeo({
     title: 'Stay in the Loop — Avalon Vitality',
-    description: 'Sign up for Avalon Vitality news — new therapies, launch updates, member exclusives, and more.',
+    description: 'Sign up for Avalon Vitality news — new therapies, launch updates, subscriber exclusives, and more.',
     path: '/newsletter',
   });
 
@@ -56,7 +56,7 @@ export default function Newsletter() {
                 Stay in<br />the loop.
               </h1>
               <p className="font-body text-sm text-foreground/60 leading-relaxed mb-10">
-                New therapies, launch updates, and member exclusives — delivered straight to your inbox. No spam. Unsubscribe any time.
+                New therapies, launch updates, and subscriber exclusives — delivered straight to your inbox. No spam. Unsubscribe any time.
               </p>
 
               <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">

@@ -13,7 +13,7 @@
 
 import {
   Droplets, Zap, ShieldCheck, Sparkles, Heart, Plane, FlaskConical, Moon,
-  Flame, BatteryCharging, Shield, LayoutGrid,
+  Flame, BatteryCharging, Shield, LayoutGrid, Leaf,
 } from 'lucide-react';
 
 // ── IV Therapy ──────────────────────────────────────────────────────────────
@@ -76,45 +76,56 @@ const IV_SESSIONS = [
     inside: 'Saline · Anti-nausea support · B-Complex · Glutathione · Zofran (if indicated) · Electrolytes',
   },
   {
-    key: 'nad_session', label: 'NAD+', price: 350, icon: BatteryCharging,
-    tagline: 'Cellular energy and metabolic support.',
+    key: 'nad', label: 'NAD+', icon: BatteryCharging,
+    tagline: 'Cellular energy restoration, metabolic support, and repair.',
     tag: 'Advanced', category: 'energy',
-    duration: '2–4 hrs',
-    inside: 'NAD+ 250mg · Saline · B-Complex',
+    inside: 'NAD+ · Saline · B-Complex',
+    doses: [
+      { key: 'nad_250',  label: '250mg',  price: 350, duration: '2–3 hr' },
+      { key: 'nad_500',  label: '500mg',  price: 500, duration: '3–4 hr' },
+      { key: 'nad_1000', label: '1000mg', price: 750, duration: '4–6 hr' },
+    ],
   },
   {
-    key: 'exosomes_30', label: 'Exosomes 30B', price: 700, icon: Sparkles,
-    tagline: 'Regenerative cellular support.',
-    tag: 'Elite', category: 'recovery',
-    duration: '45–60 min',
-    inside: 'Exosomes 30 Billion Units · Saline',
-    elite: true,
+    key: 'cbd', label: 'CBD IV', icon: Leaf,
+    tagline: 'Zero-THC cannabidiol delivered directly to your bloodstream.',
+    tag: 'Specialty', category: 'recovery',
+    inside: 'CBD (Zero THC) · Saline',
+    doses: [
+      { key: 'cbd_low',  label: '33mg',  price: 350, duration: '45–60 min' },
+      { key: 'cbd_high', label: '66mg',  price: 450, duration: '45–60 min' },
+    ],
   },
   {
-    key: 'exosomes_50', label: 'Exosomes 50B', price: 1200, icon: Sparkles,
-    tagline: 'Advanced regenerative protocol.',
+    key: 'exosomes', label: 'Exosomes', icon: Sparkles,
+    tagline: 'Regenerative cellular signaling support.',
     tag: 'Elite', category: 'recovery',
-    duration: '60–75 min',
-    inside: 'Exosomes 50 Billion Units · Saline',
+    inside: 'Exosomes · Saline',
     elite: true,
-  },
-  {
-    key: 'exosomes_90', label: 'Exosomes 90B', price: 1800, icon: Sparkles,
-    tagline: 'The highest-dose regenerative experience.',
-    tag: 'Elite', category: 'recovery',
-    duration: '60–90 min',
-    inside: 'Exosomes 90 Billion Units · Saline',
-    elite: true,
+    doses: [
+      { key: 'exosomes_30', label: '30B Units', price: 700,  duration: '45–60 min' },
+      { key: 'exosomes_50', label: '50B Units', price: 1200, duration: '60–75 min' },
+      { key: 'exosomes_90', label: '90B Units', price: 1800, duration: '60–90 min' },
+    ],
   },
 ];
 
 const IV_ADDONS = [
   { label: 'Extra Fluid',         price: 25,  desc: 'Additional 500ml saline'             },
   { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals & amino boost'   },
-  { label: 'High Dose Vitamin C', price: 45,  desc: '5,000mg IV push'                     },
-  { label: 'CBD (33mg)',          price: 250, desc: 'Zero THC · full bioavailability'     },
-  { label: 'NAD+ (250mg)',        price: 350, desc: 'Cellular energy + repair'            },
-  { label: 'Glutathione Push',    price: 60,  desc: 'Antioxidant master push · 600mg'     },
+  { label: 'Vitamin C IV Push · 5g',  price: 45,  desc: 'Entry high-dose antioxidant support' },
+  { label: 'Vitamin C IV Push · 10g', price: 85,  desc: 'Higher-dose immune + recovery support' },
+  { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support' },
+  // CBD — dose tiers (select one)
+  { label: 'CBD (Low Dose)',      price: 350, desc: 'Zero THC · full bioavailability · 33mg',  group: 'cbd' },
+  { label: 'CBD (High Dose)',     price: 450, desc: 'Zero THC · elevated dose · 66mg',          group: 'cbd' },
+  // NAD+ — dose tiers (select one)
+  { label: 'NAD+ (250mg)',        price: 350, desc: 'Cellular energy + repair · 2–3 hr infusion',  group: 'nad' },
+  { label: 'NAD+ (500mg)',        price: 500, desc: 'Enhanced cellular repair · 3–4 hr infusion',  group: 'nad' },
+  { label: 'NAD+ (1000mg)',       price: 750, desc: 'Maximum protocol · 4–6 hr infusion',           group: 'nad' },
+  { label: 'Glutathione Push · 600mg',  price: 60,  desc: 'Antioxidant master push'        },
+  { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support' },
+  { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push'       },
   { label: 'Magnesium Boost',     price: 30,  desc: 'Muscle + nerve support'              },
 ];
 
@@ -122,8 +133,10 @@ const IM_SHOTS = [
   { label: 'B12',         price: 40,  max: 5, icon: Zap,             desc: 'Energy + metabolism support'      },
   { label: 'MIC',         price: 50,          icon: Flame,           desc: 'Fat metabolism + liver function'  },
   { label: 'NAD+',        price: 80,          icon: BatteryCharging, desc: 'Quick cellular energy boost'      },
-  { label: 'Glutathione', price: 50,  max: 5, icon: Sparkles,        desc: 'Antioxidant + skin clarity'       },
-  { label: 'Vitamin C',   price: 30,          icon: Shield,          desc: 'Immune + antioxidant support'     },
+  { label: 'Glutathione IM · 200mg', price: 50, max: 5, icon: Sparkles, desc: 'Antioxidant + skin clarity'    },
+  { label: 'Glutathione IM · 400mg', price: 80, max: 5, icon: Sparkles, desc: 'Higher-dose antioxidant support' },
+  { label: 'Vitamin C IM · 500mg',   price: 30,         icon: Shield,   desc: 'Immune + antioxidant support'  },
+  { label: 'Vitamin C IM · 1000mg',  price: 45,         icon: Shield,   desc: 'Higher-dose immune support'    },
   { label: 'Vitamin D',   price: 35,          icon: Zap,             desc: 'Bone, immune & mood support'      },
   { label: 'Biotin',      price: 35,          icon: Sparkles,        desc: 'Hair, skin & nail support'        },
 ];

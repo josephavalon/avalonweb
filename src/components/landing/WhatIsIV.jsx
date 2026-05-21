@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlaskConical, Clock, ShieldCheck, Stethoscope, SlidersHorizontal, UserCheck, TrendingUp, Minus, ChevronDown } from 'lucide-react';
-
-const EASE = [0.16, 1, 0.3, 1];
+import { EASE, premiumCard, premiumHover, premiumTap } from '@/lib/motion';
 
 const MODALITIES = [
   {
@@ -60,7 +59,7 @@ const MODALITIES = [
   {
     key: 'faq',
     label: 'FAQ',
-    sub: 'Booking · safety · membership · insurance',
+    sub: 'Booking · safety · subscription · insurance',
     stats: [],
     faq: [
       {
@@ -80,8 +79,8 @@ const MODALITIES = [
         body: 'No. Avalon is private-pay. We don\'t bill insurance.',
       },
       {
-        title: 'What\'s the membership commitment?',
-        body: '3-month minimum. Credits roll over month-to-month while your membership stays active. Cancel any time after the 3-month window.',
+        title: 'What\'s the subscription commitment?',
+        body: '3-month minimum. Credits roll over month-to-month while your subscription stays active. Cancel any time after the 3-month window.',
       },
     ],
   },
@@ -91,10 +90,11 @@ function FaqItem({ item }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border border-foreground/10 bg-white/[0.08] rounded-xl overflow-hidden">
-      <button
+      <motion.button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors"
+        whileTap={premiumTap}
+        className="w-full flex items-center justify-between px-4 py-3 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors duration-base ease-editorial"
         aria-expanded={open}
       >
         <span className="font-body text-xs font-semibold text-foreground/80 text-left">{item.title}</span>
@@ -103,7 +103,7 @@ function FaqItem({ item }) {
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
           strokeWidth={2}
         />
-      </button>
+      </motion.button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -124,32 +124,36 @@ function FaqItem({ item }) {
   );
 }
 
-function ModalityRow({ mod, index }) {
-  const [open, setOpen] = useState(false);
+function ModalityRow({ mod, index, open, onToggle }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.85, delay: index * 0.08, ease: EASE }}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl overflow-hidden"
+      {...premiumCard(index * 0.1)}
+      whileHover={premiumHover}
+      className={`rounded-2xl border backdrop-blur-xl overflow-hidden shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-all duration-base ease-editorial ${
+        open
+          ? 'border-accent/35 bg-white/[0.12]'
+          : 'border-foreground/10 bg-white/[0.08] hover:border-foreground/20 hover:bg-white/[0.105]'
+      }`}
     >
-      <button
+      <motion.button
         type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors"
+        onClick={onToggle}
+        whileTap={premiumTap}
+        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors duration-base ease-editorial"
         aria-expanded={open}
       >
         <div className="text-left">
           <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">{mod.label}</p>
           <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{mod.sub}</p>
         </div>
-        <ChevronDown
-          className="w-4 h-4 text-foreground/30 shrink-0 transition-transform duration-300"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-          strokeWidth={2}
-        />
-      </button>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.38, ease: EASE }}
+          className="text-foreground/30 shrink-0"
+        >
+          <ChevronDown className="w-4 h-4" strokeWidth={2} />
+        </motion.div>
+      </motion.button>
 
       <AnimatePresence initial={false}>
         {open && (
@@ -192,8 +196,10 @@ function ModalityRow({ mod, index }) {
 }
 
 export default function WhatIsIV() {
+  const [openModality, setOpenModality] = useState(null);
+
   return (
-    <section className="py-6 md:py-10 px-4">
+    <section className="py-10 md:py-16 px-4">
       <div className="max-w-6xl mx-auto">
 
         <motion.div
@@ -203,13 +209,22 @@ export default function WhatIsIV() {
           transition={{ duration: 0.95, ease: EASE }}
           className="mb-6 md:mb-10"
         >
-          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">The Science</p>
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">How It Works</h2>
+          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">FAQ</p>
+          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Questions</h2>
+          <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
+            Quick answers on IV therapy, IM shots, booking, safety, and subscription care.
+          </p>
         </motion.div>
 
         <div className="space-y-2">
           {MODALITIES.map((mod, i) => (
-            <ModalityRow key={mod.key} mod={mod} index={i} />
+            <ModalityRow
+              key={mod.key}
+              mod={mod}
+              index={i}
+              open={openModality === mod.key}
+              onToggle={() => setOpenModality(current => current === mod.key ? null : mod.key)}
+            />
           ))}
         </div>
 

@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Droplets, Syringe, ArrowRight, ArrowLeft,
-  Check, X, MapPin, Calendar, User, CreditCard,
-  Sparkles, Circle, CircleDot, Clock, Loader2,
+  Check, X, MapPin, User, CreditCard,
+  Sparkles, Loader2, RefreshCw, Calendar,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import { COVERED_ZIPS } from '@/lib/serviceArea';
+import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -103,16 +104,16 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
         </div>
       )}
 
-      {/* Membership */}
+      {/* Subscription */}
       {membership && (
         <div className="space-y-2 mt-4">
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Membership</p>
+          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Subscription</p>
           <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-accent/20 bg-accent/[0.05]">
             <div className="p-2 rounded-xl bg-accent/10 shrink-0">
               <Sparkles className="w-4 h-4 text-accent" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-body text-xs tracking-widest uppercase text-foreground">{membership.name} Membership</p>
+              <p className="font-body text-xs tracking-widest uppercase text-foreground">{membership.name} Subscription</p>
               <p className="font-body text-[10px] text-foreground/40 capitalize">{membership.billing} billing · {membership.ivCount} IV{membership.ivCount > 1 ? 's' : ''}/mo</p>
             </div>
             <div className="text-right">
@@ -155,7 +156,23 @@ function todayString() {
 
 function AppointmentStep({ onNext, onBack, defaultValues }) {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
-    defaultValues: defaultValues || { date: '', address: '', notes: '' },
+    defaultValues: defaultValues || {
+      date: '',
+      address: '',
+      notes: '',
+      dob: '',
+      guests: '1',
+      covidPositive: 'No',
+      infectiousDisease: 'No',
+      ivBefore: 'Yes',
+      medicalConditions: 'None of the above',
+      allergies: '',
+      medications: '',
+      emergencyContact: '',
+      privacyAck: false,
+      treatmentConsent: false,
+      generalConsent: false,
+    },
   });
 
   const selectedDate = watch('date');
@@ -164,6 +181,7 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(defaultValues?.acuitySlot || null);
+  const [nextAvailLoading, setNextAvailLoading] = useState(false);
 
   const fetchSlots = useCallback(async (date) => {
     if (!date) return;
@@ -171,11 +189,8 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
     setSlotsError(null);
     setSelectedSlot(null);
     try {
-      const params = new URLSearchParams({
-        date,
-        appointmentTypeID: ACUITY_TYPE_ID || '0',
-        timezone: TZ,
-      });
+      const params = new URLSearchParams({ date, timezone: TZ });
+      if (ACUITY_TYPE_ID) params.set('appointmentTypeID', ACUITY_TYPE_ID);
       const res = await fetch(`/api/acuity-availability?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load availability');
@@ -186,6 +201,31 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
     } finally {
       setSlotsLoading(false);
     }
+  }, []);
+
+  // Find the next date (up to 14 days out) with at least one slot
+  const findNextAvailable = useCallback(async (fromDate) => {
+    setNextAvailLoading(true);
+    try {
+      const base = fromDate ? new Date(fromDate + 'T12:00:00') : new Date();
+      for (let i = 1; i <= 14; i++) {
+        const d = new Date(base);
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toLocaleDateString('en-CA', { timeZone: TZ });
+        const params = new URLSearchParams({ date: dateStr, timezone: TZ });
+        if (ACUITY_TYPE_ID) params.set('appointmentTypeID', ACUITY_TYPE_ID);
+        const res = await fetch(`/api/acuity-availability?${params}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data?.length > 0) {
+          // Programmatically update the date field via react-hook-form setValue
+          setSlots(data);
+          return dateStr;
+        }
+      }
+    } catch {}
+    setNextAvailLoading(false);
+    return null;
   }, []);
 
   useEffect(() => {
@@ -210,10 +250,30 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
         <label className={labelClass}>Service Address *</label>
         <input
           {...register('address', { required: 'Address required' })}
-          placeholder="Home, office, hotel — wherever you are"
+          placeholder="123 Main St, San Francisco, CA"
           className={fieldClass}
         />
         {errors.address && <p className={errClass}>{errors.address.message}</p>}
+      </div>
+
+      {/* ZIP code — service area enforcement */}
+      <div>
+        <label className={labelClass}>ZIP Code *</label>
+        <input
+          {...register('zip', {
+            required: 'ZIP code required',
+            pattern: { value: /^\d{5}$/, message: 'Enter a valid 5-digit ZIP' },
+            validate: (v) =>
+              COVERED_ZIPS.has(v.trim())
+                ? true
+                : 'Sorry — that ZIP is outside our current service area. View our coverage at avalonvitality.co/service-area.',
+          })}
+          inputMode="numeric"
+          maxLength={5}
+          placeholder="94103"
+          className={fieldClass}
+        />
+        {errors.zip && <p className={errClass}>{errors.zip.message}</p>}
       </div>
 
       {/* Date picker */}
@@ -241,20 +301,55 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
             <label className={labelClass}>Available Times</label>
 
             {slotsLoading && (
-              <div className="flex items-center gap-2 py-4 text-foreground/40">
-                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} />
-                <span className="font-body text-xs tracking-widest uppercase">Loading availability…</span>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-10 rounded-xl border border-white/10 bg-white/[0.04] animate-pulse"
+                    style={{ animationDelay: `${i * 60}ms` }}
+                  />
+                ))}
               </div>
             )}
 
             {slotsError && (
-              <div className="rounded-2xl border border-red-500/25 bg-red-500/8 px-4 py-3">
+              <div className="rounded-2xl border border-red-500/25 bg-red-500/[0.08] px-4 py-3 flex items-center justify-between gap-3">
                 <p className="font-body text-xs text-red-400">{slotsError}</p>
+                <button
+                  type="button"
+                  onClick={() => fetchSlots(selectedDate)}
+                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground/50 hover:text-foreground transition-colors shrink-0"
+                >
+                  <RefreshCw className="w-3 h-3" strokeWidth={2} /> Retry
+                </button>
               </div>
             )}
 
             {!slotsLoading && !slotsError && slots.length === 0 && selectedDate && (
-              <p className="font-body text-xs text-foreground/40 py-3">No availability on this date. Try another day.</p>
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-4 h-4 text-foreground/35 shrink-0" strokeWidth={1.5} />
+                  <p className="font-body text-xs text-foreground/50">No availability on this date.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = await findNextAvailable(selectedDate);
+                    if (next) {
+                      const el = document.querySelector('input[type="date"]');
+                      if (el) { el.value = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
+                    }
+                    setNextAvailLoading(false);
+                  }}
+                  disabled={nextAvailLoading}
+                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-accent hover:text-accent/70 transition-colors shrink-0 disabled:opacity-50"
+                >
+                  {nextAvailLoading
+                    ? <><Loader2 className="w-3 h-3 animate-spin" strokeWidth={2} /> Searching…</>
+                    : <><RefreshCw className="w-3 h-3" strokeWidth={2} /> Next Available</>
+                  }
+                </button>
+              </div>
             )}
 
             {!slotsLoading && slots.length > 0 && (
@@ -267,7 +362,7 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
                       key={slot.time}
                       type="button"
                       onClick={() => setSelectedSlot({
-                        appointmentTypeID: ACUITY_TYPE_ID,
+                        appointmentTypeID: ACUITY_TYPE_ID || '',
                         datetime: slot.time,
                         date: selectedDate,
                         timeLabel: label,
@@ -289,6 +384,58 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
         )}
       </AnimatePresence>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Date of Birth *</label>
+          <input
+            type="date"
+            {...register('dob', { required: 'Date of birth required' })}
+            className={fieldClass}
+          />
+          {errors.dob && <p className={errClass}>{errors.dob.message}</p>}
+        </div>
+        <div>
+          <label className={labelClass}>Guests *</label>
+          <select {...register('guests', { required: true })} className={fieldClass}>
+            {['1', '2', '3', '4', '5+'].map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <label className={labelClass}>Medical Conditions *</label>
+          <select {...register('medicalConditions', { required: true })} className={fieldClass}>
+            {[
+              'None of the above',
+              'Allergies',
+              'Active Viral or Bacterial infection',
+              'Diabetes (Type I or II)',
+              'Heart Disease',
+              'Kidney Problems',
+              'Liver Problems',
+              'Pregnancy/Breastfeeding',
+              'Other symptoms or medical conditions not listed above',
+            ].map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            ['covidPositive', 'Covid last 14 days?'],
+            ['infectiousDisease', 'Infectious disease?'],
+            ['ivBefore', 'IV before?'],
+          ].map(([name, label]) => (
+            <div key={name}>
+              <label className={labelClass}>{label}</label>
+              <select {...register(name, { required: true })} className={fieldClass}>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Notes */}
       <div>
         <label className={labelClass}>Notes for your RN</label>
@@ -298,6 +445,71 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
           placeholder="Allergies, access notes, health conditions, preferences…"
           className={`${fieldClass} resize-none`}
         />
+      </div>
+
+      <div>
+        <label className={labelClass}>Allergies or Sensitivities</label>
+        <textarea
+          {...register('allergies')}
+          rows={2}
+          placeholder="None, or list details"
+          className={`${fieldClass} resize-none`}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Medications / Supplements</label>
+        <textarea
+          {...register('medications')}
+          rows={2}
+          placeholder="None, or list details"
+          className={`${fieldClass} resize-none`}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Emergency Contact *</label>
+        <input
+          {...register('emergencyContact', { required: 'Emergency contact required' })}
+          placeholder="Name + phone"
+          className={fieldClass}
+        />
+        {errors.emergencyContact && <p className={errClass}>{errors.emergencyContact.message}</p>}
+      </div>
+
+      <div className="space-y-0 rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/35 px-4 pt-4 pb-3">
+          Acknowledgments — all required to continue
+        </p>
+        {[
+          {
+            name: 'privacyAck',
+            text: 'I consent to Avalon Vitality collecting and using my health information to coordinate and deliver my requested wellness services, in accordance with applicable privacy laws and the Avalon Privacy Policy.',
+          },
+          {
+            name: 'treatmentConsent',
+            text: 'I understand that IV therapy and intramuscular injections are wellness support services, not medical treatments. Individual responses vary. Potential side effects include bruising, discomfort at the infusion site, or adverse reactions. I have disclosed all known health conditions and medications above.',
+          },
+          {
+            name: 'generalConsent',
+            text: "I have read, understand, and agree to Avalon Vitality's Terms of Service and Consent & Waiver. I confirm I am at least 18 years of age, and that the information I have provided is accurate to the best of my knowledge.",
+          },
+        ].map(({ name, text }, i) => (
+          <label
+            key={name}
+            className={`flex gap-3 px-4 py-3.5 font-body text-xs leading-relaxed text-foreground/65 cursor-pointer hover:bg-white/[0.02] transition-colors ${i > 0 ? 'border-t border-white/[0.06]' : ''}`}
+          >
+            <input
+              type="checkbox"
+              {...register(name, { required: 'Required' })}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+            />
+            <span>{text}</span>
+          </label>
+        ))}
+        {(errors.privacyAck || errors.treatmentConsent || errors.generalConsent) && (
+          <p className={`${errClass} px-4 pb-3`}>All three acknowledgments are required before continuing.</p>
+        )}
       </div>
 
       <div className="flex gap-3 pt-2">
@@ -397,7 +609,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     setLoading(true);
     setError(null);
     try {
-      // Determine mode — if there's a membership, that goes first
+      // Determine mode — if there's a subscription, that goes first
       // (one-time items can be a separate session or combined)
       const mode = hasMembership ? 'subscription' : 'payment';
 
@@ -454,7 +666,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         ))}
         {membership && (
           <div className="flex justify-between items-center">
-            <span className="font-body text-xs text-foreground tracking-wide">{membership.name} Membership ({membership.billing})</span>
+            <span className="font-body text-xs text-foreground tracking-wide">{membership.name} Subscription ({membership.billing})</span>
             <span className="font-body text-xs text-foreground">${membership.price.toLocaleString()}/{membership.billing === 'annual' ? 'yr' : 'mo'}</span>
           </div>
         )}
@@ -513,14 +725,14 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             </span>
           ) : (
             <>
-              Pay with Stripe <CreditCard className="w-4 h-4" strokeWidth={2} />
+              Confirm Booking <CreditCard className="w-4 h-4" strokeWidth={2} />
             </>
           )}
         </button>
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/25 tracking-wide">
-        Secured by Stripe · 256-bit SSL encryption · Apple Pay & Google Pay accepted
+        Acuity scheduling · Secure checkout handoff when payments are enabled
       </p>
     </div>
   );
@@ -528,11 +740,15 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 
 /* ─── Main Checkout Page ─────────────────────────────────────── */
 export default function Checkout() {
+  useSeo({
+    title: 'Secure Checkout — Avalon Vitality',
+    description: 'Complete your mobile IV therapy booking. Review your order, set your appointment time, and confirm with a $50 deposit.',
+    path: '/checkout',
+  });
   const { items, membership, removeItem, clearMembership } = useCart();
   const [step, setStep] = useState(0);
   const [appointment, setAppointment] = useState(null);
   const [contact, setContact] = useState(null);
-  const navigate = useNavigate();
 
   const variants = {
     enter: (dir) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
@@ -546,7 +762,7 @@ export default function Checkout() {
     setStep(next);
   };
 
-  // Skip appointment step if only membership
+  // Skip appointment step if only subscription
   const hasOnlyMembership = membership && items.length === 0;
 
   return (

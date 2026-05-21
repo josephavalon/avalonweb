@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Minus, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -10,13 +10,13 @@ const TOP_FAQS = [
   { q: 'How quickly can a nurse arrive?', a: 'Same-day in most Bay Area zip codes. Bookings made before noon typically delivered same afternoon.' },
   { q: 'Is Avalon safe for everyone?', a: 'Avalon is safe for most people, but not suitable for those with certain medical conditions. Disclose your full medical history at consultation.' },
   { q: 'Do you accept insurance?', a: 'No. Avalon is private-pay. We don\'t bill insurance, but we deliver outcomes traditional medicine can\'t.' },
-  { q: 'What\'s the membership commitment?', a: '3-month minimum. Credits roll over month-to-month while your membership stays active. Cancel any time after the 3-month window.' },
+  { q: 'What\'s the subscription commitment?', a: '3-month minimum. Credits roll over month-to-month while your subscription stays active. Cancel any time after the 3-month window.' },
 ];
 
 const VISIBLE = 3;
 
 export default function HomeFAQ() {
-  const [openIdx, setOpenIdx] = useState(0);
+  const [openIdx, setOpenIdx] = useState(null);
   const [expanded, setExpanded] = useState(false);
 
   const visible = expanded ? TOP_FAQS : TOP_FAQS.slice(0, VISIBLE);

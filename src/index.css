@@ -298,42 +298,39 @@ body {
   color: hsl(var(--foreground));
 }
 
-/* Dubs theme: gold logo + matching theme toggle button */
+/* Dubs theme stays inside the Avalon dark cream palette. */
 .dubs .av-logo,
 .dubs .theme-toggle-btn,
 .dubs .mobile-menu-btn {
-  color: hsl(var(--accent));
+  color: hsl(var(--foreground));
 }
 
 
-/* Dubs hero title: solid warriors gold */
+/* Dubs hero title: no sports-blue/gold treatment. */
 .dubs .hero-root h1 {
-  color: hsl(45 100% 58%);
-  -webkit-text-fill-color: hsl(45 100% 58%);
+  color: hsl(var(--foreground));
+  -webkit-text-fill-color: hsl(var(--foreground));
   background: none;
-  filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.4));
+  filter: none;
 }
 
-/* Dubs theme: gold APPLY NOW button */
 .dubs .apply-now-btn {
   background-color: hsl(var(--accent)) !important;
   color: hsl(var(--accent-foreground)) !important;
 }
 .dubs .apply-now-btn:hover {
-  background-color: hsl(45 100% 52%) !important;
+  background-color: hsl(38 56% 82%) !important;
 }
 
-/* Dubs: all headings warriors gold */
 .dubs h1,
 .dubs h2,
 .dubs h3,
 .dubs h4 {
-  color: hsl(var(--accent)) !important;
-  -webkit-text-fill-color: hsl(var(--accent));
+  color: hsl(var(--foreground)) !important;
+  -webkit-text-fill-color: hsl(var(--foreground));
 }
-/* Preserve existing hero drop-shadow treatment */
 .dubs .hero-root h1 {
-  filter: drop-shadow(0 4px 22px rgba(29, 66, 138, 0.4));
+  filter: none;
 }
 /* iPhone mockup color-inherit guard removed: no element uses the iphone-mockup class; gold overrides already scoped to h1-h4 */
 

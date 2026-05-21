@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Home, Droplets, Calendar, Crown, User } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -16,7 +16,7 @@ export default function MemberBottomNav() {
     { icon: Home,     label: 'Home',       href: '/',           center: false },
     { icon: Droplets, label: 'Therapies',  href: '/store',      center: false },
     { icon: Calendar, label: 'Book',       href: '/store',      center: true  },
-    { icon: Crown,    label: 'Membership', href: '/membership', center: false },
+    { icon: Crown,    label: 'Subscription', href: '/subscription', center: false },
     { icon: User,     label: 'Account',    href: '#',           center: false, onClick: () => toast({ title: 'Coming Soon', description: 'Account settings launching soon.' }) },
   ];
 

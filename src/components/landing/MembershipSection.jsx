@@ -2,8 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Circle, CircleDot, Sparkles, ArrowRight } from 'lucide-react';
+import { EASE, premiumCard, premiumHover, premiumTap } from '@/lib/motion';
 
-const EASE = [0.16, 1, 0.3, 1];
+const MotionLink = motion(Link);
 
 const TIERS = [
   {
@@ -18,7 +19,7 @@ const TIERS = [
       'Same-day priority booking',
       '3-month minimum commitment',
     ],
-    href: '/newsletter',
+    href: '/subscription',
   },
   {
     icon: CircleDot,
@@ -33,7 +34,7 @@ const TIERS = [
       '1 free add-on per visit',
       '90-minute guaranteed arrival window',
     ],
-    href: '/newsletter',
+    href: '/subscription',
   },
   {
     icon: Sparkles,
@@ -45,11 +46,11 @@ const TIERS = [
       '4 IV credits per month',
       '1 NAD+ 500mg or Exosomes 30B credit',
       '25% off add-ons & extras',
-      'Unlimited add-ons at member rate',
+      'Unlimited add-ons at subscriber rate',
       'Dedicated nurse — 90-min window',
       'Shareable with one designated partner',
     ],
-    href: '/newsletter',
+    href: '/subscription',
   },
 ];
 
@@ -57,11 +58,9 @@ function TierRow({ tier, index }) {
   const Icon = tier.icon;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.96, filter: 'blur(4px)' }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-30px' }}
-      transition={{ duration: 1.0, delay: index * 0.1, ease: EASE }}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl px-5 py-4 flex items-center justify-between"
+      {...premiumCard(index * 0.11)}
+      whileHover={premiumHover}
+      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl px-5 py-4 flex items-center justify-between shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-foreground/20 hover:bg-white/[0.105]"
     >
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
@@ -82,7 +81,7 @@ function TierRow({ tier, index }) {
 
 export default function MembershipSection() {
   return (
-    <section id="membership" className="pt-8 pb-6 md:pt-10 md:pb-8 px-4">
+    <section id="subscription" className="pt-10 pb-10 md:pt-16 md:pb-16 px-4">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
@@ -96,8 +95,11 @@ export default function MembershipSection() {
           <div>
             <p className="font-body text-[11px] tracking-[0.3em] text-accent uppercase mb-2">Vitality Tiers</p>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
-              Membership
+              Subscriptions
             </h2>
+            <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
+              Built for people who want recovery to be part of the calendar, not another errand.
+            </p>
           </div>
         </motion.div>
 
@@ -109,12 +111,15 @@ export default function MembershipSection() {
         </div>
 
         <div className="mt-6">
-          <Link
-            to="/newsletter"
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground font-body text-xs tracking-[0.2em] uppercase hover:bg-white/[0.06] transition-colors"
+          <MotionLink
+            to="/subscription"
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground font-body text-xs tracking-[0.2em] uppercase hover:bg-white/[0.08] hover:border-foreground/35 transition-all duration-base ease-editorial"
           >
-            VIEW MEMBERSHIPS
-          </Link>
+            VIEW SUBSCRIPTIONS
+            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </MotionLink>
         </div>
 
         <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">

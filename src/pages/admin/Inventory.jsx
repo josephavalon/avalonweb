@@ -1,1370 +1,3384 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
+import { useInventoryData } from '../../hooks/useInventoryData';
+import { useDropzone } from 'react-dropzone';
+import AdminLayout from '@/layouts/AdminLayout';
 import {
-  Package, RefreshCw, MoreHorizontal, LayoutDashboard,
-  AlertTriangle, AlertCircle, CheckCircle, Clock, X, Plus, Minus,
-  ChevronDown, ChevronRight, ArrowLeft, Search,
-  Shield, Zap, Droplets, FlaskConical, Syringe, Sparkles,
-  User, Calendar, Edit3, FolderOpen, Tag,
-  QrCode, FileText, BarChart3, Settings, Activity,
-  Box, Hash, Thermometer, LogOut, Bell, Archive,
-  BriefcaseMedical, Star, TrendingUp, MoveRight,
+  LayoutGrid, Package, Search, Tag, BarChart3,
+  Plug, Bell, HelpCircle, Settings, ChevronLeft, ChevronRight,
+  ChevronDown, ChevronUp, Plus, Upload, FolderPlus, Trash2, Edit,
+  MoreHorizontal, X, Check, ArrowLeft, Download, Printer,
+  AlertTriangle, AlertCircle, Clock, Star, Folder, FolderOpen,
+  FlaskConical, Syringe, Shield, Droplets, BriefcaseMedical,
+  List as ListIcon, ArrowUpDown, RefreshCw,
+  Calendar, User, FileText, TrendingUp, CheckCircle,
+  MoveRight, Barcode, Image as ImageIcon, Minus, Copy, Layers,
+  AlignLeft, Sparkles, Eye, Activity, Thermometer, Sliders,
+  Hash, MapPin, Archive, Zap, Type, ToggleLeft, CalendarDays,
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TODAY_STR = new Date().toISOString().slice(0, 10);
-const TODAY_LABEL = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', ' ·');
 
-// ─── Expiry logic ─────────────────────────────────────────────────────────────
-function daysUntil(dateStr) {
-  if (!dateStr) return null;
-  const diff = Math.ceil((new Date(dateStr) - new Date(TODAY_STR)) / 86400000);
-  return diff;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function daysUntil(d) {
+  if (!d) return null;
+  return Math.ceil((new Date(d) - new Date(TODAY_STR)) / 86400000);
 }
-function expiryStatus(dateStr) {
-  const d = daysUntil(dateStr);
-  if (d === null) return null;
-  if (d <= 0)  return 'Expired';
-  if (d <= 7)  return 'Critical';
-  if (d <= 14) return 'Urgent';
-  if (d <= 30) return 'Warning';
-  return 'OK';
+function expiryLabel(d) {
+  const n = daysUntil(d);
+  if (n === null) return null;
+  if (n <= 0) return { text: 'Expired', cls: 'text-red-400' };
+  if (n <= 7) return { text: `Exp ${n}d`, cls: 'text-red-400' };
+  if (n <= 30) return { text: `Exp ${n}d`, cls: 'text-amber-400' };
+  return null;
 }
-function stockStatus(qty, restockThreshold, parLevel) {
-  if (qty <= 0)              return 'Out of Stock';
-  if (qty <= restockThreshold) return 'Restock Needed';
-  if (qty <= parLevel * 0.5)   return 'Low Stock';
-  return 'Ready';
+function stockCls(qty, min) {
+  if (qty <= 0) return 'text-red-400';
+  if (qty <= min) return 'text-amber-400';
+  return 'text-emerald-400';
+}
+function fmt$(n) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
 }
 
-// ─── Status config ────────────────────────────────────────────────────────────
-const STATUS_CFG = {
-  'Ready':          { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Low Stock':      { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400'   },
-  'Restock Needed': { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400'  },
-  'Out of Stock':   { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400'     },
-  'Expiring Soon':  { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400'   },
-  'Expired':        { cls: 'bg-red-900/20 text-red-400/70 border-red-900/30',          dot: 'bg-red-700'     },
-  'Quarantine':     { cls: 'bg-red-900/20 text-red-400/70 border-red-900/30',          dot: 'bg-red-700'     },
-  'Assigned':       { cls: 'bg-teal-500/15 text-teal-300 border-teal-500/25',          dot: 'bg-teal-400'    },
-  'In Use':         { cls: 'bg-blue-500/15 text-blue-300 border-blue-500/25',          dot: 'bg-blue-400'    },
-  'Returned':       { cls: 'bg-foreground/8 text-foreground/45 border-foreground/10',  dot: 'bg-foreground/30'},
-  'Missing':        { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400'     },
-  // Kit statuses
-  'Kit Ready':      { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
-  'Needs Restock':  { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400'  },
-  'Missing Items':  { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400'     },
-  'Check Expiry':   { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400'   },
-  'Needs Count':    { cls: 'bg-foreground/8 text-foreground/45 border-foreground/10',  dot: 'bg-foreground/30'},
-  // Expiry statuses
-  'Critical':       { cls: 'bg-red-500/15 text-red-300 border-red-500/25',             dot: 'bg-red-400'     },
-  'Urgent':         { cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25',    dot: 'bg-orange-400'  },
-  'Warning':        { cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25',       dot: 'bg-amber-400'   },
-  'OK':             { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400' },
+// ─── Category icon + color map ────────────────────────────────────────────────
+const CAT_ICON = {
+  IV: Droplets, Medication: FlaskConical, IM: Syringe,
+  PPE: Shield, Emergency: AlertTriangle, Device: BriefcaseMedical,
+  Sharps: Archive,
 };
-function pill(s) {
-  return STATUS_CFG[s] || { cls: 'bg-foreground/8 text-foreground/50 border-foreground/10', dot: 'bg-foreground/30' };
+const CAT_COLOR = {
+  IV: '#60a5fa', Medication: '#a78bfa', IM: '#34d399',
+  PPE: '#fb923c', Emergency: '#f87171', Device: '#38bdf8',
+  Sharps: '#6b7280',
+};
+
+// Seed data has moved to src/data/inventorySeed.js — imported by useInventoryData hook.
+
+// ─── Status pill ──────────────────────────────────────────────────────────────
+function StatusPill({ qty, minLevel }) {
+  if (qty <= 0)        return <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400 border border-red-500/20">Out of Stock</span>;
+  if (qty <= minLevel) return <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400 border border-amber-500/20">Low Stock</span>;
+  return <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">In Stock</span>;
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const ITEMS_RAW = [
-  { id:'iv1',  name:'IV Bag — 1L Normal Saline', sku:'IV-NS-1L',    category:'IV',        qty:12, unit:'bags',    parLevel:20, restockThreshold:8,  location:'SF Hub › IV Supplies',  lotNumber:'LS240412', expirationDate:'2026-09-15', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Bound Tree Medical', cost:4.50,  notes:'Reorder from Bound Tree. Min order 24.',         qrCode:'AV-IV-NS-1L-001'  },
-  { id:'iv2',  name:'IV Start Kit',              sku:'IV-SK-STD',   category:'IV',        qty:6,  unit:'kits',    parLevel:12, restockThreshold:4,  location:'SF Hub › IV Supplies',  lotNumber:'SK240508', expirationDate:'2027-03-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Bound Tree Medical', cost:8.75,  notes:'Includes tourniquet, tegaderm, 20g catheter.',   qrCode:'AV-IV-SK-001'     },
-  { id:'iv3',  name:'IV Extension Set (10")',    sku:'IV-EXT-10',   category:'IV',        qty:18, unit:'sets',    parLevel:20, restockThreshold:8,  location:'SF Hub › IV Supplies',  lotNumber:'ES240301', expirationDate:'2027-06-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Bound Tree Medical', cost:2.25,  notes:'',                                               qrCode:'AV-IV-EXT-001'    },
-  { id:'rx1',  name:'NAD+ 250mg vial',           sku:'RX-NAD-250',  category:'Medication',qty:8,  unit:'vials',   parLevel:10, restockThreshold:3,  location:'SF Hub › Add-Ons',      lotNumber:'NAD240490', expirationDate:'2026-05-19', refrigeration:true,  controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:85.00, notes:'Refrigerate. Check expiry weekly.',               qrCode:'AV-NAD-250-001'   },
-  { id:'rx2',  name:'Glutathione 600mg vial',    sku:'RX-GLU-600',  category:'Medication',qty:14, unit:'vials',   parLevel:16, restockThreshold:6,  location:'SF Hub › Add-Ons',      lotNumber:'GL240380', expirationDate:'2026-08-10', refrigeration:true,  controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:22.00, notes:'Refrigerate.',                                    qrCode:'AV-GLU-600-001'   },
-  { id:'rx3',  name:'Vitamin C 50ml (50g/L)',    sku:'RX-VIC-50',   category:'Medication',qty:3,  unit:'vials',   parLevel:10, restockThreshold:4,  location:'SF Hub › Add-Ons',      lotNumber:'VC240210', expirationDate:'2026-06-05', refrigeration:true,  controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:18.50, notes:'Order this week.',                                qrCode:'AV-VIC-50-001'    },
-  { id:'rx4',  name:'B-Complex vial',            sku:'RX-BCP-10',   category:'Medication',qty:22, unit:'vials',   parLevel:20, restockThreshold:8,  location:'SF Hub › IV Supplies',  lotNumber:'BC240101', expirationDate:'2026-12-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:9.00,  notes:'',                                               qrCode:'AV-BCP-001'       },
-  { id:'rx5',  name:'Magnesium Sulfate vial',    sku:'RX-MAG-5',    category:'Medication',qty:16, unit:'vials',   parLevel:16, restockThreshold:6,  location:'SF Hub › IV Supplies',  lotNumber:'MG240210', expirationDate:'2026-11-15', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:7.50,  notes:'',                                               qrCode:'AV-MAG-001'       },
-  { id:'rx6',  name:'CBD 33mg vial',             sku:'RX-CBD-33',   category:'Medication',qty:6,  unit:'vials',   parLevel:8,  restockThreshold:3,  location:'SF Hub › Add-Ons',      lotNumber:'CBD240310', expirationDate:'2026-06-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:45.00, notes:'Exp. Jun 2026 — check before use.',               qrCode:'AV-CBD-001'       },
-  { id:'rx7',  name:'Ondansetron (Zofran) 4mg',  sku:'RX-ZOF-4',   category:'Medication',qty:20, unit:'vials',   parLevel:20, restockThreshold:8,  location:'SF Hub › IV Supplies',  lotNumber:'ZF240405', expirationDate:'2027-01-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:6.50,  notes:'',                                               qrCode:'AV-ZOF-001'       },
-  { id:'im1',  name:'B12 IM vial (1000mcg/ml)',  sku:'IM-B12-1',    category:'IM',        qty:18, unit:'vials',   parLevel:20, restockThreshold:8,  location:'SF Hub › IM Supplies',  lotNumber:'B12240501', expirationDate:'2027-02-15', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:5.50,  notes:'',                                               qrCode:'AV-B12-001'       },
-  { id:'im2',  name:'MIC Lipotropic IM vial',    sku:'IM-MIC-5',    category:'IM',        qty:12, unit:'vials',   parLevel:12, restockThreshold:4,  location:'SF Hub › IM Supplies',  lotNumber:'MC240402', expirationDate:'2026-09-20', refrigeration:true,  controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:14.00, notes:'Refrigerate.',                                    qrCode:'AV-MIC-001'       },
-  { id:'im3',  name:'Biotin IM vial (10mg/ml)',  sku:'IM-BIO-10',   category:'IM',        qty:10, unit:'vials',   parLevel:10, restockThreshold:4,  location:'SF Hub › IM Supplies',  lotNumber:'BI240312', expirationDate:'2026-10-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:10.00, notes:'',                                               qrCode:'AV-BIO-001'       },
-  { id:'im4',  name:'IM Syringe 3ml (23g)',      sku:'IM-SYR-3',    category:'IM',        qty:40, unit:'syringes',parLevel:40, restockThreshold:15, location:'SF Hub › IM Supplies',  lotNumber:'SY240501', expirationDate:'2028-01-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Bound Tree Medical', cost:0.85,  notes:'',                                               qrCode:'AV-SYR-IM-001'    },
-  { id:'pp1',  name:'Nitrile Gloves — Lg (box)', sku:'PPE-GLV-LG',  category:'PPE',       qty:4,  unit:'boxes',   parLevel:6,  restockThreshold:2,  location:'SF Hub › PPE',          lotNumber:'GL240410', expirationDate:null,         refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'McKesson',           cost:12.00, notes:'',                                               qrCode:'AV-GLV-LG-001'    },
-  { id:'pp2',  name:'N95 Mask',                  sku:'PPE-N95-STD', category:'PPE',       qty:24, unit:'masks',   parLevel:20, restockThreshold:8,  location:'SF Hub › PPE',          lotNumber:'N9240401', expirationDate:'2029-01-01', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'McKesson',           cost:2.50,  notes:'',                                               qrCode:'AV-N95-001'       },
-  { id:'sh1',  name:'Sharps Container 1qt',      sku:'DIS-SHC-1',   category:'Sharps',    qty:8,  unit:'units',   parLevel:8,  restockThreshold:3,  location:'SF Hub › Sharps',       lotNumber:'SC240301', expirationDate:null,         refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'McKesson',           cost:4.75,  notes:'Do not overfill. Return for disposal.',           qrCode:'AV-SHC-001'       },
-  { id:'em1',  name:'Epinephrine 1mg/ml (1ml)',  sku:'EM-EPI-1',    category:'Emergency', qty:4,  unit:'vials',   parLevel:4,  restockThreshold:2,  location:'SF Hub › Emergency',    lotNumber:'EP240505', expirationDate:'2026-05-18', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:32.00, notes:'Check expiry before each shift. Critical.',       qrCode:'AV-EPI-001'       },
-  { id:'em2',  name:'Diphenhydramine 50mg vial', sku:'EM-DPH-50',   category:'Emergency', qty:6,  unit:'vials',   parLevel:6,  restockThreshold:2,  location:'SF Hub › Emergency',    lotNumber:'DH240405', expirationDate:'2027-03-15', refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Olympia Pharmacy',   cost:8.50,  notes:'Anaphylaxis protocol.',                           qrCode:'AV-DPH-001'       },
-  { id:'dv1',  name:'Digital BP Cuff',           sku:'DEV-BP-DIG',  category:'Device',    qty:4,  unit:'units',   parLevel:4,  restockThreshold:2,  location:'SF Hub › Devices',      lotNumber:'BP240110', expirationDate:null,         refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Omron',              cost:65.00, notes:'Check battery before each shift.',                qrCode:'AV-BP-001'        },
-  { id:'dv2',  name:'Pulse Oximeter',            sku:'DEV-POX-STD', category:'Device',    qty:4,  unit:'units',   parLevel:4,  restockThreshold:2,  location:'SF Hub › Devices',      lotNumber:'PO240110', expirationDate:null,         refrigeration:false, controlled:false, assignedNurse:null,       assignedEvent:null,             supplier:'Masimo',             cost:42.00, notes:'',                                               qrCode:'AV-POX-001'       },
-];
-
-// Augment items with computed status
-const ITEMS = ITEMS_RAW.map(item => {
-  const sStatus = stockStatus(item.qty, item.restockThreshold, item.parLevel);
-  const eStatus = expiryStatus(item.expirationDate);
-  let status = sStatus;
-  if (status === 'Ready' && (eStatus === 'Critical' || eStatus === 'Urgent')) status = 'Expiring Soon';
-  return { ...item, stockStatus: sStatus, expiryStatus: eStatus, status };
-});
-
-// ─── Folders ─────────────────────────────────────────────────────────────────
-const FOLDERS = [
-  { id:'f-iv',    name:'IV Supplies',    icon: Droplets,      parentId:'f-hub',    itemCount:7,  lowStock:2, expiring:1 },
-  { id:'f-im',    name:'IM Supplies',    icon: Syringe,       parentId:'f-hub',    itemCount:4,  lowStock:0, expiring:0 },
-  { id:'f-add',   name:'Add-Ons',        icon: Sparkles,      parentId:'f-hub',    itemCount:4,  lowStock:1, expiring:2 },
-  { id:'f-ppe',   name:'PPE',            icon: Shield,        parentId:'f-hub',    itemCount:2,  lowStock:0, expiring:0 },
-  { id:'f-em',    name:'Emergency',      icon: AlertTriangle, parentId:'f-hub',    itemCount:2,  lowStock:0, expiring:1 },
-  { id:'f-sh',    name:'Sharps',         icon: Archive,       parentId:'f-hub',    itemCount:1,  lowStock:0, expiring:0 },
-  { id:'f-dv',    name:'Devices',        icon: Zap,           parentId:'f-hub',    itemCount:2,  lowStock:0, expiring:0 },
-  { id:'f-n-nik', name:'Nikki — Bag',    icon: BriefcaseMedical, parentId:'f-nurses', itemCount:12, lowStock:1, expiring:0 },
-  { id:'f-n-ste', name:'Stephanie — Bag',icon: BriefcaseMedical, parentId:'f-nurses', itemCount:12, lowStock:2, expiring:1 },
-  { id:'f-n-bkp', name:'Backup — Bag',   icon: BriefcaseMedical, parentId:'f-nurses', itemCount:12, lowStock:0, expiring:0 },
-  { id:'f-ev-b2b',name:'Bay to Breakers',icon: Calendar,     parentId:'f-events', itemCount:18, lowStock:3, expiring:0 },
-  { id:'f-ev-vi', name:'Vital Ice',       icon: Calendar,     parentId:'f-events', itemCount:14, lowStock:0, expiring:0 },
-  { id:'f-rst',   name:'Low Stock',       icon: AlertCircle,  parentId:'f-review', itemCount:7,  lowStock:7, expiring:0 },
-  { id:'f-exp',   name:'Expiring Soon',   icon: Clock,        parentId:'f-review', itemCount:3,  lowStock:0, expiring:3 },
-];
-
-const FOLDER_GROUPS = [
-  { id:'f-hub',    label:'SF Hub',             icon:FolderOpen },
-  { id:'f-nurses', label:'Assigned to Nurses', icon:User       },
-  { id:'f-events', label:'Events',             icon:Calendar   },
-  { id:'f-review', label:'Restock / Review',   icon:AlertTriangle },
-];
-
-// ─── Kits ─────────────────────────────────────────────────────────────────────
-const KITS = [
-  {
-    id:'k1', name:'Nurse Bag — Nikki', kitType:'Nurse Bag', assignedNurse:'Nikki', assignedEvent:null,
-    status:'Kit Ready', lastCheckedAt:'Today 8:30 AM', checkedBy:'Nikki',
-    items: [
-      { name:'IV Bag 1L NS',        required:4,  current:4,  unit:'bags',  ok:true  },
-      { name:'IV Start Kit',        required:4,  current:4,  unit:'kits',  ok:true  },
-      { name:'IV Extension Set',    required:4,  current:4,  unit:'sets',  ok:true  },
-      { name:'B-Complex vial',      required:4,  current:4,  unit:'vials', ok:true  },
-      { name:'Magnesium vial',      required:3,  current:3,  unit:'vials', ok:true  },
-      { name:'Glutathione 600mg',   required:2,  current:2,  unit:'vials', ok:true  },
-      { name:'IM Syringe 3ml',      required:6,  current:6,  unit:'syrs',  ok:true  },
-      { name:'B12 IM vial',         required:3,  current:3,  unit:'vials', ok:true  },
-      { name:'Gloves Lg (box)',      required:1,  current:1,  unit:'box',   ok:true  },
-      { name:'Sharps Container',    required:1,  current:1,  unit:'unit',  ok:true  },
-      { name:'Pulse Oximeter',      required:1,  current:1,  unit:'unit',  ok:true  },
-      { name:'Digital BP Cuff',     required:1,  current:1,  unit:'unit',  ok:true  },
-    ],
-    blockers:[],
-    notes:'Ready for 2 visits today.',
-  },
-  {
-    id:'k2', name:'Nurse Bag — Stephanie', kitType:'Nurse Bag', assignedNurse:'Stephanie', assignedEvent:null,
-    status:'Needs Restock', lastCheckedAt:'Today 7:45 AM', checkedBy:'Stephanie',
-    items: [
-      { name:'IV Bag 1L NS',        required:4,  current:2,  unit:'bags',  ok:false },
-      { name:'IV Start Kit',        required:4,  current:3,  unit:'kits',  ok:false },
-      { name:'IV Extension Set',    required:4,  current:4,  unit:'sets',  ok:true  },
-      { name:'B-Complex vial',      required:4,  current:4,  unit:'vials', ok:true  },
-      { name:'Magnesium vial',      required:3,  current:3,  unit:'vials', ok:true  },
-      { name:'Glutathione 600mg',   required:2,  current:2,  unit:'vials', ok:true  },
-      { name:'IM Syringe 3ml',      required:6,  current:4,  unit:'syrs',  ok:false },
-      { name:'B12 IM vial',         required:3,  current:3,  unit:'vials', ok:true  },
-      { name:'Gloves Lg (box)',      required:1,  current:1,  unit:'box',   ok:true  },
-      { name:'Sharps Container',    required:1,  current:1,  unit:'unit',  ok:true  },
-      { name:'Pulse Oximeter',      required:1,  current:1,  unit:'unit',  ok:true  },
-      { name:'Digital BP Cuff',     required:1,  current:1,  unit:'unit',  ok:true  },
-    ],
-    blockers:['IV Bag 1L NS — 2 short','IV Start Kit — 1 short','IM Syringe — 2 short'],
-    notes:'Needs restock before 3:00 PM visits.',
-  },
-  {
-    id:'k3', name:'Nurse Bag — Backup', kitType:'Nurse Bag', assignedNurse:'Backup', assignedEvent:null,
-    status:'Needs Count', lastCheckedAt:'May 9', checkedBy:'Joseph',
-    items: [
-      { name:'IV Bag 1L NS',        required:4,  current:4,  unit:'bags',  ok:true  },
-      { name:'IV Start Kit',        required:4,  current:4,  unit:'kits',  ok:true  },
-      { name:'B-Complex vial',      required:4,  current:4,  unit:'vials', ok:true  },
-      { name:'Glutathione 600mg',   required:2,  current:2,  unit:'vials', ok:true  },
-      { name:'B12 IM vial',         required:3,  current:3,  unit:'vials', ok:true  },
-    ],
-    blockers:['Count not verified in 3+ days'],
-    notes:'Last count May 9. Verify before next activation.',
-  },
-  {
-    id:'k4', name:'Event Kit — Bay to Breakers', kitType:'Event Kit', assignedNurse:'Joseph', assignedEvent:'Bay to Breakers',
-    status:'Missing Items', lastCheckedAt:'May 10', checkedBy:'Joseph',
-    items: [
-      { name:'IV Bag 1L NS',        required:40, current:12, unit:'bags',  ok:false },
-      { name:'IV Start Kit',        required:40, current:6,  unit:'kits',  ok:false },
-      { name:'IV Extension Set',    required:40, current:18, unit:'sets',  ok:false },
-      { name:'Gloves Lg (box)',      required:6,  current:4,  unit:'boxes', ok:false },
-      { name:'Sharps Container',    required:6,  current:8,  unit:'units', ok:true  },
-      { name:'Ondansetron 4mg',     required:20, current:20, unit:'vials', ok:true  },
-      { name:'Epinephrine 1mg',     required:6,  current:4,  unit:'vials', ok:false },
-    ],
-    blockers:['IV Bags — 28 short','IV Start Kits — 34 short','Extension Sets — 22 short','Epi — 2 short'],
-    notes:'Event Jun 12. Order must be placed by May 16.',
-  },
-  {
-    id:'k5', name:'Event Kit — Vital Ice', kitType:'Event Kit', assignedNurse:'Rachel', assignedEvent:'Vital Ice',
-    status:'Kit Ready', lastCheckedAt:'May 11', checkedBy:'Rachel',
-    items: [
-      { name:'IV Bag 1L NS',        required:20, current:20, unit:'bags',  ok:true  },
-      { name:'IV Start Kit',        required:20, current:20, unit:'kits',  ok:true  },
-      { name:'IV Extension Set',    required:20, current:20, unit:'sets',  ok:true  },
-      { name:'Gloves Lg (box)',      required:3,  current:3,  unit:'boxes', ok:true  },
-      { name:'Sharps Container',    required:3,  current:3,  unit:'units', ok:true  },
-    ],
-    blockers:[],
-    notes:'Ready. Event May 18.',
-  },
-];
-
-// ─── Restock queue ────────────────────────────────────────────────────────────
-const RESTOCK = [
-  { id:'rs1', itemId:'iv1', name:'IV Bag — 1L Normal Saline', category:'IV',        current:12, par:20, needed:8,  priority:'High',  supplier:'Bound Tree Medical', relatedKit:'Nurse Bag — Stephanie, Bay to Breakers', status:'Pending' },
-  { id:'rs2', itemId:'iv2', name:'IV Start Kit',              category:'IV',        current:6,  par:12, needed:6,  priority:'High',  supplier:'Bound Tree Medical', relatedKit:'Bay to Breakers',                          status:'Pending' },
-  { id:'rs3', itemId:'rx3', name:'Vitamin C 50ml',            category:'Medication',current:3,  par:10, needed:7,  priority:'High',  supplier:'Olympia Pharmacy',   relatedKit:null,                                       status:'Pending' },
-  { id:'rs4', itemId:'rx6', name:'CBD 33mg vial',             category:'Medication',current:6,  par:8,  needed:2,  priority:'Med',   supplier:'Olympia Pharmacy',   relatedKit:null,                                       status:'Pending' },
-  { id:'rs5', itemId:'iv3', name:'IV Extension Set',          category:'IV',        current:18, par:20, needed:2,  priority:'Med',   supplier:'Bound Tree Medical', relatedKit:'Bay to Breakers',                          status:'Pending' },
-  { id:'rs6', itemId:'em1', name:'Epinephrine 1mg/ml',        category:'Emergency', current:4,  par:4,  needed:2,  priority:'High',  supplier:'Olympia Pharmacy',   relatedKit:'Bay to Breakers, All Nurse Bags',           status:'Pending' },
-  { id:'rs7', itemId:'pp1', name:'Nitrile Gloves — Lg',       category:'PPE',       current:4,  par:6,  needed:2,  priority:'Low',   supplier:'McKesson',           relatedKit:null,                                       status:'Pending' },
-];
-
-// ─── Expiry queue ─────────────────────────────────────────────────────────────
-const EXPIRY_ITEMS = ITEMS.filter(i => i.expirationDate && expiryStatus(i.expirationDate) !== 'OK' && expiryStatus(i.expirationDate) !== null)
-  .sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
-
-// ─── Activity log ─────────────────────────────────────────────────────────────
-const ACTIVITY_LOG = [
-  { id:'al1', action:'Kit marked Ready',       item:'Nurse Bag — Nikki',         user:'Nikki',     time:'Today 8:30 AM',  type:'kit'      },
-  { id:'al2', action:'Quantity adjusted -2',   item:'IV Bag 1L NS',              user:'Stephanie', time:'Today 7:45 AM',  type:'qty'      },
-  { id:'al3', action:'Restock marked needed',  item:'Vitamin C 50ml',            user:'Joseph',    time:'Today 7:00 AM',  type:'restock'  },
-  { id:'al4', action:'Expiry flagged',         item:'Epinephrine 1mg/ml',        user:'System',    time:'Yesterday',      type:'expiry'   },
-  { id:'al5', action:'Kit checked',            item:'Event Kit — Vital Ice',     user:'Rachel',    time:'May 11',         type:'kit'      },
-  { id:'al6', action:'Item added',             item:'IM Syringe 3ml × 40',       user:'Joseph',    time:'May 10',         type:'new'      },
-  { id:'al7', action:'Low stock flagged',      item:'IV Start Kit',              user:'System',    time:'May 9',          type:'alert'    },
-];
-
-const ACT_DOT = { kit:'bg-emerald-400', qty:'bg-blue-400', restock:'bg-orange-400', expiry:'bg-amber-400', new:'bg-accent', alert:'bg-red-400' };
-
-// ─── Primitive components ─────────────────────────────────────────────────────
-function StatusPill({ status, small }) {
-  const { cls, dot } = pill(status);
+function TagChip({ tag }) {
   return (
-    <span className={`inline-flex items-center gap-1 border rounded-full font-body font-semibold whitespace-nowrap ${small ? 'text-[8px] px-1.5 py-0.5 tracking-[0.1em]' : 'text-[9px] px-2 py-0.5 tracking-[0.12em]'} uppercase ${cls}`}>
-      <span className={`w-1 h-1 rounded-full shrink-0 ${dot}`} />
-      {status}
+    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}44` }}>
+      {tag.name}
     </span>
   );
 }
 
-function Card({ children, className = '', onClick }) {
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={`w-full text-left rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] active:bg-foreground/[0.06] transition-colors ${className}`}>
-        {children}
-      </button>
-    );
-  }
+// ─── Folder context menu ──────────────────────────────────────────────────────
+const FOLDER_MENU_ITEMS = ['Edit','Move to folder','History','Create Label','Set Alert','Export','Clone','Permissions','Delete'];
+
+function FolderContextMenu({ x, y, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [onClose]);
   return (
-    <div className={`rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-function SectionLabel({ children }) {
-  return <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-2 px-1">{children}</p>;
-}
-
-function QuickBtn({ icon: Icon, label, accent, small, onClick }) {
-  return (
-    <button type="button" onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-xl font-body tracking-[0.12em] uppercase font-semibold border transition-all active:scale-95 ${small ? 'px-2.5 py-1.5 text-[9px]' : 'px-3 py-2 text-[10px]'} ${accent ? 'bg-foreground text-background border-foreground' : 'border-foreground/15 text-foreground/70 hover:border-foreground/30'}`}>
-      {Icon && <Icon className="w-3 h-3 shrink-0" strokeWidth={2} />}
-      {label}
-    </button>
-  );
-}
-
-function MetricTile({ icon: Icon, value, label, sub, urgent }) {
-  return (
-    <div className={`flex flex-col gap-1.5 p-3.5 rounded-2xl border min-w-[84px] ${urgent ? 'border-red-500/30 bg-red-500/[0.06]' : 'border-foreground/[0.08] bg-foreground/[0.03]'}`}>
-      <div className={`flex items-center gap-1.5 ${urgent ? 'text-red-400' : 'text-foreground/45'}`}>
-        <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
-        <span className={`font-body text-[8px] tracking-[0.2em] uppercase ${urgent ? 'text-red-400' : 'text-foreground/45'}`}>{label}</span>
-      </div>
-      <span className={`font-heading text-2xl leading-none ${urgent ? 'text-red-300' : 'text-foreground'}`}>{value}</span>
-      {sub && <span className="font-body text-[9px] text-foreground/35">{sub}</span>}
-    </div>
-  );
-}
-
-function ExpiryBadge({ dateStr }) {
-  if (!dateStr) return null;
-  const d = daysUntil(dateStr);
-  const st = expiryStatus(dateStr);
-  if (st === 'OK') return null;
-  const colors = { Critical:'text-red-300 bg-red-500/15 border-red-500/25', Urgent:'text-orange-300 bg-orange-500/15 border-orange-500/25', Warning:'text-amber-300 bg-amber-500/15 border-amber-500/25', Expired:'text-red-400 bg-red-900/20 border-red-900/30' };
-  const label = d <= 0 ? 'EXPIRED' : `${d}d`;
-  return <span className={`font-body text-[8px] tracking-[0.1em] px-1.5 py-0.5 rounded-full border font-semibold uppercase ${colors[st]}`}>{label}</span>;
-}
-
-function QuantityAdjuster({ qty, onAdd, onRemove }) {
-  return (
-    <div className="flex items-center gap-3">
-      <button type="button" onClick={onRemove}
-        className="w-10 h-10 rounded-full border border-foreground/20 flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors text-xl leading-none">−</button>
-      <span className="font-heading text-3xl text-foreground w-12 text-center">{qty}</span>
-      <button type="button" onClick={onAdd}
-        className="w-10 h-10 rounded-full border border-foreground/20 flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors text-xl leading-none">+</button>
-    </div>
-  );
-}
-
-function FilterChips({ options, active, onChange }) {
-  return (
-    <div className="-mx-4 px-4 flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth:'none' }}>
-      {options.map(o => (
-        <button key={o} type="button" onClick={() => onChange(o)}
-          className={`shrink-0 px-3.5 py-1.5 rounded-full font-body text-[9px] tracking-[0.15em] uppercase font-semibold border transition-all ${active === o ? 'bg-foreground text-background border-foreground' : 'border-foreground/15 text-foreground/50 hover:border-foreground/30'}`}>
-          {o}
+    <div ref={ref} className="fixed z-50 w-44 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl" style={{ top: y, left: x }}>
+      {FOLDER_MENU_ITEMS.map((item) => (
+        <button key={item} onClick={onClose} className={`w-full px-4 py-2 text-left font-body text-xs transition-colors hover:bg-foreground/[0.06] ${item === 'Delete' ? 'text-red-400' : 'text-foreground/80'}`}>
+          {item}
         </button>
       ))}
     </div>
   );
 }
 
-// ─── Item Card ────────────────────────────────────────────────────────────────
-function ItemCard({ item, onOpen }) {
-  const CategoryIcon = { IV: Droplets, Medication: FlaskConical, IM: Syringe, PPE: Shield, Emergency: AlertTriangle, Sharps: Archive, Device: Zap }[item.category] || Package;
+// ─── Item context menu ────────────────────────────────────────────────────────
+const ITEM_MENU_ITEMS = ['Edit','Move to folder','History','Create Label','Set Alert','Export','Clone','Delete'];
+
+function ItemContextMenu({ x, y, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [onClose]);
   return (
-    <Card onClick={() => onOpen(item)} className="p-4">
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="w-9 h-9 rounded-xl bg-foreground/[0.06] flex items-center justify-center shrink-0">
-          <CategoryIcon className="w-4 h-4 text-foreground/50" strokeWidth={1.5} />
-        </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <StatusPill status={item.status} small />
-          <ExpiryBadge dateStr={item.expirationDate} />
-        </div>
-      </div>
-      <p className="font-body text-xs font-semibold text-foreground leading-tight mb-1 line-clamp-2">{item.name}</p>
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex items-center gap-1.5">
-          <span className="font-heading text-xl text-foreground">{item.qty}</span>
-          <span className="font-body text-[9px] text-foreground/40 uppercase">{item.unit}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          {item.refrigeration && <Thermometer className="w-3 h-3 text-blue-400" strokeWidth={1.5} />}
-          {item.controlled && <Shield className="w-3 h-3 text-amber-400" strokeWidth={1.5} />}
-        </div>
-      </div>
-      <p className="font-body text-[9px] text-foreground/35 mt-1 truncate">{item.location}</p>
-    </Card>
+    <div ref={ref} className="fixed z-50 w-44 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl" style={{ top: y, left: x }}>
+      {ITEM_MENU_ITEMS.map((item) => (
+        <button key={item} onClick={onClose} className={`w-full px-4 py-2 text-left font-body text-xs transition-colors hover:bg-foreground/[0.06] ${item === 'Delete' ? 'text-red-400' : 'text-foreground/80'}`}>
+          {item}
+        </button>
+      ))}
+    </div>
   );
 }
 
-// ─── Kit Card ─────────────────────────────────────────────────────────────────
-function KitCard({ kit, onOpen }) {
-  const total = kit.items.length;
-  const ready = kit.items.filter(i => i.ok).length;
-  const pct = Math.round((ready / total) * 100);
-  return (
-    <Card onClick={() => onOpen(kit)} className="p-4">
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-foreground/[0.06] flex items-center justify-center shrink-0">
-            <BriefcaseMedical className="w-4 h-4 text-foreground/50" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="font-body text-sm font-semibold text-foreground leading-tight">{kit.name}</p>
-            <p className="font-body text-[9px] text-foreground/40">{kit.kitType}{kit.assignedEvent ? ` · ${kit.assignedEvent}` : ''}</p>
-          </div>
-        </div>
-        <StatusPill status={kit.status} small />
-      </div>
-      {/* Progress bar */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between mb-1">
-          <span className="font-body text-[9px] text-foreground/40 uppercase tracking-[0.1em]">Items Ready</span>
-          <span className="font-body text-[9px] text-foreground/60">{ready}/{total}</span>
-        </div>
-        <div className="h-1 rounded-full bg-foreground/10 overflow-hidden">
-          <div className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-emerald-400' : pct >= 70 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width:`${pct}%` }} />
-        </div>
-      </div>
-      {kit.blockers.length > 0 && (
-        <div className="space-y-0.5 mt-2">
-          {kit.blockers.slice(0,2).map((b,i) => (
-            <div key={i} className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
-              <span className="font-body text-[9px] text-red-300/80">{b}</span>
-            </div>
-          ))}
-          {kit.blockers.length > 2 && <span className="font-body text-[9px] text-foreground/30">+{kit.blockers.length - 2} more</span>}
-        </div>
-      )}
-      <div className="flex items-center justify-between mt-3">
-        <span className="font-body text-[9px] text-foreground/30">Checked {kit.lastCheckedAt}</span>
-        {kit.assignedNurse && <span className="font-body text-[9px] text-teal-400">{kit.assignedNurse}</span>}
-      </div>
-    </Card>
-  );
-}
-
-// ─── Item Detail Sheet ────────────────────────────────────────────────────────
-function ItemDetailSheet({ item: initItem, onClose }) {
-  const [qty, setQty] = useState(initItem.qty);
-  const [note, setNote] = useState('');
+// ─── Folder node (sidebar tree) ───────────────────────────────────────────────
+function FolderNode({ folder, allFolders, currentFolderId, onSelect, expandedFolders, toggleExpand, depth = 0 }) {
+  const children = allFolders.filter(f => f.parentId === folder.id);
+  const isExpanded = expandedFolders.has(folder.id);
+  const isActive = currentFolderId === folder.id;
 
   return (
-    <motion.div
-      initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
-      transition={{ duration:0.4, ease:EASE }}
-      className="fixed inset-x-0 bottom-0 z-50 flex flex-col"
-      style={{ maxHeight:'92vh' }}
-    >
-      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10" onClick={onClose} />
-      <div className="relative bg-[#0d0d0d] border-t border-foreground/[0.1] rounded-t-3xl flex flex-col overflow-hidden">
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-foreground/20" />
-        </div>
-        {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-2 pb-4 border-b border-foreground/[0.06] shrink-0">
-          <div className="flex-1 min-w-0">
-            <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-1">{initItem.category} · {initItem.sku}</p>
-            <h2 className="font-heading text-2xl text-foreground uppercase leading-tight pr-4">{initItem.name}</h2>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <StatusPill status={initItem.status} />
-              <ExpiryBadge dateStr={initItem.expirationDate} />
-              {initItem.refrigeration && (
-                <span className="inline-flex items-center gap-1 font-body text-[8px] px-1.5 py-0.5 rounded-full border border-blue-500/25 text-blue-300 bg-blue-500/10 uppercase tracking-[0.1em]">
-                  <Thermometer className="w-2.5 h-2.5" strokeWidth={2} /> Refrigerate
-                </span>
-              )}
-            </div>
-          </div>
-          <button type="button" onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50 shrink-0">
-            <X className="w-4 h-4" strokeWidth={1.5} />
+    <div>
+      <div
+        className={`group flex cursor-pointer items-center gap-1.5 rounded-lg py-1.5 text-xs transition-colors ${isActive ? 'bg-foreground/10 text-foreground' : 'text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground/90'}`}
+        style={{ paddingLeft: `${8 + depth * 14}px`, paddingRight: 8 }}
+      >
+        {children.length > 0 ? (
+          <button onClick={(e) => { e.stopPropagation(); toggleExpand(folder.id); }} className="flex h-4 w-4 shrink-0 items-center justify-center">
+            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
           </button>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-
-          {/* Qty adjuster */}
-          <div>
-            <SectionLabel>Current Count</SectionLabel>
-            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] px-5 py-4 flex items-center justify-between">
-              <QuantityAdjuster qty={qty} onAdd={() => setQty(q => q + 1)} onRemove={() => setQty(q => Math.max(0, q - 1))} />
-              <div className="text-right">
-                <p className="font-body text-[9px] text-foreground/35 uppercase tracking-[0.1em]">{initItem.unit}</p>
-                <p className="font-body text-[9px] text-foreground/35 mt-1">Par: {initItem.parLevel}</p>
-                <p className={`font-body text-[9px] mt-0.5 ${qty <= initItem.restockThreshold ? 'text-red-400' : 'text-foreground/35'}`}>
-                  Min: {initItem.restockThreshold}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Key fields */}
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              ['Location', initItem.location, MapPin],
-              ['Supplier', initItem.supplier, Tag],
-              ['Lot Number', initItem.lotNumber || '—', Hash],
-              ['Expiration', initItem.expirationDate || 'None', Clock],
-              ['Cost', initItem.cost ? `$${initItem.cost.toFixed(2)}` : '—', FileText],
-              ['Last Checked', initItem.lastCheckedAt, CheckCircle],
-            ].map(([label, val, Icon]) => (
-              <div key={label} className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] px-3 py-2.5">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Icon className="w-3 h-3 text-foreground/35 shrink-0" strokeWidth={1.5} />
-                  <p className="font-body text-[8px] tracking-[0.2em] uppercase text-foreground/35">{label}</p>
-                </div>
-                <p className="font-body text-xs text-foreground/80 truncate">{val}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* QR */}
-          <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <QrCode className="w-4 h-4 text-foreground/40" strokeWidth={1.5} />
-              <div>
-                <p className="font-body text-[8px] tracking-[0.2em] uppercase text-foreground/35 mb-0.5">QR Code</p>
-                <p className="font-body text-xs text-foreground/70">{initItem.qrCode}</p>
-              </div>
-            </div>
-            <button type="button" className="font-body text-[9px] tracking-[0.12em] uppercase text-accent border border-accent/30 px-2.5 py-1 rounded-full hover:bg-accent/10 transition-colors">
-              Show
-            </button>
-          </div>
-
-          {/* Notes */}
-          {initItem.notes && (
-            <div className="rounded-xl border border-foreground/[0.06] px-4 py-3">
-              <p className="font-body text-[8px] tracking-[0.2em] uppercase text-foreground/35 mb-1">Notes</p>
-              <p className="font-body text-xs text-foreground/60">{initItem.notes}</p>
-            </div>
-          )}
-
-          {/* Add note */}
-          <div>
-            <SectionLabel>Add Note</SectionLabel>
-            <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
-              placeholder="Add a note..."
-              className="w-full rounded-xl border border-foreground/15 bg-foreground/[0.03] px-4 py-3 font-body text-xs text-foreground placeholder:text-foreground/25 focus:outline-none focus:border-foreground/35 resize-none" />
-          </div>
-
-          {/* Mode indicator */}
-          <div className="rounded-xl border border-foreground/[0.06] px-4 py-3 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-            <p className="font-body text-[9px] tracking-[0.1em] text-foreground/35 uppercase">Local inventory active · Changes saved locally</p>
-          </div>
-        </div>
-
-        {/* Action bar */}
-        <div className="px-5 pt-3 pb-5 border-t border-foreground/[0.06] shrink-0"
-          style={{ paddingBottom:'max(env(safe-area-inset-bottom), 1.25rem)' }}>
-          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth:'none' }}>
-            <QuickBtn icon={CheckCircle} label="Mark Counted" />
-            <QuickBtn icon={RefreshCw}   label="Restock" />
-            <QuickBtn icon={MoveRight}   label="Move" />
-            <QuickBtn icon={AlertTriangle} label="Quarantine" />
-            <QuickBtn icon={CheckCircle} label="Save Count" accent />
-          </div>
-        </div>
+        ) : (
+          <span className="w-4 shrink-0" />
+        )}
+        <button onClick={() => onSelect(folder.id)} className="flex flex-1 items-center gap-2 overflow-hidden text-left">
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: folder.color }} />
+          <span className="truncate font-body text-xs">{folder.name}</span>
+          <span className="ml-auto shrink-0 font-body text-[10px] text-foreground/35">{folder.itemCount}</span>
+        </button>
       </div>
-    </motion.div>
+      {isExpanded && children.map(child => (
+        <FolderNode key={child.id} folder={child} allFolders={allFolders} currentFolderId={currentFolderId} onSelect={onSelect} expandedFolders={expandedFolders} toggleExpand={toggleExpand} depth={depth + 1} />
+      ))}
+    </div>
   );
 }
 
-// ─── Kit Detail Sheet ─────────────────────────────────────────────────────────
-function KitDetailSheet({ kit, onClose }) {
+// ─── Folder sidebar ───────────────────────────────────────────────────────────
+function FolderSidebar({ folders, currentFolderId, onSelect, expandedFolders, toggleExpand, onAddFolder }) {
+  const roots = folders.filter(f => f.parentId === null);
   return (
-    <motion.div
-      initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
-      transition={{ duration:0.4, ease:EASE }}
-      className="fixed inset-x-0 bottom-0 z-50 flex flex-col"
-      style={{ maxHeight:'92vh' }}
-    >
-      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10" onClick={onClose} />
-      <div className="relative bg-[#0d0d0d] border-t border-foreground/[0.1] rounded-t-3xl flex flex-col overflow-hidden">
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-foreground/20" />
-        </div>
-        <div className="flex items-start justify-between px-5 pt-2 pb-4 border-b border-foreground/[0.06] shrink-0">
-          <div>
-            <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-1">{kit.kitType}</p>
-            <h2 className="font-heading text-2xl text-foreground uppercase leading-tight">{kit.name}</h2>
-            <div className="flex items-center gap-2 mt-2">
-              <StatusPill status={kit.status} />
-              {kit.assignedNurse && <span className="font-body text-[9px] text-teal-400">{kit.assignedNurse}</span>}
-            </div>
-          </div>
-          <button type="button" onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50 shrink-0">
-            <X className="w-4 h-4" strokeWidth={1.5} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          {/* Blockers */}
-          {kit.blockers.length > 0 && (
-            <div className="rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3 space-y-1.5">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />
-                <p className="font-body text-[9px] tracking-[0.2em] uppercase text-red-400">Kit Blockers</p>
-              </div>
-              {kit.blockers.map((b,i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
-                  <span className="font-body text-xs text-red-300/80">{b}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Items checklist */}
-          <div>
-            <SectionLabel>Kit Contents ({kit.items.filter(i => i.ok).length}/{kit.items.length} ready)</SectionLabel>
-            <div className="space-y-1.5">
-              {kit.items.map((item, i) => (
-                <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${item.ok ? 'border-foreground/[0.06] bg-foreground/[0.02]' : 'border-red-500/20 bg-red-500/[0.04]'}`}>
-                  {item.ok
-                    ? <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" strokeWidth={2} />
-                    : <AlertCircle className="w-4 h-4 text-red-400 shrink-0" strokeWidth={2} />}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-body text-xs text-foreground">{item.name}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`font-body text-xs font-semibold ${item.ok ? 'text-foreground/60' : 'text-red-300'}`}>{item.current}/{item.required}</p>
-                    <p className="font-body text-[8px] text-foreground/30">{item.unit}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Last checked */}
-          <div className="rounded-xl border border-foreground/[0.06] px-4 py-3 flex items-center justify-between">
-            <div>
-              <p className="font-body text-[8px] tracking-[0.2em] uppercase text-foreground/35 mb-0.5">Last Checked</p>
-              <p className="font-body text-xs text-foreground/70">{kit.lastCheckedAt} · {kit.checkedBy}</p>
-            </div>
-            {kit.notes && <p className="font-body text-[9px] text-foreground/40 max-w-[160px] text-right leading-snug">{kit.notes}</p>}
-          </div>
-        </div>
-
-        <div className="px-5 pt-3 pb-5 border-t border-foreground/[0.06] shrink-0"
-          style={{ paddingBottom:'max(env(safe-area-inset-bottom), 1.25rem)' }}>
-          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth:'none' }}>
-            <QuickBtn icon={CheckCircle} label="Check Kit" />
-            <QuickBtn icon={RefreshCw}   label="Restock Kit" />
-            <QuickBtn icon={User}        label="Assign" />
-            <QuickBtn icon={CheckCircle} label="Mark Ready" accent />
-          </div>
-        </div>
+    <div className="flex h-full flex-col border-r border-foreground/[0.08] bg-[#111111]" style={{ width: 220 }}>
+      <div className="flex items-center justify-between px-3 py-3">
+        <span className="font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Folders</span>
+        <button onClick={onAddFolder} className="flex h-6 w-6 items-center justify-center rounded-md text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground/80">
+          <FolderPlus className="h-3.5 w-3.5" />
+        </button>
       </div>
-    </motion.div>
+      <div className="flex-1 overflow-y-auto px-1 pb-4">
+        <button
+          onClick={() => onSelect(null)}
+          className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 font-body text-xs transition-colors ${currentFolderId === null ? 'bg-foreground/10 text-foreground' : 'text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground/90'}`}
+        >
+          <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
+          <span>All Items</span>
+        </button>
+        {roots.map(folder => (
+          <FolderNode key={folder.id} folder={folder} allFolders={folders} currentFolderId={currentFolderId} onSelect={onSelect} expandedFolders={expandedFolders} toggleExpand={toggleExpand} />
+        ))}
+      </div>
+    </div>
   );
 }
 
-// ─── Dashboard Screen ─────────────────────────────────────────────────────────
-function DashboardScreen({ onSelectItem, onSelectKit }) {
-  const lowStock   = ITEMS.filter(i => ['Low Stock','Restock Needed','Out of Stock'].includes(i.status));
-  const expiring   = ITEMS.filter(i => i.expirationDate && ['Critical','Urgent','Warning'].includes(expiryStatus(i.expirationDate)));
-  const kitsReady  = KITS.filter(k => k.status === 'Kit Ready').length;
-  const kitsNotRdy = KITS.filter(k => k.status !== 'Kit Ready').length;
+// ─── Icon nav ─────────────────────────────────────────────────────────────────
+const NAV_TOP = [
+  { id:'items',   Icon:LayoutGrid,  label:'All Items' },
+  { id:'tags',    Icon:Tag,         label:'Tags' },
+  { id:'reports', Icon:BarChart3,   label:'Reports' },
+];
+const NAV_BOTTOM = [
+  { id:'integrations', Icon:Plug,       label:'Integrations', badge:true },
+  { id:'notif',        Icon:Bell,       label:'Notifications' },
+  { id:'help',         Icon:HelpCircle, label:'Help' },
+  { id:'settings',     Icon:Settings,   label:'Settings' },
+];
 
-  const tiles = [
-    { icon:Package,       value:ITEMS.length, label:'Total Items',     sub:'across all locations', urgent:false },
-    { icon:BriefcaseMedical, value:kitsReady, label:'Kits Ready',       sub:`${kitsNotRdy} need attention`, urgent:kitsNotRdy > 0 },
-    { icon:AlertCircle,   value:lowStock.length,  label:'Low Stock',    sub:'below par or threshold', urgent:lowStock.length > 0 },
-    { icon:Clock,         value:expiring.length,  label:'Expiring',     sub:'within 30 days',         urgent:expiring.length > 0 },
-    { icon:RefreshCw,     value:RESTOCK.length,   label:'Restock Queue',sub:'items to order',         urgent:false },
-    { icon:AlertTriangle, value:1,                label:'Quarantine',   sub:'do not use',             urgent:true  },
-    { icon:Star,          value:1,                label:'Event Kits',   sub:'1 incomplete',            urgent:true  },
-    { icon:TrendingUp,    value:'$—',             label:'Est. Value',   sub:'Manual tracking',        urgent:false },
-  ];
+function IconNav({ section, onSection, onNotif, lowStockCount }) {
+  return (
+    <div className="flex h-full flex-col items-center border-r border-foreground/[0.08] bg-[#0d0d0d] py-3" style={{ width: 56 }}>
+      {/* Logo */}
+      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/[0.06]">
+        <span className="font-heading text-sm text-foreground/80">AV</span>
+      </div>
 
-  const risks = [
-    { text:'Nurse Bag — Stephanie needs restock before 3PM',  level:'red',   action:'Restock' },
-    { text:'Bay to Breakers event kit incomplete (Jun 12)',    level:'red',   action:'Review'  },
-    { text:'Epinephrine 1mg/ml expiring in 6 days',            level:'red',   action:'Replace' },
-    { text:'NAD+ 250mg expiring in 7 days',                    level:'amber', action:'Review'  },
-    { text:'IV Bag 1L Saline below par — 3 kits affected',    level:'amber', action:'Restock' },
-  ];
+      {/* Top nav */}
+      <div className="flex flex-col items-center gap-1">
+        {NAV_TOP.map(({ id, Icon, label }) => (
+          <button key={id} title={label} onClick={() => onSection(id)}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === id ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
+          >
+            <Icon className="h-4 w-4" />
+          </button>
+        ))}
+        <button title="Trash" onClick={() => onSection('trash')}
+          className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === 'trash' ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
 
-  // ── scroll-arrow state for metric strip ────────────────────────────────────
-  const stripRef = useRef(null);
-  const [canLeft,  setCanLeft]  = useState(false);
-  const [canRight, setCanRight] = useState(true);
+      <div className="my-3 w-6 border-t border-foreground/[0.08]" />
 
-  const syncArrows = useCallback(() => {
-    const el = stripRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 4);
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
-  }, []);
+      {/* Bottom nav */}
+      <div className="flex flex-col items-center gap-1">
+        {NAV_BOTTOM.map(({ id, Icon, label, badge }) => (
+          <button key={id} title={label} onClick={() => id === 'notif' ? onNotif() : onSection(id)}
+            className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === id ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
+          >
+            <Icon className="h-4 w-4" />
+            {badge && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-amber-400" />}
+            {id === 'notif' && lowStockCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-body text-[9px] font-bold text-white">{lowStockCount}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-auto">
+        <button className="flex h-6 w-9 items-center justify-center rounded-md border border-amber-400/40 bg-amber-400/10 font-body text-[9px] font-semibold uppercase tracking-wide text-amber-400 transition-colors hover:bg-amber-400/20">
+          New
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Table icon (inline SVG) ──────────────────────────────────────────────────
+function TableIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18M3 15h18M9 3v18" />
+    </svg>
+  );
+}
+
+// ─── Sort dropdown ────────────────────────────────────────────────────────────
+const SORT_OPTIONS = [
+  { key:'name',    label:'Name' },
+  { key:'updated', label:'Updated At' },
+  { key:'qty',     label:'Quantity' },
+  { key:'price',   label:'Price' },
+];
+
+function SortMenu({ sortBy, sortDir, onChange, onToggleDir, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [onClose]);
+  return (
+    <div ref={ref} className="absolute right-0 top-full z-50 mt-1.5 w-44 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl">
+      <div className="px-3 py-2">
+        <p className="font-body text-[10px] uppercase tracking-wider text-foreground/35">Sort by</p>
+      </div>
+      {SORT_OPTIONS.map(opt => (
+        <button key={opt.key} onClick={() => { onChange(opt.key); onClose(); }}
+          className="flex w-full items-center justify-between px-4 py-2 font-body text-xs transition-colors hover:bg-foreground/[0.06]"
+        >
+          <span className={sortBy === opt.key ? 'text-foreground' : 'text-foreground/60'}>{opt.label}</span>
+          {sortBy === opt.key && <ArrowUpDown className="h-3 w-3 text-foreground/60" />}
+        </button>
+      ))}
+      <div className="mx-3 my-1 border-t border-foreground/[0.08]" />
+      <button onClick={() => { onToggleDir(); onClose(); }} className="flex w-full items-center gap-2 px-4 py-2 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.06] hover:text-foreground/90">
+        <ArrowUpDown className="h-3 w-3" />
+        {sortDir === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
+      </button>
+    </div>
+  );
+}
+
+// ─── Toolbar ──────────────────────────────────────────────────────────────────
+function InventoryToolbar({ layout, onLayout, sortBy, sortDir, onSort, onToggleSortDir, search, onSearch, showFolders, onToggleFolders, onAdd, onAddFolder, onImport }) {
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showAddMenu,  setShowAddMenu]  = useState(false);
+  const addRef = useRef(null);
 
   useEffect(() => {
-    const el = stripRef.current;
-    if (!el) return;
-    syncArrows();
-    el.addEventListener('scroll', syncArrows, { passive: true });
-    const ro = new ResizeObserver(syncArrows);
-    ro.observe(el);
-    return () => { el.removeEventListener('scroll', syncArrows); ro.disconnect(); };
-  }, [syncArrows]);
+    const h = (e) => { if (addRef.current && !addRef.current.contains(e.target)) setShowAddMenu(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
 
-  const scrollStrip = (dir) => {
-    const el = stripRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * 200, behavior: 'smooth' });
-  };
+  const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Name';
 
   return (
-    <div className="space-y-5 pb-6">
-      {/* Metric strip */}
-      <div className="relative -mx-4">
-        {/* left arrow */}
-        {canLeft && (
-          <button
-            type="button"
-            onClick={() => scrollStrip(-1)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-sm border border-foreground/10 shadow-md ml-1"
-            aria-label="Scroll left"
+    <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-foreground/[0.08] px-4">
+      {/* Search */}
+      <div className="relative flex-1 max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/35" />
+        <input value={search} onChange={e => onSearch(e.target.value)} placeholder="Search items…"
+          className="h-8 w-full rounded-lg border border-foreground/[0.10] bg-foreground/[0.04] pl-9 pr-3 font-body text-xs text-foreground placeholder:text-foreground/30 focus:border-foreground/25 focus:outline-none"
+        />
+      </div>
+
+      <div className="ml-auto flex items-center gap-1.5">
+        {/* Sort */}
+        <div className="relative">
+          <button onClick={() => setShowSortMenu(v => !v)}
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-foreground/[0.10] bg-foreground/[0.04] px-3 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-foreground/70"/>
-            </svg>
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {currentSortLabel}
+            <span className="text-foreground/30">{sortDir === 'asc' ? '↑' : '↓'}</span>
           </button>
-        )}
-        {/* right arrow */}
-        {canRight && (
-          <button
-            type="button"
-            onClick={() => scrollStrip(1)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-sm border border-foreground/10 shadow-md mr-1"
-            aria-label="Scroll right"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-foreground/70"/>
-            </svg>
-          </button>
-        )}
-        {/* fade edges */}
-        {canLeft  && <div className="pointer-events-none absolute left-0 top-0 h-full w-8 bg-gradient-to-r from-background to-transparent z-[5]" />}
-        {canRight && <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent z-[5]" />}
-        {/* scrollable row */}
-        <div
-          ref={stripRef}
-          className="px-4 flex gap-2.5 overflow-x-auto pb-1"
-          style={{ scrollbarWidth:'none', WebkitOverflowScrolling:'touch' }}
+          {showSortMenu && <SortMenu sortBy={sortBy} sortDir={sortDir} onChange={onSort} onToggleDir={onToggleSortDir} onClose={() => setShowSortMenu(false)} />}
+        </div>
+
+        {/* Layout toggle */}
+        <div className="flex h-8 items-center rounded-lg border border-foreground/[0.10] bg-foreground/[0.04] p-0.5">
+          {[['grid', LayoutGrid], ['list', ListIcon], ['table', TableIcon]].map(([id, Icon]) => (
+            <button key={id} onClick={() => onLayout(id)}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${layout === id ? 'bg-foreground/15 text-foreground' : 'text-foreground/35 hover:text-foreground/70'}`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+
+        {/* Hide folders toggle */}
+        <button onClick={onToggleFolders}
+          className={`flex h-8 items-center gap-1.5 rounded-lg border px-2.5 font-body text-[10px] transition-colors ${showFolders ? 'border-foreground/[0.10] text-foreground/50 hover:text-foreground/80' : 'border-foreground/25 text-foreground'}`}
         >
-          {tiles.map(t => <MetricTile key={t.label} {...t} />)}
+          <Folder className="h-3.5 w-3.5" />
+          {showFolders ? 'Hide' : 'Show'} Folders
+        </button>
+
+        {/* Add split button */}
+        <div ref={addRef} className="relative flex">
+          <button onClick={onAdd}
+            className="flex h-8 items-center gap-1.5 rounded-l-lg bg-foreground px-3 font-body text-xs font-semibold uppercase tracking-wide text-background transition-colors hover:bg-foreground/90"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Item
+          </button>
+          <button onClick={() => setShowAddMenu(v => !v)}
+            className="flex h-8 w-7 items-center justify-center rounded-r-lg border-l border-background/20 bg-foreground text-background transition-colors hover:bg-foreground/90"
+          >
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          {showAddMenu && (
+            <div className="absolute right-0 top-full z-50 mt-1.5 w-40 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl">
+              {[['Add Item', onAdd], ['Import Items', onImport], ['Add Folder', onAddFolder]].map(([label, fn]) => (
+                <button key={label} onClick={() => { fn?.(); setShowAddMenu(false); }}
+                  className="w-full px-4 py-2 text-left font-body text-xs text-foreground/70 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Stats bar ────────────────────────────────────────────────────────────────
+function StatsBar({ items, currentFolderId }) {
+  const list = currentFolderId ? items.filter(i => i.folderId === currentFolderId) : items;
+  const totalVal = list.reduce((s, i) => s + i.qty * i.price, 0);
+  const lowCount = list.filter(i => i.qty > 0 && i.qty <= i.minLevel).length;
+  const outCount = list.filter(i => i.qty <= 0).length;
+  const expCount = list.filter(i => { const n = daysUntil(i.expirationDate); return n !== null && n <= 7; }).length;
+
+  return (
+    <div className="flex shrink-0 items-center gap-6 border-b border-foreground/[0.08] px-5 py-2.5">
+      <div className="flex items-center gap-2">
+        <span className="font-body text-[10px] uppercase tracking-widest text-foreground/35">Items</span>
+        <span className="font-heading text-base text-foreground">{list.length}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="font-body text-[10px] uppercase tracking-widest text-foreground/35">Value</span>
+        <span className="font-heading text-base text-foreground">{fmt$(totalVal)}</span>
+      </div>
+      {lowCount > 0 && (
+        <div className="flex items-center gap-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+          <span className="font-body text-xs text-amber-400">{lowCount} low stock</span>
+        </div>
+      )}
+      {outCount > 0 && (
+        <div className="flex items-center gap-1.5">
+          <AlertCircle className="h-3.5 w-3.5 text-red-400" />
+          <span className="font-body text-xs text-red-400">{outCount} out of stock</span>
+        </div>
+      )}
+      {expCount > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-red-400" />
+          <span className="font-body text-xs text-red-400">{expCount} expiring soon</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Filter Bar ──────────────────────────────────────────────────────────────
+const STATUS_FILTERS = [
+  { key: 'all',      label: 'All' },
+  { key: 'low',      label: 'Low Stock' },
+  { key: 'out',      label: 'Out of Stock' },
+  { key: 'expiring', label: 'Expiring ≤14d' },
+  { key: 'new',      label: 'New' },
+];
+
+function FilterBar({ items, tags, filterStatus, onFilterStatus, filterTag, onFilterTag, filterCategory, onFilterCategory }) {
+  const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))].sort(), [items]);
+  const activeCount = (filterStatus !== 'all' ? 1 : 0) + (filterTag ? 1 : 0) + (filterCategory ? 1 : 0);
+
+  return (
+    <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-foreground/[0.08] px-4 py-2 scrollbar-none">
+      {/* Status chips */}
+      <div className="flex items-center gap-1">
+        {STATUS_FILTERS.map(({ key, label }) => (
+          <button key={key} onClick={() => onFilterStatus(key)}
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 font-body text-[10px] transition-colors ${
+              filterStatus === key
+                ? 'bg-foreground text-background'
+                : 'border border-foreground/[0.10] text-foreground/50 hover:border-foreground/25 hover:text-foreground/70'
+            }`}
+          >{label}</button>
+        ))}
+      </div>
+
+      {/* Divider */}
+      {(tags.length > 0 || categories.length > 0) && <div className="h-4 w-px shrink-0 bg-foreground/10" />}
+
+      {/* Tag filter */}
+      {tags.length > 0 && (
+        <select value={filterTag} onChange={e => onFilterTag(e.target.value)}
+          className={`rounded-full border px-2.5 py-1 font-body text-[10px] focus:outline-none ${filterTag ? 'border-foreground/40 bg-foreground/10 text-foreground' : 'border-foreground/[0.10] bg-transparent text-foreground/50'}`}
+          style={{ appearance: 'none' }}
+        >
+          <option value="">All Tags</option>
+          {tags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      )}
+
+      {/* Category filter */}
+      {categories.length > 0 && (
+        <select value={filterCategory} onChange={e => onFilterCategory(e.target.value)}
+          className={`rounded-full border px-2.5 py-1 font-body text-[10px] focus:outline-none ${filterCategory ? 'border-foreground/40 bg-foreground/10 text-foreground' : 'border-foreground/[0.10] bg-transparent text-foreground/50'}`}
+          style={{ appearance: 'none' }}
+        >
+          <option value="">All Categories</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      )}
+
+      {/* Clear all */}
+      {activeCount > 0 && (
+        <button
+          onClick={() => { onFilterStatus('all'); onFilterTag(''); onFilterCategory(''); }}
+          className="ml-1 flex items-center gap-1 rounded-full border border-foreground/[0.10] px-2.5 py-1 font-body text-[10px] text-foreground/40 transition-colors hover:border-red-400/40 hover:text-red-400"
+        >
+          <X className="h-2.5 w-2.5" /> Clear ({activeCount})
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Breadcrumb ───────────────────────────────────────────────────────────────
+function Breadcrumb({ folders, currentFolderId, onNavigate }) {
+  if (!currentFolderId) return null;
+  const path = [];
+  let cur = folders.find(f => f.id === currentFolderId);
+  while (cur) {
+    path.unshift(cur);
+    cur = folders.find(f => f.id === cur.parentId);
+  }
+  return (
+    <div className="flex shrink-0 items-center gap-1.5 border-b border-foreground/[0.08] px-5 py-2">
+      <button onClick={() => onNavigate(null)} className="font-body text-[11px] text-foreground/40 transition-colors hover:text-foreground/70">All Items</button>
+      {path.map((f, i) => (
+        <React.Fragment key={f.id}>
+          <ChevronRight className="h-3 w-3 text-foreground/25" />
+          <button onClick={() => onNavigate(f.id)}
+            className={`font-body text-[11px] transition-colors ${i === path.length - 1 ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'}`}
+          >
+            {f.name}
+          </button>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+// ─── Folder card ──────────────────────────────────────────────────────────────
+function FolderCard({ folder, items, onClick, onMenuOpen }) {
+  const count = items.filter(i => i.folderId === folder.id).length;
+  return (
+    <div onClick={() => onClick(folder.id)}
+      className="group relative cursor-pointer rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4 transition-all hover:border-foreground/20 hover:bg-foreground/[0.06]"
+    >
+      <button
+        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg opacity-0 transition-all group-hover:opacity-100 hover:bg-foreground/10"
+        onClick={(e) => { e.stopPropagation(); onMenuOpen(folder.id, e); }}
+      >
+        <MoreHorizontal className="h-3.5 w-3.5 text-foreground/50" />
+      </button>
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: folder.color + '22' }}>
+        <FolderOpen className="h-5 w-5" style={{ color: folder.color }} />
+      </div>
+      <p className="truncate font-body text-sm font-semibold text-foreground">{folder.name}</p>
+      <p className="mt-0.5 font-body text-xs text-foreground/40">{count} item{count !== 1 ? 's' : ''}</p>
+    </div>
+  );
+}
+
+// ─── Item grid card ───────────────────────────────────────────────────────────
+function ItemGridCard({ item, tags, isSelected, onSelect, onOpen, onMenuOpen }) {
+  const Icon = CAT_ICON[item.category] || Package;
+  const color = CAT_COLOR[item.category] || '#6b7280';
+  const exp = expiryLabel(item.expirationDate);
+
+  return (
+    <div className="group relative cursor-pointer rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/20">
+      {/* Checkbox */}
+      <div className={`absolute left-2 top-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
+          className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-foreground/40 bg-[#0d0d0d]/80 text-transparent hover:border-foreground/70'}`}
+        >
+          <Check className="h-3 w-3" />
+        </button>
+      </div>
+
+      {/* NEW badge */}
+      {item.isNew && (
+        <div className="absolute right-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wide text-black">New</div>
+      )}
+
+      {/* Photo area */}
+      <div
+        className="relative flex aspect-square w-full items-center justify-center rounded-t-2xl overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${color}20 0%, ${color}08 100%)` }}
+        onClick={() => onOpen(item)}
+      >
+        <Icon className="h-12 w-12 opacity-50" style={{ color }} />
+        {item.refrigeration && (
+          <div className="absolute bottom-2 right-2 rounded-md border border-sky-400/20 bg-[#0d0d0d]/80 px-1.5 py-0.5 font-body text-[9px] font-semibold text-sky-300 backdrop-blur-sm">❄</div>
+        )}
+      </div>
+
+      {/* Hover action bar */}
+      <div className="absolute bottom-[72px] left-0 right-0 translate-y-1 opacity-0 transition-all duration-150 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="mx-2 flex items-center justify-around rounded-xl border border-foreground/10 bg-[#1a1a1a]/95 p-1.5 backdrop-blur-sm">
+          {[
+            [Plus,         'Add sub-item'],
+            [Edit,         'Edit'],
+            [Bell,         'Set alert'],
+            [MoveRight,    'Move'],
+            [MoreHorizontal,'More'],
+          ].map(([Icon2, title], i) => (
+            <button key={title} title={title}
+              onClick={(e) => { e.stopPropagation(); if (title === 'More') onMenuOpen(item.id, e); }}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/50 transition-colors hover:bg-foreground/10 hover:text-foreground"
+            >
+              <Icon2 className="h-3.5 w-3.5" />
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Risk card */}
-      <Card className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />
-          <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/40">Inventory Risks</p>
+      {/* Card info */}
+      <div className="px-3 pb-3 pt-2" onClick={() => onOpen(item)}>
+        <p className="truncate font-body text-xs font-semibold text-foreground">{item.name}</p>
+        <div className="mt-1 flex items-center justify-between">
+          <span className={`font-body text-xs font-semibold ${stockCls(item.qty, item.minLevel)}`}>{item.qty} {item.unit}</span>
+          {exp && <span className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</span>}
         </div>
-        <div className="space-y-2.5">
-          {risks.map((r,i) => (
-            <div key={i} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.level === 'red' ? 'bg-red-400' : 'bg-amber-400'}`} />
-                <span className="font-body text-xs text-foreground/70 leading-snug">{r.text}</span>
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="font-body text-[10px] text-foreground/35">{item.sortlyId}</span>
+          <span className="font-body text-[10px] text-foreground/50">{fmt$(item.price)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Item list row ────────────────────────────────────────────────────────────
+function ItemListRow({ item, tags, isSelected, onSelect, onOpen, onMenuOpen }) {
+  const Icon = CAT_ICON[item.category] || Package;
+  const color = CAT_COLOR[item.category] || '#6b7280';
+  const exp = expiryLabel(item.expirationDate);
+  const itemTags = tags.filter(t => item.tags.includes(t.id));
+
+  return (
+    <div className="group flex cursor-pointer items-center gap-4 border-b border-foreground/[0.06] px-4 py-3 transition-colors hover:bg-foreground/[0.03]">
+      <button onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
+        className={`shrink-0 flex h-4 w-4 items-center justify-center rounded border transition-colors ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-foreground/25 text-transparent hover:border-foreground/50'}`}
+      >
+        <Check className="h-2.5 w-2.5" />
+      </button>
+
+      <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: color + '18' }}>
+        <Icon className="h-5 w-5" style={{ color }} />
+      </div>
+
+      <div className="flex flex-1 flex-col gap-0.5 overflow-hidden" onClick={() => onOpen(item)}>
+        <div className="flex items-center gap-2">
+          <span className="truncate font-body text-sm font-semibold text-foreground">{item.name}</span>
+          {item.isNew && <span className="shrink-0 rounded-full bg-amber-400/20 px-1.5 py-0.5 font-body text-[9px] font-bold uppercase text-amber-400">New</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-body text-[10px] text-foreground/35">{item.sortlyId}</span>
+          <span className="text-foreground/20">·</span>
+          <span className="font-body text-[10px] text-foreground/35">{item.sku}</span>
+          {itemTags.slice(0, 2).map(t => <TagChip key={t.id} tag={t} />)}
+        </div>
+      </div>
+
+      <div className="w-24 shrink-0 text-right" onClick={() => onOpen(item)}>
+        <StatusPill qty={item.qty} minLevel={item.minLevel} />
+        <p className={`mt-0.5 font-body text-xs ${stockCls(item.qty, item.minLevel)}`}>{item.qty} {item.unit}</p>
+      </div>
+
+      <div className="w-20 shrink-0 text-right" onClick={() => onOpen(item)}>
+        <p className="font-body text-xs text-foreground/70">{fmt$(item.price)}</p>
+        {exp && <p className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</p>}
+      </div>
+
+      <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+        <button onClick={(e) => { e.stopPropagation(); onMenuOpen(item.id, e); }}
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Item table row ───────────────────────────────────────────────────────────
+function ItemTableRow({ item, tags, isSelected, onSelect, onOpen, onMenuOpen }) {
+  const Icon = CAT_ICON[item.category] || Package;
+  const color = CAT_COLOR[item.category] || '#6b7280';
+  const exp = expiryLabel(item.expirationDate);
+
+  return (
+    <tr className="group border-b border-foreground/[0.05] transition-colors hover:bg-foreground/[0.03]">
+      <td className="w-10 px-3 py-2.5">
+        <button onClick={() => onSelect(item.id)}
+          className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-foreground/25 text-transparent hover:border-foreground/50'}`}
+        >
+          <Check className="h-2.5 w-2.5" />
+        </button>
+      </td>
+      <td className="w-10 px-2 py-2.5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: color + '18' }}>
+          <Icon className="h-4 w-4" style={{ color }} />
+        </div>
+      </td>
+      <td className="cursor-pointer px-3 py-2.5" onClick={() => onOpen(item)}>
+        <div className="flex items-center gap-2">
+          <span className="font-body text-xs font-semibold text-foreground">{item.name}</span>
+          {item.isNew && <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 font-body text-[9px] font-bold uppercase text-amber-400">New</span>}
+        </div>
+        <span className="font-body text-[10px] text-foreground/35">{item.sortlyId}</span>
+      </td>
+      <td className="px-3 py-2.5">
+        <span className={`font-body text-xs font-semibold ${stockCls(item.qty, item.minLevel)}`}>{item.qty}</span>
+        <span className="ml-1 font-body text-[10px] text-foreground/40">{item.unit}</span>
+      </td>
+      <td className="px-3 py-2.5 font-body text-xs text-foreground/70">{fmt$(item.price)}</td>
+      <td className="px-3 py-2.5"><StatusPill qty={item.qty} minLevel={item.minLevel} /></td>
+      <td className="px-3 py-2.5">
+        {exp ? <span className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</span> : <span className="font-body text-[10px] text-foreground/25">—</span>}
+      </td>
+      <td className="w-10 px-2 py-2.5">
+        <button onClick={(e) => { e.stopPropagation(); onMenuOpen(item.id, e); }}
+          className="flex h-7 w-7 items-center justify-center rounded-lg opacity-0 text-foreground/40 transition-all group-hover:opacity-100 hover:bg-foreground/[0.08] hover:text-foreground"
+        >
+          <MoreHorizontal className="h-3.5 w-3.5" />
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+// ─── Notifications panel ──────────────────────────────────────────────────────
+function NotificationsPanel({ items, onClose }) {
+  const alerts = items.filter(i => {
+    const n = daysUntil(i.expirationDate);
+    return i.qty <= i.minLevel || (n !== null && n <= 7);
+  });
+  return (
+    <motion.div initial={{ x:'100%' }} animate={{ x:0 }} exit={{ x:'100%' }} transition={{ ease:EASE, duration:0.3 }}
+      className="fixed right-0 top-0 z-50 flex h-full w-80 flex-col border-l border-foreground/[0.08] bg-[#111111] shadow-2xl"
+    >
+      <div className="flex items-center justify-between border-b border-foreground/[0.08] px-5 py-4">
+        <h2 className="font-heading text-base text-foreground">Notifications</h2>
+        <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {alerts.length === 0 && (
+          <p className="mt-8 text-center font-body text-xs text-foreground/35">No active alerts.</p>
+        )}
+        {alerts.map(item => {
+          const n = daysUntil(item.expirationDate);
+          const isLow = item.qty <= item.minLevel;
+          const isExp = n !== null && n <= 7;
+          return (
+            <div key={item.id} className="mb-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] p-3">
+              <div className="flex items-start gap-2">
+                {isExp ? <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" /> : <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />}
+                <div>
+                  <p className="font-body text-xs font-semibold text-foreground">{item.name}</p>
+                  {isLow && <p className="font-body text-[10px] text-amber-400">Stock low: {item.qty} / min {item.minLevel}</p>}
+                  {isExp && <p className="font-body text-[10px] text-red-400">{n <= 0 ? 'Expired' : `Expires in ${n} day${n !== 1 ? 's' : ''}`}</p>}
+                  <p className="font-body text-[10px] text-foreground/30">{item.sortlyId}</p>
+                </div>
               </div>
-              <button type="button" className="shrink-0 font-body text-[8px] tracking-[0.12em] uppercase text-accent border border-accent/30 px-2 py-0.5 rounded-full hover:bg-accent/10 transition-colors whitespace-nowrap">
-                {r.action}
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Add Folder modal ─────────────────────────────────────────────────────────
+function AddFolderModal({ folders, onClose, onSave }) {
+  const [name,     setName]     = useState('');
+  const [parentId, setParentId] = useState(null);
+  const [color,    setColor]    = useState('#60a5fa');
+  const COLORS = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#38bdf8','#d4a754','#6b7280'];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <motion.div initial={{ scale:0.96, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ scale:0.96, opacity:0 }} transition={{ ease:EASE, duration:0.2 }}
+        className="w-80 rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-heading text-base text-foreground">Add Folder</h2>
+          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Name *</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Folder name"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Parent Folder</label>
+            <select value={parentId || ''} onChange={e => setParentId(e.target.value || null)}
+              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+            >
+              <option value="">None (root)</option>
+              {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="mb-2 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Color</label>
+            <div className="flex gap-2">
+              {COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)}
+                  className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${color === c ? 'border-foreground/60 scale-110' : 'border-transparent'}`}
+                  style={{ background: c }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-xl border border-foreground/[0.10] py-2.5 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.05]">Cancel</button>
+          <button
+            onClick={() => { if (name.trim()) { onSave({ name: name.trim(), parentId, color }); onClose(); } }}
+            className="flex-1 rounded-xl bg-foreground py-2.5 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90"
+          >
+            Add
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Field row helper ────────────────────────────────────────────────────────
+function FieldRow({ label, children }) {
+  return (
+    <div>
+      <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+// ─── Barcode SVG (visual-only Code128 style) ─────────────────────────────────
+const BarcodeSVG = React.forwardRef(function BarcodeSVG({ value = '', width = 200, height = 56 }, ref) {
+  const bars = useMemo(() => {
+    let seed = value.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7);
+    function rand() { seed = (seed * 1664525 + 1013904223) | 0; return (seed >>> 0) / 0xffffffff; }
+    const arr = [];
+    let x = 8;
+    arr.push({ x, w: 2, dark: true }); x += 3;
+    arr.push({ x, w: 1, dark: true }); x += 2;
+    arr.push({ x, w: 2, dark: true }); x += 3;
+    for (let i = 0; i < 36; i++) {
+      const w = rand() > 0.6 ? 2 : 1;
+      arr.push({ x, w, dark: i % 2 === 0 });
+      x += w + (rand() > 0.5 ? 2 : 1);
+    }
+    arr.push({ x, w: 2, dark: true }); x += 3;
+    arr.push({ x, w: 1, dark: true }); x += 2;
+    arr.push({ x, w: 2, dark: true });
+    return arr;
+  }, [value]);
+  return (
+    <svg ref={ref} width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="text-foreground">
+      {bars.map((b, i) => b.dark && (
+        <rect key={i} x={b.x} y={0} width={b.w} height={height - 16} fill="currentColor" />
+      ))}
+      <text x={width / 2} y={height - 2} textAnchor="middle" fontSize="8" fill="currentColor" fontFamily="monospace" opacity="0.5">
+        {value}
+      </text>
+    </svg>
+  );
+});
+
+// ─── Metric tile ──────────────────────────────────────────────────────────────
+function MetricTile({ label, value, unit, sub, accent, onPlus, onMinus, onAlert, showAlert }) {
+  return (
+    <div className="flex flex-1 flex-col gap-1.5 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4 min-w-0">
+      <span className="font-body text-[10px] uppercase tracking-wider text-foreground/35 truncate">{label}</span>
+      <div className="flex items-end gap-1">
+        <span className={`font-heading text-2xl leading-none truncate ${accent || 'text-foreground'}`}>{value}</span>
+        {unit && <span className="mb-0.5 font-body text-xs text-foreground/40 shrink-0">{unit}</span>}
+      </div>
+      {sub && <span className="font-body text-[10px] text-foreground/40 truncate">{sub}</span>}
+      {(onPlus || onMinus || onAlert) && (
+        <div className="mt-1.5 flex items-center gap-1">
+          {onMinus && (
+            <button onClick={onMinus} className="flex h-6 w-6 items-center justify-center rounded-lg border border-foreground/[0.10] text-foreground/50 transition-colors hover:bg-foreground/[0.08] hover:text-foreground">
+              <Minus className="h-3 w-3" />
+            </button>
+          )}
+          {onPlus && (
+            <button onClick={onPlus} className="flex h-6 w-6 items-center justify-center rounded-lg border border-foreground/[0.10] text-foreground/50 transition-colors hover:bg-foreground/[0.08] hover:text-foreground">
+              <Plus className="h-3 w-3" />
+            </button>
+          )}
+          {onAlert && (
+            <button onClick={onAlert} title="Set alert" className="flex h-6 w-6 items-center justify-center rounded-lg border border-foreground/[0.10] transition-colors hover:bg-foreground/[0.08]">
+              <Bell className={`h-3 w-3 ${showAlert ? 'text-amber-400' : 'text-foreground/35'}`} />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Add Item modal (centered, quick form) ───────────────────────────────────
+const UNITS = ['units','bags','vials','kits','sets','boxes','syringes','masks','bottles'];
+
+function AddItemModal({ folders, onClose, onSave, onShowAll }) {
+  const [name,        setName]        = useState('');
+  const [qty,         setQty]         = useState('');
+  const [unit,        setUnit]        = useState('units');
+  const [minLvl,      setMinLvl]      = useState('');
+  const [price,       setPrice]       = useState('');
+  const [folderId,    setFolderId]    = useState('');
+  const [photos,      setPhotos]      = useState([]);
+  const [hasVariants, setHasVariants] = useState(false);
+
+  function handleSave() {
+    if (!name.trim() || !qty) return;
+    onSave({
+      id: `item-${Date.now()}`,
+      sortlyId: `AVOT${String(Math.floor(Math.random() * 9000) + 1000)}`,
+      name: name.trim(), sku: '', category: 'IV',
+      folderId: folderId || null,
+      qty: Number(qty), unit,
+      minLevel: Number(minLvl) || 0,
+      price: Number(price) || 0,
+      supplier: '', expirationDate: null, refrigeration: false,
+      notes: '', tags: [], photos, variants: [], customFields: {},
+      isNew: true, updatedAt: TODAY_STR,
+    });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 8 }} transition={{ ease: EASE, duration: 0.2 }}
+        className="w-[440px] max-h-[90vh] overflow-y-auto rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-heading text-base text-foreground">Add Item</h2>
+          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mb-4">
+          <PhotoDropzone photos={photos} onChange={setPhotos} />
+        </div>
+        <div className="space-y-3">
+          <FieldRow label="Name *">
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Item name"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+            />
+          </FieldRow>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <FieldRow label="Quantity *">
+                <input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="0" min="0"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+                />
+              </FieldRow>
+            </div>
+            <div className="flex-1">
+              <FieldRow label="Unit">
+                <select value={unit} onChange={e => setUnit(e.target.value)}
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+                >
+                  {UNITS.map(u => <option key={u}>{u}</option>)}
+                </select>
+              </FieldRow>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <FieldRow label="Min Level">
+                <input type="number" value={minLvl} onChange={e => setMinLvl(e.target.value)} placeholder="0" min="0"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+                />
+              </FieldRow>
+            </div>
+            <div className="flex-1">
+              <FieldRow label="Price ($)">
+                <input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" min="0" step="0.01"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+                />
+              </FieldRow>
+            </div>
+          </div>
+          <FieldRow label="Add to Folder">
+            <select value={folderId} onChange={e => setFolderId(e.target.value)}
+              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+            >
+              <option value="">No folder</option>
+              {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </FieldRow>
+          <div className="flex items-center justify-between rounded-lg border border-foreground/[0.08] px-3 py-2.5">
+            <span className="font-body text-sm text-foreground/70">This item has variants</span>
+            <button onClick={() => setHasVariants(v => !v)}
+              className={`relative h-5 w-9 rounded-full transition-colors ${hasVariants ? 'bg-amber-500' : 'bg-foreground/20'}`}
+            >
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${hasVariants ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+        </div>
+        <div className="mt-5 flex gap-2">
+          <button onClick={onShowAll} className="flex-1 rounded-xl border border-foreground/[0.10] py-2.5 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.05] hover:text-foreground/80">
+            Show All Fields
+          </button>
+          <button onClick={handleSave} disabled={!name.trim() || !qty}
+            className="flex-1 rounded-xl bg-foreground py-2.5 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90 disabled:opacity-40"
+          >
+            Add Item
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Photo dropzone ───────────────────────────────────────────────────────────
+const MAX_PHOTOS = 5;
+
+function PhotoDropzone({ photos = [], onChange }) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { 'image/*': [] },
+    maxFiles: MAX_PHOTOS - photos.length,
+    disabled: photos.length >= MAX_PHOTOS,
+    onDrop: (accepted) => {
+      const news = accepted.map((file, i) => ({
+        id:        'ph_' + Date.now() + i,
+        url:       URL.createObjectURL(file),
+        file,
+        isPrimary: photos.length === 0 && i === 0,
+      }));
+      onChange([...photos, ...news]);
+    },
+  });
+
+  function remove(id) {
+    const next = photos.filter(p => p.id !== id);
+    // If we removed the primary, auto-set first remaining as primary
+    if (next.length > 0 && !next.some(p => p.isPrimary)) next[0] = { ...next[0], isPrimary: true };
+    onChange(next);
+  }
+
+  function setPrimary(id) {
+    onChange(photos.map(p => ({ ...p, isPrimary: p.id === id })));
+  }
+
+  return (
+    <div className="space-y-2">
+      {photos.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {photos.map(p => (
+            <div key={p.id} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-foreground/[0.12]">
+              <img src={p.url} alt="" className="h-full w-full object-cover" />
+              {p.isPrimary && (
+                <span className="absolute bottom-0 left-0 right-0 bg-amber-400/80 py-0.5 text-center font-body text-[9px] font-bold uppercase text-black">
+                  Primary
+                </span>
+              )}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                {!p.isPrimary && (
+                  <button onClick={() => setPrimary(p.id)}
+                    className="rounded px-2 py-0.5 font-body text-[9px] font-semibold text-white bg-white/20 hover:bg-white/30">
+                    Set Primary
+                  </button>
+                )}
+                <button onClick={() => remove(p.id)}
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500/80 text-white hover:bg-red-500">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {photos.length < MAX_PHOTOS && (
+        <div {...getRootProps()}
+          className={`flex h-20 cursor-pointer items-center justify-center rounded-xl border border-dashed transition-colors
+            ${isDragActive
+              ? 'border-foreground/40 bg-foreground/[0.08]'
+              : 'border-foreground/[0.12] bg-foreground/[0.02] hover:bg-foreground/[0.04]'}`}
+        >
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center gap-1 pointer-events-none">
+            <ImageIcon className="h-5 w-5 text-foreground/25" />
+            <span className="font-body text-[11px] text-foreground/30">
+              {isDragActive ? 'Drop to add' : photos.length === 0 ? 'Add Photo' : `Add More (${photos.length}/${MAX_PHOTOS})`}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Barcode card (download + print) ─────────────────────────────────────────
+function BarcodeCard({ item }) {
+  const svgRef  = useRef(null);
+  const qrRef   = useRef(null);
+  const value   = item.sku || item.sortlyId || 'AVOT0000';
+  const [mode, setMode] = useState('barcode'); // 'barcode' | 'qr'
+
+  function handleDownload() {
+    if (mode === 'barcode') {
+      const node = svgRef.current;
+      if (!node) return;
+      const clone = node.cloneNode(true);
+      clone.setAttribute('style', 'background:white;color:#000');
+      clone.querySelectorAll('rect').forEach(r => r.setAttribute('fill', '#000'));
+      clone.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#000'));
+      const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `barcode-${value}.svg`; a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const node = qrRef.current;
+      if (!node) return;
+      const clone = node.cloneNode(true);
+      clone.setAttribute('style', 'background:white');
+      const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `qr-${value}.svg`; a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function handlePrint() {
+    let svgHTML = '';
+    if (mode === 'barcode') {
+      const node = svgRef.current;
+      if (!node) return;
+      const clone = node.cloneNode(true);
+      clone.setAttribute('style', 'color:#000');
+      clone.querySelectorAll('rect').forEach(r => r.setAttribute('fill', '#000'));
+      clone.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#000'));
+      svgHTML = clone.outerHTML;
+    } else {
+      const node = qrRef.current;
+      if (!node) return;
+      const clone = node.cloneNode(true);
+      clone.setAttribute('style', 'background:white');
+      svgHTML = clone.outerHTML;
+    }
+    const w = window.open('', '_blank', 'width=400,height=300');
+    w.document.write(`<!DOCTYPE html><html><head>
+<style>
+  @page { size: 62mm 29mm; margin: 0; }
+  body { margin: 0; padding: 3mm; display: flex; flex-direction: column; align-items: center;
+         justify-content: center; width: 62mm; height: 29mm; background: white; box-sizing: border-box; }
+  svg { width: 54mm; }
+  .name { font-family: monospace; font-size: 7pt; text-align: center; margin-top: 1mm;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 54mm; }
+</style></head><body>
+  ${svgHTML}
+  <div class="name">${item.name}</div>
+  <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 500); }<\/script>
+</body></html>`);
+    w.document.close();
+  }
+
+  return (
+    <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+      <div className="mb-3 flex items-center justify-between">
+        {/* Mode toggle */}
+        <div className="flex gap-1 rounded-lg border border-foreground/[0.08] p-0.5">
+          {[['barcode', 'Barcode'], ['qr', 'QR']].map(([m, label]) => (
+            <button key={m} onClick={() => setMode(m)}
+              className={`rounded-md px-2.5 py-1 font-body text-[10px] uppercase tracking-wider transition-colors ${mode === m ? 'bg-foreground/10 text-foreground' : 'text-foreground/35 hover:text-foreground/60'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          <button onClick={handleDownload} title="Download SVG"
+            className="flex h-6 w-6 items-center justify-center rounded-lg text-foreground/30 transition-colors hover:bg-foreground/[0.08] hover:text-foreground/70">
+            <Download className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={handlePrint} title="Print label"
+            className="flex h-6 w-6 items-center justify-center rounded-lg text-foreground/30 transition-colors hover:bg-foreground/[0.08] hover:text-foreground/70">
+            <Printer className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="flex justify-center py-2">
+        {mode === 'barcode'
+          ? <BarcodeSVG ref={svgRef} value={value} width={220} height={64} />
+          : <QRCodeSVG ref={qrRef} value={value} size={120} bgColor="transparent" fgColor="currentColor" level="M" />
+        }
+      </div>
+      <p className="mt-1 text-center font-body text-[10px] text-foreground/30">
+        {mode === 'barcode' ? 'Print opens a 62mm × 29mm Dymo-format label dialog' : `QR encodes: ${value}`}
+      </p>
+    </div>
+  );
+}
+
+// ─── Variants Table ───────────────────────────────────────────────────────────
+function VariantsTable({ variants, onAdd, onUpdate, onRemove, inputCls }) {
+  const cls = inputCls || 'rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-2.5 py-1.5 font-body text-xs text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none';
+  return (
+    <div>
+      {variants.length > 0 && (
+        <div className="mb-2">
+          <div className="mb-1 grid grid-cols-[1fr_1fr_80px_32px] gap-2 px-1">
+            {['Variant Name', 'SKU', 'Qty', ''].map(h => (
+              <span key={h} className="font-body text-[10px] uppercase tracking-wider text-foreground/30">{h}</span>
+            ))}
+          </div>
+          {variants.map(v => (
+            <div key={v.id} className="mb-1.5 grid grid-cols-[1fr_1fr_80px_32px] items-center gap-2">
+              <input
+                value={v.name}
+                onChange={e => onUpdate(v.id, 'name', e.target.value)}
+                placeholder="e.g. 500mg"
+                className={cls + ' w-full'}
+              />
+              <input
+                value={v.sku}
+                onChange={e => onUpdate(v.id, 'sku', e.target.value)}
+                placeholder="SKU"
+                className={cls + ' w-full'}
+              />
+              <input
+                type="number" min="0"
+                value={v.qty}
+                onChange={e => onUpdate(v.id, 'qty', Number(e.target.value))}
+                className={cls + ' w-full'}
+              />
+              <button onClick={() => onRemove(v.id)} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/25 transition-colors hover:bg-foreground/[0.06] hover:text-red-400">
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
         </div>
-      </Card>
+      )}
+      <button
+        onClick={onAdd}
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-foreground/[0.12] py-2 font-body text-xs text-foreground/40 transition-colors hover:border-foreground/25 hover:text-foreground/60"
+      >
+        <Plus className="h-3 w-3" /> Add Variant
+      </button>
+    </div>
+  );
+}
 
-      {/* Kits needing attention */}
-      <div>
-        <SectionLabel>Kits Needing Attention</SectionLabel>
-        <div className="space-y-2.5">
-          {KITS.filter(k => k.status !== 'Kit Ready').map(k => (
-            <KitCard key={k.id} kit={k} onOpen={onSelectKit} />
+// ─── Custom Field Input (type-aware) ─────────────────────────────────────────
+function CustomFieldInput({ def, value, onChange, inputCls }) {
+  const cls = inputCls || 'w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none';
+  if (def.fieldType === 'checkbox') {
+    return (
+      <button
+        type="button"
+        onClick={() => onChange(value === 'true' ? 'false' : 'true')}
+        className={`relative h-5 w-9 rounded-full transition-colors ${value === 'true' ? 'bg-blue-500' : 'bg-foreground/20'}`}
+      >
+        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${value === 'true' ? 'translate-x-4' : 'translate-x-0.5'}`} />
+      </button>
+    );
+  }
+  if (def.fieldType === 'dropdown') {
+    return (
+      <select value={value} onChange={e => onChange(e.target.value)}
+        className={cls.replace('bg-foreground/[0.04]', 'bg-[#1a1a1a]')}
+      >
+        <option value="">— Select —</option>
+        {(def.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+      </select>
+    );
+  }
+  if (def.fieldType === 'date') {
+    return <input type="date" value={value} onChange={e => onChange(e.target.value)} className={cls} />;
+  }
+  if (def.fieldType === 'number') {
+    return <input type="number" value={value} onChange={e => onChange(e.target.value)} className={cls} />;
+  }
+  // text (default)
+  return <input type="text" value={value} onChange={e => onChange(e.target.value)} className={cls} />;
+}
+
+// ─── Item Detail Page (full-page overlay) ────────────────────────────────────
+function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, onEdit, onDuplicate, onUpdateQty, onFetchTransactions }) {
+  const [activeTab,    setActiveTab]    = useState('info');
+  const [transactions, setTransactions] = useState(null); // null = not yet loaded
+  const [txLoading,    setTxLoading]    = useState(false);
+
+  const exp    = expiryLabel(item.expirationDate);
+  const folder = folders.find(f => f.id === item.folderId);
+
+  // Load transactions when Orders tab is activated
+  useEffect(() => {
+    if (activeTab === 'orders' && transactions === null && onFetchTransactions) {
+      setTxLoading(true);
+      onFetchTransactions(item.id).then(rows => {
+        setTransactions(rows || []);
+        setTxLoading(false);
+      });
+    }
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const itemTags = tags.filter(t => item.tags.includes(t.id));
+  const Icon   = CAT_ICON[item.category] || Package;
+  const color  = CAT_COLOR[item.category] || '#6b7280';
+
+  return (
+    <motion.div
+      key="detail" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+      transition={{ ease: EASE, duration: 0.3 }}
+      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background"
+    >
+      {/* Header */}
+      <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
+        <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {folder && <span className="truncate font-body text-xs text-foreground/40">{folder.name}</span>}
+          {folder && <ChevronRight className="h-3 w-3 shrink-0 text-foreground/25" />}
+          <span className="truncate font-body text-xs text-foreground/60">{item.name}</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button onClick={onDuplicate} title="Duplicate item"
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-foreground/[0.10] px-3 font-body text-xs text-foreground/50 transition-colors hover:bg-foreground/[0.05] hover:text-foreground/80">
+            <Copy className="h-3.5 w-3.5" /> Duplicate
+          </button>
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground" title="Move">
+            <MoveRight className="h-4 w-4" />
+          </button>
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground" title="More">
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+          <button onClick={onEdit} className="rounded-xl bg-foreground px-4 py-2 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90">
+            Edit
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="mx-auto w-full max-w-3xl px-6 py-8">
+        {/* Title */}
+        <div className="mb-6 flex items-start gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl" style={{ background: color + '18' }}>
+            <Icon className="h-7 w-7" style={{ color }} />
+          </div>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-heading text-2xl text-foreground">{item.name}</h1>
+              {item.isNew && <span className="rounded-full bg-amber-400/20 px-2 py-0.5 font-body text-[10px] font-bold uppercase text-amber-400">New</span>}
+              {exp && <span className={`rounded-full bg-red-500/10 px-2 py-0.5 font-body text-[10px] font-semibold ${exp.cls}`}>{exp.text}</span>}
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="font-body text-xs text-foreground/35">{item.sortlyId}</span>
+              <span className="font-body text-[10px] text-foreground/20">•</span>
+              <span className="font-body text-xs text-foreground/35">Updated {item.updatedAt}</span>
+              <span className="font-body text-[10px] text-foreground/20">•</span>
+              <span className="font-body text-xs text-foreground/35">SKU: {item.sku || '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Photos */}
+        {item.photos && item.photos.length > 0 && (
+          <div className="mb-6">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {item.photos.map((ph, i) => (
+                <div key={ph.id || i} className="relative shrink-0">
+                  <img
+                    src={ph.url}
+                    alt={`${item.name} photo ${i + 1}`}
+                    className="h-28 w-28 rounded-xl border border-foreground/[0.08] object-cover"
+                  />
+                  {ph.isPrimary && (
+                    <span className="absolute bottom-1.5 left-1.5 rounded-full bg-background/80 px-1.5 py-0.5 font-body text-[9px] text-foreground/60 backdrop-blur-sm">
+                      Primary
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Metric tiles */}
+        <div className="mb-6 flex gap-3">
+          <MetricTile
+            label="Quantity" value={item.qty} unit={item.unit}
+            accent={stockCls(item.qty, item.minLevel)}
+            onMinus={() => onUpdateQty(item.id, item.qty - 1)}
+            onPlus={() => onUpdateQty(item.id, item.qty + 1)}
+          />
+          <MetricTile
+            label="Min Level" value={item.minLevel} unit={item.unit}
+            sub={item.qty <= item.minLevel ? 'Below minimum' : 'OK'}
+            onAlert={() => {}} showAlert={item.qty <= item.minLevel}
+          />
+          <MetricTile label="Unit Price" value={fmt$(item.price)} sub={item.supplier || '—'} />
+          <MetricTile label="Total Value" value={fmt$(item.qty * item.price)} sub={`${item.qty} × ${fmt$(item.price)}`} />
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-4 flex gap-1 border-b border-foreground/[0.08]">
+          {[['info','Product Information'],['custom','Custom Fields'],['orders','Orders']].map(([key, label]) => (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`px-4 pb-3 pt-1 font-body text-xs transition-colors ${activeTab === key ? 'border-b-2 border-foreground text-foreground' : 'text-foreground/40 hover:text-foreground/70'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Product Info */}
+        {activeTab === 'info' && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+              <h3 className="mb-4 font-body text-[11px] uppercase tracking-wider text-foreground/35">Details</h3>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
+                {[
+                  ['Category',     item.category],
+                  ['Supplier',     item.supplier || '—'],
+                  ['Folder',       folder?.name || '—'],
+                  ['Refrigeration',item.refrigeration ? 'Yes' : 'No'],
+                  ['Expiration',   item.expirationDate || '—'],
+                  ['Last Updated', item.updatedAt],
+                ].map(([k, v]) => (
+                  <div key={k}>
+                    <p className="font-body text-[10px] uppercase tracking-wider text-foreground/30">{k}</p>
+                    <p className="mt-0.5 font-body text-sm text-foreground/80">{v}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {itemTags.length > 0 && (
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+                <h3 className="mb-3 font-body text-[11px] uppercase tracking-wider text-foreground/35">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {itemTags.map(t => <TagChip key={t.id} tag={t} />)}
+                </div>
+              </div>
+            )}
+            {item.notes && (
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+                <h3 className="mb-2 font-body text-[11px] uppercase tracking-wider text-foreground/35">Notes</h3>
+                <p className="font-body text-sm text-foreground/70">{item.notes}</p>
+              </div>
+            )}
+            {item.variants?.length > 0 && (
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+                <h3 className="mb-3 font-body text-[11px] uppercase tracking-wider text-foreground/35">Variants</h3>
+                <div>
+                  <div className="mb-1 grid grid-cols-[1fr_1fr_80px] gap-2 px-1">
+                    {['Name', 'SKU', 'Qty'].map(h => (
+                      <span key={h} className="font-body text-[10px] uppercase tracking-wider text-foreground/30">{h}</span>
+                    ))}
+                  </div>
+                  {item.variants.map(v => (
+                    <div key={v.id} className="grid grid-cols-[1fr_1fr_80px] gap-2 border-t border-foreground/[0.05] py-2">
+                      <span className="font-body text-sm text-foreground/80">{v.name || '—'}</span>
+                      <span className="font-body text-xs text-foreground/50">{v.sku || '—'}</span>
+                      <span className="font-body text-sm text-foreground/80">{v.qty}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <BarcodeCard item={item} />
+          </div>
+        )}
+
+        {/* Custom Fields */}
+        {activeTab === 'custom' && (
+          <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+            <h3 className="mb-4 font-body text-[11px] uppercase tracking-wider text-foreground/35">Custom Fields</h3>
+            {customFieldDefs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-8">
+                <Sliders className="h-8 w-8 text-foreground/15" />
+                <p className="font-body text-xs text-foreground/30">No custom fields defined.</p>
+                <p className="font-body text-[10px] text-foreground/20">Define fields in Settings → Custom Fields.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {customFieldDefs.map(def => {
+                  const val = (item.customFields || {})[def.id];
+                  return (
+                    <div key={def.id} className="flex items-start justify-between gap-4 border-b border-foreground/[0.05] pb-3 last:border-0 last:pb-0">
+                      <span className="font-body text-[11px] uppercase tracking-wider text-foreground/40 pt-0.5">{def.name}</span>
+                      <span className="font-body text-sm text-foreground/80 text-right">
+                        {def.fieldType === 'checkbox'
+                          ? (val === 'true' || val === true ? '✓ Yes' : '— No')
+                          : (val != null && val !== '' ? String(val) : <span className="text-foreground/25">—</span>)
+                        }
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Orders / Activity History */}
+        {activeTab === 'orders' && (
+          <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+            <h3 className="mb-4 font-body text-[11px] uppercase tracking-wider text-foreground/35">Activity History</h3>
+            {txLoading && (
+              <div className="flex justify-center py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-foreground/10 border-t-foreground/50" />
+              </div>
+            )}
+            {!txLoading && transactions !== null && transactions.length === 0 && (
+              <div className="flex flex-col items-center justify-center gap-2 py-8">
+                <Activity className="h-8 w-8 text-foreground/15" />
+                <p className="font-body text-xs text-foreground/30">No activity recorded yet.</p>
+              </div>
+            )}
+            {!txLoading && transactions !== null && transactions.length > 0 && (
+              <div className="space-y-2">
+                {transactions.map(tx => {
+                  const typeMap = {
+                    check_in:  { label:'Stock In',  cls:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                    check_out: { label:'Stock Out', cls:'text-red-400 bg-red-500/10 border-red-500/20' },
+                    edit:      { label:'Edited',    cls:'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+                    create:    { label:'Created',   cls:'text-foreground/50 bg-foreground/[0.06] border-foreground/10' },
+                    move:      { label:'Moved',     cls:'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+                    delete:    { label:'Deleted',   cls:'text-red-400 bg-red-500/10 border-red-500/20' },
+                    restore:   { label:'Restored',  cls:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                  };
+                  const t = typeMap[tx.type] || { label: tx.type, cls: 'text-foreground/50 bg-foreground/[0.06] border-foreground/10' };
+                  const delta = tx.qtyDelta != null
+                    ? (tx.qtyDelta >= 0 ? `+${tx.qtyDelta}` : String(tx.qtyDelta))
+                    : null;
+                  return (
+                    <div key={tx.id} className="flex items-start gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] px-4 py-3">
+                      <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 font-body text-[10px] font-semibold ${t.cls}`}>{t.label}</span>
+                      <div className="flex-1 min-w-0">
+                        {tx.note && <p className="font-body text-xs text-foreground/70 truncate">{tx.note}</p>}
+                        {delta && (
+                          <p className="font-body text-xs text-foreground/45">
+                            {tx.qtyBefore} → {tx.qtyAfter} ({delta})
+                          </p>
+                        )}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-body text-[10px] text-foreground/35">{tx.userName || 'System'}</p>
+                        <p className="font-body text-[10px] text-foreground/25">
+                          {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* Fallback when Supabase not connected */}
+            {!txLoading && transactions === null && !onFetchTransactions && (
+              <div className="flex flex-col items-center justify-center gap-2 py-8">
+                <Activity className="h-8 w-8 text-foreground/15" />
+                <p className="font-body text-xs text-foreground/30">Activity history requires Supabase.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Item Edit Page (full-page overlay) ──────────────────────────────────────
+function ItemEditPage({ item, folders, customFieldDefs = [], onClose, onSave }) {
+  const [name,    setName]    = useState(item.name);
+  const [qty,     setQty]     = useState(String(item.qty));
+  const [unit,    setUnit]    = useState(item.unit);
+  const [minLvl,  setMinLvl]  = useState(String(item.minLevel));
+  const [price,   setPrice]   = useState(String(item.price));
+  const [supplier,setSupplier]= useState(item.supplier || '');
+  const [sku,     setSku]     = useState(item.sku || '');
+  const [folderId,setFolderId]= useState(item.folderId || '');
+  const [expDate, setExpDate] = useState(item.expirationDate || '');
+  const [refrig,  setRefrig]  = useState(item.refrigeration);
+  const [notes,        setNotes]        = useState(item.notes || '');
+  const [photos,       setPhotos]       = useState(item.photos || []);
+  const [customFields, setCustomFields] = useState(item.customFields || {});
+  const [hasVariants,  setHasVariants]  = useState(!!(item.variants?.length));
+  const [variants,     setVariants]     = useState(item.variants || []);
+
+  function setCF(fieldId, value) {
+    setCustomFields(prev => ({ ...prev, [fieldId]: value }));
+  }
+  function addVariant() {
+    setVariants(v => [...v, { id: 'v-' + Date.now(), name: '', sku: '', qty: 0 }]);
+  }
+  function updateVariant(id, field, val) {
+    setVariants(v => v.map(x => x.id === id ? { ...x, [field]: val } : x));
+  }
+  function removeVariant(id) {
+    setVariants(v => v.filter(x => x.id !== id));
+  }
+
+  function handleSave() {
+    onSave({ ...item, name: name.trim(), qty: Number(qty), unit, minLevel: Number(minLvl), price: Number(price), supplier, sku, folderId: folderId || null, expirationDate: expDate || null, refrigeration: refrig, notes, photos, customFields, variants: hasVariants ? variants : [], updatedAt: TODAY_STR });
+  }
+
+  const inputCls = 'w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none';
+  const selectCls = 'w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none';
+
+  return (
+    <motion.div
+      key="edit" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+      transition={{ ease: EASE, duration: 0.3 }}
+      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background"
+    >
+      <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
+        <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
+        <h1 className="flex-1 font-heading text-base text-foreground">Edit Item</h1>
+        <button onClick={handleSave} className="rounded-xl bg-foreground px-5 py-2 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90">Save</button>
+      </div>
+      <div className="mx-auto w-full max-w-2xl space-y-5 px-6 py-8">
+        <PhotoDropzone photos={photos} onChange={setPhotos} />
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Item Information</h3>
+          <FieldRow label="Name *"><input value={name} onChange={e => setName(e.target.value)} className={inputCls} /></FieldRow>
+          <FieldRow label="SKU"><input value={sku} onChange={e => setSku(e.target.value)} placeholder="e.g. IV-NS-1L" className={inputCls} /></FieldRow>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldRow label="Quantity *"><input type="number" value={qty} onChange={e => setQty(e.target.value)} min="0" className={inputCls} /></FieldRow>
+            <FieldRow label="Unit"><select value={unit} onChange={e => setUnit(e.target.value)} className={selectCls}>{UNITS.map(u => <option key={u}>{u}</option>)}</select></FieldRow>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldRow label="Min Level"><input type="number" value={minLvl} onChange={e => setMinLvl(e.target.value)} min="0" className={inputCls} /></FieldRow>
+            <FieldRow label="Price ($)"><input type="number" value={price} onChange={e => setPrice(e.target.value)} min="0" step="0.01" className={inputCls} /></FieldRow>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Sourcing & Location</h3>
+          <FieldRow label="Supplier"><input value={supplier} onChange={e => setSupplier(e.target.value)} placeholder="Supplier name" className={inputCls} /></FieldRow>
+          <FieldRow label="Folder">
+            <select value={folderId} onChange={e => setFolderId(e.target.value)} className={selectCls}>
+              <option value="">No folder</option>
+              {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </FieldRow>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Storage & Compliance</h3>
+          <FieldRow label="Expiration Date"><input type="date" value={expDate} onChange={e => setExpDate(e.target.value)} className={inputCls} /></FieldRow>
+          <div className="flex items-center justify-between">
+            <span className="font-body text-sm text-foreground/70">Refrigeration Required</span>
+            <button onClick={() => setRefrig(v => !v)} className={`relative h-5 w-9 rounded-full transition-colors ${refrig ? 'bg-blue-500' : 'bg-foreground/20'}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${refrig ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+        </div>
+        {customFieldDefs.length > 0 && (
+          <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+            <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Custom Fields</h3>
+            {customFieldDefs.map(def => (
+              <FieldRow key={def.id} label={def.name}>
+                <CustomFieldInput def={def} value={customFields[def.id] ?? ''} onChange={v => setCF(def.id, v)} inputCls={inputCls} />
+              </FieldRow>
+            ))}
+          </div>
+        )}
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Variants</h3>
+              <p className="mt-0.5 font-body text-[10px] text-foreground/30">Track separate SKUs per size, strength, or format.</p>
+            </div>
+            <button
+              onClick={() => { setHasVariants(v => !v); if (!hasVariants && variants.length === 0) addVariant(); }}
+              className={`relative h-5 w-9 rounded-full transition-colors ${hasVariants ? 'bg-amber-500' : 'bg-foreground/20'}`}
+            >
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${hasVariants ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+          {hasVariants && (
+            <VariantsTable variants={variants} onAdd={addVariant} onUpdate={updateVariant} onRemove={removeVariant} inputCls={inputCls} />
+          )}
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <h3 className="mb-3 font-body text-[11px] uppercase tracking-wider text-foreground/35">Notes</h3>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Internal notes..."
+            className="w-full resize-none rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Add Item Full Page (all fields) ─────────────────────────────────────────
+function AddItemFullPage({ folders, customFieldDefs = [], onClose, onSave }) {
+  const [name,    setName]    = useState('');
+  const [qty,     setQty]     = useState('');
+  const [unit,    setUnit]    = useState('units');
+  const [minLvl,  setMinLvl]  = useState('');
+  const [price,   setPrice]   = useState('');
+  const [sku,     setSku]     = useState('');
+  const [supplier,setSupplier]= useState('');
+  const [folderId,setFolderId]= useState('');
+  const [expDate, setExpDate] = useState('');
+  const [refrig,  setRefrig]  = useState(false);
+  const [notes,   setNotes]   = useState('');
+  const [customFields, setCustomFields] = useState({});
+  const [photos,       setPhotos]       = useState([]);
+  const [hasVariants,  setHasVariants]  = useState(false);
+  const [variants,     setVariants]     = useState([]);
+
+  function setCF(fieldId, value) {
+    setCustomFields(prev => ({ ...prev, [fieldId]: value }));
+  }
+  function addVariant() {
+    setVariants(v => [...v, { id: 'v-' + Date.now(), name: '', sku: '', qty: 0 }]);
+  }
+  function updateVariant(id, field, val) {
+    setVariants(v => v.map(x => x.id === id ? { ...x, [field]: val } : x));
+  }
+  function removeVariant(id) {
+    setVariants(v => v.filter(x => x.id !== id));
+  }
+
+  function handleSave() {
+    if (!name.trim() || !qty) return;
+    onSave({ id: `item-${Date.now()}`, sortlyId: `AVOT${String(Math.floor(Math.random() * 9000) + 1000)}`, name: name.trim(), sku, category: 'IV', folderId: folderId || null, qty: Number(qty), unit, minLevel: Number(minLvl) || 0, price: Number(price) || 0, supplier, expirationDate: expDate || null, refrigeration: refrig, notes, photos, customFields, variants: hasVariants ? variants : [], tags: [], isNew: true, updatedAt: TODAY_STR });
+    onClose();
+  }
+
+  const inputCls = 'w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none';
+  const selectCls = 'w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none';
+
+  return (
+    <motion.div
+      key="add-full" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+      transition={{ ease: EASE, duration: 0.3 }}
+      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background"
+    >
+      <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
+        <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
+        <h1 className="flex-1 font-heading text-base text-foreground">Add Item — All Fields</h1>
+        <button onClick={handleSave} disabled={!name.trim() || !qty} className="rounded-xl bg-foreground px-5 py-2 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90 disabled:opacity-40">Add Item</button>
+      </div>
+      <div className="mx-auto w-full max-w-2xl space-y-5 px-6 py-8">
+        <PhotoDropzone photos={photos} onChange={setPhotos} />
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Item Information</h3>
+          <FieldRow label="Name *"><input value={name} onChange={e => setName(e.target.value)} placeholder="Item name" className={inputCls} /></FieldRow>
+          <FieldRow label="SKU / Barcode"><input value={sku} onChange={e => setSku(e.target.value)} placeholder="e.g. IV-NS-1L" className={inputCls} /></FieldRow>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldRow label="Quantity *"><input type="number" value={qty} onChange={e => setQty(e.target.value)} min="0" className={inputCls} /></FieldRow>
+            <FieldRow label="Unit of Measure"><select value={unit} onChange={e => setUnit(e.target.value)} className={selectCls}>{UNITS.map(u => <option key={u}>{u}</option>)}</select></FieldRow>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldRow label="Min Level"><input type="number" value={minLvl} onChange={e => setMinLvl(e.target.value)} min="0" className={inputCls} /></FieldRow>
+            <FieldRow label="Price ($)"><input type="number" value={price} onChange={e => setPrice(e.target.value)} min="0" step="0.01" className={inputCls} /></FieldRow>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Sourcing & Location</h3>
+          <FieldRow label="Supplier"><input value={supplier} onChange={e => setSupplier(e.target.value)} placeholder="Supplier name" className={inputCls} /></FieldRow>
+          <FieldRow label="Folder">
+            <select value={folderId} onChange={e => setFolderId(e.target.value)} className={selectCls}>
+              <option value="">No folder</option>
+              {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </FieldRow>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Storage & Compliance</h3>
+          <FieldRow label="Expiration Date"><input type="date" value={expDate} onChange={e => setExpDate(e.target.value)} className={inputCls} /></FieldRow>
+          <div className="flex items-center justify-between">
+            <span className="font-body text-sm text-foreground/70">Refrigeration Required</span>
+            <button onClick={() => setRefrig(v => !v)} className={`relative h-5 w-9 rounded-full transition-colors ${refrig ? 'bg-blue-500' : 'bg-foreground/20'}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${refrig ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">QR / Barcodes</h3>
+            <span className="font-body text-[10px] text-foreground/25">Auto-generated on save</span>
+          </div>
+          <div className="flex items-center justify-center rounded-lg bg-foreground/[0.03] py-5 opacity-40">
+            <Barcode className="h-10 w-10 text-foreground/30" />
+          </div>
+        </div>
+        {customFieldDefs.length > 0 && (
+          <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+            <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Custom Fields</h3>
+            {customFieldDefs.map(def => (
+              <FieldRow key={def.id} label={def.name}>
+                <CustomFieldInput def={def} value={customFields[def.id] ?? ''} onChange={v => setCF(def.id, v)} inputCls={inputCls} />
+              </FieldRow>
+            ))}
+          </div>
+        )}
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Variants</h3>
+              <p className="mt-0.5 font-body text-[10px] text-foreground/30">Track separate SKUs per size, strength, or format.</p>
+            </div>
+            <button
+              onClick={() => { setHasVariants(v => !v); if (!hasVariants && variants.length === 0) addVariant(); }}
+              className={`relative h-5 w-9 rounded-full transition-colors ${hasVariants ? 'bg-amber-500' : 'bg-foreground/20'}`}
+            >
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${hasVariants ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+          {hasVariants && (
+            <VariantsTable variants={variants} onAdd={addVariant} onUpdate={updateVariant} onRemove={removeVariant} inputCls={inputCls} />
+          )}
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <h3 className="mb-3 font-body text-[11px] uppercase tracking-wider text-foreground/35">Notes</h3>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Internal notes..."
+            className="w-full resize-none rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Trash view ───────────────────────────────────────────────────────────────
+function TrashView({ trashedItems, onRestore, onDeletePermanent }) {
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-5 py-4">
+        <h2 className="flex-1 font-heading text-base text-foreground">Trash</h2>
+        {trashedItems.length > 0 && (
+          <button onClick={() => onDeletePermanent('all')} className="font-body text-xs text-red-400 transition-colors hover:text-red-300">
+            Empty Trash
+          </button>
+        )}
+      </div>
+      <div className="flex-1 overflow-y-auto p-5">
+        {trashedItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-24">
+            <Trash2 className="h-10 w-10 text-foreground/15" />
+            <p className="font-body text-sm text-foreground/30">Trash is empty.</p>
+            <span className="font-body text-xs text-foreground/20">Items moved to trash appear here.</span>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {trashedItems.map(item => {
+              const Icon = CAT_ICON[item.category] || Package;
+              const color = CAT_COLOR[item.category] || '#6b7280';
+              return (
+                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] px-4 py-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: color + '15' }}>
+                    <Icon className="h-4 w-4" style={{ color }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-body text-sm text-foreground/70">{item.name}</p>
+                    <p className="font-body text-[10px] text-foreground/30">{item.sortlyId} · Deleted {item.deletedAt}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button onClick={() => onRestore(item.id)} className="rounded-lg border border-foreground/[0.10] px-3 py-1.5 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.05] hover:text-foreground">
+                      Restore
+                    </button>
+                    <button onClick={() => onDeletePermanent(item.id)} className="rounded-lg border border-red-500/20 px-3 py-1.5 font-body text-xs text-red-400 transition-colors hover:bg-red-500/10">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tag edit modal ──────────────────────────────────────────────────────────
+const TAG_COLORS = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#38bdf8','#d4a754','#6b7280','#ec4899','#14b8a6'];
+
+function TagEditModal({ tag, onClose, onSave }) {
+  const [name,  setName]  = useState(tag?.name  || '');
+  const [color, setColor] = useState(tag?.color || TAG_COLORS[0]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }} transition={{ ease: EASE, duration: 0.2 }}
+        className="w-72 rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-heading text-base text-foreground">{tag ? 'Edit Tag' : 'Add Tag'}</h2>
+          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Name *</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Tag name"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2.5 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Color</label>
+            <div className="flex flex-wrap gap-2">
+              {TAG_COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)}
+                  className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${color === c ? 'border-foreground/60 scale-110' : 'border-transparent'}`}
+                  style={{ background: c }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mt-5 flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-xl border border-foreground/[0.10] py-2.5 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.05]">Cancel</button>
+          <button onClick={() => { if (name.trim()) { onSave({ name: name.trim(), color }); onClose(); } }} disabled={!name.trim()}
+            className="flex-1 rounded-xl bg-foreground py-2.5 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90 disabled:opacity-40"
+          >{tag ? 'Save' : 'Add'}</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Tags view ────────────────────────────────────────────────────────────────
+function TagsView({ tags, items, onAddTag, onEditTag, onDeleteTag }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [editTag, setEditTag] = useState(null);
+  function tagCount(id) { return items.filter(i => i.tags.includes(id)).length; }
+
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-5 py-4">
+        <h2 className="flex-1 font-heading text-base text-foreground">Tags</h2>
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90">
+          <Plus className="h-3.5 w-3.5" /> Add Tag
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-5">
+        {tags.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-24">
+            <Tag className="h-10 w-10 text-foreground/15" />
+            <p className="font-body text-sm text-foreground/30">No tags yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {tags.map(tag => (
+              <div key={tag.id} className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] px-4 py-3">
+                <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: tag.color }} />
+                <span className="flex-1 font-body text-sm text-foreground/80">{tag.name}</span>
+                <span className="font-body text-xs text-foreground/35">{tagCount(tag.id)} item{tagCount(tag.id) !== 1 ? 's' : ''}</span>
+                <div className="flex gap-1">
+                  <button onClick={() => setEditTag(tag)} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/30 transition-colors hover:bg-foreground/[0.08] hover:text-foreground/60"><Edit className="h-3.5 w-3.5" /></button>
+                  <button onClick={() => onDeleteTag(tag.id)} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/30 transition-colors hover:bg-foreground/[0.08] hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <AnimatePresence>
+        {showAdd && <TagEditModal key="add" onClose={() => setShowAdd(false)} onSave={(d) => onAddTag({ id:`t${Date.now()}`, ...d })} />}
+        {editTag && <TagEditModal key="edit" tag={editTag} onClose={() => setEditTag(null)} onSave={(d) => { onEditTag({ ...editTag, ...d }); setEditTag(null); }} />}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Reports view ─────────────────────────────────────────────────────────────
+const REPORT_DEFS = [
+  { id:'summary',  label:'Inventory Summary',    Icon:FileText },
+  { id:'activity', label:'Activity History',      Icon:Clock },
+  { id:'txn',      label:'Transactions',          Icon:ArrowUpDown },
+  { id:'flow',     label:'Item Flow',             Icon:TrendingUp },
+  { id:'moves',    label:'Move Summary',          Icon:MoveRight },
+  { id:'users',    label:'User Activity Summary', Icon:User },
+];
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+
+function exportToCSV(items, folders, tags) {
+  const tagMap  = Object.fromEntries((tags   || []).map(t => [t.id,   t.name]));
+  const folderMap = Object.fromEntries((folders || []).map(f => [f.id, f.name]));
+
+  const cols = [
+    'ID', 'Name', 'SKU', 'Category', 'Folder', 'Qty', 'Unit',
+    'Min Level', 'Price', 'Supplier', 'Expiration Date',
+    'Refrigeration', 'Tags', 'Notes', 'Updated At',
+  ];
+
+  const escape = (v) => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const rows = items.map(i => [
+    i.sortlyId || i.id,
+    i.name,
+    i.sku,
+    i.category,
+    folderMap[i.folderId] || '',
+    i.qty,
+    i.unit,
+    i.minLevel,
+    i.price,
+    i.supplier,
+    i.expirationDate || '',
+    i.refrigeration ? 'Yes' : 'No',
+    (i.tags || []).map(tid => tagMap[tid] || tid).join('; '),
+    i.notes,
+    i.updatedAt || '',
+  ].map(escape).join(','));
+
+  const csv = [cols.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `avalon-inventory-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ReportsView({ items, folders, tags }) {
+  const [activeReport, setActiveReport] = useState('summary');
+  const rDef = REPORT_DEFS.find(r => r.id === activeReport);
+  const totalValue = items.reduce((s, i) => s + i.qty * i.price, 0);
+  const totalUnits = items.reduce((s, i) => s + i.qty, 0);
+  const lowStock   = items.filter(i => i.qty > 0 && i.qty <= i.minLevel).length;
+  const outOfStock = items.filter(i => i.qty <= 0).length;
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      {/* Sub-nav */}
+      <div className="w-52 shrink-0 overflow-y-auto border-r border-foreground/[0.08] bg-[#0d0d0d]">
+        <div className="px-3 py-4">
+          <p className="mb-2 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/30">Reports</p>
+          {REPORT_DEFS.map(({ id, label, Icon }) => (
+            <button key={id} onClick={() => setActiveReport(id)}
+              className={`mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 font-body text-xs transition-colors ${activeReport === id ? 'bg-foreground/10 text-foreground' : 'text-foreground/50 hover:bg-foreground/[0.05] hover:text-foreground/80'}`}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              {label}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <Card className="overflow-hidden">
-        <div className="px-4 pt-4 pb-2">
-          <SectionLabel>Recent Activity</SectionLabel>
+      {/* Content */}
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        <div className="flex shrink-0 items-center justify-between border-b border-foreground/[0.08] px-5 py-4">
+          <h2 className="font-heading text-base text-foreground">{rDef?.label}</h2>
+          <div className="flex gap-2">
+            <button onClick={() => exportToCSV(items, folders, tags)} className="flex h-8 items-center gap-1.5 rounded-lg border border-foreground/[0.10] px-3 font-body text-xs text-foreground/50 transition-colors hover:bg-foreground/[0.05]"><Download className="h-3.5 w-3.5" /> Export CSV</button>
+            <button className="flex h-8 items-center gap-1.5 rounded-lg border border-foreground/[0.10] px-3 font-body text-xs text-foreground/50 transition-colors hover:bg-foreground/[0.05]"><Printer className="h-3.5 w-3.5" /> Print</button>
+          </div>
         </div>
-        <div className="divide-y divide-foreground/[0.05]">
-          {ACTIVITY_LOG.slice(0,5).map(a => (
-            <div key={a.id} className="flex items-start gap-3 px-4 py-2.5">
-              <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ACT_DOT[a.type] || 'bg-foreground/30'}`} />
-              <div className="flex-1 min-w-0">
-                <p className="font-body text-xs text-foreground/75 leading-snug">{a.action} · {a.item}</p>
-                <p className="font-body text-[9px] text-foreground/35 mt-0.5">{a.user} · {a.time}</p>
+        <div className="p-5">
+
+          {/* ── Inventory Summary ── */}
+          {activeReport === 'summary' && (
+            <>
+              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { label:'Total SKUs',  value:items.length,         unit:'' },
+                  { label:'Total Units', value:totalUnits,            unit:'' },
+                  { label:'Total Value', value:fmt$(totalValue),      unit:'' },
+                  { label:'Alerts',      value:lowStock + outOfStock, unit:`${lowStock} low · ${outOfStock} out` },
+                ].map(({ label, value, unit }) => (
+                  <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-4">
+                    <p className="font-body text-[10px] uppercase tracking-wider text-foreground/30">{label}</p>
+                    <p className="mt-1 font-heading text-xl text-foreground">{value}</p>
+                    {unit && <p className="font-body text-[10px] text-foreground/35">{unit}</p>}
+                  </div>
+                ))}
               </div>
+              <div className="overflow-x-auto rounded-2xl border border-foreground/[0.08]">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-foreground/[0.08] bg-foreground/[0.02]">
+                      {['Name','SKU','Folder','Qty','Price','Total Value','Status'].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-body text-[10px] uppercase tracking-wider text-foreground/35">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map(item => {
+                      const folder = folders.find(f => f.id === item.folderId);
+                      return (
+                        <tr key={item.id} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02]">
+                          <td className="px-4 py-2.5 font-body text-xs text-foreground/80">{item.name}</td>
+                          <td className="px-4 py-2.5 font-body text-xs text-foreground/40">{item.sku}</td>
+                          <td className="px-4 py-2.5 font-body text-xs text-foreground/40">{folder?.name || '—'}</td>
+                          <td className={`px-4 py-2.5 font-body text-xs font-semibold ${stockCls(item.qty, item.minLevel)}`}>{item.qty} {item.unit}</td>
+                          <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{fmt$(item.price)}</td>
+                          <td className="px-4 py-2.5 font-body text-xs font-semibold text-foreground/80">{fmt$(item.qty * item.price)}</td>
+                          <td className="px-4 py-2.5"><StatusPill qty={item.qty} minLevel={item.minLevel} /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-foreground/[0.12] bg-foreground/[0.03]">
+                      <td colSpan={3} className="px-4 py-3 font-body text-xs font-semibold text-foreground/50">Total</td>
+                      <td className="px-4 py-3 font-body text-xs font-semibold text-foreground">{totalUnits}</td>
+                      <td />
+                      <td className="px-4 py-3 font-body text-xs font-semibold text-foreground">{fmt$(totalValue)}</td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          )}
+
+          {/* ── Activity History ── */}
+          {activeReport === 'activity' && (
+            <div className="space-y-3">
+              {[
+                { action:'Qty updated',    item:'NAD+ 250mg vial',         detail:'Qty 10 → 8',                    by:'Joseph L.',    at:'2026-05-19 14:22', Icon:RefreshCw,  cls:'text-blue-400' },
+                { action:'Item added',     item:'IV Start Kit',            detail:'Added to IV Supplies',           by:'Joseph L.',    at:'2026-05-19 09:14', Icon:Plus,       cls:'text-emerald-400' },
+                { action:'Low stock',      item:'Vitamin C 50ml',          detail:'Qty 3 / Min 4',                  by:'System',       at:'2026-05-18 08:00', Icon:AlertTriangle, cls:'text-amber-400' },
+                { action:'Expiry alert',   item:'Epinephrine 1mg/ml',      detail:'Exp 2026-05-18',                 by:'System',       at:'2026-05-17 08:00', Icon:AlertCircle, cls:'text-red-400' },
+                { action:'Item edited',    item:'IV Bag — 1L Normal Saline', detail:'Supplier updated',             by:'Joseph L.',    at:'2026-05-16 16:45', Icon:Edit,       cls:'text-foreground/50' },
+                { action:'Folder created', item:'IV Supplies',             detail:'Created under Avalon Vitality',  by:'Joseph L.',    at:'2026-05-14 11:30', Icon:FolderPlus, cls:'text-foreground/50' },
+              ].map((ev, i) => (
+                <div key={i} className="flex gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-4">
+                  <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] ${ev.cls}`}><ev.Icon className="h-3.5 w-3.5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-body text-xs font-semibold text-foreground/80">{ev.action} — <span className="text-foreground">{ev.item}</span></p>
+                        <p className="font-body text-[11px] text-foreground/40">{ev.detail}</p>
+                      </div>
+                      <span className="shrink-0 font-body text-[10px] text-foreground/30">{ev.at}</span>
+                    </div>
+                    <p className="mt-1 font-body text-[10px] text-foreground/30">By {ev.by}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Transactions ── */}
+          {activeReport === 'txn' && (
+            <div className="overflow-x-auto rounded-2xl border border-foreground/[0.08]">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-foreground/[0.08] bg-foreground/[0.02]">
+                    {['Date','Item','Type','Qty Change','New Qty','User'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left font-body text-[10px] uppercase tracking-wider text-foreground/35">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { date:'2026-05-19', item:'NAD+ 250mg vial',        type:'Used',      delta:-2, newQty:8,  user:'Joseph L.' },
+                    { date:'2026-05-19', item:'IV Start Kit',           type:'Received',  delta:+2, newQty:6,  user:'Joseph L.' },
+                    { date:'2026-05-18', item:'Vitamin C 50ml',         type:'Used',      delta:-1, newQty:3,  user:'Stephanie W.' },
+                    { date:'2026-05-17', item:'B12 IM vial',            type:'Received',  delta:+6, newQty:18, user:'Joseph L.' },
+                    { date:'2026-05-16', item:'Epinephrine 1mg/ml',     type:'Used',      delta:-1, newQty:4,  user:'Stephanie W.' },
+                    { date:'2026-05-15', item:'Glutathione 600mg vial', type:'Received',  delta:+8, newQty:14, user:'Joseph L.' },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02]">
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/45">{row.date}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/80">{row.item}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`rounded-full px-2 py-0.5 font-body text-[10px] font-semibold ${row.type === 'Received' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-blue-500/15 text-blue-400'}`}>{row.type}</span>
+                      </td>
+                      <td className={`px-4 py-2.5 font-body text-xs font-semibold ${row.delta > 0 ? 'text-emerald-400' : 'text-blue-400'}`}>{row.delta > 0 ? '+' : ''}{row.delta}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{row.newQty}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/45">{row.user}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* ── Item Flow ── */}
+          {activeReport === 'flow' && (
+            <div className="space-y-3">
+              <p className="mb-4 font-body text-xs text-foreground/40">Items ranked by total value (qty × price)</p>
+              {[...items].sort((a, b) => (b.qty * b.price) - (a.qty * a.price)).slice(0, 10).map((item, i) => {
+                const maxVal = Math.max(...items.map(it => it.qty * it.price));
+                const pct = Math.round(((item.qty * item.price) / maxVal) * 100);
+                const Icon = CAT_ICON[item.category] || Package;
+                const color = CAT_COLOR[item.category] || '#6b7280';
+                return (
+                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-3">
+                    <span className="w-5 shrink-0 text-right font-body text-[11px] text-foreground/30">{i + 1}</span>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: color + '18' }}>
+                      <Icon className="h-4 w-4" style={{ color }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <p className="truncate font-body text-xs font-semibold text-foreground/80">{item.name}</p>
+                        <span className="shrink-0 font-body text-xs text-foreground/50">{item.qty} {item.unit}</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-foreground/[0.08]">
+                        <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                      </div>
+                    </div>
+                    <span className="shrink-0 font-body text-xs text-foreground/40">{fmt$(item.qty * item.price)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Move Summary ── */}
+          {activeReport === 'moves' && (
+            <div className="space-y-3">
+              {folders.map(folder => {
+                const fi = items.filter(i => i.folderId === folder.id);
+                if (fi.length === 0) return null;
+                const val = fi.reduce((s, i) => s + i.qty * i.price, 0);
+                return (
+                  <div key={folder.id} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: folder.color }} />
+                        <span className="font-body text-sm font-semibold text-foreground/80">{folder.name}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-body text-xs text-foreground/40">{fi.length} item{fi.length !== 1 ? 's' : ''}</span>
+                        <span className="font-body text-xs font-semibold text-foreground/70">{fmt$(val)}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {fi.map(item => (
+                        <span key={item.id} className="rounded-full border border-foreground/[0.08] px-2 py-0.5 font-body text-[10px] text-foreground/50">{item.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── User Activity ── */}
+          {activeReport === 'users' && (
+            <div className="overflow-x-auto rounded-2xl border border-foreground/[0.08]">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-foreground/[0.08] bg-foreground/[0.02]">
+                    {['User','Actions','Items Edited','Last Active'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left font-body text-[10px] uppercase tracking-wider text-foreground/35">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { name:'Joseph L.',   actions:12, edited:8, last:'2026-05-19' },
+                    { name:'Stephanie W.',actions:7,  edited:4, last:'2026-05-18' },
+                    { name:'System',      actions:6,  edited:0, last:'2026-05-19' },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02]">
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground/[0.08] font-body text-[11px] text-foreground/60">{row.name[0]}</div>
+                          <span className="font-body text-xs text-foreground/80">{row.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{row.actions}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{row.edited}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-foreground/45">{row.last}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Settings view ────────────────────────────────────────────────────────────
+const FIELD_TYPES = [
+  { value: 'text',     label: 'Text' },
+  { value: 'number',   label: 'Number' },
+  { value: 'date',     label: 'Date' },
+  { value: 'checkbox', label: 'Checkbox (Yes/No)' },
+  { value: 'dropdown', label: 'Dropdown' },
+];
+
+function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldDef, onEditFieldDef, onDeleteFieldDef, tags = [], onAddTag, onEditTag, onDeleteTag }) {
+  const [orgName,      setOrgName]      = useState(settings.orgName      || 'Avalon Vitality');
+  const [currency,     setCurrency]     = useState(settings.currency     || 'USD');
+  const [lowThresh,    setLowThresh]    = useState(settings.lowThreshold || 'auto');
+  const [emailAlerts,  setEmailAlerts]  = useState(settings.emailAlerts  || false);
+  const [alertEmail,   setAlertEmail]   = useState(settings.alertEmail   || '');
+  const [saving,       setSaving]       = useState(false);
+
+  // Tag editing state
+  const [addingTag,    setAddingTag]    = useState(false);
+  const [editingTagId, setEditingTagId] = useState(null);
+  const [tagName,      setTagName]      = useState('');
+  const [tagColor,     setTagColor]     = useState('#60a5fa');
+  const TAG_COLORS = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#38bdf8','#d4a754','#6b7280','#f472b6','#4ade80'];
+
+  // Custom field definition editing state
+  const [addingField,    setAddingField]    = useState(false);
+  const [editingFieldId, setEditingFieldId] = useState(null);
+  const [fieldDraft,     setFieldDraft]     = useState({ name: '', fieldType: 'text', options: [] });
+  const [optionInput,    setOptionInput]    = useState('');
+
+  // Sync when settings prop changes (e.g. after DB load)
+  useEffect(() => {
+    if (settings.orgName)      setOrgName(settings.orgName);
+    if (settings.currency)     setCurrency(settings.currency);
+    if (settings.lowThreshold) setLowThresh(settings.lowThreshold);
+    if (settings.emailAlerts != null) setEmailAlerts(settings.emailAlerts);
+    if (settings.alertEmail)   setAlertEmail(settings.alertEmail);
+  }, [settings.orgName, settings.currency, settings.lowThreshold, settings.emailAlerts, settings.alertEmail]);
+
+  function handleSave() {
+    setSaving(true);
+    onSave?.({ orgName, currency, lowThreshold: lowThresh, emailAlerts, alertEmail });
+    setTimeout(() => setSaving(false), 1500);
+  }
+
+  function openAddTag() { setTagName(''); setTagColor('#60a5fa'); setEditingTagId(null); setAddingTag(true); }
+  function openEditTag(tag) { setTagName(tag.name); setTagColor(tag.color); setEditingTagId(tag.id); setAddingTag(true); }
+  function commitTag() {
+    if (!tagName.trim()) return;
+    if (editingTagId) {
+      onEditTag?.({ id: editingTagId, name: tagName.trim(), color: tagColor });
+    } else {
+      onAddTag?.({ name: tagName.trim(), color: tagColor });
+    }
+    setAddingTag(false); setEditingTagId(null);
+  }
+
+  function openAddField() {
+    setFieldDraft({ name: '', fieldType: 'text', options: [] });
+    setOptionInput('');
+    setEditingFieldId(null);
+    setAddingField(true);
+  }
+
+  function openEditField(def) {
+    setFieldDraft({ name: def.name, fieldType: def.fieldType, options: def.options || [] });
+    setOptionInput('');
+    setEditingFieldId(def.id);
+    setAddingField(true);
+  }
+
+  function commitField() {
+    if (!fieldDraft.name.trim()) return;
+    if (editingFieldId) {
+      onEditFieldDef?.(editingFieldId, fieldDraft);
+    } else {
+      onAddFieldDef?.(fieldDraft);
+    }
+    setAddingField(false);
+    setEditingFieldId(null);
+  }
+
+  function addOption() {
+    const o = optionInput.trim();
+    if (!o || fieldDraft.options.includes(o)) return;
+    setFieldDraft(d => ({ ...d, options: [...d.options, o] }));
+    setOptionInput('');
+  }
+
+  function removeOption(o) {
+    setFieldDraft(d => ({ ...d, options: d.options.filter(x => x !== o) }));
+  }
+
+  return (
+    <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex shrink-0 items-center border-b border-foreground/[0.08] px-5 py-4">
+        <h2 className="flex-1 font-heading text-base text-foreground">Settings</h2>
+      </div>
+      <div className="mx-auto w-full max-w-xl space-y-5 p-6">
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Organization</h3>
+          <div>
+            <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Name</label>
+            <input value={orgName} onChange={e => setOrgName(e.target.value)}
+              className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Currency</label>
+            <select value={currency} onChange={e => setCurrency(e.target.value)}
+              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+            >
+              {['USD','EUR','GBP','CAD','AUD'].map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Stock Alerts</h3>
+          <div>
+            <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Low Stock Threshold</label>
+            <select value={lowThresh} onChange={e => setLowThresh(e.target.value)}
+              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+            >
+              <option value="auto">Per-item Min Level (default)</option>
+              <option value="5">Global: below 5 units</option>
+              <option value="10">Global: below 10 units</option>
+              <option value="20">Global: below 20 units</option>
+            </select>
+            <p className="mt-1.5 font-body text-[10px] text-foreground/30">Uses each item's own Min Level when set to Per-item.</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-body text-sm text-foreground/80">Email Alerts</p>
+              <p className="font-body text-[10px] text-foreground/35">Send low stock + expiry alerts by email</p>
+            </div>
+            <button onClick={() => setEmailAlerts(v => !v)} className={`relative h-5 w-9 rounded-full transition-colors ${emailAlerts ? 'bg-amber-500' : 'bg-foreground/20'}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${emailAlerts ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+          {emailAlerts && (
+            <div>
+              <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Alert Email</label>
+              <input
+                type="email" value={alertEmail} onChange={e => setAlertEmail(e.target.value)}
+                placeholder="team@avalonvitality.co"
+                className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Tags */}
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Tags</h3>
+            {!addingTag && (
+              <button onClick={openAddTag} className="flex items-center gap-1.5 rounded-lg border border-foreground/[0.10] px-3 py-1.5 font-body text-xs text-foreground/50 transition-colors hover:bg-foreground/[0.05] hover:text-foreground/80">
+                <Plus className="h-3 w-3" /> Add Tag
+              </button>
+            )}
+          </div>
+
+          {tags.length > 0 && !addingTag && (
+            <div className="mb-3 space-y-1">
+              {tags.map(tag => (
+                <div key={tag.id} className="flex items-center gap-2 rounded-lg border border-foreground/[0.06] bg-foreground/[0.02] px-3 py-2">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: tag.color }} />
+                  <span className="flex-1 font-body text-sm text-foreground/80">{tag.name}</span>
+                  <button onClick={() => openEditTag(tag)} className="flex h-6 w-6 items-center justify-center rounded text-foreground/30 transition-colors hover:text-foreground/70">
+                    <Edit className="h-3 w-3" />
+                  </button>
+                  <button onClick={() => onDeleteTag?.(tag.id)} className="flex h-6 w-6 items-center justify-center rounded text-foreground/30 transition-colors hover:text-red-400">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {addingTag && (
+            <div className="space-y-3 rounded-xl border border-foreground/[0.10] bg-foreground/[0.04] p-4">
+              <div>
+                <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Tag Name</label>
+                <input
+                  value={tagName} onChange={e => setTagName(e.target.value)}
+                  placeholder="e.g. Controlled"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Color</label>
+                <div className="flex gap-2 flex-wrap">
+                  {TAG_COLORS.map(c => (
+                    <button key={c} onClick={() => setTagColor(c)}
+                      className={`h-6 w-6 rounded-full transition-transform ${tagColor === c ? 'scale-125 ring-2 ring-white/30' : 'hover:scale-110'}`}
+                      style={{ background: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setAddingTag(false)} className="rounded-lg px-4 py-2 font-body text-xs text-foreground/40 hover:text-foreground/70">Cancel</button>
+                <button onClick={commitTag} disabled={!tagName.trim()} className="rounded-xl bg-foreground px-4 py-2 font-body text-xs font-semibold text-background disabled:opacity-40">
+                  {editingTagId ? 'Save Tag' : 'Add Tag'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tags.length === 0 && !addingTag && (
+            <p className="py-4 text-center font-body text-xs text-foreground/25">No tags yet. Click Add Tag to create one.</p>
+          )}
+        </div>
+
+        {/* Custom Field Definitions */}
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Custom Fields</h3>
+            {!addingField && (
+              <button onClick={openAddField} className="flex items-center gap-1.5 rounded-lg border border-foreground/[0.10] px-3 py-1.5 font-body text-xs text-foreground/50 transition-colors hover:bg-foreground/[0.05] hover:text-foreground/80">
+                <Plus className="h-3 w-3" /> Add Field
+              </button>
+            )}
+          </div>
+
+          {/* Existing defs list */}
+          {customFieldDefs.length > 0 && !addingField && (
+            <div className="mb-3 space-y-1">
+              {customFieldDefs.map(def => (
+                <div key={def.id} className="flex items-center gap-2 rounded-lg border border-foreground/[0.06] bg-foreground/[0.02] px-3 py-2">
+                  <span className="flex-1 font-body text-sm text-foreground/80">{def.name}</span>
+                  <span className="rounded-full bg-foreground/[0.06] px-2 py-0.5 font-body text-[10px] uppercase tracking-wide text-foreground/40">
+                    {FIELD_TYPES.find(t => t.value === def.fieldType)?.label || def.fieldType}
+                  </span>
+                  <button onClick={() => openEditField(def)} className="flex h-6 w-6 items-center justify-center rounded text-foreground/30 transition-colors hover:text-foreground/70">
+                    <Edit className="h-3 w-3" />
+                  </button>
+                  <button onClick={() => onDeleteFieldDef?.(def.id)} className="flex h-6 w-6 items-center justify-center rounded text-foreground/30 transition-colors hover:text-red-400">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Inline add/edit form */}
+          {addingField && (
+            <div className="space-y-3 rounded-xl border border-foreground/[0.10] bg-foreground/[0.04] p-4">
+              <div>
+                <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Field Name</label>
+                <input
+                  value={fieldDraft.name}
+                  onChange={e => setFieldDraft(d => ({ ...d, name: e.target.value }))}
+                  placeholder="e.g. Lot Number"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Type</label>
+                <select
+                  value={fieldDraft.fieldType}
+                  onChange={e => setFieldDraft(d => ({ ...d, fieldType: e.target.value, options: [] }))}
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+                >
+                  {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              {fieldDraft.fieldType === 'dropdown' && (
+                <div>
+                  <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Options</label>
+                  <div className="mb-2 flex gap-2">
+                    <input
+                      value={optionInput}
+                      onChange={e => setOptionInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addOption())}
+                      placeholder="Option value…"
+                      className="flex-1 rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none"
+                    />
+                    <button onClick={addOption} className="rounded-lg border border-foreground/[0.10] px-3 py-2 font-body text-xs text-foreground/50 hover:bg-foreground/[0.05]">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {fieldDraft.options.map(o => (
+                      <span key={o} className="flex items-center gap-1 rounded-full border border-foreground/[0.10] px-2.5 py-0.5 font-body text-xs text-foreground/70">
+                        {o}
+                        <button onClick={() => removeOption(o)} className="ml-0.5 text-foreground/30 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setAddingField(false)} className="rounded-lg px-4 py-2 font-body text-xs text-foreground/40 hover:text-foreground/70">Cancel</button>
+                <button onClick={commitField} disabled={!fieldDraft.name.trim()} className="rounded-xl bg-foreground px-4 py-2 font-body text-xs font-semibold text-background disabled:opacity-40">
+                  {editingFieldId ? 'Save Changes' : 'Add Field'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {customFieldDefs.length === 0 && !addingField && (
+            <p className="py-4 text-center font-body text-xs text-foreground/25">No custom fields yet. Click Add Field to create one.</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-3">
+          <h3 className="font-body text-[11px] uppercase tracking-wider text-foreground/35">Item IDs</h3>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-body text-sm text-foreground/80">ID Prefix</p>
+              <p className="font-body text-[10px] text-foreground/35">Items assigned IDs in format AVOT####</p>
+            </div>
+            <span className="rounded-lg border border-foreground/[0.10] px-3 py-1.5 font-body text-xs text-foreground/50">AVOT</span>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+          <h3 className="mb-4 font-body text-[11px] uppercase tracking-wider text-foreground/35">Integrations</h3>
+          {[
+            { name:'Square POS',  desc:'Sync inventory with Square',  },
+            { name:'Acuity',      desc:'Auto-deduct on appointment',  },
+            { name:'Bound Tree',  desc:'Auto-reorder from supplier',  },
+          ].map(({ name, desc }) => (
+            <div key={name} className="flex items-center justify-between border-b border-foreground/[0.05] py-3 last:border-0">
+              <div>
+                <p className="font-body text-sm text-foreground/80">{name}</p>
+                <p className="font-body text-[10px] text-foreground/35">{desc}</p>
+              </div>
+              <button className="rounded-lg border border-foreground/[0.10] px-3 py-1.5 font-body text-xs text-foreground/50 transition-colors hover:bg-foreground/[0.05] hover:text-foreground/80">Connect</button>
             </div>
           ))}
         </div>
-      </Card>
-
-      {/* Manual mode banner */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02]">
-        <Activity className="w-4 h-4 text-accent shrink-0" strokeWidth={1.5} />
-        <div>
-          <p className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/40">SF Bay Area · Local Inventory Active</p>
-          <p className="font-body text-[10px] text-foreground/55 mt-0.5">Manual tracking during launch. Scanner + sync coming post-beta.</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Items Screen ─────────────────────────────────────────────────────────────
-const ITEM_STATUS_FILTERS = ['All','Low Stock','Expiring','Assigned','Quarantine'];
-const ITEM_CAT_FILTERS = ['All','IV','Medication','IM','PPE','Emergency','Device','Sharps'];
-
-function ItemsScreen({ onSelectItem }) {
-  const [search, setSearch]   = useState('');
-  const [status, setStatus]   = useState('All');
-  const [cat,    setCat]      = useState('All');
-
-  const filtered = useMemo(() => {
-    return ITEMS.filter(item => {
-      const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase()) || item.sku.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = status === 'All'
-        || (status === 'Low Stock'  && ['Low Stock','Restock Needed','Out of Stock'].includes(item.status))
-        || (status === 'Expiring'   && ['Expiring Soon','Expired'].includes(item.status))
-        || (status === 'Assigned'   && item.assignedNurse)
-        || (status === 'Quarantine' && item.status === 'Quarantine');
-      const matchCat = cat === 'All' || item.category === cat;
-      return matchSearch && matchStatus && matchCat;
-    });
-  }, [search, status, cat]);
-
-  return (
-    <div className="space-y-4 pb-6">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" strokeWidth={1.5} />
-        <input
-          type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search items, SKU..."
-          className="w-full pl-9 pr-4 py-3 rounded-2xl border border-foreground/15 bg-foreground/[0.04] font-body text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/35"
-        />
-      </div>
-
-      {/* Status chips */}
-      <FilterChips options={ITEM_STATUS_FILTERS} active={status} onChange={setStatus} />
-
-      {/* Category chips */}
-      <FilterChips options={ITEM_CAT_FILTERS} active={cat} onChange={setCat} />
-
-      <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 px-1">{filtered.length} items</p>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="font-body text-sm text-foreground/30">No items match</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2.5">
-          {filtered.map(item => <ItemCard key={item.id} item={item} onOpen={onSelectItem} />)}
-        </div>
-      )}
-
-      <button type="button"
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-foreground/20 text-foreground/40 hover:text-foreground/60 transition-colors">
-        <Plus className="w-4 h-4" strokeWidth={2} />
-        <span className="font-body text-xs tracking-[0.15em] uppercase">Add Item</span>
-      </button>
-    </div>
-  );
-}
-
-// ─── Kits Screen ─────────────────────────────────────────────────────────────
-const KIT_FILTERS = ['All','Nurse Bags','Event Kits','Ready','Needs Attention'];
-
-function KitsScreen({ onSelectKit }) {
-  const [filter, setFilter] = useState('All');
-  const filtered = useMemo(() => {
-    return KITS.filter(k => {
-      if (filter === 'All')             return true;
-      if (filter === 'Nurse Bags')      return k.kitType === 'Nurse Bag';
-      if (filter === 'Event Kits')      return k.kitType === 'Event Kit';
-      if (filter === 'Ready')           return k.status === 'Kit Ready';
-      if (filter === 'Needs Attention') return k.status !== 'Kit Ready';
-      return true;
-    });
-  }, [filter]);
-
-  return (
-    <div className="space-y-4 pb-6">
-      <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 px-1">
-        Kit Tracker · {KITS.filter(k => k.status === 'Kit Ready').length}/{KITS.length} ready
-      </p>
-      <FilterChips options={KIT_FILTERS} active={filter} onChange={setFilter} />
-      <div className="space-y-2.5">
-        {filtered.map(k => <KitCard key={k.id} kit={k} onOpen={onSelectKit} />)}
-      </div>
-      <button type="button"
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-dashed border-foreground/20 text-foreground/40 hover:text-foreground/60 transition-colors">
-        <Plus className="w-4 h-4" strokeWidth={2} />
-        <span className="font-body text-xs tracking-[0.15em] uppercase">Build Kit</span>
-      </button>
-    </div>
-  );
-}
-
-// ─── Restock Screen ───────────────────────────────────────────────────────────
-function RestockScreen() {
-  const [ordered, setOrdered] = useState(new Set());
-  const high = RESTOCK.filter(r => r.priority === 'High');
-  const other = RESTOCK.filter(r => r.priority !== 'High');
-
-  function RestockCard({ r }) {
-    const done = ordered.has(r.id);
-    return (
-      <Card className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div>
-            <p className="font-body text-sm font-semibold text-foreground">{r.name}</p>
-            <p className="font-body text-[9px] text-foreground/40">{r.category} · {r.supplier}</p>
-          </div>
-          <span className={`font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border font-semibold ${r.priority === 'High' ? 'border-red-500/25 text-red-300 bg-red-500/10' : r.priority === 'Med' ? 'border-amber-500/25 text-amber-300 bg-amber-500/10' : 'border-foreground/15 text-foreground/45 bg-foreground/[0.04]'}`}>
-            {r.priority}
-          </span>
-        </div>
-        <div className="flex items-center gap-4 mb-3">
-          <div className="text-center">
-            <p className="font-heading text-xl text-foreground">{r.current}</p>
-            <p className="font-body text-[8px] text-foreground/35 uppercase tracking-[0.1em]">Current</p>
-          </div>
-          <ChevronRight className="w-3.5 h-3.5 text-foreground/25" strokeWidth={2} />
-          <div className="text-center">
-            <p className="font-heading text-xl text-orange-300">{r.par}</p>
-            <p className="font-body text-[8px] text-foreground/35 uppercase tracking-[0.1em]">Par</p>
-          </div>
-          <div className="ml-auto text-center">
-            <p className="font-heading text-xl text-foreground">+{r.needed}</p>
-            <p className="font-body text-[8px] text-foreground/35 uppercase tracking-[0.1em]">Order</p>
-          </div>
-        </div>
-        {r.relatedKit && (
-          <p className="font-body text-[9px] text-foreground/40 mb-3">Affects: {r.relatedKit}</p>
-        )}
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setOrdered(s => { const n = new Set(s); n.has(r.id) ? n.delete(r.id) : n.add(r.id); return n; })}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-body text-[10px] tracking-[0.12em] uppercase font-semibold border transition-all ${done ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300' : 'bg-foreground text-background border-foreground'}`}>
-            {done ? <><CheckCircle className="w-3 h-3" strokeWidth={2} /> Ordered</> : <><RefreshCw className="w-3 h-3" strokeWidth={2} /> Mark Ordered</>}
+        <div className="flex justify-end">
+          <button onClick={handleSave} className="rounded-xl bg-foreground px-6 py-2.5 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90">
+            {saving ? '✓ Saving…' : 'Save Settings'}
           </button>
-          <QuickBtn icon={Edit3} label="Note" />
         </div>
-      </Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── Move folder modal ────────────────────────────────────────────────────────
+function MoveFolderModal({ folders, selectedCount, onClose, onMove }) {
+  const [destId, setDestId] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }} transition={{ ease: EASE, duration: 0.2 }}
+        className="w-80 rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-heading text-base text-foreground">Move {selectedCount} item{selectedCount !== 1 ? 's' : ''}</h2>
+          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="mb-5">
+          <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Destination Folder</label>
+          <select value={destId} onChange={e => setDestId(e.target.value)}
+            className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+          >
+            <option value="">No folder (root)</option>
+            {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-xl border border-foreground/[0.10] py-2.5 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.05]">Cancel</button>
+          <button onClick={() => { onMove(destId || null); onClose(); }} className="flex-1 rounded-xl bg-foreground py-2.5 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90">Move</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Placeholder views (Phase 2 / 3) ─────────────────────────────────────────
+function PlaceholderView({ title, phase }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-foreground/[0.08] bg-foreground/[0.04]">
+        <Sparkles className="h-7 w-7 text-foreground/25" />
+      </div>
+      <h2 className="font-heading text-lg text-foreground/60">{title}</h2>
+      <span className="rounded-full border border-foreground/10 px-3 py-1 font-body text-[10px] uppercase tracking-widest text-foreground/30">Coming Phase {phase}</span>
+    </div>
+  );
+}
+
+// ─── CSV Import Modal ─────────────────────────────────────────────────────────
+
+const CSV_COL_OPTIONS = ['name','sku','category','qty','unit','minLevel','price','supplier','expirationDate','notes','-- ignore --'];
+
+function CSVImportModal({ folders, onClose, onImport }) {
+  const [step,     setStep]     = useState('upload');   // 'upload' | 'map' | 'preview'
+  const [rows,     setRows]     = useState([]);          // raw string rows
+  const [headers,  setHeaders]  = useState([]);          // CSV header row
+  const [mapping,  setMapping]  = useState({});          // { csvCol: fieldKey }
+  const [preview,  setPreview]  = useState([]);          // mapped items for confirmation
+  const [folderId, setFolderId] = useState('');
+  const [error,    setError]    = useState('');
+
+  const fileRef = useRef(null);
+
+  function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) { setError('File must have a header row and at least one data row.'); return; }
+    const splitLine = (line) => {
+      const result = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+        else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+        else cur += c;
+      }
+      result.push(cur);
+      return result;
+    };
+    const hdrs  = splitLine(lines[0]).map(h => h.trim());
+    const data  = lines.slice(1).map(splitLine);
+    setHeaders(hdrs);
+    setRows(data);
+    // Auto-map headers to fields by fuzzy name match
+    const auto = {};
+    const fieldMap = {
+      name: ['name','item','item name','product','title'],
+      sku:  ['sku','barcode','code','item code'],
+      category: ['category','cat','type'],
+      qty:  ['qty','quantity','stock','count','on hand'],
+      unit: ['unit','units','uom'],
+      minLevel: ['min','min level','minimum','reorder','reorder point'],
+      price: ['price','cost','unit cost','unit price','value'],
+      supplier: ['supplier','vendor','brand','manufacturer'],
+      expirationDate: ['exp','expiry','expiration','expiration date','best by','use by'],
+      notes: ['notes','note','description','details','comment'],
+    };
+    hdrs.forEach(h => {
+      const hl = h.toLowerCase().trim();
+      for (const [field, aliases] of Object.entries(fieldMap)) {
+        if (aliases.some(a => hl === a || hl.includes(a))) { auto[h] = field; break; }
+      }
+      if (!auto[h]) auto[h] = '-- ignore --';
+    });
+    setMapping(auto);
+    setError('');
+    setStep('map');
+  }
+
+  function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => parseCSV(ev.target.result);
+    reader.readAsText(file);
+  }
+
+  function buildPreview() {
+    const mapped = rows.map(row => {
+      const obj = { folderId: folderId || null, tags: [], isNew: true };
+      headers.forEach((h, i) => {
+        const field = mapping[h];
+        if (!field || field === '-- ignore --') return;
+        const val = (row[i] || '').trim();
+        if (field === 'qty' || field === 'minLevel') obj[field] = parseInt(val) || 0;
+        else if (field === 'price') obj[field] = parseFloat(val) || 0;
+        else obj[field] = val;
+      });
+      if (!obj.name) obj.name = '(unnamed)';
+      obj.qty      = obj.qty      ?? 0;
+      obj.minLevel = obj.minLevel ?? 0;
+      obj.unit     = obj.unit     || 'units';
+      obj.price    = obj.price    ?? 0;
+      return obj;
+    }).filter(o => o.name && o.name !== '(unnamed)');
+    if (!mapped.length) { setError('No valid rows found — make sure "Name" column is mapped.'); return; }
+    setPreview(mapped);
+    setError('');
+    setStep('preview');
+  }
+
+  function handleImport() {
+    preview.forEach(item => onImport(item));
+    onClose();
+  }
+
+  const inputCls = 'w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-2.5 py-1.5 font-body text-xs text-foreground focus:border-foreground/30 focus:outline-none';
+  const btnCls   = 'rounded-xl bg-foreground px-4 py-2 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90 disabled:opacity-40';
+
+  return (
+    <motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <motion.div className="mx-4 w-full max-w-xl rounded-2xl border border-foreground/[0.12] bg-[#111] shadow-2xl"
+        initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ ease: EASE, duration: 0.2 }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-foreground/[0.08] px-5 py-4">
+          <h2 className="font-heading text-base text-foreground">Import Items from CSV</h2>
+          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="p-5">
+          {/* Step indicator */}
+          <div className="mb-5 flex items-center gap-2">
+            {[['upload','1. Upload'],['map','2. Map Columns'],['preview','3. Confirm']].map(([s, label]) => (
+              <React.Fragment key={s}>
+                <span className={`font-body text-[11px] ${step === s ? 'text-foreground' : 'text-foreground/30'}`}>{label}</span>
+                {s !== 'preview' && <span className="font-body text-[11px] text-foreground/20">→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {error && <p className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 font-body text-xs text-red-400">{error}</p>}
+
+          {/* Step 1: Upload */}
+          {step === 'upload' && (
+            <div className="flex flex-col items-center gap-4 py-6">
+              <div onClick={() => fileRef.current?.click()}
+                className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-foreground/20 py-10 transition-colors hover:border-foreground/40 hover:bg-foreground/[0.02]">
+                <Upload className="h-8 w-8 text-foreground/25" />
+                <div className="text-center">
+                  <p className="font-body text-sm text-foreground/60">Click to select a CSV file</p>
+                  <p className="mt-1 font-body text-xs text-foreground/30">Header row required. UTF-8 encoding.</p>
+                </div>
+              </div>
+              <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleFile} />
+            </div>
+          )}
+
+          {/* Step 2: Map columns */}
+          {step === 'map' && (
+            <div className="flex flex-col gap-3">
+              <p className="font-body text-xs text-foreground/50">Map each CSV column to an inventory field. Columns set to "ignore" will be skipped.</p>
+              <div className="max-h-64 overflow-y-auto rounded-xl border border-foreground/[0.08]">
+                {headers.map(h => (
+                  <div key={h} className="flex items-center gap-3 border-b border-foreground/[0.06] px-3 py-2 last:border-0">
+                    <span className="w-32 shrink-0 truncate font-body text-xs text-foreground/60" title={h}>{h}</span>
+                    <span className="font-body text-xs text-foreground/25">→</span>
+                    <select value={mapping[h] || '-- ignore --'} onChange={e => setMapping(m => ({ ...m, [h]: e.target.value }))}
+                      className={inputCls}>
+                      {CSV_COL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="mb-1 block font-body text-[11px] text-foreground/40">Assign to folder (optional)</label>
+                <select value={folderId} onChange={e => setFolderId(e.target.value)} className={inputCls}>
+                  <option value="">No folder</option>
+                  {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button onClick={() => setStep('upload')} className="rounded-xl border border-foreground/[0.12] px-4 py-2 font-body text-xs text-foreground/60 hover:bg-foreground/[0.05]">Back</button>
+                <button onClick={buildPreview} className={btnCls}>Preview →</button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Preview */}
+          {step === 'preview' && (
+            <div className="flex flex-col gap-3">
+              <p className="font-body text-xs text-foreground/50">{preview.length} item{preview.length !== 1 ? 's' : ''} ready to import.</p>
+              <div className="max-h-52 overflow-y-auto rounded-xl border border-foreground/[0.08]">
+                <table className="w-full">
+                  <thead><tr className="border-b border-foreground/[0.08]">
+                    {['Name','SKU','Qty','Category'].map(h => (
+                      <th key={h} className="px-3 py-2 text-left font-body text-[10px] uppercase tracking-wider text-foreground/30">{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {preview.slice(0, 50).map((item, i) => (
+                      <tr key={i} className="border-b border-foreground/[0.05] last:border-0">
+                        <td className="px-3 py-1.5 font-body text-xs text-foreground">{item.name}</td>
+                        <td className="px-3 py-1.5 font-body text-xs text-foreground/50">{item.sku || '—'}</td>
+                        <td className="px-3 py-1.5 font-body text-xs text-foreground/50">{item.qty}</td>
+                        <td className="px-3 py-1.5 font-body text-xs text-foreground/50">{item.category || '—'}</td>
+                      </tr>
+                    ))}
+                    {preview.length > 50 && (
+                      <tr><td colSpan={4} className="px-3 py-2 font-body text-[11px] text-foreground/30">…and {preview.length - 50} more</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button onClick={() => setStep('map')} className="rounded-xl border border-foreground/[0.12] px-4 py-2 font-body text-xs text-foreground/60 hover:bg-foreground/[0.05]">Back</button>
+                <button onClick={handleImport} className={btnCls}>Import {preview.length} Item{preview.length !== 1 ? 's' : ''}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+export default function AdminInventory() {
+  // ── Persistence layer (Supabase when creds set, seed data fallback) ──────────
+  const {
+    items, folders, tags, trashedItems, settings,
+    customFieldDefs,
+    loading, toasts, dismissToast,
+    handleAddItem,
+    handleSaveItem,
+    handleUpdateQty,
+    handleDeleteItem,
+    handleRestoreItem,
+    handleDeletePermanent,
+    handleBulkDelete:  _handleBulkDelete,
+    handleBulkMove:    _handleBulkMove,
+    handleAddFolder,
+    handleAddTag,
+    handleEditTag,
+    handleDeleteTag,
+    handleAddFieldDef,
+    handleEditFieldDef,
+    handleDeleteFieldDef,
+    handleUpdateSettings,
+    fetchItemTransactions,
+    isLive,
+  } = useInventoryData();
+
+  // ── View state — 'main' | 'detail' | 'edit' | 'add-modal' | 'add-full' ──────
+  const [view,     setView]     = useState('main');
+  const [viewItem, setViewItem] = useState(null);
+
+  // Keep detail overlay in sync with live item updates
+  useEffect(() => {
+    if (viewItem) {
+      const fresh = items.find(i => i.id === viewItem.id);
+      if (fresh) setViewItem(fresh);
+    }
+  }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Navigation ───────────────────────────────────────────────────────────────
+  const [section,         setSection]         = useState('items');
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [expandedFolders, setExpandedFolders] = useState(new Set(['f-root']));
+
+  // ── Layout ───────────────────────────────────────────────────────────────────
+  const [layout,      setLayout]      = useState('list');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showFolders, setShowFolders] = useState(true);
+
+  // ── Search + sort + filter ───────────────────────────────────────────────────
+  const [search,        setSearch]        = useState('');
+  const [sortBy,        setSortBy]        = useState('name');
+  const [sortDir,       setSortDir]       = useState('asc');
+  const [filterStatus,  setFilterStatus]  = useState('all');   // all | low | out | expiring | new
+  const [filterTag,     setFilterTag]     = useState('');      // tag id or ''
+  const [filterCategory,setFilterCategory]= useState('');      // category string or ''
+
+  // ── Selection ────────────────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  // ── Panels / menus ───────────────────────────────────────────────────────────
+  const [showAddFolderModal, setShowAddFolderModal] = useState(false);
+  const [showNotifications,  setShowNotifications]  = useState(false);
+  const [showMoveModal,      setShowMoveModal]      = useState(false);
+  const [showImportModal,    setShowImportModal]    = useState(false);
+  const [showBulkTagMenu,    setShowBulkTagMenu]    = useState(false);
+  const [folderMenu,         setFolderMenu]         = useState(null);
+  const [itemMenu,           setItemMenu]           = useState(null);
+
+  // ── Pagination ───────────────────────────────────────────────────────────────
+  const [pageSize, setPageSize] = useState(20);
+  const [page,     setPage]     = useState(1);
+
+  // ── Computed ─────────────────────────────────────────────────────────────────
+  const lowStockCount = useMemo(() => items.filter(i => i.qty > 0 && i.qty <= i.minLevel).length, [items]);
+
+  const visibleItems = useMemo(() => {
+    let list = [...items];
+    if (currentFolderId) list = list.filter(i => i.folderId === currentFolderId);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(i =>
+        i.name.toLowerCase().includes(q) ||
+        (i.sku || '').toLowerCase().includes(q) ||
+        (i.sortlyId || '').toLowerCase().includes(q) ||
+        (i.supplier || '').toLowerCase().includes(q) ||
+        (i.notes || '').toLowerCase().includes(q)
+      );
+    }
+    if (filterStatus === 'low')      list = list.filter(i => i.qty > 0 && i.qty <= i.minLevel);
+    if (filterStatus === 'out')      list = list.filter(i => i.qty <= 0);
+    if (filterStatus === 'expiring') list = list.filter(i => { const n = daysUntil(i.expirationDate); return n !== null && n <= 14; });
+    if (filterStatus === 'new')      list = list.filter(i => i.isNew);
+    if (filterTag)                   list = list.filter(i => (i.tags || []).includes(filterTag));
+    if (filterCategory)              list = list.filter(i => i.category === filterCategory);
+    list.sort((a, b) => {
+      let va, vb;
+      if (sortBy === 'qty')          { va = a.qty;       vb = b.qty; }
+      else if (sortBy === 'price')   { va = a.price;     vb = b.price; }
+      else if (sortBy === 'updated') { va = a.updatedAt; vb = b.updatedAt; }
+      else                           { va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase(); }
+      return sortDir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+    });
+    return list;
+  }, [items, currentFolderId, search, sortBy, sortDir, filterStatus, filterTag, filterCategory]);
+
+  const visibleFolders = useMemo(
+    () => showFolders ? folders.filter(f => f.parentId === currentFolderId) : [],
+    [folders, currentFolderId, showFolders]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(visibleItems.length / pageSize));
+  const pagedItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return visibleItems.slice(start, start + pageSize);
+  }, [visibleItems, page, pageSize]);
+
+  useEffect(() => { setPage(1); }, [search, currentFolderId, sortBy, sortDir, pageSize]);
+
+  const allSelected  = visibleItems.length > 0 && selectedIds.size === visibleItems.length;
+  const someSelected = selectedIds.size > 0 && !allSelected;
+
+  // ── UI-only handlers ─────────────────────────────────────────────────────────
+  function toggleExpand(id) {
+    setExpandedFolders(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+  function toggleSelect(id) {
+    setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+  function toggleSelectAll() {
+    setSelectedIds(selectedIds.size === visibleItems.length ? new Set() : new Set(visibleItems.map(i => i.id)));
+  }
+  function openFolderMenu(folderId, e) {
+    e.preventDefault(); e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    setFolderMenu({ folderId, x: r.right + 4, y: r.top });
+  }
+  function openItemMenu(itemId, e) {
+    e.preventDefault(); e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    setItemMenu({ itemId, x: r.right + 4, y: r.top });
+  }
+  function navigateFolder(id) {
+    setCurrentFolderId(id);
+    setSelectedIds(new Set());
+    setSearch('');
+    if (id) setExpandedFolders(prev => new Set([...prev, id]));
+  }
+  function handleOpenItem(item) { setViewItem(item); setView('detail'); }
+
+  // ── Wrapped handlers (data op + UI nav) ──────────────────────────────────────
+  function handleSaveItemAndNav(updated) {
+    handleSaveItem(updated);
+    setViewItem(prev => prev && prev.id === updated.id ? { ...prev, ...updated } : prev);
+    setView('detail');
+  }
+  function handleAddItemAndNav(newItem) {
+    handleAddItem(newItem);
+    setView('main');
+  }
+  function handleUpdateQtyLocal(id, newQty) {
+    const q = Math.max(0, newQty);
+    handleUpdateQty(id, newQty);
+    setViewItem(prev => prev && prev.id === id ? { ...prev, qty: q } : prev);
+  }
+  function handleBulkDeleteLocal() {
+    _handleBulkDelete(selectedIds);
+    setSelectedIds(new Set());
+  }
+  function handleBulkMoveLocal(destFolderId) {
+    _handleBulkMove(selectedIds, destFolderId);
+    setSelectedIds(new Set());
+  }
+
+  function handleBulkTagLocal(tagId) {
+    setItems(prev => prev.map(i =>
+      selectedIds.has(i.id)
+        ? { ...i, tags: (i.tags || []).includes(tagId) ? i.tags : [...(i.tags || []), tagId] }
+        : i
+    ));
+    setShowBulkTagMenu(false);
+  }
+
+  function handleDuplicateItem(item) {
+    const copy = {
+      ...item,
+      id:        undefined,
+      sortlyId:  undefined,
+      name:      item.name + ' (Copy)',
+      isNew:     true,
+      updatedAt: undefined,
+      tags:      [...(item.tags || [])],
+    };
+    handleAddItem(copy);
+    setView('main');
+    setViewItem(null);
+  }
+
+  // ── Loading skeleton ─────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex h-64 items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex h-10 w-10 animate-spin items-center justify-center rounded-xl border-2 border-foreground/10 border-t-foreground/60" />
+            <p className="font-body text-xs text-foreground/30">
+              {isLive ? 'Loading inventory…' : 'Starting inventory…'}
+            </p>
+          </div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="space-y-5 pb-6">
-      <div className="flex items-center justify-between px-1">
-        <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35">Restock Queue · {RESTOCK.length} items</p>
-        <span className="font-body text-[9px] text-amber-400 tracking-[0.1em] uppercase border border-amber-400/30 px-2 py-0.5 rounded-full">Manual Mode</span>
+    <AdminLayout fullBleed>
+    <div className="flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative">
+
+      {/* Icon nav — desktop only */}
+      <div className="hidden md:flex h-full shrink-0">
+        <IconNav section={section} onSection={setSection} onNotif={() => setShowNotifications(v => !v)} lowStockCount={lowStockCount} />
       </div>
-      {high.length > 0 && (
-        <div>
-          <SectionLabel>High Priority</SectionLabel>
-          <div className="space-y-2.5">{high.map(r => <RestockCard key={r.id} r={r} />)}</div>
-        </div>
-      )}
-      {other.length > 0 && (
-        <div>
-          <SectionLabel>Standard</SectionLabel>
-          <div className="space-y-2.5">{other.map(r => <RestockCard key={r.id} r={r} />)}</div>
-        </div>
-      )}
-    </div>
-  );
-}
 
-// ─── Expiry Screen ────────────────────────────────────────────────────────────
-const EXPIRY_FILTERS = ['All','Expired','7 Days','14 Days','30 Days'];
-
-function ExpiryScreen({ onSelectItem }) {
-  const [filter, setFilter] = useState('All');
-
-  const filtered = useMemo(() => {
-    return EXPIRY_ITEMS.filter(item => {
-      const d = daysUntil(item.expirationDate);
-      if (filter === 'All')     return true;
-      if (filter === 'Expired') return d <= 0;
-      if (filter === '7 Days')  return d > 0 && d <= 7;
-      if (filter === '14 Days') return d > 7 && d <= 14;
-      if (filter === '30 Days') return d > 14 && d <= 30;
-      return true;
-    });
-  }, [filter]);
-
-  return (
-    <div className="space-y-4 pb-6">
-      <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 px-1">Expiration Queue · {EXPIRY_ITEMS.length} items</p>
-      <FilterChips options={EXPIRY_FILTERS} active={filter} onChange={setFilter} />
-      {filtered.length === 0 ? (
-        <div className="text-center py-12"><p className="font-body text-sm text-foreground/30">No items in this window</p></div>
-      ) : (
-        <div className="space-y-2.5">
-          {filtered.map(item => {
-            const d = daysUntil(item.expirationDate);
-            const est = expiryStatus(item.expirationDate);
-            const borderColor = est === 'Expired' ? 'border-red-900/30' : est === 'Critical' ? 'border-red-500/25' : est === 'Urgent' ? 'border-orange-500/25' : 'border-amber-500/20';
-            return (
-              <Card key={item.id} onClick={() => onSelectItem(item)} className={`p-4 ${borderColor}`}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <p className="font-body text-sm font-semibold text-foreground">{item.name}</p>
-                    <p className="font-body text-[9px] text-foreground/40">{item.category} · Lot: {item.lotNumber || '—'}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <StatusPill status={est === 'Expired' ? 'Expired' : 'Expiring Soon'} small />
-                    <span className={`font-heading text-xl ${est === 'Expired' ? 'text-red-400' : est === 'Critical' ? 'text-red-300' : est === 'Urgent' ? 'text-orange-300' : 'text-amber-300'}`}>
-                      {d <= 0 ? 'EXPIRED' : `${d}d`}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="font-body text-[8px] uppercase tracking-[0.1em] text-foreground/35">Expires</p>
-                    <p className="font-body text-xs text-foreground/70">{item.expirationDate}</p>
-                  </div>
-                  <div>
-                    <p className="font-body text-[8px] uppercase tracking-[0.1em] text-foreground/35">Qty</p>
-                    <p className="font-body text-xs text-foreground/70">{item.qty} {item.unit}</p>
-                  </div>
-                  <div>
-                    <p className="font-body text-[8px] uppercase tracking-[0.1em] text-foreground/35">Location</p>
-                    <p className="font-body text-xs text-foreground/70 truncate max-w-[120px]">{item.location}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <QuickBtn icon={CheckCircle}  label="Reviewed" small />
-                  <QuickBtn icon={AlertTriangle} label="Quarantine" small />
-                  <QuickBtn icon={RefreshCw}     label="Replace" small accent />
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Folders Screen ───────────────────────────────────────────────────────────
-function FoldersScreen() {
-  return (
-    <div className="space-y-5 pb-6">
-      {FOLDER_GROUPS.map(group => {
-        const children = FOLDERS.filter(f => f.parentId === group.id);
-        if (children.length === 0) return null;
-        return (
-          <div key={group.id}>
-            <SectionLabel>{group.label}</SectionLabel>
-            <div className="space-y-2">
-              {children.map(folder => {
-                const FIcon = folder.icon;
-                return (
-                  <Card key={folder.id} onClick={() => {}} className="px-4 py-3.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-foreground/[0.06] flex items-center justify-center shrink-0">
-                          <FIcon className="w-4 h-4 text-foreground/50" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <p className="font-body text-sm text-foreground">{folder.name}</p>
-                          <p className="font-body text-[9px] text-foreground/40">{folder.itemCount} items</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {folder.lowStock > 0 && <span className="font-body text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">{folder.lowStock} low</span>}
-                        {folder.expiring > 0 && <span className="font-body text-[8px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-300 border border-red-500/20">{folder.expiring} exp</span>}
-                        <ChevronRight className="w-4 h-4 text-foreground/25" strokeWidth={1.5} />
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ─── Activity Screen ──────────────────────────────────────────────────────────
-function ActivityScreen() {
-  return (
-    <div className="space-y-4 pb-6">
-      <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 px-1">Inventory Activity Log</p>
-      <Card className="overflow-hidden divide-y divide-foreground/[0.05]">
-        {ACTIVITY_LOG.map(a => (
-          <div key={a.id} className="flex items-start gap-3 px-4 py-3">
-            <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ACT_DOT[a.type] || 'bg-foreground/30'}`} />
-            <div className="flex-1 min-w-0">
-              <p className="font-body text-xs text-foreground/75 leading-snug">{a.action}</p>
-              <p className="font-body text-[10px] text-foreground/55 mt-0.5">{a.item}</p>
-              <p className="font-body text-[9px] text-foreground/30 mt-0.5">{a.user} · {a.time}</p>
-            </div>
-          </div>
-        ))}
-      </Card>
-    </div>
-  );
-}
-
-// ─── Reports Screen ───────────────────────────────────────────────────────────
-function ReportsScreen() {
-  const totalValue = ITEMS.reduce((s, i) => s + (i.qty * i.cost), 0);
-  const byCategory = ITEMS.reduce((acc, i) => { acc[i.category] = (acc[i.category] || 0) + 1; return acc; }, {});
-  const stats = [
-    { label:'Total Items',    value: ITEMS.length.toString(),           sub:'all locations' },
-    { label:'Est. Value',     value:`$${totalValue.toFixed(0)}`,        sub:'cost × qty'    },
-    { label:'Low Stock',      value: ITEMS.filter(i => ['Low Stock','Restock Needed'].includes(i.status)).length.toString(), sub:'below par'  },
-    { label:'Expiring Soon',  value: EXPIRY_ITEMS.length.toString(),    sub:'within 30 days'},
-    { label:'Kits Ready',     value: `${KITS.filter(k=>k.status==='Kit Ready').length}/${KITS.length}`, sub:'kit readiness' },
-    { label:'Restock Queue',  value: RESTOCK.length.toString(),         sub:'items pending' },
-    { label:'Categories',     value: Object.keys(byCategory).length.toString(), sub:'item types' },
-    { label:'Tracking Mode',  value:'Manual',                           sub:'local inventory active' },
-  ];
-  return (
-    <div className="space-y-4 pb-6">
-      <div className="flex items-center justify-between px-1">
-        <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35">Inventory Snapshot</p>
-        <span className="font-body text-[9px] text-foreground/35 tracking-[0.1em] uppercase">Manual Estimates</span>
+      {/* Folder sidebar — desktop only */}
+      <div className="hidden md:flex h-full">
+        <AnimatePresence initial={false}>
+          {sidebarOpen && (
+            <motion.div key="sidebar" initial={{ width:0, opacity:0 }} animate={{ width:220, opacity:1 }} exit={{ width:0, opacity:0 }} transition={{ ease:EASE, duration:0.25 }} className="shrink-0 overflow-hidden">
+              <FolderSidebar folders={folders} currentFolderId={currentFolderId} onSelect={navigateFolder} expandedFolders={expandedFolders} toggleExpand={toggleExpand} onAddFolder={() => setShowAddFolderModal(true)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      <div className="grid grid-cols-2 gap-2.5">
-        {stats.map(s => (
-          <Card key={s.label} className="p-4">
-            <p className="font-body text-[8px] tracking-[0.2em] uppercase text-foreground/35 mb-1.5">{s.label}</p>
-            <p className="font-heading text-2xl text-foreground leading-none">{s.value}</p>
-            <p className="font-body text-[9px] text-foreground/35 mt-1">{s.sub}</p>
-          </Card>
-        ))}
-      </div>
-      <div>
-        <SectionLabel>By Category</SectionLabel>
-        <div className="space-y-2">
-          {Object.entries(byCategory).sort((a,b) => b[1]-a[1]).map(([cat, count]) => (
-            <div key={cat} className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02]">
-              <span className="font-body text-sm text-foreground/70">{cat}</span>
-              <span className="font-body text-sm font-semibold text-foreground">{count}</span>
-            </div>
+
+      {/* Sidebar collapse tab — desktop only */}
+      <button
+        onClick={() => setSidebarOpen(v => !v)}
+        style={{ left: sidebarOpen ? 275 : 55, top: '50%', transform: 'translateY(-50%)' }}
+        className="hidden md:flex absolute z-10 h-8 w-4 items-center justify-center rounded-r-lg border border-l-0 border-foreground/[0.08] bg-[#111111] text-foreground/30 transition-all hover:text-foreground/60"
+      >
+        {sidebarOpen ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+      </button>
+
+      {/* Main */}
+      <div className="flex flex-1 flex-col overflow-hidden min-h-0">
+
+        {/* Mobile: folder chips — horizontal scroll row */}
+        <div className="md:hidden flex items-center gap-2 px-4 py-2.5 border-b border-foreground/[0.08] overflow-x-auto shrink-0" style={{ scrollbarWidth: 'none' }}>
+          <button
+            onClick={() => navigateFolder(null)}
+            className={`shrink-0 rounded-full px-3 py-1 font-body text-xs border transition-colors ${!currentFolderId ? 'bg-accent/15 text-accent border-accent/30' : 'text-foreground/50 border-foreground/[0.12]'}`}
+          >
+            All Items
+          </button>
+          {folders.filter(f => f.parentId === null).map(f => (
+            <button
+              key={f.id}
+              onClick={() => navigateFolder(f.id)}
+              className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 font-body text-xs border transition-colors ${currentFolderId === f.id ? 'bg-accent/15 text-accent border-accent/30' : 'text-foreground/50 border-foreground/[0.12]'}`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: f.color }} />
+              {f.name}
+            </button>
           ))}
         </div>
-      </div>
-      <div className="rounded-xl border border-foreground/[0.06] px-4 py-3">
-        <p className="font-body text-[9px] text-foreground/35 tracking-[0.1em] uppercase">Advanced analytics + supplier ordering launch post-beta.</p>
-      </div>
-    </div>
-  );
-}
+        {/* ── Items section ─────────────────────────────────────── */}
+        {section === 'items' && (
+          <>
+            <InventoryToolbar
+              layout={layout} onLayout={setLayout}
+              sortBy={sortBy} sortDir={sortDir}
+              onSort={setSortBy} onToggleSortDir={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+              search={search} onSearch={setSearch}
+              showFolders={showFolders} onToggleFolders={() => setShowFolders(v => !v)}
+              onAdd={() => setView('add-modal')} onAddFolder={() => setShowAddFolderModal(true)} onImport={() => setShowImportModal(true)}
+            />
 
-// ─── More Menu Sheet ──────────────────────────────────────────────────────────
-const MORE_NAV = [
-  { screen:'expiry',   icon: Clock,       label:'Expiry Queue'    },
-  { screen:'folders',  icon: FolderOpen,  label:'Folder Browser'  },
-  { screen:'activity', icon: Activity,    label:'Activity Log'    },
-  { screen:'reports',  icon: BarChart3,   label:'Reports'         },
-  { screen:'settings', icon: Settings,    label:'Settings'        },
-];
+            <StatsBar items={items} currentFolderId={currentFolderId} />
+            <FilterBar
+              items={items} tags={tags}
+              filterStatus={filterStatus}   onFilterStatus={v => { setFilterStatus(v); setPage(1); }}
+              filterTag={filterTag}         onFilterTag={v => { setFilterTag(v); setPage(1); }}
+              filterCategory={filterCategory} onFilterCategory={v => { setFilterCategory(v); setPage(1); }}
+            />
+            <Breadcrumb folders={folders} currentFolderId={currentFolderId} onNavigate={navigateFolder} />
 
-function MoreMenuSheet({ onClose, onNav }) {
-  return (
-    <motion.div
-      initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
-      transition={{ duration:0.38, ease:EASE }}
-      className="fixed inset-x-0 bottom-0 z-50 bg-[#0d0d0d] border-t border-foreground/[0.1] rounded-t-3xl"
-      style={{ paddingBottom:'max(env(safe-area-inset-bottom), 1.5rem)' }}
-    >
-      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm -z-10" onClick={onClose} />
-      <div className="flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 rounded-full bg-foreground/20" />
-      </div>
-      <div className="flex items-center justify-between px-5 py-3 border-b border-foreground/[0.06]">
-        <p className="font-heading text-xl text-foreground uppercase tracking-wide">More</p>
-        <button type="button" onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
-          <X className="w-4 h-4" strokeWidth={1.5} />
-        </button>
-      </div>
-      <nav className="px-3 py-3">
-        {MORE_NAV.map(({ screen, icon: Icon, label }) => (
-          <button key={screen} type="button" onClick={() => { onNav(screen); onClose(); }}
-            className="w-full flex items-center gap-3.5 px-3 py-3.5 rounded-xl mb-0.5 text-left hover:bg-foreground/[0.04] transition-colors">
-            <Icon className="w-5 h-5 text-foreground/45 shrink-0" strokeWidth={1.5} />
-            <span className="font-body text-sm text-foreground">{label}</span>
-            <ChevronRight className="w-4 h-4 text-foreground/25 ml-auto" strokeWidth={1.5} />
-          </button>
-        ))}
-      </nav>
-      <div className="px-3 pt-2 border-t border-foreground/[0.06]">
-        <Link to="/admin"
-          className="flex items-center gap-3.5 px-3 py-3 rounded-xl text-foreground/50 hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5 shrink-0" strokeWidth={1.5} />
-          <span className="font-body text-sm">Back to Avalon OS</span>
-        </Link>
-      </div>
-    </motion.div>
-  );
-}
+            {/* Bulk action bar */}
+            <AnimatePresence>
+              {selectedIds.size > 0 && (
+                <motion.div key="bulk" initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }} transition={{ ease:EASE, duration:0.2 }}
+                  className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] bg-foreground/[0.04] px-5 py-2"
+                >
+                  <span className="font-body text-xs font-semibold text-foreground">{selectedIds.size} selected</span>
+                  <div className="mx-2 h-4 w-px bg-foreground/15" />
+                  <button onClick={() => setShowMoveModal(true)} className="font-body text-xs text-foreground/60 transition-colors hover:text-foreground">Move</button>
+                  {/* Bulk Tag */}
+                  <div className="relative">
+                    <button onClick={() => setShowBulkTagMenu(v => !v)} className="font-body text-xs text-foreground/60 transition-colors hover:text-foreground">Tag</button>
+                    {showBulkTagMenu && tags.length > 0 && (
+                      <div className="absolute left-0 top-6 z-50 min-w-[140px] rounded-xl border border-foreground/[0.12] bg-[#111] shadow-2xl py-1">
+                        {tags.map(t => (
+                          <button key={t.id} onClick={() => handleBulkTagLocal(t.id)}
+                            className="flex w-full items-center gap-2 px-3 py-2 font-body text-xs text-foreground/70 hover:bg-foreground/[0.06] hover:text-foreground">
+                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: t.color }} />
+                            {t.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={() => exportToCSV([...items].filter(i => selectedIds.has(i.id)), folders, tags)} className="font-body text-xs text-foreground/60 transition-colors hover:text-foreground">Export</button>
+                  <button onClick={handleBulkDeleteLocal} className="font-body text-xs text-red-400 transition-colors hover:text-red-300">Delete</button>
+                  <button onClick={() => setSelectedIds(new Set())} className="ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-// ─── Settings Screen ──────────────────────────────────────────────────────────
-function SettingsScreen() {
-  const sections = [
-    { label:'Categories',           sub:'IV, IM, Medication, PPE, Emergency…', icon:Tag      },
-    { label:'Units',                sub:'bags, vials, boxes, syringes…',        icon:Hash     },
-    { label:'Locations / Folders',  sub:'SF Hub, Nurse Bags, Events…',          icon:FolderOpen },
-    { label:'Kit Templates',        sub:'Nurse Bag, Event Kit, IM Shot Kit…',   icon:BriefcaseMedical },
-    { label:'Custom Fields',        sub:'Lot number, supplier, clinical use…',  icon:FileText },
-    { label:'Expiry Windows',       sub:'30d warn · 14d urgent · 7d critical',  icon:Clock    },
-    { label:'Low Stock Thresholds', sub:'Per-item par levels + restock mins',   icon:AlertCircle },
-    { label:'QR Label Format',      sub:'AV-{category}-{sku}-{seq}',            icon:QrCode   },
-  ];
-  return (
-    <div className="space-y-3 pb-6">
-      <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 px-1">Inventory Settings</p>
-      {sections.map(s => {
-        const Icon = s.icon;
-        return (
-          <Card key={s.label} onClick={() => {}} className="px-4 py-3.5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-foreground/[0.06] flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-foreground/50" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-body text-sm text-foreground">{s.label}</p>
-                <p className="font-body text-[9px] text-foreground/40">{s.sub}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-foreground/25 shrink-0" strokeWidth={1.5} />
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto pb-24 md:pb-0">
+              {/* Folder cards row */}
+              {visibleFolders.length > 0 && (
+                <div className="px-5 pb-3 pt-5">
+                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/30">Folders</p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    {visibleFolders.map(folder => (
+                      <FolderCard key={folder.id} folder={folder} items={items} onClick={navigateFolder} onMenuOpen={openFolderMenu} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Items label */}
+              {visibleFolders.length > 0 && (
+                <p className="px-5 pb-2 pt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/30">Items ({visibleItems.length})</p>
+              )}
+
+              {/* Empty state */}
+              {visibleItems.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-3 py-24">
+                  <Package className="h-10 w-10 text-foreground/15" />
+                  <p className="font-body text-sm text-foreground/30">{search || filterStatus !== 'all' || filterTag || filterCategory ? 'No items match your filters.' : 'No items here.'}</p>
+                </div>
+              )}
+
+              {/* Grid */}
+              {layout === 'grid' && visibleItems.length > 0 && (
+                <div className="grid grid-cols-2 gap-4 px-5 pb-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  {pagedItems.map(item => (
+                    <ItemGridCard key={item.id} item={item} tags={tags} isSelected={selectedIds.has(item.id)} onSelect={toggleSelect} onOpen={handleOpenItem} onMenuOpen={openItemMenu} />
+                  ))}
+                </div>
+              )}
+
+              {/* List */}
+              {layout === 'list' && visibleItems.length > 0 && (
+                <div className="pb-6">
+                  <div className="flex items-center gap-4 border-b border-foreground/[0.08] px-4 py-2">
+                    <button onClick={toggleSelectAll}
+                      className={`shrink-0 flex h-4 w-4 items-center justify-center rounded border transition-colors ${allSelected ? 'border-foreground bg-foreground text-background' : someSelected ? 'border-foreground/50 bg-foreground/20' : 'border-foreground/25 text-transparent'}`}
+                    >
+                      {(allSelected || someSelected) && <Check className="h-2.5 w-2.5" />}
+                    </button>
+                    <span className="h-10 w-10 shrink-0" />
+                    <span className="flex-1 font-body text-[10px] uppercase tracking-wider text-foreground/30">Name</span>
+                    <span className="w-24 shrink-0 text-right font-body text-[10px] uppercase tracking-wider text-foreground/30">Stock</span>
+                    <span className="w-20 shrink-0 text-right font-body text-[10px] uppercase tracking-wider text-foreground/30">Price</span>
+                    <span className="w-7 shrink-0" />
+                  </div>
+                  {pagedItems.map(item => (
+                    <ItemListRow key={item.id} item={item} tags={tags} isSelected={selectedIds.has(item.id)} onSelect={toggleSelect} onOpen={handleOpenItem} onMenuOpen={openItemMenu} />
+                  ))}
+                </div>
+              )}
+
+              {/* Table */}
+              {layout === 'table' && visibleItems.length > 0 && (
+                <div className="pb-6">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-foreground/[0.08] bg-foreground/[0.02]">
+                        <th className="w-10 px-3 py-2.5">
+                          <button onClick={toggleSelectAll}
+                            className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${allSelected ? 'border-foreground bg-foreground text-background' : someSelected ? 'border-foreground/50 bg-foreground/20' : 'border-foreground/25 text-transparent'}`}
+                          >
+                            {(allSelected || someSelected) && <Check className="h-2.5 w-2.5" />}
+                          </button>
+                        </th>
+                        <th className="w-10 px-2 py-2.5" />
+                        {['Name','Quantity','Price','Status','Expiry'].map(h => (
+                          <th key={h} className="px-3 py-2.5 text-left font-body text-[10px] uppercase tracking-wider text-foreground/35">{h}</th>
+                        ))}
+                        <th className="w-10 px-2 py-2.5" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagedItems.map(item => (
+                        <ItemTableRow key={item.id} item={item} tags={tags} isSelected={selectedIds.has(item.id)} onSelect={toggleSelect} onOpen={handleOpenItem} onMenuOpen={openItemMenu} />
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center justify-between border-t border-foreground/[0.08] px-5 py-3">
+                    <span className="font-body text-xs text-foreground/35">
+                      {visibleItems.length === 0 ? '0' : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, visibleItems.length)}`} of {visibleItems.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                        className="flex h-6 w-6 items-center justify-center rounded-lg border border-foreground/[0.10] text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground disabled:opacity-30">
+                        <ChevronLeft className="h-3 w-3" />
+                      </button>
+                      <span className="font-body text-xs text-foreground/40">{page} / {totalPages}</span>
+                      <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                        className="flex h-6 w-6 items-center justify-center rounded-lg border border-foreground/[0.10] text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground disabled:opacity-30">
+                        <ChevronRight className="h-3 w-3" />
+                      </button>
+                      <div className="ml-2 flex items-center gap-1.5">
+                        <span className="font-body text-xs text-foreground/35">Show</span>
+                        <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); }}
+                          className="rounded-lg border border-foreground/[0.10] bg-[#1a1a1a] px-2 py-1 font-body text-xs text-foreground focus:outline-none"
+                        >
+                          <option value={20}>20</option><option value={50}>50</option><option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </Card>
-        );
-      })}
-      <div className="rounded-xl border border-foreground/[0.06] px-4 py-3 mt-2">
-        <p className="font-body text-[9px] text-foreground/35 tracking-[0.1em] uppercase">
-          Settings sync + multi-user roles launch post-beta.
-        </p>
+          </>
+        )}
+
+        {section === 'tags'     && <TagsView tags={tags} items={items} onAddTag={handleAddTag} onEditTag={handleEditTag} onDeleteTag={handleDeleteTag} />}
+        {section === 'reports'  && <ReportsView items={items} folders={folders} tags={tags} />}
+        {section === 'trash'    && <TrashView trashedItems={trashedItems} onRestore={handleRestoreItem} onDeletePermanent={handleDeletePermanent} />}
+        {section === 'settings' && (
+          <SettingsView
+            settings={settings}
+            onSave={handleUpdateSettings}
+            customFieldDefs={customFieldDefs}
+            onAddFieldDef={handleAddFieldDef}
+            onEditFieldDef={handleEditFieldDef}
+            onDeleteFieldDef={handleDeleteFieldDef}
+            tags={tags}
+            onAddTag={handleAddTag}
+            onEditTag={handleEditTag}
+            onDeleteTag={handleDeleteTag}
+          />
+        )}
       </div>
-    </div>
-  );
-}
 
-// ─── Bottom Nav ───────────────────────────────────────────────────────────────
-const BOTTOM_TABS = [
-  { screen:'dashboard', icon: LayoutDashboard, label:'Dashboard' },
-  { screen:'items',     icon: Package,         label:'Items'     },
-  { screen:'kits',      icon: BriefcaseMedical,label:'Kits'      },
-  { screen:'restock',   icon: RefreshCw,       label:'Restock'   },
-];
+      {/* Full-page overlays (detail / edit / add) */}
+      <AnimatePresence>
+        {view === 'detail' && viewItem && (
+          <ItemDetailPage key="detail" item={viewItem} folders={folders} tags={tags}
+            customFieldDefs={customFieldDefs}
+            onClose={() => { setView('main'); setViewItem(null); }}
+            onEdit={() => setView('edit')}
+            onDuplicate={() => handleDuplicateItem(viewItem)}
+            onUpdateQty={handleUpdateQtyLocal}
+            onFetchTransactions={fetchItemTransactions}
+          />
+        )}
+        {view === 'edit' && viewItem && (
+          <ItemEditPage key="edit" item={viewItem} folders={folders} tags={tags}
+            customFieldDefs={customFieldDefs}
+            onClose={() => setView('detail')}
+            onSave={handleSaveItemAndNav}
+          />
+        )}
+        {view === 'add-modal' && (
+          <AddItemModal key="add-modal" folders={folders}
+            onClose={() => setView('main')}
+            onSave={handleAddItemAndNav}
+            onShowAll={() => setView('add-full')}
+          />
+        )}
+        {view === 'add-full' && (
+          <AddItemFullPage key="add-full" folders={folders}
+            customFieldDefs={customFieldDefs}
+            onClose={() => setView('main')}
+            onSave={handleAddItemAndNav}
+          />
+        )}
+      </AnimatePresence>
 
-const SCREEN_TITLES = {
-  dashboard: 'AVALON INVENTORY',
-  items:     'ITEM CATALOG',
-  kits:      'KIT TRACKER',
-  restock:   'RESTOCK QUEUE',
-  expiry:    'EXPIRY QUEUE',
-  folders:   'FOLDERS',
-  activity:  'ACTIVITY LOG',
-  reports:   'REPORTS',
-  settings:  'SETTINGS',
-};
+      {/* Panel overlays */}
+      <AnimatePresence>
+        {showNotifications  && <NotificationsPanel key="notif" items={items} onClose={() => setShowNotifications(false)} />}
+        {folderMenu         && <FolderContextMenu  key="fmenu" x={folderMenu.x} y={folderMenu.y} onClose={() => setFolderMenu(null)} />}
+        {itemMenu           && <ItemContextMenu    key="imenu" x={itemMenu.x}   y={itemMenu.y}   onClose={() => setItemMenu(null)} />}
+        {showAddFolderModal && <AddFolderModal     key="afm"   folders={folders} onClose={() => setShowAddFolderModal(false)} onSave={handleAddFolder} />}
+        {showMoveModal      && <MoveFolderModal    key="move"  folders={folders} selectedCount={selectedIds.size} onClose={() => setShowMoveModal(false)} onMove={handleBulkMoveLocal} />}
+        {showImportModal    && <CSVImportModal     key="import" folders={folders} onClose={() => setShowImportModal(false)} onImport={handleAddItem} />}
+      </AnimatePresence>
 
-// ─── Main Export ──────────────────────────────────────────────────────────────
-export default function Inventory() {
-  const [screen,          setScreen]          = useState('dashboard');
-  const [selectedItem,    setSelectedItem]    = useState(null);
-  const [selectedKit,     setSelectedKit]     = useState(null);
-  const [moreOpen,        setMoreOpen]        = useState(false);
-
-  const isMoreScreen = !BOTTOM_TABS.find(t => t.screen === screen);
-
-  return (
-    <div className="bg-background text-foreground flex flex-col max-w-[430px] mx-auto overflow-hidden" style={{ height: '100dvh' }}>
-
-      {/* ── Top Bar ─────────────────────────────────────────────── */}
-      <div className="shrink-0 bg-background border-b border-foreground/[0.06]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            {isMoreScreen && (
-              <button type="button" onClick={() => setScreen('dashboard')}
-                className="w-7 h-7 flex items-center justify-center text-foreground/50 hover:text-foreground">
-                <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+      {/* Toast stack */}
+      <div className="pointer-events-none fixed bottom-6 right-6 z-[200] flex flex-col items-end gap-2">
+        <AnimatePresence>
+          {toasts.map(t => (
+            <motion.div
+              key={t.id}
+              initial={{ x: 48, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 48, opacity: 0 }}
+              transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
+              className={`pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-sm font-body text-sm
+                ${t.type === 'error'   ? 'border-red-500/20 bg-red-950/80 text-red-300' :
+                  t.type === 'success' ? 'border-emerald-500/20 bg-emerald-950/80 text-emerald-300' :
+                  'border-foreground/10 bg-[#1a1a1a]/95 text-foreground/80'}`}
+            >
+              <span>{t.msg}</span>
+              <button onClick={() => dismissToast(t.id)} className="ml-1 text-current/50 hover:text-current">
+                <X className="h-3.5 w-3.5" />
               </button>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-heading text-[13px] tracking-[0.35em] text-foreground">AV</span>
-                <span className="font-body text-[8px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full border border-accent/40 text-accent bg-accent/10">
-                  INVENTORY
-                </span>
-              </div>
-              <p className="font-body text-[8px] tracking-[0.15em] uppercase text-foreground/35 mt-0.5">{TODAY_LABEL}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-foreground/15 text-foreground/50 hover:text-foreground transition-colors">
-              <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-              <span className="font-body text-[9px] tracking-[0.12em] uppercase">Add</span>
-            </button>
-          </div>
-        </div>
-        <div className="px-4 pb-3">
-          <h1 className="font-heading text-3xl text-foreground uppercase leading-none tracking-tight">
-            {SCREEN_TITLES[screen]}
-          </h1>
-          <p className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/35 mt-1">
-            SF Bay Area · Local Inventory Active
-          </p>
-        </div>
-      </div>
-
-      {/* ── Content ─────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto px-4 pt-2" style={{ paddingBottom:'5.5rem' }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={screen}
-            initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-            exit={{ opacity:0, y:-6 }} transition={{ duration:0.25, ease:EASE }}
-          >
-            {screen === 'dashboard' && <DashboardScreen onSelectItem={setSelectedItem} onSelectKit={setSelectedKit} />}
-            {screen === 'items'     && <ItemsScreen     onSelectItem={setSelectedItem} />}
-            {screen === 'kits'      && <KitsScreen      onSelectKit={setSelectedKit}  />}
-            {screen === 'restock'   && <RestockScreen />}
-            {screen === 'expiry'    && <ExpiryScreen    onSelectItem={setSelectedItem} />}
-            {screen === 'folders'   && <FoldersScreen />}
-            {screen === 'activity'  && <ActivityScreen />}
-            {screen === 'reports'   && <ReportsScreen  />}
-            {screen === 'settings'  && <SettingsScreen />}
-          </motion.div>
+            </motion.div>
+          ))}
         </AnimatePresence>
-      </main>
-
-      {/* ── Bottom Nav ──────────────────────────────────────────── */}
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-background border-t border-foreground/[0.12] max-w-[430px] mx-auto"
-        style={{ paddingBottom:'max(env(safe-area-inset-bottom), 0px)' }}>
-        <div className="flex items-stretch">
-          {BOTTOM_TABS.map(({ screen: s, icon: Icon, label }) => {
-            const active = screen === s;
-            return (
-              <button key={s} type="button" onClick={() => setScreen(s)}
-                className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 relative transition-colors"
-                style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.65)' }}>
-                {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-accent" />}
-                {s === 'restock' && RESTOCK.length > 0 && (
-                  <span className="absolute top-2 right-[22%] w-4 h-4 rounded-full bg-orange-400 text-background font-body text-[8px] font-bold flex items-center justify-center leading-none">
-                    {RESTOCK.length}
-                  </span>
-                )}
-                <Icon className="w-[22px] h-[22px] shrink-0" strokeWidth={active ? 2 : 1.5} />
-                <span className={`font-body text-[9px] tracking-[0.08em] uppercase leading-none ${active ? 'font-semibold' : ''}`}>{label}</span>
-              </button>
-            );
-          })}
-          <button type="button" onClick={() => setMoreOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 relative transition-colors"
-            style={{ color: isMoreScreen ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.65)' }}>
-            {isMoreScreen && <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-accent" />}
-            <MoreHorizontal className="w-[22px] h-[22px] shrink-0" strokeWidth={isMoreScreen ? 2 : 1.5} />
-            <span className={`font-body text-[9px] tracking-[0.08em] uppercase leading-none ${isMoreScreen ? 'font-semibold' : ''}`}>More</span>
-          </button>
-        </div>
       </div>
 
-      {/* ── Item Detail Sheet ────────────────────────────────────── */}
-      <AnimatePresence>
-        {selectedItem && (
-          <ItemDetailSheet item={selectedItem} onClose={() => setSelectedItem(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* ── Kit Detail Sheet ─────────────────────────────────────── */}
-      <AnimatePresence>
-        {selectedKit && (
-          <KitDetailSheet kit={selectedKit} onClose={() => setSelectedKit(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* ── More Menu Sheet ──────────────────────────────────────── */}
-      <AnimatePresence>
-        {moreOpen && (
-          <MoreMenuSheet onClose={() => setMoreOpen(false)} onNav={s => setScreen(s)} />
-        )}
-      </AnimatePresence>
+      {/* Live indicator — small badge when connected to Supabase */}
+      {isLive && (
+        <div className="pointer-events-none fixed bottom-6 left-16 z-[200]">
+          <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/60 px-2.5 py-1 font-body text-[10px] text-emerald-400/70">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/70 animate-pulse" />
+            Live
+          </span>
+        </div>
+      )}
     </div>
+    </AdminLayout>
   );
 }

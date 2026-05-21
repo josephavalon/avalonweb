@@ -48,6 +48,7 @@ const NAV = [
   { to: '/provider/services',       icon: Star,            label: 'Memberships',roles: ['admin', 'superadmin'] },
   { to: '/provider/communications',  icon: MessageSquare,   label: 'Follow-Ups', roles: ['admin', 'superadmin'] },
   { to: '/provider/reports',        icon: TrendingUp,      label: 'Reports',    roles: ['admin', 'superadmin'] },
+  { to: '/admin/inventory',         icon: Package,         label: 'Inventory',  roles: ['admin', 'superadmin'] },
   { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['admin', 'superadmin'] },
 ];
 
@@ -64,7 +65,7 @@ const ROLE_BADGE = {
 const EASE = [0.16, 1, 0.3, 1];
 
 // ─── Component ─────────────────────────────────────────────────────────────
-export default function AdminLayout({ children }) {
+export default function AdminLayout({ children, fullBleed = false }) {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -182,7 +183,7 @@ export default function AdminLayout({ children }) {
 
   // ── Layout ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
+    <div className={`${theme !== 'light' ? theme : ''} min-h-screen flex bg-background text-foreground`}>
 
       {/* ── Desktop sidebar ────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-60 shrink-0 fixed left-0 top-0 h-full z-30 border-r border-foreground/[0.06] bg-foreground/[0.04]">
@@ -224,7 +225,7 @@ export default function AdminLayout({ children }) {
         </div>
 
         {/* Page content — extra bottom padding on mobile so bottom tabs don't overlap */}
-        <main className="flex-1 p-5 md:p-8 max-w-[1280px] w-full pb-24 md:pb-8">
+        <main className={fullBleed ? 'flex-1 flex flex-col md:overflow-hidden' : 'flex-1 p-5 md:p-8 max-w-[1280px] w-full pb-24 md:pb-8'}>
           {children}
         </main>
       </div>
@@ -295,14 +296,14 @@ export default function AdminLayout({ children }) {
               onClick={() => setMoreOpen(false)}
             />
 
-            {/* Sheet */}
+            {/* Sheet — theme class applied directly so CSS vars always resolve correctly */}
             <motion.div
               key="more-sheet"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ duration: 0.38, ease: EASE }}
-              className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-background border-t border-foreground/[0.1] rounded-t-2xl"
+              className={`${theme !== 'light' ? theme : ''} md:hidden fixed bottom-0 inset-x-0 z-50 bg-background border-t border-white/10 rounded-t-2xl`}
               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)' }}
             >
               {/* Handle */}
@@ -311,9 +312,9 @@ export default function AdminLayout({ children }) {
               </div>
 
               {/* Sheet header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-foreground/[0.06]">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-foreground/[0.08]">
                 <div>
-                  <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 mb-0.5">
+                  <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50 mb-0.5">
                     Avalon Admin
                   </p>
                   <p className="font-body text-[13px] font-medium text-foreground">
@@ -325,7 +326,7 @@ export default function AdminLayout({ children }) {
                 </div>
                 <button
                   onClick={() => setMoreOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50 hover:text-foreground transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.06] text-foreground/60 hover:text-foreground transition-colors"
                 >
                   <X className="w-4 h-4" strokeWidth={1.5} />
                 </button>
@@ -333,7 +334,7 @@ export default function AdminLayout({ children }) {
 
               {/* Overflow nav items */}
               <nav className="px-3 py-3">
-                <p className="px-3 mb-2 text-[9px] tracking-[0.3em] uppercase text-foreground/35 font-body">
+                <p className="px-3 mb-2 text-[9px] tracking-[0.3em] uppercase text-foreground/50 font-body">
                   More
                 </p>
                 {overflowNav.map(({ to, icon: Icon, label }) => {
@@ -342,45 +343,45 @@ export default function AdminLayout({ children }) {
                     <Link
                       key={to}
                       to={to}
-                      className="flex items-center gap-3.5 px-3 py-3 rounded-xl mb-0.5 transition-all"
-                      style={{
-                        background: active ? 'hsl(var(--accent) / 0.1)' : 'transparent',
-                        color:      active ? 'hsl(var(--accent))' : 'hsl(var(--foreground))',
-                      }}
+                      onClick={() => setMoreOpen(false)}
+                      className={`flex items-center gap-3.5 px-3 py-3.5 rounded-xl mb-0.5 transition-all ${
+                        active ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-foreground/[0.05]'
+                      }`}
                     >
                       <Icon
-                        className="w-5 h-5 shrink-0"
+                        className={`w-5 h-5 shrink-0 ${active ? 'text-accent' : 'text-foreground/60'}`}
                         strokeWidth={1.5}
-                        style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.55)' }}
                       />
-                      <span className="font-body text-[14px] tracking-wide">{label}</span>
-                      {active && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent" />
-                      )}
+                      <span className="font-body text-[15px] tracking-wide">{label}</span>
+                      {active
+                        ? <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent" />
+                        : <ChevronRight className="ml-auto w-4 h-4 text-foreground/25" strokeWidth={1.5} />
+                      }
                     </Link>
                   );
                 })}
               </nav>
 
               {/* Sheet footer */}
-              <div className="px-3 pt-1 pb-1 border-t border-foreground/[0.06] space-y-0.5">
+              <div className="px-3 pt-1 pb-1 border-t border-foreground/[0.08] space-y-0.5">
                 <button
-                  onClick={() => { cycleTheme(); }}
-                  className="flex items-center gap-3.5 w-full px-3 py-3 rounded-xl text-foreground/55 hover:text-foreground transition-colors"
+                  onClick={cycleTheme}
+                  className="flex items-center gap-3.5 w-full px-3 py-3 rounded-xl text-foreground/70 hover:text-foreground transition-colors"
                 >
                   <ThemeIcon className="w-5 h-5 shrink-0" />
                   <span className="font-body text-[13px] capitalize">{theme} theme</span>
                 </button>
                 <Link
                   to="/"
-                  className="flex items-center gap-3.5 px-3 py-3 rounded-xl text-foreground/55 hover:text-foreground transition-colors"
+                  onClick={() => setMoreOpen(false)}
+                  className="flex items-center gap-3.5 px-3 py-3 rounded-xl text-foreground/70 hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5 shrink-0" strokeWidth={1.5} />
                   <span className="font-body text-[13px]">Back to site</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-3.5 w-full px-3 py-3 rounded-xl text-foreground/55 hover:text-red-400 transition-colors"
+                  className="flex items-center gap-3.5 w-full px-3 py-3 rounded-xl text-red-400/80 hover:text-red-400 transition-colors"
                 >
                   <LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
                   <span className="font-body text-[13px]">Sign Out</span>

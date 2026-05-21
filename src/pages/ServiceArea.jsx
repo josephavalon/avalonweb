@@ -5,30 +5,9 @@ import { Search, CheckCircle, XCircle, ChevronDown, ArrowRight } from 'lucide-re
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
+import { COVERED_ZIPS } from '@/lib/serviceArea';
 
 const EASE = [0.16, 1, 0.3, 1];
-
-// ── Covered zip codes ─────────────────────────────────────────────────────────
-const COVERED_ZIPS = new Set([
-  // San Francisco
-  '94102','94103','94104','94105','94107','94108','94109','94110','94111',
-  '94112','94114','94115','94116','94117','94118','94119','94120','94121',
-  '94122','94123','94124','94125','94126','94127','94128','94129','94130',
-  '94131','94132','94133','94134','94158',
-  // Marin
-  '94901','94903','94904','94920','94925','94930','94941','94945','94947','94949','94965',
-  // Peninsula / South Bay
-  '94002','94010','94019','94020','94021','94025','94026','94027','94028',
-  '94030','94040','94041','94043','94044','94061','94062','94063','94065',
-  '94066','94080','94401','94402','94403','94404',
-  '94301','94302','94303','94304','94305','94306',
-  '94085','94086','94087','94088','94089',
-  // East Bay
-  '94501','94502','94530','94547','94549','94556','94563','94596','94597','94598',
-  '94601','94602','94603','94605','94606','94607','94608','94609','94610',
-  '94611','94612','94613','94618','94619','94621','94702','94703','94704',
-  '94705','94706','94707','94708','94709','94710','94720',
-]);
 
 const ZONES = [
   {
@@ -78,6 +57,87 @@ const ZONES = [
     ],
   },
 ];
+
+const ALL_SERVICE_AREAS = ZONES.flatMap((zone) => zone.areas);
+const PRIMARY_SERVICE_AREAS = [
+  'San Francisco',
+  'Oakland',
+  'Berkeley',
+  'Alameda',
+  'Emeryville',
+  'Walnut Creek',
+  'Lafayette',
+  'Orinda',
+  'Danville',
+  'San Ramon',
+  'Palo Alto',
+  'Menlo Park',
+  'Redwood City',
+  'San Mateo',
+  'Burlingame',
+  'South San Francisco',
+  'Daly City',
+  'Mountain View',
+  'Sunnyvale',
+  'Cupertino',
+  'Santa Clara',
+  'San Jose',
+  'Mill Valley',
+  'Sausalito',
+  'Tiburon',
+  'San Rafael',
+  'Novato',
+];
+
+const serviceAreaJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': 'https://avalonvitality.co/service-area#webpage',
+      url: 'https://avalonvitality.co/service-area',
+      name: 'Mobile IV Therapy Service Area in the San Francisco Bay Area',
+      description:
+        'Avalon Vitality provides mobile IV therapy and IM injections across San Francisco, Marin, the Peninsula, South Bay, and East Bay.',
+      isPartOf: { '@id': 'https://avalonvitality.co/#website' },
+      about: { '@id': 'https://avalonvitality.co/#localbusiness' },
+    },
+    {
+      '@type': 'MedicalBusiness',
+      '@id': 'https://avalonvitality.co/#localbusiness',
+      name: 'Avalon Vitality',
+      url: 'https://avalonvitality.co',
+      medicalSpecialty: 'IV Therapy',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'San Francisco',
+        addressRegion: 'CA',
+        addressCountry: 'US',
+      },
+      areaServed: PRIMARY_SERVICE_AREAS.map((name) => ({
+        '@type': 'City',
+        name,
+        containedInPlace: {
+          '@type': 'AdministrativeArea',
+          name: 'San Francisco Bay Area',
+        },
+      })),
+      description:
+        'RN-administered mobile IV drips and IM injections delivered to homes, hotels, offices, and events throughout the San Francisco Bay Area.',
+    },
+    {
+      '@type': 'Service',
+      '@id': 'https://avalonvitality.co/service-area#mobile-iv-therapy',
+      name: 'Mobile IV Therapy in the San Francisco Bay Area',
+      serviceType: 'Mobile IV therapy and IM injections',
+      provider: { '@id': 'https://avalonvitality.co/#localbusiness' },
+      areaServed: PRIMARY_SERVICE_AREAS.map((name) => ({
+        '@type': 'City',
+        name,
+      })),
+    },
+  ],
+};
 
 function ZipChecker() {
   const [zip, setZip] = useState('');
@@ -229,7 +289,14 @@ function RegionAccordion({ zone, defaultOpen = false }) {
 }
 
 export default function ServiceArea() {
-  useSeo({ title: 'Service Area — Avalon Vitality', description: 'Avalon Vitality serves San Francisco, Peninsula, East Bay, and Marin.', path: '/service-area' });
+  useSeo({
+    title: 'Mobile IV Therapy Service Area in the San Francisco Bay Area — Avalon Vitality',
+    description:
+      'Avalon Vitality delivers RN-administered mobile IV therapy and IM injections across San Francisco, Oakland, Berkeley, Marin, Peninsula, South Bay, and East Bay cities.',
+    path: '/service-area',
+    jsonLd: serviceAreaJsonLd,
+  });
+
   return (
     <div className="bg-background min-h-screen w-full">
       <Navbar />
@@ -248,13 +315,13 @@ export default function ServiceArea() {
               className="font-heading text-6xl md:text-8xl lg:text-[9rem] text-foreground uppercase leading-[0.9] mb-5"
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.05 }}
             >
-              We Come<br />to You
+              Bay Area<br />IV Therapy
             </motion.h1>
             <motion.p
               className="font-body text-sm md:text-base text-foreground/55 max-w-xl mb-10"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
             >
-              A licensed RN comes to your home, hotel, office, or event with IV drips and IM injections — across the SF Bay Area, no clinic visit required.
+              Mobile IV therapy and IM injections delivered by a licensed RN across San Francisco, Marin, the Peninsula, South Bay, and East Bay — no clinic visit required.
             </motion.p>
 
             {/* Zip code checker */}
@@ -265,6 +332,51 @@ export default function ServiceArea() {
             >
               <p className="font-body text-[11px] tracking-[0.25em] uppercase text-foreground/35 mb-4">Check your zip code</p>
               <ZipChecker />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Bay Area SEO overview */}
+        <section className="py-10 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-[0.95fr_1.25fr] gap-8 md:gap-12 items-start">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: EASE }}
+            >
+              <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3">Bay Area Coverage</p>
+              <h2 className="font-heading text-4xl md:text-6xl text-foreground uppercase leading-[0.9]">
+                Mobile IVs Across the Bay
+              </h2>
+              <p className="font-body text-sm text-foreground/50 mt-4 leading-relaxed">
+                Avalon Vitality provides concierge mobile IV therapy in the San Francisco Bay Area, including same-day IV drips and IM shots for homes, hotels, offices, private events, and team recovery.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
+              className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.025] p-5 md:p-6"
+            >
+              <h3 className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/35 mb-4">
+                Popular Mobile IV Service Areas
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {PRIMARY_SERVICE_AREAS.map((area) => (
+                  <span
+                    key={area}
+                    className="font-body text-[11px] tracking-[0.08em] text-foreground/60 border border-foreground/[0.08] rounded-full px-3.5 py-1.5 bg-background/40"
+                  >
+                    {area}
+                  </span>
+                ))}
+              </div>
+              <p className="sr-only">
+                Avalon Vitality mobile IV therapy service areas include {ALL_SERVICE_AREAS.join(', ')}.
+              </p>
             </motion.div>
           </div>
         </section>
@@ -292,7 +404,7 @@ export default function ServiceArea() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, ease: EASE, delay: i * 0.07 }}
                 >
-                  <RegionAccordion zone={zone} defaultOpen={i === 0} />
+                  <RegionAccordion zone={zone} defaultOpen={false} />
                 </motion.div>
               ))}
             </div>

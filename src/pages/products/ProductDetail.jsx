@@ -1,94 +1,147 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Droplet } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, LockKeyhole,
+  ShieldCheck, Sparkles, Truck, UserRoundCheck,
+} from 'lucide-react';
+
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { useCart } from '@/context/CartContext';
 import { getProduct } from '@/data/products';
+import { useSeo } from '@/lib/seo';
 
-// Avalon easing — matches project non-negotiable.
 const EASE = [0.16, 1, 0.3, 1];
 
-// Pricing rows shared with ServicePageLayout card. Kept in sync by shape.
-function PricingRows({ t }) {
-  const rows = [];
+function priceNumber(value) {
+  const number = Number(String(value || '').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(number) ? number : 0;
+}
 
-  if (t.oneTime) {
-    rows.push(
-      <div key="oneTime" className="flex items-baseline gap-3">
-        <span className="font-heading text-4xl text-foreground">{t.oneTime}</span>
-        <span className="font-body text-xs tracking-wider uppercase text-muted-foreground">One-time</span>
-      </div>
-    );
-  }
-  if (t.price) {
-    rows.push(
-      <div key="price" className="flex items-baseline gap-3">
-        <span className="font-heading text-4xl text-foreground">{t.price}</span>
-        <span className="font-body text-xs tracking-wider uppercase text-muted-foreground">Per session</span>
-      </div>
-    );
-  }
+function productPrice(product) {
+  return product.oneTime || product.price || '$250';
+}
 
-  // annualPrice field holds the per-unit MONTHLY member rate (already 20% off session).
-  // Annual membership = monthly × 12, flat.
-  if (t.annualPrice) {
-    rows.push(
-      <div key="monthlyFromAnnual" className="flex items-baseline gap-3">
-        <span className="font-heading text-2xl text-accent">{t.annualPrice}</span>
-        <span className="font-body text-xs tracking-wider uppercase text-muted-foreground">Monthly member</span>
-      </div>
-    );
-    const n = parseFloat(String(t.annualPrice).replace(/[^0-9.]/g, ''));
-    if (Number.isFinite(n)) {
-      const annual = Math.round(n * 12);
-      rows.push(
-        <div key="annualComputed" className="flex items-baseline gap-3">
-          <span className="font-heading text-2xl text-foreground">${annual.toLocaleString()}</span>
-          <span className="font-body text-xs tracking-wider uppercase text-muted-foreground">Annual member</span>
+function ProductBag({ image, name }) {
+  return (
+    <div className="relative isolate aspect-[0.76] min-h-[30rem] overflow-hidden rounded-lg border border-foreground/[0.08] bg-[linear-gradient(135deg,#f2eee6,#d9d0c4_48%,#f9f8f4)]">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.9),transparent_38%),radial-gradient(circle_at_50%_82%,rgba(130,105,75,0.22),transparent_46%)]" />
+      {image ? (
+        <img
+          src={image}
+          alt={name}
+          className="h-full w-full object-contain p-7 drop-shadow-[0_22px_42px_rgba(41,31,21,0.22)]"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center px-10 text-center">
+          <div>
+            <p className="font-heading text-4xl tracking-[0.12em] text-foreground">AVALON</p>
+            <p className="font-body text-[10px] tracking-[0.48em] text-foreground/40">VITALITY</p>
+            <p className="mt-8 font-body text-xs uppercase tracking-[0.24em] text-foreground/45">{name}</p>
+          </div>
         </div>
-      );
-    }
-  }
+      )}
+    </div>
+  );
+}
 
-  if (t.monthly) {
-    rows.push(
-      <div key="monthly" className="flex items-baseline gap-3">
-        <span className="font-heading text-2xl text-accent">{t.monthly}</span>
-        <span className="font-body text-xs tracking-wider uppercase text-muted-foreground">Monthly member</span>
+function TrustItem({ icon: Icon, title, sub }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <Icon className="h-4 w-4 shrink-0 text-foreground/55" strokeWidth={1.6} />
+      <div className="min-w-0">
+        <p className="font-body text-[10px] font-semibold leading-tight text-foreground">{title}</p>
+        <p className="font-body text-[9px] leading-tight text-foreground/40">{sub}</p>
       </div>
-    );
-  }
-  if (t.annual) {
-    rows.push(
-      <div key="annual" className="flex items-baseline gap-3">
-        <span className="font-heading text-2xl text-foreground">{t.annual}</span>
-        <span className="font-body text-xs tracking-wider uppercase text-muted-foreground">Annual member</span>
-      </div>
-    );
-  }
+    </div>
+  );
+}
 
-  return <div className="space-y-3">{rows}</div>;
+function AccordionRow({ title, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-t border-foreground/[0.10]">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-4 py-4 text-left"
+        aria-expanded={open}
+      >
+        <span className="font-body text-sm font-semibold text-foreground">{title}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.28, ease: EASE }}>
+          <ChevronDown className="h-4 w-4 text-foreground/45" strokeWidth={1.8} />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="pb-5 font-body text-sm leading-relaxed text-foreground/55">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function includedFor(product) {
+  if (product.name.toLowerCase().includes('myers')) {
+    return ['B-complex vitamins', 'Vitamin C', 'Magnesium', 'Calcium', 'Zinc', 'IV fluids'];
+  }
+  if (product.name.toLowerCase().includes('nad')) return ['NAD+', 'IV fluids', 'B-complex support'];
+  if (product.name.toLowerCase().includes('cbd')) return ['Zero-THC CBD', 'IV fluids', 'Clinician-guided dose'];
+  if (product.name.toLowerCase().includes('beauty')) return ['Glutathione', 'Biotin', 'Vitamin C', 'B-complex'];
+  if (product.name.toLowerCase().includes('immunity')) return ['Vitamin C', 'Zinc', 'Glutathione', 'IV fluids'];
+  return ['IV fluids', 'Electrolytes', 'B-complex vitamins', 'Clinician-guided support'];
 }
 
 export default function ProductDetail() {
   const { category, slug } = useParams();
   const match = getProduct(category, slug);
+  const navigate = useNavigate();
+  const { clearItems, addItem } = useCart();
+
+  const price = useMemo(() => productPrice(match?.treatment || {}), [match]);
+  const numericPrice = useMemo(() => priceNumber(price), [price]);
+
+  useSeo({
+    title: match ? `${match.treatment.name} — Avalon Vitality` : 'Product Not Found — Avalon Vitality',
+    description: match?.treatment.desc || 'Avalon Vitality mobile IV therapy product page.',
+    path: match ? `/products/${category}/${slug}` : undefined,
+    jsonLd: match ? {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: match.treatment.name,
+      image: match.treatment.image ? `https://avalonvitality.co${match.treatment.image}` : undefined,
+      description: match.treatment.desc,
+      brand: { '@type': 'Brand', name: 'Avalon Vitality' },
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        price: numericPrice,
+        availability: 'https://schema.org/InStock',
+      },
+    } : undefined,
+  });
 
   if (!match) {
     return (
-      <div className="bg-background min-h-screen">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-          <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-3">Not found</p>
-          <h1 className="font-heading text-4xl md:text-5xl text-foreground tracking-wide mb-4">
-            We couldn't find that product
-          </h1>
-          <Link
-            to="/"
-            className="mt-4 inline-block px-8 py-3 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
-          >
-            Back to home
+        <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 text-center">
+          <p className="mb-3 font-body text-[10px] uppercase tracking-[0.32em] text-accent">Not found</p>
+          <h1 className="font-heading text-5xl uppercase leading-none text-foreground">Product missing</h1>
+          <Link to="/store" className="mt-8 rounded-full bg-foreground px-8 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background">
+            Browse Store
           </Link>
         </div>
         <Footer />
@@ -96,106 +149,169 @@ export default function ProductDetail() {
     );
   }
 
-  const { category: cat, treatment: t } = match;
+  const { category: cat, treatment } = match;
+  const included = includedFor(treatment);
+
+  const buyNow = () => {
+    clearItems();
+    addItem({
+      cartKey: slug,
+      label: treatment.name,
+      price: numericPrice,
+      type: category === 'iv-vitamins' ? 'iv' : 'addon',
+    });
+    navigate('/checkout');
+  };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero */}
-      <section className="pt-24 pb-12 px-6 md:px-16 border-b border-border">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease: EASE }}
-            className="mb-8"
+      <main className="px-4 pb-16 pt-24 md:px-8 md:pt-28">
+        <div className="mx-auto max-w-7xl">
+          <Link
+            to={cat.backTo}
+            className="mb-6 inline-flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.24em] text-foreground/45 transition-colors hover:text-foreground"
           >
-            <Link
-              to={cat.backTo}
-              className="inline-flex items-center gap-2 text-accent hover:text-accent/80 text-[11px] font-body uppercase tracking-[0.2em]"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              {cat.backLabel}
-            </Link>
-          </motion.div>
+            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
+            {cat.backLabel}
+          </Link>
 
-          <div className="grid md:grid-cols-2 gap-12 items-start">
-            {/* Image */}
+          <section className="grid gap-8 md:grid-cols-[0.84fr_1fr] md:gap-12 lg:gap-16">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE }}
-              className="aspect-square rounded-3xl overflow-hidden border border-white/20 bg-white/[0.03] backdrop-blur-md"
+              initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.75, ease: EASE }}
+              className="hidden md:block"
             >
-              {t.image && (
-                <img src={t.image} alt={t.name} className="w-full h-full object-contain bg-background" />
-              )}
+              <ProductBag image={treatment.image} name={treatment.name} />
             </motion.div>
 
-            {/* Content */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
+              initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
+              className="md:pt-3"
             >
-              <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-3">
-                {cat.categoryLabel}
-              </p>
-              <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide leading-none mb-5">
-                {t.name}
-              </h1>
-              {t.desc && (
-                <p className="font-body text-base text-muted-foreground leading-relaxed mb-8">
-                  {t.desc}
+              <div className="relative min-h-[21.5rem] overflow-hidden rounded-lg border border-foreground/[0.08] bg-[linear-gradient(135deg,#fbfaf6,#eee8df)] p-5 md:hidden">
+                <div className="relative z-10 max-w-[55%]">
+                  <p className="mb-3 inline-flex rounded-full bg-foreground/[0.06] px-2.5 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
+                    {treatment.name.toLowerCase().includes('myers') ? 'Most Popular' : cat.categoryLabel}
+                  </p>
+                  <h1 className="font-serif text-[2rem] leading-[0.98] tracking-tight text-foreground">
+                    {treatment.name}
+                  </h1>
+                  <p className="mt-3 font-body text-[11px] leading-relaxed text-foreground/62">
+                    {treatment.desc || cat.description}
+                  </p>
+                  <p className="mt-5 font-heading text-2xl text-foreground">{price}</p>
+                </div>
+                {treatment.image && (
+                  <img
+                    src={treatment.image}
+                    alt={treatment.name}
+                    className="absolute bottom-4 right-0 h-[76%] w-[52%] object-contain drop-shadow-[0_18px_35px_rgba(41,31,21,0.22)]"
+                  />
+                )}
+              </div>
+
+              <div className="hidden md:block">
+                <p className="mb-3 inline-flex rounded-full bg-foreground/[0.06] px-3 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/55">
+                  {treatment.name.toLowerCase().includes('myers') ? 'Most Popular' : cat.categoryLabel}
                 </p>
-              )}
 
-              <div className="mb-10">
-                <PricingRows t={t} />
+                <h1 className="font-heading text-5xl uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl">
+                  {treatment.name}
+                </h1>
+
+                <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-foreground/62">
+                  {treatment.desc || cat.description}
+                </p>
+
+                <p className="mt-7 font-heading text-3xl text-foreground">{price}</p>
               </div>
 
-              <div className="flex items-center gap-3 mb-10 pb-8">
-                <Droplet className="w-4 h-4 text-accent" strokeWidth={1.5} />
-                <span className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground">
-                  Direct IV · Administered by a licensed clinician
-                </span>
+              <div className="mt-5 grid grid-cols-1 gap-3 border-y border-foreground/[0.10] py-5 md:mt-8 md:grid-cols-3 md:gap-4">
+                <TrustItem icon={Truck} title="Flat pricing" sub="No surprise fees" />
+                <TrustItem icon={UserRoundCheck} title="Licensed RN" sub="Clinician delivered" />
+                <TrustItem icon={ShieldCheck} title="Medical oversight" sub="Your safety first" />
               </div>
 
-              <Link
-                to="/apply"
-                className="inline-block w-full text-center px-8 py-4 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
-              >
-                BUY NOW
-              </Link>
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={buyNow}
+                  className="flex items-center justify-center gap-2 rounded-md bg-foreground px-7 py-4 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background transition-colors hover:bg-foreground/88"
+                >
+                  Buy Now <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                </button>
+                <Link
+                  to="/subscription"
+                  className="flex items-center justify-center gap-2 rounded-md border border-foreground/[0.16] bg-white/[0.45] px-7 py-4 font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground/32"
+                >
+                  Subscribe & Save 10%
+                </Link>
+              </div>
+
+              <div className="mt-8">
+                <AccordionRow title="What's Included" defaultOpen>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {included.map((item) => (
+                      <div key={item} className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-foreground/45" strokeWidth={1.7} />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionRow>
+                <AccordionRow title="Best For">
+                  <p>
+                    Best for clients looking for convenient mobile IV support before or after travel, work, training,
+                    events, long weeks, or routine wellness days across the SF Bay Area.
+                  </p>
+                </AccordionRow>
+                <AccordionRow title="How It Works">
+                  <p>
+                    Choose your product, complete checkout, and Avalon confirms clinical eligibility and timing. A
+                    California-licensed RN arrives with the supplies needed for your visit.
+                  </p>
+                </AccordionRow>
+                <AccordionRow title="Clinical Oversight">
+                  <p>
+                    Every visit is administered by a licensed clinician under medical protocols. Final formulation and
+                    eligibility are subject to clinical review.
+                  </p>
+                </AccordionRow>
+                <AccordionRow title="FAQ">
+                  <p>
+                    Most sessions take 30-60 minutes. Same-day availability depends on location, nurse coverage, and
+                    clinical clearance. Your card is authorized first and charged after confirmation.
+                  </p>
+                </AccordionRow>
+              </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* Context block — brief educational framing from the category */}
-      {cat.description && (
-        <section className="py-16 px-6 md:px-16 border-b border-border">
-          <div className="max-w-3xl mx-auto">
-            <p className="text-[10px] tracking-[0.3em] text-accent font-body uppercase mb-4">
-              About {cat.categoryLabel}
-            </p>
-            <p className="font-body text-base text-foreground leading-relaxed">
-              {cat.description}
-            </p>
-          </div>
-        </section>
-      )}
+          <section className="mt-12 grid gap-4 border-t border-foreground/[0.10] pt-8 md:grid-cols-3">
+            {[
+              { icon: CreditCard, title: 'Secure checkout', body: 'Apple Pay and card payments through encrypted checkout.' },
+              { icon: LockKeyhole, title: 'Clinical clearance', body: 'Required before your RN visit is confirmed.' },
+              { icon: Sparkles, title: 'Good faith estimate', body: 'Transparent pricing before care begins.' },
+            ].map((item) => (
+              <div key={item.title} className="rounded-lg border border-foreground/[0.08] bg-white/[0.38] p-5">
+                <item.icon className="mb-4 h-5 w-5 text-foreground/55" strokeWidth={1.6} />
+                <p className="font-body text-sm font-semibold text-foreground">{item.title}</p>
+                <p className="mt-1 font-body text-xs leading-relaxed text-foreground/45">{item.body}</p>
+              </div>
+            ))}
+          </section>
 
-      {/* Disclaimer */}
-      <section className="py-12 px-6 md:px-16">
-        <div className="max-w-4xl mx-auto">
-          <p className="font-body text-[11px] text-muted-foreground text-center leading-relaxed">
-            Educational content only — not intended to diagnose, treat, cure, or prevent any condition.
-            Administered by California-licensed clinicians under physician supervision.
+          <p className="mx-auto mt-10 max-w-3xl text-center font-body text-[10px] leading-relaxed text-foreground/30">
+            Educational content only. Avalon Vitality provides wellness and recovery support and does not diagnose,
+            treat, cure, or prevent disease. Services are subject to clinical approval.
           </p>
         </div>
-      </section>
+      </main>
 
       <Footer />
     </div>

@@ -79,7 +79,7 @@ const TIERS = [
       '4 IV credits/month',
       '1 credit may be NAD+ 500mg or Exosomes 30B',
       '25% off add-ons',
-      'Unlimited add-ons at member rate',
+      'Unlimited add-ons at subscriber rate',
       'Dedicated nurse',
       'Shareable with partner',
       '3-month minimum',
@@ -94,11 +94,11 @@ const FAQS = [
   },
   {
     q: 'Can I pause?',
-    a: 'Yes. Members may pause once per 3-month term with 7 days notice.',
+    a: 'Yes. Subscribers may pause once per 3-month term with 7 days notice.',
   },
   {
     q: 'What if I want more?',
-    a: 'Additional sessions beyond your credits are available at the member-discounted rate.',
+    a: 'Additional sessions beyond your credits are available at the subscriber-discounted rate.',
   },
 ];
 
@@ -106,7 +106,7 @@ export default function Pricing() {
   useSeo({
     title: 'Pricing — Avalon Vitality',
     description:
-      'Transparent pricing for mobile IV therapy in San Francisco. Single sessions from $179. Membership plans from $200/mo.',
+      'Transparent pricing for mobile IV therapy in San Francisco. Single sessions from $179. Subscription plans from $200/mo.',
     path: '/pricing',
   });
 
@@ -147,10 +147,10 @@ export default function Pricing() {
                 Book a Session <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                to="/membership"
+                to="/subscription"
                 className="inline-flex items-center gap-2 border border-foreground/20 text-foreground font-body text-sm tracking-[0.15em] uppercase px-6 py-3.5 rounded-xl hover:border-foreground/50 transition-colors duration-200"
               >
-                View Membership <ArrowRight className="w-4 h-4" />
+                View Subscription <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
           </div>
@@ -211,11 +211,11 @@ export default function Pricing() {
           </div>
         </Reveal>
 
-        {/* Membership */}
+        {/* Subscription */}
         <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.p {...REVEAL} className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3">
-              Membership
+              Subscription
             </motion.p>
             <motion.h2
               {...REVEAL}
@@ -301,7 +301,7 @@ export default function Pricing() {
               className="flex flex-wrap justify-center gap-4"
             >
               <Link
-                to="/membership"
+                to="/subscription"
                 className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-6 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
               >
                 SUBSCRIBE & SAVE <ArrowRight className="w-4 h-4" />

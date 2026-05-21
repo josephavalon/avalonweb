@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   Droplets, Zap, ShieldCheck, Sparkles, Heart, Plane, FlaskConical, Moon,
   ArrowRight, Check, X, ShoppingBag, Plus, Syringe, ChevronDown, ChevronRight,
-  Flame, BatteryCharging, Shield, Package, Info, LayoutGrid,
+  Flame, BatteryCharging, Shield, Info, LayoutGrid,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
@@ -113,7 +113,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
             <p className="font-body text-sm text-foreground/50">Visit Total</p>
             <p className="font-heading text-2xl text-foreground tracking-tight">${total.toLocaleString()}</p>
           </div>
-          <Link to="/newsletter"
+          <Link to="/book"
             className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/85 transition-colors">
             Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
@@ -185,7 +185,7 @@ export default function RecoveryMenuSection() {
           <div className="flex items-center gap-3 mb-2">
             <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/60">One-Time Visit</p>
             <span className="font-body text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border border-foreground/20 text-foreground/50 font-semibold">
-              No membership required
+              No subscription required
             </span>
           </div>
           <h2 className="font-heading text-4xl md:text-5xl text-foreground uppercase tracking-tight leading-none">
@@ -388,8 +388,8 @@ export default function RecoveryMenuSection() {
                   <ArrowRight className="w-4 h-4" strokeWidth={2} />
                 </motion.button>
                 <div className="flex items-center gap-2 px-1">
-                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Members save 20% ·</span>
-                  <Link to="/newsletter" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View memberships →</Link>
+                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Subscribers save 20% ·</span>
+                  <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View subscriptions →</Link>
                 </div>
               </div>
             </motion.div>
@@ -488,8 +488,8 @@ export default function RecoveryMenuSection() {
                 ))}
               </div>
               <div className="flex items-center gap-2 px-1 pt-1">
-                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Members save an additional 20% ·</span>
-                <Link to="/newsletter" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
+                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Subscribers save an additional 20% ·</span>
+                <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
               </div>
             </motion.div>
           )}

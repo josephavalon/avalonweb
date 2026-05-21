@@ -25,7 +25,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How quickly can a nurse arrive?',
-        a: 'Most sessions are available same-day. Members receive a 90-minute arrival window. Inner Circle and Elite members receive dedicated nurse priority scheduling.',
+        a: 'Most sessions are available same-day. Subscribers receive a 90-minute arrival window. Inner Circle and Elite subscribers receive dedicated nurse priority scheduling.',
       },
     ],
   },
@@ -80,19 +80,19 @@ const FAQ_SECTIONS = [
     ],
   },
   {
-    title: 'Membership & Booking',
+    title: 'Subscription & Booking',
     items: [
       {
-        q: 'How does the membership work?',
-        a: 'Members pay a monthly fee and receive credits redeemable for IV sessions, plus a discount on all add-ons and additional sessions. Credits do not roll over.',
+        q: 'How does the subscription work?',
+        a: 'Subscribers pay a monthly fee and receive credits redeemable for IV sessions, plus a discount on all add-ons and additional sessions. Credits do not roll over.',
       },
       {
         q: 'Can I pause or cancel?',
-        a: 'Memberships require a 3-month minimum commitment. After that, you can cancel anytime with 30 days notice. Pausing is available once per year for up to 60 days.',
+        a: 'Subscriptions require a 3-month minimum commitment. After that, you can cancel anytime with 30 days notice. Pausing is available once per year for up to 60 days.',
       },
       {
-        q: 'Can I share my membership?',
-        a: 'Elite and Private Client members may designate one household partner to share their membership benefits.',
+        q: 'Can I share my subscription?',
+        a: 'Elite and Private Client subscribers may designate one household partner to share their subscription benefits.',
       },
       {
         q: "What's the commitment?",

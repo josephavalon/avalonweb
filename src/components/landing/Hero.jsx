@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Tag, MapPin } from 'lucide-react';
+import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
-const EASE = [0.16, 1, 0.3, 1];
+const MotionLink = motion(Link);
 
 export default function Hero() {
   const ref = useRef(null);
@@ -23,11 +24,14 @@ export default function Hero() {
         style={isMobile ? undefined : { y }}
         className={`absolute inset-0 pointer-events-none${isMobile ? '' : ' will-change-transform'}`}
       >
-        <img
+        <motion.img
           src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
           alt="Avalon Vitality IV therapy"
           className="w-full h-full object-cover"
-          style={{ objectPosition: '30% 55%', transform: 'scale(1.22)', transformOrigin: '38% 62%' }}
+          style={{ objectPosition: '30% 55%', transformOrigin: '38% 62%' }}
+          initial={{ scale: 1.28 }}
+          animate={{ scale: 1.22 }}
+          transition={{ duration: 3.2, ease: EASE }}
           loading="eager"
           fetchpriority="high"
         />
@@ -49,9 +53,8 @@ export default function Hero() {
         <div className="flex-1 md:hidden" />
 
         <motion.p
-          initial={{ opacity: 0, y: 8, filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 1.4, delay: 0.2, ease: EASE }}
+          {...premiumFadeUp(0.18)}
+          initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
           className="font-body text-[16px] tracking-[0.3em] uppercase mb-3 md:mb-5"
           style={{ color: 'hsl(var(--foreground) / 0.5)' }}
         >
@@ -59,9 +62,9 @@ export default function Hero() {
         </motion.p>
 
         <motion.h1
-          initial={{ opacity: 0, y: 32, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 1.6, delay: 0.42, ease: EASE }}
+          {...premiumFadeUp(0.38)}
+          initial={{ opacity: 0, y: 38, filter: 'blur(12px)' }}
+          transition={{ duration: 1.6, delay: 0.38, ease: EASE }}
           className="font-heading text-[15vw] sm:text-[12vw] md:text-[9vw] lg:text-[8rem] leading-[0.88] tracking-tight text-foreground uppercase max-w-3xl"
           style={{ willChange: 'opacity, transform, filter' }}
         >
@@ -69,35 +72,60 @@ export default function Hero() {
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 1.3, delay: 0.78, ease: EASE }}
+          {...premiumFadeUp(0.72)}
+          initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+          transition={{ duration: 1.15, delay: 0.72, ease: EASE }}
           className="font-body text-base md:text-lg leading-snug mt-4 md:mt-6"
           style={{ color: 'hsl(var(--foreground) / 0.75)' }}
         >
-          Your protocol.<br />Delivered by a licensed RN.
+          Your protocol.<br />Delivered by a licensed RN.<br />At home, hotel, office, or event.
         </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 1.2, delay: 1.05, ease: EASE }}
+          {...premiumFadeUp(0.98)}
+          initial={{ opacity: 0, y: 22, filter: 'blur(7px)' }}
+          transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
           className="flex flex-col gap-3 mt-7 md:mt-8 w-full max-w-sm"
         >
-          <Link
-            to="/newsletter"
-            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-colors"
+          <MotionLink
+            to="/book"
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
           >
             <span>Buy Now</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/newsletter"
-            className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-xl bg-transparent border border-foreground/40 text-foreground hover:bg-white/10 transition-colors"
+            <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
+          </MotionLink>
+          <MotionLink
+            to="/subscription"
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-xl bg-white/[0.03] border border-foreground/35 text-foreground hover:bg-white/[0.10] hover:border-foreground/55 transition-all duration-base ease-editorial backdrop-blur-sm"
           >
-            <span>Subscribe & Save</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+            <span>Subscribe & Save 10%</span>
+            <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
+          </MotionLink>
+        </motion.div>
+
+        {/* Trust strip */}
+        <motion.div
+          {...premiumFadeUp(1.18)}
+          initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }}
+          transition={{ duration: 1.0, delay: 1.18, ease: EASE }}
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 md:mt-10"
+        >
+          {[
+            { icon: Tag,    label: 'No Hidden Fees' },
+            { icon: MapPin, label: 'SF Bay Area' },
+          ].map(({ icon: Icon, label }, i) => (
+            <React.Fragment key={label}>
+              {i > 0 && <span className="hidden sm:block w-px h-3.5 bg-foreground/20" />}
+              <span className="flex items-center gap-1.5">
+                <Icon className="w-3.5 h-3.5 text-foreground/45" strokeWidth={1.6} />
+                <span className="font-body text-[11px] tracking-[0.12em] text-foreground/55 uppercase">{label}</span>
+              </span>
+            </React.Fragment>
+          ))}
         </motion.div>
 
         <div className="pb-10 md:pb-0 md:flex-1" />

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { track } from '@/lib/analytics';
 import { useCart } from '@/context/CartContext';
-import { Droplets, Zap, Syringe, ChevronDown, ArrowRight, Check, Plus, Minus } from 'lucide-react';
+import { Droplets, Zap, Syringe, ChevronDown, ArrowRight, Check, Plus } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import StickyMobileCTA from '@/components/landing/StickyMobileCTA';
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -55,7 +54,7 @@ function StyledSelect({ value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none bg-white/[0.04] border border-border/50 text-foreground font-body text-xs tracking-widest uppercase rounded-xl px-3 py-2.5 pr-8 focus:outline-none focus:border-accent/60 cursor-pointer transition-colors hover:border-foreground/40"
+        className="w-full appearance-none rounded-2xl border border-foreground/[0.10] bg-card/[0.72] px-4 py-3 pr-10 font-body text-xs uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground/25 focus:outline-none focus:border-foreground/40"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-background text-foreground normal-case tracking-normal">
@@ -63,17 +62,17 @@ function StyledSelect({ value, onChange, options }) {
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" strokeWidth={1.8} />
+      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" strokeWidth={1.8} />
     </div>
   );
 }
 
 // Inline 1–4 qty selector used inside each treatment row
-function QtyPicker({ value, onChange, label = 'per month' }) {
+function QtyPicker({ value, onChange }) {
   return (
-    <div className="flex items-center gap-3 mt-3">
-      <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/40 shrink-0">
-        × / mo
+    <div className="mt-4 flex items-center gap-3">
+      <p className="shrink-0 font-body text-[9px] uppercase tracking-[0.25em] text-foreground/40">
+        Monthly Qty
       </p>
       <div className="flex gap-1">
         {QTY_OPTIONS.map(q => (
@@ -84,48 +83,60 @@ function QtyPicker({ value, onChange, label = 'per month' }) {
             className={`w-8 h-8 rounded-lg font-body text-xs font-semibold transition-all duration-150 ${
               value === q
                 ? 'bg-foreground text-background'
-                : 'border border-foreground/15 text-foreground/50 hover:border-foreground/40 hover:text-foreground'
+                : 'border border-foreground/15 bg-card/[0.45] text-foreground/50 hover:border-foreground/40 hover:text-foreground'
             }`}
           >
             {q}
           </button>
         ))}
       </div>
-      <p className="font-body text-[9px] text-foreground/30">per month</p>
     </div>
+  );
+}
+
+function OneTimeNote() {
+  return (
+    <p className="mt-4 inline-flex rounded-full border border-foreground/[0.10] bg-background/[0.22] px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.16em] text-foreground/45">
+      One-time visit
+    </p>
   );
 }
 
 function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, children }) {
   return (
-    <motion.div layout className="border-b border-border/20 py-5">
-      <div className="flex items-start gap-4">
+    <motion.div layout className="overflow-hidden rounded-3xl border border-foreground/[0.10] bg-card/[0.60] backdrop-blur-md">
+      <div className="flex items-start gap-4 p-4">
         <button
           type="button"
           onClick={onToggle}
-          className={`mt-1 w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
+          className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
             active
               ? 'bg-foreground border-foreground text-background'
               : 'border-border/60 text-foreground/40 hover:border-foreground/50 hover:text-foreground/70'
           }`}
           aria-pressed={active}
         >
-          {active ? <Check className="w-3 h-3" strokeWidth={2.5} /> : <Plus className="w-3 h-3" strokeWidth={2} />}
+          {active ? <Check className="h-4 w-4" strokeWidth={2.5} /> : <Plus className="h-4 w-4" strokeWidth={2} />}
         </button>
 
-        <div className={`flex-1 min-w-0 transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-50'}`}>
-          <div className="flex items-center justify-between mb-0.5">
+        <div className={`min-w-0 flex-1 transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-60'}`}>
+          <button type="button" onClick={onToggle} className="w-full text-left">
+          <div className="mb-1 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Icon className="w-3.5 h-3.5 text-accent" strokeWidth={1.5} />
-              <span className="font-heading text-xl tracking-wide text-foreground uppercase">{title}</span>
+              <Icon className="mt-0.5 h-4 w-4 text-foreground/65" strokeWidth={1.5} />
+              <span className="font-heading text-2xl uppercase tracking-wide text-foreground">{title}</span>
             </div>
-            {!active && (
-              <span className="font-body text-xs tracking-widest uppercase text-foreground/50 shrink-0">
-                from ${fromPrice}
-              </span>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {!active && (
+                <span className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+                  from ${fromPrice}
+                </span>
+              )}
+              <ChevronDown className={`h-4 w-4 text-foreground/60 transition-transform duration-300 ${active ? 'rotate-180' : ''}`} strokeWidth={1.8} />
+            </div>
           </div>
-          <p className="font-body text-[10px] tracking-[0.22em] uppercase text-foreground/50 mb-3">{tag}</p>
+          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/50">{tag}</p>
+          </button>
 
           <AnimatePresence>
             {active && (
@@ -134,8 +145,11 @@ function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, chi
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3, ease: EASE }}
+                className="overflow-hidden"
               >
-                {children}
+                <div className="mt-4 border-t border-foreground/[0.08] pt-4">
+                  {children}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -149,7 +163,7 @@ function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, chi
 
 export default function CustomProtocol() {
   useSeo({ title: 'Custom Protocol — Avalon Vitality', description: 'Build a fully custom IV therapy protocol with your choice of drip, add-ons, and frequency.', path: '/custom' });
-  const { addItem } = useCart();
+  const { addItem, clearItems } = useCart();
   const navigate = useNavigate();
   // Treatment on/off
   const [vitaminsOn, setVitaminsOn] = useState(true);
@@ -161,7 +175,11 @@ export default function CustomProtocol() {
   const [cbdDose, setCbdDose]                 = useState(CBD_DOSES[0]);
   const [nadDose, setNadDose]                 = useState(NAD_DOSES[0]);
 
-  // Per-treatment monthly quantities (1–4)
+  // Billing mode
+  const [billingMode, setBillingMode] = useState('onetime'); // 'onetime' | 'subscription'
+  const isSubscription = billingMode === 'subscription';
+
+  // Per-treatment quantities (per visit for one-time; per month for subscription)
   const [vitaminsQty, setVitaminsQty] = useState(1);
   const [cbdQty, setCbdQty]           = useState(1);
   const [nadQty, setNadQty]           = useState(1);
@@ -179,31 +197,36 @@ export default function CustomProtocol() {
     setImQty(prev => ({ ...prev, [key]: qty }));
 
   // ── Price calculation ─────────────────────────────────────────────────
-  const vitaminsCost = vitaminsOn ? vitaminsVariant.price * vitaminsQty : 0;
-  const cbdCost      = cbdOn      ? cbdDose.price      * cbdQty        : 0;
-  const nadCost      = nadOn      ? nadDose.price       * nadQty        : 0;
+  const effectiveVitaminsQty = isSubscription ? vitaminsQty : 1;
+  const effectiveCbdQty = isSubscription ? cbdQty : 1;
+  const effectiveNadQty = isSubscription ? nadQty : 1;
+  const effectiveImQty = (key) => isSubscription ? imQty[key] : 1;
+
+  const vitaminsCost = vitaminsOn ? vitaminsVariant.price * effectiveVitaminsQty : 0;
+  const cbdCost      = cbdOn      ? cbdDose.price      * effectiveCbdQty        : 0;
+  const nadCost      = nadOn      ? nadDose.price       * effectiveNadQty        : 0;
   const imCost       = IM_OPTIONS
     .filter(s => imSelected.includes(s.key))
-    .reduce((sum, s) => sum + s.price * imQty[s.key], 0);
+    .reduce((sum, s) => sum + s.price * effectiveImQty(s.key), 0);
   const monthlyTotal = vitaminsCost + cbdCost + nadCost + imCost;
 
   // ── Line items for summary ─────────────────────────────────────────────
   const lineItems = [
     vitaminsOn && {
       label: `IV Vitamins — ${vitaminsVariant.label}`,
-      qty:   vitaminsQty,
+      qty:   effectiveVitaminsQty,
       price: vitaminsVariant.price,
       total: vitaminsCost,
     },
     cbdOn && {
       label: `IV CBD — ${cbdDose.label}`,
-      qty:   cbdQty,
+      qty:   effectiveCbdQty,
       price: cbdDose.price,
       total: cbdCost,
     },
     nadOn && {
       label: `IV NAD+ — ${nadDose.label}`,
-      qty:   nadQty,
+      qty:   effectiveNadQty,
       price: nadDose.price,
       total: nadCost,
     },
@@ -211,26 +234,17 @@ export default function CustomProtocol() {
       .filter(s => imSelected.includes(s.key))
       .map(s => ({
         label: `IM ${s.label}`,
-        qty:   imQty[s.key],
+        qty:   effectiveImQty(s.key),
         price: s.price,
-        total: s.price * imQty[s.key],
+        total: s.price * effectiveImQty(s.key),
       })),
   ].filter(Boolean);
 
-  // Apply URL params
-  const applyParams = new URLSearchParams({
-    tier: 'custom',
-    ...(vitaminsOn && { vitamins: vitaminsVariant.label, vitaminsQty }),
-    ...(cbdOn      && { cbd: cbdDose.label, cbdQty }),
-    ...(nadOn      && { nad: nadDose.label, nadQty }),
-    ...(imSelected.length > 0 && { im: imSelected.join(',') }),
-  });
-
   return (
     <>
-      <Navbar />
+      <Navbar showBack />
 
-      <div className="min-h-screen bg-background pt-24 pb-32">
+      <div className="min-h-screen bg-background pt-28 pb-32">
         <div className="max-w-6xl mx-auto px-4">
 
           {/* ── Header ── */}
@@ -238,15 +252,15 @@ export default function CustomProtocol() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE }}
-            className="mb-12 md:mb-16"
+            className="mb-8 md:mb-12"
           >
-            <p className="font-body text-xs tracking-[0.35em] uppercase text-accent mb-3">Custom Protocol</p>
-            <h1 className="font-heading text-[13vw] md:text-[7rem] lg:text-[9rem] text-foreground leading-[0.88] uppercase tracking-wide mb-4">
+            <p className="mb-3 font-body text-xs uppercase tracking-[0.35em] text-foreground/60">Custom Protocol</p>
+            <h1 className="mb-4 font-heading text-[13vw] uppercase leading-[0.88] tracking-wide text-foreground md:text-[7rem] lg:text-[9rem]">
               Build Your<br />Protocol
             </h1>
-            <div className="w-12 h-[2px] bg-accent mb-4" />
-            <p className="font-body text-sm text-foreground/70 max-w-lg">
-              Choose your stack, set your cadence per treatment, get an instant estimate.
+            <div className="mb-4 h-px w-12 bg-foreground/35" />
+            <p className="max-w-lg font-body text-sm leading-relaxed text-foreground/70">
+              Choose your stack, set your quantity per treatment, get an instant estimate.
               Final pricing confirmed with your care team before you commit.
             </p>
           </motion.div>
@@ -258,6 +272,7 @@ export default function CustomProtocol() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.7, ease: EASE }}
+              className="space-y-3"
             >
 
               {/* ── IV Vitamins ── */}
@@ -275,8 +290,12 @@ export default function CustomProtocol() {
                     onChange={val => { setVitaminsVariant(VITAMINS_VARIANTS.find(v => v.label === val)); track('protocol_vitamin_selected', { label: val }); }}
                     options={VITAMINS_VARIANTS.map(v => ({ value: v.label, label: `${v.label}  —  $${v.price}` }))}
                   />
-                  <p className="font-body text-[11px] text-foreground/60 pl-1">{vitaminsVariant.desc}</p>
-                  <QtyPicker value={vitaminsQty} onChange={setVitaminsQty} />
+                  <p className="pl-1 font-body text-[11px] text-foreground/60">{vitaminsVariant.desc}</p>
+                  {isSubscription ? (
+                    <QtyPicker value={vitaminsQty} onChange={setVitaminsQty} />
+                  ) : (
+                    <OneTimeNote />
+                  )}
                 </div>
               </TreatmentRow>
 
@@ -295,7 +314,11 @@ export default function CustomProtocol() {
                     onChange={val => setCbdDose(CBD_DOSES.find(d => d.label === val))}
                     options={CBD_DOSES.map(d => ({ value: d.label, label: `${d.label}  —  $${d.price}` }))}
                   />
-                  <QtyPicker value={cbdQty} onChange={setCbdQty} />
+                  {isSubscription ? (
+                    <QtyPicker value={cbdQty} onChange={setCbdQty} />
+                  ) : (
+                    <OneTimeNote />
+                  )}
                 </div>
               </TreatmentRow>
 
@@ -314,17 +337,21 @@ export default function CustomProtocol() {
                     onChange={val => { setNadDose(NAD_DOSES.find(d => d.label === val)); track('protocol_nad_selected', { dose: val }); }}
                     options={NAD_DOSES.map(d => ({ value: d.label, label: `${d.label}  —  $${d.price}` }))}
                   />
-                  <QtyPicker value={nadQty} onChange={setNadQty} />
+                  {isSubscription ? (
+                    <QtyPicker value={nadQty} onChange={setNadQty} />
+                  ) : (
+                    <OneTimeNote />
+                  )}
                 </div>
               </TreatmentRow>
 
               {/* ── IM Shots ── */}
-              <div className="py-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Syringe className="w-3.5 h-3.5 text-accent" strokeWidth={1.5} />
-                  <span className="font-heading text-xl tracking-wide text-foreground uppercase">IM Shots</span>
+              <div className="rounded-3xl border border-foreground/[0.10] bg-card/[0.60] p-4 backdrop-blur-md">
+                <div className="mb-1 flex items-center gap-2">
+                  <Syringe className="h-4 w-4 text-foreground/65" strokeWidth={1.5} />
+                  <span className="font-heading text-2xl uppercase tracking-wide text-foreground">IM Shots</span>
                 </div>
-                <p className="font-body text-[10px] tracking-[0.22em] uppercase text-foreground/50 mb-4">
+                <p className="mb-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/50">
                   Add-Ons — Select any combination
                 </p>
                 <div className="grid grid-cols-2 gap-2.5">
@@ -336,7 +363,7 @@ export default function CustomProtocol() {
                         className={`rounded-2xl border transition-all duration-200 ${
                           on
                             ? 'border-foreground bg-foreground/[0.06]'
-                            : 'border-border/40'
+                            : 'border-foreground/[0.10] bg-card/[0.45]'
                         }`}
                       >
                         <button
@@ -358,9 +385,9 @@ export default function CustomProtocol() {
                           <span className="font-heading text-base text-accent shrink-0">${shot.price}</span>
                         </button>
 
-                        {/* Qty picker — only shown when selected */}
+                        {/* Monthly quantity — only shown for subscriptions */}
                         <AnimatePresence>
-                          {on && (
+                          {on && isSubscription && (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
@@ -369,8 +396,8 @@ export default function CustomProtocol() {
                               className="overflow-hidden"
                             >
                               <div className="flex items-center gap-2 px-3.5 pb-3 border-t border-foreground/[0.06] pt-2.5">
-                                <p className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/40 shrink-0">
-                                  × / mo
+                                <p className="shrink-0 font-body text-[9px] uppercase tracking-[0.2em] text-foreground/40">
+                                  Qty
                                 </p>
                                 <div className="flex gap-1">
                                   {QTY_OPTIONS.map(q => (
@@ -406,13 +433,31 @@ export default function CustomProtocol() {
               transition={{ delay: 0.3, duration: 0.7, ease: EASE }}
               className="lg:sticky lg:top-28"
             >
-              <div className="border border-white/20 bg-white/[0.04] backdrop-blur-md rounded-3xl p-6">
-                <p className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-5">
+              <div className="rounded-3xl border border-foreground/[0.10] bg-card/[0.70] p-6 shadow-[0_24px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-md">
+                <p className="mb-4 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/60">
                   Protocol Summary
                 </p>
 
+                {/* One-time / Subscription toggle */}
+                <div className="mb-5 flex gap-1 rounded-2xl border border-foreground/[0.10] bg-background/[0.45] p-1">
+                  {['onetime', 'subscription'].map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setBillingMode(mode)}
+                      className={`flex-1 rounded-xl py-2.5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-200 ${
+                        billingMode === mode
+                          ? 'bg-foreground text-background shadow-sm'
+                          : 'text-foreground/50 hover:text-foreground/80'
+                      }`}
+                    >
+                      {mode === 'onetime' ? 'One Time' : 'Subscribe'}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Line items */}
-                <div className="min-h-[72px] mb-5 space-y-2">
+                <div className="mb-5 min-h-[72px] space-y-2">
                   <AnimatePresence mode="popLayout">
                     {lineItems.length === 0 ? (
                       <motion.p
@@ -454,9 +499,9 @@ export default function CustomProtocol() {
                 </div>
 
                 {/* Monthly total — hero number */}
-                <div className="border-t border-border/30 pt-4 mb-5">
-                  <p className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-1">
-                    Est. Monthly
+                <div className="mb-5 border-t border-foreground/[0.10] pt-4">
+                  <p className="mb-1 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/55">
+                    {billingMode === 'subscription' ? 'Est. Monthly' : 'Est. Total'}
                   </p>
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -465,13 +510,15 @@ export default function CustomProtocol() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.25, ease: EASE }}
-                      className="font-heading text-7xl text-foreground leading-none tracking-tight"
+                      className="font-heading text-7xl leading-none tracking-tight text-foreground"
                     >
                       ${monthlyTotal.toLocaleString()}
                     </motion.div>
                   </AnimatePresence>
-                  <p className="font-body text-[10px] text-foreground/40 mt-2">
-                    Estimate only — final pricing set with your care team.
+                  <p className="mt-2 font-body text-[10px] leading-relaxed text-foreground/45">
+                    {billingMode === 'subscription'
+                      ? 'Billed monthly · Cancel anytime'
+                      : 'Estimate only — final pricing confirmed with your care team.'}
                   </p>
                 </div>
 
@@ -479,37 +526,38 @@ export default function CustomProtocol() {
                 <button
                   type="button"
                   onClick={() => {
+                    clearItems();
                     const items = [];
                     if (vitaminsOn && vitaminsVariant) {
-                      for (let i = 0; i < vitaminsQty; i++)
-                        items.push({ key: 'iv-vitamins', label: vitaminsVariant.label, price: vitaminsVariant.price, type: 'iv' });
+                      for (let i = 0; i < effectiveVitaminsQty; i++)
+                        items.push({ cartKey: `iv-vitamins-${i}`, label: vitaminsVariant.label, price: vitaminsVariant.price, type: 'iv' });
                     }
                     if (nadOn && nadDose) {
-                      for (let i = 0; i < nadQty; i++)
-                        items.push({ key: 'iv-nad', label: `NAD+ ${nadDose.label}`, price: nadDose.price, type: 'iv' });
+                      for (let i = 0; i < effectiveNadQty; i++)
+                        items.push({ cartKey: `iv-nad-${i}`, label: `NAD+ ${nadDose.label}`, price: nadDose.price, type: 'iv' });
                     }
                     if (cbdOn && cbdDose) {
-                      for (let i = 0; i < cbdQty; i++)
-                        items.push({ key: 'iv-cbd', label: `CBD ${cbdDose.label}`, price: cbdDose.price, type: 'iv' });
+                      for (let i = 0; i < effectiveCbdQty; i++)
+                        items.push({ cartKey: `iv-cbd-${i}`, label: `CBD ${cbdDose.label}`, price: cbdDose.price, type: 'iv' });
                     }
-                    imSelected.forEach((key) => {
-                      const shot = IM_OPTIONS.find(s => s.key === key);
+                    imSelected.forEach((shotKey) => {
+                      const shot = IM_OPTIONS.find(s => s.key === shotKey);
                       if (shot) {
-                        for (let i = 0; i < (imQty[key] || 1); i++)
-                          items.push({ key: `im-${key}`, label: shot.label, price: shot.price, type: 'im' });
+                        for (let i = 0; i < effectiveImQty(shotKey); i++)
+                          items.push({ cartKey: `im-${shotKey}-${i}`, label: shot.label, price: shot.price, type: 'im' });
                       }
                     });
                     items.forEach(item => addItem?.(item));
-                    track('protocol_completed', { item_count: items.length });
-                    navigate('/store?from=protocol');
+                    track('protocol_completed', { item_count: items.length, billing: billingMode });
+                    navigate('/checkout');
                   }}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase font-semibold rounded-full hover:bg-foreground/90 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground py-4 font-body text-xs font-semibold uppercase tracking-[0.24em] text-background transition-colors hover:bg-foreground/90"
                 >
-                  Add to Order
+                  {billingMode === 'subscription' ? 'Start Subscription' : 'Proceed to Checkout'}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
-                <p className="font-body text-[10px] text-foreground/40 text-center mt-3">
+                <p className="mt-3 text-center font-body text-[10px] text-foreground/40">
                   Free consult · No commitment
                 </p>
               </div>
@@ -529,7 +577,6 @@ export default function CustomProtocol() {
       </div>
 
       <Footer />
-      <StickyMobileCTA />
     </>
   );
 }

@@ -36,17 +36,17 @@ const SECTIONS = [
     ],
   },
   {
-    h: '6. Memberships and credits',
+    h: '6. Subscriptions and credits',
     p: [
-      'Avalon offers tiered memberships, including our presale cohort, with monthly or annual billing. Membership credits accrue per the terms of your selected tier and apply toward eligible services.',
-      'Unused credits may roll over for a limited period as defined in your member agreement. Memberships auto-renew unless cancelled in accordance with the cancellation policy below.',
+      'Avalon offers tiered subscriptions, including our presale cohort, with monthly or annual billing. Subscription credits accrue per the terms of your selected tier and apply toward eligible services.',
+      'Unused credits may roll over for a limited period as defined in your subscriber agreement. Subscriptions auto-renew unless cancelled in accordance with the cancellation policy below.',
     ],
   },
   {
     h: '7. Cancellation, refunds, and rescheduling',
     p: [
-      'Single-visit appointments may be rescheduled or cancelled at no charge up to 24 hours before the scheduled time. Cancellations within 24 hours forfeit any prepaid service fee or one membership credit.',
-      'Memberships may be cancelled at any time effective at the end of the current billing period. Avalon does not provide refunds for the current billing period after the period has begun.',
+      'Single-visit appointments may be rescheduled or cancelled at no charge up to 24 hours before the scheduled time. Cancellations within 24 hours forfeit any prepaid service fee or one subscription credit.',
+      'Subscriptions may be cancelled at any time effective at the end of the current billing period. Avalon does not provide refunds for the current billing period after the period has begun.',
       'In the event a clinician cannot complete a scheduled service due to a clinical safety concern (for example, vital signs outside safe parameters), the visit will be rescheduled or refunded at our discretion.',
     ],
   },
@@ -67,7 +67,7 @@ const SECTIONS = [
   {
     h: '10. Payment',
     p: [
-      'You authorize Avalon to charge the payment method on file for the Services and memberships you purchase. All fees are in U.S. dollars and exclude applicable taxes.',
+      'You authorize Avalon to charge the payment method on file for the Services and subscriptions you purchase. All fees are in U.S. dollars and exclude applicable taxes.',
       'If a charge is declined, Avalon may suspend Services until payment is made.',
     ],
   },

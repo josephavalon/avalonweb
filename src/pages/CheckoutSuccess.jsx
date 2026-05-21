@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useSeo } from '@/lib/seo';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
@@ -7,6 +8,11 @@ import Navbar from '@/components/landing/Navbar';
 const EASE = [0.16, 1, 0.3, 1];
 
 export default function CheckoutSuccess() {
+  useSeo({
+    title: 'Booking Confirmed — Avalon Vitality',
+    description: 'Your Avalon Vitality session is confirmed. A licensed RN will be in touch shortly with arrival details.',
+    path: '/checkout/success',
+  });
   const [params] = useSearchParams();
   const type = params.get('type'); // 'onetime' | 'membership'
 
@@ -29,14 +35,14 @@ export default function CheckoutSuccess() {
           transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
         >
           <p className="font-body text-[11px] tracking-[0.35em] uppercase text-accent mb-4">
-            {type === 'membership' ? 'Membership Confirmed' : 'Request Received'}
+            {type === 'membership' ? 'Subscription Confirmed' : 'Request Received'}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide uppercase leading-[0.95] mb-6">
             {type === 'membership' ? "You're In." : "We'll Be In Touch."}
           </h1>
           <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-sm mx-auto mb-10">
             {type === 'membership'
-              ? 'Your membership is active. A member concierge will reach out within 24 hours to book your first session.'
+              ? 'Your subscription is active. A subscriber concierge will reach out within 24 hours to book your first session.'
               : 'Your card has been authorized. A licensed RN will confirm your appointment details and arrival window shortly.'
             }
           </p>

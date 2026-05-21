@@ -9,7 +9,7 @@
  * Returns: [{ time: ISO8601, slotsAvailable: number }]
  */
 
-import { acuityFetch } from './_acuity.js';
+import { acuityFetch, resolveAppointmentTypeId } from './_acuity.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -17,15 +17,16 @@ export default async function handler(req, res) {
   }
 
   const { date, appointmentTypeID, timezone = 'America/Los_Angeles' } = req.query;
+  const resolvedTypeId = Number(appointmentTypeID) || resolveAppointmentTypeId();
 
-  if (!date || !appointmentTypeID) {
+  if (!date || !resolvedTypeId) {
     return res.status(400).json({ error: 'date and appointmentTypeID are required' });
   }
 
   try {
     const params = new URLSearchParams({
       date,
-      appointmentTypeID,
+      appointmentTypeID: String(resolvedTypeId),
       timezone,
     });
 

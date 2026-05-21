@@ -126,21 +126,35 @@ export async function rescheduleAppointment(appointmentId, { datetime, calendarI
  */
 export function resolveAppointmentTypeId(cartItems = [], membership = null) {
   const defaultId = parseInt(process.env.ACUITY_DEFAULT_TYPE_ID || '0', 10);
+  const ivVitaminsId = parseInt(process.env.ACUITY_TYPE_IV_VITAMINS || defaultId, 10);
+  const ivNadId = parseInt(process.env.ACUITY_TYPE_IV_NAD || defaultId, 10);
+  const ivCbdId = parseInt(process.env.ACUITY_TYPE_IV_CBD || defaultId, 10);
+  const imShotsId = parseInt(process.env.ACUITY_TYPE_IM_SHOTS || defaultId, 10);
+  const membershipId = parseInt(process.env.ACUITY_TYPE_MEMBERSHIP || defaultId, 10);
 
   const TYPE_MAP = {
     // membership tiers
-    'membership-starter':  parseInt(process.env.ACUITY_TYPE_MEMBERSHIP  || defaultId, 10),
-    'membership-premium':  parseInt(process.env.ACUITY_TYPE_MEMBERSHIP  || defaultId, 10),
-    'membership-vip':      parseInt(process.env.ACUITY_TYPE_MEMBERSHIP  || defaultId, 10),
+    'membership-starter':  membershipId,
+    'membership-premium':  membershipId,
+    'membership-vip':      membershipId,
     // one-time IV drips
-    'iv-vitamins':         parseInt(process.env.ACUITY_TYPE_IV_VITAMINS || defaultId, 10),
-    'iv-nad':              parseInt(process.env.ACUITY_TYPE_IV_NAD      || defaultId, 10),
-    'iv-cbd':              parseInt(process.env.ACUITY_TYPE_IV_CBD      || defaultId, 10),
+    'iv-vitamins':         ivVitaminsId,
+    'iv-nad':              ivNadId,
+    'iv-cbd':              ivCbdId,
+    hydration:             parseInt(process.env.ACUITY_TYPE_HYDRATION || defaultId, 10),
+    energy:                parseInt(process.env.ACUITY_TYPE_ENERGY || ivVitaminsId, 10),
+    immunity:              parseInt(process.env.ACUITY_TYPE_IMMUNITY || ivVitaminsId, 10),
+    beauty:                parseInt(process.env.ACUITY_TYPE_BEAUTY || ivVitaminsId, 10),
+    recovery:              parseInt(process.env.ACUITY_TYPE_RECOVERY || ivVitaminsId, 10),
+    jetlag:                parseInt(process.env.ACUITY_TYPE_JETLAG || ivVitaminsId, 10),
+    myers:                 parseInt(process.env.ACUITY_TYPE_MYERS || ivVitaminsId, 10),
+    postnight:             parseInt(process.env.ACUITY_TYPE_HANGOVER || ivVitaminsId, 10),
+    nad_session:           ivNadId,
     // IM shots
-    'im-B12':              parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
-    'im-Glutathione':      parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
-    'im-MIC':              parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
-    'im-NAD+_Shot':        parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
+    'im-B12':              imShotsId,
+    'im-Glutathione':      imShotsId,
+    'im-MIC':              imShotsId,
+    'im-NAD+_Shot':        imShotsId,
   };
 
   // Membership takes precedence
@@ -150,8 +164,16 @@ export function resolveAppointmentTypeId(cartItems = [], membership = null) {
   }
 
   for (const item of cartItems) {
-    const id = TYPE_MAP[item.key];
+    const itemKey = item.cartKey || item.key || '';
+    const label = item.label || '';
+    const normalizedKey = itemKey.toLowerCase();
+    const normalizedLabel = label.toLowerCase();
+    const id = TYPE_MAP[itemKey] || TYPE_MAP[normalizedKey];
     if (id) return id;
+    if (item.type === 'im' || normalizedKey.startsWith('im-')) return imShotsId || defaultId;
+    if (normalizedKey.includes('nad') || normalizedLabel.includes('nad')) return ivNadId || defaultId;
+    if (normalizedKey.includes('cbd') || normalizedLabel.includes('cbd')) return ivCbdId || defaultId;
+    if (item.type === 'iv' || normalizedKey.startsWith('pkg-')) return ivVitaminsId || defaultId;
   }
 
   return defaultId;

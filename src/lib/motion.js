@@ -10,10 +10,11 @@ export const EASE_OUT_EXPO = EASE;
 
 // Standard durations — keep a small set.
 export const DURATIONS = {
-  fast: 0.3,
-  base: 0.6,
-  slow: 0.9,
-  dramatic: 1.2,
+  quick: 0.22,
+  fast: 0.36,
+  base: 0.72,
+  slow: 1,
+  dramatic: 1.35,
 };
 
 // Common Framer Motion transition presets.
@@ -24,6 +25,11 @@ export const transitionBase = {
 
 export const transitionSlow = {
   duration: DURATIONS.slow,
+  ease: EASE,
+};
+
+export const transitionDramatic = {
+  duration: DURATIONS.dramatic,
   ease: EASE,
 };
 
@@ -44,6 +50,30 @@ export const scaleIn = {
   initial: { opacity: 0, scale: 0.96 },
   animate: { opacity: 1, scale: 1 },
   transition: transitionBase,
+};
+
+export const premiumFadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 24, filter: 'blur(10px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  transition: { ...transitionDramatic, delay },
+});
+
+export const premiumCard = (delay = 0) => ({
+  initial: { opacity: 0, y: 18, scale: 0.985, filter: 'blur(8px)' },
+  whileInView: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
+  viewport: { once: true, margin: '-32px' },
+  transition: { duration: 0.95, delay, ease: EASE },
+});
+
+export const premiumHover = {
+  y: -3,
+  scale: 1.006,
+  transition: { duration: DURATIONS.fast, ease: EASE },
+};
+
+export const premiumTap = {
+  scale: 0.992,
+  transition: { duration: DURATIONS.quick, ease: EASE },
 };
 
 // Stagger helpers for list children.

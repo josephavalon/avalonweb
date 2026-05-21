@@ -1,70 +1,86 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { CheckCircle2, ArrowLeft, CalendarPlus, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useSearchParams } from 'react-router-dom';
+import {
+  CheckCircle2, ArrowLeft, CalendarPlus, User,
+  Droplets, Clock, MapPin, Hash, Loader2,
+  ShieldCheck, Shirt, CreditCard, Phone,
+  ExternalLink,
+} from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
+const TZ = 'America/Los_Angeles';
 
-/* ─── Data ───────────────────────────────────────────────────── */
-const TIMELINE_STEPS = [
-  {
-    number: '01',
-    title: 'Text Confirmation',
-    body: "You'll receive a text confirmation with your nurse's name and ETA within 15 minutes of booking.",
-  },
-  {
-    number: '02',
-    title: 'Nurse En Route',
-    body: 'Your licensed RN will arrive within your 90-minute window. They bring all supplies — no prep needed on your end.',
-  },
-  {
-    number: '03',
-    title: 'Your Session',
-    body: 'Sessions run 30–90 minutes. Relax at home while your nurse handles everything. They clean up before leaving.',
-  },
-];
+/* ─── Helpers ────────────────────────────────────────────────── */
+function formatApptDate(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', timeZone: TZ,
+  });
+}
 
-const PREP_ITEMS = [
-  'Have water available (optional but helpful)',
-  'Wear loose-fitting clothing with easy arm access',
-  'Have your ID ready for nurse verification',
-  'Let us know if symptoms change before arrival',
-];
+function formatApptTime(isoString, duration) {
+  if (!isoString) return '';
+  const start = new Date(isoString);
+  const end = duration ? new Date(start.getTime() + duration * 60000) : null;
+  const fmt = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ });
+  return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
+}
 
-/* ─── Animated Checkmark ─────────────────────────────────────── */
+function buildIcsContent({ appointment }) {
+  if (!appointment) return '';
+  const start = new Date(appointment.datetime);
+  const end = new Date(start.getTime() + (appointment.duration || 60) * 60000);
+  const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Avalon Vitality//BookingConfirmation//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:Avalon Vitality IV Session`,
+    `DESCRIPTION:Confirmation #${appointment.id} — ${appointment.type || 'Mobile IV Therapy'}`,
+    `LOCATION:${appointment.location || ''}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+function downloadIcs(appointment) {
+  const content = buildIcsContent({ appointment });
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'avalon-session.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ─── Animated check ─────────────────────────────────────────── */
 function AnimatedCheck() {
   return (
     <div className="flex items-center justify-center mb-8">
-      <svg
-        viewBox="0 0 80 80"
-        className="w-20 h-20"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+      <svg viewBox="0 0 80 80" className="w-20 h-20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <motion.circle
-          cx="40"
-          cy="40"
-          r="36"
-          stroke="currentColor"
-          strokeWidth="2"
+          cx="40" cy="40" r="36"
+          stroke="currentColor" strokeWidth="2"
           className="text-accent"
           strokeLinecap="round"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
           transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-          style={{ pathLength: 0 }}
         />
         <motion.path
           d="M24 40 L35 51 L56 30"
-          stroke="currentColor"
-          strokeWidth="2.5"
+          stroke="currentColor" strokeWidth="2.5"
           className="text-accent"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
+          strokeLinecap="round" strokeLinejoin="round" fill="none"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
           transition={{ duration: 0.5, ease: EASE, delay: 0.75 }}
@@ -74,7 +90,67 @@ function AnimatedCheck() {
   );
 }
 
-/* ─── Timeline Step ──────────────────────────────────────────── */
+/* ─── Booking detail pill ────────────────────────────────────── */
+function DetailPill({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-foreground/[0.06] last:border-b-0">
+      <Icon className="w-4 h-4 text-accent/60 mt-0.5 shrink-0" strokeWidth={1.5} />
+      <div className="min-w-0">
+        <p className="font-body text-[9px] tracking-[0.28em] uppercase text-foreground/35 mb-0.5">{label}</p>
+        <p className="font-body text-sm text-foreground leading-snug">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Prep card ──────────────────────────────────────────────── */
+const PREP_CARDS = [
+  {
+    icon: Droplets,
+    title: 'Hydrate beforehand',
+    body: 'Drink 16 oz of water before your nurse arrives. Well-hydrated veins make the process faster and more comfortable.',
+  },
+  {
+    icon: Shirt,
+    title: 'Wear comfortable clothing',
+    body: 'Loose sleeves or a short-sleeved top gives easy access to your arm. No tight cuffs.',
+  },
+  {
+    icon: CreditCard,
+    title: 'Have your ID ready',
+    body: 'Your RN will verify your identity on arrival. A government-issued ID or passport works.',
+  },
+  {
+    icon: Phone,
+    title: 'Your clinician will text on arrival',
+    body: 'You\'ll get a text with your nurse\'s name and ETA 30 minutes before they arrive. Keep your phone nearby.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Update us if anything changes',
+    body: 'If your symptoms, medications, or health status change before the visit, let us know and we\'ll adjust.',
+  },
+];
+
+/* ─── Timeline ───────────────────────────────────────────────── */
+const TIMELINE = [
+  {
+    number: '01',
+    title: 'Text Confirmation',
+    body: "You'll receive a text with your nurse's name and ETA 30 minutes before arrival.",
+  },
+  {
+    number: '02',
+    title: 'Nurse En Route',
+    body: 'Your licensed RN arrives within your scheduled window with all supplies — nothing to prep on your end.',
+  },
+  {
+    number: '03',
+    title: 'Your Session',
+    body: 'Sessions run 30–90 minutes. Relax while your nurse handles everything, then cleans up before leaving.',
+  },
+];
+
 function TimelineStep({ step, index, isLast }) {
   return (
     <motion.div
@@ -83,24 +159,13 @@ function TimelineStep({ step, index, isLast }) {
       transition={{ duration: 0.5, ease: EASE, delay: 0.8 + index * 0.12 }}
       className="flex gap-4"
     >
-      {/* Left column: number + line */}
       <div className="flex flex-col items-center shrink-0">
-        <span className="font-heading text-4xl text-accent/30 leading-none">
-          {step.number}
-        </span>
-        {!isLast && (
-          <div className="w-px flex-1 mt-3 bg-foreground/[0.08]" style={{ minHeight: '2rem' }} />
-        )}
+        <span className="font-heading text-4xl text-accent/30 leading-none">{step.number}</span>
+        {!isLast && <div className="w-px flex-1 mt-3 bg-foreground/[0.08]" style={{ minHeight: '2rem' }} />}
       </div>
-
-      {/* Right column: content */}
       <div className={`flex-1 min-w-0 pt-1 ${isLast ? '' : 'pb-8'}`}>
-        <p className="font-heading text-xl text-foreground tracking-wide mb-1">
-          {step.title}
-        </p>
-        <p className="font-body text-sm text-foreground/60 leading-relaxed">
-          {step.body}
-        </p>
+        <p className="font-heading text-xl text-foreground tracking-wide mb-1">{step.title}</p>
+        <p className="font-body text-sm text-foreground/60 leading-relaxed">{step.body}</p>
       </div>
     </motion.div>
   );
@@ -108,11 +173,53 @@ function TimelineStep({ step, index, isLast }) {
 
 /* ─── Main ───────────────────────────────────────────────────── */
 export default function BookingConfirmation() {
+  const [params] = useSearchParams();
+  const appointmentId = params.get('appointment');
+
+  const [appt, setAppt] = useState(null);
+  const [apptLoading, setApptLoading] = useState(!!appointmentId);
+  const [apptError, setApptError] = useState(null);
+
   useSeo({
     title: 'Session Confirmed — Avalon Vitality',
-    description: 'Your IV wellness session has been confirmed. A licensed RN is en route.',
+    description: 'Your IV wellness session has been confirmed. A licensed RN will be in touch shortly.',
     path: '/store/confirmation',
   });
+
+  useEffect(() => {
+    if (!appointmentId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/acuity-appointment?id=${encodeURIComponent(appointmentId)}`);
+        const data = await res.json();
+        if (!cancelled) {
+          if (res.ok) setAppt(data);
+          else setApptError(data.error || 'Could not load booking details');
+        }
+      } catch {
+        if (!cancelled) setApptError('Could not load booking details');
+      } finally {
+        if (!cancelled) setApptLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [appointmentId]);
+
+  // Acuity self-service reschedule/cancel links
+  const rescheduleUrl = appt?.confirmationPage || null;
+  // Acuity's confirmation page URL has cancel/reschedule links built in
+
+  const referenceNum = appt?.id
+    ? `AV-${String(appt.id).slice(-6).toUpperCase()}`
+    : appointmentId
+      ? `AV-${String(appointmentId).slice(-6).toUpperCase()}`
+      : null;
+
+  const serviceLabel = appt?.type || 'IV Therapy Session';
+  const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : null;
+  const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : null;
+  const apptAddress = appt?.location || null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,7 +227,7 @@ export default function BookingConfirmation() {
 
       <div className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-32 space-y-10">
 
-        {/* ── 1. Confirmation Hero ─────────────────────────────── */}
+        {/* ── 1. Hero ─────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,167 +245,191 @@ export default function BookingConfirmation() {
               Your Session Is Confirmed.
             </h1>
             <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-sm mx-auto mb-6">
-              A licensed RN is en route. You'll receive a text confirmation with nurse details shortly.
+              A licensed RN will reach out shortly with arrival details. Keep your phone nearby.
             </p>
 
-            {/* Booking meta pill */}
-            <div className="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-6 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3 mx-auto">
-              <div className="text-center sm:text-left">
-                <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-0.5">
-                  Reference
-                </p>
-                <p className="font-body text-sm text-accent font-medium tracking-wider">
-                  REF #AV-2847
+            {/* Loading state */}
+            {apptLoading && (
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3.5">
+                <Loader2 className="w-4 h-4 text-foreground/40 animate-spin" strokeWidth={1.5} />
+                <span className="font-body text-xs tracking-widest uppercase text-foreground/40">Loading your booking…</span>
+              </div>
+            )}
+
+            {/* Real booking details */}
+            {!apptLoading && (referenceNum || apptDate) && (
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-5 py-4 text-left space-y-0 mx-auto">
+                {referenceNum && (
+                  <DetailPill icon={Hash} label="Confirmation" value={referenceNum} />
+                )}
+                {serviceLabel && (
+                  <DetailPill icon={Droplets} label="Service" value={serviceLabel} />
+                )}
+                {apptDate && apptTime && (
+                  <DetailPill icon={Clock} label="Scheduled" value={`${apptDate} · ${apptTime}`} />
+                )}
+                {apptAddress && (
+                  <DetailPill icon={MapPin} label="Location" value={apptAddress} />
+                )}
+              </div>
+            )}
+
+            {/* Fallback if no appointment data and no error */}
+            {!apptLoading && !appt && !apptError && (
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3">
+                <p className="font-body text-sm text-foreground/60">
+                  Your confirmation details will arrive by text shortly.
                 </p>
               </div>
-              <div className="w-px h-6 bg-foreground/[0.08] hidden sm:block" />
-              <div className="text-center sm:text-left">
-                <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-0.5">
-                  Session Time
-                </p>
-                <p className="font-body text-sm text-foreground">
-                  Today, 3:30 PM – 5:00 PM
-                </p>
-              </div>
-            </div>
+            )}
           </motion.div>
         </motion.div>
 
-        {/* ── 2. What to Expect — Timeline ─────────────────────── */}
+        {/* ── 2. What to Expect ───────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE, delay: 0.65 }}
           className="space-y-4"
         >
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">
-            What to Expect
-          </p>
-
+          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">What to Expect</p>
           <div className="rounded-2xl border border-foreground/[0.08] bg-background/80 backdrop-blur-xl px-5 pt-5 pb-4">
-            {TIMELINE_STEPS.map((step, i) => (
-              <TimelineStep
-                key={step.number}
-                step={step}
-                index={i}
-                isLast={i === TIMELINE_STEPS.length - 1}
-              />
+            {TIMELINE.map((step, i) => (
+              <TimelineStep key={step.number} step={step} index={i} isLast={i === TIMELINE.length - 1} />
             ))}
           </div>
         </motion.div>
 
-        {/* ── 3. Prep Checklist Card ───────────────────────────── */}
+        {/* ── 3. Before Your Visit — premium cards ────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE, delay: 1.0 }}
           className="space-y-3"
         >
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">
-            Get Ready for Your Visit
-          </p>
-
-          <div className="rounded-2xl border border-foreground/[0.08] bg-background/80 backdrop-blur-xl px-5 py-5 space-y-3.5">
-            {PREP_ITEMS.map((item, i) => (
-              <motion.div
-                key={item}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, ease: EASE, delay: 1.05 + i * 0.07 }}
-                className="flex items-start gap-3"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
-                <p className="font-body text-sm text-foreground/70 leading-relaxed">
-                  {item}
-                </p>
-              </motion.div>
-            ))}
+          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">Before Your Visit</p>
+          <div className="grid grid-cols-1 gap-2.5">
+            {PREP_CARDS.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: EASE, delay: 1.05 + i * 0.07 }}
+                  className="flex items-start gap-4 rounded-2xl border border-foreground/[0.08] bg-background/80 backdrop-blur-xl px-4 py-4"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-body text-sm font-semibold text-foreground mb-1">{card.title}</p>
+                    <p className="font-body text-xs text-foreground/55 leading-relaxed">{card.body}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
-        {/* ── 4. Nurse Card Preview ────────────────────────────── */}
+        {/* ── 4. Nurse card (placeholder until staff assignment) ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE, delay: 1.15 }}
           className="space-y-3"
         >
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">
-            Your Nurse
-          </p>
-
+          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">Your Nurse</p>
           <div className="rounded-2xl border border-foreground/[0.08] bg-background/80 backdrop-blur-xl px-5 py-5">
             <div className="flex items-center gap-4 mb-4">
-              {/* Avatar initials */}
               <div className="w-12 h-12 rounded-full border border-accent/30 bg-accent/5 flex items-center justify-center shrink-0">
-                <span className="font-heading text-lg text-accent tracking-wide">SK</span>
+                <User className="w-5 h-5 text-accent/60" strokeWidth={1.5} />
               </div>
               <div>
-                <p className="font-body text-sm text-foreground font-medium">
-                  Sarah K., RN
-                </p>
+                <p className="font-body text-sm text-foreground font-medium">Assignment Pending</p>
                 <p className="font-body text-[11px] text-foreground/50 leading-relaxed">
-                  8 years experience · Critical Care &amp; IV Therapy
+                  Licensed RN · California-certified
                 </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 mb-4 px-0">
-              <User className="w-3.5 h-3.5 text-foreground/30 shrink-0" strokeWidth={1.5} />
-              <p className="font-body text-[11px] text-foreground/40 tracking-wide">
-                California RN License #XXXXXX
-              </p>
-            </div>
-
             <div className="rounded-xl border border-accent/10 bg-accent/5 px-4 py-2.5">
               <p className="font-body text-[10px] text-accent/70 leading-relaxed tracking-wide">
-                Full details — name, photo, and license — sent by text 30 min before arrival.
+                Nurse name, photo, and license number sent by text 30 minutes before arrival.
               </p>
             </div>
           </div>
         </motion.div>
 
-        {/* ── 5. Footer Actions ────────────────────────────────── */}
+        {/* ── 5. Actions ───────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE, delay: 1.28 }}
-          className="space-y-4 pt-2"
+          className="space-y-3 pt-2"
         >
           {/* Add to Calendar */}
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
-            onClick={() => {/* placeholder */}}
-          >
-            <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
-            <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
-              Add to Calendar
-            </span>
-          </button>
-
-          {/* Reschedule + Back to Home */}
-          <div className="flex items-center justify-between px-1">
-            <a
-              href="sms:+14150000000"
-              className="font-body text-xs text-foreground/40 hover:text-accent transition-colors tracking-wide"
+          {appt?.datetime && (
+            <button
+              type="button"
+              onClick={() => downloadIcs(appt)}
+              className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
             >
-              Need to reschedule?{' '}
-              <span className="underline underline-offset-4">Text us at (415) 000-0000</span>
-            </a>
+              <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
+              <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
+                Add to Calendar
+              </span>
+            </button>
+          )}
 
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 font-body text-xs tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
-              Back to Home
-            </Link>
+          {/* Reschedule / Cancel */}
+          <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] px-5 py-4 space-y-2.5">
+            <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/35">Need to change your appointment?</p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              {rescheduleUrl ? (
+                <>
+                  <a
+                    href={rescheduleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-2.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+                  >
+                    Reschedule <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                  </a>
+                  <a
+                    href={rescheduleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-2.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+                  >
+                    Cancel <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                  </a>
+                </>
+              ) : (
+                <a
+                  href="sms:+14157070818"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-2.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  Text Us to Reschedule
+                </a>
+              )}
+            </div>
+            <p className="font-body text-[9px] text-foreground/30 leading-relaxed">
+              Changes requested less than 24 hours before your appointment may incur a rescheduling fee.
+            </p>
           </div>
+
+          {/* Back home */}
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 font-body text-xs tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors justify-center pt-2"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
+            Back to Avalon
+          </Link>
         </motion.div>
 
       </div>
-
       <Footer />
     </div>
   );
