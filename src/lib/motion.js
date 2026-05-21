@@ -59,8 +59,8 @@ export const premiumFadeUp = (delay = 0) => ({
 });
 
 export const premiumCard = (delay = 0) => ({
-  initial: { opacity: 0, y: 18, scale: 0.985 },
-  whileInView: { opacity: 1, y: 0, scale: 1 },
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-32px' },
   transition: { duration: 0.95, delay, ease: EASE },
 });

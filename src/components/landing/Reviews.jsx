@@ -76,10 +76,6 @@ function StarRow({ count }) {
 function ReviewCard({ review, index }) {
   return (
     <motion.article
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-24px' }}
-      transition={{ duration: 0.85, delay: Math.min(index, 5) * 0.055, ease: EASE }}
       whileHover={premiumHover}
       className="rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-white/[0.16] hover:bg-white/[0.105]"
     >
