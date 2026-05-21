@@ -58,9 +58,8 @@ function TierRow({ tier, index }) {
   const Icon = tier.icon;
   return (
     <motion.div
-      {...premiumCard(index * 0.11)}
       whileHover={premiumHover}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl px-5 py-4 flex items-center justify-between shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-foreground/20 hover:bg-white/[0.105]"
+      className="rounded-2xl border border-foreground/10 bg-white/[0.08] px-5 py-4 flex items-center justify-between shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-foreground/20 hover:bg-white/[0.105]"
     >
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">

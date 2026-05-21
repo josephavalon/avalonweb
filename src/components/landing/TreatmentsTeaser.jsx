@@ -262,13 +262,12 @@ export default function TreatmentsTeaser() {
 
         {/* CTA card */}
         <motion.div
-          {...premiumCard(0.32)}
           whileHover={premiumHover}
         >
           <MotionLink
             to="/menu"
             whileTap={premiumTap}
-            className="flex items-center justify-between px-5 py-4 rounded-2xl border border-foreground/10 bg-white/[0.08] backdrop-blur-xl hover:bg-white/[0.105] hover:border-foreground/20 transition-all duration-base ease-editorial group shadow-[0_18px_70px_hsl(var(--foreground)/0.035)]"
+            className="flex items-center justify-between px-5 py-4 rounded-2xl border border-foreground/10 bg-white/[0.08] hover:bg-white/[0.105] hover:border-foreground/20 transition-colors duration-base ease-editorial group shadow-[0_18px_70px_hsl(var(--foreground)/0.035)]"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
