@@ -62,7 +62,7 @@ export default function WhyAvalon() {
               initial={{ opacity: 0, y: 6 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.4, delay: i * 0.04, ease: EASE }}
+              transition={{ duration: 0.65, delay: i * 0.07, ease: EASE }}
               className="grid grid-cols-[1.5fr_repeat(4,1fr)] gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-white/5 last:border-b-0 items-center"
             >
               <span className="font-body text-xs md:text-sm text-foreground/70 leading-relaxed">

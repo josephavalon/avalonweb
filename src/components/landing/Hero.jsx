@@ -66,7 +66,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 38, filter: 'blur(12px)' }}
           transition={{ duration: 1.6, delay: 0.38, ease: EASE }}
           className="font-heading text-[15vw] sm:text-[12vw] md:text-[9vw] lg:text-[8rem] leading-[0.88] tracking-tight text-foreground uppercase max-w-3xl"
-          style={{ willChange: 'opacity, transform, filter' }}
+          style={{ willChange: 'opacity, transform' }}
         >
           Recovery<br />On Demand
         </motion.h1>

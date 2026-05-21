@@ -76,8 +76,8 @@ function StarRow({ count }) {
 function ReviewCard({ review, index }) {
   return (
     <motion.article
-      initial={{ opacity: 0, y: 18, filter: 'blur(7px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-24px' }}
       transition={{ duration: 0.85, delay: Math.min(index, 5) * 0.055, ease: EASE }}
       whileHover={premiumHover}

@@ -42,8 +42,8 @@ const GROUPS = [
 function FooterGroup({ group, open, onToggle }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, filter: 'blur(6px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-24px' }}
       transition={{ duration: 0.55, ease: EASE }}
       className="w-full max-w-full rounded-2xl border border-foreground/10 bg-white/[0.055] backdrop-blur-xl overflow-hidden"

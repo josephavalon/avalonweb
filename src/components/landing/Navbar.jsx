@@ -246,10 +246,10 @@ export default function Navbar({ showBack = false }) {
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
-              exit={{ opacity: 0, height: 0, filter: 'blur(8px)' }}
-              transition={{ duration: 0.5, ease: EASE }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.45, ease: EASE }}
             >
               <div className="border-t border-white/[0.08] mx-4 mb-1" />
               <motion.div

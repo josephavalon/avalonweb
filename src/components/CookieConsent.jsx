@@ -30,9 +30,9 @@ export default function CookieConsent() {
     <AnimatePresence>
       {showConsent && (
         <motion.div
-          initial={{ opacity: 0, y: 28, scale: 0.985, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24, scale: 0.985, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, y: 28, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 24, scale: 0.985 }}
           transition={{ duration: 0.55, ease: EASE }}
           className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-4 sm:px-5 sm:pb-5 pointer-events-none"
         >

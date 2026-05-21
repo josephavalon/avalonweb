@@ -21,9 +21,9 @@ export default function StickyBookBar() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ y: 84, opacity: 0, filter: 'blur(8px)' }}
-          animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-          exit={{ y: 84, opacity: 0, filter: 'blur(8px)' }}
+          initial={{ y: 84, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 84, opacity: 0 }}
           transition={{ duration: 0.58, ease: EASE }}
           className="fixed bottom-0 inset-x-0 z-50 md:hidden"
           aria-label="Quick booking bar"
