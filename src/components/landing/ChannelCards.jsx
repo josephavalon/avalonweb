@@ -15,9 +15,8 @@ function ChannelRow({ channel, index, open, onToggle }) {
 
   return (
     <motion.div
-      {...premiumCard(index * 0.11)}
       whileHover={premiumHover}
-      className={`rounded-2xl border backdrop-blur-xl shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial ${
+      className={`rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial ${
         open
           ? 'border-accent/35 bg-white/[0.12]'
           : 'border-foreground/10 bg-white/[0.08] hover:border-foreground/20 hover:bg-white/[0.105]'
