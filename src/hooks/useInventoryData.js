@@ -245,7 +245,7 @@ export function useInventoryData() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Recompute folder item counts whenever items change
   useEffect(() => {

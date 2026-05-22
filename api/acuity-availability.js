@@ -1,9 +1,9 @@
 /**
- * GET /api/acuity-availability
+ * GET /api/scheduling-availability
  *
  * Query params:
  *   date            YYYY-MM-DD        — day to fetch slots for
- *   appointmentTypeID  number         — Acuity appointment type
+ *   appointmentTypeID  number         — scheduling appointment type
  *   timezone        string (optional) — defaults to America/Los_Angeles
  *
  * Returns: [{ time: ISO8601, slotsAvailable: number }]
@@ -32,12 +32,12 @@ export default async function handler(req, res) {
 
     const slots = await acuityFetch(`/availability/times?${params}`);
 
-    // Normalize — Acuity returns an array of { time, slotsAvailable }
+    // Normalize provider response into { time, slotsAvailable }
     const available = (slots || []).filter((s) => s.slotsAvailable > 0);
 
     return res.status(200).json(available);
   } catch (err) {
-    console.error('[acuity-availability]', err.message);
+    console.error('[scheduling-availability]', err.message);
     return res.status(err.status || 500).json({ error: err.message });
   }
 }

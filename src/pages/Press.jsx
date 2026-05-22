@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Download, ExternalLink, Mail, Image, FileText, User, Camera } from 'lucide-react';
+import { Download, Mail, Image, FileText, User, Camera } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';

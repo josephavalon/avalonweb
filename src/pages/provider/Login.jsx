@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, ArrowRight, Check, Stethoscope } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 
 const EASE = [0.16, 1, 0.3, 1];

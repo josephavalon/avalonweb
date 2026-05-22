@@ -2,11 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, X, Plus, ChevronRight, Check, Clock,
-  MapPin, Phone, Mail, Tag, Calendar, DollarSign,
+  MapPin, Phone, Mail, Calendar, DollarSign,
   User, Activity, FileText, Edit2, ToggleLeft, ToggleRight,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
-import { CLIENTS, APPOINTMENTS, INVOICES, getClientName } from '@/data/adminMockData';
+import { CLIENTS, APPOINTMENTS, INVOICES } from '@/fixtures/adminMockData';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const EASE = [0.16, 1, 0.3, 1];

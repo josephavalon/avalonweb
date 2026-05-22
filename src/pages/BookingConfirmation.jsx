@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  CheckCircle2, ArrowLeft, CalendarPlus, User,
+import { ArrowLeft, CalendarPlus, User,
   Droplets, Clock, MapPin, Hash, Loader2,
   ShieldCheck, Shirt, CreditCard, Phone,
   ExternalLink,
@@ -10,6 +9,8 @@ import {
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
+import { readLastBooking, saveLastBooking, appendActivity } from '@/lib/localOs';
+import { readVisitPrep, saveVisitPrep } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
@@ -175,10 +176,12 @@ function TimelineStep({ step, index, isLast }) {
 export default function BookingConfirmation() {
   const [params] = useSearchParams();
   const appointmentId = params.get('appointment');
+  const [localBooking] = useState(() => readLastBooking());
 
   const [appt, setAppt] = useState(null);
   const [apptLoading, setApptLoading] = useState(!!appointmentId);
   const [apptError, setApptError] = useState(null);
+  const [prep, setPrep] = useState(() => readVisitPrep());
 
   useSeo({
     title: 'Session Confirmed — Avalon Vitality',
@@ -191,7 +194,7 @@ export default function BookingConfirmation() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/acuity-appointment?id=${encodeURIComponent(appointmentId)}`);
+        const res = await fetch(`/api/scheduling-appointment?id=${encodeURIComponent(appointmentId)}`);
         const data = await res.json();
         if (!cancelled) {
           if (res.ok) setAppt(data);
@@ -206,20 +209,50 @@ export default function BookingConfirmation() {
     return () => { cancelled = true; };
   }, [appointmentId]);
 
-  // Acuity self-service reschedule/cancel links
-  const rescheduleUrl = appt?.confirmationPage || null;
-  // Acuity's confirmation page URL has cancel/reschedule links built in
+  useEffect(() => {
+    if (appt?.id) {
+      const saved = saveLastBooking({
+        ...(localBooking || {}),
+        id: appt.id,
+        service: appt.type || localBooking?.service || 'IV Therapy Session',
+        datetime: appt.datetime,
+        time: appt.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time,
+        address: appt.location || localBooking?.address,
+        contact: localBooking?.contact,
+        addOns: localBooking?.addOns || [],
+        items: localBooking?.items || [],
+        subtotal: appt.price ?? localBooking?.subtotal,
+        status: localBooking?.status || 'Scheduling received',
+        nextStep: localBooking?.manualReview ? 'Clinical review before RN assignment' : 'RN assignment and arrival text',
+        gfe: localBooking?.gfe || 'Pending',
+        nurse: localBooking?.nurse || 'Unassigned',
+        payment: localBooking?.payment || 'Pending',
+        source: localBooking?.source || 'Website',
+        reference: localBooking?.reference || appt.id,
+      });
+      appendActivity(`Booking confirmed: ${saved.service}`, { role: 'client', bookingId: String(appt.id) });
+    }
+  }, [appt, localBooking]);
 
-  const referenceNum = appt?.id
-    ? `AV-${String(appt.id).slice(-6).toUpperCase()}`
+  // Scheduling self-service reschedule/cancel links
+  const rescheduleUrl = appt?.confirmationPage || null;
+  // The confirmation page URL has cancel/reschedule links built in
+
+  const referenceSource = appt?.id || localBooking?.id;
+  const referenceNum = referenceSource
+    ? `AV-${String(referenceSource).slice(-6).toUpperCase()}`
     : appointmentId
       ? `AV-${String(appointmentId).slice(-6).toUpperCase()}`
       : null;
 
-  const serviceLabel = appt?.type || 'IV Therapy Session';
-  const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : null;
-  const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : null;
-  const apptAddress = appt?.location || null;
+  const serviceLabel = appt?.type || localBooking?.service || 'IV Therapy Session';
+  const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : localBooking?.date || null;
+  const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time || null;
+  const apptAddress = appt?.location || localBooking?.address || null;
+  const togglePrep = (index) => {
+    const next = prep.map((item, i) => i === index ? { ...item, done: !item.done } : item);
+    setPrep(saveVisitPrep(next));
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -270,6 +303,12 @@ export default function BookingConfirmation() {
                 )}
                 {apptAddress && (
                   <DetailPill icon={MapPin} label="Location" value={apptAddress} />
+                )}
+                {localBooking?.addOns?.length > 0 && (
+                  <DetailPill icon={ShieldCheck} label="Add-ons" value={localBooking.addOns.join(' · ')} />
+                )}
+                {localBooking?.subtotal != null && (
+                  <DetailPill icon={CreditCard} label="Estimated Total" value={`$${Number(localBooking.subtotal).toLocaleString()}`} />
                 )}
               </div>
             )}
@@ -330,9 +369,22 @@ export default function BookingConfirmation() {
               );
             })}
           </div>
+          <div className="mt-3 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-background/80 backdrop-blur-xl">
+            {prep.map((item, index) => (
+              <button
+                type="button"
+                key={item.key || item.label}
+                onClick={() => togglePrep(index)}
+                className="flex min-h-[54px] w-full items-center justify-between gap-3 border-t border-foreground/[0.06] px-4 text-left first:border-t-0"
+              >
+                <span className="font-body text-sm text-foreground/70">{item.label}</span>
+                <ShieldCheck className={`h-4 w-4 ${item.done ? 'text-accent' : 'text-foreground/25'}`} strokeWidth={1.8} />
+              </button>
+            ))}
+          </div>
         </motion.div>
 
-        {/* ── 4. Nurse card (placeholder until staff assignment) ── */}
+        {/* ── 4. Nurse card (local fixture until staff assignment) ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

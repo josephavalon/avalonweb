@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, ArrowRight, Fingerprint, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Fingerprint, AlertCircle, CheckCircle, ShieldCheck, Stethoscope, UserRound } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { useToast } from '@/components/ui/use-toast';
 
 const EASE = [0.16, 1, 0.3, 1];
+
+const DEMO_SHORTCUTS = [
+  { username: 'CLIENT001', label: 'Client', detail: 'booking, prep, support', icon: UserRound },
+  { username: 'NURSE001', label: 'Nurse', detail: 'shift, client, route', icon: Stethoscope },
+  { username: 'ADMIN001', label: 'Admin', detail: 'handoff, dispatch, ops', icon: ShieldCheck },
+];
+const DEMO_PASSWORD = 'JonJones1986';
 
 const AppleLogo = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -122,7 +129,6 @@ function SignInTab({ onSwitchTab }) {
   const [passkeySupported, setPasskeySupported] = useState(false);
   const [passkeyLoading, setPasskeyLoading]     = useState(false);
   const [passkeyError, setPasskeyError]         = useState('');
-
   useEffect(() => {
     if (user) navigate(user.redirect || '/members/dashboard', { replace: true });
   }, [user, navigate]);
@@ -143,6 +149,14 @@ function SignInTab({ onSwitchTab }) {
     if (!username.trim()) { setFieldError('Enter your username or email.'); return; }
     if (!password)        { setFieldError('Enter your password.'); return; }
     const result = await signIn({ email: username.trim(), password });
+    if (result.ok) navigate(result.user.redirect || '/members/dashboard', { replace: true });
+  };
+
+  const handleDemoSignIn = async (demoUsername) => {
+    setFieldError('');
+    setUsername(demoUsername);
+    setPassword(DEMO_PASSWORD);
+    const result = await signIn({ email: demoUsername, password: DEMO_PASSWORD });
     if (result.ok) navigate(result.user.redirect || '/members/dashboard', { replace: true });
   };
 
@@ -171,11 +185,11 @@ function SignInTab({ onSwitchTab }) {
             {passkeyLoading ? 'Authenticating…' : 'Sign in with Passkey'}
           </button>
         )}
-        <button type="button" onClick={() => toast({ title: 'Coming soon', description: 'Apple Sign In will be available at launch.' })}
+        <button type="button" onClick={() => toast({ title: 'Local Mode', description: 'Use NURSE001 or CLIENT001 for this preview.' })}
           className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground">
           <AppleLogo className="w-3.5 h-3.5" /> Sign in with Apple
         </button>
-        <button type="button" onClick={() => toast({ title: 'Coming soon', description: 'Google Sign In will be available at launch.' })}
+        <button type="button" onClick={() => toast({ title: 'Local Mode', description: 'Use NURSE001 or CLIENT001 for this preview.' })}
           className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground">
           <GoogleLogo className="w-3.5 h-3.5" /> Sign in with Google
         </button>
@@ -188,11 +202,27 @@ function SignInTab({ onSwitchTab }) {
         <div className="flex-1 h-px bg-foreground/[0.08]" />
       </div>
 
+      <div className="grid grid-cols-3 gap-2">
+        {DEMO_SHORTCUTS.map(({ username: demoUsername, label, detail, icon: Icon }) => (
+          <button
+            key={demoUsername}
+            type="button"
+            onClick={() => handleDemoSignIn(demoUsername)}
+            disabled={loading}
+            className="min-h-[92px] rounded-2xl border border-foreground/10 bg-foreground/[0.035] px-2.5 py-3 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] disabled:opacity-40"
+          >
+            <Icon className="mb-3 h-4 w-4 text-foreground/55" strokeWidth={1.7} />
+            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground">{label}</p>
+            <p className="mt-1 font-body text-[9px] leading-snug text-foreground/40">{detail}</p>
+          </button>
+        ))}
+      </div>
+
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>
         <Field id="username" label="Username or Email" value={username}
           onChange={(e) => { setUsername(e.target.value); setFieldError(''); }}
-          autoComplete="username webauthn" placeholder="username or email" />
+          autoComplete="username webauthn" placeholder="NURSE001 or CLIENT001" />
 
         <Field id="password" label="Password" type={showPw ? 'text' : 'password'} value={password}
           onChange={(e) => { setPassword(e.target.value); setFieldError(''); }}

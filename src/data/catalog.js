@@ -1,0 +1,437 @@
+import {
+  BatteryCharging,
+  Droplets,
+  Flame,
+  FlaskConical,
+  Heart,
+  LayoutGrid,
+  Leaf,
+  Moon,
+  Plane,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
+
+export const slugify = (name) =>
+  String(name)
+    .toLowerCase()
+    .replace(/\+/g, ' ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const money = (value) => `$${Number(value).toLocaleString()}`;
+const subscriberPrice = (value) => money(Math.round(Number(value) * 0.8));
+const annualPrice = (value) => money(Math.round(Number(value) * 0.8 * 9));
+
+export const IV_SESSIONS = [
+  {
+    key: 'hydration',
+    label: 'Hydration',
+    price: 150,
+    icon: Droplets,
+    tagline: 'Rehydrate, replenish, and recover fast.',
+    tag: 'Essential',
+    category: 'recovery',
+    duration: '30-45 min',
+    inside: 'Saline (500-1000ml) · Electrolytes · B-Complex · Trace minerals',
+    features: ['Deep hydration', 'Electrolyte balance', 'Nutrient support', 'Overall wellness'],
+    image: '/bags/dehydration.png',
+    desc: 'Saline, electrolytes, B-complex, and trace minerals for efficient rehydration.',
+  },
+  {
+    key: 'energy',
+    label: 'Energy',
+    price: 250,
+    icon: Zap,
+    tagline: 'Boost energy, sharpen focus, perform.',
+    tag: 'Performance',
+    category: 'energy',
+    duration: '45-60 min',
+    inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C',
+    features: ['High-dose B vitamins', 'Amino acids', 'Metabolic support', 'Mental clarity'],
+    image: '/bags/energy.png',
+    desc: 'B12, B-complex, and amino acids - nutrients commonly associated with daily energy.',
+  },
+  {
+    key: 'immunity',
+    label: 'Immunity',
+    price: 250,
+    icon: ShieldCheck,
+    tagline: 'Strengthen your defenses, fast.',
+    tag: 'Bestseller',
+    category: 'immunity',
+    duration: '45-60 min',
+    inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline',
+    features: ['High-dose Vitamin C', 'Zinc infusion', 'Antioxidant support', 'Immune modulation'],
+    image: '/bags/immunity.png',
+    desc: 'High-dose Vitamin C and zinc - nutrients often chosen for immune support.',
+  },
+  {
+    key: 'beauty',
+    label: 'Beauty',
+    price: 250,
+    icon: Sparkles,
+    tagline: 'Glow from within.',
+    tag: 'Glow Favorite',
+    category: 'beauty',
+    duration: '45-60 min',
+    inside: 'Glutathione · Biotin · Vitamin C · B-Complex · Collagen support nutrients · Saline',
+    features: ['Glutathione push', 'Biotin support', 'Vitamin C boost', 'Skin radiance'],
+    image: '/bags/beauty.png',
+    desc: 'Glutathione, biotin, Vitamin C, and collagen - nutrients associated with skin, hair, and nails.',
+  },
+  {
+    key: 'recovery',
+    label: 'Recovery',
+    price: 250,
+    icon: Heart,
+    tagline: 'Bounce back faster. Feel better sooner.',
+    tag: 'Same-Day Favorite',
+    category: 'recovery',
+    duration: '45-60 min',
+    inside: 'Saline · Magnesium · B-Complex · Amino acids · Anti-nausea support · Electrolytes',
+    features: ['Anti-inflammatory support', 'Tissue repair', 'Pain reduction', 'Rehydration'],
+    image: '/bags/recovery.png',
+    desc: 'Saline, magnesium, B-complex, amino acids, and electrolyte support for heavier recovery days.',
+  },
+  {
+    key: 'jetlag',
+    label: 'Jet Lag',
+    price: 250,
+    icon: Plane,
+    tagline: 'Land ready. Recover in flight time.',
+    tag: 'Travel Essential',
+    category: 'travel',
+    duration: '45-60 min',
+    inside: 'Saline · Vitamin B12 · Magnesium · B-Complex · Electrolytes · Immune support blend',
+    features: ['Circadian reset', 'Immune support', 'Deep rehydration', 'Energy restoration'],
+    image: '/bags/jet-lag.png',
+    desc: 'Melatonin support, B vitamins, and full hydration - popular with travelers adjusting to new time zones.',
+  },
+  {
+    key: 'myers',
+    label: "Myers' Cocktail",
+    tabLabel: 'Wellness',
+    price: 250,
+    icon: FlaskConical,
+    tagline: 'The gold standard of IV therapy.',
+    tag: 'Most Popular',
+    category: 'energy',
+    popular: true,
+    duration: '45-60 min',
+    inside: 'Magnesium · Calcium · Vitamins B1 B2 B3 B5 B6 · Vitamin C · Saline',
+    features: ['Magnesium', 'B-complex vitamins', 'Calcium', 'Vitamin C'],
+    image: '/bags/myers-cocktail-cutout.png',
+    transparentMedia: true,
+    motionVideo: null,
+    desc: 'A classic IV formula featuring B-complex, Vitamin C, magnesium, calcium, and zinc.',
+  },
+  {
+    key: 'postnight',
+    label: 'Post-Night-Out',
+    price: 250,
+    icon: Moon,
+    tagline: 'Back to baseline, fast.',
+    tag: 'Same-Day Favorite',
+    category: 'recovery',
+    duration: '45-60 min',
+    inside: 'Saline · Anti-nausea support · B-Complex · Glutathione · Electrolytes',
+    features: ['Rapid rehydration', 'Anti-nausea blend', 'Liver support', 'B-vitamin replenishment'],
+    image: '/bags/recovery.png',
+    desc: 'Saline, B vitamins, and glutathione - a well-known combination for rehydration.',
+  },
+  {
+    key: 'nad',
+    label: 'NAD+',
+    icon: BatteryCharging,
+    tagline: 'Cellular energy restoration, metabolic support, and repair.',
+    tag: 'Advanced',
+    category: 'energy',
+    inside: 'NAD+ · Saline · B-Complex',
+    features: ['Cellular regeneration', 'Cognitive clarity', 'Metabolism boost', 'Anti-aging support'],
+    doses: [
+      { key: 'nad_250', label: '250mg', price: 350, duration: '2-3 hr', image: '/bags/nad-250.png' },
+      { key: 'nad_500', label: '500mg', price: 500, duration: '3-4 hr', image: '/bags/nad-500.png' },
+      { key: 'nad_750', label: '750mg', price: 600, duration: '3-5 hr', image: '/bags/nad-750.png' },
+      { key: 'nad_1000', label: '1000mg', price: 750, duration: '4-6 hr', image: '/bags/nad-1000.png' },
+      { key: 'nad_1250', label: '1250mg', price: 950, duration: '5-7 hr', image: '/bags/nad-1500.png' },
+      { key: 'nad_1500', label: '1500mg', price: 1100, duration: '6-8 hr', image: '/bags/nad-1500.png' },
+    ],
+  },
+  {
+    key: 'cbd',
+    label: 'CBD',
+    icon: Leaf,
+    tagline: 'Zero-THC cannabidiol delivered directly to your bloodstream.',
+    tag: 'Specialty',
+    category: 'recovery',
+    inside: 'CBD (Zero THC) · Saline',
+    features: ['Zero THC', 'Full bioavailability', 'Muscle relaxation', 'Stress response'],
+    doses: [
+      { key: 'cbd_33', label: '33mg', price: 350, duration: '45-60 min', image: '/bags/cbd-33.png' },
+      { key: 'cbd_66', label: '66mg', price: 450, duration: '45-60 min', image: '/bags/cbd-66.png' },
+      { key: 'cbd_99', label: '99mg', price: 550, duration: '45-60 min', image: '/bags/cbd-99.png' },
+      { key: 'cbd_132', label: '132mg', price: 650, duration: '45-60 min', image: '/bags/cbd-132.png' },
+    ],
+  },
+  {
+    key: 'exosomes',
+    label: 'Exosomes',
+    icon: Sparkles,
+    tagline: 'Regenerative cellular signaling support.',
+    tag: 'Elite',
+    category: 'recovery',
+    inside: 'Exosomes · Saline',
+    elite: true,
+    doses: [
+      { key: 'exosomes_30', label: '30B Units', price: 700, duration: '45-60 min', image: '/bags/nad-1500.png' },
+      { key: 'exosomes_50', label: '50B Units', price: 1200, duration: '60-75 min', image: '/bags/nad-1500.png' },
+      { key: 'exosomes_90', label: '90B Units', price: 1800, duration: '60-90 min', image: '/bags/nad-1500.png' },
+    ],
+  },
+];
+
+export const IV_ADDONS = [
+  { label: 'Extra Fluid', price: 25, desc: 'Additional 500ml saline' },
+  { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals & amino boost' },
+  { label: 'Vitamin C IV Push · 5g', price: 45, desc: 'Entry high-dose antioxidant support' },
+  { label: 'Vitamin C IV Push · 10g', price: 85, desc: 'Higher-dose immune + recovery support' },
+  { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support' },
+  { label: 'CBD (Low Dose)', price: 350, desc: 'Zero THC · full bioavailability · 33mg', group: 'cbd' },
+  { label: 'CBD (High Dose)', price: 450, desc: 'Zero THC · elevated dose · 66mg', group: 'cbd' },
+  { label: 'NAD+ (250mg)', price: 350, desc: 'Cellular energy + repair · 2-3 hr infusion', group: 'nad' },
+  { label: 'NAD+ (500mg)', price: 500, desc: 'Enhanced cellular repair · 3-4 hr infusion', group: 'nad' },
+  { label: 'NAD+ (1000mg)', price: 750, desc: 'Maximum protocol · 4-6 hr infusion', group: 'nad' },
+  { label: 'Glutathione Push · 600mg', price: 60, desc: 'Antioxidant master push' },
+  { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support' },
+  { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push' },
+  { label: 'Magnesium Boost', price: 30, desc: 'Muscle + nerve support' },
+];
+
+export const IM_SHOTS = [
+  { label: 'B12', price: 40, max: 5, icon: Zap, desc: 'Energy + metabolism support' },
+  { label: 'MIC', price: 50, icon: Flame, desc: 'Fat metabolism + liver function' },
+  { label: 'NAD+', price: 80, icon: BatteryCharging, desc: 'Quick cellular energy boost' },
+  { label: 'Glutathione IM · 200mg', price: 50, max: 5, icon: Sparkles, desc: 'Antioxidant + skin clarity' },
+  { label: 'Glutathione IM · 400mg', price: 80, max: 5, icon: Sparkles, desc: 'Higher-dose antioxidant support' },
+  { label: 'Vitamin C IM · 500mg', price: 30, icon: Shield, desc: 'Immune + antioxidant support' },
+  { label: 'Vitamin C IM · 1000mg', price: 45, icon: Shield, desc: 'Higher-dose immune support' },
+  { label: 'Vitamin D', price: 35, icon: Zap, desc: 'Bone, immune & mood support' },
+  { label: 'Biotin', price: 35, icon: Sparkles, desc: 'Hair, skin & nail support' },
+];
+
+export const PACKAGES = [
+  {
+    key: 'hangover',
+    label: 'Hangover Kit',
+    tagline: 'Recover from a rough night - fast.',
+    includes: ['Post-Night-Out IV', 'B12 IM shot', 'Glutathione IM shot'],
+    price: 340,
+    save: 30,
+    icon: Moon,
+    tag: 'Best for Tonight',
+    items: [
+      { cartKey: 'pkg-hangover-iv', label: 'Post-Night-Out IV', price: 250, type: 'iv' },
+      { cartKey: 'pkg-hangover-b12', label: 'IM · B12', price: 40, type: 'im' },
+      { cartKey: 'pkg-hangover-glut', label: 'IM · Glutathione', price: 50, type: 'im' },
+    ],
+  },
+  {
+    key: 'performance',
+    label: 'Performance Bundle',
+    tagline: 'Built for peak output. Before or after.',
+    includes: ['Energy IV', 'NAD+ IM shot', 'MIC IM shot'],
+    price: 380,
+    save: 30,
+    icon: Zap,
+    tag: 'Athlete Favorite',
+    items: [
+      { cartKey: 'pkg-perf-iv', label: 'Energy IV', price: 250, type: 'iv' },
+      { cartKey: 'pkg-perf-nad', label: 'IM · NAD+', price: 80, type: 'im' },
+      { cartKey: 'pkg-perf-mic', label: 'IM · MIC', price: 50, type: 'im' },
+    ],
+  },
+  {
+    key: 'glow',
+    label: 'Glow Stack',
+    tagline: 'Skin, hair, and radiance from within.',
+    includes: ['Beauty IV', 'Glutathione IM shot', 'Biotin IM shot'],
+    price: 335,
+    save: 30,
+    icon: Sparkles,
+    tag: 'Most Requested',
+    items: [
+      { cartKey: 'pkg-glow-iv', label: 'Beauty IV', price: 250, type: 'iv' },
+      { cartKey: 'pkg-glow-glut', label: 'IM · Glutathione', price: 50, type: 'im' },
+      { cartKey: 'pkg-glow-biotin', label: 'IM · Biotin', price: 35, type: 'im' },
+    ],
+  },
+  {
+    key: 'reset',
+    label: 'Total Reset',
+    tagline: "The full protocol. Myers' + NAD+ + B12.",
+    includes: ["Myers' Cocktail IV", 'NAD+ add-on (250mg)', 'B12 IM shot'],
+    price: 680,
+    save: 60,
+    icon: FlaskConical,
+    tag: 'Highest Impact',
+    items: [
+      { cartKey: 'pkg-reset-iv', label: "Myers' Cocktail IV", price: 250, type: 'iv' },
+      { cartKey: 'pkg-reset-nad', label: 'NAD+ Add-On (250mg)', price: 350, type: 'addon' },
+      { cartKey: 'pkg-reset-b12', label: 'IM · B12', price: 40, type: 'im' },
+      { cartKey: 'pkg-reset-extra', label: 'Extra Fluid', price: 25, type: 'addon' },
+    ],
+  },
+];
+
+export const IV_CATEGORIES = [
+  { key: 'all', label: 'Not Sure', icon: LayoutGrid },
+  { key: 'recovery', label: 'Recovery', icon: Heart },
+  { key: 'energy', label: 'Energy', icon: Zap },
+  { key: 'beauty', label: 'Beauty', icon: Sparkles },
+  { key: 'immunity', label: 'Immunity', icon: ShieldCheck },
+  { key: 'travel', label: 'Travel', icon: Plane },
+  { key: 'elite', label: 'Elite', icon: Sparkles },
+];
+
+export const IV_GOAL_RECOMMENDATION = {
+  recovery: 'recovery',
+  energy: 'myers',
+  beauty: 'beauty',
+  packages: 'hangover',
+};
+
+export const VERTICALS = {
+  iv_therapy: {
+    slug: 'iv_therapy',
+    label: 'IV Therapy',
+    active: true,
+    launchDate: '2026-05-01',
+    sessions: IV_SESSIONS,
+    addons: IV_ADDONS,
+    shots: IM_SHOTS,
+    packages: PACKAGES,
+    categories: IV_CATEGORIES,
+    goalRecommendation: IV_GOAL_RECOMMENDATION,
+  },
+};
+
+function treatmentFromSession(session) {
+  return {
+    name: session.label,
+    oneTime: money(session.price),
+    monthly: subscriberPrice(session.price),
+    annual: annualPrice(session.price),
+    desc: session.desc || session.tagline,
+    image: session.image,
+    transparentMedia: session.transparentMedia,
+    motionVideo: session.motionVideo,
+  };
+}
+
+function treatmentFromDose(parent, dose) {
+  return {
+    name: `${parent.label} ${dose.label}`,
+    price: money(dose.price),
+    annualPrice: subscriberPrice(dose.price),
+    desc: `${parent.tagline} ${dose.duration ? `Typical visit time: ${dose.duration}.` : ''}`.trim(),
+    image: dose.image,
+  };
+}
+
+const ivVitaminKeys = new Set(['hydration', 'myers', 'recovery', 'energy', 'postnight', 'immunity', 'beauty', 'jetlag']);
+const byKey = Object.fromEntries(IV_SESSIONS.map((session) => [session.key, session]));
+
+export const productsByCategory = {
+  cbd: {
+    title: 'IV CBD',
+    subtitle: 'Zero THC · Pharmaceutical-grade cannabidiol',
+    badge: '100% Zero THC - Pharmaceutical Grade',
+    description:
+      'Pharmaceutical-grade cannabidiol, delivered intravenously. Zero THC. Full bioavailability. Dose levels from 33mg upward - your clinician will match the dose to your goals.',
+    heroImage: null,
+    categoryLabel: 'IV CBD',
+    backTo: '/services/cbd',
+    backLabel: 'Back to IV CBD',
+    treatments: byKey.cbd.doses.map((dose) => treatmentFromDose(byKey.cbd, dose)),
+  },
+  nad: {
+    title: 'IV NAD+',
+    subtitle: 'The longevity molecule',
+    badge: 'Cellular Energy · Cognitive Support · Longevity',
+    description:
+      'NAD+ is a coenzyme involved in energy metabolism, cellular repair, and cognitive support. Your clinician confirms whether IV NAD+ is appropriate before treatment.',
+    heroImage: null,
+    categoryLabel: 'IV NAD+',
+    backTo: '/services/nad',
+    backLabel: 'Back to IV NAD+',
+    treatments: [
+      ...byKey.nad.doses.map((dose) => treatmentFromDose(byKey.nad, dose)),
+      {
+        name: "NAD+ Myers' Cocktail",
+        price: money(700),
+        annualPrice: subscriberPrice(700),
+        desc: 'NAD+ paired with B vitamins and amino acids.',
+        image: '/bags/nad-750.png',
+      },
+    ],
+  },
+  exosomes: {
+    title: 'EXOSOMES',
+    subtitle: 'Regenerative cellular signaling support',
+    badge: 'Elite · Clinician Guided',
+    description:
+      'Exosome protocols are advanced regenerative wellness sessions reserved for clinician-guided care plans. Dose and eligibility are confirmed before treatment.',
+    heroImage: null,
+    categoryLabel: 'Exosomes',
+    backTo: '/menu',
+    backLabel: 'Back to Full Menu',
+    treatments: byKey.exosomes.doses.map((dose) => treatmentFromDose(byKey.exosomes, dose)),
+  },
+  'iv-vitamins': {
+    title: 'IV VITAMINS',
+    subtitle: 'Medical-grade intravenous vitamin therapy',
+    description:
+      'Every IV is customized and made fresh on-site with medical-grade ingredients - B-complex vitamins, glutathione, magnesium, zinc, and electrolytes.',
+    heroImage: null,
+    categoryLabel: 'IV Vitamins',
+    backTo: '/services/iv-vitamins',
+    backLabel: 'Back to IV Vitamins',
+    treatments: [
+      treatmentFromSession(byKey.hydration),
+      {
+        ...treatmentFromSession(byKey.hydration),
+        name: 'Dehydration',
+        desc: '1000ml saline with electrolytes. A classic formula used for hydration support.',
+      },
+      treatmentFromSession(byKey.myers),
+      treatmentFromSession(byKey.recovery),
+      {
+        ...treatmentFromSession(byKey.recovery),
+        name: 'Event Recovery',
+        desc: 'Post-event hydration with amino acids and electrolytes - popular with clients bouncing back from long days.',
+      },
+      {
+        ...treatmentFromSession(byKey.energy),
+        name: 'Event Performance',
+        desc: 'Pre-event hydration featuring B vitamins and amino acids - often chosen by performers and athletes.',
+      },
+      ...IV_SESSIONS.filter((session) => ivVitaminKeys.has(session.key) && !['hydration', 'myers', 'recovery', 'energy'].includes(session.key)).map(treatmentFromSession),
+      {
+        ...treatmentFromSession(byKey.recovery),
+        name: 'Food Poisoning',
+        desc: 'Electrolytes, anti-nausea support, and hydration - commonly chosen after GI distress.',
+        image: '/bags/food-poisoning.png',
+      },
+    ],
+  },
+};
+
+export function getProduct(categorySlug, productSlug) {
+  const cat = productsByCategory[categorySlug];
+  if (!cat) return null;
+  const treatment = cat.treatments.find((item) => slugify(item.name) === productSlug);
+  return treatment ? { category: cat, treatment } : null;
+}

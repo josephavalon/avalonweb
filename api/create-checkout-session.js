@@ -83,7 +83,7 @@ function requiresSpecialConsent(items = [], appointmentTypeID, needle) {
   return haystack.includes(needle);
 }
 
-function requiredAcuityFields(appointment = {}, items = [], appointmentTypeID = '') {
+function requiredSchedulingFields(appointment = {}, items = [], appointmentTypeID = '') {
   const medicalConditions = appointment.medicalConditions || 'None of the above';
   const fields = [
     { id: 16968986, value: appointment.dob || '01/01/1990' },
@@ -112,14 +112,14 @@ function requiredAcuityFields(appointment = {}, items = [], appointmentTypeID = 
   return fields;
 }
 
-async function createAcuityAppointment({ appointment, contact, items, membership }) {
+async function createSchedulingAppointment({ appointment, contact, items, membership, req }) {
   if (!appointment?.acuityDatetime) return null;
 
   const appointmentTypeID = Number(appointment.acuityTypeId)
     || resolveAppointmentTypeId(items, membership);
 
   if (!appointmentTypeID) {
-    throw Object.assign(new Error('Acuity appointment type is not configured'), { status: 400 });
+    throw Object.assign(new Error('Appointment type is not configured'), { status: 400 });
   }
 
   return acuityFetch('/appointments', {
@@ -133,7 +133,7 @@ async function createAcuityAppointment({ appointment, contact, items, membership
       phone: contact.phone || '',
       timezone: appointment.acuityTimezone || TZ,
       notes: appointmentNotes({ appointment, items, membership, req }),
-      fields: requiredAcuityFields(appointment, items, appointmentTypeID),
+      fields: requiredSchedulingFields(appointment, items, appointmentTypeID),
     }),
   });
 }
@@ -187,11 +187,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const acuityAppointment = await createAcuityAppointment({
+    const acuityAppointment = await createSchedulingAppointment({
       appointment,
       contact,
       items,
       membership,
+      req,
     });
 
     const baseUrl = publicBaseUrl(req);
@@ -201,7 +202,7 @@ export default async function handler(req, res) {
     if (!process.env.STRIPE_SECRET_KEY) {
       return res.status(200).json({
         ok: true,
-        provider: 'acuity',
+        provider: 'scheduling',
         appointment: acuityAppointment,
         url: successUrl,
       });

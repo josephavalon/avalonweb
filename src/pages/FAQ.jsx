@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import FAQ from '../components/landing/FAQ';

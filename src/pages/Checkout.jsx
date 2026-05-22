@@ -11,6 +11,8 @@ import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
 import { COVERED_ZIPS } from '@/lib/serviceArea';
 import { useSeo } from '@/lib/seo';
+import { acuityTypeForCart } from '@/lib/acuityAppointmentTypes';
+import { avalonErrorClass, avalonLabelClass, avalonLightFieldClass } from '@/components/ui/formStyles';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -141,8 +143,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
   );
 }
 
-/* ─── Step 1: Appointment (Acuity-powered) ───────────────────── */
-const ACUITY_TYPE_ID = import.meta.env.VITE_ACUITY_DEFAULT_TYPE_ID || '';
+/* ─── Step 1: Appointment scheduling ─────────────────────────── */
 const TZ = 'America/Los_Angeles';
 
 function formatTimeLabel(isoString) {
@@ -154,7 +155,7 @@ function todayString() {
   return new Date().toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD
 }
 
-function AppointmentStep({ onNext, onBack, defaultValues }) {
+function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: defaultValues || {
       date: '',
@@ -190,8 +191,8 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
     setSelectedSlot(null);
     try {
       const params = new URLSearchParams({ date, timezone: TZ });
-      if (ACUITY_TYPE_ID) params.set('appointmentTypeID', ACUITY_TYPE_ID);
-      const res = await fetch(`/api/acuity-availability?${params}`);
+      if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
+      const res = await fetch(`/api/scheduling-availability?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load availability');
       setSlots(data);
@@ -201,7 +202,7 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
     } finally {
       setSlotsLoading(false);
     }
-  }, []);
+  }, [appointmentTypeId]);
 
   // Find the next date (up to 14 days out) with at least one slot
   const findNextAvailable = useCallback(async (fromDate) => {
@@ -213,8 +214,8 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
         d.setDate(d.getDate() + i);
         const dateStr = d.toLocaleDateString('en-CA', { timeZone: TZ });
         const params = new URLSearchParams({ date: dateStr, timezone: TZ });
-        if (ACUITY_TYPE_ID) params.set('appointmentTypeID', ACUITY_TYPE_ID);
-        const res = await fetch(`/api/acuity-availability?${params}`);
+        if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
+        const res = await fetch(`/api/scheduling-availability?${params}`);
         if (!res.ok) continue;
         const data = await res.json();
         if (data?.length > 0) {
@@ -226,15 +227,15 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
     } catch {}
     setNextAvailLoading(false);
     return null;
-  }, []);
+  }, [appointmentTypeId]);
 
   useEffect(() => {
     if (selectedDate) fetchSlots(selectedDate);
   }, [selectedDate, fetchSlots]);
 
-  const fieldClass = "w-full bg-white/[0.04] border border-white/15 text-foreground font-body text-sm rounded-2xl px-4 py-3.5 placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors";
-  const labelClass = "font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50 mb-2 block";
-  const errClass = "font-body text-[10px] text-red-400 mt-1";
+  const fieldClass = avalonLightFieldClass;
+  const labelClass = avalonLabelClass;
+  const errClass = avalonErrorClass;
 
   const onSubmit = (data) => {
     if (!selectedSlot) return; // guard — button is disabled anyway
@@ -288,7 +289,7 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
         {errors.date && <p className={errClass}>{errors.date.message}</p>}
       </div>
 
-      {/* Acuity time slot grid */}
+      {/* Appointment time slot grid */}
       <AnimatePresence>
         {selectedDate && (
           <motion.div
@@ -362,7 +363,7 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
                       key={slot.time}
                       type="button"
                       onClick={() => setSelectedSlot({
-                        appointmentTypeID: ACUITY_TYPE_ID || '',
+                        appointmentTypeID: appointmentTypeId || '',
                         datetime: slot.time,
                         date: selectedDate,
                         timeLabel: label,
@@ -536,9 +537,9 @@ function AppointmentStep({ onNext, onBack, defaultValues }) {
 function ContactStep({ onNext, onBack, defaultValues }) {
   const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues });
 
-  const fieldClass = "w-full bg-white/[0.04] border border-white/15 text-foreground font-body text-sm rounded-2xl px-4 py-3.5 placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors";
-  const labelClass = "font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50 mb-2 block";
-  const errClass = "font-body text-[10px] text-red-400 mt-1";
+  const fieldClass = avalonLightFieldClass;
+  const labelClass = avalonLabelClass;
+  const errClass = avalonErrorClass;
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-5">
@@ -732,7 +733,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/25 tracking-wide">
-        Acuity scheduling · Secure checkout handoff when payments are enabled
+        Secure scheduling · checkout handoff when payments are enabled
       </p>
     </div>
   );
@@ -746,6 +747,7 @@ export default function Checkout() {
     path: '/checkout',
   });
   const { items, membership, removeItem, clearMembership } = useCart();
+  const appointmentTypeId = acuityTypeForCart(items, membership);
   const [step, setStep] = useState(0);
   const [appointment, setAppointment] = useState(null);
   const [contact, setContact] = useState(null);
@@ -793,6 +795,7 @@ export default function Checkout() {
             {step === 1 && !hasOnlyMembership && (
               <AppointmentStep
                 defaultValues={appointment}
+                appointmentTypeId={appointmentTypeId}
                 onNext={(data) => { setAppointment(data); goTo(2); }}
                 onBack={() => goTo(0)}
               />

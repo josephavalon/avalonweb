@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Calendar, Sparkles, ChevronDown, ArrowRight } from 'lucide-react';
-import { EASE, premiumCard, premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const CHANNELS = [
   { icon: Building2, label: 'Corporate Teams',      detail: 'Volume pricing and office wellness programs. Request a proposal — we come to you.', href: '/corporate', cta: 'Request a Proposal' },

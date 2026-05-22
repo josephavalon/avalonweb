@@ -1,10 +1,10 @@
 /**
- * GET /api/acuity-appointment?id=<appointmentId>
+ * GET /api/scheduling-appointment?id=<appointmentId>
  *
- * Fetches a single Acuity appointment by ID.
+ * Fetches a single scheduling appointment by ID.
  * Used by the confirmation page to display real booking details.
  *
- * Returns the Acuity appointment object:
+ * Returns the scheduling appointment object:
  *   { id, type, datetime, duration, location, firstName, lastName,
  *     email, phone, notes, price, forms, ... }
  */
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     const appointment = await acuityFetch(`/appointments/${encodeURIComponent(id)}`);
     return res.status(200).json(appointment);
   } catch (err) {
-    console.error('[acuity-appointment]', err.message);
+    console.error('[scheduling-appointment]', err.message);
     return res.status(err.status || 500).json({ error: err.message });
   }
 }

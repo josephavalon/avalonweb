@@ -1,116 +1,111 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Check } from 'lucide-react';
-import Navbar from '../components/landing/Navbar';
-import Footer from '../components/landing/Footer';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Check, Mail } from 'lucide-react';
 import { useSeo } from '@/lib/seo';
+import Navbar from '@/components/landing/Navbar';
+import Footer from '@/components/landing/Footer';
 
 const EASE = [0.16, 1, 0.3, 1];
 
 export default function Newsletter() {
   useSeo({
-    title: 'Stay in the Loop — Avalon Vitality',
-    description: 'Sign up for Avalon Vitality news — new therapies, launch updates, subscriber exclusives, and more.',
+    title: 'Early Access — Avalon Vitality',
+    description: 'Sign up for early access, launch updates, and subscriber exclusives from Avalon Vitality in the SF Bay Area.',
     path: '/newsletter',
   });
 
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const validate = (v) => {
-    if (!v.trim()) return 'Email is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) return 'Enter a valid email address.';
-    return '';
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const err = validate(email);
-    if (err) { setError(err); return; }
-    setSubmitting(true);
-    // Stub — wire to Klaviyo list subscribe endpoint when ready
-    await new Promise((r) => setTimeout(r, 900));
-    setSubmitting(false);
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    setError('');
+    // Save to localStorage until backend is wired
+    try {
+      const existing = JSON.parse(localStorage.getItem('avalon.waitlist') || '[]');
+      if (!existing.includes(email)) {
+        existing.push(email);
+        localStorage.setItem('avalon.waitlist', JSON.stringify(existing));
+      }
+    } catch {}
     setSubmitted(true);
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-24">
-        <div className="w-full max-w-md">
-
-          {!submitted ? (
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE }}
-            >
-              <p className="font-body text-xs tracking-[0.3em] text-accent uppercase mb-4">
-                Avalon Vitality
-              </p>
-              <h1 className="font-heading text-4xl md:text-5xl tracking-widest text-foreground uppercase mb-4 leading-tight">
-                Stay in<br />the loop.
-              </h1>
-              <p className="font-body text-sm text-foreground/60 leading-relaxed mb-10">
-                New therapies, launch updates, and subscriber exclusives — delivered straight to your inbox. No spam. Unsubscribe any time.
-              </p>
-
-              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-                <div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                    onBlur={() => setError(validate(email))}
-                    placeholder="your@email.com"
-                    autoComplete="email"
-                    className={`w-full bg-transparent border rounded-full px-6 py-4 font-body text-sm text-foreground placeholder:text-foreground/30 focus:outline-none transition-colors ${
-                      error ? 'border-red-400' : 'border-foreground/20 focus:border-foreground/50'
-                    }`}
-                  />
-                  {error && (
-                    <p className="mt-2 ml-4 font-body text-xs text-red-400">{error}</p>
-                  )}
+    <div className="min-h-screen bg-background">
+      <Navbar showBack />
+      <div className="flex min-h-screen items-center justify-center px-4 pt-24 pb-16">
+        <div className="w-full max-w-sm">
+          <AnimatePresence mode="wait">
+            {!submitted ? (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.6, ease: EASE }}
+              >
+                <div className="mb-2 flex items-center justify-center w-11 h-11 rounded-xl border border-foreground/10 bg-white/[0.05]">
+                  <Mail className="w-4.5 h-4.5 text-accent" strokeWidth={1.5} />
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-full bg-accent text-background hover:bg-accent/85 transition-colors disabled:opacity-60"
-                >
-                  <span>{submitting ? 'Subscribing…' : 'Subscribe'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </form>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="flex flex-col items-start gap-6"
-            >
-              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                <Check className="w-5 h-5 text-accent" strokeWidth={2} />
-              </div>
-              <div>
-                <h2 className="font-heading text-3xl tracking-widest text-foreground uppercase mb-3">
-                  You're in.
-                </h2>
-                <p className="font-body text-sm text-foreground/60 leading-relaxed">
-                  We'll be in touch when it matters. Welcome to Avalon.
+                <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mt-6 mb-2">Stay in the Loop</p>
+                <h1 className="font-heading text-5xl md:text-6xl uppercase leading-[0.9] text-foreground tracking-tight mb-4">
+                  Early<br />Access
+                </h1>
+                <p className="font-body text-sm text-foreground/55 leading-relaxed mb-8">
+                  Launch updates, subscriber exclusives, and first access to new protocols — delivered directly to you.
                 </p>
-              </div>
-            </motion.div>
-          )}
-
+                <form onSubmit={handleSubmit} noValidate className="space-y-3">
+                  <div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                      placeholder="your@email.com"
+                      className="w-full rounded-xl border border-foreground/15 bg-white/[0.04] px-4 py-3.5 font-body text-sm text-foreground placeholder:text-foreground/30 focus:border-foreground/35 focus:outline-none transition-colors"
+                    />
+                    {error && (
+                      <p className="mt-1.5 font-body text-[11px] text-red-400">{error}</p>
+                    )}
+                  </div>
+                  <motion.button
+                    type="submit"
+                    whileTap={{ scale: 0.98 }}
+                    className="group w-full flex items-center justify-between px-5 py-3.5 rounded-xl bg-foreground text-background font-body text-xs font-semibold tracking-[0.18em] uppercase"
+                  >
+                    <span>Get Early Access</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+                  </motion.button>
+                </form>
+                <p className="mt-4 font-body text-[10px] text-foreground/30 text-center">
+                  No spam. Unsubscribe anytime.
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.55, ease: EASE }}
+                className="text-center"
+              >
+                <div className="mx-auto mb-6 flex items-center justify-center w-14 h-14 rounded-full border border-accent/30 bg-accent/10">
+                  <Check className="w-6 h-6 text-accent" strokeWidth={2} />
+                </div>
+                <h2 className="font-heading text-4xl uppercase leading-[0.92] text-foreground tracking-tight mb-3">You're In</h2>
+                <p className="font-body text-sm text-foreground/55 leading-relaxed max-w-xs mx-auto">
+                  We'll reach out when early access opens. Keep an eye on your inbox.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </main>
-
+      </div>
       <Footer />
     </div>
   );

@@ -1,7 +1,7 @@
 /**
- * GET /api/acuity-appointments
+ * GET /api/scheduling-appointments
  *
- * Fetches recent Acuity appointments for the admin booking intake view.
+ * Fetches recent scheduling appointments for the admin booking intake view.
  *
  * Query params:
  *   max        number   — max results (default 50)
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     const appointments = await acuityFetch(`/appointments?${params}`);
     return res.status(200).json(appointments);
   } catch (err) {
-    console.error('[acuity-appointments]', err.message);
+    console.error('[scheduling-appointments]', err.message);
     return res.status(err.status || 500).json({ error: err.message });
   }
 }

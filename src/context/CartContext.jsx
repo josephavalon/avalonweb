@@ -17,7 +17,7 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState(() => readLocalCart());
   // Membership subscription (only one at a time)
   const [membership, setMembership] = useState(null);
-  // Acuity appointment slot (set during checkout AppointmentStep)
+  // Appointment slot (set during checkout AppointmentStep)
   // Shape: { appointmentTypeID, datetime, date, timeLabel, timezone }
   const [appointment, setAppointmentState] = useState(null);
 

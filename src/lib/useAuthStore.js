@@ -3,6 +3,7 @@
 // The user shape and hook API stay the same — nothing else needs to change.
 
 import React, { useState, createContext, useContext } from 'react';
+import { seedDemoState } from './platformOps';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
@@ -10,8 +11,8 @@ const SESSION_KEY = 'av.session';
 // ── Demo accounts (replace with real auth before production) ──────────────
 const DEMO_USERS = {
   'ADMIN001':  { role: 'admin',    name: 'Admin',  redirect: '/admin',              status: 'active' },
-  'CLIENT001': { role: 'client',   name: 'Client', redirect: '/members/dashboard',  status: 'active' },
-  'NURSE001':  { role: 'provider', name: 'Nurse',  redirect: '/provider/dashboard', status: 'active' },
+  'CLIENT001': { role: 'client',   name: 'Sarah',       redirect: '/members/dashboard',  status: 'active' },
+  'NURSE001':  { role: 'provider', name: 'Stephanie R.', redirect: '/provider/dashboard', status: 'active' },
 };
 const DEMO_PASSWORD = 'JonJones1986';
 // ─────────────────────────────────────────────────────────────────────────
@@ -59,8 +60,10 @@ export function AuthStoreProvider({ children }) {
         name:     profile.name,
         role:     profile.role,
         redirect: profile.redirect,
+        seededAt: new Date().toISOString(),
       };
 
+      seedDemoState(usernameKey);
       setUser(sessionUser);
       writeSession(sessionUser);
       return { ok: true, user: sessionUser };

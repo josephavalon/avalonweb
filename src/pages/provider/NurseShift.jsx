@@ -4,10 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import {
   APPOINTMENTS,
+  INVENTORY,
   getClient,
   getService,
   formatTime,
-} from '@/data/commandMockData';
+} from '@/fixtures/commandMockData';
+import { appendActivity, readLocal, writeLocal } from '@/lib/localOs';
+import { deductVisitInventory } from '@/lib/osRules';
 import {
   ChevronRight,
   MapPin,
@@ -89,7 +92,7 @@ function useTimer(running) {
 // ── VisitCard ──────────────────────────────────────────────────────────────────
 function VisitCard({ appt, visitNumber, onStatusChange }) {
   const [expanded,      setExpanded]      = useState(false);
-  const [localStatus,   setLocalStatus]   = useState(appt.status);
+  const [localStatus,   setLocalStatus]   = useState(() => readLocal(`visitStatus.${appt.id}`, appt.status));
   const [clinicalNotes, setClinicalNotes] = useState(appt.clinical_notes || '');
   const [completedAt,   setCompletedAt]   = useState(null);
   const [timerRunning,  setTimerRunning]  = useState(false);
@@ -116,6 +119,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
 
   function saveNotes() {
     try { localStorage.setItem(NOTES_KEY, JSON.stringify({ notes: visitNote, bp, hr })); } catch {}
+    appendActivity(`Saved visit notes for ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
     setNotesSaved(true);
     setTimeout(() => setNotesSaved(false), 2000);
   }
@@ -128,6 +132,8 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
 
   function startVisit() {
     setLocalStatus('in_progress');
+    writeLocal(`visitStatus.${appt.id}`, 'in_progress');
+    appendActivity(`Started visit: ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
     setTimerRunning(true);
     onStatusChange(appt.id, 'in_progress');
   }
@@ -135,6 +141,8 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
   function endVisit() {
     setTimerRunning(false);
     setLocalStatus('post_visit');
+    writeLocal(`visitStatus.${appt.id}`, 'post_visit');
+    appendActivity(`Ended visit timer: ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
     onStatusChange(appt.id, 'post_visit');
   }
 
@@ -142,6 +150,12 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
     const now = new Date();
     setCompletedAt(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
     setLocalStatus('completed');
+    writeLocal(`visitStatus.${appt.id}`, 'completed');
+    writeLocal('inventorySimulation', deductVisitInventory(readLocal('inventorySimulation', INVENTORY), {
+      service: service.name,
+      therapy: service.name,
+    }));
+    appendActivity(`Completed visit: ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
     onStatusChange(appt.id, 'completed');
   }
 
@@ -606,15 +620,21 @@ export default function NurseShift() {
   const [apptStatuses, setApptStatuses] = useState({});
   const [supplyModal,  setSupplyModal]  = useState(false);
 
-  // Show Stephanie's (s2) appointments for today (always uses real current date)
+  // Show today's visits when present; otherwise keep NURSE001 useful in demo mode
+  // by showing Stephanie's active assigned queue.
   const todayStr = new Date().toISOString().slice(0, 10);
-  const myAppts  = APPOINTMENTS.filter(a => {
+  const assignedAppts = APPOINTMENTS.filter(a => {
+    const isNurse = a.nurse_id === 's2';
+    const notCancelled = a.status !== 'cancelled';
+    return isNurse && notCancelled;
+  });
+  const todayAppts = assignedAppts.filter(a => {
     const apptDate    = a.scheduled_at.slice(0, 10);
     const isToday     = apptDate === todayStr;
-    const isNurse     = a.nurse_id === 's2';
-    const notCancelled = a.status !== 'cancelled';
-    return isToday && isNurse && notCancelled;
-  }).sort((a, b) => {
+    return isToday;
+  });
+  const activeAssigned = assignedAppts.filter(a => a.status !== 'completed');
+  const myAppts  = (todayAppts.length ? todayAppts : activeAssigned.length ? activeAssigned : assignedAppts).sort((a, b) => {
     const aStatus = apptStatuses[a.id] || a.status;
     const bStatus = apptStatuses[b.id] || b.status;
     if (statusOrder(aStatus) !== statusOrder(bStatus)) {
@@ -737,13 +757,13 @@ export default function NurseShift() {
       </div>
 
       {/* ── BOTTOM QUICK ACTIONS ── */}
-      <div className="fixed bottom-0 inset-x-0 bg-[rgba(10,10,10,0.96)] backdrop-blur-2xl border-t border-white/[0.06] px-4 pt-3 pb-5 z-[100]">
+      <div className="fixed bottom-0 inset-x-0 bg-[rgba(10,10,10,0.96)] backdrop-blur-2xl border-t border-white/[0.06] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] z-[100]">
         <div className="max-w-[512px] mx-auto flex gap-2.5">
 
           {/* Call Dispatch */}
           <a
             href={DISPATCH_PHONE}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 bg-white/5 border border-white/[0.06] rounded-xl no-underline text-white"
+            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-white/5 border border-white/[0.06] rounded-xl no-underline text-white"
           >
             <Phone size={18} className="text-white/50" />
             <span className="text-[11px] text-white font-semibold tracking-[0.04em]">DISPATCH</span>
@@ -752,7 +772,7 @@ export default function NurseShift() {
           {/* Supply Issue */}
           <button
             onClick={() => setSupplyModal(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 bg-white/5 border border-white/[0.06] rounded-xl cursor-pointer"
+            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-white/5 border border-white/[0.06] rounded-xl cursor-pointer"
           >
             <AlertCircle size={18} className="text-yellow-400" />
             <span className="text-[11px] text-white font-semibold tracking-[0.04em]">SUPPLY ISSUE</span>
@@ -761,7 +781,7 @@ export default function NurseShift() {
           {/* End Shift */}
           <button
             onClick={handleEndShift}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 bg-red-400/[0.08] border border-red-400/25 rounded-xl cursor-pointer"
+            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-red-400/[0.08] border border-red-400/25 rounded-xl cursor-pointer"
           >
             <LogOut size={18} className="text-red-400" />
             <span className="text-[11px] text-red-400 font-semibold tracking-[0.04em]">END SHIFT</span>

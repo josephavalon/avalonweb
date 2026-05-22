@@ -1,11 +1,11 @@
 /**
  * GET /api/integrations/acuity/test
  *
- * Verifies Acuity credentials from backend without exposing the API key.
- * Use this in the admin Acuity sync panel to confirm the connection.
+ * Verifies scheduling credentials from backend without exposing the API key.
+ * Use this in the admin scheduling sync panel to confirm the connection.
  *
  * Response:
- *   200  { ok: true, connected: true, provider: 'acuity', user_id: '...' }
+ *   200  { ok: true, connected: true, provider: 'scheduling', user_id: '...' }
  *   500  { ok: false, connected: false, error: '...' }
  */
 
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok:        true,
       connected: true,
-      provider:  'acuity',
+      provider:  'scheduling',
       user_id:   process.env.ACUITY_USER_ID,
       // Safe fields from /me — never include the API key
       account: {
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     return res.status(500).json({
       ok:        false,
       connected: false,
-      provider:  'acuity',
+      provider:  'scheduling',
       error:     err.message,
     });
   }

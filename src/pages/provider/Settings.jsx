@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  ToggleLeft, ToggleRight, CheckCircle, XCircle, Settings2,
+  ToggleLeft, ToggleRight, Settings2,
   Zap, AlertCircle,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
@@ -210,7 +210,7 @@ function ToggleRow({ item, value, onChange }) {
 
 function IntegrationRow({ item, toast }) {
   const handleConfigure = () => {
-    toast({ title: `${item.service}`, description: 'Integration configuration coming soon.' });
+    toast({ title: `${item.service}`, description: 'Integration configuration not active in local mode.' });
   };
 
   return (
@@ -381,7 +381,7 @@ export default function Settings() {
               </span>
             </div>
             <p className="font-body text-[11px] text-foreground/45 leading-relaxed">
-              No APIs are active. All integrations are placeholders. Configure buttons are non-functional until post-launch.
+              No APIs are active. All integrations are local fixtures. Configure buttons are non-functional until post-launch.
             </p>
           </div>
 

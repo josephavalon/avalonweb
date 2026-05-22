@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Circle, CircleDot, Sparkles, ArrowRight } from 'lucide-react';
-import { EASE, premiumCard, premiumHover, premiumTap } from '@/lib/motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Circle, CircleDot, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion(Link);
 
@@ -54,6 +54,83 @@ const TIERS = [
   },
 ];
 
+const COMPARE_ROWS = [
+  { label: 'Monthly IV credits',       starter: '1',     premium: '2',      vip: '4'    },
+  { label: 'Advanced drip credit',     starter: '—',     premium: '1×/mo',  vip: '1×/mo' },
+  { label: 'NAD+ / Exosomes credit',   starter: '—',     premium: '—',      vip: '1×/mo' },
+  { label: 'Add-on discount',          starter: '15%',   premium: '20%',    vip: '25%'  },
+  { label: 'Free add-on per visit',    starter: '—',     premium: '1',      vip: 'Unlimited' },
+  { label: 'Arrival window',           starter: 'Standard', premium: '90 min', vip: '90 min' },
+  { label: 'Dedicated nurse',          starter: '—',     premium: '—',      vip: '✓'    },
+  { label: 'Share with partner',       starter: '—',     premium: '—',      vip: '✓'    },
+];
+
+function TierComparator() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-foreground/[0.08] overflow-hidden mb-2">
+      <motion.button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        whileTap={{ scale: 0.99 }}
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.055] transition-colors"
+        aria-expanded={open}
+      >
+        <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50">Compare tiers</span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.32, ease: EASE }}
+          className="text-foreground/30"
+        >
+          <ChevronDown className="w-4 h-4" strokeWidth={2} />
+        </motion.span>
+      </motion.button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.38, ease: EASE }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="border-t border-foreground/[0.07]">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.07] bg-white/[0.02]">
+                <div className="px-4 py-2.5" />
+                {['Starter', 'Premium', 'VIP'].map((t) => (
+                  <div key={t} className="py-2.5 text-center">
+                    <span className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/40">{t}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Rows */}
+              {COMPARE_ROWS.map(({ label, starter, premium, vip }, i) => (
+                <div
+                  key={label}
+                  className={`grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.05] last:border-0 ${i % 2 === 0 ? '' : 'bg-white/[0.015]'}`}
+                >
+                  <div className="px-4 py-3 flex items-center">
+                    <span className="font-body text-[11px] text-foreground/60">{label}</span>
+                  </div>
+                  {[starter, premium, vip].map((val, j) => (
+                    <div key={j} className="py-3 flex items-center justify-center">
+                      <span className={`font-body text-[11px] text-center ${val === '—' ? 'text-foreground/20' : j === 2 ? 'text-accent' : 'text-foreground/75'}`}>
+                        {val}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function TierRow({ tier, index }) {
   const Icon = tier.icon;
   return (
@@ -103,11 +180,14 @@ export default function MembershipSection() {
         </motion.div>
 
         {/* Tier accordion rows */}
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mb-4">
           {TIERS.map((tier, i) => (
             <TierRow key={tier.name} tier={tier} index={i} />
           ))}
         </div>
+
+        {/* Tier comparator */}
+        <TierComparator />
 
         <div className="mt-6">
           <MotionLink

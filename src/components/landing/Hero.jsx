@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Tag, MapPin } from 'lucide-react';
+import { ArrowRight, Tag, MapPin, ShieldCheck, Stethoscope } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion(Link);
@@ -115,8 +115,10 @@ export default function Hero() {
           className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 md:mt-10"
         >
           {[
-            { icon: Tag,    label: 'No Hidden Fees' },
-            { icon: MapPin, label: 'SF Bay Area' },
+            { icon: Tag,        label: 'No Hidden Fees' },
+            { icon: MapPin,     label: 'SF Bay Area' },
+            { icon: ShieldCheck, label: 'Licensed RNs' },
+            { icon: Stethoscope, label: 'MD Supervised' },
           ].map(({ icon: Icon, label }, i) => (
             <React.Fragment key={label}>
               {i > 0 && <span className="hidden sm:block w-px h-3.5 bg-foreground/20" />}

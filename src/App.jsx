@@ -69,6 +69,7 @@ const BookNow = lazy(() => import('./pages/BookNow'));
 const Subscribe = lazy(() => import('./pages/Subscribe'));
 const ProtocolPage = lazy(() => import('./pages/therapies/ProtocolPage'));
 const Menu = lazy(() => import('./pages/Menu'));
+const Store = lazy(() => import('./pages/Store'));
 const BookingConfirmation = lazy(() => import('./pages/BookingConfirmation'));
 const Membership = lazy(() => import('./pages/Membership'));
 const Corporate = lazy(() => import('./pages/Corporate'));
@@ -90,7 +91,20 @@ const AdminCommand = lazy(() => import('./pages/admin/Command'));
 const AdminInventory = lazy(() => import('./pages/admin/Inventory'));
 const AdminBookings = lazy(() => import('./pages/admin/Bookings'));
 
-const HIDE_BOTTOM_NAV = ['/provider', '/admin', '/members', '/login', '/checkout'];
+const HIDE_BOTTOM_NAV = [
+  '/provider',
+  '/admin',
+  '/members',
+  '/login',
+  '/checkout',
+  '/book',
+  '/products',
+  '/store',
+  '/subscribe',
+  '/subscription',
+  '/custom',
+  '/menu',
+];
 
 const BottomNavGate = () => {
   const { pathname } = useLocation();
@@ -178,6 +192,7 @@ function AppRoutes() {
             <Route path="/subscribe" element={<Subscribe />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/menu" element={<Menu />} />
+            <Route path="/store" element={<Store />} />
             <Route path="/store/confirmation" element={<BookingConfirmation />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
@@ -208,7 +223,8 @@ function AppRoutes() {
             <Route path="/jet-lag" element={<JetLag />} />
             <Route path="/press" element={<Press />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/newsletter" element={<Navigate to="/book" replace />} />
+            <Route path="/newsletter" element={<Navigate to="/subscription" replace />} />
+            <Route path="/waitlist" element={<Navigate to="/book" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

@@ -1,17 +1,16 @@
 /**
  * Admin Booking Intake — /admin/bookings
  *
- * Pulls recent Acuity appointments and displays them in a live table.
- * No database required — reads directly from the Acuity API.
+ * Pulls recent scheduling appointments and displays them in a live table.
+ * No database required — reads directly from the scheduling API.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  RefreshCw, ChevronLeft, Calendar, Clock, MapPin,
-  User, Phone, Mail, Hash, Loader2, AlertCircle,
-  ChevronDown, ChevronUp, ExternalLink,
+  RefreshCw, ChevronLeft, Calendar, Clock, MapPin, Phone, Mail, Hash, AlertCircle,
+  ChevronDown, ExternalLink,
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -167,7 +166,7 @@ function ApptRow({ appt, defaultOpen = false }) {
                 </div>
               )}
 
-              {/* Acuity link */}
+              {/* Scheduling link */}
               {appt.confirmationPage && (
                 <div className="sm:col-span-2">
                   <a
@@ -176,7 +175,7 @@ function ApptRow({ appt, defaultOpen = false }) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground/40 hover:text-foreground transition-colors"
                   >
-                    View in Acuity <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                    Open appointment <ExternalLink className="w-3 h-3" strokeWidth={2} />
                   </a>
                 </div>
               )}
@@ -201,7 +200,7 @@ export default function AdminBookings() {
     setError(null);
     try {
       const params = new URLSearchParams({ max: '100', direction: 'asc' });
-      const res = await fetch(`/api/acuity-appointments?${params}`);
+      const res = await fetch(`/api/scheduling-appointments?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load appointments');
       setAppointments(Array.isArray(data) ? data : []);

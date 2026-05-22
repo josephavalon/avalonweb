@@ -13,6 +13,9 @@ import {
   Star, TrendingUp, Flame, Heart, ChevronRight,
   Sun, Moon, Sunset,
 } from 'lucide-react';
+import { buildAdminRisks } from '@/lib/osRules';
+import { readActivity, readLastBooking } from '@/lib/localOs';
+import { advanceLatestBooking, assignLatestBooking, buildDispatchBoard } from '@/lib/platformOps';
 
 // ─── Theme helpers (mirrors Navbar) ──────────────────────────────────────────
 const THEMES = ['dark', 'light', 'golden', 'dubs'];
@@ -66,6 +69,7 @@ const ST = {
   // WHITE/NEUTRAL bucket — pending, scheduled, in-progress, processing
   'New Request':        { cls: WHITE_CLS, dot: WHITE_DOT },
   'Contacted':          { cls: WHITE_CLS, dot: WHITE_DOT },
+  'Clearance Pending':  { cls: WHITE_CLS, dot: WHITE_DOT },
   'Intake Pending':     { cls: WHITE_CLS, dot: WHITE_DOT },
   'Consent Pending':    { cls: WHITE_CLS, dot: WHITE_DOT },
   'Nurse Assigned':     { cls: WHITE_CLS, dot: WHITE_DOT },
@@ -368,23 +372,19 @@ function FilterChips({ options, active, onChange }) {
 
 // ─── Risk Card ────────────────────────────────────────────────────────────────
 function RiskCard() {
-  const risks = [
-    { label:'Clinical clearance', detail:'2 visits blocked', level:'red' },
-    { label:'Nurse assignment',   detail:'4 visits unassigned', level:'red' },
-    { label:'Payments',           detail:'3 pending', level:'amber' },
-    { label:'Inventory',          detail:'1 kit restock before visits', level:'amber' },
-  ];
+  const risks = buildAdminRisks(REQUESTS, INVENTORY);
+  const critical = risks.filter((risk) => risk.level === 'red').length;
   return (
     <AdminAccordion
       title="Launch Risks"
       eyebrow="Today"
       icon={AlertTriangle}
-      meta="2 critical"
+      meta={`${critical} critical`}
     >
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {risks.map((r, i) => (
           <div key={i} className="flex items-center gap-2 rounded-xl border border-foreground/[0.06] bg-background/[0.22] px-3 py-2.5">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${r.level === 'red' ? 'bg-red-400' : 'bg-amber-400'}`} />
+            <span className={`h-2 w-2 shrink-0 rounded-full ${r.level === 'red' ? 'bg-red-400' : r.level === 'amber' ? 'bg-amber-400' : 'bg-accent'}`} />
             <div className="min-w-0">
               <p className="truncate font-body text-xs font-semibold text-foreground/80">{r.label}</p>
               <p className="truncate font-body text-[10px] text-foreground/42">{r.detail}</p>
@@ -422,10 +422,17 @@ const ACT_COLORS = {
 };
 
 function ActivityFeed() {
+  const localActivity = readActivity(5).map((item) => ({
+    id: item.id,
+    text: item.text,
+    time: 'Local',
+    type: 'success',
+  }));
+  const items = [...localActivity, ...ACTIVITY].slice(0, 12);
   return (
-    <AdminAccordion title="Activity Feed" icon={Activity} meta={`${ACTIVITY.length} events`}>
+    <AdminAccordion title="Activity Feed" icon={Activity} meta={`${items.length} events`}>
       <div className="-mx-4 -my-4 divide-y divide-foreground/[0.05]">
-        {ACTIVITY.map((a) => (
+        {items.map((a) => (
           <div key={a.id} className="flex items-start gap-3 px-4 py-2.5">
             <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${ACT_COLORS[a.type]}`} />
             <div className="flex-1 min-w-0">
@@ -562,15 +569,90 @@ function RequestCard({ req, onOpen }) {
 // ─── Visit Detail Sheet ───────────────────────────────────────────────────────
 const VISIT_STATUSES = [
   'New Request','Contacted','Confirmed','Intake Pending','Consent Pending',
-  'GFE Pending','Cleared','Nurse Assigned','Payment Pending','Ready for Visit',
-  'Completed','Follow-Up Due','Cancelled',
+  'Clearance Pending','GFE Pending','Cleared','Nurse Assigned','Payment Pending','Ready for Visit',
+  'En Route','Arrived','In Progress','Completed','Follow-Up Due','Cancelled',
 ];
 
-function VisitDetailSheet({ req, onClose }) {
+function latestBookingToRequest(booking) {
+  if (!booking) return null;
+  const contact = booking.contact || {};
+  const guestCount = Number(booking.guests || 1);
+  const status = booking.status === 'Scheduling received' ? 'New Request' : booking.status || 'New Request';
+  return {
+    id: `latest-${booking.id || booking.reference || 'booking'}`,
+    client: contact.name || [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'New client',
+    phone: contact.phone || 'Not provided',
+    email: contact.email || 'Not provided',
+    locationType: booking.locationType || 'home',
+    address: booking.address || 'Address pending',
+    city: booking.city || booking.zip || 'SF Bay Area',
+    time: [booking.date, booking.time].filter(Boolean).join(' ') || 'Time pending',
+    therapy: booking.service || 'IV Therapy Session',
+    addons: booking.addOns || [],
+    addOns: booking.addOns || [],
+    total: Number(booking.subtotal || 0),
+    status,
+    source: booking.source || 'Website',
+    priority: booking.gfe === 'Pending' || booking.nurse === 'Unassigned' ? 'High' : 'New',
+    intake: booking.intake || 'Pending',
+    consent: booking.consent || 'Pending',
+    gfe: booking.gfe || 'Pending',
+    nurse: booking.nurse || 'Unassigned',
+    payment: booking.payment || 'Pending',
+    guests: Number.isFinite(guestCount) ? guestCount : 1,
+    notes: [
+      booking.notes,
+      booking.reference ? `Reference: ${booking.reference}` : null,
+      booking.nextStep ? `Next: ${booking.nextStep}` : null,
+    ].filter(Boolean).join('\n'),
+    created: booking.updatedAt ? new Date(booking.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Latest',
+  };
+}
+
+function VisitDetailSheet({ req, onClose, onUpdate }) {
   const [status, setStatus] = useState(() => localStorage.getItem(`av.visit.status.${req.id}`) || req.status);
+  const [nurse, setNurse] = useState(req.nurse || 'Unassigned');
   const [note, setNote] = useState(req.notes || '');
   const [statusOpen, setStatusOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [transitionError, setTransitionError] = useState('');
+  const isLatest = String(req.id).startsWith('latest-');
+
+  const applyStatus = (nextStatus) => {
+    setTransitionError('');
+    setStatus(nextStatus);
+    localStorage.setItem(`av.visit.status.${req.id}`, nextStatus);
+    if (isLatest) {
+      const result = advanceLatestBooking(nextStatus, {
+        gfe: ['Confirmed', 'Cleared', 'Nurse Assigned', 'Ready for Visit', 'En Route', 'Arrived', 'In Progress', 'Completed'].includes(nextStatus) ? 'Cleared' : req.gfe,
+        payment: nextStatus === 'Completed' ? 'Paid' : req.payment,
+        actor: 'admin',
+      });
+      if (!result.ok) {
+        setStatus(req.status);
+        localStorage.setItem(`av.visit.status.${req.id}`, req.status);
+        setTransitionError(result.errors.join(' '));
+        return;
+      }
+      if (result.booking) onUpdate?.(latestBookingToRequest(result.booking));
+    }
+    setStatusOpen(false);
+  };
+
+  const applyNurse = (nurseName) => {
+    setTransitionError('');
+    setNurse(nurseName);
+    if (isLatest) {
+      const result = assignLatestBooking(nurseName);
+      if (!result.ok) {
+        setNurse(req.nurse || 'Unassigned');
+        setTransitionError(result.errors.join(' '));
+        return;
+      }
+      if (result.booking) onUpdate?.(latestBookingToRequest(result.booking));
+    }
+    setAssignOpen(false);
+  };
 
   return (
     <motion.div
@@ -607,7 +689,7 @@ function VisitDetailSheet({ req, onClose }) {
             </div>
           </div>
           <button type="button" onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
             <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
@@ -712,7 +794,7 @@ function VisitDetailSheet({ req, onClose }) {
                       <button
                         key={s}
                         type="button"
-                        onClick={() => { setStatus(s); localStorage.setItem(`av.visit.status.${req.id}`, s); setStatusOpen(false); }}
+                        onClick={() => applyStatus(s)}
                         className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl border text-left transition-all ${
                           status === s ? 'border-foreground/30 bg-foreground/[0.06]' : 'border-foreground/[0.06] hover:border-foreground/20'
                         }`}
@@ -737,7 +819,7 @@ function VisitDetailSheet({ req, onClose }) {
             >
               <div className="flex items-center gap-2">
                 <Syringe className="w-4 h-4 text-foreground/40" strokeWidth={1.5} />
-                <span className="font-body text-sm text-foreground/70">{req.nurse}</span>
+                <span className="font-body text-sm text-foreground/70">{nurse}</span>
               </div>
               <ChevronDown className={`w-4 h-4 text-foreground/40 transition-transform ${assignOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
             </button>
@@ -751,6 +833,7 @@ function VisitDetailSheet({ req, onClose }) {
                   <div className="pt-2 space-y-1.5">
                     {NURSES.filter(n => n.status !== 'Off Duty').map((n) => (
                       <button key={n.id} type="button"
+                        onClick={() => applyNurse(n.name)}
                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-foreground/[0.06] hover:border-foreground/20 text-left"
                       >
                         <div>
@@ -765,6 +848,13 @@ function VisitDetailSheet({ req, onClose }) {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Notes */}
+          {transitionError && (
+            <div className="rounded-xl border border-red-400/25 bg-red-400/[0.08] px-4 py-3">
+              <p className="font-body text-xs leading-relaxed text-red-300">{transitionError}</p>
+            </div>
+          )}
 
           {/* Notes */}
           <div>
@@ -792,10 +882,16 @@ function VisitDetailSheet({ req, onClose }) {
              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)' }}>
           <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth:'none' }}>
             <QuickBtn icon={MessageSquare} label="Text Client"   />
-            <QuickBtn icon={Syringe}       label="Assign Nurse"  />
-            <QuickBtn icon={Shield}        label="Mark Cleared"  />
-            <QuickBtn icon={CreditCard}    label="Mark Paid"     />
-            <QuickBtn icon={CheckCircle}   label="Complete"      accent />
+            <QuickBtn icon={Syringe}       label="Assign Nurse" onClick={() => setAssignOpen(true)} />
+            <QuickBtn icon={Shield}        label="Mark Cleared" onClick={() => applyStatus('Cleared')} />
+            <QuickBtn icon={CreditCard}    label="Mark Paid" onClick={() => {
+              if (isLatest) {
+                const result = advanceLatestBooking(status, { payment: 'Paid', override: true, reason: 'Payment marked ready' });
+                if (!result.ok) setTransitionError(result.errors.join(' '));
+                if (result.booking) onUpdate?.(latestBookingToRequest(result.booking));
+              }
+            }} />
+            <QuickBtn icon={CheckCircle}   label="Complete" onClick={() => applyStatus('Completed')} accent />
           </div>
         </div>
       </div>
@@ -805,6 +901,9 @@ function VisitDetailSheet({ req, onClose }) {
 
 // ─── Command Screen ───────────────────────────────────────────────────────────
 function CommandScreen({ onSelectRequest }) {
+  const lastBooking = readLastBooking();
+  const latestRequest = latestBookingToRequest(lastBooking);
+  const dispatchBoard = buildDispatchBoard(REQUESTS, INVENTORY, lastBooking);
   const tiles = [
     { icon: Plus,          value: '8',    label: 'New',       sub: '2 same-day',      urgent: false },
     { icon: Shield,        value: '4',    label: 'Clearance', sub: '1 flagged',       urgent: true  },
@@ -836,9 +935,58 @@ function CommandScreen({ onSelectRequest }) {
       {/* Risk card */}
       <RiskCard />
 
+      <AdminAccordion title="Dispatch Board" icon={Calendar} meta={`${dispatchBoard.length} lanes`} defaultOpen>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {dispatchBoard.map((lane) => (
+            <button
+              key={lane.id}
+              type="button"
+              onClick={() => {
+                if (lane.id === 'latest-booking' && latestRequest) onSelectRequest(latestRequest);
+              }}
+              className={`block w-full text-left ${lane.id === 'latest-booking' ? '' : 'cursor-default'}`}
+            >
+              <Card className={`p-4 transition-all ${lane.id === 'latest-booking' ? 'hover:border-accent/25 hover:bg-card/[0.72]' : ''}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/35">{lane.label}</p>
+                  <p className="mt-2 font-body text-sm leading-snug text-foreground">{lane.detail}</p>
+                </div>
+                <span className={`shrink-0 rounded-full border px-2.5 py-1 font-body text-[8px] uppercase tracking-[0.16em] ${PRIORITY_COLOR[lane.priority] || PRIORITY_COLOR.Low}`}>
+                  {lane.status}
+                </span>
+              </div>
+              </Card>
+            </button>
+          ))}
+        </div>
+      </AdminAccordion>
+
       {/* Needs action now */}
       <AdminAccordion title="Needs Action Now" icon={AlertCircle} meta={`${urgent.length} blocked`} defaultOpen>
         <div className="space-y-2.5">
+          {latestRequest && (
+            <button
+              type="button"
+              onClick={() => onSelectRequest(latestRequest)}
+              className="block w-full text-left"
+            >
+              <Card className="p-4 transition-all hover:border-accent/25 hover:bg-card/[0.72]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-body text-[9px] tracking-[0.22em] uppercase text-accent">Latest Booking Handoff</p>
+                  <p className="mt-2 font-heading text-2xl uppercase leading-none text-foreground">{lastBooking.service}</p>
+                  <p className="mt-2 font-body text-xs leading-relaxed text-foreground/55">
+                    {[lastBooking.date, lastBooking.time, lastBooking.address].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.18em] text-accent">
+                  {lastBooking.status || 'New'}
+                </span>
+              </div>
+              </Card>
+            </button>
+          )}
           {urgent.slice(0, 3).map((r) => (
             <RequestCard key={r.id} req={r} onOpen={onSelectRequest} />
           ))}
@@ -1300,7 +1448,7 @@ function MoreMenuSheet({ onClose, onNav, onSignOut }) {
       <div className="flex items-center justify-between px-5 py-3 border-b border-foreground/[0.06]">
         <p className="font-heading text-xl text-foreground uppercase tracking-wide">More</p>
         <button type="button" onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground/[0.05] text-foreground/50">
           <X className="w-4 h-4" strokeWidth={1.5} />
         </button>
       </div>
@@ -1423,10 +1571,16 @@ export default function Command() {
   const [screen, setScreen]               = useState('command');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [moreOpen, setMoreOpen]           = useState(false);
+  const [opsTick, setOpsTick]             = useState(0);
 
   function handleSignOut() {
     signOut();
     navigate('/login', { replace: true });
+  }
+
+  function handleRequestUpdate(nextRequest) {
+    setSelectedRequest(nextRequest);
+    setOpsTick((value) => value + 1);
   }
 
   const screenTitles = {
@@ -1521,7 +1675,7 @@ export default function Command() {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.25, ease: EASE }}
               >
-                {screen === 'command'     && <CommandScreen   onSelectRequest={setSelectedRequest} />}
+                {screen === 'command'     && <CommandScreen key={opsTick} onSelectRequest={setSelectedRequest} />}
                 {screen === 'requests'    && <RequestsScreen  onSelectRequest={setSelectedRequest} />}
                 {screen === 'nurses'      && <NursesScreen />}
                 {screen === 'clearance'   && <ClearanceScreen />}
@@ -1589,6 +1743,7 @@ export default function Command() {
           <VisitDetailSheet
             req={selectedRequest}
             onClose={() => setSelectedRequest(null)}
+            onUpdate={handleRequestUpdate}
           />
         )}
       </AnimatePresence>

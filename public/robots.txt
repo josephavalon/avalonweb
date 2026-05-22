@@ -2,5 +2,11 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /provider
+Disallow: /provider/
+Disallow: /members
+Disallow: /members/
 
 Sitemap: https://avalonvitality.co/sitemap.xml

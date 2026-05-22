@@ -26,7 +26,7 @@ export default function ServiceZone() {
           We Come to You
         </h2>
         <p className="font-body text-sm text-foreground/55 mb-5 max-w-xl">
-          Serving San Francisco and the Peninsula. More Bay Area coverage coming soon.
+          Serving San Francisco and the Peninsula. More Bay Area coverage not active in local mode.
         </p>
 
         {/* All neighborhood names in a single paragraph — full SEO coverage, minimal DOM */}

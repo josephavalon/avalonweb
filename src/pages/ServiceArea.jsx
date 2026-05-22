@@ -6,6 +6,7 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { COVERED_ZIPS } from '@/lib/serviceArea';
+import { matchServiceArea } from '@/lib/osRules';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -141,12 +142,12 @@ const serviceAreaJsonLd = {
 
 function ZipChecker() {
   const [zip, setZip] = useState('');
-  const [result, setResult] = useState(null); // null | 'covered' | 'not_covered'
+  const [result, setResult] = useState(null);
 
   const check = () => {
-    const clean = zip.trim().slice(0, 5);
-    if (clean.length < 5) return;
-    setResult(COVERED_ZIPS.has(clean) ? 'covered' : 'not_covered');
+    const clean = zip.trim();
+    if (clean.length < 3) return;
+    setResult(matchServiceArea(clean, ZONES, COVERED_ZIPS));
   };
 
   const handleKey = (e) => {
@@ -154,7 +155,7 @@ function ZipChecker() {
   };
 
   const handleChange = (e) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+    const val = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '').slice(0, 32);
     setZip(val);
     if (result) setResult(null);
   };
@@ -170,14 +171,14 @@ function ZipChecker() {
             value={zip}
             onChange={handleChange}
             onKeyDown={handleKey}
-            placeholder="Enter your zip code"
-            maxLength={5}
+            placeholder="Enter ZIP or city"
+            maxLength={32}
             className="w-full pl-11 pr-4 py-4 rounded-2xl font-body text-sm text-foreground bg-foreground/[0.04] border border-foreground/[0.10] placeholder:text-foreground/25 focus:outline-none focus:border-foreground/30 transition-colors"
           />
         </div>
         <button
           onClick={check}
-          disabled={zip.length < 5}
+          disabled={zip.trim().length < 3}
           className="px-6 py-4 rounded-2xl font-body text-xs tracking-[0.2em] uppercase font-semibold bg-foreground text-background hover:bg-foreground/85 disabled:opacity-30 transition-colors shrink-0"
         >
           Check
@@ -185,7 +186,7 @@ function ZipChecker() {
       </div>
 
       <AnimatePresence mode="wait">
-        {result === 'covered' && (
+        {result?.status === 'covered' && (
           <motion.div
             key="covered"
             initial={{ opacity: 0, y: 8 }}
@@ -196,8 +197,8 @@ function ZipChecker() {
           >
             <CheckCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
-              <p className="font-body text-sm text-foreground font-medium">We cover {zip}.</p>
-              <p className="font-body text-xs text-foreground/50 mt-0.5">Same-day availability in most cases. Request your visit to confirm timing.</p>
+              <p className="font-body text-sm text-foreground font-medium">We cover {result.label}.</p>
+              <p className="font-body text-xs text-foreground/50 mt-0.5">{result.zone} · {result.window}. Request your visit to confirm timing.</p>
               <Link
                 to="/store"
                 className="inline-flex items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-accent hover:text-foreground transition-colors"
@@ -207,7 +208,7 @@ function ZipChecker() {
             </div>
           </motion.div>
         )}
-        {result === 'not_covered' && (
+        {result?.status === 'not_covered' && (
           <motion.div
             key="not"
             initial={{ opacity: 0, y: 8 }}

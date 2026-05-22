@@ -8,11 +8,11 @@ import HowItWorks from '../components/landing/HowItWorks';
 import WhatIsIV from '../components/landing/WhatIsIV';
 import TreatmentsTeaser from '../components/landing/TreatmentsTeaser';
 import MembershipSection from '../components/landing/MembershipSection';
-import WaitlistSection from '../components/landing/WaitlistSection';
 import Footer from '../components/landing/Footer';
 import Reviews from '../components/landing/Reviews';
 import ChannelCards from '../components/landing/ChannelCards';
 import StickyBookBar from '../components/landing/StickyBookBar';
+import ComparisonTable from '../components/landing/ComparisonTable';
 
 // Section order — conversion funnel:
 // 1. Hero: promise + social proof + dual CTA  (ATF — fills 100svh)
@@ -22,7 +22,6 @@ import StickyBookBar from '../components/landing/StickyBookBar';
 // 5. ChannelCards: corporate / events / hotel pathways
 // 6. Reviews: earned trust
 // 7. WhatIsIV: education for skeptics
-// 8. WaitlistSection: secondary capture
 //
 // Note: Reveal wrappers removed — each section owns its per-card whileInView
 // animations. Stacking Reveal (opacity 0→1) on top of per-card (opacity 0→1)
@@ -47,8 +46,8 @@ export default function Home() {
       <MembershipSection />
       <Reviews />
       <ChannelCards />
+      <ComparisonTable />
       <WhatIsIV />
-      <WaitlistSection />
       <StickyBookBar />
 
       <div className="pb-24 md:pb-0">

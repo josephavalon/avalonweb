@@ -91,7 +91,7 @@ export default function MembershipDashboard() {
 
             {/* Forgot password */}
             <div className="pt-1">
-              <a href="#" className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase">
+              <a href="mailto:support@avalonvitality.co?subject=Password%20Help" className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase">
                 Forgot password?
               </a>
             </div>

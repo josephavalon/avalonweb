@@ -1,9 +1,9 @@
 /**
  * POST /api/integrations/acuity/webhook
  *
- * Receives Acuity Scheduling webhook events and syncs them into Avalon OS.
+ * Receives scheduling webhook events and syncs them into Avalon OS.
  *
- * Acuity webhook configuration:
+ * Scheduling webhook configuration:
  *   Dashboard → Integrations → Webhooks → Add Webhook
  *   URL: https://<your-domain>/api/integrations/acuity/webhook
  *   Events: scheduled, rescheduled, canceled, changed
@@ -17,7 +17,7 @@
  *   Customers are found-or-created in the `users` + `customer_profiles` tables.
  *
  *   Until Supabase is wired, events are logged to console and returned 200
- *   so Acuity does not retry endlessly.
+ *   so the scheduling provider does not retry endlessly.
  */
 
 import crypto from 'crypto';
@@ -64,7 +64,7 @@ function appointmentToBooking(appt) {
 // ── Main handler ───────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  // Acuity sends POST; respond quickly so it doesn't retry
+  // Provider sends POST; respond quickly so it doesn't retry
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
   const db = getSupabase();
 
   if (!db) {
-    // Supabase not yet configured — log and return 200 so Acuity doesn't retry
+    // Supabase not yet configured — log and return 200 so provider doesn't retry
     console.warn('[acuity/webhook] Supabase not configured — event logged only');
     return res.status(200).json({ ok: true, queued: false, note: 'db_not_configured' });
   }
@@ -129,7 +129,7 @@ export default async function handler(req, res) {
 
     const eventId = eventRow?.id;
 
-    // ── 3. Fetch full appointment from Acuity ──────────────────────────────
+    // ── 3. Fetch full appointment from scheduling provider ─────────────────
     let appt;
     try {
       appt = await getAppointment(apptId);
@@ -186,7 +186,7 @@ export default async function handler(req, res) {
     }
 
     if (!customerId) {
-      // Create a new customer user from Acuity data
+      // Create a new customer user from scheduling data
       const isBeta = email?.endsWith('@beta.avalon.local') || false;
       const { data: newUser, error: userErr } = await db
         .from('users')
@@ -270,7 +270,7 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('[acuity/webhook] unhandled error', err.message);
-    // Still return 200 — we don't want Acuity to retry storms
+    // Still return 200 — we don't want retry storms
     return res.status(200).json({ ok: false, error: err.message });
   }
 }

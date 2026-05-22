@@ -53,7 +53,7 @@ export default function HomeFAQ() {
                     ? <Minus className="w-4 h-4 text-accent shrink-0" strokeWidth={2} />
                     : <Plus className="w-4 h-4 text-accent shrink-0" strokeWidth={2} />}
                 </div>
-                <div className={`overflow-hidden transition-[max-height,margin,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'max-h-40 opacity-100 mt-3 md:mt-4' : 'max-h-0 opacity-0'}`}>
+                <div className={`overflow-hidden transition-[max-height,margin,opacity] duration-500 ease-editorial ${isOpen ? 'max-h-40 opacity-100 mt-3 md:mt-4' : 'max-h-0 opacity-0'}`}>
                   <p className="font-body text-sm md:text-base text-foreground/70 leading-relaxed">{item.a}</p>
                 </div>
               </motion.button>

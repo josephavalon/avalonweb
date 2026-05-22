@@ -53,7 +53,7 @@ export default function OurStory() {
             alt="Golden Gate Bridge at dusk"
             className="w-full h-full object-cover opacity-50"
             loading="eager"
-            fetchpriority="high"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         </div>

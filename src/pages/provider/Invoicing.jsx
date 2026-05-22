@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '@/layouts/AdminLayout';
 import PageShell from '@/components/admin/PageShell';
-import { REQUESTS } from '@/data/commandMockData';
+import { REQUESTS } from '@/fixtures/commandMockData';
 import { ShieldCheck, AlertTriangle, Clock, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -395,7 +395,7 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
                   <QBtn
                     label="Contact Client"
                     variant="ghost"
-                    onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.client} — coming soon.` })}
+                    onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.client} — not active in local mode.` })}
                   />
                 </div>
               </div>

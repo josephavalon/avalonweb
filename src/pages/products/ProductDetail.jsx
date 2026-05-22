@@ -11,6 +11,8 @@ import Footer from '@/components/landing/Footer';
 import { useCart } from '@/context/CartContext';
 import { getProduct } from '@/data/products';
 import { useSeo } from '@/lib/seo';
+import { appendActivity } from '@/lib/localOs';
+import { buildProductJsonLd } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -23,36 +25,65 @@ function productPrice(product) {
   return product.oneTime || product.price || '$250';
 }
 
-function ProductBag({ image, name }) {
+function ProductMedia({ product, compact = false }) {
+  const { image, motionVideo, name } = product;
+  const transparentMedia = product.transparentMedia || image?.includes('-cutout.');
+  const mediaPadding = compact ? (transparentMedia ? 'p-0' : 'p-2') : (transparentMedia ? 'p-2' : 'p-5');
+
+  if (motionVideo) {
+    return (
+      <video
+        src={motionVideo}
+        poster={image}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className={`h-full w-full object-contain ${mediaPadding}`}
+        aria-label={name}
+      />
+    );
+  }
+
+  return image ? (
+    <motion.img
+      src={image}
+      alt={name}
+      className={`h-full w-full object-contain drop-shadow-[0_22px_42px_rgba(41,31,21,0.20)] ${mediaPadding}`}
+      initial={{ y: 8, scale: 0.985 }}
+      animate={{ y: [8, -3, 8], scale: [0.985, 1, 0.985] }}
+      transition={{ duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
+    />
+  ) : (
+    <div className="flex h-full items-center justify-center px-10 text-center">
+      <div>
+        <p className="font-heading text-4xl tracking-[0.12em] text-[#fff3dc]">AVALON</p>
+        <p className="font-body text-[10px] tracking-[0.48em] text-[#fff3dc]/40">VITALITY</p>
+        <p className="mt-8 font-body text-xs uppercase tracking-[0.24em] text-[#fff3dc]/45">{name}</p>
+      </div>
+    </div>
+  );
+}
+
+function ProductBag({ product }) {
   return (
-    <div className="relative isolate aspect-[0.76] min-h-[30rem] overflow-hidden rounded-lg border border-foreground/[0.08] bg-[linear-gradient(135deg,#f2eee6,#d9d0c4_48%,#f9f8f4)]">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.9),transparent_38%),radial-gradient(circle_at_50%_82%,rgba(130,105,75,0.22),transparent_46%)]" />
-      {image ? (
-        <img
-          src={image}
-          alt={name}
-          className="h-full w-full object-contain p-7 drop-shadow-[0_22px_42px_rgba(41,31,21,0.22)]"
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center px-10 text-center">
-          <div>
-            <p className="font-heading text-4xl tracking-[0.12em] text-foreground">AVALON</p>
-            <p className="font-body text-[10px] tracking-[0.48em] text-foreground/40">VITALITY</p>
-            <p className="mt-8 font-body text-xs uppercase tracking-[0.24em] text-foreground/45">{name}</p>
-          </div>
-        </div>
-      )}
+    <div className="relative isolate aspect-[0.78] min-h-[30rem] overflow-hidden rounded-[1.75rem] border border-[#f4e6cb]/12 bg-[#160f0a]/82 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_42%_18%,rgba(244,230,203,0.13),transparent_34%),radial-gradient(circle_at_70%_92%,rgba(184,127,44,0.10),transparent_44%)]" />
+      <div className="relative h-full overflow-hidden rounded-[1.25rem] border border-[#f4e6cb]/10 bg-[linear-gradient(135deg,#f8f1e5,#e8dcc8)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-1/3 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),transparent)]" />
+        <ProductMedia product={product} />
+      </div>
     </div>
   );
 }
 
 function TrustItem({ icon: Icon, title, sub }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center md:flex-row md:text-left">
       <Icon className="h-4 w-4 shrink-0 text-foreground/55" strokeWidth={1.6} />
-      <div className="min-w-0">
-        <p className="font-body text-[10px] font-semibold leading-tight text-foreground">{title}</p>
-        <p className="font-body text-[9px] leading-tight text-foreground/40">{sub}</p>
+      <div className="min-w-0 max-w-full">
+        <p className="font-body text-[9px] font-semibold leading-tight text-foreground md:text-[10px]">{title}</p>
+        <p className="hidden font-body text-[9px] leading-tight text-foreground/40 sm:block">{sub}</p>
       </div>
     </div>
   );
@@ -117,20 +148,7 @@ export default function ProductDetail() {
     title: match ? `${match.treatment.name} — Avalon Vitality` : 'Product Not Found — Avalon Vitality',
     description: match?.treatment.desc || 'Avalon Vitality mobile IV therapy product page.',
     path: match ? `/products/${category}/${slug}` : undefined,
-    jsonLd: match ? {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: match.treatment.name,
-      image: match.treatment.image ? `https://avalonvitality.co${match.treatment.image}` : undefined,
-      description: match.treatment.desc,
-      brand: { '@type': 'Brand', name: 'Avalon Vitality' },
-      offers: {
-        '@type': 'Offer',
-        priceCurrency: 'USD',
-        price: numericPrice,
-        availability: 'https://schema.org/InStock',
-      },
-    } : undefined,
+    jsonLd: match ? buildProductJsonLd({ category: match.category, categorySlug: category, product: match.treatment, slug, price: numericPrice }) : undefined,
   });
 
   if (!match) {
@@ -140,8 +158,8 @@ export default function ProductDetail() {
         <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 text-center">
           <p className="mb-3 font-body text-[10px] uppercase tracking-[0.32em] text-accent">Not found</p>
           <h1 className="font-heading text-5xl uppercase leading-none text-foreground">Product missing</h1>
-          <Link to="/store" className="mt-8 rounded-full bg-foreground px-8 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background">
-            Browse Store
+          <Link to="/menu" className="mt-8 rounded-full bg-foreground px-8 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background">
+            Browse Menu
           </Link>
         </div>
         <Footer />
@@ -160,14 +178,15 @@ export default function ProductDetail() {
       price: numericPrice,
       type: category === 'iv-vitamins' ? 'iv' : 'addon',
     });
-    navigate('/checkout');
+    appendActivity(`Added product to checkout: ${treatment.name}`, { role: 'client', product: slug });
+    navigate(`/book?protocol=${encodeURIComponent(slug)}`);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="px-4 pb-16 pt-24 md:px-8 md:pt-28">
+      <main className="px-4 pb-36 pt-24 md:px-8 md:pb-16 md:pt-28">
         <div className="mx-auto max-w-7xl">
           <Link
             to={cat.backTo}
@@ -177,14 +196,14 @@ export default function ProductDetail() {
             {cat.backLabel}
           </Link>
 
-          <section className="grid gap-8 md:grid-cols-[0.84fr_1fr] md:gap-12 lg:gap-16">
+          <section className="grid gap-6 md:grid-cols-[0.84fr_1fr] md:gap-12 lg:gap-16">
             <motion.div
               initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.75, ease: EASE }}
               className="hidden md:block"
             >
-              <ProductBag image={treatment.image} name={treatment.name} />
+              <ProductBag product={treatment} />
             </motion.div>
 
             <motion.div
@@ -193,26 +212,23 @@ export default function ProductDetail() {
               transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
               className="md:pt-3"
             >
-              <div className="relative min-h-[21.5rem] overflow-hidden rounded-lg border border-foreground/[0.08] bg-[linear-gradient(135deg,#fbfaf6,#eee8df)] p-5 md:hidden">
-                <div className="relative z-10 max-w-[55%]">
-                  <p className="mb-3 inline-flex rounded-full bg-foreground/[0.06] px-2.5 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.18em] text-foreground/55">
+              <div className="relative min-h-[22rem] overflow-hidden rounded-[1.75rem] border border-[#f4e6cb]/12 bg-[#160f0a]/88 p-5 shadow-[0_22px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl md:hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(244,230,203,0.13),transparent_36%),radial-gradient(circle_at_90%_75%,rgba(184,127,44,0.12),transparent_45%)]" />
+                <div className="relative z-10 max-w-[53%]">
+                  <p className="mb-3 inline-flex rounded-full border border-[#f4e6cb]/12 bg-[#f4e6cb]/8 px-2.5 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.18em] text-[#f4e6cb]/65">
                     {treatment.name.toLowerCase().includes('myers') ? 'Most Popular' : cat.categoryLabel}
                   </p>
-                  <h1 className="font-serif text-[2rem] leading-[0.98] tracking-tight text-foreground">
+                  <h1 className="font-heading text-[clamp(2.2rem,10vw,3rem)] uppercase leading-[0.86] tracking-tight text-[#fff3dc] [overflow-wrap:normal] [word-break:normal]">
                     {treatment.name}
                   </h1>
-                  <p className="mt-3 font-body text-[11px] leading-relaxed text-foreground/62">
+                  <p className="mt-3 font-body text-[11px] leading-relaxed text-[#fff3dc]/58">
                     {treatment.desc || cat.description}
                   </p>
-                  <p className="mt-5 font-heading text-2xl text-foreground">{price}</p>
+                  <p className="mt-5 font-heading text-2xl text-[#fff3dc]">{price}</p>
                 </div>
-                {treatment.image && (
-                  <img
-                    src={treatment.image}
-                    alt={treatment.name}
-                    className="absolute bottom-4 right-0 h-[76%] w-[52%] object-contain drop-shadow-[0_18px_35px_rgba(41,31,21,0.22)]"
-                  />
-                )}
+                <div className="absolute bottom-4 right-4 h-[76%] w-[43%] overflow-hidden rounded-[1.1rem] border border-[#f4e6cb]/12 bg-[linear-gradient(135deg,#f8f1e5,#e8dcc8)]">
+                  <ProductMedia product={treatment} compact />
+                </div>
               </div>
 
               <div className="hidden md:block">
@@ -231,13 +247,13 @@ export default function ProductDetail() {
                 <p className="mt-7 font-heading text-3xl text-foreground">{price}</p>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 gap-3 border-y border-foreground/[0.10] py-5 md:mt-8 md:grid-cols-3 md:gap-4">
+              <div className="mt-5 grid grid-cols-3 gap-2 border-y border-foreground/[0.10] py-4 md:mt-8 md:gap-4 md:py-5">
                 <TrustItem icon={Truck} title="Flat pricing" sub="No surprise fees" />
                 <TrustItem icon={UserRoundCheck} title="Licensed RN" sub="Clinician delivered" />
                 <TrustItem icon={ShieldCheck} title="Medical oversight" sub="Your safety first" />
               </div>
 
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <div className="mt-7 hidden gap-3 sm:grid-cols-2 md:grid">
                 <button
                   type="button"
                   onClick={buyNow}
@@ -247,14 +263,14 @@ export default function ProductDetail() {
                 </button>
                 <Link
                   to="/subscription"
-                  className="flex items-center justify-center gap-2 rounded-md border border-foreground/[0.16] bg-white/[0.45] px-7 py-4 font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground/32"
+                  className="flex items-center justify-center gap-2 rounded-md border border-[#f4e6cb] bg-[#f4e6cb] px-7 py-4 font-body text-xs font-semibold uppercase tracking-[0.14em] text-[#151515] shadow-[0_14px_34px_rgba(244,230,203,0.10)] transition-colors hover:bg-[#fff0d6]"
                 >
                   Subscribe & Save 10%
                 </Link>
               </div>
 
-              <div className="mt-8">
-                <AccordionRow title="What's Included" defaultOpen>
+              <div className="mt-8 overflow-hidden rounded-[1.35rem] border border-[#f4e6cb]/12 bg-white/[0.035] px-5 backdrop-blur-xl">
+                <AccordionRow title="What's Included">
                   <div className="grid gap-2 sm:grid-cols-2">
                     {included.map((item) => (
                       <div key={item} className="flex items-center gap-2">
@@ -296,12 +312,12 @@ export default function ProductDetail() {
             {[
               { icon: CreditCard, title: 'Secure checkout', body: 'Apple Pay and card payments through encrypted checkout.' },
               { icon: LockKeyhole, title: 'Clinical clearance', body: 'Required before your RN visit is confirmed.' },
-              { icon: Sparkles, title: 'Good faith estimate', body: 'Transparent pricing before care begins.' },
+              { icon: Sparkles, title: 'Transparent estimate', body: 'Pricing clarity before care begins.' },
             ].map((item) => (
-              <div key={item.title} className="rounded-lg border border-foreground/[0.08] bg-white/[0.38] p-5">
-                <item.icon className="mb-4 h-5 w-5 text-foreground/55" strokeWidth={1.6} />
-                <p className="font-body text-sm font-semibold text-foreground">{item.title}</p>
-                <p className="mt-1 font-body text-xs leading-relaxed text-foreground/45">{item.body}</p>
+              <div key={item.title} className="rounded-[1.25rem] border border-[#f4e6cb]/12 bg-[#20160f]/86 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+                <item.icon className="mb-4 h-5 w-5 text-[#f4e6cb]/78" strokeWidth={1.6} />
+                <p className="font-body text-sm font-semibold text-[#fff3dc]">{item.title}</p>
+                <p className="mt-1 font-body text-xs leading-relaxed text-[#fff3dc]/58">{item.body}</p>
               </div>
             ))}
           </section>
@@ -312,6 +328,24 @@ export default function ProductDetail() {
           </p>
         </div>
       </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/92 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-18px_45px_rgba(20,15,10,0.16)] backdrop-blur-2xl md:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-[1fr_0.72fr] gap-2">
+          <button
+            type="button"
+            onClick={buyNow}
+            className="flex min-h-[3.75rem] items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-4 font-body text-[12px] font-semibold uppercase tracking-[0.18em] text-background"
+          >
+            Buy Now <ArrowRight className="h-4 w-4" strokeWidth={2} />
+          </button>
+          <Link
+            to="/subscription"
+            className="flex min-h-[3.75rem] items-center justify-center rounded-[1.35rem] border border-[#f4e6cb] bg-[#f4e6cb] px-3 text-center font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-[#151515] shadow-[0_14px_34px_rgba(244,230,203,0.12)]"
+          >
+            Subscribe
+          </Link>
+        </div>
+      </div>
 
       <Footer />
     </div>

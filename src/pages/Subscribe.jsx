@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, BatteryCharging, CalendarDays, Check, ChevronDown,
-  CreditCard, Dumbbell, HeartPulse, RefreshCw, ShieldCheck, Sparkles, Users, Zap,
+  CreditCard, Dumbbell, HeartPulse, RefreshCw, ShieldCheck, Sparkles, Zap,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
@@ -221,7 +221,7 @@ export default function Subscribe() {
   };
 
   const footer = (
-    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg px-6 pb-5">
+    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg px-6 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]">
       <div className="flex gap-3">
         {step > 0 && (
           <button type="button" onClick={back} className="flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/[0.12] bg-background text-foreground" aria-label="Back">

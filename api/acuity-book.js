@@ -1,17 +1,17 @@
 /**
- * POST /api/acuity-book
+ * POST /api/scheduling-book
  *
  * Body:
- *   appointmentTypeID  number     — Acuity service type
+ *   appointmentTypeID  number     — scheduling service type
  *   datetime           string     — ISO 8601 slot time (from availability response)
  *   firstName          string
  *   lastName           string
  *   email              string
  *   phone              string
  *   notes              string     — address + any special requests
- *   fields             object[]   — optional Acuity custom fields [{ id, value }]
+ *   fields             object[]   — optional scheduling custom fields [{ id, value }]
  *
- * Returns: created Acuity appointment object
+ * Returns: created scheduling appointment object
  */
 
 import { acuityFetch } from './_acuity.js';
@@ -60,11 +60,11 @@ export default async function handler(req, res) {
       email,
       phone,
       appointment,
-    }).catch((e) => console.warn('[acuity-book] Attio sync failed:', e.message));
+    }).catch((e) => console.warn('[scheduling-book] Attio sync failed:', e.message));
 
     return res.status(200).json(appointment);
   } catch (err) {
-    console.error('[acuity-book]', err.message, err.body);
+    console.error('[scheduling-book]', err.message, err.body);
     return res.status(err.status || 500).json({ error: err.message });
   }
 }
@@ -124,7 +124,7 @@ async function syncToAttio({ firstName, lastName, email, phone, appointment }) {
     : 'unknown date';
 
   const noteText = [
-    `📅 Acuity booking confirmed`,
+    `Appointment confirmed`,
     `Service: ${appointment?.type || 'IV Therapy'}`,
     `Date: ${apptDate}`,
     `Confirmation #: ${appointment?.id || 'N/A'}`,
@@ -139,7 +139,7 @@ async function syncToAttio({ firstName, lastName, email, phone, appointment }) {
       data: {
         parent_object: 'people',
         parent_record_id: recordId,
-        title: `Acuity booking — ${apptDate}`,
+        title: `Appointment — ${apptDate}`,
         content: noteText,
       },
     }),

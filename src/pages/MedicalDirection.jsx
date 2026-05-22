@@ -144,7 +144,7 @@ export default function MedicalDirection() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.14 }}
               className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-10 flex flex-col md:flex-row gap-8 items-start"
             >
-              {/* Photo placeholder */}
+              {/* Portrait pending announcement */}
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-foreground/[0.06] border border-foreground/[0.08] flex items-center justify-center flex-shrink-0">
                 <Stethoscope className="w-8 h-8 text-foreground/20" />
               </div>
@@ -158,7 +158,7 @@ export default function MedicalDirection() {
                 </p>
                 <p className="font-body text-sm text-foreground/40 mb-4">Credentials pending announcement</p>
                 <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-xl">
-                  Our medical director oversees all clinical protocols, reviews every formulation, and maintains physician-level availability throughout Avalon operating hours. Full announcement coming soon.
+                  Our medical director oversees all clinical protocols, reviews every formulation, and maintains physician-level availability throughout Avalon operating hours. Full announcement will be published before launch.
                 </p>
               </div>
             </motion.div>

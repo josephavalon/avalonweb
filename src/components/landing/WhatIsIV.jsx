@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlaskConical, Clock, ShieldCheck, Stethoscope, SlidersHorizontal, UserCheck, TrendingUp, Minus, ChevronDown } from 'lucide-react';
-import { EASE, premiumCard, premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const MODALITIES = [
   {

@@ -279,7 +279,7 @@ export default function Reports() {
       >
         <p className="font-body text-[12px] leading-relaxed"
           style={{ color: 'hsl(var(--accent) / 0.8)' }}>
-          Reports reflect manual data. Analytics automation placeholder enabled after launch.
+          Reports reflect manual data. Analytics automation can be enabled after launch.
         </p>
       </div>
     </AdminLayout>

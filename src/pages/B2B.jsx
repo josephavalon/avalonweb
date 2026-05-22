@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Tag, X as XIcon, Plus, Heart } from 'lucide-react';
+import { ArrowRight, Plus } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 

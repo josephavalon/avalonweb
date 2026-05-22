@@ -5,7 +5,7 @@ import {
   AlertTriangle, FileText, X, RefreshCw, Clock,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
-import { PAYMENTS } from '@/data/commandMockData';
+import { PAYMENTS } from '@/fixtures/commandMockData';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

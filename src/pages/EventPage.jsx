@@ -103,11 +103,11 @@ export default function EventPage() {
                 </div>
 
                 <Link
-                  to="/#waitlist"
+                  to="/events"
                   className="group flex items-center justify-center gap-2 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-3.5 hover:bg-foreground/90 transition-colors"
                 >
                   <Ticket className="w-4 h-4" strokeWidth={2} />
-                  Get Notified
+                  View Events
                 </Link>
                 <Link
                   to="/apply"
@@ -117,7 +117,7 @@ export default function EventPage() {
                 </Link>
 
                 <p className="font-body text-xs text-muted-foreground leading-relaxed mt-5 text-center">
-                  Member dinners and clinical salons are invitation-first. Join the waitlist for presale updates.
+                  Member dinners and clinical salons are invitation-first. Contact the care team for private access.
                 </p>
               </div>
             </motion.aside>

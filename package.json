@@ -8,6 +8,10 @@
     "build": "vite build && node scripts/build-b2b-html.mjs",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
+    "test:smoke": "node scripts/smoke-tests.mjs",
+    "test:lifecycle": "node scripts/booking-lifecycle-check.mjs",
+    "assets:audit": "node scripts/asset-audit.mjs",
+    "assets:optimize": "node scripts/optimize-bags.mjs",
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview"
   },

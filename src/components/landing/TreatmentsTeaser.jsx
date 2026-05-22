@@ -5,7 +5,7 @@ import {
   Droplets, Zap, ShieldCheck, Sparkles, FlaskConical,
   Syringe, Star, Plus, ArrowRight, ChevronDown, ChevronRight,
 } from 'lucide-react';
-import { EASE, premiumCard, premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion(Link);
 
@@ -22,11 +22,11 @@ const SPECIALTY_IVS = [
     ],
   },
   {
-    label: 'CBD IV',
+    label: 'CBD',
     icon: Star,
     treatments: [
-      { icon: Star, label: 'CBD IV — Low Dose',  price: 350 },
-      { icon: Star, label: 'CBD IV — High Dose', price: 450 },
+      { icon: Star, label: 'CBD — Low Dose',  price: 350 },
+      { icon: Star, label: 'CBD — High Dose', price: 450 },
     ],
   },
   {

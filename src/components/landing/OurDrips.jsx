@@ -76,7 +76,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
             <p className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-0.5">Your Order</p>
             <p className="font-heading text-2xl text-foreground tracking-wide">{cart.length} Item{cart.length !== 1 ? 's' : ''}</p>
           </div>
-          <button type="button" onClick={onClose} className="p-2 rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors focus:outline-none" aria-label="Close cart">
+          <button type="button" onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors focus:outline-none" aria-label="Close cart">
             <X className="w-4 h-4" strokeWidth={1.8} />
           </button>
         </div>

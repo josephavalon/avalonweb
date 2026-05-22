@@ -7,15 +7,12 @@ import AdminLayout from '@/layouts/AdminLayout';
 import {
   LayoutGrid, Package, Search, Tag, BarChart3,
   Plug, Bell, HelpCircle, Settings, ChevronLeft, ChevronRight,
-  ChevronDown, ChevronUp, Plus, Upload, FolderPlus, Trash2, Edit,
+  ChevronDown, Plus, Upload, FolderPlus, Trash2, Edit,
   MoreHorizontal, X, Check, ArrowLeft, Download, Printer,
-  AlertTriangle, AlertCircle, Clock, Star, Folder, FolderOpen,
+  AlertTriangle, AlertCircle, Clock, Folder, FolderOpen,
   FlaskConical, Syringe, Shield, Droplets, BriefcaseMedical,
-  List as ListIcon, ArrowUpDown, RefreshCw,
-  Calendar, User, FileText, TrendingUp, CheckCircle,
-  MoveRight, Barcode, Image as ImageIcon, Minus, Copy, Layers,
-  AlignLeft, Sparkles, Eye, Activity, Thermometer, Sliders,
-  Hash, MapPin, Archive, Zap, Type, ToggleLeft, CalendarDays,
+  List as ListIcon, ArrowUpDown, RefreshCw, User, FileText, TrendingUp,
+  MoveRight, Barcode, Image as ImageIcon, Minus, Copy, Sparkles, Activity, Sliders, Archive,
 } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -189,13 +186,8 @@ const NAV_BOTTOM = [
 function IconNav({ section, onSection, onNotif, lowStockCount }) {
   return (
     <div className="flex h-full flex-col items-center border-r border-foreground/[0.08] bg-[#0d0d0d] py-3" style={{ width: 56 }}>
-      {/* Logo */}
-      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/[0.06]">
-        <span className="font-heading text-sm text-foreground/80">AV</span>
-      </div>
-
       {/* Top nav */}
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-1 pt-1">
         {NAV_TOP.map(({ id, Icon, label }) => (
           <button key={id} title={label} onClick={() => onSection(id)}
             className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === id ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
@@ -1283,7 +1275,7 @@ function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, on
     <motion.div
       key="detail" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ ease: EASE, duration: 0.3 }}
-      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background"
+      className="dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
     >
       {/* Header */}
       <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
@@ -1583,7 +1575,7 @@ function ItemEditPage({ item, folders, customFieldDefs = [], onClose, onSave }) 
     <motion.div
       key="edit" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ ease: EASE, duration: 0.3 }}
-      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background"
+      className="dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
     >
       <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
         <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
@@ -1707,7 +1699,7 @@ function AddItemFullPage({ folders, customFieldDefs = [], onClose, onSave }) {
     <motion.div
       key="add-full" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ ease: EASE, duration: 0.3 }}
-      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background"
+      className="dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
     >
       <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
         <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
@@ -2573,7 +2565,7 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
           <h3 className="mb-4 font-body text-[11px] uppercase tracking-wider text-foreground/35">Integrations</h3>
           {[
             { name:'Square POS',  desc:'Sync inventory with Square',  },
-            { name:'Acuity',      desc:'Auto-deduct on appointment',  },
+            { name:'Scheduling',  desc:'Auto-deduct on appointment',  },
             { name:'Bound Tree',  desc:'Auto-reorder from supplier',  },
           ].map(({ name, desc }) => (
             <div key={name} className="flex items-center justify-between border-b border-foreground/[0.05] py-3 last:border-0">
@@ -3065,7 +3057,7 @@ export default function AdminInventory() {
 
   return (
     <AdminLayout fullBleed>
-    <div className="flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative">
+    <div className="dark flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative bg-background text-foreground">
 
       {/* Icon nav — desktop only */}
       <div className="hidden md:flex h-full shrink-0">
@@ -3086,10 +3078,11 @@ export default function AdminInventory() {
       {/* Sidebar collapse tab — desktop only */}
       <button
         onClick={() => setSidebarOpen(v => !v)}
-        style={{ left: sidebarOpen ? 275 : 55, top: '50%', transform: 'translateY(-50%)' }}
-        className="hidden md:flex absolute z-10 h-8 w-4 items-center justify-center rounded-r-lg border border-l-0 border-foreground/[0.08] bg-[#111111] text-foreground/30 transition-all hover:text-foreground/60"
+        title={sidebarOpen ? 'Collapse folders' : 'Expand folders'}
+        style={{ left: sidebarOpen ? 271 : 51, top: '50%', transform: 'translateY(-50%)' }}
+        className="hidden md:flex absolute z-10 h-10 w-5 items-center justify-center rounded-r-lg border border-l-0 border-foreground/[0.15] bg-[#1a1a1a] text-foreground/50 shadow-sm transition-all hover:bg-[#222] hover:text-foreground/90"
       >
-        {sidebarOpen ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        {sidebarOpen ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
       </button>
 
       {/* Main */}

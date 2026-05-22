@@ -2,15 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Home, Hotel, Building2, Calendar, Star, X,
-  MapPin, Phone, MessageSquare, Users, Shield, CheckCircle,
-  Clock, DollarSign, AlertTriangle, Edit3, Zap, Heart,
-  ChevronRight, Activity, Droplets, Syringe, Package,
+  MapPin, CheckCircle, AlertTriangle, Activity, Droplets, Syringe, Package,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import PageShell from '@/components/admin/PageShell';
 import {
-  REQUESTS, ALL_STATUSES,
-} from '@/data/commandMockData';
+  REQUESTS,
+} from '@/fixtures/commandMockData';
 import StatusPill from '@/components/ui/StatusPill';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -280,13 +278,13 @@ function RequestCard({ req, index, onOpen, onStatusChange, toast }) {
         style={{ borderColor: 'rgba(255,255,255,0.05)' }}
       >
         <QBtn label="Open" color="gold" onClick={() => onOpen(req)} />
-        <QBtn label="Text" color="blue" onClick={() => toast({ title: 'Text', description: `Message to ${req.client} — coming soon.` })} />
+        <QBtn label="Text" color="blue" onClick={() => toast({ title: 'Text', description: `Message to ${req.client} — not active in local mode.` })} />
         {req.status === 'New Request' || req.status === 'Contacted'
           ? <QBtn label="Confirm" color="emerald" onClick={() => onStatusChange(req.id, 'Confirmed')} />
           : null
         }
         {!req.nurse
-          ? <QBtn label="Assign Nurse" color="amber" onClick={() => toast({ title: 'Assign Nurse', description: 'Nurse assignment — coming soon.' })} />
+          ? <QBtn label="Assign Nurse" color="amber" onClick={() => toast({ title: 'Assign Nurse', description: 'Nurse assignment — not active in local mode.' })} />
           : null
         }
         {req.payment === 'Payment Pending' || req.payment === 'Link Sent'

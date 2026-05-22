@@ -1,12 +1,12 @@
 /**
- * Acuity Scheduling API client.
+ * Scheduling API client.
  * Docs: https://developers.acuityscheduling.com/
  *
  * Auth: HTTP Basic — ACUITY_USER_ID : ACUITY_API_KEY
  * Base: https://acuityscheduling.com/api/v1
  *
  * IMPORTANT: Never import this in frontend code.
- * All Acuity API calls must go through Vercel serverless functions.
+ * All scheduling API calls must go through Vercel serverless functions.
  */
 
 const BASE = 'https://acuityscheduling.com/api/v1';
@@ -14,7 +14,7 @@ const BASE = 'https://acuityscheduling.com/api/v1';
 function authHeader() {
   const userId = process.env.ACUITY_USER_ID;
   const apiKey = process.env.ACUITY_API_KEY;
-  if (!userId || !apiKey) throw new Error('Acuity credentials not configured');
+  if (!userId || !apiKey) throw new Error('Scheduling credentials not configured');
   return 'Basic ' + Buffer.from(`${userId}:${apiKey}`).toString('base64');
 }
 
@@ -37,7 +37,7 @@ export async function acuityFetch(path, opts = {}) {
   const data = await res.json();
 
   if (!res.ok) {
-    const msg = data?.message || data?.error || `Acuity error ${res.status}`;
+    const msg = data?.message || data?.error || `Scheduling error ${res.status}`;
     throw Object.assign(new Error(msg), { status: res.status, body: data });
   }
 
@@ -118,10 +118,10 @@ export async function rescheduleAppointment(appointmentId, { datetime, calendarI
 // ── Appointment type → Avalon cart key resolver ────────────────────────────
 
 /**
- * Map a cart item key to an Acuity appointment type ID.
- * Add your real Acuity type IDs here once you create them in your dashboard.
+ * Map a cart item key to a scheduling appointment type ID.
+ * Add your real scheduling type IDs here once you create them in your dashboard.
  *
- * Acuity dashboard → Services → each service has a numeric ID in the URL.
+ * Scheduling dashboard → Services → each service has a numeric ID in the URL.
  * You can also set ACUITY_DEFAULT_TYPE_ID in .env as a catch-all.
  */
 export function resolveAppointmentTypeId(cartItems = [], membership = null) {

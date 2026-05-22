@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import {
-  Phone, Mail, PlusCircle, Check, X,
-  Building2, Calendar, DollarSign, MapPin, Gift,
+  Phone, Mail, PlusCircle, Check, X, Calendar,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
-import { MEMBERSHIPS, LEADS } from '@/data/commandMockData';
+import { MEMBERSHIPS, LEADS } from '@/fixtures/commandMockData';
 import { useToast } from '@/components/ui/use-toast';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -118,7 +117,7 @@ function MemberCard({ item, onStatusChange, toast }) {
           </span>
         </div>
         <span className="font-body text-[11px] text-foreground/40">
-          {item.credits} credit{item.credits !== 1 ? 's' : ''} placeholder
+          {item.credits} credit{item.credits !== 1 ? 's' : ''} available
         </span>
       </div>
 
@@ -143,7 +142,7 @@ function MemberCard({ item, onStatusChange, toast }) {
         <ActionBtn
           icon={Phone}
           label="Contact"
-          onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.name} — coming soon.` })}
+          onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.name} — not active in local mode.` })}
         />
         <ActionBtn
           icon={Check}
@@ -159,7 +158,7 @@ function MemberCard({ item, onStatusChange, toast }) {
         <ActionBtn
           icon={PlusCircle}
           label="Add Note"
-          onClick={() => toast({ title: 'Note', description: `Notes for ${item.name} — coming soon.` })}
+          onClick={() => toast({ title: 'Note', description: `Notes for ${item.name} — not active in local mode.` })}
         />
       </div>
     </div>
@@ -235,12 +234,12 @@ function LeadCard({ item, onStatusChange, toast }) {
         <ActionBtn
           icon={Mail}
           label="Contact"
-          onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.org} — coming soon.` })}
+          onClick={() => toast({ title: 'Contact', description: `Contact flow for ${item.org} — not active in local mode.` })}
         />
         <ActionBtn
           icon={PlusCircle}
           label="Add Note"
-          onClick={() => toast({ title: 'Note', description: `Notes for ${item.org} — coming soon.` })}
+          onClick={() => toast({ title: 'Note', description: `Notes for ${item.org} — not active in local mode.` })}
         />
         <ActionBtn
           label="Mark Proposal Needed"

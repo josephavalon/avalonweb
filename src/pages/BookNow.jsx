@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   ArrowLeft, ArrowRight, BatteryCharging, Building2, Check, ChevronDown,
   CreditCard, Dumbbell, HeartPulse, Home, Hotel, MapPin, ShieldCheck,
   Sparkles, Users, Zap, SlidersHorizontal, Loader2, RefreshCw, Calendar,
-  Droplets, Syringe, Leaf,
+  Droplets, Syringe,
 } from 'lucide-react';
 
 import { useCart } from '@/context/CartContext';
@@ -14,9 +14,13 @@ import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import { useSeo } from '@/lib/seo';
 import Navbar from '@/components/landing/Navbar';
 import { COVERED_ZIPS } from '@/lib/serviceArea';
+import { acuityTypeForProtocol } from '@/lib/acuityAppointmentTypes';
+import { avalonErrorClass, avalonFieldClass, avalonLabelClass } from '@/components/ui/formStyles';
+import { clearBookingDraft, readBookingDraft, saveBookingDraft, appendActivity, saveLastBooking } from '@/lib/localOs';
+import { recommendProtocol } from '@/lib/osRules';
+import { createBookingRecord, validateBookingForCheckout } from '@/lib/bookingLifecycle';
 
 const EASE = [0.16, 1, 0.3, 1];
-const ACUITY_TYPE_ID = import.meta.env.VITE_ACUITY_DEFAULT_TYPE_ID || '';
 const TZ = 'America/Los_Angeles';
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
@@ -59,6 +63,20 @@ const ADDON_GROUPS = [
 ];
 
 const ADDONS_FLAT = ADDON_GROUPS.flatMap(g => g.items);
+
+const PROTOCOL_PARAM_ALIASES = {
+  'myers-cocktail': 'myers',
+  'post-night-out': 'postnight',
+  'jet-lag': 'jetlag',
+  'nad-250mg': 'nad',
+  'cbd-33mg': 'cbd',
+  'exosomes-30b-units': 'exosomes',
+};
+
+function protocolFromParam(value) {
+  if (!value) return null;
+  return PROTOCOL_PARAM_ALIASES[value] || value;
+}
 
 function formatTimeLabel(isoString) {
   const d = new Date(isoString);
@@ -245,30 +263,45 @@ export default function BookNow() {
   });
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addItem, clearItems } = useCart();
+  const requestedProtocol = protocolFromParam(searchParams.get('protocol'));
+  const requestedAddon = searchParams.get('addon');
+  const [draft, setDraft] = useState(() => readBookingDraft());
 
   // ── Step & selection state ──────────────────────────────────────────────────
-  const [step, setStep] = useState(0);
-  const [goal, setGoal] = useState(GOALS[0]);
+  const [step, setStep] = useState(() => draft?.step ?? 0);
+  const [goal, setGoal] = useState(() => GOALS.find(g => g.key === draft?.goalKey) || GOALS[0]);
   const [groupSize, setGroupSize] = useState(2);
-  const [protocol, setProtocol] = useState(
-    IV_SESSIONS.find(s => s.key === 'myers') || IV_SESSIONS[0]
+  const [protocol, setProtocol] = useState(() =>
+    IV_SESSIONS.find(s => s.key === requestedProtocol) || IV_SESSIONS.find(s => s.key === draft?.protocolKey) || IV_SESSIONS.find(s => s.key === 'myers') || IV_SESSIONS[0]
   );
   // For sessions with dose tiers, track selected dose
   const [selectedDose, setSelectedDose] = useState(() => {
-    const p = IV_SESSIONS.find(s => s.key === 'myers') || IV_SESSIONS[0];
+    const p = IV_SESSIONS.find(s => s.key === requestedProtocol) || IV_SESSIONS.find(s => s.key === draft?.protocolKey) || IV_SESSIONS.find(s => s.key === 'myers') || IV_SESSIONS[0];
     return p?.doses?.[0] ?? null;
   });
   const [expandedProtocol, setExpandedProtocol] = useState(null);
-  const [addons, setAddons] = useState(new Set());
+  const [addons, setAddons] = useState(() => {
+    const selected = new Set(draft?.addons || []);
+    if (requestedAddon) {
+      const match = ADDONS_FLAT.find((addon) => addon.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') === requestedAddon);
+      if (match) selected.add(match.label);
+    }
+    return selected;
+  });
   const [openAddonGroups, setOpenAddonGroups] = useState({ iv: false, im: false });
 
-  // ── Acuity / scheduling state ───────────────────────────────────────────────
+  // ── Scheduling state ────────────────────────────────────────────────────────
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState(null);
   const [nextAvailLoading, setNextAvailLoading] = useState(false);
+  const appointmentTypeId = useMemo(
+    () => acuityTypeForProtocol(protocol?.key, selectedDose?.key),
+    [protocol?.key, selectedDose?.key]
+  );
 
   // ── Checkout state ──────────────────────────────────────────────────────────
   const [appointment, setAppointment] = useState(null);
@@ -290,8 +323,10 @@ export default function BookNow() {
   });
 
   const selectedDate = aboutForm.watch('date');
+  const watchedZip = aboutForm.watch('zip');
+  const watchedGuests = aboutForm.watch('guests');
 
-  // ── Acuity availability ─────────────────────────────────────────────────────
+  // ── Scheduling availability ─────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date) => {
     if (!date) return;
     setSlotsLoading(true);
@@ -299,8 +334,8 @@ export default function BookNow() {
     setSelectedSlot(null);
     try {
       const params = new URLSearchParams({ date, timezone: TZ });
-      if (ACUITY_TYPE_ID) params.set('appointmentTypeID', ACUITY_TYPE_ID);
-      const res = await fetch(`/api/acuity-availability?${params}`);
+      if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
+      const res = await fetch(`/api/scheduling-availability?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load availability');
       setSlots(data);
@@ -310,7 +345,7 @@ export default function BookNow() {
     } finally {
       setSlotsLoading(false);
     }
-  }, []);
+  }, [appointmentTypeId]);
 
   useEffect(() => {
     if (selectedDate) fetchSlots(selectedDate);
@@ -325,8 +360,8 @@ export default function BookNow() {
         d.setDate(d.getDate() + i);
         const dateStr = d.toLocaleDateString('en-CA', { timeZone: TZ });
         const params = new URLSearchParams({ date: dateStr, timezone: TZ });
-        if (ACUITY_TYPE_ID) params.set('appointmentTypeID', ACUITY_TYPE_ID);
-        const res = await fetch(`/api/acuity-availability?${params}`);
+        if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
+        const res = await fetch(`/api/scheduling-availability?${params}`);
         if (!res.ok) continue;
         const data = await res.json();
         if (data?.length > 0) { setSlots(data); setNextAvailLoading(false); return dateStr; }
@@ -334,18 +369,39 @@ export default function BookNow() {
     } catch {}
     setNextAvailLoading(false);
     return null;
-  }, []);
+  }, [appointmentTypeId]);
 
   // ── Computed values ─────────────────────────────────────────────────────────
   const recommendedProtocols = useMemo(() => {
+    const smart = recommendProtocol({ goal: goal.key, budget: 450, time: 90, symptoms: goal.sub }, IV_SESSIONS);
     const filtered = IV_SESSIONS.filter(s => s.category === goal.category);
-    return (filtered.length ? filtered : IV_SESSIONS).slice(0, 6);
+    const merged = [...smart, ...(filtered.length ? filtered : IV_SESSIONS)];
+    const deduped = merged.filter((item, index, arr) => arr.findIndex(other => other.key === item.key) === index).slice(0, 6);
+    // Hydration always pins to first position
+    const hydration = IV_SESSIONS.find(s => s.key === 'hydration');
+    const rest = deduped.filter(s => s.key !== 'hydration');
+    return hydration ? [hydration, ...rest] : deduped;
   }, [goal]);
 
   const selectedAddons = ADDONS_FLAT.filter(a => addons.has(a.label));
+  const selectedAddonKey = selectedAddons.map((addon) => addon.label).sort().join('|');
   const protocolPrice  = selectedDose ? selectedDose.price : (protocol?.price ?? 0);
   const subtotal       = protocolPrice + selectedAddons.reduce((sum, a) => sum + a.price, 0);
   const groupNeedsContact = step === 0 && goal.key === 'event' && groupSize > 4;
+
+  useEffect(() => {
+    const nextDraft = saveBookingDraft({
+      step,
+      goalKey: goal.key,
+      protocolKey: protocol?.key,
+      selectedDoseKey: selectedDose?.key,
+      addons: selectedAddons.map((addon) => addon.label),
+      zip: watchedZip,
+      guests: watchedGuests,
+      subtotal,
+    });
+    setDraft(nextDraft);
+  }, [step, goal.key, protocol?.key, selectedDose?.key, watchedZip, watchedGuests, subtotal, selectedAddonKey]);
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
   const toggleAddon = (label) => {
@@ -375,6 +431,54 @@ export default function BookNow() {
 
     clearItems();
     const protocolLabel = `${protocol.label}${selectedDose ? ` (${selectedDose.label})` : ''}`;
+    const bookingCandidate = {
+      id: `LOCAL-${Date.now().toString().slice(-6)}`,
+      service: protocolLabel,
+      protocolKey: protocol.key,
+      doseKey: selectedDose?.key ?? protocol.key,
+      date: appointment.date,
+      time: appointment.acuitySlot?.timeLabel ?? '',
+      datetime: appointment.acuitySlot?.datetime ?? '',
+      timezone: appointment.acuitySlot?.timezone ?? TZ,
+      address: appointment.address,
+      zip: appointment.zip,
+      city: appointment.city ?? '',
+      locationType: appointment.locationType,
+      guests: appointment.guests,
+      notes: appointment.notes ?? '',
+      contact: { name: `${contact.firstName} ${contact.lastName}`.trim(), ...contact },
+      addOns: selectedAddons.map(a => a.type === 'im' ? `IM · ${a.label}` : a.label),
+      items: [
+        { cartKey: selectedDose?.key ?? protocol.key, label: protocolLabel, price: protocolPrice, type: 'iv' },
+        ...selectedAddons.map(a => ({ cartKey: a.cartKey, label: a.type === 'im' ? `IM · ${a.label}` : a.label, price: a.price, type: a.type })),
+      ],
+      subtotal,
+      status: 'Scheduling received',
+      nextStep: 'Clinical review and RN assignment',
+      intake: 'Done',
+      consent: 'Done',
+      gfe: 'Pending',
+      nurse: 'Unassigned',
+      payment: 'Pending',
+      source: 'Website',
+      reference: `WEB-${Date.now().toString().slice(-6)}`,
+      appointmentTypeId: appointment.acuitySlot?.appointmentTypeID ?? '',
+    };
+    const lifecycleCheck = validateBookingForCheckout(
+      { ...bookingCandidate, acuitySlot: appointment.acuitySlot },
+      { coveredZips: COVERED_ZIPS }
+    );
+    if (!lifecycleCheck.ok) {
+      setCheckoutError(lifecycleCheck.errors[0]);
+      setCheckoutLoading(false);
+      return;
+    }
+    const localBooking = createBookingRecord({
+      ...bookingCandidate,
+      manualReview: lifecycleCheck.manualReview,
+      lifecycleWarnings: lifecycleCheck.warnings,
+    });
+    saveLastBooking(localBooking);
     addItem({ cartKey: selectedDose?.key ?? protocol.key, label: protocolLabel, price: protocolPrice, type: 'iv' });
     selectedAddons.forEach(a => addItem({
       cartKey: a.cartKey,
@@ -408,6 +512,8 @@ export default function BookNow() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       if (data.url) window.location.href = data.url;
+      clearBookingDraft();
+      appendActivity(`Checkout started for ${protocolLabel}`, { role: 'client', subtotal, bookingId: localBooking.id });
     } catch (err) {
       setCheckoutError(err.message);
       setCheckoutLoading(false);
@@ -415,16 +521,16 @@ export default function BookNow() {
   };
 
   // ── Shared styles ────────────────────────────────────────────────────────────
-  const fieldCls  = 'w-full bg-foreground/[0.04] border border-foreground/[0.10] text-foreground font-body text-sm rounded-2xl px-4 py-3.5 placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40 transition-colors';
-  const labelCls  = 'font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50 mb-2 block';
-  const errCls    = 'font-body text-[10px] text-red-400 mt-1';
+  const fieldCls  = avalonFieldClass;
+  const labelCls  = avalonLabelClass;
+  const errCls    = avalonErrorClass;
   const btnBack   = 'flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/[0.12] bg-background text-foreground shrink-0 transition-colors hover:bg-foreground/[0.05]';
   const btnFwd    = 'flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground font-body text-xs font-semibold uppercase tracking-[0.22em] text-background shadow-[0_14px_40px_hsl(var(--foreground)/0.16)] transition-opacity hover:opacity-90';
   const btnConfirm = 'flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-accent font-body text-xs font-semibold uppercase tracking-[0.22em] text-background shadow-[0_14px_40px_hsl(var(--accent)/0.3)] transition-opacity hover:opacity-90';
 
   // ── Fixed mobile/tablet footer (steps 0–1 only; form steps handle their own) ─
   const mobileFooter = step <= 1 ? (
-    <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden px-4 pb-5 pt-4 bg-gradient-to-t from-background via-background/95 to-transparent">
+    <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 bg-gradient-to-t from-background via-background/95 to-transparent">
       <div className="flex gap-3 max-w-lg mx-auto">
         {step > 0 && (
           <button type="button" onClick={back} className={btnBack} aria-label="Back">
@@ -469,6 +575,21 @@ export default function BookNow() {
       <Navbar showBack />
 
       <div className="mx-auto max-w-6xl px-4 md:px-8 pt-24 md:pt-28 pb-36 lg:pb-16">
+        {draft && draft.protocolKey && step === 0 && (
+          <button
+            type="button"
+            onClick={() => setStep(Math.min(draft.step || 1, STEPS.length - 1))}
+            className="mb-5 flex w-full items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/[0.06] px-4 py-3 text-left lg:max-w-lg"
+          >
+            <span>
+              <span className="block font-body text-[10px] tracking-[0.24em] uppercase text-accent">Resume Request</span>
+              <span className="mt-1 block font-body text-xs text-foreground/55">
+                Continue your {IV_SESSIONS.find(s => s.key === draft.protocolKey)?.label || 'booking'} request.
+              </span>
+            </span>
+            <RefreshCw className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.8} />
+          </button>
+        )}
         <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-16 lg:items-start">
 
           {/* ── Left: step content ───────────────────────────────────────── */}
@@ -510,6 +631,10 @@ export default function BookNow() {
                               }
                               if (item.key === 'event') {
                                 setProtocol(LOCATIONS.find(l => l.key === 'event') || protocol);
+                              }
+                              // Auto-advance for all goals except event (needs group size input)
+                              if (item.key !== 'event') {
+                                setTimeout(() => setStep(cur => Math.min(cur + 1, STEPS.length - 1)), 140);
                               }
                             }}
                           />
@@ -608,7 +733,9 @@ export default function BookNow() {
                                         <button
                                           key={dose.key}
                                           type="button"
-                                          onClick={() => setSelectedDose(dose)}
+                                          onClick={() => {
+                                          setSelectedDose(dose);
+                                        }}
                                           className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-body text-xs transition-all ${
                                             active
                                               ? 'border-foreground bg-foreground text-background'
@@ -693,7 +820,7 @@ export default function BookNow() {
                   </>
                 )}
 
-                {/* ───────────── STEP 2: Schedule (Acuity) ──────────── */}
+                {/* ───────────── STEP 2: Schedule ──────────── */}
                 {step === 2 && (
                   <>
                     <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] text-foreground">
@@ -746,7 +873,7 @@ export default function BookNow() {
                         />
                       </div>
 
-                      {/* Acuity time slots */}
+                      {/* Appointment time slots */}
                       <AnimatePresence>
                         {appointment?.date && (
                           <motion.div
@@ -806,7 +933,7 @@ export default function BookNow() {
                                     <button
                                       key={slot.time}
                                       type="button"
-                                      onClick={() => setSelectedSlot({ appointmentTypeID: ACUITY_TYPE_ID, datetime: slot.time, date: appointment.date, timeLabel: label, timezone: TZ })}
+                                      onClick={() => setSelectedSlot({ appointmentTypeID: appointmentTypeId, datetime: slot.time, date: appointment.date, timeLabel: label, timezone: TZ })}
                                       className={`py-2.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
                                         active
                                           ? 'bg-accent text-background shadow-[0_0_10px_-2px_hsl(var(--accent)/0.5)]'

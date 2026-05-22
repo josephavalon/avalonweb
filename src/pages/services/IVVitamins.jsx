@@ -2,7 +2,6 @@ import React from 'react';
 import { useSeo } from '@/lib/seo';
 import ServicePageLayout from '../../components/services/ServicePageLayout';
 import CuriositySection from '../../components/landing/CuriositySection';
-import NewsletterSignup from '../../components/landing/NewsletterSignup';
 import { productsByCategory } from '@/data/products';
 
 export default function IVVitamins() {
@@ -32,7 +31,6 @@ export default function IVVitamins() {
         categorySlug="iv-vitamins"
       />
       <CuriositySection />
-      <NewsletterSignup />
     </>
   );
 }

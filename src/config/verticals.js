@@ -1,279 +1,38 @@
-/**
- * verticals.js — Avalon Vitality Protocol Config
- *
- * Single source of truth for every service vertical.
- * Adding a new vertical (e.g. Peptides Jul '26) = add one entry to VERTICALS.
- * Store.jsx and any future vertical page render dynamically from this config.
- *
- * Shape per vertical:
- *   slug, label, active, launchDate,
- *   sessions, addons, shots, packages,
- *   categories, goalRecommendation
- */
+export {
+  IV_ADDONS,
+  IV_CATEGORIES,
+  IV_GOAL_RECOMMENDATION,
+  IV_SESSIONS,
+  IM_SHOTS,
+  PACKAGES,
+  VERTICALS,
+} from '@/data/catalog';
 
 import {
-  Droplets, Zap, ShieldCheck, Sparkles, Heart, Plane, FlaskConical, Moon,
-  Flame, BatteryCharging, Shield, LayoutGrid, Leaf,
-} from 'lucide-react';
-
-// ── IV Therapy ──────────────────────────────────────────────────────────────
-
-const IV_SESSIONS = [
-  {
-    key: 'hydration', label: 'Hydration', price: 150, icon: Droplets,
-    tagline: 'Rehydrate, replenish, and recover fast.',
-    tag: 'Essential', category: 'recovery',
-    duration: '30–45 min',
-    inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals',
-  },
-  {
-    key: 'energy', label: 'Energy', price: 250, icon: Zap,
-    tagline: 'Boost energy, sharpen focus, perform.',
-    tag: 'Performance', category: 'energy',
-    duration: '45–60 min',
-    inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C',
-  },
-  {
-    key: 'immunity', label: 'Immunity', price: 250, icon: ShieldCheck,
-    tagline: 'Strengthen your defenses, fast.',
-    tag: 'Bestseller', category: 'immunity',
-    duration: '45–60 min',
-    inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline',
-  },
-  {
-    key: 'beauty', label: 'Beauty', price: 250, icon: Sparkles,
-    tagline: 'Glow from within.',
-    tag: 'Glow Favorite', category: 'beauty',
-    duration: '45–60 min',
-    inside: 'Glutathione · Biotin · Vitamin C · B-Complex · Collagen support nutrients · Saline',
-  },
-  {
-    key: 'recovery', label: 'Recovery', price: 250, icon: Heart,
-    tagline: 'Bounce back faster. Feel better sooner.',
-    tag: 'Same-Day Favorite', category: 'recovery',
-    duration: '45–60 min',
-    inside: 'Saline · Magnesium · B-Complex · Amino acids · Anti-nausea support · Electrolytes',
-  },
-  {
-    key: 'jetlag', label: 'Jet Lag', price: 250, icon: Plane,
-    tagline: 'Land ready. Recover in flight time.',
-    tag: 'Travel Essential', category: 'travel',
-    duration: '45–60 min',
-    inside: 'Saline · Vitamin B12 · Magnesium · B-Complex · Electrolytes · Immune support blend',
-  },
-  {
-    key: 'myers', label: "Myers' Cocktail", price: 250, icon: FlaskConical,
-    tagline: 'The gold standard of IV therapy.',
-    tag: 'Most Popular', category: 'energy', popular: true,
-    duration: '45–60 min',
-    inside: 'Magnesium · Calcium · Vitamins B1 B2 B3 B5 B6 · Vitamin C · Saline',
-  },
-  {
-    key: 'postnight', label: 'Post-Night-Out', price: 250, icon: Moon,
-    tagline: 'Back to baseline, fast.',
-    tag: 'Same-Day Favorite', category: 'recovery',
-    duration: '45–60 min',
-    inside: 'Saline · Anti-nausea support · B-Complex · Glutathione · Zofran (if indicated) · Electrolytes',
-  },
-  {
-    key: 'nad', label: 'NAD+', icon: BatteryCharging,
-    tagline: 'Cellular energy restoration, metabolic support, and repair.',
-    tag: 'Advanced', category: 'energy',
-    inside: 'NAD+ · Saline · B-Complex',
-    doses: [
-      { key: 'nad_250',  label: '250mg',  price: 350, duration: '2–3 hr' },
-      { key: 'nad_500',  label: '500mg',  price: 500, duration: '3–4 hr' },
-      { key: 'nad_1000', label: '1000mg', price: 750, duration: '4–6 hr' },
-    ],
-  },
-  {
-    key: 'cbd', label: 'CBD IV', icon: Leaf,
-    tagline: 'Zero-THC cannabidiol delivered directly to your bloodstream.',
-    tag: 'Specialty', category: 'recovery',
-    inside: 'CBD (Zero THC) · Saline',
-    doses: [
-      { key: 'cbd_low',  label: '33mg',  price: 350, duration: '45–60 min' },
-      { key: 'cbd_high', label: '66mg',  price: 450, duration: '45–60 min' },
-    ],
-  },
-  {
-    key: 'exosomes', label: 'Exosomes', icon: Sparkles,
-    tagline: 'Regenerative cellular signaling support.',
-    tag: 'Elite', category: 'recovery',
-    inside: 'Exosomes · Saline',
-    elite: true,
-    doses: [
-      { key: 'exosomes_30', label: '30B Units', price: 700,  duration: '45–60 min' },
-      { key: 'exosomes_50', label: '50B Units', price: 1200, duration: '60–75 min' },
-      { key: 'exosomes_90', label: '90B Units', price: 1800, duration: '60–90 min' },
-    ],
-  },
-];
-
-const IV_ADDONS = [
-  { label: 'Extra Fluid',         price: 25,  desc: 'Additional 500ml saline'             },
-  { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals & amino boost'   },
-  { label: 'Vitamin C IV Push · 5g',  price: 45,  desc: 'Entry high-dose antioxidant support' },
-  { label: 'Vitamin C IV Push · 10g', price: 85,  desc: 'Higher-dose immune + recovery support' },
-  { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support' },
-  // CBD — dose tiers (select one)
-  { label: 'CBD (Low Dose)',      price: 350, desc: 'Zero THC · full bioavailability · 33mg',  group: 'cbd' },
-  { label: 'CBD (High Dose)',     price: 450, desc: 'Zero THC · elevated dose · 66mg',          group: 'cbd' },
-  // NAD+ — dose tiers (select one)
-  { label: 'NAD+ (250mg)',        price: 350, desc: 'Cellular energy + repair · 2–3 hr infusion',  group: 'nad' },
-  { label: 'NAD+ (500mg)',        price: 500, desc: 'Enhanced cellular repair · 3–4 hr infusion',  group: 'nad' },
-  { label: 'NAD+ (1000mg)',       price: 750, desc: 'Maximum protocol · 4–6 hr infusion',           group: 'nad' },
-  { label: 'Glutathione Push · 600mg',  price: 60,  desc: 'Antioxidant master push'        },
-  { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support' },
-  { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push'       },
-  { label: 'Magnesium Boost',     price: 30,  desc: 'Muscle + nerve support'              },
-];
-
-const IM_SHOTS = [
-  { label: 'B12',         price: 40,  max: 5, icon: Zap,             desc: 'Energy + metabolism support'      },
-  { label: 'MIC',         price: 50,          icon: Flame,           desc: 'Fat metabolism + liver function'  },
-  { label: 'NAD+',        price: 80,          icon: BatteryCharging, desc: 'Quick cellular energy boost'      },
-  { label: 'Glutathione IM · 200mg', price: 50, max: 5, icon: Sparkles, desc: 'Antioxidant + skin clarity'    },
-  { label: 'Glutathione IM · 400mg', price: 80, max: 5, icon: Sparkles, desc: 'Higher-dose antioxidant support' },
-  { label: 'Vitamin C IM · 500mg',   price: 30,         icon: Shield,   desc: 'Immune + antioxidant support'  },
-  { label: 'Vitamin C IM · 1000mg',  price: 45,         icon: Shield,   desc: 'Higher-dose immune support'    },
-  { label: 'Vitamin D',   price: 35,          icon: Zap,             desc: 'Bone, immune & mood support'      },
-  { label: 'Biotin',      price: 35,          icon: Sparkles,        desc: 'Hair, skin & nail support'        },
-];
-
-const PACKAGES = [
-  {
-    key: 'hangover',
-    label: 'Hangover Kit',
-    tagline: 'Recover from a rough night — fast.',
-    includes: ['Post-Night-Out IV', 'B12 IM shot', 'Glutathione IM shot'],
-    price: 340,
-    save: 30,
-    icon: Moon,
-    tag: 'Best for Tonight',
-    items: [
-      { cartKey: 'pkg-hangover-iv',   label: 'Post-Night-Out IV', price: 250, type: 'iv' },
-      { cartKey: 'pkg-hangover-b12',  label: 'IM · B12',          price: 40,  type: 'im' },
-      { cartKey: 'pkg-hangover-glut', label: 'IM · Glutathione',  price: 50,  type: 'im' },
-    ],
-  },
-  {
-    key: 'performance',
-    label: 'Performance Bundle',
-    tagline: 'Built for peak output. Before or after.',
-    includes: ['Energy IV', 'NAD+ IM shot', 'MIC IM shot'],
-    price: 380,
-    save: 30,
-    icon: Zap,
-    tag: 'Athlete Favorite',
-    items: [
-      { cartKey: 'pkg-perf-iv',  label: 'Energy IV',   price: 250, type: 'iv' },
-      { cartKey: 'pkg-perf-nad', label: 'IM · NAD+',   price: 80,  type: 'im' },
-      { cartKey: 'pkg-perf-mic', label: 'IM · MIC',    price: 50,  type: 'im' },
-    ],
-  },
-  {
-    key: 'glow',
-    label: 'Glow Stack',
-    tagline: 'Skin, hair, and radiance from within.',
-    includes: ['Beauty IV', 'Glutathione IM shot', 'Biotin IM shot'],
-    price: 335,
-    save: 30,
-    icon: Sparkles,
-    tag: 'Most Requested',
-    items: [
-      { cartKey: 'pkg-glow-iv',    label: 'Beauty IV',         price: 250, type: 'iv' },
-      { cartKey: 'pkg-glow-glut',  label: 'IM · Glutathione',  price: 50,  type: 'im' },
-      { cartKey: 'pkg-glow-biotin',label: 'IM · Biotin',       price: 35,  type: 'im' },
-    ],
-  },
-  {
-    key: 'reset',
-    label: 'Total Reset',
-    tagline: "The full protocol. Myers' + NAD+ + B12.",
-    includes: ["Myers' Cocktail IV", 'NAD+ add-on (250mg)', 'B12 IM shot'],
-    price: 680,
-    save: 60,
-    icon: FlaskConical,
-    tag: 'Highest Impact',
-    items: [
-      { cartKey: 'pkg-reset-iv',    label: "Myers' Cocktail IV",  price: 250, type: 'iv'    },
-      { cartKey: 'pkg-reset-nad',   label: 'NAD+ Add-On (250mg)', price: 350, type: 'addon' },
-      { cartKey: 'pkg-reset-b12',   label: 'IM · B12',            price: 40,  type: 'im'    },
-      { cartKey: 'pkg-reset-extra', label: 'Extra Fluid',         price: 25,  type: 'addon' },
-    ],
-  },
-];
-
-const IV_CATEGORIES = [
-  { key: 'all',      label: 'Not Sure', icon: LayoutGrid  },
-  { key: 'recovery', label: 'Recovery', icon: Heart       },
-  { key: 'energy',   label: 'Energy',   icon: Zap         },
-  { key: 'beauty',   label: 'Beauty',   icon: Sparkles    },
-  { key: 'immunity', label: 'Immunity', icon: ShieldCheck },
-  { key: 'travel',   label: 'Travel',   icon: Plane       },
-  { key: 'elite',    label: 'Elite',    icon: Sparkles    },
-];
-
-// Goal chip → recommended session key
-const IV_GOAL_RECOMMENDATION = {
-  recovery: 'recovery',  // Recovery IV
-  energy:   'myers',     // Myers' Cocktail
-  beauty:   'beauty',    // Beauty IV
-  packages: 'hangover',  // surfaced in Packages tab, handled separately
-};
-
-// ── Vertical registry ───────────────────────────────────────────────────────
-
-export const VERTICALS = {
-  iv_therapy: {
-    slug: 'iv_therapy',
-    label: 'IV Therapy',
-    active: true,
-    launchDate: '2026-05-01',
-    sessions:          IV_SESSIONS,
-    addons:            IV_ADDONS,
-    shots:             IM_SHOTS,
-    packages:          PACKAGES,
-    categories:        IV_CATEGORIES,
-    goalRecommendation: IV_GOAL_RECOMMENDATION,
-  },
-
-  // ── Coming Jul '26 ──────────────────────────────────────────────────────
-  // peptides: {
-  //   slug: 'peptides',
-  //   label: 'Peptides',
-  //   active: false,
-  //   launchDate: '2026-07-01',
-  //   sessions: [],
-  //   addons: [],
-  //   shots: [],
-  //   packages: [],
-  //   categories: [],
-  //   goalRecommendation: {},
-  // },
-
-  // ── Coming Q4 '26 ───────────────────────────────────────────────────────
-  // trt_sex_health: { active: false, launchDate: '2026-10-01', ... },
-};
-
-// ── Named convenience exports (backward compat for Store.jsx) ───────────────
+  IV_ADDONS,
+  IV_CATEGORIES,
+  IV_GOAL_RECOMMENDATION,
+  IV_SESSIONS,
+  IM_SHOTS,
+  PACKAGES,
+  VERTICALS,
+} from '@/data/catalog';
 
 const iv = VERTICALS.iv_therapy;
 
-export const SESSIONS            = iv.sessions;
-export const IV_ADDONS_LIST      = iv.addons;       // alias — avoids name collision
-export const IM_SHOTS_LIST       = iv.shots;
-export const PACKAGES_LIST       = iv.packages;
-export const IV_CATEGORIES_LIST  = iv.categories;
+export const SESSIONS = iv.sessions;
+export const IV_ADDONS_LIST = iv.addons;
+export const IM_SHOTS_LIST = iv.shots;
+export const PACKAGES_LIST = iv.packages;
+export const IV_CATEGORIES_LIST = iv.categories;
 export const GOAL_RECOMMENDATION = iv.goalRecommendation;
 
-// Keep old names available for any file that imports them directly
-export {
-  IV_SESSIONS,
+export default {
   IV_ADDONS,
-  IM_SHOTS,
-  PACKAGES,
   IV_CATEGORIES,
   IV_GOAL_RECOMMENDATION,
+  IV_SESSIONS,
+  IM_SHOTS,
+  PACKAGES,
+  VERTICALS,
 };

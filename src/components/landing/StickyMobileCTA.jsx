@@ -14,7 +14,7 @@ export default function StickyMobileCTA() {
   }, []);
   return (
     <div
-      className={`md:hidden fixed bottom-0 inset-x-0 z-40 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`md:hidden fixed bottom-0 inset-x-0 z-40 transition-transform duration-500 ease-editorial ${
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}

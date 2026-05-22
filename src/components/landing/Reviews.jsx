@@ -21,7 +21,7 @@ const FEATURED = [
   { name: 'J.L.',       tag: 'Performance IV',   quote: "I'm an AI founder. Every day I gain new abilities. Avalon holds me down through the storm." },
   { name: 'A.G.',       tag: 'Beauty IV',        quote: 'Beauty IV is my weekly. Glutathione drip, every time.' },
   { name: 'G.B.',       tag: 'Event Recovery',   quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.' },
-  { name: 'C.A.',       tag: 'CBD IV',           quote: "Who knew CBD IVs were a thing? Zero THC. The most relaxing drip experience I've had. Already booked my next bag." },
+  { name: 'C.A.',       tag: 'CBD',              quote: "Who knew CBD IVs were a thing? Zero THC. The most relaxing drip experience I've had. Already booked my next bag." },
 ];
 
 // ── Long-form client reviews ────────────────────────────────────────────────

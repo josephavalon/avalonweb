@@ -179,15 +179,15 @@ export default function Navbar({ showBack = false }) {
       </div>
 
       {/* Mobile bar */}
-      <div className={`md:hidden flex items-center justify-between px-5 transition-all duration-500 ease-editorial ${
-        scrolled ? 'h-12' : 'h-14'
+      <div className={`md:hidden flex items-center justify-between px-4 transition-all duration-500 ease-editorial ${
+        scrolled ? 'h-14' : 'h-16'
       }`}>
         <div className="flex items-center gap-3">
           {showBack && (
             <button
               type="button"
               onClick={goBack}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/10 text-foreground"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 text-foreground"
               aria-label="Go back"
             >
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
@@ -198,10 +198,10 @@ export default function Navbar({ showBack = false }) {
             <span className="font-body text-[7px] tracking-[0.38em] text-foreground/60 uppercase mt-0.5">VITALITY</span>
           </Link>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={cycleTheme}
-            className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-all duration-base ease-editorial text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="theme-toggle-btn flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 transition-all duration-base ease-editorial text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label={`Switch theme — currently ${theme}`}
             title={`Theme: ${theme}`}
           >
@@ -221,7 +221,7 @@ export default function Navbar({ showBack = false }) {
           <motion.button
             onClick={() => setMobileOpen(!mobileOpen)}
             whileTap={premiumTap}
-            className="mobile-menu-btn text-foreground p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+            className="mobile-menu-btn flex h-11 w-11 items-center justify-center rounded-full text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
           >

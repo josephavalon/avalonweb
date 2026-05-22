@@ -73,7 +73,7 @@ export const EXPENSES = [
   { id: 'e5', category: 'insurance',  description: 'Malpractice premium Q2',       amount: 1200, vendor: 'CM&F Group',         date: '2026-04-01', receipt_url: null },
   { id: 'e6', category: 'supplies',   description: 'Vitamin C 50ml vials (50)',    amount: 175,  vendor: 'Olympia Pharmacy',   date: '2026-04-28', receipt_url: null },
   { id: 'e7', category: 'travel',     description: 'Nurse mileage reimbursement',  amount: 210,  vendor: 'Internal',           date: '2026-05-10', receipt_url: null },
-  { id: 'e8', category: 'other',      description: 'Acuity Scheduling subscription', amount: 25, vendor: 'Acuity',             date: '2026-05-01', receipt_url: null },
+  { id: 'e8', category: 'other',      description: 'Scheduling platform subscription', amount: 25, vendor: 'Scheduling Platform', date: '2026-05-01', receipt_url: null },
 ];
 
 export const ACTIVITY_LOG = [

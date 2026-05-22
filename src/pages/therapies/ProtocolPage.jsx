@@ -20,6 +20,12 @@ export default function ProtocolPage() {
 
   const protocol = IV_SESSIONS.find((s) => s.key === slug);
 
+  useSeo({
+    title: protocol ? `${protocol.label} IV Therapy — Avalon Vitality` : 'Protocol Not Found — Avalon Vitality',
+    description: protocol?.tagline || 'Explore Avalon Vitality mobile IV therapy protocols.',
+    path: `/therapies/${slug}`,
+  });
+
   if (!protocol) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
@@ -32,12 +38,6 @@ export default function ProtocolPage() {
 
   const Icon = protocol.icon;
   const ingredients = protocol.inside ? protocol.inside.split(' · ') : [];
-
-  useSeo({
-    title: `${protocol.label} IV Therapy — Avalon Vitality`,
-    description: protocol.tagline,
-    path: `/therapies/${slug}`,
-  });
 
   return (
     <>

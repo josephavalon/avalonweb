@@ -84,7 +84,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
             <p className="font-heading text-2xl text-foreground tracking-wide">{cart.length} Item{cart.length !== 1 ? 's' : ''}</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close"
-            className="p-2 rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors">
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors">
             <X className="w-4 h-4" strokeWidth={1.8} />
           </button>
         </div>
@@ -359,9 +359,9 @@ export default function RecoveryMenuSection() {
                             <p className="font-body text-[10px] text-foreground/40 mt-0.5">We bring additional RNs for groups of 4+</p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <button type="button" onClick={() => setGroupCount((c) => Math.max(1, c - 1))} className="w-8 h-8 rounded-full border border-foreground/20 flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors text-lg leading-none">−</button>
+                            <button type="button" onClick={() => setGroupCount((c) => Math.max(1, c - 1))} className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/20 text-foreground/60 hover:text-foreground transition-colors text-lg leading-none">−</button>
                             <span className="font-heading text-xl text-foreground w-5 text-center">{groupCount}</span>
-                            <button type="button" onClick={() => setGroupCount((c) => Math.min(8, c + 1))} className="w-8 h-8 rounded-full border border-foreground/20 flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors text-lg leading-none">+</button>
+                            <button type="button" onClick={() => setGroupCount((c) => Math.min(8, c + 1))} className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/20 text-foreground/60 hover:text-foreground transition-colors text-lg leading-none">+</button>
                           </div>
                         </div>
                         {groupCount >= 8 && (
@@ -502,7 +502,8 @@ export default function RecoveryMenuSection() {
           <motion.div
             initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
-            className="fixed bottom-0 md:bottom-4 left-0 md:left-1/2 md:-translate-x-1/2 z-50 w-full md:w-[calc(100%-2rem)] md:max-w-xl"
+            className="fixed bottom-0 left-0 z-50 w-full md:bottom-4 md:left-1/2 md:w-[calc(100%-2rem)] md:max-w-xl md:-translate-x-1/2"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="bg-white/10 backdrop-blur-2xl border-t md:border border-white/20 md:rounded-3xl px-5 py-4 md:py-3.5 shadow-2xl shadow-black/40 flex items-center gap-3">
               <div className="relative shrink-0">
@@ -519,7 +520,7 @@ export default function RecoveryMenuSection() {
                   Review Request
                 </button>
                 <button type="button" onClick={clearCart} aria-label="Clear cart"
-                  className="w-8 h-8 rounded-full border border-white/20 bg-white/[0.06] flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-white/[0.12] transition-colors flex-shrink-0">
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/[0.06] text-foreground/50 hover:text-foreground hover:bg-white/[0.12] transition-colors">
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                 </button>
               </div>

@@ -3,7 +3,7 @@ import {
   Clock, MessageSquare, Check, RefreshCw, Star, PlusCircle,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
-import { FOLLOWUPS } from '@/data/commandMockData';
+import { FOLLOWUPS } from '@/fixtures/commandMockData';
 import { useToast } from '@/components/ui/use-toast';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -156,7 +156,7 @@ function FollowUpCard({ item, onStatusChange, toast }) {
           <ActionBtn
             icon={MessageSquare}
             label="Text"
-            onClick={() => toast({ title: `Text queued`, description: `Message to ${item.client} — coming soon.` })}
+            onClick={() => toast({ title: `Text queued`, description: `Message to ${item.client} — not active in local mode.` })}
           />
           <ActionBtn
             icon={Check}
@@ -167,17 +167,17 @@ function FollowUpCard({ item, onStatusChange, toast }) {
           <ActionBtn
             icon={PlusCircle}
             label="Add Note"
-            onClick={() => toast({ title: `Note`, description: `Notes for ${item.client} — coming soon.` })}
+            onClick={() => toast({ title: `Note`, description: `Notes for ${item.client} — not active in local mode.` })}
           />
           <ActionBtn
             icon={RefreshCw}
             label="Create Rebook"
-            onClick={() => toast({ title: `Rebook`, description: `Rebook flow for ${item.client} — coming soon.` })}
+            onClick={() => toast({ title: `Rebook`, description: `Rebook flow for ${item.client} — not active in local mode.` })}
           />
           <ActionBtn
             icon={Star}
             label="Membership Follow-Up"
-            onClick={() => toast({ title: `Membership`, description: `Follow-up flow for ${item.client} — coming soon.` })}
+            onClick={() => toast({ title: `Membership`, description: `Follow-up flow for ${item.client} — not active in local mode.` })}
           />
         </div>
       )}

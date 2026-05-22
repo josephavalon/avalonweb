@@ -1,701 +1,419 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { track } from '@/lib/analytics';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, Check, X, ChevronDown,
-  Heart, Zap, Sparkles, Droplets, Syringe,
-  Package, Clock, MapPin,
+  ArrowRight,
+  BatteryCharging,
+  Check,
+  Droplets,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Plane,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  Zap,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { useCart } from '@/context/CartContext';
-import {
-  IV_SESSIONS as SESSIONS,
-  IV_ADDONS,
-  IM_SHOTS,
-  PACKAGES,
-} from '@/config/verticals';
+import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
 
-/* ─── Goal definitions (rule of 3 + browse all) ─────────────── */
 const GOALS = [
-  { key: 'recover',  label: 'Recover',  icon: Heart,    cat: 'recovery' },
-  { key: 'energize', label: 'Energize', icon: Zap,      cat: 'energy'   },
-  { key: 'glow',     label: 'Glow',     icon: Sparkles, cat: 'beauty'   },
+  { key: 'recovery', label: 'Recover', sub: 'Feel better fast', icon: Heart, protocol: 'recovery' },
+  { key: 'energy', label: 'Energy', sub: 'Recharge + focus', icon: Zap, protocol: 'myers' },
+  { key: 'immunity', label: 'Immunity', sub: 'Support defense', icon: ShieldCheck, protocol: 'immunity' },
+  { key: 'beauty', label: 'Glow', sub: 'Skin + radiance', icon: Sparkles, protocol: 'beauty' },
+  { key: 'travel', label: 'Travel', sub: 'Jet lag + hydration', icon: Plane, protocol: 'jetlag' },
 ];
 
-/* ─── Checkout Sheet ─────────────────────────────────────────── */
-function CheckoutSheet({ cart, onRemove, onClose, onConfirm }) {
-  const total = cart.reduce((s, i) => s + i.price, 0);
+const QUICK_ADDONS = [
+  { type: 'iv', match: 'Extra Fluid' },
+  { type: 'iv', match: 'Glutathione Push · 600mg' },
+  { type: 'im', match: 'B12' },
+  { type: 'iv', match: 'NAD+ (250mg)' },
+];
 
-  return (
-    <motion.div
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
-      transition={{ duration: 0.45, ease: EASE }}
-      className="fixed inset-x-0 bottom-0 z-50 flex flex-col"
-      style={{ maxHeight: '80vh' }}
-    >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
-        onClick={onClose}
-      />
-      <div className="relative bg-background/95 backdrop-blur-2xl border-t border-foreground/10 rounded-t-3xl flex flex-col overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.35, ease: EASE }}
-          className="flex flex-col overflow-hidden"
-        >
-          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-foreground/[0.08]">
-            <div>
-              <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-0.5">Your Visit</p>
-              <p className="font-heading text-2xl text-foreground tracking-wide">
-                {cart.length} Item{cart.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="p-2 rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors"
-            >
-              <X className="w-4 h-4" strokeWidth={1.8} />
-            </button>
-          </div>
-          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
-            {cart.map((item) => (
-              <div key={item.cartKey} className="flex items-center gap-3 py-2.5 border-b border-foreground/[0.06]">
-                <div className="p-1.5 rounded-lg bg-foreground/[0.06] shrink-0">
-                  {item.type === 'im'
-                    ? <Syringe className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />
-                    : <Droplets className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-body text-xs text-foreground truncate">{item.label}</p>
-                  <p className="font-body text-[10px] text-foreground/40">
-                    {item.type === 'im' ? '/ shot' : '/ session'}
-                  </p>
-                </div>
-                <span className="font-body text-sm font-medium text-foreground shrink-0">${item.price.toLocaleString()}</span>
-                <button
-                  type="button"
-                  onClick={() => onRemove(item.cartKey)}
-                  className="p-1 text-foreground/30 hover:text-foreground transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" strokeWidth={2} />
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="px-6 pt-4 pb-6 border-t border-foreground/[0.08] space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="font-body text-sm text-foreground/50">Visit Total</p>
-              <p className="font-heading text-2xl text-foreground tracking-tight">${total.toLocaleString()}</p>
-            </div>
-            <button
-              type="button"
-              onClick={onConfirm}
-              className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/85 transition-colors"
-            >
-              Continue to Checkout <ArrowRight className="w-4 h-4" strokeWidth={2} />
-            </button>
-            <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">
-              No charge until your RN confirms availability.
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    </motion.div>
-  );
+const CUSTOM_GOALS = ['Recovery', 'Energy', 'Immunity', 'Glow', 'Travel', 'Performance', 'Longevity'];
+
+function pickAddon({ type, match }) {
+  const list = type === 'im' ? IM_SHOTS : IV_ADDONS;
+  const addon = list.find((item) => item.label === match) || list.find((item) => item.label.includes(match));
+  return addon ? { ...addon, type } : null;
 }
 
-/* ─── Picker Row — glass accordion section ───────────────────── */
-function PickerRow({ label, value, open, onToggle, children }) {
-  return (
-    <div className="border-t border-foreground/[0.07] first:border-t-0">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-foreground/[0.02]"
-      >
-        {/* Dark circle marker */}
-        <div className="w-8 h-8 rounded-full bg-foreground/[0.08] border border-foreground/[0.14] flex items-center justify-center shrink-0">
-          <div className={`w-2 h-2 rounded-full transition-colors ${open ? 'bg-foreground' : 'bg-foreground/25'}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-0.5">{label}</p>
-          <p className="font-body text-sm tracking-[0.03em] text-foreground truncate">{value}</p>
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-foreground/35 transition-transform duration-300 shrink-0 ${open ? 'rotate-180' : ''}`}
-          strokeWidth={1.5}
-        />
-      </button>
+const QUICK_ADDON_ITEMS = QUICK_ADDONS.map(pickAddon).filter(Boolean);
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="border-t border-foreground/[0.07]">
-              {children}
+function money(value) {
+  return `$${Number(value || 0).toLocaleString()}`;
+}
+
+function iconForSession(session) {
+  const Icon = session?.icon || Droplets;
+  return Icon;
+}
+
+export default function Store() {
+  useSeo({
+    title: 'Start a Mobile IV Visit — Avalon Vitality',
+    description: 'A simple client-facing flow to choose a goal, select a mobile IV visit, or request a custom protocol.',
+    path: '/store',
+  });
+
+  const navigate = useNavigate();
+  const { addItem, clearItems } = useCart();
+  const [mode, setMode] = useState('guided');
+  const [goalKey, setGoalKey] = useState('recovery');
+  const [selectedProtocol, setSelectedProtocol] = useState(null);
+  const [selectedAddons, setSelectedAddons] = useState(new Set());
+  const [customGoals, setCustomGoals] = useState(new Set(['Recovery']));
+  const [people, setPeople] = useState('1');
+  const [customNote, setCustomNote] = useState('');
+
+  const goal = GOALS.find((item) => item.key === goalKey) || GOALS[0];
+  const recommended = useMemo(() => {
+    const key = selectedProtocol || goal.protocol;
+    return IV_SESSIONS.find((item) => item.key === key) || IV_SESSIONS.find((item) => item.key === 'myers') || IV_SESSIONS[0];
+  }, [goal.protocol, selectedProtocol]);
+
+  const alternatives = useMemo(() => {
+    const keys = ['hydration', 'myers', 'recovery', 'immunity', 'beauty', 'nad'];
+    return keys
+      .map((key) => IV_SESSIONS.find((item) => item.key === key))
+      .filter(Boolean)
+      .filter((item) => item.key !== recommended.key)
+      .slice(0, 3);
+  }, [recommended.key]);
+
+  const addonItems = QUICK_ADDON_ITEMS.filter((item) => selectedAddons.has(item.label));
+  const addonTotal = addonItems.reduce((sum, item) => sum + item.price, 0);
+  const total = (recommended.price || recommended.doses?.[0]?.price || 0) + addonTotal;
+  const customNeedsContact = people === '5+';
+
+  const toggleAddon = (label) => {
+    setSelectedAddons((current) => {
+      const next = new Set(current);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
+  };
+
+  const toggleCustomGoal = (label) => {
+    setCustomGoals((current) => {
+      const next = new Set(current);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next.size ? next : new Set([label]);
+    });
+  };
+
+  const saveDraft = (payload) => {
+    try {
+      window.localStorage.setItem('avalon.clientStoreDraft', JSON.stringify({
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      }));
+    } catch {}
+  };
+
+  const continueGuided = () => {
+    clearItems();
+    const price = recommended.price || recommended.doses?.[0]?.price || 0;
+    addItem({ cartKey: recommended.key, label: recommended.label, price, type: 'iv' });
+    addonItems.forEach((item) => {
+      addItem({
+        cartKey: `${item.type}-${item.label}`,
+        label: item.type === 'im' ? `IM · ${item.label}` : item.label,
+        price: item.price,
+        type: item.type === 'im' ? 'im' : 'addon',
+      });
+    });
+    saveDraft({
+      mode: 'guided',
+      goal: goal.label,
+      protocol: recommended.key,
+      addOns: addonItems.map((item) => item.label),
+      total,
+    });
+    navigate(`/book?protocol=${recommended.key}`);
+  };
+
+  const continueCustom = () => {
+    saveDraft({
+      mode: 'custom',
+      goals: Array.from(customGoals),
+      people,
+      note: customNote,
+    });
+    navigate('/book?protocol=myers&custom=1');
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar showBack />
+
+      <main className="mx-auto max-w-lg px-4 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-24">
+        <motion.header
+          initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.55, ease: EASE }}
+          className="pb-5"
+        >
+          <p className="font-body text-[10px] uppercase tracking-[0.3em] text-accent">Client Store</p>
+          <h1 className="mt-3 font-heading text-[4.1rem] uppercase leading-[0.82] tracking-tight">
+            Start<br />Simple.
+          </h1>
+          <p className="mt-4 max-w-sm font-body text-base leading-relaxed text-foreground/62">
+            Pick a goal. We recommend the visit. Customize only if you need to.
+          </p>
+        </motion.header>
+
+        <div className="grid grid-cols-2 gap-2 rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-1">
+          {[
+            ['guided', 'Recommended'],
+            ['custom', 'Custom'],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setMode(key)}
+              className={`min-h-[52px] rounded-[1rem] font-body text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                mode === key ? 'bg-foreground text-background' : 'text-foreground/55'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'guided' ? (
+          <section className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 gap-2">
+              {GOALS.map((item) => {
+                const Icon = item.icon;
+                const active = item.key === goalKey;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      setGoalKey(item.key);
+                      setSelectedProtocol(null);
+                    }}
+                    className={`flex min-h-[76px] items-center gap-4 rounded-[1.35rem] border px-4 text-left transition-colors ${
+                      active
+                        ? 'border-foreground/22 bg-foreground text-background'
+                        : 'border-foreground/[0.10] bg-foreground/[0.035] text-foreground'
+                    }`}
+                  >
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${
+                      active ? 'border-background/12 bg-background/10' : 'border-foreground/[0.10] bg-foreground/[0.04]'
+                    }`}>
+                      <Icon className="h-5 w-5" strokeWidth={1.75} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-heading text-2xl uppercase leading-none">{item.label}</span>
+                      <span className={`mt-1 block font-body text-sm ${active ? 'text-background/62' : 'text-foreground/52'}`}>{item.sub}</span>
+                    </span>
+                    {active && <Check className="h-4 w-4 shrink-0" strokeWidth={2.4} />}
+                  </button>
+                );
+              })}
             </div>
-          </motion.div>
+
+            <VisitCard session={recommended} active label="Recommended Visit" />
+
+            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Quick Add-ons</p>
+                <p className="font-body text-xs text-foreground/45">{selectedAddons.size} selected</p>
+              </div>
+              <div className="grid gap-2">
+                {QUICK_ADDON_ITEMS.map((item) => {
+                  const active = selectedAddons.has(item.label);
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => toggleAddon(item.label)}
+                      className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left transition-colors ${
+                        active ? 'border-accent/35 bg-accent/[0.10]' : 'border-foreground/[0.08] bg-background/55'
+                      }`}
+                    >
+                      <span>
+                        <span className="block font-body text-sm font-medium">{item.type === 'im' ? `IM · ${item.label}` : item.label}</span>
+                        <span className="mt-0.5 block font-body text-[11px] text-foreground/42">{item.desc}</span>
+                      </span>
+                      <span className="shrink-0 font-body text-sm font-semibold">+{money(item.price)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Other good fits</p>
+              <div className="grid gap-2">
+                {alternatives.map((session) => (
+                  <button
+                    key={session.key}
+                    type="button"
+                    onClick={() => setSelectedProtocol(session.key)}
+                    className="flex min-h-[58px] items-center justify-between rounded-2xl border border-foreground/[0.08] bg-background/55 px-3 text-left"
+                  >
+                    <span className="font-body text-sm text-foreground/72">{session.label}</span>
+                    <span className="font-body text-sm text-foreground/45">{money(session.price || session.doses?.[0]?.price)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="mt-4 space-y-4">
+            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-4">
+              <p className="font-body text-[10px] uppercase tracking-[0.28em] text-accent">Custom Protocol</p>
+              <h2 className="mt-3 font-heading text-4xl uppercase leading-none">Tell us the outcome.</h2>
+              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/58">
+                Use this when you are not sure what to choose, want a stack, or need something built around a group, event, travel, or recovery plan.
+              </p>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Primary goals</p>
+              <div className="flex flex-wrap gap-2">
+                {CUSTOM_GOALS.map((label) => {
+                  const active = customGoals.has(label);
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => toggleCustomGoal(label)}
+                      className={`min-h-[44px] rounded-full border px-4 font-body text-xs font-semibold uppercase tracking-[0.12em] ${
+                        active ? 'border-foreground bg-foreground text-background' : 'border-foreground/[0.12] text-foreground/58'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">How many people?</p>
+              <div className="grid grid-cols-4 gap-2">
+                {['1', '2', '3-4', '5+'].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setPeople(value)}
+                    className={`min-h-[54px] rounded-2xl border font-body text-sm font-semibold ${
+                      people === value ? 'border-foreground bg-foreground text-background' : 'border-foreground/[0.10] bg-background/55 text-foreground/62'
+                    }`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+              {customNeedsContact && (
+                <p className="mt-3 rounded-2xl border border-accent/20 bg-accent/[0.08] px-3 py-2 font-body text-xs leading-relaxed text-accent/85">
+                  Groups over 4 need direct coordination so we can staff appropriately.
+                </p>
+              )}
+            </div>
+
+            <label className="block rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+              <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Anything we should know?</span>
+              <textarea
+                value={customNote}
+                onChange={(event) => setCustomNote(event.target.value)}
+                rows={5}
+                placeholder="Example: I want recovery after a race, better energy, and no sedating add-ons."
+                className="w-full resize-none rounded-2xl border border-foreground/[0.10] bg-background/65 px-4 py-3 font-body text-base text-foreground placeholder:text-foreground/28 focus:border-accent/50 focus:outline-none"
+              />
+            </label>
+
+            <div className="grid grid-cols-2 gap-2">
+              <a
+                href="tel:+14159807708"
+                className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.035] font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/68"
+              >
+                <MessageCircle className="h-4 w-4" /> Call
+              </a>
+              <Link
+                to="/events"
+                className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.035] font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/68"
+              >
+                <Users className="h-4 w-4" /> Events
+              </Link>
+            </div>
+          </section>
         )}
-      </AnimatePresence>
+      </main>
+
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/94 px-4 pt-3 backdrop-blur-2xl"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.85rem)' }}
+      >
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">
+              {mode === 'guided' ? 'Visit total' : 'Custom request'}
+            </p>
+            <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">
+              {mode === 'guided' ? `${recommended.label} · ${money(total)}` : `${Array.from(customGoals).slice(0, 2).join(' + ')} · ${people} people`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={mode === 'guided' ? continueGuided : continueCustom}
+            className="flex min-h-[60px] min-w-[148px] items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-5 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-background"
+          >
+            Continue <ArrowRight className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+        <p className="mx-auto mt-2 max-w-lg text-center font-body text-[10px] text-foreground/34">
+          No charge here. Your visit is confirmed after clinical review and scheduling.
+        </p>
+      </div>
     </div>
   );
 }
 
-/* ─── Main ───────────────────────────────────────────────────── */
-export default function Store() {
-  useSeo({
-    title: 'Book Mobile IV Therapy — Avalon Vitality',
-    description: 'Browse IV drip protocols and book a licensed RN to your location in the San Francisco Bay Area.',
-    path: '/store',
-  });
-
-  const { items: cart, addItem, removeItem } = useCart();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  /* ── Accordion state ── */
-  const [goalOpen,    setGoalOpen]    = useState(false);
-  const [therapyOpen, setTherapyOpen] = useState(false);
-  const [enhOpen,     setEnhOpen]     = useState(false);
-  const [pkgOpen,     setPkgOpen]     = useState(false);
-
-  /* ── Selections ── */
-  const [selectedGoal, setSelectedGoal] = useState(null); // null = browse all
-  const [selectedKey,  setSelectedKey]  = useState(SESSIONS[0].key);
-  const [ivSelected,   setIvSelected]   = useState(new Set());
-  const [imSelected,   setImSelected]   = useState(new Set());
-  const [detailOpen,   setDetailOpen]   = useState(false); // ingredient reveal
-
-  /* ── Purchase type ── */
-  const [purchaseType, setPurchaseType] = useState('one-time');
-
-  /* ── Checkout ── */
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-
-  /* Auto-open checkout from URL param */
-  useEffect(() => {
-    if (searchParams.get('checkout') === '1' && cart.length > 0) {
-      setCheckoutOpen(true);
-    }
-  }, [searchParams, cart.length]);
-
-  /* ── Derived values ── */
-  const goal = GOALS.find((g) => g.key === selectedGoal) ?? null;
-
-  const filteredSessions = useMemo(
-    () => (selectedGoal && goal ? SESSIONS.filter((s) => s.category === goal.cat) : SESSIONS),
-    [selectedGoal, goal],
-  );
-
-  const session  = SESSIONS.find((s) => s.key === selectedKey) ?? SESSIONS[0];
-  const selIV    = IV_ADDONS.filter((a) => ivSelected.has(a.label));
-  const selIM    = IM_SHOTS.filter((s) => imSelected.has(s.label));
-  const enhTotal = selIV.reduce((s, x) => s + x.price, 0) + selIM.reduce((s, x) => s + x.price, 0);
-  const visitTotal = session.price + enhTotal;
-
-  const enhValue = (() => {
-    const n = ivSelected.size + imSelected.size;
-    if (n === 0) return 'None';
-    return `${n} selected · +$${enhTotal}`;
-  })();
-
-  /* ── Helpers ── */
-  const toggleIV = (label) =>
-    setIvSelected((prev) => { const n = new Set(prev); n.has(label) ? n.delete(label) : n.add(label); return n; });
-
-  const toggleIM = (label) =>
-    setImSelected((prev) => { const n = new Set(prev); n.has(label) ? n.delete(label) : n.add(label); return n; });
-
-  const handleBook = () => {
-    if (purchaseType === 'subscribe') {
-      navigate('/subscription');
-      return;
-    }
-
-    if (!cart.some((i) => i.cartKey === session.key))
-      addItem({ cartKey: session.key, label: session.label, price: session.price, type: 'iv' });
-    selIV.forEach((a) => {
-      if (!cart.some((i) => i.cartKey === `iv-${a.label}`))
-        addItem({ cartKey: `iv-${a.label}`, label: a.label, price: a.price, type: 'addon' });
-    });
-    selIM.forEach((s) => {
-      if (!cart.some((i) => i.cartKey === `im-${s.label}`))
-        addItem({ cartKey: `im-${s.label}`, label: `IM · ${s.label}`, price: s.price, type: 'im' });
-    });
-    track('checkout_opened', { session: session.key, enhancements: ivSelected.size + imSelected.size });
-    setCheckoutOpen(true);
-  };
-
-  const handleAddPackage = (pkg) => {
-    pkg.items.forEach((item) => {
-      if (!cart.some((i) => i.cartKey === item.cartKey)) addItem(item);
-    });
-    track('package_added', { package: pkg.key });
-    setCheckoutOpen(true);
-  };
+function VisitCard({ session, label }) {
+  const Icon = iconForSession(session);
+  const price = session.price || session.doses?.[0]?.price || 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
-      <div className="max-w-lg mx-auto px-5 pt-24 pb-36 space-y-3">
-
-        {/* ── Store header ─────────────────────────────────────── */}
-        <motion.header
-          initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="pt-2 pb-2"
-        >
-          <p className="font-body text-[10px] tracking-[0.32em] uppercase text-accent mb-3">Store</p>
-          <h1 className="font-heading text-[3.6rem] leading-[0.82] tracking-tight uppercase text-foreground">
-            Build<br />Your Visit
-          </h1>
-          <p className="font-body text-sm leading-relaxed text-foreground/60 mt-4 max-w-sm">
-            Choose a protocol, add boosters, and continue to secure checkout when the visit is ready.
-          </p>
-        </motion.header>
-
-        {/* ── Trust bar (rule of 3) ─────────────────────────────── */}
-        <div className="flex items-center justify-center py-2">
-          <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/45">RN</span>
-          <div className="w-px h-3 bg-foreground/20 mx-4" />
-          <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/45">Clinical</span>
-          <div className="w-px h-3 bg-foreground/20 mx-4" />
-          <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/45">SF Bay Area</span>
+    <div className="rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_18px_54px_rgba(0,0,0,0.16)]">
+      <div className="flex items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-accent/25 bg-accent/[0.10] text-accent">
+          <Icon className="h-5 w-5" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-body text-[10px] uppercase tracking-[0.26em] text-accent">{label}</p>
+          <h2 className="mt-2 font-heading text-4xl uppercase leading-none">{session.label}</h2>
+          <p className="mt-2 font-body text-sm leading-relaxed text-foreground/58">{session.tagline || session.desc}</p>
         </div>
-
-        {/* ── Main 3-picker accordion ───────────────────────────── */}
-        <div className="rounded-2xl border border-foreground/[0.10] bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-
-          {/* ── GOAL ── */}
-          <PickerRow
-            label="GOAL"
-            value={goal ? goal.label : 'All Therapies'}
-            open={goalOpen}
-            onToggle={() => { setGoalOpen((v) => !v); setTherapyOpen(false); setEnhOpen(false); }}
-          >
-            {GOALS.map((g, idx) => {
-              const isActive = selectedGoal === g.key;
-              return (
-                <button
-                  key={g.key}
-                  type="button"
-                  onClick={() => {
-                    const newGoal = isActive ? null : g.key;
-                    setSelectedGoal(newGoal);
-                    // If current session doesn't fit the new goal, reset to first match
-                    if (newGoal) {
-                      const goalDef = GOALS.find((x) => x.key === newGoal);
-                      const fits = SESSIONS.filter((s) => s.category === goalDef?.cat);
-                      if (fits.length > 0 && !fits.some((s) => s.key === selectedKey)) {
-                        setSelectedKey(fits[0].key);
-                        setDetailOpen(false);
-                      }
-                    }
-                    setGoalOpen(false);
-                    setTherapyOpen(true);
-                    track('goal_selected', { goal: newGoal });
-                  }}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 transition-colors ${
-                    idx > 0 ? 'border-t border-foreground/[0.05]' : ''
-                  } ${isActive ? 'bg-foreground/[0.07]' : 'hover:bg-foreground/[0.03]'}`}
-                >
-                  <g.icon
-                    className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-foreground' : 'text-foreground/30'}`}
-                    strokeWidth={1.5}
-                  />
-                  <span className={`flex-1 font-body text-sm tracking-[0.04em] transition-colors ${isActive ? 'text-foreground font-medium' : 'text-foreground/60'}`}>
-                    {g.label}
-                  </span>
-                  {isActive && <Check className="w-3.5 h-3.5 text-foreground shrink-0" strokeWidth={2.5} />}
-                </button>
-              );
-            })}
-            {/* Browse all */}
-            <button
-              type="button"
-              onClick={() => { setSelectedGoal(null); setGoalOpen(false); setTherapyOpen(true); }}
-              className={`w-full flex items-center gap-3 px-5 py-3.5 border-t border-foreground/[0.05] transition-colors ${
-                !selectedGoal ? 'bg-foreground/[0.07]' : 'hover:bg-foreground/[0.03]'
-              }`}
-            >
-              <Droplets
-                className={`w-4 h-4 shrink-0 ${!selectedGoal ? 'text-foreground' : 'text-foreground/30'}`}
-                strokeWidth={1.5}
-              />
-              <span className={`flex-1 font-body text-sm tracking-[0.04em] ${!selectedGoal ? 'text-foreground font-medium' : 'text-foreground/60'}`}>
-                Browse All
-              </span>
-              {!selectedGoal && <Check className="w-3.5 h-3.5 text-foreground shrink-0" strokeWidth={2.5} />}
-            </button>
-          </PickerRow>
-
-          {/* ── THERAPY ── */}
-          <PickerRow
-            label="THERAPY"
-            value={session.label}
-            open={therapyOpen}
-            onToggle={() => { setTherapyOpen((v) => !v); setGoalOpen(false); setEnhOpen(false); }}
-          >
-            {filteredSessions.map((s, idx) => {
-              const isSelected = selectedKey === s.key;
-              return (
-                <div key={s.key}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isSelected) {
-                        // Second tap on selected row → toggle ingredient detail
-                        setDetailOpen((v) => !v);
-                      } else {
-                        setSelectedKey(s.key);
-                        setDetailOpen(false);
-                        setTherapyOpen(false);
-                      }
-                    }}
-                    className={`w-full flex items-center gap-3 px-5 py-3.5 transition-colors ${
-                      idx > 0 ? 'border-t border-foreground/[0.05]' : ''
-                    } ${isSelected ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.03]'}`}
-                  >
-                    <s.icon
-                      className={`w-4 h-4 shrink-0 transition-colors ${
-                        isSelected ? 'text-foreground' : s.elite ? 'text-accent/40' : 'text-foreground/30'
-                      }`}
-                      strokeWidth={1.5}
-                    />
-                    <span className={`flex-1 font-body text-sm tracking-[0.04em] transition-colors ${isSelected ? 'text-foreground font-medium' : 'text-foreground/60'}`}>
-                      {s.label}
-                    </span>
-                    {s.popular && !isSelected && (
-                      <span className="font-body text-[8px] tracking-[0.2em] uppercase text-accent/60 border border-accent/20 px-1.5 py-0.5 rounded-full">
-                        Popular
-                      </span>
-                    )}
-                    <span className={`font-body text-sm shrink-0 transition-colors ${isSelected ? 'text-foreground font-semibold' : 'text-foreground/40'}`}>
-                      ${s.price}
-                    </span>
-                    {/* Chevron only on selected row to hint at detail expansion */}
-                    {isSelected && (
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-foreground/35 transition-transform duration-200 shrink-0 ${detailOpen ? 'rotate-180' : ''}`}
-                        strokeWidth={1.5}
-                      />
-                    )}
-                  </button>
-
-                  {/* ── Ingredient detail sub-row ── */}
-                  <AnimatePresence initial={false}>
-                    {isSelected && detailOpen && s.inside && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: EASE }}
-                        style={{ overflow: 'hidden' }}
-                      >
-                        <div className="px-5 pb-4 pt-3 border-t border-foreground/[0.05] bg-foreground/[0.015] space-y-2">
-                          <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35">Formulated with</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {s.inside.split(' · ').map((ing) => (
-                              <span
-                                key={ing}
-                                className="font-body text-[10px] text-foreground/60 bg-foreground/[0.05] border border-foreground/[0.08] px-2.5 py-1 rounded-full"
-                              >
-                                {ing}
-                              </span>
-                            ))}
-                          </div>
-                          <p className="font-body text-[9px] text-foreground/25 leading-relaxed pt-1">
-                            For educational purposes. Formulation may vary based on clinical assessment.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </PickerRow>
-
-          {/* ── ENHANCEMENTS ── */}
-          <PickerRow
-            label="ENHANCEMENTS"
-            value={enhValue}
-            open={enhOpen}
-            onToggle={() => { setEnhOpen((v) => !v); setGoalOpen(false); setTherapyOpen(false); }}
-          >
-            {/* IV Bag Add-ons */}
-            {IV_ADDONS.map((addon, idx) => {
-              const sel = ivSelected.has(addon.label);
-              return (
-                <button
-                  key={addon.label}
-                  type="button"
-                  onClick={() => toggleIV(addon.label)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 transition-colors ${
-                    idx > 0 ? 'border-t border-foreground/[0.05]' : ''
-                  } ${sel ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.03]'}`}
-                >
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${sel ? 'bg-foreground border-foreground' : 'border-foreground/20'}`}>
-                    {sel && <Check className="w-2.5 h-2.5 text-background" strokeWidth={3} />}
-                  </div>
-                  <span className={`flex-1 font-body text-sm tracking-[0.04em] transition-colors ${sel ? 'text-foreground font-medium' : 'text-foreground/60'}`}>
-                    {addon.label}
-                  </span>
-                  <span className={`font-body text-sm shrink-0 transition-colors ${sel ? 'text-foreground font-semibold' : 'text-foreground/40'}`}>
-                    +${addon.price}
-                  </span>
-                </button>
-              );
-            })}
-
-            {/* IM Shots divider */}
-            <div className="flex items-center gap-3 px-5 py-2.5 border-t border-foreground/[0.05] bg-foreground/[0.01]">
-              <Syringe className="w-3 h-3 text-foreground/25" strokeWidth={1.5} />
-              <span className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/25">IM Shots</span>
-            </div>
-
-            {/* IM Shots */}
-            {IM_SHOTS.map((shot) => {
-              const sel = imSelected.has(shot.label);
-              return (
-                <button
-                  key={shot.label}
-                  type="button"
-                  onClick={() => toggleIM(shot.label)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 border-t border-foreground/[0.05] transition-colors ${sel ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.03]'}`}
-                >
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${sel ? 'bg-foreground border-foreground' : 'border-foreground/20'}`}>
-                    {sel && <Check className="w-2.5 h-2.5 text-background" strokeWidth={3} />}
-                  </div>
-                  <span className={`flex-1 font-body text-sm tracking-[0.04em] transition-colors ${sel ? 'text-foreground font-medium' : 'text-foreground/60'}`}>
-                    {shot.label}
-                  </span>
-                  <span className={`font-body text-sm shrink-0 transition-colors ${sel ? 'text-foreground font-semibold' : 'text-foreground/40'}`}>
-                    +${shot.price}
-                  </span>
-                </button>
-              );
-            })}
-          </PickerRow>
-        </div>
-
-        {/* ── Purchase type toggle ──────────────────────────────── */}
-        <div className="flex rounded-2xl border border-foreground/[0.10] bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setPurchaseType('one-time')}
-            className={`flex-1 py-3.5 font-body text-[10px] tracking-[0.2em] uppercase font-semibold transition-all ${
-              purchaseType === 'one-time'
-                ? 'bg-foreground text-background'
-                : 'text-foreground/45 hover:text-foreground/70'
-            }`}
-          >
-            Buy Now
-          </button>
-          <button
-            type="button"
-            onClick={() => setPurchaseType('subscribe')}
-            className={`flex-1 py-3.5 font-body text-[10px] tracking-[0.2em] uppercase font-semibold transition-all ${
-              purchaseType === 'subscribe'
-                ? 'bg-foreground text-background'
-                : 'text-foreground/45 hover:text-foreground/70'
-            }`}
-          >
-            Subscribe & Save
-          </button>
-        </div>
-
-        {purchaseType === 'subscribe' && (
-          <motion.p
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2, ease: EASE }}
-            className="font-body text-[10px] text-center text-accent/70 tracking-[0.05em]"
-          >
-            Save 15–25% with a subscription.{' '}
-            <Link to="/subscription" className="underline underline-offset-2 hover:text-accent transition-colors">
-              View plans →
-            </Link>
-          </motion.p>
-        )}
-
-        {/* ── Info strip (rule of 3) ────────────────────────────── */}
-        <div className="flex items-center justify-center py-2">
-          <div className="flex items-center gap-1.5">
-            <span className="font-body text-sm text-foreground font-semibold">${visitTotal.toLocaleString()}</span>
-            {enhTotal > 0 && (
-              <span className="font-body text-[10px] text-foreground/40">total</span>
-            )}
-          </div>
-          <div className="w-px h-3 bg-foreground/15 mx-5" />
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-foreground/40" strokeWidth={1.5} />
-            <span className="font-body text-xs text-foreground/60">30–45 min</span>
-          </div>
-          <div className="w-px h-3 bg-foreground/15 mx-5" />
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-foreground/40" strokeWidth={1.5} />
-            <span className="font-body text-xs text-foreground/60">Mobile</span>
-          </div>
-        </div>
-
-        {/* ── Book CTA ─────────────────────────────────────────── */}
-        <motion.button
-          type="button"
-          onClick={handleBook}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-foreground text-background font-body text-sm tracking-[0.22em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
-        >
-          {purchaseType === 'subscribe' ? 'View Plans' : 'Add to Visit'} <ArrowRight className="w-4 h-4" strokeWidth={2} />
-        </motion.button>
-
-        {/* ── Subscribers note ─────────────────────────────────── */}
-        <p className="font-body text-[10px] text-center text-foreground/30 tracking-[0.05em]">
-          Subscribers save 15–25% on every visit.{' '}
-          <Link to="/subscription" className="text-foreground/50 hover:text-foreground/70 transition-colors underline underline-offset-2">
-            Join →
-          </Link>
-        </p>
-
-        {/* ── Packages — Bundle & Save ─────────────────────────── */}
-        <div className="pt-4 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-px bg-foreground/[0.07]" />
-            <span className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/25">Bundle & Save</span>
-            <div className="flex-1 h-px bg-foreground/[0.07]" />
-          </div>
-
-          <div className="rounded-2xl border border-foreground/[0.10] bg-white/[0.04] backdrop-blur-xl overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setPkgOpen((v) => !v)}
-              className="w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-foreground/[0.02]"
-            >
-              <div className="w-8 h-8 rounded-full bg-foreground/[0.08] border border-foreground/[0.14] flex items-center justify-center shrink-0">
-                <Package className="w-3.5 h-3.5 text-foreground/50" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1">
-                <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/35 mb-0.5">Packages</p>
-                <p className="font-body text-sm tracking-[0.03em] text-foreground">Curated Bundles</p>
-              </div>
-              <ChevronDown
-                className={`w-4 h-4 text-foreground/35 transition-transform duration-300 shrink-0 ${pkgOpen ? 'rotate-180' : ''}`}
-                strokeWidth={1.5}
-              />
-            </button>
-
-            <AnimatePresence initial={false}>
-              {pkgOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: EASE }}
-                  style={{ overflow: 'hidden' }}
-                >
-                  <div className="border-t border-foreground/[0.07] divide-y divide-foreground/[0.05]">
-                    {PACKAGES.map((pkg) => (
-                      <div key={pkg.key} className="px-5 py-4 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                              <p className="font-body text-sm tracking-[0.04em] text-foreground font-medium">{pkg.label}</p>
-                              <span className="font-body text-[8px] tracking-[0.2em] uppercase text-foreground/40 border border-foreground/15 px-1.5 py-0.5 rounded-full">
-                                {pkg.tag}
-                              </span>
-                            </div>
-                            <p className="font-body text-[10px] text-foreground/45">{pkg.tagline}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="font-body text-sm font-semibold text-foreground">${pkg.price}</p>
-                            <p className="font-body text-[9px] text-accent/80">Save ${pkg.save}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          {pkg.includes.map((item) => (
-                            <div key={item} className="flex items-center gap-2">
-                              <Check className="w-3 h-3 text-foreground/30 shrink-0" strokeWidth={2} />
-                              <span className="font-body text-[10px] text-foreground/55">{item}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleAddPackage(pkg)}
-                          className="w-full py-2.5 rounded-xl bg-foreground text-background font-body text-[10px] tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
-                        >
-                          Add Package →
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        <div className="text-right">
+          <p className="font-heading text-3xl leading-none">{money(price)}</p>
+          <p className="mt-1 font-body text-[10px] text-foreground/36">from</p>
         </div>
       </div>
-
-      <Footer />
-
-      {/* ── Floating cart bar ─────────────────────────────────── */}
-      <AnimatePresence>
-        {cart.length > 0 && !checkoutOpen && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="fixed bottom-6 left-4 right-4 z-40"
-          >
-            <button
-              type="button"
-              onClick={() => setCheckoutOpen(true)}
-              className="w-full flex items-center justify-between px-6 py-4 rounded-2xl bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors shadow-2xl shadow-black/40"
-            >
-              <span>{cart.length} item{cart.length !== 1 ? 's' : ''}</span>
-              <span className="flex items-center gap-2">
-                Review Cart <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
-              </span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Checkout sheet ────────────────────────────────────── */}
-      <AnimatePresence>
-        {checkoutOpen && (
-          <CheckoutSheet
-            cart={cart}
-            onRemove={removeItem}
-            onClose={() => setCheckoutOpen(false)}
-            onConfirm={() => navigate('/checkout')}
-          />
-        )}
-      </AnimatePresence>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {[
+          ['Mobile', MapPin],
+          [session.duration || session.doses?.[0]?.duration || '45-60 min', BatteryCharging],
+          ['RN', ShieldCheck],
+        ].map(([text, IconItem]) => (
+          <div key={text} className="rounded-2xl border border-foreground/[0.08] bg-background/45 px-2 py-3 text-center">
+            <IconItem className="mx-auto mb-2 h-4 w-4 text-foreground/42" strokeWidth={1.6} />
+            <p className="font-body text-[10px] uppercase tracking-[0.12em] text-foreground/58">{text}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
