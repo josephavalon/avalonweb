@@ -117,7 +117,7 @@ export default function Careers() {
                   <div className="shrink-0">
                     <a
                       href="mailto:careers@avalonvitality.co"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-foreground/20 font-body text-xs tracking-[0.15em] uppercase text-foreground/70 hover:border-accent/50 hover:text-accent transition-all duration-200"
+                      className="inline-flex min-h-[44px] items-center gap-2 px-5 py-2.5 rounded-xl border border-foreground/20 font-body text-xs tracking-[0.15em] uppercase text-foreground/70 hover:border-accent/50 hover:text-accent transition-all duration-200"
                     >
                       Learn More <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </a>
@@ -161,7 +161,7 @@ export default function Careers() {
             >
               <a
                 href="mailto:nurses@avalonvitality.co"
-                className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-7 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
+                className="inline-flex min-h-[44px] items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-7 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
               >
                 Apply to Join <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </a>
@@ -174,7 +174,7 @@ export default function Careers() {
           <div className="max-w-5xl mx-auto">
             <p className="font-body text-xs text-foreground/35 leading-relaxed max-w-2xl">
               Don't see a role that fits? We're always open to exceptional people. Send us a note at{' '}
-              <a href="mailto:careers@avalonvitality.co" className="text-foreground/50 hover:text-accent transition-colors">
+              <a href="mailto:careers@avalonvitality.co" className="inline-flex min-h-[44px] items-center text-foreground/50 hover:text-accent transition-colors">
                 careers@avalonvitality.co
               </a>{' '}
               and tell us what you'd bring to Avalon.

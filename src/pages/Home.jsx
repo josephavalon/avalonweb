@@ -1,35 +1,33 @@
 // @push 1777082646030 — fix orphan trim
 // @rev 1777073683808 — credits model
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
-import HowItWorks from '../components/landing/HowItWorks';
-import WhatIsIV from '../components/landing/WhatIsIV';
-import TreatmentsTeaser from '../components/landing/TreatmentsTeaser';
-import MembershipSection from '../components/landing/MembershipSection';
-import Footer from '../components/landing/Footer';
-import Reviews from '../components/landing/Reviews';
-import ChannelCards from '../components/landing/ChannelCards';
 import StickyBookBar from '../components/landing/StickyBookBar';
-import ComparisonTable from '../components/landing/ComparisonTable';
+
+const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
+const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
+const MembershipSection = lazy(() => import('../components/landing/MembershipSection'));
+const Reviews = lazy(() => import('../components/landing/Reviews'));
+const ChannelCards = lazy(() => import('../components/landing/ChannelCards'));
+const Footer = lazy(() => import('../components/landing/Footer'));
 
 // Section order — conversion funnel:
 // 1. Hero: promise + social proof + dual CTA  (ATF — fills 100svh)
 // 2. HowItWorks: remove friction, explain the service
 // 3. TreatmentsTeaser: product tour with pricing
 // 4. MembershipSection: subscription pricing ask
-// 5. ChannelCards: corporate / events / hotel pathways
-// 6. Reviews: earned trust
-// 7. WhatIsIV: education for skeptics
+// 5. Reviews: earned trust
+// 6. ChannelCards: corporate / events / hotel pathways
 //
 // Note: Reveal wrappers removed — each section owns its per-card whileInView
 // animations. Stacking Reveal (opacity 0→1) on top of per-card (opacity 0→1)
 // produces opacity multiplication (t²) which creates the visible flash highlight.
 export default function Home() {
   useSeo({
-    title: 'Avalon Vitality — Mobile IV Therapy in the San Francisco Bay Area',
-    description: 'Luxury mobile IV therapy delivered to your home, hotel, or office across SF, Marin, the Peninsula, and the East Bay. Book your session in minutes.',
+    title: 'Avalon Vitality — Premium Recovery, Delivered',
+    description: 'Avalon Vitality is a premium recovery platform for clinician-reviewed protocols across hydration, recovery, performance, longevity, launches, and mobile appointments.',
     path: '/',
   });
 
@@ -41,17 +39,19 @@ export default function Home() {
       <Hero />
 
       {/* ── Below fold — per-card whileInView animations handle entrance ── */}
-      <HowItWorks />
-      <TreatmentsTeaser />
-      <MembershipSection />
-      <Reviews />
-      <ChannelCards />
-      <ComparisonTable />
-      <WhatIsIV />
+      <Suspense fallback={null}>
+        <HowItWorks />
+        <TreatmentsTeaser />
+        <MembershipSection />
+        <Reviews />
+        <ChannelCards />
+      </Suspense>
       <StickyBookBar />
 
       <div className="pb-24 md:pb-0">
-        <Footer />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       </div>
     </div>
   );

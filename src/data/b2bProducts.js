@@ -1,11 +1,11 @@
-// Bay to Breakers presale catalog.
+// Group recovery catalog.
 // To wire real Square checkout: in Square Dashboard, create a Payment Link
 // for each product (and each combo with compression add-on), then drop
 // the URL into squareUrl below. Coupons stay client-side; the squareUrl
 // always points to the BASE price; coupon discount is shown to the
 // buyer in the order summary and noted in the Square checkout title.
 
-// B2B IV inventory — 200 B2B IV bags total for race day.
+// Group IV inventory — 200 IV bags reserved for private group programs.
 // Pool is shared across the single IV + every bundle that contains it.
 // Update B2B_IV_SOLD manually as Square reports sales (or wire a webhook later).
 export const B2B_IV_INVENTORY = 200;
@@ -18,46 +18,46 @@ export const B2B_PRODUCTS = [
   // Singles
   {
     id: 'bay2bay-shot',
-    name: 'B2B IM Shot',
-    tagline: 'Finish-line shot',
-    description: 'Quick intramuscular shot at the finish line — choose B-12 or glutathione. Recovery in a hurry.',
+    name: 'IM Shot',
+    tagline: 'Quick boost',
+    description: 'B-12 or glutathione.',
     price: 40,
     originalPrice: 60,
     kind: 'single',
     consumes: ['imShot'],
-    flair: { line1: '33% OFF', line2: 'ONE DAY ONLY' },
+    flair: { line1: 'GROUP', line2: 'RATE' },
     squareUrl: 'https://square.link/u/xpooOvYi',
   },
   {
     id: 'bay2bay-iv',
-    name: 'B2B IV',
-    tagline: 'Race-day hydration, full bag',
-    description: "500 mL. Classic Myers' Cocktail. Magnesium, calcium gluconate, B-complex, B-12, and high-dose Vitamin C. Delivered at the finish line.",
+    name: 'Group IV',
+    tagline: 'Full hydration',
+    description: "500 mL Myers' Cocktail.",
     price: 120,
     originalPrice: 300,
     kind: 'single',
     consumes: ['b2bIv'],
-    flair: { line1: '60% OFF', line2: 'ONE DAY ONLY' },
+    flair: { line1: 'GROUP', line2: 'RATE' },
     squareUrl: 'https://square.link/u/5Mqez7ub',
   },
   {
     id: 'bay2bay-cbd',
-    name: 'CBD IV',
-    tagline: 'Full-body recovery',
-    description: '500 mL. Premium CBD infusion (zero THC) for post-race recovery. 33mg therapeutic dose.',
+    name: 'CBD IV Review',
+    tagline: 'Approval gated',
+    description: 'Held for clinical and legal approval.',
     price: 200,
     originalPrice: 350,
     kind: 'single',
     consumes: ['cbdIv'],
-    flair: { line1: '43% OFF', line2: 'ONE DAY ONLY' },
+    flair: { line1: 'GROUP', line2: 'RATE' },
     squareUrl: 'https://square.link/u/LdDbC7pU',
   },
   // Bundles — pre-priced with a small bundle discount baked in
   {
     id: 'bundle-iv-im',
-    name: 'B2B IV + IM',
-    tagline: 'Save $10 — IV + shot',
-    description: 'Full B2B IV plus an intramuscular B-12 or glutathione shot at the finish line.',
+    name: 'IV + IM',
+    tagline: 'IV + shot',
+    description: 'Hydration plus B-12 or glutathione.',
     price: 150,
     originalPrice: 160,
     kind: 'bundle',
@@ -67,9 +67,9 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bundle-full-recovery',
-    name: 'B2B IV + IM + Boots',
-    tagline: 'Save $20 — IV + shot + boots',
-    description: 'The whole protocol at the finish line: B2B IV, intramuscular B-12 or glutathione shot, and Normatec compression. Three steps, dialed.',
+    name: 'IV + IM + Boots',
+    tagline: 'Full support',
+    description: 'IV, shot, and compression.',
     price: 190,
     originalPrice: 210,
     kind: 'bundle',
@@ -79,9 +79,9 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bundle-cbd-compression',
-    name: 'CBD IV + Boots',
-    tagline: 'Save $10 vs singles — Premium recovery',
-    description: 'CBD IV with Normatec compression boots. Premium recovery pairing for hard race effort.',
+    name: 'CBD Review + Boots',
+    tagline: 'Approval gated',
+    description: 'CBD IV review plus compression.',
     price: 240,
     originalPrice: 250,
     kind: 'bundle',
@@ -91,9 +91,9 @@ export const B2B_PRODUCTS = [
   },
   {
     id: 'bundle-cbd-im-boots',
-    name: 'CBD IV + IM + Boots',
-    tagline: 'Save $20 vs singles — Full premium stack',
-    description: 'CBD IV, intramuscular B-12 or glutathione shot, and Normatec compression boots. Top-tier finish-line protocol.',
+    name: 'CBD Review + IM + Boots',
+    tagline: 'Approval gated',
+    description: 'CBD IV review, shot, and compression.',
     price: 270,
     originalPrice: 290,
     kind: 'bundle',
@@ -106,17 +106,17 @@ export const B2B_PRODUCTS = [
 export const COMPRESSION_ADDON = {
   id: 'compression',
   name: 'Normatec compression boots',
-  description: 'Normatec compression boots. Add to any IV or shot for full-body recovery.',
+  description: 'Compression add-on.',
   price: 50,
   originalPrice: 60,
-  flair: { line1: '17% OFF', line2: 'ONE DAY ONLY' },
+  flair: { line1: 'GROUP', line2: 'ADD-ON' },
   squareUrl: 'https://square.link/u/REPLACE-ME-COMPRESSION',
 };
 
 // Coupon codes — manage manually here. Apply % off or flat amount.
 // Codes are case-insensitive at runtime.
 export const COUPONS = {
-  'BAYTOBAY10':   { kind: 'percent', value: 10, label: '10% off' },
+  'GROUP10':      { kind: 'percent', value: 10, label: '10% off' },
   'NOFAKESWEAT':  { kind: 'percent', value: 20, label: '20% off' },
   'FOUNDER25':    { kind: 'percent', value: 25, label: '25% off' },
   'CREW50':       { kind: 'flat',    value: 50, label: '$50 off' },

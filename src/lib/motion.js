@@ -53,8 +53,8 @@ export const scaleIn = {
 };
 
 export const premiumFadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24, filter: 'blur(10px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
   transition: { ...transitionDramatic, delay },
 });
 
@@ -72,8 +72,63 @@ export const premiumHover = {
 };
 
 export const premiumTap = {
-  scale: 0.992,
+  scale: 0.97,
   transition: { duration: DURATIONS.quick, ease: EASE },
+};
+
+export const premiumLayoutTransition = {
+  duration: 0.58,
+  ease: EASE,
+};
+
+export const premiumExpandTransition = {
+  duration: 0.56,
+  ease: EASE,
+};
+
+export const premiumSelectionTransition = {
+  duration: 0.52,
+  ease: EASE,
+};
+
+export const premiumListContainer = (stagger = 0.045, delayChildren = 0.08) => ({
+  hidden: {
+    transition: { staggerChildren: stagger * 0.65, staggerDirection: -1 },
+  },
+  show: {
+    transition: { staggerChildren: stagger, delayChildren },
+  },
+});
+
+export const premiumListItem = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.44, ease: EASE },
+  },
+};
+
+export const routeTransition = {
+  initial: { opacity: 0.96 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0.98 },
+  transition: { duration: 0.18, ease: EASE },
+};
+
+export const premiumStaggerItem = {
+  hidden: { opacity: 0, y: 12, scale: 0.992 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: EASE },
+  },
+};
+
+export const premiumSheetTransition = {
+  duration: 0.68,
+  ease: EASE,
 };
 
 // Stagger helpers for list children.

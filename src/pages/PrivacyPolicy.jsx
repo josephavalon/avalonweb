@@ -45,7 +45,7 @@ const SECTIONS = [
       'To process payments, manage subscriptions including our presale cohort, and send transactional and account communications.',
       'To improve clinical outcomes through Avalon OS, by combining outcome and biomarker data (de-identified where possible) to refine future protocols.',
       'To comply with California medical record retention requirements, federal HIPAA obligations, audits, and other legal duties.',
-      'To prevent fraud, enforce our Terms of Service, and protect the rights, property, and safety of Avalon, our subscribers, and our staff.',
+      'To prevent fraud, enforce our Terms of Service, and protect the rights, property, and safety of Avalon, our clients, and our staff.',
       'For internal research and product improvement using aggregated and de-identified data.',
     ],
   },

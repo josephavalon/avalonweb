@@ -6,21 +6,21 @@ import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 const STEPS = [
   {
     n: '01',
-    title: 'Build your visit',
-    preview: 'Menu · location · time',
-    desc: 'Choose your drip, drop your location, pick a time. Our menu covers everything from hydration and energy to NAD+ and specialty infusions.',
+    title: 'Choose',
+    preview: 'Protocol · place · time',
+    desc: 'Pick the protocol and location.',
   },
   {
     n: '02',
-    title: 'Get confirmed',
-    preview: 'RN details · arrival window',
-    desc: 'We lock your arrival window and send your RN\'s details. Expect a 90-minute window — most arrive well within it.',
+    title: 'Confirm',
+    preview: 'RN · arrival window',
+    desc: 'We confirm the visit and RN details.',
   },
   {
     n: '03',
-    title: 'RN comes to you',
-    preview: '30-60 min session',
-    desc: 'A licensed RN arrives to your home, hotel, or office. Setup takes minutes. Your session runs 30–60 minutes depending on your protocol.',
+    title: 'Recover',
+    preview: '30-60 min',
+    desc: 'Your RN handles setup and care.',
   },
 ];
 
@@ -29,12 +29,20 @@ function StepCard({ step, index, open, onToggle }) {
   return (
     <motion.div
       whileHover={premiumHover}
-      className={`rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial ${
+      className={`relative rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] backdrop-blur-xl transition-colors duration-base ease-editorial ${
         open
           ? 'border-accent/35 bg-white/[0.12]'
           : 'border-foreground/10 bg-white/[0.08] hover:border-foreground/20 hover:bg-white/[0.105]'
       }`}
     >
+      <motion.span
+        initial={false}
+        animate={{ scale: open ? 1.08 : 1, opacity: open ? 1 : 0.55 }}
+        transition={{ duration: 0.45, ease: EASE }}
+        className={`absolute -left-[1.85rem] top-7 hidden h-3 w-3 rounded-full border md:block ${
+          open ? 'border-accent bg-accent shadow-[0_0_24px_hsl(var(--accent)/0.35)]' : 'border-foreground/18 bg-background'
+        }`}
+      />
       <motion.button
         type="button"
         onClick={onToggle}
@@ -96,13 +104,20 @@ export default function HowItWorks() {
           transition={{ duration: 0.95, ease: EASE }}
           className="mb-6 md:mb-10"
         >
-          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">The Process</p>
+          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Process</p>
           <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
-            HOW AVALON WORKS
+            HOW IT WORKS
           </h2>
         </motion.div>
 
-        <div className="space-y-2">
+        <div className="relative space-y-2 md:ml-7">
+          <motion.div
+            initial={{ scaleY: 0, opacity: 0 }}
+            whileInView={{ scaleY: 1, opacity: 1 }}
+            viewport={{ once: true, margin: '-12%' }}
+            transition={{ duration: 1.05, ease: EASE }}
+            className="absolute -left-[1.48rem] bottom-7 top-7 hidden w-px origin-top bg-gradient-to-b from-accent/60 via-foreground/[0.12] to-transparent md:block"
+          />
           {STEPS.map((step, i) => (
             <StepCard
               key={step.n}

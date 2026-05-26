@@ -11,41 +11,41 @@ import { useCart } from '@/context/CartContext';
 const EASE = [0.16, 1, 0.3, 1];
 
 const SESSIONS = [
-  { key: 'hydration', label: 'Hydration', price: 150, icon: Droplets, tagline: 'Rehydrate, replenish, and recover fast.', tag: 'Essential', category: 'recovery', duration: '30–45 min', inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals' },
-  { key: 'energy',    label: 'Energy',    price: 250, icon: Zap,       tagline: 'Boost energy, sharpen focus, perform.',       tag: 'Performance',    category: 'energy',    duration: '45–60 min', inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C' },
-  { key: 'immunity',  label: 'Immunity',  price: 250, icon: ShieldCheck,tagline: 'Strengthen your defenses, fast.',             tag: 'Bestseller',     category: 'immunity',  duration: '45–60 min', inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline' },
+  { key: 'hydration', label: 'Hydration', price: 150, icon: Droplets, tagline: 'Hydration and electrolyte support.', tag: 'Essential', category: 'recovery', duration: '30–45 min', inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals' },
+  { key: 'energy',    label: 'Energy',    price: 250, icon: Zap,       tagline: 'Energy and nutrient support.',       tag: 'Performance',    category: 'energy',    duration: '45–60 min', inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C' },
+  { key: 'immunity',  label: 'Immunity',  price: 250, icon: ShieldCheck,tagline: 'Vitamin and mineral support.',             tag: 'Bestseller',     category: 'immunity',  duration: '45–60 min', inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline' },
   { key: 'beauty',    label: 'Beauty',    price: 250, icon: Sparkles,   tagline: 'Glow from within.',                           tag: 'Glow Favorite',  category: 'beauty',    duration: '45–60 min', inside: 'Glutathione · Biotin · Vitamin C · B-Complex · Collagen support nutrients · Saline' },
-  { key: 'recovery',  label: 'Recovery',  price: 250, icon: Heart,      tagline: 'Bounce back faster. Feel better sooner.',     tag: 'Same-Day Favorite', category: 'recovery', duration: '45–60 min', inside: 'Saline · Magnesium · B-Complex · Amino acids · Anti-nausea support · Electrolytes' },
-  { key: 'jetlag',    label: 'Jet Lag',   price: 250, icon: Plane,      tagline: 'Land ready. Recover in flight time.',         tag: 'Travel Essential', category: 'travel',  duration: '45–60 min', inside: 'Saline · Vitamin B12 · Magnesium · B-Complex · Electrolytes · Immune support blend' },
+  { key: 'recovery',  label: 'Recovery',  price: 250, icon: Heart,      tagline: 'Recovery-focused hydration support.',     tag: 'Same-Day Favorite', category: 'recovery', duration: '45–60 min', inside: 'Saline · Magnesium · B-Complex · Amino acids · Nausea support when clinically appropriate · Electrolytes' },
+  { key: 'jetlag',    label: 'Travel',   price: 250, icon: Plane,      tagline: 'Travel-day hydration support.',         tag: 'Travel Essential', category: 'travel',  duration: '45–60 min', inside: 'Saline · Vitamin B12 · Magnesium · B-Complex · Electrolytes · Vitamin support blend' },
   { key: 'myers',     label: "Myers' Cocktail", price: 250, icon: FlaskConical, tagline: 'The gold standard of IV therapy.',  tag: 'Most Popular',   category: 'energy',    duration: '45–60 min', inside: 'Magnesium · Calcium · Vitamins B1 B2 B3 B5 B6 · Vitamin C · Saline', popular: true },
-  { key: 'postnight', label: 'Post-Night-Out', price: 250, icon: Moon,  tagline: 'Back to baseline, fast.',                    tag: 'Same-Day Favorite', category: 'recovery', duration: '45–60 min', inside: 'Saline · Anti-nausea support · B-Complex · Glutathione · Electrolytes' },
+  { key: 'postnight', label: 'Post-Night-Out', price: 250, icon: Moon,  tagline: 'Post-night-out hydration support.',                    tag: 'Same-Day Favorite', category: 'recovery', duration: '45–60 min', inside: 'Saline · Nausea support when clinically appropriate · B-Complex · Glutathione · Electrolytes' },
 ];
 
 const IV_ADDONS = [
   { label: 'Extra Fluid',         price: 25,  desc: 'Additional 500ml saline' },
   { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals & amino boost' },
   { label: 'High Dose Vitamin C', price: 45,  desc: '5,000mg IV push' },
-  { label: 'CBD (33mg)',          price: 250, desc: 'Zero THC · full bioavailability' },
-  { label: 'NAD+ (250mg)',        price: 350, desc: 'Cellular energy + repair' },
-  { label: 'Glutathione Push',    price: 60,  desc: 'Antioxidant master push · 600mg' },
+  { label: 'CBD Review',          price: 250, desc: 'Approval-gated clinical review' },
+  { label: 'NAD+ (250mg)',        price: 350, desc: 'Clinician-reviewed NAD+ add-on' },
+  { label: 'Glutathione Push',    price: 60,  desc: 'Antioxidant support · 600mg' },
   { label: 'Magnesium Boost',     price: 30,  desc: 'Muscle + nerve support' },
 ];
 
 const IM_SHOTS = [
   { label: 'B12',         price: 40, icon: Zap,           desc: 'Energy + metabolism support' },
-  { label: 'MIC',         price: 50, icon: Flame,         desc: 'Fat metabolism + liver function' },
-  { label: 'NAD+',        price: 80, icon: BatteryCharging,desc: 'Quick cellular energy boost' },
+  { label: 'MIC',         price: 50, icon: Flame,         desc: 'Metabolism support' },
+  { label: 'NAD+',        price: 80, icon: BatteryCharging,desc: 'Clinician-reviewed NAD+ support' },
   { label: 'Glutathione', price: 50, icon: Sparkles,      desc: 'Antioxidant + skin clarity' },
   { label: 'Vitamin C',   price: 30, icon: Shield,        desc: 'Immune + antioxidant support' },
-  { label: 'Vitamin D',   price: 35, icon: Zap,           desc: 'Bone, immune & mood support' },
+  { label: 'Vitamin D',   price: 35, icon: Zap,           desc: 'Vitamin D support' },
   { label: 'Biotin',      price: 35, icon: Sparkles,      desc: 'Hair, skin & nail support' },
 ];
 
 const PACKAGES = [
-  { key: 'hangover',    label: 'Hangover Kit',        tagline: 'Recover from a rough night — fast.',        includes: ['Post-Night-Out IV', 'B12 IM shot', 'Glutathione IM shot'],           price: 340, save: 30, icon: Moon,        tag: 'Best for Tonight', items: [{ cartKey: 'pkg-hangover-iv', label: 'Post-Night-Out IV', price: 250, type: 'iv' }, { cartKey: 'pkg-hangover-b12', label: 'IM · B12', price: 40, type: 'im' }, { cartKey: 'pkg-hangover-glut', label: 'IM · Glutathione', price: 50, type: 'im' }] },
-  { key: 'performance', label: 'Performance Bundle',  tagline: 'Built for peak output. Before or after.',   includes: ['Energy IV', 'NAD+ IM shot', 'MIC IM shot'],                          price: 380, save: 30, icon: Zap,         tag: 'Athlete Favorite', items: [{ cartKey: 'pkg-perf-iv', label: 'Energy IV', price: 250, type: 'iv' }, { cartKey: 'pkg-perf-nad', label: 'IM · NAD+', price: 80, type: 'im' }, { cartKey: 'pkg-perf-mic', label: 'IM · MIC', price: 50, type: 'im' }] },
+  { key: 'hangover',    label: 'Post-Night-Out Kit',  tagline: 'Hydration support after late nights.',      includes: ['Post-Night-Out IV', 'B12 IM shot', 'Glutathione IM shot'],           price: 340, save: 30, icon: Moon,        tag: 'Tonight', items: [{ cartKey: 'pkg-hangover-iv', label: 'Post-Night-Out IV', price: 250, type: 'iv' }, { cartKey: 'pkg-hangover-b12', label: 'IM · B12', price: 40, type: 'im' }, { cartKey: 'pkg-hangover-glut', label: 'IM · Glutathione', price: 50, type: 'im' }] },
+  { key: 'performance', label: 'Performance Bundle',  tagline: 'Support before or after high-output days.', includes: ['Energy IV', 'NAD+ IM shot', 'MIC IM shot'],                          price: 380, save: 30, icon: Zap,         tag: 'Athlete Favorite', items: [{ cartKey: 'pkg-perf-iv', label: 'Energy IV', price: 250, type: 'iv' }, { cartKey: 'pkg-perf-nad', label: 'IM · NAD+', price: 80, type: 'im' }, { cartKey: 'pkg-perf-mic', label: 'IM · MIC', price: 50, type: 'im' }] },
   { key: 'glow',        label: 'Glow Stack',          tagline: 'Skin, hair, and radiance from within.',     includes: ['Beauty IV', 'Glutathione IM shot', 'Biotin IM shot'],                price: 335, save: 30, icon: Sparkles,    tag: 'Most Requested',  items: [{ cartKey: 'pkg-glow-iv', label: 'Beauty IV', price: 250, type: 'iv' }, { cartKey: 'pkg-glow-glut', label: 'IM · Glutathione', price: 50, type: 'im' }, { cartKey: 'pkg-glow-biotin', label: 'IM · Biotin', price: 35, type: 'im' }] },
-  { key: 'reset',       label: 'Total Reset',         tagline: "The full protocol. Myers' + NAD+ + B12.",   includes: ["Myers' Cocktail IV", 'NAD+ add-on (250mg)', 'B12 IM shot'],          price: 680, save: 60, icon: FlaskConical,tag: 'Highest Impact',   items: [{ cartKey: 'pkg-reset-iv', label: "Myers' Cocktail IV", price: 250, type: 'iv' }, { cartKey: 'pkg-reset-nad', label: 'NAD+ Add-On (250mg)', price: 350, type: 'addon' }, { cartKey: 'pkg-reset-b12', label: 'IM · B12', price: 40, type: 'im' }] },
+  { key: 'reset',       label: 'Total Reset',         tagline: "Expanded protocol review. Myers' + NAD+ + B12.", includes: ["Myers' Cocktail IV", 'NAD+ add-on (250mg)', 'B12 IM shot'],          price: 680, save: 60, icon: FlaskConical,tag: 'Expanded',   items: [{ cartKey: 'pkg-reset-iv', label: "Myers' Cocktail IV", price: 250, type: 'iv' }, { cartKey: 'pkg-reset-nad', label: 'NAD+ Add-On (250mg)', price: 350, type: 'addon' }, { cartKey: 'pkg-reset-b12', label: 'IM · B12', price: 40, type: 'im' }] },
 ];
 
 const IV_CATEGORIES = [
@@ -67,6 +67,9 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
   const total = cart.reduce((s, i) => s + i.price, 0);
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cart checkout"
       initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
       transition={{ duration: 0.45, ease: EASE }}
       className="fixed inset-x-0 bottom-0 z-50 flex flex-col"
@@ -189,7 +192,7 @@ export default function RecoveryMenuSection() {
             </span>
           </div>
           <h2 className="font-heading text-4xl md:text-5xl text-foreground uppercase tracking-tight leading-none">
-            Recovery Menu
+            Recovery Protocols
           </h2>
         </div>
 
@@ -365,7 +368,7 @@ export default function RecoveryMenuSection() {
                           </div>
                         </div>
                         {groupCount >= 8 && (
-                          <p className="font-body text-[10px] text-foreground/50">For groups of 9+, <Link to="/events" className="text-accent hover:text-accent/80 transition-colors">use our Events booking →</Link></p>
+                          <p className="font-body text-[10px] text-foreground/50">For groups of 9+, <Link to="/launches" className="text-accent hover:text-accent/80 transition-colors">use Launch booking →</Link></p>
                         )}
                       </div>
                     </motion.div>
@@ -388,7 +391,7 @@ export default function RecoveryMenuSection() {
                   <ArrowRight className="w-4 h-4" strokeWidth={2} />
                 </motion.button>
                 <div className="flex items-center gap-2 px-1">
-                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Subscribers save 20% ·</span>
+                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save 20% ·</span>
                   <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View subscriptions →</Link>
                 </div>
               </div>
@@ -488,7 +491,7 @@ export default function RecoveryMenuSection() {
                 ))}
               </div>
               <div className="flex items-center gap-2 px-1 pt-1">
-                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Subscribers save an additional 20% ·</span>
+                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save an additional 20% ·</span>
                 <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
               </div>
             </motion.div>

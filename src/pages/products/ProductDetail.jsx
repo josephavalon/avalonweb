@@ -57,9 +57,9 @@ function ProductMedia({ product, compact = false }) {
   ) : (
     <div className="flex h-full items-center justify-center px-10 text-center">
       <div>
-        <p className="font-heading text-4xl tracking-[0.12em] text-[#fff3dc]">AVALON</p>
-        <p className="font-body text-[10px] tracking-[0.48em] text-[#fff3dc]/40">VITALITY</p>
-        <p className="mt-8 font-body text-xs uppercase tracking-[0.24em] text-[#fff3dc]/45">{name}</p>
+        <p className="font-heading text-4xl tracking-[0.12em] text-foreground">AVALON</p>
+        <p className="font-body text-[10px] tracking-[0.48em] text-foreground/40">VITALITY</p>
+        <p className="mt-8 font-body text-xs uppercase tracking-[0.24em] text-foreground/45">{name}</p>
       </div>
     </div>
   );
@@ -67,9 +67,9 @@ function ProductMedia({ product, compact = false }) {
 
 function ProductBag({ product }) {
   return (
-    <div className="relative isolate aspect-[0.78] min-h-[30rem] overflow-hidden rounded-[1.75rem] border border-[#f4e6cb]/12 bg-[#160f0a]/82 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
+    <div className="relative isolate aspect-[0.78] min-h-[30rem] overflow-hidden rounded-[1.75rem] border border-foreground/12 bg-card/82 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_42%_18%,rgba(244,230,203,0.13),transparent_34%),radial-gradient(circle_at_70%_92%,rgba(184,127,44,0.10),transparent_44%)]" />
-      <div className="relative h-full overflow-hidden rounded-[1.25rem] border border-[#f4e6cb]/10 bg-[linear-gradient(135deg,#f8f1e5,#e8dcc8)]">
+      <div className="relative h-full overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-foreground/90">
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-1/3 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),transparent)]" />
         <ProductMedia product={product} />
       </div>
@@ -158,8 +158,8 @@ export default function ProductDetail() {
         <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 text-center">
           <p className="mb-3 font-body text-[10px] uppercase tracking-[0.32em] text-accent">Not found</p>
           <h1 className="font-heading text-5xl uppercase leading-none text-foreground">Product missing</h1>
-          <Link to="/menu" className="mt-8 rounded-full bg-foreground px-8 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background">
-            Browse Menu
+          <Link to="/protocols" className="mt-8 rounded-full bg-foreground px-8 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background">
+            Browse Protocols
           </Link>
         </div>
         <Footer />
@@ -212,21 +212,21 @@ export default function ProductDetail() {
               transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
               className="md:pt-3"
             >
-              <div className="relative min-h-[22rem] overflow-hidden rounded-[1.75rem] border border-[#f4e6cb]/12 bg-[#160f0a]/88 p-5 shadow-[0_22px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl md:hidden">
+              <div className="relative min-h-[22rem] overflow-hidden rounded-[1.75rem] border border-foreground/12 bg-card/88 p-5 shadow-[0_22px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl md:hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(244,230,203,0.13),transparent_36%),radial-gradient(circle_at_90%_75%,rgba(184,127,44,0.12),transparent_45%)]" />
                 <div className="relative z-10 max-w-[53%]">
-                  <p className="mb-3 inline-flex rounded-full border border-[#f4e6cb]/12 bg-[#f4e6cb]/8 px-2.5 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.18em] text-[#f4e6cb]/65">
+                  <p className="mb-3 inline-flex rounded-full border border-foreground/12 bg-foreground/8 px-2.5 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.18em] text-foreground/65">
                     {treatment.name.toLowerCase().includes('myers') ? 'Most Popular' : cat.categoryLabel}
                   </p>
-                  <h1 className="font-heading text-[clamp(2.2rem,10vw,3rem)] uppercase leading-[0.86] tracking-tight text-[#fff3dc] [overflow-wrap:normal] [word-break:normal]">
+                  <h1 className="font-heading text-[clamp(2.2rem,10vw,3rem)] uppercase leading-[0.86] tracking-tight text-foreground [overflow-wrap:normal] [word-break:normal]">
                     {treatment.name}
                   </h1>
-                  <p className="mt-3 font-body text-[11px] leading-relaxed text-[#fff3dc]/58">
+                  <p className="mt-3 font-body text-[11px] leading-relaxed text-foreground/58">
                     {treatment.desc || cat.description}
                   </p>
-                  <p className="mt-5 font-heading text-2xl text-[#fff3dc]">{price}</p>
+                  <p className="mt-5 font-heading text-2xl text-foreground">{price}</p>
                 </div>
-                <div className="absolute bottom-4 right-4 h-[76%] w-[43%] overflow-hidden rounded-[1.1rem] border border-[#f4e6cb]/12 bg-[linear-gradient(135deg,#f8f1e5,#e8dcc8)]">
+                <div className="absolute bottom-4 right-4 h-[76%] w-[43%] overflow-hidden rounded-[1.1rem] border border-foreground/12 bg-foreground/90">
                   <ProductMedia product={treatment} compact />
                 </div>
               </div>
@@ -263,13 +263,13 @@ export default function ProductDetail() {
                 </button>
                 <Link
                   to="/subscription"
-                  className="flex items-center justify-center gap-2 rounded-md border border-[#f4e6cb] bg-[#f4e6cb] px-7 py-4 font-body text-xs font-semibold uppercase tracking-[0.14em] text-[#151515] shadow-[0_14px_34px_rgba(244,230,203,0.10)] transition-colors hover:bg-[#fff0d6]"
+                  className="flex items-center justify-center gap-2 rounded-md border border-foreground bg-foreground px-7 py-4 font-body text-xs font-semibold uppercase tracking-[0.14em] text-background shadow-[0_14px_34px_hsl(var(--foreground)/0.10)] transition-colors hover:bg-foreground/90"
                 >
-                  Subscribe & Save 10%
+                  View Plans
                 </Link>
               </div>
 
-              <div className="mt-8 overflow-hidden rounded-[1.35rem] border border-[#f4e6cb]/12 bg-white/[0.035] px-5 backdrop-blur-xl">
+              <div className="mt-8 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-white/[0.035] px-5 backdrop-blur-xl">
                 <AccordionRow title="What's Included">
                   <div className="grid gap-2 sm:grid-cols-2">
                     {included.map((item) => (
@@ -310,14 +310,14 @@ export default function ProductDetail() {
 
           <section className="mt-12 grid gap-4 border-t border-foreground/[0.10] pt-8 md:grid-cols-3">
             {[
-              { icon: CreditCard, title: 'Secure checkout', body: 'Apple Pay and card payments through encrypted checkout.' },
+              { icon: CreditCard, title: 'Secure checkout', body: 'Encrypted card checkout.' },
               { icon: LockKeyhole, title: 'Clinical clearance', body: 'Required before your RN visit is confirmed.' },
               { icon: Sparkles, title: 'Transparent estimate', body: 'Pricing clarity before care begins.' },
             ].map((item) => (
-              <div key={item.title} className="rounded-[1.25rem] border border-[#f4e6cb]/12 bg-[#20160f]/86 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-                <item.icon className="mb-4 h-5 w-5 text-[#f4e6cb]/78" strokeWidth={1.6} />
-                <p className="font-body text-sm font-semibold text-[#fff3dc]">{item.title}</p>
-                <p className="mt-1 font-body text-xs leading-relaxed text-[#fff3dc]/58">{item.body}</p>
+              <div key={item.title} className="rounded-[1.25rem] border border-foreground/12 bg-card/86 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+                <item.icon className="mb-4 h-5 w-5 text-foreground/78" strokeWidth={1.6} />
+                <p className="font-body text-sm font-semibold text-foreground">{item.title}</p>
+                <p className="mt-1 font-body text-xs leading-relaxed text-foreground/58">{item.body}</p>
               </div>
             ))}
           </section>
@@ -340,9 +340,9 @@ export default function ProductDetail() {
           </button>
           <Link
             to="/subscription"
-            className="flex min-h-[3.75rem] items-center justify-center rounded-[1.35rem] border border-[#f4e6cb] bg-[#f4e6cb] px-3 text-center font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-[#151515] shadow-[0_14px_34px_rgba(244,230,203,0.12)]"
+            className="flex min-h-[3.75rem] items-center justify-center rounded-[1.35rem] border border-foreground bg-foreground px-3 text-center font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-background shadow-[0_14px_34px_hsl(var(--foreground)/0.12)]"
           >
-            Subscribe
+            Plans
           </Link>
         </div>
       </div>

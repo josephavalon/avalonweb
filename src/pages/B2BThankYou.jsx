@@ -1,82 +1,98 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Mail } from 'lucide-react';
+import { ArrowRight, Mail, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Navbar from '@/components/landing/Navbar';
+import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
+import PremiumButton from '@/components/ui/PremiumButton';
 
-const EVENT_ICS = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Avalon Vitality//Bay 2 Breakers 2026//EN
-BEGIN:VEVENT
-UID:b2b-2026-avalon-vitality
-DTSTAMP:20260427T120000Z
-DTSTART;TZID=America/Los_Angeles:20260517T080000
-DTEND;TZID=America/Los_Angeles:20260517T140000
-SUMMARY:Bay to Breakers — Avalon Recovery
-LOCATION:Finish line · Ocean Beach · San Francisco
-DESCRIPTION:Your Avalon Vitality finish-line IV / shot / boots is reserved. We will text you on race morning with the location. Bring your confirmation email.
-END:VEVENT
-END:VCALENDAR`;
-
-function downloadIcs() {
-  const blob = new Blob([EVENT_ICS], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'avalon-bay-to-breakers-2026.ics';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
+const EASE = [0.16, 1, 0.3, 1];
 
 export default function B2BThankYou() {
   useSeo({
-    title: "You're in — Avalon Vitality",
-    description: 'Your Bay to Breakers finish-line recovery is reserved. Race-morning text incoming.',
+    title: 'Group Recovery Request — Avalon Vitality',
+    description: 'Your Avalon Vitality group recovery request has been received.',
     path: '/b2b/thank-you',
   });
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FFFEE4', color: '#0A0A0A' }}>
-      <style>{`
-        .ty-display { font-family: 'Bebas Neue', 'Impact', sans-serif; letter-spacing: 0.02em; }
-        .ty-pink { color: #ED7AC3; }
-        .ty-card { background:#fff; border:2px solid #0A0A0A; border-radius:16px; box-shadow:6px 6px 0 #0A0A0A; }
-        .ty-btn-primary { padding:14px 28px; background:#ED7AC3; color:#0A0A0A; font-family:'Bebas Neue','Impact',sans-serif; font-size:16px; letter-spacing:0.15em; text-transform:uppercase; border:2px solid #0A0A0A; border-radius:999px; box-shadow:4px 4px 0 #0A0A0A; transition:transform .2s cubic-bezier(0.16,1,0.3,1), box-shadow .2s cubic-bezier(0.16,1,0.3,1); }
-        .ty-btn-primary:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #0A0A0A; }
-        .ty-btn-primary:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #0A0A0A; }
-        .ty-btn-secondary { padding:14px 28px; background:transparent; color:#0A0A0A; font-family:'Bebas Neue','Impact',sans-serif; font-size:16px; letter-spacing:0.15em; text-transform:uppercase; border:2px solid #0A0A0A; border-radius:999px; transition:background-color .2s cubic-bezier(0.16,1,0.3,1); }
-        .ty-btn-secondary:hover { background:#80C7D3; }
-      `}</style>
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <main className="px-5 pb-20 pt-28 md:px-10 md:pb-28 md:pt-36">
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: EASE }}
+          className="mx-auto max-w-5xl"
+        >
+          <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/42">Group Recovery</p>
+          <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-end">
+            <div>
+              <h1 className="font-heading text-[4.2rem] uppercase leading-[0.84] tracking-tight text-foreground md:text-[7.8rem]">
+                Request<br />Received
+              </h1>
+              <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-foreground/58 md:text-lg">
+                Your Avalon group request is in. We will confirm timing, staffing, protocol, and payment by text.
+              </p>
+            </div>
 
-      <main className="flex-1 flex items-center justify-center px-5 py-12 md:py-20">
-        <div className="ty-card max-w-2xl w-full p-8 md:p-12 text-center">
-          <p className="ty-display ty-pink text-xs md:text-sm tracking-[0.3em] uppercase mb-3">You&rsquo;re in</p>
-          <h1 className="ty-display text-5xl md:text-7xl uppercase leading-[0.95] mb-4">See you at the finish line.</h1>
-          <p className="text-base md:text-lg leading-relaxed mb-2">Your Avalon recovery slot is reserved for <strong>Sunday, May 17</strong>.</p>
-          <p className="text-sm md:text-base leading-relaxed text-black/70 mb-8">Confirmation email is on its way. We&rsquo;ll text the location race morning.</p>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-10">
-            <button type="button" onClick={downloadIcs} className="ty-btn-primary inline-flex items-center justify-center gap-2">
-              <Calendar className="w-4 h-4" /> Add to calendar
-            </button>
-            <a href="mailto:support@avalonvitality.co" className="ty-btn-secondary inline-flex items-center justify-center gap-2">
-              <Mail className="w-4 h-4" /> Email us
-            </a>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 0.8, delay: 0.18, ease: EASE }}
+              className="av-motion-rail rounded-[1.5rem] border border-accent/22 bg-accent/[0.055] p-4 shadow-[0_24px_90px_hsl(var(--accent)/0.10)] backdrop-blur-2xl"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/24 bg-accent/[0.10] text-accent">
+                  <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
+                </span>
+                <div>
+                  <p className="font-body text-[10px] uppercase tracking-[0.22em] text-accent/80">Ops Queue</p>
+                  <p className="mt-1 font-body text-sm font-semibold text-foreground">Acuity, staffing, and GFE routing next.</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          <div className="border-t-2 border-black pt-6 text-left space-y-1.5 text-sm md:text-base leading-relaxed">
-            <p className="ty-display ty-pink text-[10px] md:text-xs tracking-[0.3em] uppercase mb-2">What&rsquo;s next</p>
-            <p>1. Save the date and run your race.</p>
-            <p>2. Watch your phone race morning for the location.</p>
-            <p>3. Cross the line, walk to our station, show your confirmation. Hydrate. Recover.</p>
+          <div className="mt-8 grid gap-3 md:grid-cols-3">
+            {[
+              ['01', 'Review size + timing'],
+              ['02', 'Confirm protocol + staff'],
+              ['03', 'Recover on site'],
+            ].map(([step, label]) => (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.54, delay: 0.24 + Number(step) * 0.06, ease: EASE }}
+                className="av-glass-sweep relative overflow-hidden rounded-[1.25rem] border border-foreground/[0.10] bg-background/62 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl"
+              >
+                <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/35">{step}</p>
+                <p className="mt-2 font-body text-sm font-semibold text-foreground">{label}</p>
+              </motion.div>
+            ))}
           </div>
 
-          <Link to="/" className="inline-flex items-center gap-2 mt-8 ty-display text-xs md:text-sm tracking-[0.25em] uppercase hover:ty-pink transition-colors">
-            Back to avalonvitality.co <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <PremiumButton
+              as="a"
+              href="mailto:support@avalonvitality.co"
+              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] px-6 font-body text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/35"
+            >
+              <Mail className="h-4 w-4" strokeWidth={1.8} /> Email Us
+            </PremiumButton>
+            <PremiumButton
+              as={Link}
+              to="/launches"
+              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-semibold uppercase tracking-[0.2em] text-background transition-opacity hover:opacity-85"
+            >
+              Launches <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+            </PremiumButton>
+          </div>
+        </motion.section>
       </main>
+      <Footer />
     </div>
   );
 }

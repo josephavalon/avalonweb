@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Circle, CircleDot, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
-import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion(Link);
 
@@ -32,7 +32,7 @@ const TIERS = [
       '1 advanced drip credit (up to $250 value)',
       '20% off add-ons & extras',
       '1 free add-on per visit',
-      '90-minute guaranteed arrival window',
+      'Priority arrival window',
     ],
     href: '/subscription',
   },
@@ -46,7 +46,7 @@ const TIERS = [
       '4 IV credits per month',
       '1 NAD+ 500mg or Exosomes 30B credit',
       '25% off add-ons & extras',
-      'Unlimited add-ons at subscriber rate',
+      'Unlimited add-ons at plan rate',
       'Dedicated nurse — 90-min window',
       'Shareable with one designated partner',
     ],
@@ -68,7 +68,7 @@ const COMPARE_ROWS = [
 function TierComparator() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-foreground/[0.08] overflow-hidden mb-2">
+    <div className="mb-2 overflow-hidden rounded-2xl border border-foreground/[0.10] bg-background/58 shadow-[0_18px_70px_hsl(var(--foreground)/0.04)] backdrop-blur-xl">
       <motion.button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -92,23 +92,30 @@ function TierComparator() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.38, ease: EASE }}
+            transition={premiumExpandTransition}
             style={{ overflow: 'hidden' }}
           >
-            <div className="border-t border-foreground/[0.07]">
+            <motion.div
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              variants={premiumListContainer(0.035, 0.05)}
+              className="border-t border-foreground/[0.07]"
+            >
               {/* Header */}
               <div className="grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.07] bg-white/[0.02]">
                 <div className="px-4 py-2.5" />
                 {['Starter', 'Premium', 'VIP'].map((t) => (
                   <div key={t} className="py-2.5 text-center">
-                    <span className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/40">{t}</span>
+                    <span className={`font-body text-[9px] tracking-[0.2em] uppercase ${t === 'Premium' ? 'text-accent' : 'text-foreground/40'}`}>{t}</span>
                   </div>
                 ))}
               </div>
               {/* Rows */}
               {COMPARE_ROWS.map(({ label, starter, premium, vip }, i) => (
-                <div
+                <motion.div
                   key={label}
+                  variants={premiumListItem}
                   className={`grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.05] last:border-0 ${i % 2 === 0 ? '' : 'bg-white/[0.015]'}`}
                 >
                   <div className="px-4 py-3 flex items-center">
@@ -116,14 +123,14 @@ function TierComparator() {
                   </div>
                   {[starter, premium, vip].map((val, j) => (
                     <div key={j} className="py-3 flex items-center justify-center">
-                      <span className={`font-body text-[11px] text-center ${val === '—' ? 'text-foreground/20' : j === 2 ? 'text-accent' : 'text-foreground/75'}`}>
+                      <span className={`font-body text-[11px] text-center ${val === '—' ? 'text-foreground/20' : j === 1 ? 'text-accent' : 'text-foreground/75'}`}>
                         {val}
                       </span>
                     </div>
                   ))}
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -133,13 +140,32 @@ function TierComparator() {
 
 function TierRow({ tier, index }) {
   const Icon = tier.icon;
+  const featured = tier.name === 'Premium';
   return (
     <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-24px' }}
+      transition={{ duration: 0.55, ease: EASE, delay: index * 0.06, layout: premiumExpandTransition }}
       whileHover={premiumHover}
-      className="rounded-2xl border border-foreground/10 bg-white/[0.08] px-5 py-4 flex items-center justify-between shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-foreground/20 hover:bg-white/[0.105]"
+      className={`relative overflow-hidden rounded-2xl border px-5 py-4 flex items-center justify-between backdrop-blur-xl transition-colors duration-base ease-editorial ${
+        featured
+          ? 'border-accent/35 bg-accent/[0.075] shadow-[0_24px_90px_hsl(var(--accent)/0.14)]'
+          : 'border-foreground/10 bg-white/[0.08] shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] hover:border-foreground/20 hover:bg-white/[0.105]'
+      }`}
     >
+      {featured && (
+        <motion.span
+          className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-accent/70 to-transparent"
+          initial={{ opacity: 0, scaleX: 0.35 }}
+          whileInView={{ opacity: 1, scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
+        />
+      )}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
+        <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${featured ? 'border-accent/25 bg-accent/10' : 'bg-white/[0.05] border-foreground/10'}`}>
           <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
         </div>
         <div>
@@ -180,11 +206,13 @@ export default function MembershipSection() {
         </motion.div>
 
         {/* Tier accordion rows */}
-        <div className="space-y-2 mb-4">
-          {TIERS.map((tier, i) => (
-            <TierRow key={tier.name} tier={tier} index={i} />
-          ))}
-        </div>
+        <LayoutGroup id="membership-tiers">
+          <div className="space-y-2 mb-4">
+            {TIERS.map((tier, i) => (
+              <TierRow key={tier.name} tier={tier} index={i} />
+            ))}
+          </div>
+        </LayoutGroup>
 
         {/* Tier comparator */}
         <TierComparator />

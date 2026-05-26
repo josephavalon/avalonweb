@@ -4,37 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Fingerprint, AlertCircle, CheckCircle, ShieldCheck, Stethoscope, UserRound } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
-import { useToast } from '@/components/ui/use-toast';
+import { PRE_API_SECURITY_MODE, isDemoAuthAllowed } from '@/lib/preApiSecurity';
 
 const EASE = [0.16, 1, 0.3, 1];
 
 const DEMO_SHORTCUTS = [
   { username: 'CLIENT001', label: 'Client', detail: 'booking, prep, support', icon: UserRound },
-  { username: 'NURSE001', label: 'Nurse', detail: 'shift, client, route', icon: Stethoscope },
+  { username: 'NURSE001', label: 'Nurse', detail: 'shift, route, chart', icon: Stethoscope },
+  { username: 'NP001', label: 'NP', detail: 'GFE, approvals', icon: ShieldCheck },
+  { username: 'MD001', label: 'MD', detail: 'standing orders', icon: ShieldCheck },
   { username: 'ADMIN001', label: 'Admin', detail: 'handoff, dispatch, ops', icon: ShieldCheck },
 ];
-const DEMO_PASSWORD = 'JonJones1986';
-
-const AppleLogo = (props) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-  </svg>
-);
-
-const GoogleLogo = (props) => (
-  <svg viewBox="0 0 24 24" fill="none" {...props}>
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-  </svg>
-);
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
+const PASSKEY_ENABLED = false;
 
 // ── Reusable field ────────────────────────────────────────────────────────────
 function Field({ id, label, type = 'text', value, onChange, placeholder, autoComplete, children }) {
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/40">
+      <label htmlFor={id} className="font-body text-[11px] tracking-[0.18em] uppercase text-foreground/45">
         {label}
       </label>
       <div className="relative">
@@ -47,7 +35,7 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, autoCom
           autoCapitalize="none"
           spellCheck={false}
           placeholder={placeholder}
-          className="w-full px-4 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] font-body text-sm text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-foreground/40 transition-colors"
+          className="min-h-[46px] w-full rounded-xl border border-foreground/15 bg-foreground/[0.03] px-4 py-3 font-body text-base text-foreground placeholder:text-foreground/20 transition-colors focus:border-foreground/40 focus:outline-none sm:text-sm"
         />
         {children}
       </div>
@@ -106,7 +94,7 @@ function SubmitBtn({ loading, label, loadingLabel }) {
       type="submit"
       disabled={loading}
       whileTap={{ scale: 0.98 }}
-      className="w-full flex items-center justify-between px-6 py-3 rounded-2xl bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      className="flex min-h-[48px] w-full items-center justify-between rounded-2xl bg-foreground px-6 py-3 font-body text-xs font-semibold uppercase tracking-[0.2em] text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
     >
       <span>{loading ? loadingLabel : label}</span>
       {loading
@@ -120,8 +108,7 @@ function SubmitBtn({ loading, label, loadingLabel }) {
 // ── Tab: Sign In ──────────────────────────────────────────────────────────────
 function SignInTab({ onSwitchTab }) {
   const navigate = useNavigate();
-  const { signIn, loading, error, user } = useAuthStore();
-  const { toast } = useToast();
+  const { signIn, loading, error } = useAuthStore();
   const [username, setUsername]         = useState('');
   const [password, setPassword]         = useState('');
   const [showPw, setShowPw]             = useState(false);
@@ -130,10 +117,11 @@ function SignInTab({ onSwitchTab }) {
   const [passkeyLoading, setPasskeyLoading]     = useState(false);
   const [passkeyError, setPasskeyError]         = useState('');
   useEffect(() => {
-    if (user) navigate(user.redirect || '/members/dashboard', { replace: true });
-  }, [user, navigate]);
+    if (!PASSKEY_ENABLED) {
+      setPasskeySupported(false);
+      return;
+    }
 
-  useEffect(() => {
     const check = async () => {
       if (window.PublicKeyCredential?.isConditionalMediationAvailable) {
         const ok = await window.PublicKeyCredential.isConditionalMediationAvailable();
@@ -154,6 +142,10 @@ function SignInTab({ onSwitchTab }) {
 
   const handleDemoSignIn = async (demoUsername) => {
     setFieldError('');
+    if (!DEMO_PASSWORD) {
+      setFieldError('Demo shortcut password is not configured.');
+      return;
+    }
     setUsername(demoUsername);
     setPassword(DEMO_PASSWORD);
     const result = await signIn({ email: demoUsername, password: DEMO_PASSWORD });
@@ -161,10 +153,20 @@ function SignInTab({ onSwitchTab }) {
   };
 
   const handlePasskey = async () => {
+    if (!PASSKEY_ENABLED) {
+      setPasskeyError('Passkey sign-in is not enabled yet.');
+      return;
+    }
+
     setPasskeyLoading(true); setPasskeyError('');
     try {
+      const cryptoApi = window.crypto || globalThis.crypto;
+      const challenge = cryptoApi?.getRandomValues
+        ? cryptoApi.getRandomValues(new Uint8Array(32))
+        : Uint8Array.from({ length: 32 }, () => Math.floor(Math.random() * 255));
+
       await navigator.credentials.get({
-        publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: window.location.hostname, userVerification: 'required', timeout: 60000 },
+        publicKey: { challenge, rpId: window.location.hostname, userVerification: 'required', timeout: 60000 },
       });
       setPasskeyError('Passkey backend not yet configured — use username + password for now.');
     } catch (err) {
@@ -173,76 +175,73 @@ function SignInTab({ onSwitchTab }) {
   };
 
   const displayError = fieldError || error;
+  const demoAuthAllowed = isDemoAuthAllowed();
 
   return (
-    <div className="space-y-4">
-      {/* SSO */}
-      <div className="space-y-2">
-        {passkeySupported && (
-          <button type="button" onClick={handlePasskey} disabled={passkeyLoading}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground disabled:opacity-40">
-            {passkeyLoading ? <span className="w-3.5 h-3.5 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" /> : <Fingerprint className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />}
-            {passkeyLoading ? 'Authenticating…' : 'Sign in with Passkey'}
-          </button>
-        )}
-        <button type="button" onClick={() => toast({ title: 'Local Mode', description: 'Use NURSE001 or CLIENT001 for this preview.' })}
-          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground">
-          <AppleLogo className="w-3.5 h-3.5" /> Sign in with Apple
-        </button>
-        <button type="button" onClick={() => toast({ title: 'Local Mode', description: 'Use NURSE001 or CLIENT001 for this preview.' })}
-          className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-all font-body text-xs tracking-[0.15em] uppercase text-foreground">
-          <GoogleLogo className="w-3.5 h-3.5" /> Sign in with Google
-        </button>
-      </div>
-
-      {/* Divider */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-foreground/[0.08]" />
-        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/30">or</p>
-        <div className="flex-1 h-px bg-foreground/[0.08]" />
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        {DEMO_SHORTCUTS.map(({ username: demoUsername, label, detail, icon: Icon }) => (
-          <button
-            key={demoUsername}
-            type="button"
-            onClick={() => handleDemoSignIn(demoUsername)}
-            disabled={loading}
-            className="min-h-[92px] rounded-2xl border border-foreground/10 bg-foreground/[0.035] px-2.5 py-3 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] disabled:opacity-40"
-          >
-            <Icon className="mb-3 h-4 w-4 text-foreground/55" strokeWidth={1.7} />
-            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground">{label}</p>
-            <p className="mt-1 font-body text-[9px] leading-snug text-foreground/40">{detail}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Form */}
+    <div className="space-y-3.5">
       <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>
         <Field id="username" label="Username or Email" value={username}
           onChange={(e) => { setUsername(e.target.value); setFieldError(''); }}
-          autoComplete="username webauthn" placeholder="NURSE001 or CLIENT001" />
+          autoComplete="username" placeholder="CLIENT001, NURSE001, ADMIN001" />
 
         <Field id="password" label="Password" type={showPw ? 'text' : 'password'} value={password}
           onChange={(e) => { setPassword(e.target.value); setFieldError(''); }}
           autoComplete="current-password" placeholder="••••••••">
-          <button type="button" onClick={() => setShowPw(v => !v)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-foreground/30 hover:text-foreground/60 transition-colors">
+          <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Hide password' : 'Show password'}
+            className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground/30 transition-colors hover:bg-foreground/[0.06] hover:text-foreground/60">
             {showPw ? <EyeOff className="w-4 h-4" strokeWidth={1.5} /> : <Eye className="w-4 h-4" strokeWidth={1.5} />}
           </button>
         </Field>
 
-        <div className="flex justify-end">
-          <button type="button" onClick={() => onSwitchTab('forgot')}
-            className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/35 hover:text-foreground/60 transition-colors">
-            Forgot password?
-          </button>
-        </div>
-
         <ErrorBanner msg={passkeyError || displayError} />
         <SubmitBtn loading={loading} label="Sign In" loadingLabel="Signing in…" />
       </form>
+
+      {passkeySupported && (
+        <button type="button" onClick={handlePasskey} disabled={passkeyLoading}
+          className="flex min-h-[48px] w-full items-center justify-center gap-2.5 rounded-xl border border-foreground/15 bg-foreground/[0.03] py-3 font-body text-xs uppercase tracking-[0.15em] text-foreground transition-all hover:bg-foreground/[0.06] disabled:opacity-40">
+          {passkeyLoading ? <span className="w-3.5 h-3.5 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" /> : <Fingerprint className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />}
+          {passkeyLoading ? 'Authenticating…' : 'Use Passkey'}
+        </button>
+      )}
+
+      {demoAuthAllowed && (
+      <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-3">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/48">
+            Preview accounts
+          </p>
+          <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/30">
+            Local only
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {DEMO_SHORTCUTS.map(({ username: demoUsername, label, icon: Icon }) => (
+            <button
+              key={demoUsername}
+              type="button"
+              onClick={() => handleDemoSignIn(demoUsername)}
+              disabled={loading}
+              className="min-h-[64px] cursor-pointer rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2 py-2 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
+            >
+              <Icon className="mb-2 h-3.5 w-3.5 text-foreground/55" strokeWidth={1.7} />
+              <p className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">{label}</p>
+            </button>
+          ))}
+        </div>
+          <p className="mt-2 font-body text-[10px] leading-relaxed text-foreground/34">
+            Local simulation only. {PRE_API_SECURITY_MODE.label}. No live clinical access.
+          </p>
+      </div>
+      )}
+      {!demoAuthAllowed && (
+        <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.055] p-3">
+          <p className="font-body text-[10px] uppercase tracking-[0.2em] text-amber-200">Production guard</p>
+          <p className="mt-1 font-body text-xs leading-relaxed text-foreground/52">
+            Demo access is blocked outside local simulation.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -287,8 +286,8 @@ function CreateAccountTab() {
       <Field id="reg-password" label="Password" type={showPw ? 'text' : 'password'} value={password}
         onChange={(e) => { setPassword(e.target.value); setError(''); }}
         autoComplete="new-password" placeholder="8+ characters">
-        <button type="button" onClick={() => setShowPw(v => !v)}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-foreground/30 hover:text-foreground/60 transition-colors">
+        <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Hide password' : 'Show password'}
+          className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground/30 transition-colors hover:bg-foreground/[0.06] hover:text-foreground/60">
           {showPw ? <EyeOff className="w-4 h-4" strokeWidth={1.5} /> : <Eye className="w-4 h-4" strokeWidth={1.5} />}
         </button>
       </Field>
@@ -301,11 +300,11 @@ function CreateAccountTab() {
       <SuccessBanner msg={success} />
       <SubmitBtn loading={loading} label="Create Account" loadingLabel="Creating…" />
 
-      <p className="font-body text-[9px] tracking-[0.1em] text-foreground/25 text-center leading-relaxed">
+      <p className="font-body text-[11px] text-foreground/35 text-center leading-relaxed">
         By creating an account you agree to our{' '}
-        <Link to="/safety" className="text-foreground/40 hover:text-foreground/60 transition-colors underline">Terms</Link>
+        <Link to="/terms-and-conditions" className="inline-flex min-h-[44px] items-center text-foreground/40 underline transition-colors hover:text-foreground/60">Terms</Link>
         {' '}and{' '}
-        <Link to="/safety" className="text-foreground/40 hover:text-foreground/60 transition-colors underline">Privacy Policy</Link>.
+        <Link to="/privacy-policy" className="inline-flex min-h-[44px] items-center text-foreground/40 underline transition-colors hover:text-foreground/60">Privacy Policy</Link>.
       </p>
     </form>
   );
@@ -313,8 +312,8 @@ function CreateAccountTab() {
 
 // ── Tab: Forgot Password ──────────────────────────────────────────────────────
 function ForgotPasswordTab({ onSwitchTab }) {
+  const { requestPasswordReset, loading } = useAuthStore();
   const [email, setEmail]     = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState('');
 
@@ -323,9 +322,11 @@ function ForgotPasswordTab({ onSwitchTab }) {
     setError(''); setSuccess('');
     if (!email.trim()) { setError('Enter your email address.'); return; }
     if (!/\S+@\S+\.\S+/.test(email)) { setError('Enter a valid email address.'); return; }
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    setLoading(false);
+    const result = await requestPasswordReset(email.trim());
+    if (!result.ok) {
+      setError(result.error || 'Password reset is not connected yet.');
+      return;
+    }
     setSuccess('If that email is on file, a reset link is on its way.');
     setEmail('');
   };
@@ -344,8 +345,8 @@ function ForgotPasswordTab({ onSwitchTab }) {
         <SubmitBtn loading={loading} label="Send Reset Link" loadingLabel="Sending…" />
       </form>
       <button type="button" onClick={() => onSwitchTab('signin')}
-        className="w-full text-center font-body text-[9px] tracking-[0.2em] uppercase text-foreground/35 hover:text-foreground/60 transition-colors">
-        ← Back to Sign In
+        className="min-h-[44px] w-full text-center font-body text-[11px] uppercase tracking-[0.16em] text-foreground/40 transition-colors hover:text-foreground/65">
+        Back to Sign In
       </button>
     </div>
   );
@@ -355,116 +356,151 @@ function ForgotPasswordTab({ onSwitchTab }) {
 const TABS = [
   { id: 'signin',  label: 'Sign In' },
   { id: 'create',  label: 'Create Account' },
-  { id: 'forgot',  label: 'Forgot Password' },
+  { id: 'forgot',  label: 'Reset Password' },
 ];
 
 const TAB_TITLES = {
-  signin:  { eyebrow: 'Welcome back',    heading: 'Sign In' },
-  create:  { eyebrow: 'Join Avalon',     heading: 'Create Account' },
-  forgot:  { eyebrow: 'Password reset',  heading: 'Forgot Password' },
+  signin:  { eyebrow: 'Portal', heading: 'Sign In' },
+  create:  { eyebrow: 'Portal', heading: 'Create Account' },
+  forgot:  { eyebrow: 'Portal', heading: 'Reset Password' },
 };
 
+const PORTAL_METRICS = [
+  ['Client', 'Book + prep'],
+  ['Nurse', 'Shift command'],
+  ['NP / MD', 'Clinical authority'],
+  ['Admin', 'Ops console'],
+];
+
 export default function Login() {
-  useSeo({ title: 'Sign In — Avalon Vitality', path: '/login' });
-  const { user } = useAuthStore();
+  useSeo({
+    title: 'Sign In — Avalon Vitality',
+    description: 'Sign in to Avalon Vitality for client booking, nurse shift command, and admin operations.',
+    path: '/login',
+  });
   const navigate = useNavigate();
   const [tab, setTab] = useState('signin');
 
   // Inherit the theme that was active on the main site
   useEffect(() => {
     try {
-      const THEMES = ['dark', 'light', 'golden', 'dubs'];
+      const THEMES = ['dark', 'light'];
       const stored = window.localStorage.getItem('avalon.theme');
       const theme = stored && THEMES.includes(stored) ? stored : 'light';
       document.documentElement.classList.remove('dark', 'golden', 'dubs');
       if (theme !== 'light') document.documentElement.classList.add(theme);
-    } catch {}
+    } catch (err) {
+      if (import.meta.env?.DEV) console.warn('[login-theme]', err);
+    }
   }, []);
-
-  useEffect(() => {
-    if (user) navigate(user.redirect || '/members/dashboard', { replace: true });
-  }, [user, navigate]);
 
   const { eyebrow, heading } = TAB_TITLES[tab];
 
   return (
-    <div
-      className="min-h-dvh flex flex-col items-center justify-center px-5 py-10"
-      style={{ background: 'var(--background)' }}
-    >
-      {/* Subtle radial glow behind card */}
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
-        <div className="w-[500px] h-[500px] rounded-full bg-white/[0.03] blur-3xl" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE, delay: 0.06 }}
-        className="relative w-full max-w-sm bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl px-7 py-8 shadow-2xl shadow-black/40"
-      >
-        {/* Logo inside card */}
-        <Link to="/" className="font-heading text-[11px] tracking-[0.3em] text-foreground/40 hover:text-foreground/70 transition-colors mb-6 block">
-          AVALON VITALITY
-        </Link>
-        {/* Header */}
-        <div className="mb-5">
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-1">
-            {eyebrow}
-          </p>
-          <h1 className="font-heading text-3xl text-foreground uppercase tracking-tight leading-none">
-            {heading}
-          </h1>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-0 mb-5 border-b border-foreground/[0.08]">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className="relative pb-2.5 mr-5 font-body text-[10px] tracking-[0.2em] uppercase transition-colors"
-              style={{ color: tab === t.id ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.35)' }}
+    <div className="relative min-h-screen min-h-dvh overflow-x-hidden bg-background px-4 py-5 text-foreground md:px-8 md:py-8">
+      <main className="relative mx-auto grid min-h-[calc(100vh-2.5rem)] min-h-[calc(100dvh-2.5rem)] w-full max-w-6xl items-center gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
+        <motion.section
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.64, ease: EASE }}
+          className="hidden min-h-[min(760px,calc(100vh-4rem))] min-h-[min(760px,calc(100dvh-4rem))] flex-col justify-between overflow-hidden rounded-[2rem] border border-foreground/[0.10] bg-foreground/[0.035] p-8 shadow-[0_32px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl lg:flex"
+        >
+          <div className="flex items-start justify-between gap-5">
+            <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-colors hover:opacity-70">
+              <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground">AVALON</span>
+              <span className="mt-0.5 block font-body text-[7px] uppercase tracking-[0.38em] text-foreground/58">VITALITY</span>
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex min-h-11 items-center rounded-full border border-foreground/[0.12] px-4 py-2 font-body text-[10px] uppercase tracking-[0.18em] text-foreground/52 transition-colors hover:border-foreground/25 hover:text-foreground"
             >
-              {t.label}
-              {tab === t.id && (
-                <motion.span
-                  layoutId="tab-underline"
-                  className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-foreground"
-                  transition={{ duration: 0.25, ease: EASE }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
+              Back
+            </Link>
+          </div>
 
-        {/* Tab content */}
-        <AnimatePresence mode="wait">
+          <div>
+            <p className="font-body text-[11px] uppercase tracking-[0.32em] text-foreground/42">Avalon Portal</p>
+            <h2 className="mt-4 max-w-xl font-heading text-[7.6rem] uppercase leading-[0.82] tracking-tight text-foreground">
+              Care<br />Command
+            </h2>
+            <p className="mt-6 max-w-md font-body text-base leading-relaxed text-foreground/58">
+              Secure access for clients, field nurses, and operations.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3">
+            {PORTAL_METRICS.map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-background/48 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.045)] backdrop-blur-xl">
+                <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{label}</p>
+                <p className="mt-2 font-body text-xs font-semibold text-foreground/72">{value}</p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        <section className="flex min-h-[calc(100vh-2.5rem)] min-h-[calc(100dvh-2.5rem)] items-center justify-center lg:min-h-[min(760px,calc(100vh-4rem))] lg:min-h-[min(760px,calc(100dvh-4rem))]">
           <motion.div
-            key={tab}
-            initial={{ opacity: 0, y: 8 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: EASE }}
+            transition={{ duration: 0.5, ease: EASE, delay: 0.06 }}
+            className="relative w-full max-w-sm rounded-3xl border border-foreground/10 bg-foreground/[0.04] px-7 py-8 shadow-2xl shadow-black/40 backdrop-blur-2xl lg:max-w-[29rem] lg:px-8 lg:py-9"
           >
-            {tab === 'signin'  && <SignInTab onSwitchTab={setTab} />}
-            {tab === 'create'  && <CreateAccountTab />}
-            {tab === 'forgot'  && <ForgotPasswordTab onSwitchTab={setTab} />}
+            <Link to="/" className="mb-6 inline-flex min-h-11 flex-col justify-center transition-colors hover:opacity-70 lg:hidden">
+              <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground">AVALON</span>
+              <span className="mt-0.5 block font-body text-[7px] uppercase tracking-[0.38em] text-foreground/58">VITALITY</span>
+            </Link>
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <p className="mb-1 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">
+                  {eyebrow}
+                </p>
+                <h1 className="font-heading text-3xl uppercase leading-none tracking-tight text-foreground lg:text-5xl">
+                  {heading}
+                </h1>
+              </div>
+              <span className="hidden rounded-full border border-foreground/[0.12] px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38 lg:inline-flex">
+                Secure
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: EASE }}
+              >
+                {tab === 'signin'  && <SignInTab onSwitchTab={setTab} />}
+                {tab === 'create'  && <CreateAccountTab />}
+                {tab === 'forgot'  && <ForgotPasswordTab onSwitchTab={setTab} />}
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-5 flex items-center justify-between border-t border-foreground/[0.08] pt-4">
+              {TABS.filter((item) => item.id !== tab).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  className="inline-flex min-h-[44px] items-center font-body text-[10px] uppercase tracking-[0.18em] text-foreground/38 transition-colors hover:text-foreground/65"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </motion.div>
-        </AnimatePresence>
+        </section>
+      </main>
 
-      </motion.div>
-
-      {/* Back link — sits below the glass card */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, ease: EASE, delay: 0.3 }}
-        className="mt-6 text-center"
+        className="relative mt-5 text-center lg:hidden"
       >
-        <Link to="/" className="inline-block font-body text-[10px] tracking-[0.2em] uppercase text-foreground/30 hover:text-foreground/60 transition-colors">
-          ← Back to Avalon
+        <Link to="/" className="inline-flex min-h-[44px] items-center font-body text-[10px] uppercase tracking-[0.2em] text-foreground/30 transition-colors hover:text-foreground/60">
+          Back to Avalon
         </Link>
       </motion.div>
     </div>

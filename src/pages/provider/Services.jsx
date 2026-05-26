@@ -296,7 +296,7 @@ export default function Services() {
       {/* Page header */}
       <div className="mb-6 space-y-1">
         <h1 className="font-heading text-2xl tracking-[0.15em] text-foreground uppercase">
-          Memberships &amp; Leads
+          Plans &amp; Leads
         </h1>
         <p className="font-body text-[12px] text-foreground/45 tracking-wide">
           Manual Pipeline Tracker
@@ -309,7 +309,7 @@ export default function Services() {
         style={{ background: 'hsl(var(--foreground) / 0.06)' }}
       >
         {[
-          { id: 'memberships', label: 'Memberships' },
+          { id: 'memberships', label: 'Plans' },
           { id: 'leads',       label: 'Leads' },
         ].map(tab => (
           <button
@@ -327,11 +327,11 @@ export default function Services() {
         ))}
       </div>
 
-      {/* Memberships tab */}
+      {/* Plans tab */}
       {activeTab === 'memberships' && (
         <div className="space-y-3">
           {members.length === 0 ? (
-            <EmptyState text="No membership records found." />
+            <EmptyState text="No plan records found." />
           ) : (
             members.map(m => (
               <MemberCard key={m.id} item={m} onStatusChange={handleMemberStatusChange} toast={toast} />

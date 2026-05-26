@@ -104,9 +104,9 @@ function FilterChips({ active, onChange, requests }) {
             onClick={() => onChange(tab.key)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
             style={{
-              background: isActive ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.05)',
-              border: isActive ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(255,255,255,0.08)',
-              color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.55)',
+              background: isActive ? 'hsl(var(--accent) / 0.18)' : 'rgba(255,255,255,0.05)',
+              border: isActive ? '1px solid hsl(var(--accent) / 0.4)' : '1px solid rgba(255,255,255,0.08)',
+              color: isActive ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.55)',
               cursor: 'pointer',
               fontFamily: 'inherit',
             }}
@@ -115,8 +115,8 @@ function FilterChips({ active, onChange, requests }) {
             <span
               className="text-[9px] px-1.5 py-0.5 rounded-full"
               style={{
-                background: isActive ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.1)',
-                color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.4)',
+                background: isActive ? 'hsl(var(--accent) / 0.25)' : 'rgba(255,255,255,0.1)',
+                color: isActive ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.4)',
               }}
             >
               {counts[tab.key]}
@@ -144,11 +144,11 @@ function SearchBar({ value, onChange }) {
         onChange={e => onChange(e.target.value)}
         className="w-full sm:w-56 pl-9 pr-3 py-2 rounded-xl text-sm placeholder-white/30"
         style={{
-          background: '#141414',
+          background: 'hsl(var(--card))',
           border: '1px solid rgba(255,255,255,0.08)',
           outline: 'none',
           fontFamily: 'inherit',
-          color: '#ffffff',
+          color: 'hsl(var(--foreground))',
         }}
       />
     </div>
@@ -159,11 +159,11 @@ function SearchBar({ value, onChange }) {
 
 function QBtn({ label, color, onClick }) {
   const colors = {
-    gold:    { border: '#c9a84c', text: '#c9a84c', bg: 'rgba(201,168,76,0.08)' },
-    emerald: { border: '#34d399', text: '#34d399', bg: 'rgba(52,211,153,0.08)' },
-    blue:    { border: '#60a5fa', text: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
-    red:     { border: '#f87171', text: '#f87171', bg: 'rgba(248,113,113,0.08)' },
-    amber:   { border: '#fbbf24', text: '#fbbf24', bg: 'rgba(251,191,36,0.08)' },
+    gold:    { border: 'hsl(var(--accent))', text: 'hsl(var(--accent))', bg: 'hsl(var(--accent) / 0.08)' },
+    emerald: { border: 'hsl(158 64% 52%)', text: 'hsl(158 64% 52%)', bg: 'rgba(52,211,153,0.08)' },
+    blue:    { border: 'hsl(213 94% 68%)', text: 'hsl(213 94% 68%)', bg: 'rgba(96,165,250,0.08)' },
+    red:     { border: 'hsl(var(--destructive))', text: 'hsl(var(--destructive))', bg: 'rgba(248,113,113,0.08)' },
+    amber:   { border: 'hsl(45 93% 58%)', text: 'hsl(45 93% 58%)', bg: 'rgba(251,191,36,0.08)' },
     muted:   { border: 'rgba(255,255,255,0.15)', text: 'rgba(255,255,255,0.55)', bg: 'rgba(255,255,255,0.04)' },
   };
   const c = colors[color] || colors.muted;
@@ -195,8 +195,8 @@ function RequestCard({ req, index, onOpen, onStatusChange, toast }) {
       transition={{ duration: 0.38, ease: EASE, delay: index * 0.04 }}
       className="rounded-2xl border overflow-hidden"
       style={{
-        background: '#141414',
-        borderColor: req.priority ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.07)',
+        background: 'hsl(var(--card))',
+        borderColor: req.priority ? 'hsl(var(--accent) / 0.25)' : 'rgba(255,255,255,0.07)',
       }}
     >
       {/* Top row */}
@@ -212,7 +212,7 @@ function RequestCard({ req, index, onOpen, onStatusChange, toast }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold text-white truncate">{req.client}</span>
             {(req.isVIP || req.priority) && (
-              <Star className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#c9a84c', fill: '#c9a84c' }} />
+              <Star className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--accent))', fill: 'hsl(var(--accent))' }} />
             )}
             <TherapyBadge therapy={req.therapy} />
           </div>
@@ -259,11 +259,11 @@ function RequestCard({ req, index, onOpen, onStatusChange, toast }) {
             Nurse
           </span>
           {req.nurse ? (
-            <span className="text-[10px] font-medium" style={{ color: '#34d399' }}>{req.nurse}</span>
+            <span className="text-[10px] font-medium" style={{ color: 'hsl(158 64% 52%)' }}>{req.nurse}</span>
           ) : (
             <span
               className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
-              style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}
+              style={{ background: 'rgba(251,191,36,0.12)', color: 'hsl(45 93% 58%)', border: '1px solid rgba(251,191,36,0.2)' }}
             >
               Needed
             </span>
@@ -315,7 +315,7 @@ function PipelineItem({ label, value }) {
 
 const TIMELINE_PLACEHOLDER = [
   { text: 'Status updated to Ready for Visit', time: '9:42 AM' },
-  { text: 'Payment confirmed — Square Link', time: '9:15 AM' },
+  { text: 'Payment confirmed — Stripe deposit', time: '9:15 AM' },
   { text: 'Nurse assigned — Stephanie R.', time: '8:55 AM' },
   { text: 'GFE cleared by supervising physician', time: '8:40 AM' },
   { text: 'Consent form signed digitally', time: '8:20 AM' },
@@ -398,6 +398,9 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
   return (
     <motion.div
       key="drawer-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Appointment details"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -414,7 +417,7 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className="fixed inset-x-0 bottom-0 z-50 md:inset-x-auto md:right-0 md:top-0 md:bottom-0 md:w-[440px] md:max-h-screen border overflow-hidden flex flex-col md:rounded-none md:border-t-0 md:border-l md:border-r-0"
         style={{
-          background: '#141414',
+          background: 'hsl(var(--card))',
           borderColor: 'rgba(255,255,255,0.08)',
           borderRadius: '20px 20px 0 0',
           maxHeight: '90dvh',
@@ -438,9 +441,9 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
               {(localReq.isVIP || localReq.priority) && (
                 <span
                   className="flex items-center gap-1 text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' }}
+                  style={{ background: 'hsl(var(--accent) / 0.15)', color: 'hsl(var(--accent))', border: '1px solid hsl(var(--accent) / 0.3)' }}
                 >
-                  <Star className="w-2.5 h-2.5" style={{ fill: '#c9a84c' }} />
+                  <Star className="w-2.5 h-2.5" style={{ fill: 'hsl(var(--accent))' }} />
                   VIP
                 </span>
               )}
@@ -507,7 +510,7 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
                 }
                 <span
                   className="text-sm font-semibold tracking-wide"
-                  style={{ color: allReady ? '#34d399' : '#f87171' }}
+                  style={{ color: allReady ? 'hsl(158 64% 52%)' : 'hsl(var(--destructive))' }}
                 >
                   {allReady ? 'READY FOR VISIT' : 'BLOCKED'}
                 </span>
@@ -579,9 +582,9 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
                         onClick={() => applyStatus(s)}
                         className="px-2 py-1.5 rounded-lg text-[9px] font-medium text-left transition-all"
                         style={{
-                          background: isActive ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.03)',
-                          border: isActive ? '1px solid rgba(201,168,76,0.4)' : '1px solid rgba(255,255,255,0.06)',
-                          color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.5)',
+                          background: isActive ? 'hsl(var(--accent) / 0.15)' : 'rgba(255,255,255,0.03)',
+                          border: isActive ? '1px solid hsl(var(--accent) / 0.4)' : '1px solid rgba(255,255,255,0.06)',
+                          color: isActive ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.5)',
                           cursor: 'pointer',
                           fontFamily: 'inherit',
                         }}
@@ -606,7 +609,7 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
                   <div className="flex flex-col items-center flex-shrink-0 mt-1">
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: i === 0 ? '#c9a84c' : 'rgba(255,255,255,0.2)' }}
+                      style={{ background: i === 0 ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.2)' }}
                     />
                     {i < TIMELINE_PLACEHOLDER.length - 1 && (
                       <span className="w-px flex-1 mt-1" style={{ background: 'rgba(255,255,255,0.08)', minHeight: 16 }} />
@@ -633,9 +636,9 @@ function VisitDetailDrawer({ req, onClose, onUpdate }) {
               placeholder="Add internal notes…"
               className="w-full rounded-xl text-sm resize-none"
               style={{
-                background: '#0f0f0f',
+                background: 'hsl(var(--card))',
                 border: '1px solid rgba(255,255,255,0.1)',
-                color: '#fff',
+                color: 'hsl(var(--foreground))',
                 padding: '10px 12px',
                 outline: 'none',
                 fontFamily: 'inherit',
@@ -748,7 +751,7 @@ export default function Appointments() {
           {/* Sticky filter chips */}
           <div
             className="sticky top-0 z-10 py-3 -mx-4 px-4 mb-4"
-            style={{ background: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'hsl(var(--background) / 0.95)', backdropFilter: 'blur(8px)' }}
           >
             <FilterChips active={activeFilter} onChange={setActiveFilter} requests={requests} />
           </div>

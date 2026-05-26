@@ -12,6 +12,8 @@ const typeIds = {
   cbd: import.meta.env.VITE_ACUITY_TYPE_IV_CBD || '',
   im: import.meta.env.VITE_ACUITY_TYPE_IM_SHOTS || '',
   subscription: import.meta.env.VITE_ACUITY_TYPE_MEMBERSHIP || '',
+  event: import.meta.env.VITE_ACUITY_TYPE_EVENT || '',
+  eventPresale: import.meta.env.VITE_ACUITY_TYPE_EVENT_PRESALE || '',
 };
 
 const protocolAliases = {

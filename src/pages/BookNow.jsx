@@ -1,1244 +1,950 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
-  ArrowLeft, ArrowRight, BatteryCharging, Building2, Check, ChevronDown,
-  CreditCard, Dumbbell, HeartPulse, Home, Hotel, MapPin, ShieldCheck,
-  Sparkles, Users, Zap, SlidersHorizontal, Loader2, RefreshCw, Calendar,
-  Droplets, Syringe,
+  ArrowRight,
+  BatteryCharging,
+  Building2,
+  Calendar,
+  Check,
+  Clock,
+  CreditCard,
+  Droplets,
+  Home,
+  Hotel,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  Zap,
 } from 'lucide-react';
 
+import Navbar from '@/components/landing/Navbar';
 import { useCart } from '@/context/CartContext';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
-import { useSeo } from '@/lib/seo';
-import Navbar from '@/components/landing/Navbar';
 import { COVERED_ZIPS } from '@/lib/serviceArea';
-import { acuityTypeForProtocol } from '@/lib/acuityAppointmentTypes';
-import { avalonErrorClass, avalonFieldClass, avalonLabelClass } from '@/components/ui/formStyles';
-import { clearBookingDraft, readBookingDraft, saveBookingDraft, appendActivity, saveLastBooking } from '@/lib/localOs';
-import { recommendProtocol } from '@/lib/osRules';
-import { createBookingRecord, validateBookingForCheckout } from '@/lib/bookingLifecycle';
+import { useSeo } from '@/lib/seo';
+import {
+  appendActivity,
+  clearBookingDraft,
+  readBookingDraft,
+  saveBookingDraft,
+  saveLastBooking,
+  writeLocal,
+} from '@/lib/localOs';
+import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout } from '@/lib/bookingLifecycle';
+import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
+import { getDepositAmountDollars } from '@/lib/checkoutConfig';
+import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 
 const EASE = [0.16, 1, 0.3, 1];
+const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 const TZ = 'America/Los_Angeles';
+const DEFAULT_TIME = 'ASAP';
+const STEPS = ['Goal', 'Visit', 'Protocol', 'Where', 'When', 'Confirm'];
 
-// ── Steps ─────────────────────────────────────────────────────────────────────
-const STEPS = ['Goal', 'Protocol', 'Schedule', 'About You', 'Confirm'];
-
-// ── Goal options ──────────────────────────────────────────────────────────────
-const GOALS = [
-  { key: 'recovery',    label: 'Recovery',       sub: 'Feel better fast',        icon: HeartPulse,   category: 'recovery' },
-  { key: 'energy',      label: 'Energy',          sub: 'Boost and recharge',      icon: Zap,          category: 'energy'   },
-  { key: 'immunity',    label: 'Immunity',        sub: 'Support your defense',    icon: ShieldCheck,  category: 'immunity' },
-  { key: 'beauty',      label: 'Beauty / Glow',   sub: 'Radiate from within',     icon: Sparkles,     category: 'beauty'   },
-  { key: 'performance', label: 'Performance',     sub: 'Optimize your edge',      icon: Dumbbell,     category: 'energy'   },
-  { key: 'longevity',   label: 'Longevity',       sub: 'Invest in your future',   icon: BatteryCharging, category: 'energy' },
-  { key: 'event',       label: 'Event / Group',   sub: 'We come to you',          icon: Users,        category: 'recovery' },
-];
-
-const LOCATIONS = [
-  { key: 'home',   label: 'Home',          icon: Home      },
-  { key: 'hotel',  label: 'Hotel',         icon: Hotel     },
-  { key: 'office', label: 'Office',        icon: Building2 },
-  { key: 'event',  label: 'Event / Venue', icon: Users     },
-  { key: 'other',  label: 'Other',         icon: MapPin    },
-];
-
-const ADDON_GROUPS = [
+const OUTCOMES = [
   {
-    key: 'iv',
-    title: 'IV Add-Ons',
-    sub: 'Boost your drip with fluids, antioxidants, and specialty pushes.',
-    items: IV_ADDONS
-      .filter(a => !a.group) // exclude dose-tiered specialties (NAD+, CBD — those are standalone sessions)
-      .map(addon => ({ ...addon, cartKey: `iv-${addon.label}`, type: 'addon' })),
+    key: 'recover',
+    label: 'Recover',
+    sub: 'Hydration, fatigue, post-night-out.',
+    icon: Droplets,
+    productKeys: ['recovery', 'hydration', 'postnight'],
   },
   {
-    key: 'im',
-    title: 'IM Shots',
-    sub: 'Fast intramuscular shots for targeted support.',
-    items: IM_SHOTS.map(shot => ({ ...shot, cartKey: `im-${shot.label}`, type: 'im' })),
+    key: 'perform',
+    label: 'Perform',
+    sub: 'Energy, focus, travel, work output.',
+    icon: Zap,
+    productKeys: ['energy', 'myers', 'jetlag'],
+  },
+  {
+    key: 'restore',
+    label: 'Restore',
+    sub: 'Immune support, wellness, replenishment.',
+    icon: ShieldCheck,
+    productKeys: ['immunity', 'myers', 'beauty'],
+  },
+  {
+    key: 'longevity',
+    label: 'Longevity',
+    sub: 'NAD+, advanced recovery, premium protocols.',
+    icon: BatteryCharging,
+    productKeys: ['nad', 'myers', 'recovery'],
   },
 ];
 
-const ADDONS_FLAT = ADDON_GROUPS.flatMap(g => g.items);
+const VISIT_TYPES = [
+  {
+    key: 'one-time',
+    label: 'One-Time Visit',
+    sub: 'Book once.',
+    icon: Calendar,
+    orderType: 'recovery',
+  },
+  {
+    key: 'subscription',
+    label: 'Subscribe & Save',
+    sub: 'Monthly recovery.',
+    icon: Sparkles,
+    orderType: 'subscription',
+  },
+  {
+    key: 'event',
+    label: 'Launch / Group',
+    sub: 'Venue, office, hotel, private.',
+    icon: Users,
+    orderType: 'event',
+  },
+];
 
-const PROTOCOL_PARAM_ALIASES = {
-  'myers-cocktail': 'myers',
-  'post-night-out': 'postnight',
-  'jet-lag': 'jetlag',
-  'nad-250mg': 'nad',
-  'cbd-33mg': 'cbd',
-  'exosomes-30b-units': 'exosomes',
-};
+const LOCATION_TYPES = [
+  { key: 'home', label: 'Home', icon: Home, placeholder: 'Home address' },
+  { key: 'hotel', label: 'Hotel', icon: Hotel, placeholder: 'Hotel name and room if known' },
+  { key: 'office', label: 'Office', icon: Building2, placeholder: 'Office address' },
+  { key: 'event', label: 'Launch', icon: Users, placeholder: 'Venue address' },
+];
 
-function protocolFromParam(value) {
-  if (!value) return null;
-  return PROTOCOL_PARAM_ALIASES[value] || value;
+const TIME_INTENTS = [
+  { key: 'today', label: 'Today', window: 'Today' },
+  { key: 'tomorrow', label: 'Tomorrow', window: 'Tomorrow' },
+  { key: 'choose', label: 'Choose Time', window: 'Preferred window' },
+];
+
+const WHO_OPTIONS = [
+  { key: 'me', label: 'Me' },
+  { key: 'other', label: 'Someone Else' },
+  { key: 'group', label: 'Group' },
+];
+
+const MEMBERSHIP_OPTIONS = [
+  { key: 'monthly-one', label: 'Monthly Protocol', price: 199, sub: '1 visit/mo · priority booking' },
+  { key: 'monthly-two', label: 'Recovery Plus', price: 389, sub: '2 visits/mo · preferred pricing' },
+  { key: 'concierge', label: 'Concierge', price: 899, sub: '4 visits/mo · VIP coordination' },
+];
+
+const EVENT_TYPES = ['Private', 'Hotel', 'Office', 'Festival', 'Venue'];
+const CLIENT_TYPES = [
+  { key: 'new', label: 'New', sub: 'GFE needed before first treatment.' },
+  { key: 'returning', label: 'Returning', sub: 'Annual GFE checked before dispatch.' },
+];
+
+function todayDate(offset = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return date.toLocaleDateString('en-CA', { timeZone: TZ });
 }
 
-function formatTimeLabel(isoString) {
-  const d = new Date(isoString);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ });
+function splitName(name = '') {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || 'Client' };
 }
 
-function todayString() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+function currency(value) {
+  return `$${Number(value || 0).toLocaleString()}`;
 }
 
-// ── Progress dots ─────────────────────────────────────────────────────────────
-function StepProgress({ step }) {
+function protocolPrice(protocol) {
+  return Number(protocol?.price || protocol?.doses?.[0]?.price || 250);
+}
+
+function protocolDuration(protocol) {
+  return protocol?.duration || protocol?.doses?.[0]?.duration || '45-60 min';
+}
+
+function getProductByKey(key) {
+  return IV_SESSIONS.find((item) => item.key === key) || IV_SESSIONS[0];
+}
+
+function safeProtocol(protocol) {
+  if (!protocol) return getProductByKey('recovery');
+  if (protocol.key === 'cbd') return { ...protocol, label: 'CBD Review', tagline: 'Held for clinical and legal approval.' };
+  return protocol;
+}
+
+function buildSlot(date, timeIntent, customTime) {
+  const rawDate = date || todayDate();
+  const time = customTime || (timeIntent === 'tomorrow' ? '11:00' : '15:00');
+  return {
+    datetime: `${rawDate}T${time}:00`,
+    timezone: TZ,
+    timeLabel: timeIntent === 'today' ? 'Today · ASAP' : timeIntent === 'tomorrow' ? 'Tomorrow · 11:00 AM' : `${rawDate} · ${time}`,
+    appointmentTypeID: `ACUITY-${timeIntent || 'manual'}`,
+  };
+}
+
+function SectionTitle({ kicker, title, sub }) {
   return (
-    <div className="flex items-center gap-2 mb-8 md:mb-10">
-      {STEPS.map((label, i) => {
-        const active = i === step;
-        const done   = i < step;
-        return (
-          <React.Fragment key={label}>
-            <div
-              className={`h-2.5 w-2.5 rounded-full border transition-all duration-300 ${
-                done || active ? 'bg-foreground border-foreground' : 'bg-transparent border-foreground/20'
-              }`}
-              title={label}
-            />
-            {i < STEPS.length - 1 && (
-              <div className={`h-px flex-1 transition-colors duration-300 ${i < step ? 'bg-foreground/40' : 'bg-foreground/12'}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
+    <div className="mb-5">
+      <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">{kicker}</p>
+      <h1 className="mt-2 font-heading text-5xl uppercase leading-[0.86] tracking-tight text-foreground md:text-7xl">
+        {title}
+      </h1>
+      {sub && <p className="mt-3 max-w-xl font-body text-sm leading-snug text-foreground/58 md:text-base">{sub}</p>}
     </div>
   );
 }
 
-// ── Order sidebar (desktop) ───────────────────────────────────────────────────
-function OrderSidebar({ protocol, selectedDose, addons, step, subtotal }) {
-  if (step === 0 || !protocol) return null;
-  const priceDisplay = selectedDose ? selectedDose.price : protocol.price;
-  const Icon = protocol.icon || Droplets;
-
+function StepProgress({ step }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: EASE }}
-      className="hidden lg:block sticky top-32 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 space-y-4"
-    >
-      <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/35">Your Order</p>
-
-      {/* Protocol */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-foreground/[0.05] border border-foreground/[0.07] flex items-center justify-center shrink-0">
-          <Icon className="w-3.5 h-3.5 text-accent" strokeWidth={1.5} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-body text-sm font-semibold text-foreground truncate">
-            {protocol.label}{selectedDose ? ` · ${selectedDose.label}` : ''}
-          </p>
-          <p className="font-body text-[10px] text-foreground/40">IV Session</p>
-        </div>
-        <span className="font-body text-sm font-semibold text-foreground shrink-0">${priceDisplay.toLocaleString()}</span>
-      </div>
-
-      {/* Add-ons */}
-      {addons.length > 0 && (
-        <div className="space-y-2 border-t border-foreground/[0.06] pt-3">
-          {addons.map(addon => (
-            <div key={addon.label} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Syringe className="w-3 h-3 text-foreground/25 shrink-0" strokeWidth={1.5} />
-                <span className="font-body text-xs text-foreground/60 truncate">{addon.label}</span>
-              </div>
-              <span className="font-body text-xs text-foreground/50 shrink-0">+${addon.price}</span>
+    <div className="mb-5 flex items-center gap-2">
+      {STEPS.map((item, index) => (
+        <React.Fragment key={item}>
+          <div className={`h-2.5 w-2.5 rounded-full border transition-colors ${index <= step ? 'border-foreground bg-foreground' : 'border-foreground/18'}`} />
+          {index < STEPS.length - 1 && (
+            <div className="h-px flex-1 bg-foreground/12">
+              <motion.div
+                className="h-full bg-foreground/48"
+                initial={false}
+                animate={{ scaleX: index < step ? 1 : 0 }}
+                transition={{ duration: 0.45, ease: EASE }}
+                style={{ originX: 0 }}
+              />
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Total */}
-      {step >= 2 && (
-        <div className="border-t border-foreground/[0.06] pt-3 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/35">Subtotal</span>
-            <span className="font-heading text-2xl text-foreground">${subtotal.toLocaleString()}</span>
-          </div>
-          <p className="font-body text-[10px] text-foreground/30">$50 deposit due now. Balance after visit.</p>
-        </div>
-      )}
-    </motion.div>
+          )}
+        </React.Fragment>
+      ))}
+      <span className="ml-2 shrink-0 font-body text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+        {STEPS[step]}
+      </span>
+    </div>
   );
 }
 
-// ── Option card ───────────────────────────────────────────────────────────────
-function OptionCard({ active, icon: Icon, title, sub, meta, onClick }) {
+function SelectCard({ item, active, onClick, children, className = '' }) {
+  const Icon = item.icon;
   return (
     <motion.button
       type="button"
-      onClick={onClick}
+      layout
       whileTap={{ scale: 0.985 }}
-      className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-all ${
+      onClick={onClick}
+      className={`relative isolate min-h-[112px] overflow-hidden rounded-[1.25rem] border p-4 text-left transition-colors ${
         active
-          ? 'border-foreground bg-foreground text-background shadow-[0_18px_45px_hsl(var(--foreground)/0.14)]'
-          : 'border-foreground/[0.10] bg-card/[0.72] hover:border-foreground/25'
-      }`}
+          ? 'border-foreground bg-foreground text-background shadow-[0_22px_80px_hsl(var(--foreground)/0.18)]'
+          : 'border-foreground/10 bg-foreground/[0.035] text-foreground hover:border-foreground/22 hover:bg-foreground/[0.055]'
+      } ${className}`}
     >
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${
-        active ? 'border-background/25 bg-background/10' : 'border-foreground/[0.08] bg-foreground/[0.04]'
-      }`}>
-        <Icon className="h-4 w-4" strokeWidth={1.7} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-body text-sm font-semibold tracking-[0.02em]">{title}</span>
-        {sub && <span className={`mt-0.5 block font-body text-[11px] ${active ? 'text-background/65' : 'text-foreground/45'}`}>{sub}</span>}
-      </span>
-      {meta && <span className={`font-body text-xs font-semibold shrink-0 ${active ? 'text-background' : 'text-foreground'}`}>{meta}</span>}
+      {active && (
+        <motion.span layoutId="active-booking-card" className="absolute inset-0 -z-10 bg-foreground" transition={{ duration: 0.42, ease: EASE }} />
+      )}
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${active ? 'border-background/18 bg-background/10' : 'border-foreground/10 bg-background/35'}`}>
+          {Icon && <Icon className="h-4 w-4" strokeWidth={1.8} />}
+        </div>
+        {active && <Check className="h-4 w-4" strokeWidth={2.2} />}
+      </div>
+      <p className="mt-4 font-heading text-3xl uppercase leading-none tracking-[0.03em]">{item.label}</p>
+      <p className={`mt-2 font-body text-xs leading-snug ${active ? 'text-background/68' : 'text-foreground/50'}`}>{item.sub}</p>
+      {children}
     </motion.button>
   );
 }
 
-// ── Add-on accordion group ────────────────────────────────────────────────────
-function AddonGroup({ group, selected, open, onToggleOpen, onToggleAddon }) {
-  const selectedCount = group.items.filter(item => selected.has(item.label)).length;
+function ProductCard({ product, active, onClick, onPlan }) {
+  const Icon = product.icon || Droplets;
+  const price = protocolPrice(product);
   return (
-    <div className="overflow-hidden rounded-2xl border border-foreground/[0.10] bg-card/[0.72]">
-      <button type="button" onClick={onToggleOpen} className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left">
-        <span>
-          <span className="block font-body text-xs font-semibold uppercase tracking-[0.24em] text-foreground">{group.title}</span>
-          <span className="mt-1 block font-body text-[11px] leading-relaxed text-foreground/45">
-            {selectedCount ? `${selectedCount} selected` : group.sub}
-          </span>
-        </span>
-        <span className="flex items-center gap-3">
-          <span className="font-body text-xs font-semibold text-foreground/45">{group.items.length}</span>
-          <ChevronDown className={`h-4 w-4 text-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`} strokeWidth={1.8} />
-        </span>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            className="overflow-hidden border-t border-foreground/[0.08]"
-          >
-            <div className="px-4 pb-2">
-              {group.items.map(addon => {
-                const active = selected.has(addon.label);
-                return (
-                  <button
-                    key={addon.cartKey}
-                    type="button"
-                    onClick={() => onToggleAddon(addon.label)}
-                    className="flex w-full items-center gap-3 border-b border-foreground/[0.07] py-4 text-left last:border-b-0"
-                  >
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                      active ? 'border-foreground bg-foreground text-background' : 'border-foreground/18'
-                    }`}>
-                      {active && <Check className="h-3 w-3" strokeWidth={2.5} />}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-body text-sm font-semibold text-foreground">{addon.label}</span>
-                      {addon.desc && <span className="mt-0.5 block font-body text-[10px] leading-relaxed text-foreground/40">{addon.desc}</span>}
-                    </span>
-                    <span className="font-body text-sm font-semibold text-foreground shrink-0">${addon.price}</span>
-                  </button>
-                );
-              })}
+    <motion.div
+      layout
+      className={`rounded-[1.25rem] border p-4 transition-colors ${
+        active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-foreground/[0.03] text-foreground'
+      }`}
+    >
+      <button type="button" onClick={onClick} aria-label={`Select ${product.label}`} className="block min-h-[44px] w-full text-left">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${active ? 'border-background/18 bg-background/10' : 'border-foreground/10 bg-background/35'}`}>
+              <Icon className="h-4 w-4" strokeWidth={1.8} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <div className="min-w-0">
+              <p className="font-heading text-3xl uppercase leading-none tracking-[0.03em]">{product.label}</p>
+              <p className={`mt-1 font-body text-xs ${active ? 'text-background/62' : 'text-foreground/45'}`}>{protocolDuration(product)}</p>
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="font-heading text-3xl leading-none">{currency(price)}</p>
+            <p className={`font-body text-[9px] uppercase tracking-[0.16em] ${active ? 'text-background/52' : 'text-foreground/45'}`}>flat</p>
+          </div>
+        </div>
+        <p className={`mt-4 font-body text-sm leading-snug ${active ? 'text-background/72' : 'text-foreground/58'}`}>
+          Includes fluids, vitamins, medications when clinically appropriate, licensed RN visit, and clinical oversight.
+        </p>
+        <p className={`mt-2 font-body text-xs leading-snug ${active ? 'text-background/58' : 'text-foreground/45'}`}>
+          Best for: {product.tagline || product.desc || 'hydration, recovery, wellness support.'}
+        </p>
+      </button>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onClick}
+          className={`min-h-[46px] rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.16em] ${
+            active ? 'bg-background text-foreground' : 'bg-foreground text-background'
+          }`}
+        >
+          Choose
+        </button>
+        <button
+          type="button"
+          onClick={onPlan}
+          className={`min-h-[46px] rounded-full border font-body text-[10px] font-semibold uppercase tracking-[0.16em] ${
+            active ? 'border-background/18 text-background/78' : 'border-foreground/12 text-foreground/58'
+          }`}
+        >
+          Add to Plan
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+function formatGfeDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function TextInput({ label, value, onChange, placeholder, type = 'text', required = false }) {
+  return (
+    <label className="block">
+      <span className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">{label}</span>
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="mt-2 min-h-[48px] w-full rounded-2xl border border-foreground/12 bg-foreground/[0.035] px-4 font-body text-base text-foreground placeholder:text-foreground/45 outline-none transition-colors focus:border-foreground/32"
+      />
+    </label>
+  );
+}
+
+function SummaryRail({ state, product, subtotal, canSubmit, onSubmit }) {
+  return (
+    <aside className="hidden lg:block">
+      <div className="sticky top-28 rounded-[1.5rem] border border-foreground/10 bg-background/70 p-5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
+        <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Your Visit</p>
+        <div className="mt-5 space-y-4">
+          <div>
+            <p className="font-heading text-4xl uppercase leading-none">{product?.label || 'Select protocol'}</p>
+            <p className="mt-1 font-body text-sm text-foreground/50">{state.visitType === 'subscription' ? 'Monthly plan' : state.visitType === 'event' ? 'Launch/group visit' : 'One-time visit'}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              ['Due now', currency(DEPOSIT_DUE)],
+              ['Estimate', currency(subtotal)],
+              ['Acuity', 'Queued'],
+              ['GFE', 'Before visit'],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
+                <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
+                <p className="mt-1 font-body text-xs font-semibold text-foreground/72">{value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2 border-t border-foreground/8 pt-4 font-body text-xs text-foreground/52">
+            <p>{state.address || 'Address pending'}</p>
+            <p>{state.timeIntent === 'today' ? 'Today · ASAP' : state.timeIntent === 'tomorrow' ? 'Tomorrow · 11:00 AM' : state.customDate || 'Time pending'}</p>
+            {state.addOns.length > 0 && <p>{state.addOns.length} add-on{state.addOns.length > 1 ? 's' : ''} selected</p>}
+          </div>
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={onSubmit}
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background disabled:opacity-35"
+          >
+            Hold Visit <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+const defaultState = {
+  outcome: 'recover',
+  visitType: 'one-time',
+  productKey: 'recovery',
+  planKey: 'monthly-one',
+  clientType: 'new',
+  eventType: 'Private',
+  locationType: 'home',
+  address: '',
+  zip: '',
+  who: 'me',
+  guests: 1,
+  timeIntent: 'today',
+  customDate: todayDate(),
+  customTime: '',
+  name: '',
+  email: '',
+  phone: '',
+  notes: '',
+  addOns: [],
+};
+
 export default function BookNow() {
   useSeo({
-    title: 'Book Mobile IV Therapy — Avalon Vitality',
-    description: 'Choose your goal, protocol, add-ons, and visit time for Avalon Vitality mobile IV therapy in the SF Bay Area.',
+    title: 'Choose Protocol — Avalon Vitality',
+    description: 'Book a premium mobile recovery protocol in the Bay Area with flat pricing, licensed clinicians, and clinical clearance before treatment.',
     path: '/book',
   });
 
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { addItem, clearItems } = useCart();
-  const requestedProtocol = protocolFromParam(searchParams.get('protocol'));
-  const requestedAddon = searchParams.get('addon');
-  const [draft, setDraft] = useState(() => readBookingDraft());
-
-  // ── Step & selection state ──────────────────────────────────────────────────
-  const [step, setStep] = useState(() => draft?.step ?? 0);
-  const [goal, setGoal] = useState(() => GOALS.find(g => g.key === draft?.goalKey) || GOALS[0]);
-  const [groupSize, setGroupSize] = useState(2);
-  const [protocol, setProtocol] = useState(() =>
-    IV_SESSIONS.find(s => s.key === requestedProtocol) || IV_SESSIONS.find(s => s.key === draft?.protocolKey) || IV_SESSIONS.find(s => s.key === 'myers') || IV_SESSIONS[0]
-  );
-  // For sessions with dose tiers, track selected dose
-  const [selectedDose, setSelectedDose] = useState(() => {
-    const p = IV_SESSIONS.find(s => s.key === requestedProtocol) || IV_SESSIONS.find(s => s.key === draft?.protocolKey) || IV_SESSIONS.find(s => s.key === 'myers') || IV_SESSIONS[0];
-    return p?.doses?.[0] ?? null;
-  });
-  const [expandedProtocol, setExpandedProtocol] = useState(null);
-  const [addons, setAddons] = useState(() => {
-    const selected = new Set(draft?.addons || []);
-    if (requestedAddon) {
-      const match = ADDONS_FLAT.find((addon) => addon.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') === requestedAddon);
-      if (match) selected.add(match.label);
-    }
-    return selected;
-  });
-  const [openAddonGroups, setOpenAddonGroups] = useState({ iv: false, im: false });
-
-  // ── Scheduling state ────────────────────────────────────────────────────────
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [slots, setSlots] = useState([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [slotsError, setSlotsError] = useState(null);
-  const [nextAvailLoading, setNextAvailLoading] = useState(false);
-  const appointmentTypeId = useMemo(
-    () => acuityTypeForProtocol(protocol?.key, selectedDose?.key),
-    [protocol?.key, selectedDose?.key]
-  );
-
-  // ── Checkout state ──────────────────────────────────────────────────────────
-  const [appointment, setAppointment] = useState(null);
-  const [contact, setContact] = useState(null);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState(null);
-
-  // ── Forms (steps 3 & 4) ─────────────────────────────────────────────────────
-  const aboutForm = useForm({
-    defaultValues: {
-      firstName: '', lastName: '', email: '', phone: '',
-      address: '', zip: '', date: '', notes: '',
-      dob: '', guests: '1',
-      covidPositive: 'No', infectiousDisease: 'No', ivBefore: 'Yes',
-      medicalConditions: 'None of the above',
-      allergies: '', medications: '', emergencyContact: '',
-      privacyAck: false, treatmentConsent: false, generalConsent: false,
-    },
-  });
-
-  const selectedDate = aboutForm.watch('date');
-  const watchedZip = aboutForm.watch('zip');
-  const watchedGuests = aboutForm.watch('guests');
-
-  // ── Scheduling availability ─────────────────────────────────────────────────
-  const fetchSlots = useCallback(async (date) => {
-    if (!date) return;
-    setSlotsLoading(true);
-    setSlotsError(null);
-    setSelectedSlot(null);
-    try {
-      const params = new URLSearchParams({ date, timezone: TZ });
-      if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
-      const res = await fetch(`/api/scheduling-availability?${params}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not load availability');
-      setSlots(data);
-    } catch (err) {
-      setSlotsError(err.message);
-      setSlots([]);
-    } finally {
-      setSlotsLoading(false);
-    }
-  }, [appointmentTypeId]);
+  const navigate = useNavigate();
+  const { clearItems, addItem } = useCart();
+  const clientProfile = useMemo(() => readClientProfile(), []);
+  const profileGfe = useMemo(() => resolveGfeRequirement({
+    isNewClient: false,
+    visitCount: Math.max(1, Number(clientProfile.visitCount || 1)),
+    gfe: clientProfile.gfe,
+    gfeExpiresAt: clientProfile.gfe?.validUntil,
+  }), [clientProfile]);
+  const [step, setStep] = useState(0);
+  const [state, setState] = useState(() => ({
+    ...defaultState,
+    clientType: profileGfe.required ? 'new' : 'returning',
+    ...(readBookingDraft()?.webstore || {}),
+  }));
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (selectedDate) fetchSlots(selectedDate);
-  }, [selectedDate, fetchSlots]);
+    const outcomeParam = searchParams.get('outcome');
+    const protocolParam = searchParams.get('protocol');
+    const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
+    if (protocolParam && IV_SESSIONS.some((item) => item.key === protocolParam)) {
+      setState((current) => ({
+        ...current,
+        ...(nextOutcome ? { outcome: nextOutcome.key } : {}),
+        productKey: protocolParam,
+      }));
+      setStep(2);
+    } else if (nextOutcome) {
+      setState((current) => ({
+        ...current,
+        outcome: nextOutcome.key,
+        productKey: nextOutcome.productKeys[0],
+      }));
+      setStep(1);
+    }
+  }, [searchParams]);
 
-  const findNextAvailable = useCallback(async (fromDate) => {
-    setNextAvailLoading(true);
-    try {
-      const base = fromDate ? new Date(fromDate + 'T12:00:00') : new Date();
-      for (let i = 1; i <= 14; i++) {
-        const d = new Date(base);
-        d.setDate(d.getDate() + i);
-        const dateStr = d.toLocaleDateString('en-CA', { timeZone: TZ });
-        const params = new URLSearchParams({ date: dateStr, timezone: TZ });
-        if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
-        const res = await fetch(`/api/scheduling-availability?${params}`);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data?.length > 0) { setSlots(data); setNextAvailLoading(false); return dateStr; }
-      }
-    } catch {}
-    setNextAvailLoading(false);
-    return null;
-  }, [appointmentTypeId]);
-
-  // ── Computed values ─────────────────────────────────────────────────────────
-  const recommendedProtocols = useMemo(() => {
-    const smart = recommendProtocol({ goal: goal.key, budget: 450, time: 90, symptoms: goal.sub }, IV_SESSIONS);
-    const filtered = IV_SESSIONS.filter(s => s.category === goal.category);
-    const merged = [...smart, ...(filtered.length ? filtered : IV_SESSIONS)];
-    const deduped = merged.filter((item, index, arr) => arr.findIndex(other => other.key === item.key) === index).slice(0, 6);
-    // Hydration always pins to first position
-    const hydration = IV_SESSIONS.find(s => s.key === 'hydration');
-    const rest = deduped.filter(s => s.key !== 'hydration');
-    return hydration ? [hydration, ...rest] : deduped;
-  }, [goal]);
-
-  const selectedAddons = ADDONS_FLAT.filter(a => addons.has(a.label));
-  const selectedAddonKey = selectedAddons.map((addon) => addon.label).sort().join('|');
-  const protocolPrice  = selectedDose ? selectedDose.price : (protocol?.price ?? 0);
-  const subtotal       = protocolPrice + selectedAddons.reduce((sum, a) => sum + a.price, 0);
-  const groupNeedsContact = step === 0 && goal.key === 'event' && groupSize > 4;
+  const outcome = OUTCOMES.find((item) => item.key === state.outcome) || OUTCOMES[0];
+  const visitType = VISIT_TYPES.find((item) => item.key === state.visitType) || VISIT_TYPES[0];
+  const productOptions = useMemo(
+    () => outcome.productKeys.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean).slice(0, 3),
+    [outcome]
+  );
+  const product = safeProtocol(getProductByKey(state.productKey)) || productOptions[0];
+  const plan = MEMBERSHIP_OPTIONS.find((item) => item.key === state.planKey) || MEMBERSHIP_OPTIONS[0];
+  const isReturningClient = state.clientType === 'returning';
+  const bookingGfeRequirement = resolveGfeRequirement({
+    isNewClient: !isReturningClient,
+    visitCount: isReturningClient ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
+    gfe: isReturningClient ? clientProfile.gfe : {},
+    gfeExpiresAt: isReturningClient ? clientProfile.gfe?.validUntil : '',
+  });
+  const selectedAddons = useMemo(() => {
+    const pool = [
+      ...IV_ADDONS.slice(0, 8).map((item) => ({ ...item, type: 'addon', cartKey: `addon-${item.label}` })),
+      ...IM_SHOTS.slice(0, 6).map((item) => ({ ...item, type: 'im', cartKey: `im-${item.label}` })),
+    ];
+    return pool.filter((item) => state.addOns.includes(item.label));
+  }, [state.addOns]);
+  const subtotal = protocolPrice(product) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
 
   useEffect(() => {
-    const nextDraft = saveBookingDraft({
-      step,
-      goalKey: goal.key,
-      protocolKey: protocol?.key,
-      selectedDoseKey: selectedDose?.key,
-      addons: selectedAddons.map((addon) => addon.label),
-      zip: watchedZip,
-      guests: watchedGuests,
-      subtotal,
+    saveBookingDraft({ webstore: state, step, subtotal, updatedAt: new Date().toISOString() });
+  }, [state, step, subtotal]);
+
+  useEffect(() => {
+    track(ANALYTICS_EVENTS.STEP_VIEWED, {
+      funnel: 'webstore',
+      step_index: step,
+      step_name: STEPS[step],
+      outcome: state.outcome,
+      visit_type: state.visitType,
+      protocol_key: state.productKey,
+      attribution: getAttribution(),
     });
-    setDraft(nextDraft);
-  }, [step, goal.key, protocol?.key, selectedDose?.key, watchedZip, watchedGuests, subtotal, selectedAddonKey]);
+  }, [step, state.outcome, state.visitType, state.productKey]);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  const setValue = (key, value) => {
+    setError('');
+    setState((current) => ({ ...current, [key]: value }));
+  };
+
+  const chooseOutcome = (key) => {
+    const nextOutcome = OUTCOMES.find((item) => item.key === key) || OUTCOMES[0];
+    track(ANALYTICS_EVENTS.STEP_COMPLETED, {
+      funnel: 'webstore',
+      step_index: 0,
+      step_name: STEPS[0],
+      outcome: key,
+    });
+    setState((current) => ({
+      ...current,
+      outcome: key,
+      productKey: nextOutcome.productKeys[0],
+    }));
+    setStep(1);
+  };
+
+  const chooseVisitType = (key) => {
+    const next = key === 'event' ? { who: 'group', locationType: 'event', guests: Math.max(2, Number(state.guests || 2)) } : {};
+    track(ANALYTICS_EVENTS.STEP_COMPLETED, {
+      funnel: 'webstore',
+      step_index: 1,
+      step_name: STEPS[1],
+      visit_type: key,
+    });
+    setState((current) => ({ ...current, visitType: key, ...next }));
+    setStep(2);
+  };
+
   const toggleAddon = (label) => {
-    setAddons(cur => {
-      const next = new Set(cur);
-      next.has(label) ? next.delete(label) : next.add(label);
-      return next;
-    });
+    setState((current) => ({
+      ...current,
+      addOns: current.addOns.includes(label)
+        ? current.addOns.filter((item) => item !== label)
+        : [...current.addOns, label],
+    }));
   };
 
-  const toggleAddonGroup = (key) =>
-    setOpenAddonGroups(cur => ({ iv: false, im: false, [key]: !cur[key] }));
-
-  const next = () => setStep(cur => Math.min(cur + 1, STEPS.length - 1));
-  const back = () => setStep(cur => Math.max(cur - 1, 0));
-
-  const contactForGroup = () => {
-    const sub  = encodeURIComponent('Group visit request');
-    const body = encodeURIComponent(`Hi Avalon,\n\nI'd like to book a group IV visit for ${groupSize}+ people.\n\n`);
-    window.location.href = `mailto:support@avalonvitality.co?subject=${sub}&body=${body}`;
+  const canAdvance = () => {
+    if (step === 3) return Boolean(state.address.trim() && String(state.zip).trim().length === 5);
+    if (step === 4) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
+    return true;
   };
 
-  const handleCheckout = async () => {
-    if (!contact || !appointment) return;
-    setCheckoutLoading(true);
-    setCheckoutError(null);
-
-    clearItems();
-    const protocolLabel = `${protocol.label}${selectedDose ? ` (${selectedDose.label})` : ''}`;
-    const bookingCandidate = {
-      id: `LOCAL-${Date.now().toString().slice(-6)}`,
-      service: protocolLabel,
-      protocolKey: protocol.key,
-      doseKey: selectedDose?.key ?? protocol.key,
-      date: appointment.date,
-      time: appointment.acuitySlot?.timeLabel ?? '',
-      datetime: appointment.acuitySlot?.datetime ?? '',
-      timezone: appointment.acuitySlot?.timezone ?? TZ,
-      address: appointment.address,
-      zip: appointment.zip,
-      city: appointment.city ?? '',
-      locationType: appointment.locationType,
-      guests: appointment.guests,
-      notes: appointment.notes ?? '',
-      contact: { name: `${contact.firstName} ${contact.lastName}`.trim(), ...contact },
-      addOns: selectedAddons.map(a => a.type === 'im' ? `IM · ${a.label}` : a.label),
-      items: [
-        { cartKey: selectedDose?.key ?? protocol.key, label: protocolLabel, price: protocolPrice, type: 'iv' },
-        ...selectedAddons.map(a => ({ cartKey: a.cartKey, label: a.type === 'im' ? `IM · ${a.label}` : a.label, price: a.price, type: a.type })),
-      ],
-      subtotal,
-      status: 'Scheduling received',
-      nextStep: 'Clinical review and RN assignment',
-      intake: 'Done',
-      consent: 'Done',
-      gfe: 'Pending',
-      nurse: 'Unassigned',
-      payment: 'Pending',
-      source: 'Website',
-      reference: `WEB-${Date.now().toString().slice(-6)}`,
-      appointmentTypeId: appointment.acuitySlot?.appointmentTypeID ?? '',
-    };
-    const lifecycleCheck = validateBookingForCheckout(
-      { ...bookingCandidate, acuitySlot: appointment.acuitySlot },
-      { coveredZips: COVERED_ZIPS }
-    );
-    if (!lifecycleCheck.ok) {
-      setCheckoutError(lifecycleCheck.errors[0]);
-      setCheckoutLoading(false);
+  const next = () => {
+    if (!canAdvance()) {
+      setError(step === 3 ? 'Add address and ZIP.' : 'Choose a date and time.');
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'webstore',
+        step_index: step,
+        step_name: STEPS[step],
+        reason: step === 3 ? 'address_zip_missing' : 'time_missing',
+      });
       return;
     }
-    const localBooking = createBookingRecord({
-      ...bookingCandidate,
-      manualReview: lifecycleCheck.manualReview,
-      lifecycleWarnings: lifecycleCheck.warnings,
+    setError('');
+    track(ANALYTICS_EVENTS.STEP_COMPLETED, {
+      funnel: 'webstore',
+      step_index: step,
+      step_name: STEPS[step],
+      outcome: state.outcome,
+      visit_type: state.visitType,
+      protocol_key: state.productKey,
     });
-    saveLastBooking(localBooking);
-    addItem({ cartKey: selectedDose?.key ?? protocol.key, label: protocolLabel, price: protocolPrice, type: 'iv' });
-    selectedAddons.forEach(a => addItem({
-      cartKey: a.cartKey,
-      label: a.type === 'im' ? `IM · ${a.label}` : a.label,
-      price: a.price,
-      type: a.type,
-    }));
-
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: 'payment',
-          items: [
-            { cartKey: selectedDose?.key ?? protocol.key, label: protocolLabel, price: protocolPrice, type: 'iv' },
-            ...selectedAddons.map(a => ({ cartKey: a.cartKey, label: a.type === 'im' ? `IM · ${a.label}` : a.label, price: a.price, type: a.type })),
-          ],
-          membership: null,
-          contact: { name: `${contact.firstName} ${contact.lastName}`, ...contact },
-          appointment: {
-            address: appointment.address,
-            notes: appointment.notes ?? '',
-            acuityTypeId: appointment.acuitySlot?.appointmentTypeID ?? '',
-            acuityDatetime: appointment.acuitySlot?.datetime ?? '',
-            acuityTimezone: appointment.acuitySlot?.timezone ?? TZ,
-            timeLabel: appointment.acuitySlot?.timeLabel ?? '',
-          },
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Something went wrong');
-      if (data.url) window.location.href = data.url;
-      clearBookingDraft();
-      appendActivity(`Checkout started for ${protocolLabel}`, { role: 'client', subtotal, bookingId: localBooking.id });
-    } catch (err) {
-      setCheckoutError(err.message);
-      setCheckoutLoading(false);
-    }
+    setStep((current) => Math.min(current + 1, STEPS.length - 1));
   };
 
-  // ── Shared styles ────────────────────────────────────────────────────────────
-  const fieldCls  = avalonFieldClass;
-  const labelCls  = avalonLabelClass;
-  const errCls    = avalonErrorClass;
-  const btnBack   = 'flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/[0.12] bg-background text-foreground shrink-0 transition-colors hover:bg-foreground/[0.05]';
-  const btnFwd    = 'flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground font-body text-xs font-semibold uppercase tracking-[0.22em] text-background shadow-[0_14px_40px_hsl(var(--foreground)/0.16)] transition-opacity hover:opacity-90';
-  const btnConfirm = 'flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-accent font-body text-xs font-semibold uppercase tracking-[0.22em] text-background shadow-[0_14px_40px_hsl(var(--accent)/0.3)] transition-opacity hover:opacity-90';
+  const back = () => setStep((current) => Math.max(current - 1, 0));
 
-  // ── Fixed mobile/tablet footer (steps 0–1 only; form steps handle their own) ─
-  const mobileFooter = step <= 1 ? (
-    <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 bg-gradient-to-t from-background via-background/95 to-transparent">
-      <div className="flex gap-3 max-w-lg mx-auto">
-        {step > 0 && (
-          <button type="button" onClick={back} className={btnBack} aria-label="Back">
-            <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={groupNeedsContact ? contactForGroup : next}
-          className={btnFwd}
-        >
-          {groupNeedsContact ? 'Contact Us' : 'Continue'}
-          <ArrowRight className="h-4 w-4" strokeWidth={2} />
-        </button>
-      </div>
-    </div>
-  ) : null;
+  const buildBooking = () => {
+    const { firstName, lastName } = splitName(state.name);
+    const date = state.timeIntent === 'tomorrow' ? todayDate(1) : state.timeIntent === 'choose' ? state.customDate : todayDate();
+    const slot = buildSlot(date, state.timeIntent, state.customTime);
+    const service = `${product.label}${state.visitType === 'subscription' ? ` · ${plan.label}` : ''}`;
+    const guests = state.visitType === 'event' ? Math.max(2, Number(state.guests || 2)) : Math.max(1, Number(state.guests || 1));
+    const returningClient = state.clientType === 'returning';
+    const profileGfeRecord = returningClient ? clientProfile.gfe : {};
+    const gfeRequirement = resolveGfeRequirement({
+      isNewClient: !returningClient,
+      visitCount: returningClient ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
+      gfe: profileGfeRecord,
+      gfeExpiresAt: returningClient ? profileGfeRecord?.validUntil : '',
+    });
+    return {
+      id: `AV-${Date.now().toString().slice(-6)}`,
+      reference: `WEB-${Date.now().toString().slice(-6)}`,
+      service,
+      protocolKey: product.key,
+      date,
+      time: slot.timeLabel,
+      datetime: slot.datetime,
+      timezone: TZ,
+      address: state.address,
+      zip: String(state.zip || '').trim(),
+      locationType: state.locationType,
+      guests,
+      notes: state.notes,
+      contact: {
+        name: state.name.trim(),
+        firstName,
+        lastName,
+        email: state.email.trim(),
+        phone: state.phone.trim(),
+        clientType: state.clientType,
+        visitCount: returningClient ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
+      },
+      addOns: selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
+      items: [
+        { cartKey: product.key, label: product.label, price: protocolPrice(product), type: 'iv' },
+        ...selectedAddons.map((item) => ({
+          cartKey: item.cartKey,
+          label: item.type === 'im' ? `IM · ${item.label}` : item.label,
+          price: Number(item.price || 0),
+          type: item.type,
+        })),
+      ],
+      subtotal,
+      depositAmount: DEPOSIT_DUE,
+      payment: `$${DEPOSIT_DUE} hold pending`,
+      status: 'Scheduling received',
+      nextStep: gfeRequirement.required
+        ? 'Clinical review, annual GFE, $50 hold, and Acuity scheduling handoff'
+        : 'Annual GFE valid. Clinical review, $50 hold, and Acuity scheduling handoff',
+      intake: 'Needed',
+      consent: 'Needed',
+      gfe: gfeRequirement.required ? 'Pending' : 'Cleared',
+      gfeRecord: profileGfeRecord,
+      gfeRequired: gfeRequirement.required,
+      gfeExpiresAt: gfeRequirement.expiresAt || '',
+      gfeStatusReason: gfeRequirement.reason,
+      nurse: 'Unassigned',
+      source: 'Avalon Webstore',
+      orderType: visitType.orderType,
+      productFamily: state.visitType === 'event' ? 'launch' : state.visitType === 'subscription' ? 'subscription' : 'protocol',
+      appointmentChannel: state.locationType === 'event' ? 'venue' : 'mobile',
+      appointmentTypeId: slot.appointmentTypeID,
+      acuitySlot: slot,
+      isNewClient: !returningClient,
+      visitCount: returningClient ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
+      manualReview: true,
+      clientType: state.clientType,
+      subscription: state.visitType === 'subscription' ? { ...plan, frequency: 'monthly', preferredOutcome: outcome.label } : null,
+      event: state.visitType === 'event' ? { type: state.eventType, guestCount: guests, gfeTiming: 'Before launch' } : null,
+      lifecycleWarnings: [
+        gfeRequirement.required
+          ? 'Annual GFE required before dispatch.'
+          : `Annual GFE valid${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
+        'Clinical review required before treatment.',
+        'Acuity scheduling handoff is represented locally until connected.',
+        !COVERED_ZIPS.has(String(state.zip || '').trim()) && 'Service-area review required.',
+        state.visitType === 'event' && 'Pre-launch GFE coordination required.',
+      ].filter(Boolean),
+    };
+  };
 
-  // Desktop inline footer for steps 0–1
-  const desktopFooter = step <= 1 ? (
-    <div className="hidden lg:flex gap-3 mt-8">
-      {step > 0 && (
-        <button type="button" onClick={back} className={btnBack} aria-label="Back">
-          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={groupNeedsContact ? contactForGroup : next}
-        className={btnFwd}
-        style={{ maxWidth: '18rem' }}
-      >
-        {groupNeedsContact ? 'Contact Us' : 'Continue'}
-        <ArrowRight className="h-4 w-4" strokeWidth={2} />
-      </button>
-    </div>
-  ) : null;
+  const canSubmit = Boolean(state.name.trim() && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
 
-  // ── Render ────────────────────────────────────────────────────────────────────
+  const submit = () => {
+    if (!canSubmit) {
+      setError('Add name, phone, email, address, and ZIP.');
+      setStep(5);
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'webstore',
+        step_index: 5,
+        step_name: STEPS[5],
+        reason: 'required_fields_missing',
+      });
+      return;
+    }
+    const candidate = buildBooking();
+    const check = validateBookingForCheckout(candidate, { coveredZips: COVERED_ZIPS });
+    const localBooking = createBookingRecord({
+      ...candidate,
+      manualReview: true,
+      lifecycleWarnings: [...new Set([...(candidate.lifecycleWarnings || []), ...(check.warnings || [])])],
+    });
+
+    track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
+      funnel: 'webstore',
+      booking_id: localBooking.id,
+      order_type: localBooking.orderType,
+      product_family: localBooking.productFamily,
+      protocol_key: localBooking.protocolKey,
+      addon_count: localBooking.addOns?.length || 0,
+      subtotal,
+      deposit_due: DEPOSIT_DUE,
+      gfe_required: localBooking.gfeRequired,
+    });
+
+    clearItems();
+    localBooking.items.forEach(addItem);
+    saveLastBooking(localBooking);
+    orchestrateOrderHandoff(localBooking, {
+      source: 'avalon-webstore',
+      type: visitType.label,
+      scope: state.visitType === 'event' ? 'Launch/group local handoff' : state.visitType === 'subscription' ? 'Subscription local handoff' : 'One-time local handoff',
+      depositAmount: DEPOSIT_DUE,
+    });
+    writeLocal('webstore.latestHandoff', {
+      bookingId: localBooking.id,
+      stack: ['Avalon OS', 'Acuity placeholder', 'GFE routing', 'Nurse dispatch', 'Inventory deduction', 'CRM-safe follow-up'],
+      noThirdPartyCalls: true,
+      updatedAt: new Date().toISOString(),
+    });
+    if (localBooking.subscription) writeLocal('webstore.subscriptionPlan', localBooking.subscription);
+    if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
+    appendActivity(`Webstore hold received: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
+    clearBookingDraft();
+    navigate('/booking/confirmation');
+  };
+
+  const addonPool = [
+    ...IV_ADDONS.filter((item) => !item.group).slice(0, 4),
+    ...IM_SHOTS.slice(0, 4),
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar showBack />
-
-      <div className="mx-auto max-w-6xl px-4 md:px-8 pt-24 md:pt-28 pb-36 lg:pb-16">
-        {draft && draft.protocolKey && step === 0 && (
-          <button
-            type="button"
-            onClick={() => setStep(Math.min(draft.step || 1, STEPS.length - 1))}
-            className="mb-5 flex w-full items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/[0.06] px-4 py-3 text-left lg:max-w-lg"
-          >
-            <span>
-              <span className="block font-body text-[10px] tracking-[0.24em] uppercase text-accent">Resume Request</span>
-              <span className="mt-1 block font-body text-xs text-foreground/55">
-                Continue your {IV_SESSIONS.find(s => s.key === draft.protocolKey)?.label || 'booking'} request.
-              </span>
-            </span>
-            <RefreshCw className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.8} />
-          </button>
-        )}
-        <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-16 lg:items-start">
-
-          {/* ── Left: step content ───────────────────────────────────────── */}
-          <div className="max-w-lg lg:max-w-none">
+      <main className="mx-auto max-w-6xl px-4 pb-32 pt-20 md:px-8 md:pt-28 lg:pb-16">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12">
+          <section className="min-w-0">
             <StepProgress step={step} />
-
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
-                initial={{ opacity: 0, x: 20, filter: 'blur(6px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: -20, filter: 'blur(6px)' }}
-                transition={{ duration: 0.4, ease: EASE }}
+                initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -12, filter: 'blur(8px)' }}
+                transition={{ duration: 0.42, ease: EASE }}
               >
-
-                {/* ───────────── STEP 0: Goal ─────────────────────────── */}
                 {step === 0 && (
                   <>
-                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] text-foreground">
-                      What do you need today?
-                    </h1>
-                    <p className="mt-4 font-body text-sm leading-relaxed text-foreground/55">
-                      Choose your goal and we'll take care of the rest.
-                    </p>
-                    <div className="mt-7 space-y-3">
-                      {GOALS.map(item => (
-                        <div key={item.key} className="space-y-3">
-                          <OptionCard
-                            active={goal.key === item.key}
-                            icon={item.icon}
-                            title={item.label}
-                            sub={item.sub}
-                            onClick={() => {
-                              setGoal(item);
-                              const match = IV_SESSIONS.find(s => s.category === item.category);
-                              if (match) {
-                                setProtocol(match);
-                                setSelectedDose(match.doses?.[0] ?? null);
-                              }
-                              if (item.key === 'event') {
-                                setProtocol(LOCATIONS.find(l => l.key === 'event') || protocol);
-                              }
-                              // Auto-advance for all goals except event (needs group size input)
-                              if (item.key !== 'event') {
-                                setTimeout(() => setStep(cur => Math.min(cur + 1, STEPS.length - 1)), 140);
-                              }
-                            }}
-                          />
-                          {/* Group size expander */}
-                          <AnimatePresence>
-                            {goal.key === 'event' && item.key === 'event' && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -8, height: 0 }}
-                                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                exit={{ opacity: 0, y: -8, height: 0 }}
-                                transition={{ duration: 0.32, ease: EASE }}
-                                className="overflow-hidden rounded-2xl border border-foreground/[0.10] bg-card/[0.78] p-4"
-                              >
-                                <div className="flex items-center justify-between gap-4">
-                                  <div>
-                                    <p className="font-body text-sm font-semibold text-foreground">How many people?</p>
-                                    <p className="mt-1 font-body text-[11px] leading-relaxed text-foreground/45">We can book up to 4 guests here.</p>
-                                  </div>
-                                  <span className="font-heading text-3xl text-foreground">{groupSize > 4 ? '5+' : groupSize}</span>
-                                </div>
-                                <div className="mt-4 grid grid-cols-5 gap-2">
-                                  {[1, 2, 3, 4, 5].map(n => (
-                                    <button
-                                      key={n}
-                                      type="button"
-                                      onClick={() => setGroupSize(n)}
-                                      className={`h-11 rounded-xl border font-body text-xs font-semibold transition-all ${
-                                        groupSize === n
-                                          ? 'border-foreground bg-foreground text-background'
-                                          : 'border-foreground/[0.10] bg-background text-foreground/60'
-                                      }`}
-                                    >
-                                      {n === 5 ? '5+' : n}
-                                    </button>
-                                  ))}
-                                </div>
-                                <p className={`mt-4 rounded-xl px-3 py-3 font-body text-[11px] leading-relaxed ${
-                                  groupSize > 4 ? 'bg-foreground text-background' : 'bg-foreground/[0.04] text-foreground/50'
-                                }`}>
-                                  {groupSize > 4
-                                    ? 'For groups over 4, contact us directly so we can staff the visit and coordinate timing.'
-                                    : 'For 1–4 people, continue here and choose your visit details.'}
-                                </p>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                    </div>
-                    {desktopFooter}
-                  </>
-                )}
-
-                {/* ───────────── STEP 1: Protocol + Add-ons ─────────── */}
-                {step === 1 && (
-                  <>
-                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] text-foreground">
-                      Choose your protocol
-                    </h1>
-                    <p className="mt-4 font-body text-sm leading-relaxed text-foreground/55">
-                      Clinician designed. Results driven.
-                    </p>
-
-                    {/* Protocol list */}
-                    <div className="mt-7 space-y-3">
-                      {recommendedProtocols.map(item => (
-                        <div key={item.key}>
-                          <OptionCard
-                            active={protocol.key === item.key}
-                            icon={item.icon}
-                            title={item.label}
-                            sub={item.tagline}
-                            meta={item.doses ? `From $${item.doses[0].price}` : `$${item.price}`}
-                            onClick={() => {
-                              setProtocol(item);
-                              setSelectedDose(item.doses?.[0] ?? null);
-                              setExpandedProtocol(expandedProtocol === item.key ? null : item.key);
-                            }}
-                          />
-                          {/* Dose selector for tiered sessions */}
-                          <AnimatePresence>
-                            {protocol.key === item.key && item.doses && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.32, ease: EASE }}
-                                className="overflow-hidden"
-                              >
-                                <div className="mx-1 rounded-b-2xl border border-t-0 border-foreground/[0.08] bg-foreground/[0.03] px-4 pb-4 pt-3">
-                                  <p className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/35 mb-2">Select dose</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {item.doses.map(dose => {
-                                      const active = selectedDose?.key === dose.key;
-                                      return (
-                                        <button
-                                          key={dose.key}
-                                          type="button"
-                                          onClick={() => {
-                                          setSelectedDose(dose);
-                                        }}
-                                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-body text-xs transition-all ${
-                                            active
-                                              ? 'border-foreground bg-foreground text-background'
-                                              : 'border-foreground/[0.12] text-foreground/60 hover:border-foreground/30'
-                                          }`}
-                                        >
-                                          <span className="font-semibold">{dose.label}</span>
-                                          <span className={active ? 'text-background/55' : 'text-foreground/35'}>${dose.price.toLocaleString()}</span>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                  {item.inside && (
-                                    <div className="mt-3 flex flex-wrap gap-1.5">
-                                      {item.inside.split(' · ').map(ing => (
-                                        <span key={ing} className="rounded-full border border-foreground/[0.10] bg-foreground/[0.04] px-2.5 py-1 font-body text-[10px] text-foreground/60">
-                                          {ing.trim()}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                          {/* Ingredient expander for non-dose sessions */}
-                          <AnimatePresence>
-                            {expandedProtocol === item.key && !item.doses && item.inside && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.32, ease: EASE }}
-                                className="overflow-hidden"
-                              >
-                                <div className="mx-1 rounded-b-2xl border border-t-0 border-foreground/[0.08] bg-foreground/[0.03] px-4 pb-4 pt-3">
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {item.inside.split(' · ').map(ing => (
-                                      <span key={ing} className="rounded-full border border-foreground/[0.10] bg-foreground/[0.04] px-2.5 py-1 font-body text-[10px] text-foreground/60">
-                                        {ing.trim()}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  <Link to={`/therapies/${item.key}`} className="mt-3 inline-flex items-center gap-1 font-body text-[10px] tracking-[0.18em] uppercase text-foreground/45 hover:text-foreground transition-colors">
-                                    Full details <ArrowRight className="h-3 w-3" strokeWidth={2} />
-                                  </Link>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                      <OptionCard
-                        active={false}
-                        icon={SlidersHorizontal}
-                        title="Custom Protocol"
-                        sub="Tell us your goals and we'll build it."
-                        onClick={() => navigate('/custom')}
-                      />
-                    </div>
-
-                    {/* Add-ons section */}
-                    <div className="mt-8">
-                      <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/35 mb-4">
-                        Enhance Your Visit
-                      </p>
-                      <div className="space-y-3">
-                        {ADDON_GROUPS.map(group => (
-                          <AddonGroup
-                            key={group.key}
-                            group={group}
-                            selected={addons}
-                            open={openAddonGroups[group.key]}
-                            onToggleOpen={() => toggleAddonGroup(group.key)}
-                            onToggleAddon={toggleAddon}
-                          />
+                    <SectionTitle kicker="Book in under 60 seconds" title="Choose protocol." sub="No menu hell. Pick the outcome. Avalon handles the rest." />
+                    <LayoutGroup id="outcomes">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {OUTCOMES.map((item) => (
+                          <SelectCard key={item.key} item={item} active={state.outcome === item.key} onClick={() => chooseOutcome(item.key)} />
                         ))}
                       </div>
-                    </div>
-
-                    {desktopFooter}
+                    </LayoutGroup>
                   </>
                 )}
 
-                {/* ───────────── STEP 2: Schedule ──────────── */}
+                {step === 1 && (
+                  <>
+                    <SectionTitle kicker="Appointment type" title="How should this work?" sub="One visit, monthly recovery, or a launch." />
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {VISIT_TYPES.map((item) => (
+                        <SelectCard key={item.key} item={item} active={state.visitType === item.key} onClick={() => chooseVisitType(item.key)} className="sm:min-h-[160px]" />
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 {step === 2 && (
                   <>
-                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] text-foreground">
-                      When & where?
-                    </h1>
-                    <p className="mt-4 font-body text-sm leading-relaxed text-foreground/55">
-                      Real-time availability. Same-day often open.
-                    </p>
-
-                    <div className="mt-7 space-y-5">
-                      {/* Address */}
-                      <div>
-                        <label className={labelCls}>Service Address *</label>
-                        <input
-                          value={appointment?.address ?? ''}
-                          onChange={e => setAppointment(a => ({ ...a, address: e.target.value }))}
-                          placeholder="123 Main St, San Francisco, CA"
-                          className={fieldCls}
-                        />
-                      </div>
-
-                      {/* ZIP */}
-                      <div>
-                        <label className={labelCls}>ZIP Code *</label>
-                        <input
-                          value={appointment?.zip ?? ''}
-                          onChange={e => setAppointment(a => ({ ...a, zip: e.target.value }))}
-                          inputMode="numeric"
-                          maxLength={5}
-                          placeholder="94103"
-                          className={fieldCls}
-                        />
-                        {appointment?.zip?.length === 5 && !COVERED_ZIPS.has(appointment.zip) && (
-                          <p className={errCls}>Outside our current service area. <Link to="/service-area" className="underline">View coverage</Link></p>
-                        )}
-                      </div>
-
-                      {/* Date */}
-                      <div>
-                        <label className={labelCls}>Select Date *</label>
-                        <input
-                          type="date"
-                          value={appointment?.date ?? ''}
-                          min={todayString()}
-                          onChange={e => {
-                            setAppointment(a => ({ ...a, date: e.target.value }));
-                            if (e.target.value) fetchSlots(e.target.value);
+                    <SectionTitle kicker={outcome.label} title="Pick the protocol." sub="Curated. Flat. Clinician-reviewed before treatment." />
+                    <div className="grid gap-3">
+                      {productOptions.map((item) => (
+                        <ProductCard
+                          key={item.key}
+                          product={item}
+                          active={product.key === item.key}
+                          onClick={() => {
+                            setValue('productKey', item.key);
+                            setStep(3);
                           }}
-                          className={fieldCls}
+                          onPlan={() => {
+                            setState((current) => ({ ...current, productKey: item.key, visitType: 'subscription' }));
+                            setStep(3);
+                          }}
                         />
+                      ))}
+                    </div>
+                    <div className="mt-5 rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03] p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/42">Optional add-ons</p>
+                        <p className="font-body text-[10px] text-foreground/45">{state.addOns.length} selected</p>
                       </div>
-
-                      {/* Appointment time slots */}
-                      <AnimatePresence>
-                        {appointment?.date && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.35, ease: EASE }}
-                            className="overflow-hidden"
-                          >
-                            <label className={labelCls}>Available Times</label>
-
-                            {slotsLoading && (
-                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                {Array.from({ length: 8 }).map((_, i) => (
-                                  <div key={i} className="h-10 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
-                                ))}
-                              </div>
-                            )}
-
-                            {slotsError && (
-                              <div className="rounded-2xl border border-red-500/25 bg-red-500/[0.08] px-4 py-3 flex items-center justify-between gap-3">
-                                <p className="font-body text-xs text-red-400">{slotsError}</p>
-                                <button type="button" onClick={() => fetchSlots(appointment.date)} className="flex items-center gap-1.5 font-body text-[10px] uppercase text-foreground/50 hover:text-foreground transition-colors shrink-0">
-                                  <RefreshCw className="w-3 h-3" strokeWidth={2} /> Retry
-                                </button>
-                              </div>
-                            )}
-
-                            {!slotsLoading && !slotsError && slots.length === 0 && appointment?.date && (
-                              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-2.5">
-                                  <Calendar className="w-4 h-4 text-foreground/35 shrink-0" strokeWidth={1.5} />
-                                  <p className="font-body text-xs text-foreground/50">No availability on this date.</p>
-                                </div>
-                                <button
-                                  type="button"
-                                  disabled={nextAvailLoading}
-                                  onClick={async () => {
-                                    const next = await findNextAvailable(appointment.date);
-                                    if (next) {
-                                      setAppointment(a => ({ ...a, date: next }));
-                                    }
-                                  }}
-                                  className="flex items-center gap-1.5 font-body text-[10px] uppercase text-accent hover:text-accent/70 transition-colors shrink-0 disabled:opacity-50"
-                                >
-                                  {nextAvailLoading ? <><Loader2 className="w-3 h-3 animate-spin" strokeWidth={2} /> Searching…</> : <><RefreshCw className="w-3 h-3" strokeWidth={2} /> Next Available</>}
-                                </button>
-                              </div>
-                            )}
-
-                            {!slotsLoading && slots.length > 0 && (
-                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                {slots.map(slot => {
-                                  const label  = formatTimeLabel(slot.time);
-                                  const active = selectedSlot?.datetime === slot.time;
-                                  return (
-                                    <button
-                                      key={slot.time}
-                                      type="button"
-                                      onClick={() => setSelectedSlot({ appointmentTypeID: appointmentTypeId, datetime: slot.time, date: appointment.date, timeLabel: label, timezone: TZ })}
-                                      className={`py-2.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
-                                        active
-                                          ? 'bg-accent text-background shadow-[0_0_10px_-2px_hsl(var(--accent)/0.5)]'
-                                          : 'border border-foreground/[0.12] text-foreground/70 hover:border-accent/50 hover:text-foreground'
-                                      }`}
-                                    >
-                                      {label}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Notes */}
-                      <div>
-                        <label className={labelCls}>Notes for your RN <span className="normal-case text-foreground/30">(optional)</span></label>
-                        <textarea
-                          rows={2}
-                          value={appointment?.notes ?? ''}
-                          onChange={e => setAppointment(a => ({ ...a, notes: e.target.value }))}
-                          placeholder="Preferences, access notes, anything we should know…"
-                          className={`${fieldCls} resize-none`}
-                        />
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {addonPool.map((item) => {
+                          const active = state.addOns.includes(item.label);
+                          return (
+                            <button
+                              key={item.label}
+                              type="button"
+                              onClick={() => toggleAddon(item.label)}
+                              className={`flex min-h-[48px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body text-xs transition-colors ${
+                                active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 text-foreground/62'
+                              }`}
+                            >
+                              <span>{item.label}</span>
+                              <span className="flex items-center gap-2 font-semibold">{currency(item.price)} {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
+                  </>
+                )}
 
-                    {/* Schedule step buttons */}
-                    <div className="flex gap-3 mt-8 mb-4">
-                      <button type="button" onClick={back} className={btnBack} aria-label="Back">
-                        <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!appointment?.address || !appointment?.zip || !appointment?.date || !selectedSlot) return;
-                          next();
-                        }}
-                        disabled={!appointment?.address || !appointment?.zip || !appointment?.date || !selectedSlot}
-                        className={`${btnFwd} disabled:opacity-40 disabled:cursor-not-allowed`}
-                      >
-                        Continue
-                        <ArrowRight className="h-4 w-4" strokeWidth={2} />
-                      </button>
+                {step === 3 && (
+                  <>
+                    <SectionTitle kicker="Location" title="Where should we come?" sub="Home, hotel, office, or launch. The stack stays invisible." />
+                    <div className="grid gap-2 sm:grid-cols-4">
+                      {LOCATION_TYPES.map((item) => (
+                        <SelectCard key={item.key} item={{ ...item, sub: item.placeholder }} active={state.locationType === item.key} onClick={() => setValue('locationType', item.key)} className="min-h-[132px]" />
+                      ))}
                     </div>
-                    {!selectedSlot && appointment?.date && slots.length > 0 && (
-                      <p className="font-body text-[10px] text-foreground/35 text-center">Select a time slot to continue</p>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_120px]">
+                      <TextInput label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'} value={state.address} onChange={(value) => setValue('address', value)} placeholder="Street, unit, city" required />
+                      <TextInput label="ZIP" value={state.zip} onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))} placeholder="94107" required />
+                    </div>
+                    <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                      {WHO_OPTIONS.map((item) => (
+                        <button key={item.key} type="button" onClick={() => setValue('who', item.key)} className={`min-h-[48px] rounded-full border px-4 font-body text-[10px] font-semibold uppercase tracking-[0.14em] ${state.who === item.key ? 'border-foreground bg-foreground text-background' : 'border-foreground/12 text-foreground/58'}`}>
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                    {(state.who === 'group' || state.visitType === 'event') && (
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <TextInput label="Guests" type="number" value={state.guests} onChange={(value) => setValue('guests', value)} placeholder="8" />
+                        <label>
+                          <span className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Launch Type</span>
+                      <select aria-label="Event type" value={state.eventType} onChange={(event) => setValue('eventType', event.target.value)} className="mt-2 min-h-[48px] w-full rounded-2xl border border-foreground/12 bg-foreground/[0.035] px-4 font-body text-base text-foreground outline-none">
+                            {EVENT_TYPES.map((item) => <option key={item}>{item}</option>)}
+                          </select>
+                        </label>
+                      </div>
                     )}
                   </>
                 )}
 
-                {/* ───────────── STEP 3: About You ──────────────────── */}
-                {step === 3 && (
+                {step === 4 && (
                   <>
-                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] text-foreground">
-                      About you
-                    </h1>
-                    <p className="mt-4 font-body text-sm leading-relaxed text-foreground/55">
-                      Contact info and a quick health screen. Required before every visit.
-                    </p>
-
-                    <form
-                      onSubmit={aboutForm.handleSubmit(data => {
-                        setContact({ firstName: data.firstName, lastName: data.lastName, email: data.email, phone: data.phone });
-                        setAppointment(a => ({
-                          ...a,
-                          dob: data.dob, guests: data.guests,
-                          covidPositive: data.covidPositive, infectiousDisease: data.infectiousDisease,
-                          ivBefore: data.ivBefore, medicalConditions: data.medicalConditions,
-                          allergies: data.allergies, medications: data.medications,
-                          emergencyContact: data.emergencyContact,
-                          acuitySlot: selectedSlot,
-                        }));
-                        next();
-                      })}
-                      className="mt-7 space-y-5"
-                    >
-                      {/* Contact */}
-                      <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/35">Contact</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className={labelCls}>First Name *</label>
-                          <input {...aboutForm.register('firstName', { required: 'Required' })} placeholder="First" className={fieldCls} />
-                          {aboutForm.formState.errors.firstName && <p className={errCls}>{aboutForm.formState.errors.firstName.message}</p>}
-                        </div>
-                        <div>
-                          <label className={labelCls}>Last Name *</label>
-                          <input {...aboutForm.register('lastName', { required: 'Required' })} placeholder="Last" className={fieldCls} />
-                          {aboutForm.formState.errors.lastName && <p className={errCls}>{aboutForm.formState.errors.lastName.message}</p>}
-                        </div>
+                    <SectionTitle kicker="Timing" title="When do you want us?" sub="Acuity will own live scheduling. This creates the Avalon handoff." />
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {TIME_INTENTS.map((item) => (
+                        <SelectCard key={item.key} item={{ ...item, sub: item.window, icon: Clock }} active={state.timeIntent === item.key} onClick={() => setValue('timeIntent', item.key)} />
+                      ))}
+                    </div>
+                    {state.timeIntent === 'choose' && (
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <TextInput label="Date" type="date" value={state.customDate} onChange={(value) => setValue('customDate', value)} />
+                        <TextInput label="Time" type="time" value={state.customTime} onChange={(value) => setValue('customTime', value)} />
                       </div>
-                      <div>
-                        <label className={labelCls}>Email *</label>
-                        <input type="email" inputMode="email" {...aboutForm.register('email', { required: 'Required', pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Valid email required' } })} placeholder="you@example.com" className={fieldCls} />
-                        {aboutForm.formState.errors.email && <p className={errCls}>{aboutForm.formState.errors.email.message}</p>}
-                      </div>
-                      <div>
-                        <label className={labelCls}>Phone *</label>
-                        <input type="tel" inputMode="tel" {...aboutForm.register('phone', { required: 'Required' })} placeholder="+1 (415) 000-0000" className={fieldCls} />
-                        {aboutForm.formState.errors.phone && <p className={errCls}>{aboutForm.formState.errors.phone.message}</p>}
-                      </div>
-
-                      {/* Health info */}
-                      <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/35 pt-2">Health Info</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className={labelCls}>Date of Birth *</label>
-                          <input type="date" {...aboutForm.register('dob', { required: 'Required' })} className={fieldCls} />
-                          {aboutForm.formState.errors.dob && <p className={errCls}>{aboutForm.formState.errors.dob.message}</p>}
-                        </div>
-                        <div>
-                          <label className={labelCls}>Guests *</label>
-                          <select {...aboutForm.register('guests', { required: true })} className={fieldCls}>
-                            {['1', '2', '3', '4', '5+'].map(v => <option key={v} value={v}>{v}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label className={labelCls}>Medical Conditions *</label>
-                        <select {...aboutForm.register('medicalConditions', { required: true })} className={fieldCls}>
-                          {['None of the above', 'Allergies', 'Active Viral or Bacterial infection', 'Diabetes (Type I or II)', 'Heart Disease', 'Kidney Problems', 'Liver Problems', 'Pregnancy/Breastfeeding', 'Other symptoms or medical conditions not listed above'].map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[['covidPositive', 'Covid last 14 days?'], ['infectiousDisease', 'Infectious disease?'], ['ivBefore', 'IV before?']].map(([name, lbl]) => (
-                          <div key={name}>
-                            <label className={labelCls}>{lbl}</label>
-                            <select {...aboutForm.register(name, { required: true })} className={fieldCls}>
-                              <option value="No">No</option>
-                              <option value="Yes">Yes</option>
-                            </select>
-                          </div>
+                    )}
+                    {state.visitType === 'subscription' && (
+                      <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                        {MEMBERSHIP_OPTIONS.map((item) => (
+                          <button key={item.key} type="button" onClick={() => setValue('planKey', item.key)} className={`min-h-[92px] rounded-[1rem] border p-3 text-left ${state.planKey === item.key ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-foreground/[0.03]'}`}>
+                            <p className="font-body text-xs font-semibold">{item.label}</p>
+                            <p className="mt-1 font-heading text-2xl">{currency(item.price)}/mo</p>
+                            <p className={`mt-1 font-body text-[10px] leading-snug ${state.planKey === item.key ? 'text-background/62' : 'text-foreground/42'}`}>{item.sub}</p>
+                          </button>
                         ))}
                       </div>
-                      <div>
-                        <label className={labelCls}>Allergies / Sensitivities</label>
-                        <textarea {...aboutForm.register('allergies')} rows={2} placeholder="None, or list details" className={`${fieldCls} resize-none`} />
-                      </div>
-                      <div>
-                        <label className={labelCls}>Medications / Supplements</label>
-                        <textarea {...aboutForm.register('medications')} rows={2} placeholder="None, or list details" className={`${fieldCls} resize-none`} />
-                      </div>
-                      <div>
-                        <label className={labelCls}>Emergency Contact *</label>
-                        <input {...aboutForm.register('emergencyContact', { required: 'Required' })} placeholder="Name + phone" className={fieldCls} />
-                        {aboutForm.formState.errors.emergencyContact && <p className={errCls}>{aboutForm.formState.errors.emergencyContact.message}</p>}
-                      </div>
-
-                      {/* Consent */}
-                      <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] overflow-hidden">
-                        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/35 px-4 pt-4 pb-3">
-                          Acknowledgments — all required
-                        </p>
-                        {[
-                          { name: 'privacyAck',       text: 'I consent to Avalon Vitality collecting and using my health information to coordinate and deliver my requested wellness services, in accordance with applicable privacy laws and the Avalon Privacy Policy.' },
-                          { name: 'treatmentConsent', text: 'I understand that IV therapy and intramuscular injections are wellness support services, not medical treatments. Individual responses vary. Potential side effects include bruising, discomfort at the infusion site, or adverse reactions. I have disclosed all known health conditions and medications above.' },
-                          { name: 'generalConsent',   text: "I have read, understand, and agree to Avalon Vitality's Terms of Service and Consent & Waiver. I confirm I am at least 18 years of age, and that the information I have provided is accurate." },
-                        ].map(({ name, text }, i) => (
-                          <label key={name} className={`flex gap-3 px-4 py-3.5 font-body text-xs leading-relaxed text-foreground/65 cursor-pointer hover:bg-foreground/[0.02] transition-colors ${i > 0 ? 'border-t border-foreground/[0.06]' : ''}`}>
-                            <input type="checkbox" {...aboutForm.register(name, { required: true })} className="mt-0.5 h-4 w-4 shrink-0 accent-foreground" />
-                            <span>{text}</span>
-                          </label>
-                        ))}
-                        {(aboutForm.formState.errors.privacyAck || aboutForm.formState.errors.treatmentConsent || aboutForm.formState.errors.generalConsent) && (
-                          <p className={`${errCls} px-4 pb-3`}>All three acknowledgments are required.</p>
-                        )}
-                      </div>
-
-                      {/* Buttons */}
-                      <div className="flex gap-3 pt-2 pb-4">
-                        <button type="button" onClick={back} className={btnBack} aria-label="Back">
-                          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-                        </button>
-                        <button type="submit" className={btnFwd}>
-                          Continue
-                          <ArrowRight className="h-4 w-4" strokeWidth={2} />
-                        </button>
-                      </div>
-                    </form>
+                    )}
                   </>
                 )}
 
-                {/* ───────────── STEP 4: Confirm & Pay ─────────────── */}
-                {step === 4 && (
+                {step === 5 && (
                   <>
-                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl uppercase leading-[0.9] text-foreground">
-                      Review & confirm
-                    </h1>
-                    <p className="mt-4 font-body text-sm leading-relaxed text-foreground/55">
-                      A $50 deposit is collected now. The balance is authorized after your visit.
-                    </p>
-
-                    <div className="mt-7 space-y-4">
-
-                      {/* Order */}
-                      <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-4 space-y-3">
-                        <p className={`${labelCls} !mb-0`}>Order</p>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Droplets className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={1.5} />
-                            <span className="font-body text-sm text-foreground">
-                              {protocol.label}{selectedDose ? ` · ${selectedDose.label}` : ''}
-                            </span>
-                          </div>
-                          <span className="font-body text-sm font-semibold text-foreground">${protocolPrice.toLocaleString()}</span>
+                    <SectionTitle kicker="Secure hold" title="Avalon is coming." sub="Clinical clearance is required before treatment. If you are not eligible, the visit is adjusted or refunded according to policy." />
+                    <div className="mb-4 rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03] p-4">
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Annual GFE</p>
+                          <p className="mt-1 font-body text-sm leading-snug text-foreground/58">
+                            Returning clients only need a new GFE when the annual clearance is missing or expired.
+                          </p>
                         </div>
-                        {selectedAddons.map(addon => (
-                          <div key={addon.label} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Syringe className="w-3.5 h-3.5 text-foreground/25 shrink-0" strokeWidth={1.5} />
-                              <span className="font-body text-sm text-foreground/70">{addon.label}</span>
-                            </div>
-                            <span className="font-body text-sm text-foreground/70">+${addon.price}</span>
-                          </div>
-                        ))}
-                        <div className="border-t border-foreground/[0.08] pt-3 flex items-center justify-between">
-                          <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/35">Subtotal</span>
-                          <span className="font-heading text-2xl text-foreground">${subtotal.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-body text-[10px] tracking-[0.2em] uppercase text-accent">Due now (deposit)</span>
-                          <span className="font-heading text-xl text-accent">$50</span>
-                        </div>
+                        <span className={`shrink-0 rounded-full border px-2.5 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.14em] ${bookingGfeRequirement.required ? 'border-amber-300/24 text-amber-200' : 'border-emerald-300/20 text-emerald-200'}`}>
+                          {bookingGfeRequirement.required ? 'Needed' : 'Valid'}
+                        </span>
                       </div>
-
-                      {/* Appointment summary */}
-                      {appointment?.address && (
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-4">
-                            <p className={`${labelCls} !mb-1`}>Appointment</p>
-                            <p className="font-body text-xs text-foreground">{appointment.address}</p>
-                            {selectedSlot && (
-                              <p className="font-body text-[10px] text-foreground/45 mt-0.5">
-                                {appointment.date} · {selectedSlot.timeLabel}
-                              </p>
-                            )}
-                          </div>
-                          {contact && (
-                            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-4">
-                              <p className={`${labelCls} !mb-1`}>Contact</p>
-                              <p className="font-body text-xs text-foreground">{contact.firstName} {contact.lastName}</p>
-                              <p className="font-body text-[10px] text-foreground/45 mt-0.5">{contact.email}</p>
-                              <p className="font-body text-[10px] text-foreground/45">{contact.phone}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Error */}
-                      {checkoutError && (
-                        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
-                          <p className="font-body text-xs text-red-400">{checkoutError}</p>
-                        </div>
-                      )}
-
-                      {/* Buttons */}
-                      <div className="flex gap-3 pt-2 pb-4">
-                        <button type="button" onClick={back} className={btnBack} aria-label="Back">
-                          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleCheckout}
-                          disabled={checkoutLoading}
-                          className={`${btnConfirm} disabled:opacity-50`}
-                        >
-                          {checkoutLoading ? (
-                            <span className="flex items-center gap-2">
-                              <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> Redirecting…
-                            </span>
-                          ) : (
-                            <>Confirm Booking — $50 Deposit <CreditCard className="h-4 w-4" strokeWidth={2} /></>
-                          )}
-                        </button>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {CLIENT_TYPES.map((item) => {
+                          const active = state.clientType === item.key;
+                          return (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => setValue('clientType', item.key)}
+                              className={`min-h-[76px] rounded-2xl border p-3 text-left transition-colors ${
+                                active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 text-foreground/62'
+                              }`}
+                            >
+                              <span className="block font-body text-[10px] font-semibold uppercase tracking-[0.16em]">{item.label}</span>
+                              <span className={`mt-2 block font-body text-xs leading-snug ${active ? 'text-background/62' : 'text-foreground/45'}`}>{item.sub}</span>
+                            </button>
+                          );
+                        })}
                       </div>
-
-                      <p className="font-body text-[10px] text-center text-foreground/25 tracking-wide pb-2">
-                        Secure checkout · Balance authorized after visit completion
+                      <p className="mt-3 font-body text-[11px] leading-relaxed text-foreground/45">
+                        {bookingGfeRequirement.required
+                          ? bookingGfeRequirement.reason
+                          : `GFE on file. ${bookingGfeRequirement.expiresAt ? `Valid through ${formatGfeDate(bookingGfeRequirement.expiresAt)}.` : bookingGfeRequirement.reason}`}
                       </p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <TextInput label="Name" value={state.name} onChange={(value) => setValue('name', value)} placeholder="Alex Morgan" required />
+                      <TextInput label="Phone" value={state.phone} onChange={(value) => setValue('phone', value)} placeholder="(415) 555-0123" required />
+                      <TextInput label="Email" type="email" value={state.email} onChange={(value) => setValue('email', value)} placeholder="you@example.com" required />
+                    </div>
+                    <label className="mt-3 block">
+                      <span className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Notes</span>
+                      <textarea
+                        value={state.notes}
+                        onChange={(event) => setValue('notes', event.target.value)}
+                        placeholder="Gate code, hotel room, group details, timing notes."
+                        className="mt-2 min-h-[96px] w-full rounded-2xl border border-foreground/12 bg-foreground/[0.035] p-4 font-body text-sm text-foreground placeholder:text-foreground/45 outline-none transition-colors focus:border-foreground/32"
+                      />
+                    </label>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      {['Secure checkout placeholder', 'Flat transparent pricing', 'No hidden fees'].map((item) => (
+                        <div key={item} className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-3 font-body text-xs text-foreground/55">{item}</div>
+                      ))}
                     </div>
                   </>
                 )}
-
               </motion.div>
             </AnimatePresence>
-          </div>
 
-          {/* ── Right: Order summary sidebar (desktop lg+) ────────── */}
-          <div>
-            <OrderSidebar
-              protocol={protocol}
-              selectedDose={selectedDose}
-              addons={selectedAddons}
-              step={step}
-              subtotal={subtotal}
-            />
-          </div>
+            {error && <p className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/8 px-4 py-3 font-body text-xs text-red-300">{error}</p>}
 
+            <div className="mt-7 hidden gap-3 lg:flex">
+              {step > 0 && (
+                <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[52px] rounded-full border border-foreground/12 px-6 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/62">
+                  Back
+                </button>
+              )}
+              {step < 5 ? (
+                <button type="button" onClick={next} aria-label={`Continue from ${STEPS[step]}`} className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button type="button" disabled={!canSubmit} onClick={submit} aria-label="Hold visit and continue to checkout" className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background disabled:opacity-35">
+                  Hold Visit <CreditCard className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </section>
+
+          <SummaryRail state={state} product={product} subtotal={subtotal} canSubmit={canSubmit} onSubmit={submit} />
+        </div>
+      </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 lg:hidden">
+        <div className="mx-auto flex max-w-lg items-center gap-3 rounded-[1.35rem] border border-foreground/10 bg-background/86 p-2 shadow-[0_-18px_80px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
+          {step > 0 && (
+            <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[52px] rounded-full border border-foreground/12 px-5 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/62">
+              Back
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={step < 5 ? next : submit}
+            disabled={step === 5 && !canSubmit}
+            aria-label={step < 5 ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
+            className="flex min-h-[52px] flex-1 items-center justify-between rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background disabled:opacity-35"
+          >
+            <span>{step < 5 ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`}</span>
+            <span>{currency(subtotal)}</span>
+          </button>
         </div>
       </div>
 
-      {/* Mobile/tablet fixed footer (steps 0–1 only) */}
-      {mobileFooter}
     </div>
   );
 }

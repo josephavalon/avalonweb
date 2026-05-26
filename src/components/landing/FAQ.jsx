@@ -25,7 +25,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How quickly can a nurse arrive?',
-        a: 'Most sessions are available same-day. Subscribers receive a 90-minute arrival window. Inner Circle and Elite subscribers receive dedicated nurse priority scheduling.',
+        a: 'Most sessions are available same-day. Plan clients receive a 90-minute arrival window. Inner Circle and Elite clients receive dedicated nurse priority scheduling.',
       },
     ],
   },
@@ -84,7 +84,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: 'How does the subscription work?',
-        a: 'Subscribers pay a monthly fee and receive credits redeemable for IV sessions, plus a discount on all add-ons and additional sessions. Credits do not roll over.',
+        a: 'Plan clients pay a monthly fee and receive credits redeemable for IV sessions, plus a discount on all add-ons and additional sessions. Credits roll forward while active.',
       },
       {
         q: 'Can I pause or cancel?',
@@ -92,7 +92,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Can I share my subscription?',
-        a: 'Elite and Private Client subscribers may designate one household partner to share their subscription benefits.',
+        a: 'Elite and Private Client plans may designate one household partner to share subscription benefits.',
       },
       {
         q: "What's the commitment?",
@@ -174,14 +174,14 @@ export default function FAQ() {
   return (
     <section id="faq" className="py-4 md:py-6 px-4">
       <div className="max-w-6xl mx-auto">
-        <motion.h2
+        <motion.h1
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8 md:whitespace-nowrap"
         >
           FAQ
-        </motion.h2>
+        </motion.h1>
       </div>
       <div className="max-w-3xl mx-auto">
 
@@ -193,7 +193,7 @@ export default function FAQ() {
             placeholder="SEARCH"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setOpenKey(null); }}
-            className="w-full bg-transparent border border-border/60 rounded-2xl pl-12 pr-6 py-2 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="min-h-10 w-full bg-transparent border border-border/60 rounded-2xl pl-12 pr-6 py-2 font-body text-xs tracking-[0.2em] uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
 

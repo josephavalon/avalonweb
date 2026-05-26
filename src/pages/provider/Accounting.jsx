@@ -6,18 +6,28 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { PAYMENTS } from '@/fixtures/commandMockData';
+import { readPayrollProofQueue } from '@/lib/platformOps';
+import {
+  FINANCE_HANDOFF_CONTRACT,
+  GUSTO_PAYROLL_PLACEHOLDER,
+  MERCURY_BANKING_PLACEHOLDER,
+  QUICKBOOKS_ACCOUNTING_PLACEHOLDER,
+  isGustoConfigured,
+  isMercuryConfigured,
+  isQuickBooksConfigured,
+} from '@/lib/financeIntegrations';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const EASE = [0.16, 1, 0.3, 1];
 
 const STATUS_MAP = {
-  'Payment Pending':    { bg: 'rgba(239,68,68,0.12)',   color: '#ef4444', border: 'rgba(239,68,68,0.25)'   },
-  'Link Sent':          { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa', border: 'rgba(96,165,250,0.25)'  },
-  'Deposit Received':   { bg: 'rgba(251,191,36,0.12)',  color: '#fbbf24', border: 'rgba(251,191,36,0.25)'  },
-  'Paid':               { bg: 'rgba(52,211,153,0.12)',  color: '#34d399', border: 'rgba(52,211,153,0.25)'  },
-  'Refunded':           { bg: 'rgba(148,163,184,0.10)', color: '#94a3b8', border: 'rgba(148,163,184,0.20)' },
-  'Comped':             { bg: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: 'rgba(167,139,250,0.25)' },
+  'Payment Pending':    { bg: 'rgba(239,68,68,0.12)',   color: 'hsl(var(--destructive))', border: 'rgba(239,68,68,0.25)'   },
+  'Link Sent':          { bg: 'rgba(96,165,250,0.12)',  color: 'hsl(213 94% 68%)', border: 'rgba(96,165,250,0.25)'  },
+  'Deposit Received':   { bg: 'rgba(251,191,36,0.12)',  color: 'hsl(45 93% 58%)', border: 'rgba(251,191,36,0.25)'  },
+  'Paid':               { bg: 'rgba(52,211,153,0.12)',  color: 'hsl(158 64% 52%)', border: 'rgba(52,211,153,0.25)'  },
+  'Refunded':           { bg: 'rgba(148,163,184,0.10)', color: 'hsl(215 16% 57%)', border: 'rgba(148,163,184,0.20)' },
+  'Comped':             { bg: 'rgba(167,139,250,0.12)', color: 'hsl(255 92% 76%)', border: 'rgba(167,139,250,0.25)' },
 };
 
 const FILTERS = ['All', 'Pending', 'Link Sent', 'Deposit', 'Paid', 'Refunded', 'Comped'];
@@ -33,7 +43,7 @@ const FILTER_MAP = {
 };
 
 function getStatusStyle(status) {
-  return STATUS_MAP[status] || { bg: 'rgba(148,163,184,0.10)', color: '#94a3b8', border: 'rgba(148,163,184,0.20)' };
+  return STATUS_MAP[status] || { bg: 'rgba(148,163,184,0.10)', color: 'hsl(215 16% 57%)', border: 'rgba(148,163,184,0.20)' };
 }
 
 function formatCurrency(n) {
@@ -88,8 +98,6 @@ function PaymentCard({ payment: initialPayment, index }) {
     setShowNoteInput(false);
   }
 
-  const s = getStatusStyle(payment.status);
-
   return (
     <motion.div
       key={payment.id}
@@ -98,7 +106,7 @@ function PaymentCard({ payment: initialPayment, index }) {
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.4, ease: EASE, delay: index * 0.05 }}
       className="rounded-2xl border overflow-hidden"
-      style={{ background: '#111114', borderColor: 'rgba(255,255,255,0.07)' }}
+      style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.07)' }}
     >
       {/* Card header */}
       <div
@@ -116,7 +124,7 @@ function PaymentCard({ payment: initialPayment, index }) {
           </div>
           <p
             className="font-heading text-2xl tracking-widest shrink-0"
-            style={{ color: '#c9a84c' }}
+            style={{ color: 'hsl(var(--accent))' }}
           >
             {formatCurrency(payment.amount)}
           </p>
@@ -125,7 +133,7 @@ function PaymentCard({ payment: initialPayment, index }) {
         {/* Therapy + Date */}
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <CreditCard className="w-3.5 h-3.5 shrink-0" style={{ color: '#c9a84c' }} strokeWidth={1.5} />
+            <CreditCard className="w-3.5 h-3.5 shrink-0" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1.5} />
             <span className="text-[12px] text-white">{payment.therapy}</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -150,7 +158,7 @@ function PaymentCard({ payment: initialPayment, index }) {
                 borderColor: 'rgba(255,255,255,0.10)',
               }}
             >
-              {payment.method || 'Square Link'}
+              {payment.method || 'Stripe Link'}
             </span>
           </div>
 
@@ -158,12 +166,12 @@ function PaymentCard({ payment: initialPayment, index }) {
           <div className="flex items-center gap-1.5">
             {payment.dueBeforeVisit ? (
               <>
-                <AlertTriangle className="w-3.5 h-3.5" style={{ color: '#fbbf24' }} strokeWidth={1.5} />
-                <span className="text-[10px] font-medium" style={{ color: '#fbbf24' }}>Due before visit</span>
+                <AlertTriangle className="w-3.5 h-3.5" style={{ color: 'hsl(45 93% 58%)' }} strokeWidth={1.5} />
+                <span className="text-[10px] font-medium" style={{ color: 'hsl(45 93% 58%)' }}>Due before visit</span>
               </>
             ) : (
               <>
-                <CheckCircle className="w-3.5 h-3.5" style={{ color: '#34d399' }} strokeWidth={1.5} />
+                <CheckCircle className="w-3.5 h-3.5" style={{ color: 'hsl(158 64% 52%)' }} strokeWidth={1.5} />
                 <span className="text-[10px] text-white opacity-40">No pre-payment required</span>
               </>
             )}
@@ -207,7 +215,7 @@ function PaymentCard({ payment: initialPayment, index }) {
                 <button
                   onClick={saveNote}
                   className="px-3 py-2 rounded-lg text-[11px] font-semibold"
-                  style={{ background: '#c9a84c', color: '#0A0A0A' }}
+                  style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))' }}
                 >
                   Save
                 </button>
@@ -233,7 +241,7 @@ function PaymentCard({ payment: initialPayment, index }) {
           <button
             onClick={() => setStatus('Link Sent')}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] tracking-[0.1em] uppercase font-medium transition-colors"
-            style={{ background: 'rgba(96,165,250,0.10)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.20)' }}
+            style={{ background: 'rgba(96,165,250,0.10)', color: 'hsl(213 94% 68%)', border: '1px solid rgba(96,165,250,0.20)' }}
           >
             <Send className="w-3 h-3" strokeWidth={1.5} />
             Link Sent
@@ -244,7 +252,7 @@ function PaymentCard({ payment: initialPayment, index }) {
           <button
             onClick={() => setStatus('Paid')}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] tracking-[0.1em] uppercase font-medium transition-colors"
-            style={{ background: 'rgba(52,211,153,0.10)', color: '#34d399', border: '1px solid rgba(52,211,153,0.20)' }}
+            style={{ background: 'rgba(52,211,153,0.10)', color: 'hsl(158 64% 52%)', border: '1px solid rgba(52,211,153,0.20)' }}
           >
             <CheckCircle className="w-3 h-3" strokeWidth={1.5} />
             Mark Paid
@@ -255,7 +263,7 @@ function PaymentCard({ payment: initialPayment, index }) {
           <button
             onClick={() => setStatus('Deposit Received')}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] tracking-[0.1em] uppercase font-medium transition-colors"
-            style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}
+            style={{ background: 'rgba(251,191,36,0.10)', color: 'hsl(45 93% 58%)', border: '1px solid rgba(251,191,36,0.20)' }}
           >
             <DollarSign className="w-3 h-3" strokeWidth={1.5} />
             Deposit
@@ -266,7 +274,7 @@ function PaymentCard({ payment: initialPayment, index }) {
           <button
             onClick={() => setStatus('Refunded')}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] tracking-[0.1em] uppercase font-medium transition-colors"
-            style={{ background: 'rgba(148,163,184,0.08)', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.18)' }}
+            style={{ background: 'rgba(148,163,184,0.08)', color: 'hsl(215 16% 57%)', border: '1px solid rgba(148,163,184,0.18)' }}
           >
             <RefreshCw className="w-3 h-3" strokeWidth={1.5} />
             Refund
@@ -295,7 +303,7 @@ function SummaryTile({ icon: Icon, label, value, sub, color, delay = 0 }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE, delay }}
       className="rounded-xl border p-4 flex items-center gap-3"
-      style={{ background: '#111114', borderColor: 'rgba(255,255,255,0.07)' }}
+      style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.07)' }}
     >
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
@@ -312,10 +320,41 @@ function SummaryTile({ icon: Icon, label, value, sub, color, delay = 0 }) {
   );
 }
 
+function FinanceHandoffCard({ icon: Icon, title, status, body, items, delay = 0 }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: EASE, delay }}
+      className="rounded-2xl border p-4"
+      style={{ background: 'rgba(255,255,255,0.035)', borderColor: 'rgba(255,255,255,0.08)' }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[9px] tracking-[0.25em] uppercase text-white opacity-45">{title}</p>
+          <p className="mt-1 text-sm text-white">{body}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="rounded-full border px-2 py-0.5 text-[8px] uppercase tracking-[0.14em] text-white/55 border-white/15 bg-white/[0.04]">
+            {status}
+          </span>
+          <Icon className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1.5} />
+        </div>
+      </div>
+      <div className="mt-3 grid gap-1.5">
+        {items.map((item) => (
+          <p key={item} className="text-[10px] leading-relaxed text-white opacity-45">{item}</p>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Accounting() {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [payrollProofQueue] = useState(() => readPayrollProofQueue());
 
   // ── Summary calculations ───────────────────────────────────────────────────
 
@@ -329,6 +368,10 @@ export default function Accounting() {
   const avgPerVisit      = PAYMENTS.length > 0
     ? Math.round(PAYMENTS.reduce((s, p) => s + (p.amount || 0), 0) / PAYMENTS.length)
     : 0;
+  const mercuryConfigured = isMercuryConfigured();
+  const gustoConfigured = isGustoConfigured();
+  const quickBooksConfigured = isQuickBooksConfigured();
+  const payrollReady = payrollProofQueue.filter((item) => item.status === 'Ready').length;
 
   // ── Filter logic ──────────────────────────────────────────────────────────
 
@@ -348,13 +391,53 @@ export default function Accounting() {
           transition={{ duration: 0.4, ease: EASE }}
           className="mb-8"
         >
-          <p className="text-[10px] tracking-[0.35em] uppercase mb-1.5 font-medium" style={{ color: '#c9a84c' }}>
-            Manual Payment Tracker
+          <p className="text-[10px] tracking-[0.35em] uppercase mb-1.5 font-medium" style={{ color: 'hsl(var(--accent))' }}>
+            Finance Command
           </p>
           <h1 className="font-heading text-5xl tracking-widest text-white">PAYMENTS</h1>
           <p className="text-[11px] text-white mt-2 opacity-40">
-            Payment handled manually during launch.
+            Stripe/Acuity deposits. Mercury banking. Gusto payroll. QuickBooks books.
           </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-3 mb-8">
+          <FinanceHandoffCard
+            icon={CreditCard}
+            title={MERCURY_BANKING_PLACEHOLDER.service}
+            status={mercuryConfigured ? 'Configured' : MERCURY_BANKING_PLACEHOLDER.mode}
+            body="Operating cash lane."
+            items={MERCURY_BANKING_PLACEHOLDER.capabilities}
+            delay={0.03}
+          />
+          <FinanceHandoffCard
+            icon={FileText}
+            title={GUSTO_PAYROLL_PLACEHOLDER.service}
+            status={gustoConfigured ? 'Configured' : `${payrollReady} Ready`}
+            body="Nurse pay after Acuity closeout."
+            items={GUSTO_PAYROLL_PLACEHOLDER.capabilities}
+            delay={0.08}
+          />
+          <FinanceHandoffCard
+            icon={RefreshCw}
+            title={QUICKBOOKS_ACCOUNTING_PLACEHOLDER.service}
+            status={quickBooksConfigured ? 'Configured' : QUICKBOOKS_ACCOUNTING_PLACEHOLDER.mode}
+            body="Books sync without PHI."
+            items={QUICKBOOKS_ACCOUNTING_PLACEHOLDER.capabilities}
+            delay={0.12}
+          />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35, delay: 0.12, ease: EASE }}
+          className="mb-8 flex flex-wrap gap-2"
+        >
+          {FINANCE_HANDOFF_CONTRACT.map((item) => (
+            <span key={item} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/45">
+              {item}
+            </span>
+          ))}
         </motion.div>
 
         {/* ── Summary Tiles ── */}
@@ -364,7 +447,7 @@ export default function Accounting() {
             label="Total Pending"
             value={formatCurrency(totalPending)}
             sub={`${pending.length} payment${pending.length !== 1 ? 's' : ''}`}
-            color="#ef4444"
+            color="hsl(var(--destructive))"
             delay={0}
           />
           <SummaryTile
@@ -372,15 +455,15 @@ export default function Accounting() {
             label="Collected Today"
             value={formatCurrency(collectedToday)}
             sub={`${paidToday.length} today`}
-            color="#34d399"
+            color="hsl(158 64% 52%)"
             delay={0.05}
           />
           <SummaryTile
             icon={Send}
             label="Link Sent"
             value={linkSent.length}
-            sub="awaiting payment"
-            color="#60a5fa"
+            sub="awaiting deposit"
+            color="hsl(213 94% 68%)"
             delay={0.1}
           />
           <SummaryTile
@@ -388,7 +471,7 @@ export default function Accounting() {
             label="Avg per Visit"
             value={formatCurrency(avgPerVisit)}
             sub="all statuses"
-            color="#c9a84c"
+            color="hsl(var(--accent))"
             delay={0.15}
           />
         </div>
@@ -408,8 +491,8 @@ export default function Accounting() {
                 onClick={() => setActiveFilter(f)}
                 className="px-3 py-1.5 rounded-full text-[11px] tracking-[0.12em] uppercase font-medium transition-all"
                 style={{
-                  background: active ? '#c9a84c' : 'rgba(255,255,255,0.05)',
-                  color:      active ? '#0A0A0A' : 'rgba(255,255,255,0.6)',
+                  background: active ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.05)',
+                  color:      active ? 'hsl(var(--background))' : 'rgba(255,255,255,0.6)',
                   border:     active ? '1px solid transparent' : '1px solid rgba(255,255,255,0.10)',
                 }}
               >
@@ -426,9 +509,9 @@ export default function Accounting() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, ease: EASE }}
             className="text-center py-20 rounded-2xl border"
-            style={{ background: '#111114', borderColor: 'rgba(255,255,255,0.06)' }}
+            style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.06)' }}
           >
-            <CheckCircle className="w-10 h-10 mx-auto mb-4" style={{ color: '#34d399' }} strokeWidth={1} />
+            <CheckCircle className="w-10 h-10 mx-auto mb-4" style={{ color: 'hsl(158 64% 52%)' }} strokeWidth={1} />
             <p className="text-white opacity-50 text-sm max-w-xs mx-auto">
               No payments in this queue. All collections are current or handled manually.
             </p>

@@ -10,6 +10,7 @@
  */
 
 import { getMe } from '../../_acuity.js';
+import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -20,6 +21,16 @@ export default async function handler(req, res) {
   // e.g. verifySupabaseSession(req) and check role === 'admin'
 
   try {
+    if (!isLiveApiEnabled()) {
+      return res.status(200).json({
+        ok: false,
+        connected: false,
+        provider: 'scheduling',
+        mode: 'local-simulation-only',
+        preApiHardWall: true,
+      });
+    }
+
     const me = await getMe();
 
     return res.status(200).json({

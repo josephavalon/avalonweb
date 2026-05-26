@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
+import { events as publicEvents } from '@/data/events';
+import { readEventPresales } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -14,12 +17,12 @@ const fadeUp = {
   transition: { duration: 0.7, ease: EASE },
 };
 
-const eventTypes = [
+const launchTypes = [
   { name: 'Corporate Retreats', desc: 'Reward teams. Signal investment in their wellbeing.' },
   { name: 'Product Launches', desc: 'Stand-out activations that guests remember.' },
   { name: 'Wellness Festivals', desc: 'On-brand, medically credible, high-engagement.' },
   { name: 'Private Parties', desc: 'Recovery-forward hospitality. Elevated hosting.' },
-  { name: 'Athletic Events', desc: 'Pre-race hydration. Post-event recovery. On-site.' },
+  { name: 'Athletic Launches', desc: 'Pre-race hydration. Post-launch recovery. On-site.' },
   { name: 'Film & Music Productions', desc: 'Keep cast and crew performing through long days.' },
 ];
 
@@ -27,7 +30,7 @@ const whatWeBring = [
   { title: 'RN Team', body: 'Licensed registered nurses only. Every session is medically supervised.' },
   { title: 'Medical-Grade Setup', body: 'IV poles, sterile supplies, full clinical kit. We handle logistics end to end.' },
   { title: 'Branded Experience', body: 'Avalon\'s aesthetic travels. Clean, dark, luxe. Photographs well.' },
-  { title: 'Express Sessions', body: 'Faster IV formats optimized for event pacing. Guests are in and out.' },
+  { title: 'Express Sessions', body: 'Faster IV formats optimized for launch pacing. Guests are in and out.' },
 ];
 
 const pastActivations = [
@@ -41,7 +44,7 @@ const pastActivations = [
     type: 'Product Launch',
     size: '60 guests',
     location: 'SoMa, San Francisco',
-    note: 'Pre-event prep sessions for key stakeholders. 3 RNs on-site for 4 hours.',
+    note: 'Pre-launch prep sessions for key stakeholders. 3 RNs on-site for 4 hours.',
   },
   {
     type: 'Private Party',
@@ -52,7 +55,21 @@ const pastActivations = [
 ];
 
 export default function Events() {
-  useSeo({ title: 'Events & Experiences — Avalon Vitality', description: 'IV therapy for events, activations, and group recovery in San Francisco.', path: '/events' });
+  useSeo({ title: 'Launches — Avalon Vitality', description: 'Avalon launches premium recovery activations for venues, hotels, offices, festivals, and private groups in San Francisco.', path: '/launches' });
+  const savedEvents = readEventPresales().events.map((event) => ({
+    slug: event.slug,
+    title: event.headline || event.name,
+    date: event.date,
+    location: event.venue,
+    desc: event.description,
+    status: event.publishStatus || 'Presale',
+    presaleEnabled: event.presaleEnabled,
+    ticketSystem: event.ticketSystem,
+    service: event.service,
+  }));
+  const eventPages = [...savedEvents, ...publicEvents]
+    .filter((event, index, list) => list.findIndex((item) => item.slug === event.slug) === index)
+    .slice(0, 6);
   const [formState, setFormState] = useState({
     eventName: '',
     eventType: '',
@@ -87,7 +104,7 @@ export default function Events() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE }}
             >
-              Events
+              Launches
             </motion.p>
             <motion.h1
               className="font-heading text-6xl md:text-8xl lg:text-[9rem] text-foreground uppercase leading-[0.9] mb-6"
@@ -95,7 +112,7 @@ export default function Events() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
             >
-              For Events
+              Always<br />Launching
             </motion.h1>
             <motion.p
               className="font-body text-base md:text-lg text-foreground/60 max-w-xl"
@@ -103,22 +120,59 @@ export default function Events() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE, delay: 0.16 }}
             >
-              IV therapy activations for conferences, launches, and private events.
+              Recovery activations for venues, hotels, offices, festivals, and private groups.
             </motion.p>
           </div>
         </section>
 
-        {/* Event Types */}
+        {/* Launch Pages */}
         <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3" {...fadeUp}>
-              Event Types
+              Live Launches
+            </motion.p>
+            <motion.h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-10" {...fadeUp}>
+              Presale Or<br />Showcase
+            </motion.h2>
+            <div className="grid gap-4 md:grid-cols-3">
+              {eventPages.map((event, i) => (
+                <motion.div
+                  key={event.slug}
+                  className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5"
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, ease: EASE, delay: i * 0.07 }}
+                >
+                  <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/35 mb-3">
+                    {event.ticketSystem ? 'Tickets' : event.presaleEnabled ? 'Presale' : 'Inquiry'}
+                  </p>
+                  <h3 className="font-heading text-2xl text-foreground uppercase leading-none">{event.title}</h3>
+                  <p className="mt-2 font-body text-xs text-foreground/42">{event.date} · {event.location}</p>
+                  <p className="mt-4 min-h-[3rem] font-body text-sm leading-relaxed text-foreground/58">{event.desc}</p>
+                  <Link
+                    to={`/launches/${event.slug}`}
+                    className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full border border-foreground/18 px-4 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:border-foreground/40"
+                  >
+                    Open Page
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Launch Types */}
+        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+          <div className="max-w-5xl mx-auto">
+            <motion.p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3" {...fadeUp}>
+              Launch Types
             </motion.p>
             <motion.h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-12" {...fadeUp}>
-              We Work<br />All Formats
+              Every Format<br />Can Launch
             </motion.h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {eventTypes.map((type, i) => (
+              {launchTypes.map((type, i) => (
                 <motion.div
                   key={type.name}
                   className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6"
@@ -136,7 +190,7 @@ export default function Events() {
         </Reveal>
 
         {/* What We Bring */}
-        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <Reveal as="section" id="inquiry" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3" {...fadeUp}>
               What We Bring
@@ -181,7 +235,7 @@ export default function Events() {
               <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-10">
                 <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3">Minimum</p>
                 <p className="font-heading text-3xl md:text-4xl text-foreground uppercase leading-snug mb-4">
-                  Events from<br />10 Guests
+                  Launches from<br />10 Guests
                 </p>
                 <p className="font-body text-sm text-foreground/60">
                   SF Bay Area only. Minimum 10 participants per activation. Travel to select Peninsula and East Bay venues — inquire for details.
@@ -195,7 +249,7 @@ export default function Events() {
         <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3" {...fadeUp}>
-              Past Activations
+              Field Notes
             </motion.p>
             <motion.h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-12" {...fadeUp}>
               In The Field
@@ -227,7 +281,7 @@ export default function Events() {
               Book
             </motion.p>
             <motion.h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-12" {...fadeUp}>
-              Book Your<br />Activation
+              Launch With<br />Avalon
             </motion.h2>
 
             {submitted ? (
@@ -239,7 +293,7 @@ export default function Events() {
               >
                 <p className="font-heading text-4xl text-foreground uppercase mb-4">Inquiry Received</p>
                 <p className="font-body text-sm text-foreground/60">
-                  Our events team will follow up within one business day with availability and a custom quote.
+                  Our launch team will follow up within one business day with availability and a custom quote.
                 </p>
               </motion.div>
             ) : (
@@ -250,7 +304,7 @@ export default function Events() {
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Event Name</label>
+                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Launch Name</label>
                     <input
                       type="text"
                       name="eventName"
@@ -262,7 +316,7 @@ export default function Events() {
                     />
                   </div>
                   <div>
-                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Event Type</label>
+                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Launch Type</label>
                     <select
                       name="eventType"
                       value={formState.eventType}
@@ -270,12 +324,12 @@ export default function Events() {
                       required
                       className="w-full px-4 py-3 rounded-xl bg-foreground/[0.05] border border-foreground/[0.12] text-foreground font-body text-sm focus:outline-none focus:border-accent/50 transition-colors appearance-none"
                     >
-                      <option value="" disabled>Select event type</option>
+                      <option value="" disabled>Select launch type</option>
                       <option value="corporate-retreat">Corporate Retreat</option>
                       <option value="product-launch">Product Launch</option>
                       <option value="wellness-festival">Wellness Festival</option>
                       <option value="private-party">Private Party</option>
-                      <option value="athletic-event">Athletic Event</option>
+                      <option value="athletic-event">Athletic Launch</option>
                       <option value="film-music">Film / Music Production</option>
                       <option value="other">Other</option>
                     </select>
@@ -283,7 +337,7 @@ export default function Events() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Event Date</label>
+                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Launch Date</label>
                     <input
                       type="date"
                       name="date"
@@ -309,7 +363,7 @@ export default function Events() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Event Location</label>
+                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">Launch Location</label>
                     <input
                       type="text"
                       name="location"
@@ -348,7 +402,7 @@ export default function Events() {
                     type="submit"
                     className="px-8 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
                   >
-                    Book Your Activation
+                    Launch With Avalon
                   </button>
                 </div>
               </motion.form>

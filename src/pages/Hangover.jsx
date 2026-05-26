@@ -297,7 +297,7 @@ export default function Hangover() {
             <p className="font-body text-sm text-foreground/50">Ready to feel better?</p>
             <Link
               to="/store"
-              className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors duration-200 flex items-center gap-1"
+              className="flex min-h-10 items-center gap-1 font-body text-sm text-foreground/70 hover:text-foreground transition-colors duration-200"
             >
               BUY NOW <ArrowRight className="w-3.5 h-3.5" />
             </Link>

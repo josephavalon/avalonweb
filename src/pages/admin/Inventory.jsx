@@ -4,687 +4,39 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useInventoryData } from '../../hooks/useInventoryData';
 import { useDropzone } from 'react-dropzone';
 import AdminLayout from '@/layouts/AdminLayout';
+
+const INVENTORY_CLINICAL_NOTE = 'Inventory records support operations only. Clinical use follows approved protocols.';
 import {
-  LayoutGrid, Package, Search, Tag, BarChart3,
-  Plug, Bell, HelpCircle, Settings, ChevronLeft, ChevronRight,
-  ChevronDown, Plus, Upload, FolderPlus, Trash2, Edit,
+  Breadcrumb,
+  CAT_COLOR,
+  CAT_ICON,
+  EASE,
+  FilterBar,
+  FolderCard,
+  FolderContextMenu,
+  FolderSidebar,
+  IconNav,
+  InventoryToolbar,
+  ItemContextMenu,
+  StatusPill,
+  StatsBar,
+  TODAY_STR,
+  TagChip,
+  daysUntil,
+  expiryLabel,
+  fmt$,
+  stockCls,
+} from '@/components/admin/inventory/InventoryChrome.jsx';
+import { ItemGridCard, ItemListRow, ItemTableRow } from '@/components/admin/inventory/InventoryItemRows.jsx';
+import {
+  Package, Tag,
+  Bell, ChevronLeft, ChevronRight,
+  Plus, Upload, FolderPlus, Trash2, Edit,
   MoreHorizontal, X, Check, ArrowLeft, Download, Printer,
-  AlertTriangle, AlertCircle, Clock, Folder, FolderOpen,
-  FlaskConical, Syringe, Shield, Droplets, BriefcaseMedical,
-  List as ListIcon, ArrowUpDown, RefreshCw, User, FileText, TrendingUp,
-  MoveRight, Barcode, Image as ImageIcon, Minus, Copy, Sparkles, Activity, Sliders, Archive,
+  AlertTriangle, AlertCircle, Clock,
+  ArrowUpDown, RefreshCw, User, FileText, TrendingUp,
+  MoveRight, Barcode, Image as ImageIcon, Minus, Copy, Sparkles, Activity, Sliders,
 } from 'lucide-react';
-
-const EASE = [0.16, 1, 0.3, 1];
-const TODAY_STR = new Date().toISOString().slice(0, 10);
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function daysUntil(d) {
-  if (!d) return null;
-  return Math.ceil((new Date(d) - new Date(TODAY_STR)) / 86400000);
-}
-function expiryLabel(d) {
-  const n = daysUntil(d);
-  if (n === null) return null;
-  if (n <= 0) return { text: 'Expired', cls: 'text-red-400' };
-  if (n <= 7) return { text: `Exp ${n}d`, cls: 'text-red-400' };
-  if (n <= 30) return { text: `Exp ${n}d`, cls: 'text-amber-400' };
-  return null;
-}
-function stockCls(qty, min) {
-  if (qty <= 0) return 'text-red-400';
-  if (qty <= min) return 'text-amber-400';
-  return 'text-emerald-400';
-}
-function fmt$(n) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
-}
-
-// ─── Category icon + color map ────────────────────────────────────────────────
-const CAT_ICON = {
-  IV: Droplets, Medication: FlaskConical, IM: Syringe,
-  PPE: Shield, Emergency: AlertTriangle, Device: BriefcaseMedical,
-  Sharps: Archive,
-};
-const CAT_COLOR = {
-  IV: '#60a5fa', Medication: '#a78bfa', IM: '#34d399',
-  PPE: '#fb923c', Emergency: '#f87171', Device: '#38bdf8',
-  Sharps: '#6b7280',
-};
-
-// Seed data has moved to src/data/inventorySeed.js — imported by useInventoryData hook.
-
-// ─── Status pill ──────────────────────────────────────────────────────────────
-function StatusPill({ qty, minLevel }) {
-  if (qty <= 0)        return <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400 border border-red-500/20">Out of Stock</span>;
-  if (qty <= minLevel) return <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400 border border-amber-500/20">Low Stock</span>;
-  return <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">In Stock</span>;
-}
-
-function TagChip({ tag }) {
-  return (
-    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}44` }}>
-      {tag.name}
-    </span>
-  );
-}
-
-// ─── Folder context menu ──────────────────────────────────────────────────────
-const FOLDER_MENU_ITEMS = ['Edit','Move to folder','History','Create Label','Set Alert','Export','Clone','Permissions','Delete'];
-
-function FolderContextMenu({ x, y, onClose }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [onClose]);
-  return (
-    <div ref={ref} className="fixed z-50 w-44 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl" style={{ top: y, left: x }}>
-      {FOLDER_MENU_ITEMS.map((item) => (
-        <button key={item} onClick={onClose} className={`w-full px-4 py-2 text-left font-body text-xs transition-colors hover:bg-foreground/[0.06] ${item === 'Delete' ? 'text-red-400' : 'text-foreground/80'}`}>
-          {item}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ─── Item context menu ────────────────────────────────────────────────────────
-const ITEM_MENU_ITEMS = ['Edit','Move to folder','History','Create Label','Set Alert','Export','Clone','Delete'];
-
-function ItemContextMenu({ x, y, onClose }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [onClose]);
-  return (
-    <div ref={ref} className="fixed z-50 w-44 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl" style={{ top: y, left: x }}>
-      {ITEM_MENU_ITEMS.map((item) => (
-        <button key={item} onClick={onClose} className={`w-full px-4 py-2 text-left font-body text-xs transition-colors hover:bg-foreground/[0.06] ${item === 'Delete' ? 'text-red-400' : 'text-foreground/80'}`}>
-          {item}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ─── Folder node (sidebar tree) ───────────────────────────────────────────────
-function FolderNode({ folder, allFolders, currentFolderId, onSelect, expandedFolders, toggleExpand, depth = 0 }) {
-  const children = allFolders.filter(f => f.parentId === folder.id);
-  const isExpanded = expandedFolders.has(folder.id);
-  const isActive = currentFolderId === folder.id;
-
-  return (
-    <div>
-      <div
-        className={`group flex cursor-pointer items-center gap-1.5 rounded-lg py-1.5 text-xs transition-colors ${isActive ? 'bg-foreground/10 text-foreground' : 'text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground/90'}`}
-        style={{ paddingLeft: `${8 + depth * 14}px`, paddingRight: 8 }}
-      >
-        {children.length > 0 ? (
-          <button onClick={(e) => { e.stopPropagation(); toggleExpand(folder.id); }} className="flex h-4 w-4 shrink-0 items-center justify-center">
-            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-          </button>
-        ) : (
-          <span className="w-4 shrink-0" />
-        )}
-        <button onClick={() => onSelect(folder.id)} className="flex flex-1 items-center gap-2 overflow-hidden text-left">
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: folder.color }} />
-          <span className="truncate font-body text-xs">{folder.name}</span>
-          <span className="ml-auto shrink-0 font-body text-[10px] text-foreground/35">{folder.itemCount}</span>
-        </button>
-      </div>
-      {isExpanded && children.map(child => (
-        <FolderNode key={child.id} folder={child} allFolders={allFolders} currentFolderId={currentFolderId} onSelect={onSelect} expandedFolders={expandedFolders} toggleExpand={toggleExpand} depth={depth + 1} />
-      ))}
-    </div>
-  );
-}
-
-// ─── Folder sidebar ───────────────────────────────────────────────────────────
-function FolderSidebar({ folders, currentFolderId, onSelect, expandedFolders, toggleExpand, onAddFolder }) {
-  const roots = folders.filter(f => f.parentId === null);
-  return (
-    <div className="flex h-full flex-col border-r border-foreground/[0.08] bg-[#111111]" style={{ width: 220 }}>
-      <div className="flex items-center justify-between px-3 py-3">
-        <span className="font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/35">Folders</span>
-        <button onClick={onAddFolder} className="flex h-6 w-6 items-center justify-center rounded-md text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground/80">
-          <FolderPlus className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto px-1 pb-4">
-        <button
-          onClick={() => onSelect(null)}
-          className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 font-body text-xs transition-colors ${currentFolderId === null ? 'bg-foreground/10 text-foreground' : 'text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground/90'}`}
-        >
-          <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
-          <span>All Items</span>
-        </button>
-        {roots.map(folder => (
-          <FolderNode key={folder.id} folder={folder} allFolders={folders} currentFolderId={currentFolderId} onSelect={onSelect} expandedFolders={expandedFolders} toggleExpand={toggleExpand} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Icon nav ─────────────────────────────────────────────────────────────────
-const NAV_TOP = [
-  { id:'items',   Icon:LayoutGrid,  label:'All Items' },
-  { id:'tags',    Icon:Tag,         label:'Tags' },
-  { id:'reports', Icon:BarChart3,   label:'Reports' },
-];
-const NAV_BOTTOM = [
-  { id:'integrations', Icon:Plug,       label:'Integrations', badge:true },
-  { id:'notif',        Icon:Bell,       label:'Notifications' },
-  { id:'help',         Icon:HelpCircle, label:'Help' },
-  { id:'settings',     Icon:Settings,   label:'Settings' },
-];
-
-function IconNav({ section, onSection, onNotif, lowStockCount }) {
-  return (
-    <div className="flex h-full flex-col items-center border-r border-foreground/[0.08] bg-[#0d0d0d] py-3" style={{ width: 56 }}>
-      {/* Top nav */}
-      <div className="flex flex-col items-center gap-1 pt-1">
-        {NAV_TOP.map(({ id, Icon, label }) => (
-          <button key={id} title={label} onClick={() => onSection(id)}
-            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === id ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
-          >
-            <Icon className="h-4 w-4" />
-          </button>
-        ))}
-        <button title="Trash" onClick={() => onSection('trash')}
-          className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === 'trash' ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="my-3 w-6 border-t border-foreground/[0.08]" />
-
-      {/* Bottom nav */}
-      <div className="flex flex-col items-center gap-1">
-        {NAV_BOTTOM.map(({ id, Icon, label, badge }) => (
-          <button key={id} title={label} onClick={() => id === 'notif' ? onNotif() : onSection(id)}
-            className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${section === id ? 'bg-foreground/10 text-foreground' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/70'}`}
-          >
-            <Icon className="h-4 w-4" />
-            {badge && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-amber-400" />}
-            {id === 'notif' && lowStockCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 font-body text-[9px] font-bold text-white">{lowStockCount}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-auto">
-        <button className="flex h-6 w-9 items-center justify-center rounded-md border border-amber-400/40 bg-amber-400/10 font-body text-[9px] font-semibold uppercase tracking-wide text-amber-400 transition-colors hover:bg-amber-400/20">
-          New
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Table icon (inline SVG) ──────────────────────────────────────────────────
-function TableIcon({ className = 'h-4 w-4' }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 9h18M3 15h18M9 3v18" />
-    </svg>
-  );
-}
-
-// ─── Sort dropdown ────────────────────────────────────────────────────────────
-const SORT_OPTIONS = [
-  { key:'name',    label:'Name' },
-  { key:'updated', label:'Updated At' },
-  { key:'qty',     label:'Quantity' },
-  { key:'price',   label:'Price' },
-];
-
-function SortMenu({ sortBy, sortDir, onChange, onToggleDir, onClose }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [onClose]);
-  return (
-    <div ref={ref} className="absolute right-0 top-full z-50 mt-1.5 w-44 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl">
-      <div className="px-3 py-2">
-        <p className="font-body text-[10px] uppercase tracking-wider text-foreground/35">Sort by</p>
-      </div>
-      {SORT_OPTIONS.map(opt => (
-        <button key={opt.key} onClick={() => { onChange(opt.key); onClose(); }}
-          className="flex w-full items-center justify-between px-4 py-2 font-body text-xs transition-colors hover:bg-foreground/[0.06]"
-        >
-          <span className={sortBy === opt.key ? 'text-foreground' : 'text-foreground/60'}>{opt.label}</span>
-          {sortBy === opt.key && <ArrowUpDown className="h-3 w-3 text-foreground/60" />}
-        </button>
-      ))}
-      <div className="mx-3 my-1 border-t border-foreground/[0.08]" />
-      <button onClick={() => { onToggleDir(); onClose(); }} className="flex w-full items-center gap-2 px-4 py-2 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.06] hover:text-foreground/90">
-        <ArrowUpDown className="h-3 w-3" />
-        {sortDir === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
-      </button>
-    </div>
-  );
-}
-
-// ─── Toolbar ──────────────────────────────────────────────────────────────────
-function InventoryToolbar({ layout, onLayout, sortBy, sortDir, onSort, onToggleSortDir, search, onSearch, showFolders, onToggleFolders, onAdd, onAddFolder, onImport }) {
-  const [showSortMenu, setShowSortMenu] = useState(false);
-  const [showAddMenu,  setShowAddMenu]  = useState(false);
-  const addRef = useRef(null);
-
-  useEffect(() => {
-    const h = (e) => { if (addRef.current && !addRef.current.contains(e.target)) setShowAddMenu(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
-
-  const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortBy)?.label || 'Name';
-
-  return (
-    <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-foreground/[0.08] px-4">
-      {/* Search */}
-      <div className="relative flex-1 max-w-xs">
-        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/35" />
-        <input value={search} onChange={e => onSearch(e.target.value)} placeholder="Search items…"
-          className="h-8 w-full rounded-lg border border-foreground/[0.10] bg-foreground/[0.04] pl-9 pr-3 font-body text-xs text-foreground placeholder:text-foreground/30 focus:border-foreground/25 focus:outline-none"
-        />
-      </div>
-
-      <div className="ml-auto flex items-center gap-1.5">
-        {/* Sort */}
-        <div className="relative">
-          <button onClick={() => setShowSortMenu(v => !v)}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-foreground/[0.10] bg-foreground/[0.04] px-3 font-body text-xs text-foreground/60 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"
-          >
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            {currentSortLabel}
-            <span className="text-foreground/30">{sortDir === 'asc' ? '↑' : '↓'}</span>
-          </button>
-          {showSortMenu && <SortMenu sortBy={sortBy} sortDir={sortDir} onChange={onSort} onToggleDir={onToggleSortDir} onClose={() => setShowSortMenu(false)} />}
-        </div>
-
-        {/* Layout toggle */}
-        <div className="flex h-8 items-center rounded-lg border border-foreground/[0.10] bg-foreground/[0.04] p-0.5">
-          {[['grid', LayoutGrid], ['list', ListIcon], ['table', TableIcon]].map(([id, Icon]) => (
-            <button key={id} onClick={() => onLayout(id)}
-              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${layout === id ? 'bg-foreground/15 text-foreground' : 'text-foreground/35 hover:text-foreground/70'}`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-            </button>
-          ))}
-        </div>
-
-        {/* Hide folders toggle */}
-        <button onClick={onToggleFolders}
-          className={`flex h-8 items-center gap-1.5 rounded-lg border px-2.5 font-body text-[10px] transition-colors ${showFolders ? 'border-foreground/[0.10] text-foreground/50 hover:text-foreground/80' : 'border-foreground/25 text-foreground'}`}
-        >
-          <Folder className="h-3.5 w-3.5" />
-          {showFolders ? 'Hide' : 'Show'} Folders
-        </button>
-
-        {/* Add split button */}
-        <div ref={addRef} className="relative flex">
-          <button onClick={onAdd}
-            className="flex h-8 items-center gap-1.5 rounded-l-lg bg-foreground px-3 font-body text-xs font-semibold uppercase tracking-wide text-background transition-colors hover:bg-foreground/90"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add Item
-          </button>
-          <button onClick={() => setShowAddMenu(v => !v)}
-            className="flex h-8 w-7 items-center justify-center rounded-r-lg border-l border-background/20 bg-foreground text-background transition-colors hover:bg-foreground/90"
-          >
-            <ChevronDown className="h-3 w-3" />
-          </button>
-          {showAddMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1.5 w-40 rounded-xl border border-foreground/10 bg-[#1c1c1c] py-1 shadow-xl">
-              {[['Add Item', onAdd], ['Import Items', onImport], ['Add Folder', onAddFolder]].map(([label, fn]) => (
-                <button key={label} onClick={() => { fn?.(); setShowAddMenu(false); }}
-                  className="w-full px-4 py-2 text-left font-body text-xs text-foreground/70 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Stats bar ────────────────────────────────────────────────────────────────
-function StatsBar({ items, currentFolderId }) {
-  const list = currentFolderId ? items.filter(i => i.folderId === currentFolderId) : items;
-  const totalVal = list.reduce((s, i) => s + i.qty * i.price, 0);
-  const lowCount = list.filter(i => i.qty > 0 && i.qty <= i.minLevel).length;
-  const outCount = list.filter(i => i.qty <= 0).length;
-  const expCount = list.filter(i => { const n = daysUntil(i.expirationDate); return n !== null && n <= 7; }).length;
-
-  return (
-    <div className="flex shrink-0 items-center gap-6 border-b border-foreground/[0.08] px-5 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="font-body text-[10px] uppercase tracking-widest text-foreground/35">Items</span>
-        <span className="font-heading text-base text-foreground">{list.length}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="font-body text-[10px] uppercase tracking-widest text-foreground/35">Value</span>
-        <span className="font-heading text-base text-foreground">{fmt$(totalVal)}</span>
-      </div>
-      {lowCount > 0 && (
-        <div className="flex items-center gap-1.5">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
-          <span className="font-body text-xs text-amber-400">{lowCount} low stock</span>
-        </div>
-      )}
-      {outCount > 0 && (
-        <div className="flex items-center gap-1.5">
-          <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-          <span className="font-body text-xs text-red-400">{outCount} out of stock</span>
-        </div>
-      )}
-      {expCount > 0 && (
-        <div className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 text-red-400" />
-          <span className="font-body text-xs text-red-400">{expCount} expiring soon</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Filter Bar ──────────────────────────────────────────────────────────────
-const STATUS_FILTERS = [
-  { key: 'all',      label: 'All' },
-  { key: 'low',      label: 'Low Stock' },
-  { key: 'out',      label: 'Out of Stock' },
-  { key: 'expiring', label: 'Expiring ≤14d' },
-  { key: 'new',      label: 'New' },
-];
-
-function FilterBar({ items, tags, filterStatus, onFilterStatus, filterTag, onFilterTag, filterCategory, onFilterCategory }) {
-  const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))].sort(), [items]);
-  const activeCount = (filterStatus !== 'all' ? 1 : 0) + (filterTag ? 1 : 0) + (filterCategory ? 1 : 0);
-
-  return (
-    <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-foreground/[0.08] px-4 py-2 scrollbar-none">
-      {/* Status chips */}
-      <div className="flex items-center gap-1">
-        {STATUS_FILTERS.map(({ key, label }) => (
-          <button key={key} onClick={() => onFilterStatus(key)}
-            className={`whitespace-nowrap rounded-full px-2.5 py-1 font-body text-[10px] transition-colors ${
-              filterStatus === key
-                ? 'bg-foreground text-background'
-                : 'border border-foreground/[0.10] text-foreground/50 hover:border-foreground/25 hover:text-foreground/70'
-            }`}
-          >{label}</button>
-        ))}
-      </div>
-
-      {/* Divider */}
-      {(tags.length > 0 || categories.length > 0) && <div className="h-4 w-px shrink-0 bg-foreground/10" />}
-
-      {/* Tag filter */}
-      {tags.length > 0 && (
-        <select value={filterTag} onChange={e => onFilterTag(e.target.value)}
-          className={`rounded-full border px-2.5 py-1 font-body text-[10px] focus:outline-none ${filterTag ? 'border-foreground/40 bg-foreground/10 text-foreground' : 'border-foreground/[0.10] bg-transparent text-foreground/50'}`}
-          style={{ appearance: 'none' }}
-        >
-          <option value="">All Tags</option>
-          {tags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
-      )}
-
-      {/* Category filter */}
-      {categories.length > 0 && (
-        <select value={filterCategory} onChange={e => onFilterCategory(e.target.value)}
-          className={`rounded-full border px-2.5 py-1 font-body text-[10px] focus:outline-none ${filterCategory ? 'border-foreground/40 bg-foreground/10 text-foreground' : 'border-foreground/[0.10] bg-transparent text-foreground/50'}`}
-          style={{ appearance: 'none' }}
-        >
-          <option value="">All Categories</option>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-      )}
-
-      {/* Clear all */}
-      {activeCount > 0 && (
-        <button
-          onClick={() => { onFilterStatus('all'); onFilterTag(''); onFilterCategory(''); }}
-          className="ml-1 flex items-center gap-1 rounded-full border border-foreground/[0.10] px-2.5 py-1 font-body text-[10px] text-foreground/40 transition-colors hover:border-red-400/40 hover:text-red-400"
-        >
-          <X className="h-2.5 w-2.5" /> Clear ({activeCount})
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ─── Breadcrumb ───────────────────────────────────────────────────────────────
-function Breadcrumb({ folders, currentFolderId, onNavigate }) {
-  if (!currentFolderId) return null;
-  const path = [];
-  let cur = folders.find(f => f.id === currentFolderId);
-  while (cur) {
-    path.unshift(cur);
-    cur = folders.find(f => f.id === cur.parentId);
-  }
-  return (
-    <div className="flex shrink-0 items-center gap-1.5 border-b border-foreground/[0.08] px-5 py-2">
-      <button onClick={() => onNavigate(null)} className="font-body text-[11px] text-foreground/40 transition-colors hover:text-foreground/70">All Items</button>
-      {path.map((f, i) => (
-        <React.Fragment key={f.id}>
-          <ChevronRight className="h-3 w-3 text-foreground/25" />
-          <button onClick={() => onNavigate(f.id)}
-            className={`font-body text-[11px] transition-colors ${i === path.length - 1 ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'}`}
-          >
-            {f.name}
-          </button>
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
-// ─── Folder card ──────────────────────────────────────────────────────────────
-function FolderCard({ folder, items, onClick, onMenuOpen }) {
-  const count = items.filter(i => i.folderId === folder.id).length;
-  return (
-    <div onClick={() => onClick(folder.id)}
-      className="group relative cursor-pointer rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4 transition-all hover:border-foreground/20 hover:bg-foreground/[0.06]"
-    >
-      <button
-        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg opacity-0 transition-all group-hover:opacity-100 hover:bg-foreground/10"
-        onClick={(e) => { e.stopPropagation(); onMenuOpen(folder.id, e); }}
-      >
-        <MoreHorizontal className="h-3.5 w-3.5 text-foreground/50" />
-      </button>
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: folder.color + '22' }}>
-        <FolderOpen className="h-5 w-5" style={{ color: folder.color }} />
-      </div>
-      <p className="truncate font-body text-sm font-semibold text-foreground">{folder.name}</p>
-      <p className="mt-0.5 font-body text-xs text-foreground/40">{count} item{count !== 1 ? 's' : ''}</p>
-    </div>
-  );
-}
-
-// ─── Item grid card ───────────────────────────────────────────────────────────
-function ItemGridCard({ item, tags, isSelected, onSelect, onOpen, onMenuOpen }) {
-  const Icon = CAT_ICON[item.category] || Package;
-  const color = CAT_COLOR[item.category] || '#6b7280';
-  const exp = expiryLabel(item.expirationDate);
-
-  return (
-    <div className="group relative cursor-pointer rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/20">
-      {/* Checkbox */}
-      <div className={`absolute left-2 top-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-        <button
-          onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
-          className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-foreground/40 bg-[#0d0d0d]/80 text-transparent hover:border-foreground/70'}`}
-        >
-          <Check className="h-3 w-3" />
-        </button>
-      </div>
-
-      {/* NEW badge */}
-      {item.isNew && (
-        <div className="absolute right-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wide text-black">New</div>
-      )}
-
-      {/* Photo area */}
-      <div
-        className="relative flex aspect-square w-full items-center justify-center rounded-t-2xl overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${color}20 0%, ${color}08 100%)` }}
-        onClick={() => onOpen(item)}
-      >
-        <Icon className="h-12 w-12 opacity-50" style={{ color }} />
-        {item.refrigeration && (
-          <div className="absolute bottom-2 right-2 rounded-md border border-sky-400/20 bg-[#0d0d0d]/80 px-1.5 py-0.5 font-body text-[9px] font-semibold text-sky-300 backdrop-blur-sm">❄</div>
-        )}
-      </div>
-
-      {/* Hover action bar */}
-      <div className="absolute bottom-[72px] left-0 right-0 translate-y-1 opacity-0 transition-all duration-150 group-hover:translate-y-0 group-hover:opacity-100">
-        <div className="mx-2 flex items-center justify-around rounded-xl border border-foreground/10 bg-[#1a1a1a]/95 p-1.5 backdrop-blur-sm">
-          {[
-            [Plus,         'Add sub-item'],
-            [Edit,         'Edit'],
-            [Bell,         'Set alert'],
-            [MoveRight,    'Move'],
-            [MoreHorizontal,'More'],
-          ].map(([Icon2, title], i) => (
-            <button key={title} title={title}
-              onClick={(e) => { e.stopPropagation(); if (title === 'More') onMenuOpen(item.id, e); }}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/50 transition-colors hover:bg-foreground/10 hover:text-foreground"
-            >
-              <Icon2 className="h-3.5 w-3.5" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Card info */}
-      <div className="px-3 pb-3 pt-2" onClick={() => onOpen(item)}>
-        <p className="truncate font-body text-xs font-semibold text-foreground">{item.name}</p>
-        <div className="mt-1 flex items-center justify-between">
-          <span className={`font-body text-xs font-semibold ${stockCls(item.qty, item.minLevel)}`}>{item.qty} {item.unit}</span>
-          {exp && <span className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</span>}
-        </div>
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="font-body text-[10px] text-foreground/35">{item.sortlyId}</span>
-          <span className="font-body text-[10px] text-foreground/50">{fmt$(item.price)}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Item list row ────────────────────────────────────────────────────────────
-function ItemListRow({ item, tags, isSelected, onSelect, onOpen, onMenuOpen }) {
-  const Icon = CAT_ICON[item.category] || Package;
-  const color = CAT_COLOR[item.category] || '#6b7280';
-  const exp = expiryLabel(item.expirationDate);
-  const itemTags = tags.filter(t => item.tags.includes(t.id));
-
-  return (
-    <div className="group flex cursor-pointer items-center gap-4 border-b border-foreground/[0.06] px-4 py-3 transition-colors hover:bg-foreground/[0.03]">
-      <button onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
-        className={`shrink-0 flex h-4 w-4 items-center justify-center rounded border transition-colors ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-foreground/25 text-transparent hover:border-foreground/50'}`}
-      >
-        <Check className="h-2.5 w-2.5" />
-      </button>
-
-      <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: color + '18' }}>
-        <Icon className="h-5 w-5" style={{ color }} />
-      </div>
-
-      <div className="flex flex-1 flex-col gap-0.5 overflow-hidden" onClick={() => onOpen(item)}>
-        <div className="flex items-center gap-2">
-          <span className="truncate font-body text-sm font-semibold text-foreground">{item.name}</span>
-          {item.isNew && <span className="shrink-0 rounded-full bg-amber-400/20 px-1.5 py-0.5 font-body text-[9px] font-bold uppercase text-amber-400">New</span>}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-body text-[10px] text-foreground/35">{item.sortlyId}</span>
-          <span className="text-foreground/20">·</span>
-          <span className="font-body text-[10px] text-foreground/35">{item.sku}</span>
-          {itemTags.slice(0, 2).map(t => <TagChip key={t.id} tag={t} />)}
-        </div>
-      </div>
-
-      <div className="w-24 shrink-0 text-right" onClick={() => onOpen(item)}>
-        <StatusPill qty={item.qty} minLevel={item.minLevel} />
-        <p className={`mt-0.5 font-body text-xs ${stockCls(item.qty, item.minLevel)}`}>{item.qty} {item.unit}</p>
-      </div>
-
-      <div className="w-20 shrink-0 text-right" onClick={() => onOpen(item)}>
-        <p className="font-body text-xs text-foreground/70">{fmt$(item.price)}</p>
-        {exp && <p className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</p>}
-      </div>
-
-      <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-        <button onClick={(e) => { e.stopPropagation(); onMenuOpen(item.id, e); }}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Item table row ───────────────────────────────────────────────────────────
-function ItemTableRow({ item, tags, isSelected, onSelect, onOpen, onMenuOpen }) {
-  const Icon = CAT_ICON[item.category] || Package;
-  const color = CAT_COLOR[item.category] || '#6b7280';
-  const exp = expiryLabel(item.expirationDate);
-
-  return (
-    <tr className="group border-b border-foreground/[0.05] transition-colors hover:bg-foreground/[0.03]">
-      <td className="w-10 px-3 py-2.5">
-        <button onClick={() => onSelect(item.id)}
-          className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-foreground/25 text-transparent hover:border-foreground/50'}`}
-        >
-          <Check className="h-2.5 w-2.5" />
-        </button>
-      </td>
-      <td className="w-10 px-2 py-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: color + '18' }}>
-          <Icon className="h-4 w-4" style={{ color }} />
-        </div>
-      </td>
-      <td className="cursor-pointer px-3 py-2.5" onClick={() => onOpen(item)}>
-        <div className="flex items-center gap-2">
-          <span className="font-body text-xs font-semibold text-foreground">{item.name}</span>
-          {item.isNew && <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 font-body text-[9px] font-bold uppercase text-amber-400">New</span>}
-        </div>
-        <span className="font-body text-[10px] text-foreground/35">{item.sortlyId}</span>
-      </td>
-      <td className="px-3 py-2.5">
-        <span className={`font-body text-xs font-semibold ${stockCls(item.qty, item.minLevel)}`}>{item.qty}</span>
-        <span className="ml-1 font-body text-[10px] text-foreground/40">{item.unit}</span>
-      </td>
-      <td className="px-3 py-2.5 font-body text-xs text-foreground/70">{fmt$(item.price)}</td>
-      <td className="px-3 py-2.5"><StatusPill qty={item.qty} minLevel={item.minLevel} /></td>
-      <td className="px-3 py-2.5">
-        {exp ? <span className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</span> : <span className="font-body text-[10px] text-foreground/25">—</span>}
-      </td>
-      <td className="w-10 px-2 py-2.5">
-        <button onClick={(e) => { e.stopPropagation(); onMenuOpen(item.id, e); }}
-          className="flex h-7 w-7 items-center justify-center rounded-lg opacity-0 text-foreground/40 transition-all group-hover:opacity-100 hover:bg-foreground/[0.08] hover:text-foreground"
-        >
-          <MoreHorizontal className="h-3.5 w-3.5" />
-        </button>
-      </td>
-    </tr>
-  );
-}
 
 // ─── Notifications panel ──────────────────────────────────────────────────────
 function NotificationsPanel({ items, onClose }) {
@@ -694,7 +46,7 @@ function NotificationsPanel({ items, onClose }) {
   });
   return (
     <motion.div initial={{ x:'100%' }} animate={{ x:0 }} exit={{ x:'100%' }} transition={{ ease:EASE, duration:0.3 }}
-      className="fixed right-0 top-0 z-50 flex h-full w-80 flex-col border-l border-foreground/[0.08] bg-[#111111] shadow-2xl"
+      className="fixed right-0 top-0 z-50 flex h-full w-80 flex-col border-l border-foreground/[0.08] bg-card shadow-2xl"
     >
       <div className="flex items-center justify-between border-b border-foreground/[0.08] px-5 py-4">
         <h2 className="font-heading text-base text-foreground">Notifications</h2>
@@ -733,18 +85,18 @@ function NotificationsPanel({ items, onClose }) {
 function AddFolderModal({ folders, onClose, onSave }) {
   const [name,     setName]     = useState('');
   const [parentId, setParentId] = useState(null);
-  const [color,    setColor]    = useState('#60a5fa');
-  const COLORS = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#38bdf8','#d4a754','#6b7280'];
+  const [color,    setColor]    = useState('hsl(var(--chart-1))');
+  const COLORS = ['hsl(var(--chart-1))','hsl(var(--chart-2))','hsl(var(--success))','hsl(var(--warning))','hsl(var(--destructive))','hsl(var(--chart-3))','hsl(var(--accent))','hsl(var(--muted-foreground))'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Add folder" onClick={onClose}>
       <motion.div initial={{ scale:0.96, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ scale:0.96, opacity:0 }} transition={{ ease:EASE, duration:0.2 }}
-        className="w-80 rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        className="w-80 rounded-2xl border border-foreground/10 bg-card p-6 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-heading text-base text-foreground">Add Folder</h2>
-          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground">
+          <button onClick={onClose} aria-label="Close add folder" className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/40 hover:bg-foreground/[0.08] hover:text-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -758,7 +110,7 @@ function AddFolderModal({ folders, onClose, onSave }) {
           <div>
             <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Parent Folder</label>
             <select value={parentId || ''} onChange={e => setParentId(e.target.value || null)}
-              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
             >
               <option value="">None (root)</option>
               {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -900,7 +252,7 @@ function AddItemModal({ folders, onClose, onSave, onShowAll }) {
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 8 }} transition={{ ease: EASE, duration: 0.2 }}
-        className="w-[440px] max-h-[90vh] overflow-y-auto rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        className="w-[440px] max-h-[90vh] overflow-y-auto rounded-2xl border border-foreground/10 bg-card p-6 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
@@ -929,7 +281,7 @@ function AddItemModal({ folders, onClose, onSave, onShowAll }) {
             <div className="flex-1">
               <FieldRow label="Unit">
                 <select value={unit} onChange={e => setUnit(e.target.value)}
-                  className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
                 >
                   {UNITS.map(u => <option key={u}>{u}</option>)}
                 </select>
@@ -954,7 +306,7 @@ function AddItemModal({ folders, onClose, onSave, onShowAll }) {
           </div>
           <FieldRow label="Add to Folder">
             <select value={folderId} onChange={e => setFolderId(e.target.value)}
-              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
             >
               <option value="">No folder</option>
               {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -1020,7 +372,7 @@ function PhotoDropzone({ photos = [], onChange }) {
         <div className="flex flex-wrap gap-2">
           {photos.map(p => (
             <div key={p.id} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-foreground/[0.12]">
-              <img src={p.url} alt="" className="h-full w-full object-cover" />
+              <img src={p.url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               {p.isPrimary && (
                 <span className="absolute bottom-0 left-0 right-0 bg-amber-400/80 py-0.5 text-center font-body text-[9px] font-bold uppercase text-black">
                   Primary
@@ -1074,9 +426,9 @@ function BarcodeCard({ item }) {
       const node = svgRef.current;
       if (!node) return;
       const clone = node.cloneNode(true);
-      clone.setAttribute('style', 'background:white;color:#000');
-      clone.querySelectorAll('rect').forEach(r => r.setAttribute('fill', '#000'));
-      clone.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#000'));
+      clone.setAttribute('style', 'background:white;color:hsl(var(--background))');
+      clone.querySelectorAll('rect').forEach(r => r.setAttribute('fill', 'hsl(var(--background))'));
+      clone.querySelectorAll('text').forEach(t => t.setAttribute('fill', 'hsl(var(--background))'));
       const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
@@ -1101,9 +453,9 @@ function BarcodeCard({ item }) {
       const node = svgRef.current;
       if (!node) return;
       const clone = node.cloneNode(true);
-      clone.setAttribute('style', 'color:#000');
-      clone.querySelectorAll('rect').forEach(r => r.setAttribute('fill', '#000'));
-      clone.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#000'));
+      clone.setAttribute('style', 'color:hsl(var(--background))');
+      clone.querySelectorAll('rect').forEach(r => r.setAttribute('fill', 'hsl(var(--background))'));
+      clone.querySelectorAll('text').forEach(t => t.setAttribute('fill', 'hsl(var(--background))'));
       svgHTML = clone.outerHTML;
     } else {
       const node = qrRef.current;
@@ -1231,7 +583,7 @@ function CustomFieldInput({ def, value, onChange, inputCls }) {
   if (def.fieldType === 'dropdown') {
     return (
       <select value={value} onChange={e => onChange(e.target.value)}
-        className={cls.replace('bg-foreground/[0.04]', 'bg-[#1a1a1a]')}
+        className={cls.replace('bg-foreground/[0.04]', 'bg-muted')}
       >
         <option value="">— Select —</option>
         {(def.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1253,6 +605,7 @@ function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, on
   const [activeTab,    setActiveTab]    = useState('info');
   const [transactions, setTransactions] = useState(null); // null = not yet loaded
   const [txLoading,    setTxLoading]    = useState(false);
+  const [txError,      setTxError]      = useState('');
 
   const exp    = expiryLabel(item.expirationDate);
   const folder = folders.find(f => f.id === item.folderId);
@@ -1261,15 +614,20 @@ function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, on
   useEffect(() => {
     if (activeTab === 'orders' && transactions === null && onFetchTransactions) {
       setTxLoading(true);
+      setTxError('');
       onFetchTransactions(item.id).then(rows => {
         setTransactions(rows || []);
+        setTxLoading(false);
+      }).catch(err => {
+        setTransactions([]);
+        setTxError(err?.message || 'Could not load activity history.');
         setTxLoading(false);
       });
     }
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
   const itemTags = tags.filter(t => item.tags.includes(t.id));
   const Icon   = CAT_ICON[item.category] || Package;
-  const color  = CAT_COLOR[item.category] || '#6b7280';
+  const color  = CAT_COLOR[item.category] || 'hsl(var(--muted-foreground))';
 
   return (
     <motion.div
@@ -1336,6 +694,8 @@ function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, on
                   <img
                     src={ph.url}
                     alt={`${item.name} photo ${i + 1}`}
+                    loading="lazy"
+                    decoding="async"
                     className="h-28 w-28 rounded-xl border border-foreground/[0.08] object-cover"
                   />
                   {ph.isPrimary && (
@@ -1475,6 +835,11 @@ function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, on
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-foreground/10 border-t-foreground/50" />
               </div>
             )}
+            {!txLoading && txError && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2">
+                <p className="font-body text-xs text-red-300">{txError}</p>
+              </div>
+            )}
             {!txLoading && transactions !== null && transactions.length === 0 && (
               <div className="flex flex-col items-center justify-center gap-2 py-8">
                 <Activity className="h-8 w-8 text-foreground/15" />
@@ -1569,7 +934,7 @@ function ItemEditPage({ item, folders, customFieldDefs = [], onClose, onSave }) 
   }
 
   const inputCls = 'w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none';
-  const selectCls = 'w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none';
+  const selectCls = 'w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none';
 
   return (
     <motion.div
@@ -1693,7 +1058,7 @@ function AddItemFullPage({ folders, customFieldDefs = [], onClose, onSave }) {
   }
 
   const inputCls = 'w-full rounded-lg border border-foreground/[0.12] bg-foreground/[0.04] px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/25 focus:border-foreground/30 focus:outline-none';
-  const selectCls = 'w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none';
+  const selectCls = 'w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none';
 
   return (
     <motion.div
@@ -1811,7 +1176,7 @@ function TrashView({ trashedItems, onRestore, onDeletePermanent }) {
           <div className="space-y-2">
             {trashedItems.map(item => {
               const Icon = CAT_ICON[item.category] || Package;
-              const color = CAT_COLOR[item.category] || '#6b7280';
+              const color = CAT_COLOR[item.category] || 'hsl(var(--muted-foreground))';
               return (
                 <div key={item.id} className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] px-4 py-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: color + '15' }}>
@@ -1840,7 +1205,7 @@ function TrashView({ trashedItems, onRestore, onDeletePermanent }) {
 }
 
 // ─── Tag edit modal ──────────────────────────────────────────────────────────
-const TAG_COLORS = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#38bdf8','#d4a754','#6b7280','#ec4899','#14b8a6'];
+const TAG_COLORS = ['hsl(var(--chart-1))','hsl(var(--chart-2))','hsl(var(--success))','hsl(var(--warning))','hsl(var(--destructive))','hsl(var(--chart-3))','hsl(var(--accent))','hsl(var(--muted-foreground))','hsl(var(--chart-4))','hsl(var(--chart-5))'];
 
 function TagEditModal({ tag, onClose, onSave }) {
   const [name,  setName]  = useState(tag?.name  || '');
@@ -1850,7 +1215,7 @@ function TagEditModal({ tag, onClose, onSave }) {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }} transition={{ ease: EASE, duration: 0.2 }}
-        className="w-72 rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        className="w-72 rounded-2xl border border-foreground/10 bg-card p-6 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
@@ -2001,7 +1366,7 @@ function ReportsView({ items, folders, tags }) {
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* Sub-nav */}
-      <div className="w-52 shrink-0 overflow-y-auto border-r border-foreground/[0.08] bg-[#0d0d0d]">
+      <div className="w-52 shrink-0 overflow-y-auto border-r border-foreground/[0.08] bg-background">
         <div className="px-3 py-4">
           <p className="mb-2 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/30">Reports</p>
           {REPORT_DEFS.map(({ id, label, Icon }) => (
@@ -2085,6 +1450,9 @@ function ReportsView({ items, folders, tags }) {
           {/* ── Activity History ── */}
           {activeReport === 'activity' && (
             <div className="space-y-3">
+              <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/30">
+                {INVENTORY_CLINICAL_NOTE}
+              </p>
               {[
                 { action:'Qty updated',    item:'NAD+ 250mg vial',         detail:'Qty 10 → 8',                    by:'Joseph L.',    at:'2026-05-19 14:22', Icon:RefreshCw,  cls:'text-blue-400' },
                 { action:'Item added',     item:'IV Start Kit',            detail:'Added to IV Supplies',           by:'Joseph L.',    at:'2026-05-19 09:14', Icon:Plus,       cls:'text-emerald-400' },
@@ -2154,7 +1522,7 @@ function ReportsView({ items, folders, tags }) {
                 const maxVal = Math.max(...items.map(it => it.qty * it.price));
                 const pct = Math.round(((item.qty * item.price) / maxVal) * 100);
                 const Icon = CAT_ICON[item.category] || Package;
-                const color = CAT_COLOR[item.category] || '#6b7280';
+                const color = CAT_COLOR[item.category] || 'hsl(var(--muted-foreground))';
                 return (
                   <div key={item.id} className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-3">
                     <span className="w-5 shrink-0 text-right font-body text-[11px] text-foreground/30">{i + 1}</span>
@@ -2263,13 +1631,14 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
   const [emailAlerts,  setEmailAlerts]  = useState(settings.emailAlerts  || false);
   const [alertEmail,   setAlertEmail]   = useState(settings.alertEmail   || '');
   const [saving,       setSaving]       = useState(false);
+  const saveTimer = useRef(null);
 
   // Tag editing state
   const [addingTag,    setAddingTag]    = useState(false);
   const [editingTagId, setEditingTagId] = useState(null);
   const [tagName,      setTagName]      = useState('');
-  const [tagColor,     setTagColor]     = useState('#60a5fa');
-  const TAG_COLORS = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#38bdf8','#d4a754','#6b7280','#f472b6','#4ade80'];
+  const [tagColor,     setTagColor]     = useState('hsl(var(--chart-1))');
+  const TAG_COLORS = ['hsl(var(--chart-1))','hsl(var(--chart-2))','hsl(var(--success))','hsl(var(--warning))','hsl(var(--destructive))','hsl(var(--chart-3))','hsl(var(--accent))','hsl(var(--muted-foreground))','hsl(var(--chart-4))','hsl(var(--success))'];
 
   // Custom field definition editing state
   const [addingField,    setAddingField]    = useState(false);
@@ -2286,13 +1655,18 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
     if (settings.alertEmail)   setAlertEmail(settings.alertEmail);
   }, [settings.orgName, settings.currency, settings.lowThreshold, settings.emailAlerts, settings.alertEmail]);
 
+  useEffect(() => () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+  }, []);
+
   function handleSave() {
     setSaving(true);
     onSave?.({ orgName, currency, lowThreshold: lowThresh, emailAlerts, alertEmail });
-    setTimeout(() => setSaving(false), 1500);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => setSaving(false), 1500);
   }
 
-  function openAddTag() { setTagName(''); setTagColor('#60a5fa'); setEditingTagId(null); setAddingTag(true); }
+  function openAddTag() { setTagName(''); setTagColor('hsl(var(--chart-1))'); setEditingTagId(null); setAddingTag(true); }
   function openEditTag(tag) { setTagName(tag.name); setTagColor(tag.color); setEditingTagId(tag.id); setAddingTag(true); }
   function commitTag() {
     if (!tagName.trim()) return;
@@ -2357,7 +1731,7 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
           <div>
             <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Currency</label>
             <select value={currency} onChange={e => setCurrency(e.target.value)}
-              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
             >
               {['USD','EUR','GBP','CAD','AUD'].map(c => <option key={c}>{c}</option>)}
             </select>
@@ -2368,7 +1742,7 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
           <div>
             <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Low Stock Threshold</label>
             <select value={lowThresh} onChange={e => setLowThresh(e.target.value)}
-              className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+              className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
             >
               <option value="auto">Per-item Min Level (default)</option>
               <option value="5">Global: below 5 units</option>
@@ -2509,7 +1883,7 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
                 <select
                   value={fieldDraft.fieldType}
                   onChange={e => setFieldDraft(d => ({ ...d, fieldType: e.target.value, options: [] }))}
-                  className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+                  className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
                 >
                   {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
@@ -2595,7 +1969,7 @@ function MoveFolderModal({ folders, selectedCount, onClose, onMove }) {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }} transition={{ ease: EASE, duration: 0.2 }}
-        className="w-80 rounded-2xl border border-foreground/10 bg-[#161616] p-6 shadow-2xl"
+        className="w-80 rounded-2xl border border-foreground/10 bg-card p-6 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
@@ -2605,7 +1979,7 @@ function MoveFolderModal({ folders, selectedCount, onClose, onMove }) {
         <div className="mb-5">
           <label className="mb-1.5 block font-body text-[11px] uppercase tracking-wider text-foreground/40">Destination Folder</label>
           <select value={destId} onChange={e => setDestId(e.target.value)}
-            className="w-full rounded-lg border border-foreground/[0.12] bg-[#1a1a1a] px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
+            className="w-full rounded-lg border border-foreground/[0.12] bg-muted px-3 py-2.5 font-body text-sm text-foreground focus:border-foreground/30 focus:outline-none"
           >
             <option value="">No folder (root)</option>
             {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -2735,7 +2109,7 @@ function CSVImportModal({ folders, onClose, onImport }) {
   return (
     <motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.div className="mx-4 w-full max-w-xl rounded-2xl border border-foreground/[0.12] bg-[#111] shadow-2xl"
+      <motion.div className="mx-4 w-full max-w-xl rounded-2xl border border-foreground/[0.12] bg-card shadow-2xl"
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
         transition={{ ease: EASE, duration: 0.2 }}>
 
@@ -3058,6 +2432,7 @@ export default function AdminInventory() {
   return (
     <AdminLayout fullBleed>
     <div className="dark flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative bg-background text-foreground">
+      <h1 className="sr-only">Inventory</h1>
 
       {/* Icon nav — desktop only */}
       <div className="hidden md:flex h-full shrink-0">
@@ -3080,7 +2455,7 @@ export default function AdminInventory() {
         onClick={() => setSidebarOpen(v => !v)}
         title={sidebarOpen ? 'Collapse folders' : 'Expand folders'}
         style={{ left: sidebarOpen ? 271 : 51, top: '50%', transform: 'translateY(-50%)' }}
-        className="hidden md:flex absolute z-10 h-10 w-5 items-center justify-center rounded-r-lg border border-l-0 border-foreground/[0.15] bg-[#1a1a1a] text-foreground/50 shadow-sm transition-all hover:bg-[#222] hover:text-foreground/90"
+        className="hidden md:flex absolute z-10 h-10 w-5 items-center justify-center rounded-r-lg border border-l-0 border-foreground/[0.15] bg-muted text-foreground/50 shadow-sm transition-all hover:bg-muted/80 hover:text-foreground/90"
       >
         {sidebarOpen ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
       </button>
@@ -3094,7 +2469,7 @@ export default function AdminInventory() {
             onClick={() => navigateFolder(null)}
             className={`shrink-0 rounded-full px-3 py-1 font-body text-xs border transition-colors ${!currentFolderId ? 'bg-accent/15 text-accent border-accent/30' : 'text-foreground/50 border-foreground/[0.12]'}`}
           >
-            All Items
+            All
           </button>
           {folders.filter(f => f.parentId === null).map(f => (
             <button
@@ -3141,7 +2516,7 @@ export default function AdminInventory() {
                   <div className="relative">
                     <button onClick={() => setShowBulkTagMenu(v => !v)} className="font-body text-xs text-foreground/60 transition-colors hover:text-foreground">Tag</button>
                     {showBulkTagMenu && tags.length > 0 && (
-                      <div className="absolute left-0 top-6 z-50 min-w-[140px] rounded-xl border border-foreground/[0.12] bg-[#111] shadow-2xl py-1">
+                      <div className="absolute left-0 top-6 z-50 min-w-[140px] rounded-xl border border-foreground/[0.12] bg-card shadow-2xl py-1">
                         {tags.map(t => (
                           <button key={t.id} onClick={() => handleBulkTagLocal(t.id)}
                             className="flex w-full items-center gap-2 px-3 py-2 font-body text-xs text-foreground/70 hover:bg-foreground/[0.06] hover:text-foreground">
@@ -3261,7 +2636,7 @@ export default function AdminInventory() {
                       <div className="ml-2 flex items-center gap-1.5">
                         <span className="font-body text-xs text-foreground/35">Show</span>
                         <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); }}
-                          className="rounded-lg border border-foreground/[0.10] bg-[#1a1a1a] px-2 py-1 font-body text-xs text-foreground focus:outline-none"
+                          className="rounded-lg border border-foreground/[0.10] bg-muted px-2 py-1 font-body text-xs text-foreground focus:outline-none"
                         >
                           <option value={20}>20</option><option value={50}>50</option><option value={100}>100</option>
                         </select>
@@ -3351,7 +2726,7 @@ export default function AdminInventory() {
               className={`pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-sm font-body text-sm
                 ${t.type === 'error'   ? 'border-red-500/20 bg-red-950/80 text-red-300' :
                   t.type === 'success' ? 'border-emerald-500/20 bg-emerald-950/80 text-emerald-300' :
-                  'border-foreground/10 bg-[#1a1a1a]/95 text-foreground/80'}`}
+                  'border-foreground/10 bg-muted/95 text-foreground/80'}`}
             >
               <span>{t.msg}</span>
               <button onClick={() => dismissToast(t.id)} className="ml-1 text-current/50 hover:text-current">

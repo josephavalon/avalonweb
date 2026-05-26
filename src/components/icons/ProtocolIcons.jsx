@@ -2,6 +2,7 @@
  * Custom editorial SVG icons for Avalon Vitality protocol cards.
  * Line-weight: 1.5px stroke, no fill, foreground color via currentColor.
  * Style: precise medical-instrument aesthetic — not Lucide defaults.
+ * Visual labels only. Protocol availability is subject to clinical review.
  */
 
 const BASE = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' };

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 
 /**
  * Magnetic hover wrapper: child element drifts toward cursor within `strength` px.
@@ -10,12 +10,14 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
  */
 export default function MagneticButton({ children, strength = 18, className = '', as: As = 'div', ...rest }) {
   const ref = useRef(null);
+  const reduceMotion = useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const sx = useSpring(x, { stiffness: 220, damping: 18, mass: 0.5 });
   const sy = useSpring(y, { stiffness: 220, damping: 18, mass: 0.5 });
 
   const onMove = (e) => {
+    if (reduceMotion) return;
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -33,7 +35,7 @@ export default function MagneticButton({ children, strength = 18, className = ''
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      style={{ x: sx, y: sy }}
+      style={reduceMotion ? undefined : { x: sx, y: sy }}
       className={className}
       {...rest}
     >

@@ -15,7 +15,7 @@ const CATEGORIES = [
     key: 'recover',
     icon: Droplets,
     title: 'RECOVER',
-    subtitle: 'Hydration, hangover, jet lag',
+    subtitle: 'Hydration, travel, recovery',
     price: 'From $150',
     drips: [
       { name: 'Hydration', price: '$150' },
@@ -28,7 +28,7 @@ const CATEGORIES = [
     key: 'perform',
     icon: Zap,
     title: 'PERFORM',
-    subtitle: 'Energy, immunity, NAD+',
+    subtitle: 'Energy, wellness, NAD+',
     price: 'From $250',
     drips: [
       { name: 'Energy', price: '$250' },
@@ -41,7 +41,7 @@ const CATEGORIES = [
     key: 'elevate',
     icon: Sparkles,
     title: 'ELEVATE',
-    subtitle: 'CBD, exosomes, longevity',
+    subtitle: 'Advanced options by review',
     price: 'From $350',
     drips: [
       { name: 'IV CBD 33mg', price: '$250' },
@@ -57,6 +57,9 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
   const total = cart.reduce((sum, i) => sum + i.price, 0);
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cart checkout"
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
@@ -132,6 +135,9 @@ export default function OurDrips() {
             <h2 className="font-heading text-[9vw] md:text-7xl text-foreground tracking-tight leading-[0.92] uppercase">
               Choose Your Session
             </h2>
+            <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-foreground/50">
+              All sessions require intake, consent, and clinical approval.
+            </p>
             <div className="w-10 h-[2px] bg-foreground mt-3" />
           </div>
           <Link to="/book" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
@@ -162,8 +168,8 @@ export default function OurDrips() {
                 >
                   {/* Left: icon + text */}
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-[#c9a84c]/10 flex items-center justify-center shrink-0">
-                      <CatIcon className="w-5 h-5 text-[#c9a84c]" strokeWidth={1.5} />
+                    <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                      <CatIcon className="w-5 h-5 text-accent" strokeWidth={1.5} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-white font-bold text-base leading-none">{cat.title}</p>
@@ -172,7 +178,7 @@ export default function OurDrips() {
                   </div>
                   {/* Right: price + chevron */}
                   <div className="flex items-center gap-3 shrink-0 ml-4">
-                    <span className="text-[#c9a84c] font-bold text-sm">{cat.price}</span>
+                    <span className="text-accent font-bold text-sm">{cat.price}</span>
                     <ChevronRight
                       className="w-4 h-4 text-white/30 transition-transform duration-300"
                       style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
@@ -199,7 +205,7 @@ export default function OurDrips() {
                             className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0"
                           >
                             <span className="text-white/70 text-sm font-body">{drip.name}</span>
-                            <span className="text-[#c9a84c] text-sm font-bold ml-4 shrink-0">{drip.price}</span>
+                            <span className="text-accent text-sm font-bold ml-4 shrink-0">{drip.price}</span>
                           </div>
                         ))}
                         <Link

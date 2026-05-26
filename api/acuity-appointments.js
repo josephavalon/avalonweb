@@ -12,6 +12,7 @@
  */
 
 import { acuityFetch } from './_acuity.js';
+import { isLiveApiEnabled, localAppointments, requireInternalAccess } from './_lib/pre-api-guard.js';
 
 const TZ = 'America/Los_Angeles';
 
@@ -29,6 +30,13 @@ export default async function handler(req, res) {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
 
   try {
+    if (!isLiveApiEnabled()) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(200).json(localAppointments());
+    }
+
+    if (!requireInternalAccess(req, res, 'Acuity appointment list')) return;
+
     const params = new URLSearchParams({
       max: String(Math.min(Number(max) || 50, 200)),
       minDate: minDate || today,

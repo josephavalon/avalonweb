@@ -1,30 +1,36 @@
+import { redactLocalPhi } from './preApiSecurity.js';
+
 const PREFIX = 'av.local.';
 
 export function readLocal(key, fallback = null) {
   try {
     const raw = window.localStorage.getItem(`${PREFIX}${key}`);
     return raw ? JSON.parse(raw) : fallback;
-  } catch {
+  } catch (err) {
+    if (import.meta.env?.DEV) console.warn('[local-os-read]', key, err);
     return fallback;
   }
 }
 
 export function writeLocal(key, value) {
+  const safeValue = redactLocalPhi(value);
   try {
-    window.localStorage.setItem(`${PREFIX}${key}`, JSON.stringify(value));
+    window.localStorage.setItem(`${PREFIX}${key}`, JSON.stringify(safeValue));
     window.dispatchEvent(new CustomEvent('av.local.change', {
-      detail: { key, value, updatedAt: new Date().toISOString() },
+      detail: { key, value: safeValue, updatedAt: new Date().toISOString() },
     }));
   } catch {
-    // Local persistence is progressive enhancement only.
+    if (import.meta.env?.DEV) console.warn('[local-os-write]', key);
   }
-  return value;
+  return safeValue;
 }
 
 export function clearLocal(key) {
   try {
     window.localStorage.removeItem(`${PREFIX}${key}`);
-  } catch {}
+  } catch (err) {
+    if (import.meta.env?.DEV) console.warn('[local-os-clear]', key, err);
+  }
 }
 
 export function appendActivity(text, meta = {}) {

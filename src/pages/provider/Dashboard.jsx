@@ -16,14 +16,14 @@ import StatusPill from '@/components/ui/StatusPill';
 const EASE = [0.16, 1, 0.3, 1];
 
 const ACTIVITY = [
-  { id: 1, text: 'Marcus T. marked Paid — Myers\' Cocktail', time: '8m ago', dot: 'bg-emerald-400' },
-  { id: 2, text: 'Stephanie R. assigned to Elena V. — Beauty Drip', time: '22m ago', dot: 'bg-teal-400' },
-  { id: 3, text: 'Intake received — Priya S.', time: '41m ago', dot: 'bg-blue-400' },
-  { id: 4, text: 'GFE clearance pending — Serena W.', time: '1h ago', dot: 'bg-orange-400' },
-  { id: 5, text: 'James L. event confirmed — 8 guests', time: '2h ago', dot: 'bg-emerald-400' },
-  { id: 6, text: 'Payment link sent — James L.', time: '2h ago', dot: 'bg-blue-400' },
-  { id: 7, text: 'New request — Sofia R., Marina', time: '3h ago', dot: 'bg-blue-400' },
-  { id: 8, text: 'Ryan C. follow-up due', time: '4h ago', dot: 'bg-purple-400' },
+  { id: 1, text: 'RN marked Paid — Myers\' Cocktail', time: '8m ago', tone: 'accent' },
+  { id: 2, text: 'RN assigned to Client 012 — Beauty Drip', time: '22m ago', tone: 'neutral' },
+  { id: 3, text: 'Intake received — Client 005', time: '41m ago', tone: 'neutral' },
+  { id: 4, text: 'GFE clearance pending — Client 001', time: '1h ago', tone: 'danger' },
+  { id: 5, text: 'Event client confirmed — 8 guests', time: '2h ago', tone: 'accent' },
+  { id: 6, text: 'Payment link sent — Event client', time: '2h ago', tone: 'neutral' },
+  { id: 7, text: 'New request — Client 007, Marina', time: '3h ago', tone: 'neutral' },
+  { id: 8, text: 'Client 013 follow-up due', time: '4h ago', tone: 'neutral' },
 ];
 
 const RISKS = [
@@ -34,13 +34,13 @@ const RISKS = [
 ];
 
 const METRICS = [
-  { label: 'New Requests',   value: '8',      sub: '3 same-day',          icon: ClipboardList, color: '#64a0ff', urgent: false },
-  { label: 'Pending Confirm',value: '5',      sub: '2 need response',      icon: Clock,         color: '#fbbf24', urgent: false },
-  { label: 'Visits Today',   value: '3',      sub: '1 in progress',        icon: Calendar,      color: '#34d399', urgent: false },
-  { label: 'Needs Clearance',value: '4',      sub: '2 same-day',           icon: Shield,        color: '#f87171', urgent: true  },
-  { label: 'Nurses Available',value: '4',     sub: '2 assigned today',     icon: Users,         color: '#34d399', urgent: false },
-  { label: 'Payment Pending', value: '$660',  sub: '3 visits',             icon: DollarSign,    color: '#f87171', urgent: true  },
-  { label: 'Follow-Ups Due',  value: '9',     sub: '3 overdue',            icon: Heart,         color: '#a78bfa', urgent: false },
+  { label: 'New Requests',   value: '8',      sub: '3 same-day',          icon: ClipboardList, urgent: false },
+  { label: 'Pending Confirm',value: '5',      sub: '2 need response',      icon: Clock,         urgent: false },
+  { label: 'Visits Today',   value: '3',      sub: '1 in progress',        icon: Calendar,      urgent: false },
+  { label: 'Needs Clearance',value: '4',      sub: '2 same-day',           icon: Shield,        urgent: true  },
+  { label: 'Nurses Available',value: '4',     sub: '2 assigned today',     icon: Users,         urgent: false },
+  { label: 'Payment Pending', value: '$660',  sub: '3 visits',             icon: DollarSign,    urgent: true  },
+  { label: 'Follow-Ups Due',  value: '9',     sub: '3 overdue',            icon: Heart,         urgent: false },
   { label: 'Revenue Today',   value: '$1,280',sub: '3 paid visits',        icon: Activity,      color: 'hsl(var(--accent))', urgent: false },
 ];
 
@@ -63,6 +63,9 @@ function VisitDrawer({ req, onClose }) {
 
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Provider panel"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -171,8 +174,8 @@ function VisitDrawer({ req, onClose }) {
                       className="px-2.5 py-1 rounded-full border text-[9px] tracking-[0.1em] uppercase font-medium transition-all"
                       style={
                         status === s
-                          ? { background: 'rgba(201,168,76,0.15)', color: '#c9a84c', borderColor: 'rgba(201,168,76,0.4)' }
-                          : { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.38)' }
+                          ? { background: 'hsl(var(--accent) / 0.08)', color: 'hsl(var(--accent))', borderColor: 'hsl(var(--accent) / 0.24)' }
+                          : { borderColor: 'hsl(var(--foreground) / 0.08)', color: 'hsl(var(--foreground) / 0.38)' }
                       }
                     >
                       {s}
@@ -194,11 +197,11 @@ function VisitDrawer({ req, onClose }) {
           {/* Quick actions */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Text Client',   icon: MessageSquare, color: 'text-blue-300 border-blue-500/25 bg-blue-500/5' },
-              { label: 'Assign Nurse',  icon: Users,         color: 'text-teal-300 border-teal-500/25 bg-teal-500/5' },
-              { label: 'Mark Cleared',  icon: Shield,        color: 'text-emerald-300 border-emerald-500/25 bg-emerald-500/5' },
-              { label: 'Mark Paid',     icon: CheckCircle,   color: 'text-emerald-300 border-emerald-500/25 bg-emerald-500/5' },
-              { label: 'Complete',      icon: Zap,           color: 'text-accent border-accent/25 bg-accent/5' },
+              { label: 'Text Client',   icon: MessageSquare, color: 'text-foreground/65 border-foreground/15 bg-foreground/[0.03]' },
+              { label: 'Assign Nurse',  icon: Users,         color: 'text-foreground/65 border-foreground/15 bg-foreground/[0.03]' },
+              { label: 'Mark Cleared',  icon: Shield,        color: 'text-accent border-accent/20 bg-accent/[0.04]' },
+              { label: 'Mark Paid',     icon: CheckCircle,   color: 'text-accent border-accent/20 bg-accent/[0.04]' },
+              { label: 'Complete',      icon: Zap,           color: 'text-accent border-accent/20 bg-accent/[0.04]' },
               { label: 'Add Note',      icon: Edit3,         color: 'text-foreground/60 border-foreground/15 bg-foreground/[0.03]' },
             ].map(({ label, icon: Icon, color }) => (
               <button
@@ -279,7 +282,7 @@ function RequestCard({ req, onOpen }) {
             </div>
           ))}
           {req.nurse && (
-            <span className="font-body text-[9px] text-teal-400 ml-1">· {req.nurse}</span>
+            <span className="font-body text-[9px] text-foreground/45 ml-1">· {req.nurse}</span>
           )}
         </div>
 
@@ -354,8 +357,8 @@ export default function Dashboard() {
             >
               <div className="flex items-start justify-between mb-2.5">
                 <p className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/45 leading-tight max-w-[80%]">{m.label}</p>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: m.color + '18' }}>
-                  <Icon className="w-3.5 h-3.5" strokeWidth={1.5} style={{ color: m.color }} />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: m.urgent ? 'rgba(248,113,113,0.10)' : 'hsl(var(--foreground) / 0.06)' }}>
+                  <Icon className="w-3.5 h-3.5" strokeWidth={1.5} style={{ color: m.urgent ? 'rgb(248,113,113)' : 'hsl(var(--foreground) / 0.48)' }} />
                 </div>
               </div>
               <p className="font-heading text-3xl text-foreground leading-none tracking-tight mb-1">{m.value}</p>
@@ -384,7 +387,7 @@ export default function Dashboard() {
             <div className="space-y-1.5">
               {RISKS.map((r, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.level === 'red' ? 'bg-red-400' : 'bg-amber-400'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.level === 'red' ? 'bg-red-400' : 'bg-foreground/35'}`} />
                   <p className="font-body text-[11px] text-foreground/65">{r.text}</p>
                 </div>
               ))}
@@ -446,7 +449,7 @@ export default function Dashboard() {
             <div className="divide-y divide-foreground/[0.04]">
               {ACTIVITY.map((a) => (
                 <div key={a.id} className="px-5 py-3 flex items-start gap-3">
-                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${a.dot}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${a.tone === 'danger' ? 'bg-red-400' : a.tone === 'accent' ? 'bg-accent' : 'bg-foreground/25'}`} />
                   <div className="min-w-0 flex-1">
                     <p className="font-body text-[11px] text-foreground/75 leading-snug">{a.text}</p>
                     <p className="font-body text-[9px] mt-0.5 text-foreground/35">{a.time}</p>

@@ -5,24 +5,26 @@ import PageShell from '@/components/admin/PageShell';
 import { REQUESTS } from '@/fixtures/commandMockData';
 import { ShieldCheck, AlertTriangle, Clock, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { readLastBooking, saveLastBooking } from '@/lib/localOs';
+import { buildClinicalClearanceQueueItem } from '@/lib/clinicalClearance';
 
 const EASE = [0.16, 1, 0.3, 1];
 
 // ── Pipeline step colors ──────────────────────────────────────────────────────
 
 function stepColor(val) {
-  if (!val) return { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.10)', text: '#ffffff66' };
+  if (!val) return { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.10)', text: 'hsl(var(--foreground) / 0.40)' };
   const v = val.toLowerCase();
   if (v === 'received' || v === 'signed' || v === 'cleared') {
-    return { bg: 'rgba(16,185,129,0.12)', border: '#10b981', text: '#10b981' };
+    return { bg: 'rgba(16,185,129,0.12)', border: 'hsl(160 84% 39%)', text: 'hsl(160 84% 39%)' };
   }
   if (v === 'pending') {
-    return { bg: 'rgba(245,158,11,0.12)', border: '#f59e0b', text: '#f59e0b' };
+    return { bg: 'rgba(245,158,11,0.12)', border: 'hsl(38 92% 50%)', text: 'hsl(38 92% 50%)' };
   }
   if (v === 'blocked') {
-    return { bg: 'rgba(239,68,68,0.12)', border: '#ef4444', text: '#ef4444' };
+    return { bg: 'rgba(239,68,68,0.12)', border: 'hsl(var(--destructive))', text: 'hsl(var(--destructive))' };
   }
-  return { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.10)', text: '#ffffff66' };
+  return { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.10)', text: 'hsl(var(--foreground) / 0.40)' };
 }
 
 // ── Pipeline step badge ───────────────────────────────────────────────────────
@@ -36,7 +38,7 @@ function StepBadge({ label, value }) {
         fontSize: 9,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
-        color: '#ffffff',
+        color: 'hsl(var(--foreground))',
         opacity: 0.45,
       }}>{label}</span>
       <span style={{
@@ -61,6 +63,15 @@ function StepBadge({ label, value }) {
 // ── Overall clearance status ──────────────────────────────────────────────────
 
 function overallStatus(item) {
+  if (item.clearance) {
+    if (item.clearance.blocked?.length) return 'Blocked';
+    if (item.clearance.dispatchAllowed) return 'Cleared';
+    const first = item.clearance.blockers?.[0]?.key;
+    if (first === 'intake') return 'Intake Pending';
+    if (first === 'consent') return 'Consent Pending';
+    if (first === 'gfe') return 'GFE Pending';
+    return 'Dispatch Pending';
+  }
   if (item.gfe === 'Blocked' || item.intake === 'Blocked' || item.consent === 'Blocked') return 'Blocked';
   if (item.gfe === 'Cleared' && (item.consent === 'Signed') && item.intake === 'Received') return 'Cleared';
   if (item.gfe === 'Pending') return 'GFE Pending';
@@ -76,7 +87,7 @@ function SummaryTile({ label, value, accent }) {
     <div style={{
       flex: '1 1 0',
       minWidth: 120,
-      background: '#141414',
+      background: 'hsl(var(--card))',
       border: '1px solid rgba(255,255,255,0.06)',
       borderRadius: 10,
       padding: '18px 20px',
@@ -86,14 +97,14 @@ function SummaryTile({ label, value, accent }) {
         fontSize: 10,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
-        color: '#ffffff',
+        color: 'hsl(var(--foreground))',
         opacity: 0.5,
         margin: '0 0 6px',
       }}>{label}</p>
       <p style={{
         fontFamily: 'var(--font-heading)',
         fontSize: 30,
-        color: accent || '#ffffff',
+        color: accent || 'hsl(var(--foreground))',
         margin: 0,
         lineHeight: 1,
         letterSpacing: '0.02em',
@@ -104,7 +115,7 @@ function SummaryTile({ label, value, accent }) {
 
 // ── Filter chips ──────────────────────────────────────────────────────────────
 
-const TABS = ['All', 'Intake Pending', 'Consent Pending', 'GFE Pending', 'Cleared', 'Blocked'];
+const TABS = ['All', 'Intake Pending', 'Consent Pending', 'GFE Pending', 'Dispatch Pending', 'Cleared', 'Blocked'];
 
 function FilterChips({ active, onChange, counts }) {
   return (
@@ -120,9 +131,9 @@ function FilterChips({ active, onChange, counts }) {
               fontFamily: 'var(--font-body)',
               fontSize: 12,
               fontWeight: isActive ? 600 : 400,
-              color: isActive ? '#0A0A0A' : '#ffffffaa',
-              background: isActive ? '#c9a84c' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${isActive ? '#c9a84c' : 'rgba(255,255,255,0.08)'}`,
+              color: isActive ? 'hsl(var(--background))' : 'hsl(var(--foreground) / 0.66)',
+              background: isActive ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${isActive ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.08)'}`,
               borderRadius: 6,
               padding: '5px 14px',
               cursor: 'pointer',
@@ -140,7 +151,7 @@ function FilterChips({ active, onChange, counts }) {
                 padding: '1px 6px',
                 fontSize: 10,
                 fontWeight: 700,
-                color: isActive ? '#0A0A0A' : '#ffffffaa',
+                color: isActive ? 'hsl(var(--background))' : 'hsl(var(--foreground) / 0.66)',
               }}>{count}</span>
             )}
           </button>
@@ -157,27 +168,27 @@ function QBtn({ label, onClick, variant = 'ghost' }) {
     ghost: {
       background: 'rgba(255,255,255,0.04)',
       border: '1px solid rgba(255,255,255,0.10)',
-      color: '#ffffffcc',
+      color: 'hsl(var(--foreground) / 0.80)',
     },
     gold: {
-      background: '#c9a84c',
-      border: '1px solid #c9a84c',
-      color: '#0A0A0A',
+      background: 'hsl(var(--accent))',
+      border: '1px solid hsl(var(--accent))',
+      color: 'hsl(var(--background))',
     },
     danger: {
       background: 'rgba(239,68,68,0.10)',
       border: '1px solid rgba(239,68,68,0.35)',
-      color: '#ef4444',
+      color: 'hsl(var(--destructive))',
     },
     success: {
       background: 'rgba(16,185,129,0.10)',
       border: '1px solid rgba(16,185,129,0.35)',
-      color: '#10b981',
+      color: 'hsl(160 84% 39%)',
     },
     amber: {
       background: 'rgba(245,158,11,0.10)',
       border: '1px solid rgba(245,158,11,0.35)',
-      color: '#f59e0b',
+      color: 'hsl(38 92% 50%)',
     },
   };
   const s = styles[variant] || styles.ghost;
@@ -206,11 +217,12 @@ function QBtn({ label, onClick, variant = 'ghost' }) {
 
 function OverallPill({ status }) {
   const map = {
-    'Cleared':         { bg: 'rgba(16,185,129,0.12)', border: '#10b981',  text: '#10b981',  icon: <ShieldCheck size={11} /> },
-    'Blocked':         { bg: 'rgba(239,68,68,0.12)',  border: '#ef4444',  text: '#ef4444',  icon: <XCircle size={11} /> },
-    'Intake Pending':  { bg: 'rgba(245,158,11,0.10)', border: '#f59e0b',  text: '#f59e0b',  icon: <Clock size={11} /> },
-    'Consent Pending': { bg: 'rgba(245,158,11,0.10)', border: '#f59e0b',  text: '#f59e0b',  icon: <Clock size={11} /> },
-    'GFE Pending':     { bg: 'rgba(245,158,11,0.10)', border: '#f59e0b',  text: '#f59e0b',  icon: <AlertTriangle size={11} /> },
+    'Cleared':         { bg: 'rgba(16,185,129,0.12)', border: 'hsl(160 84% 39%)',  text: 'hsl(160 84% 39%)',  icon: <ShieldCheck size={11} /> },
+    'Blocked':         { bg: 'rgba(239,68,68,0.12)',  border: 'hsl(var(--destructive))',  text: 'hsl(var(--destructive))',  icon: <XCircle size={11} /> },
+    'Intake Pending':  { bg: 'rgba(245,158,11,0.10)', border: 'hsl(38 92% 50%)',  text: 'hsl(38 92% 50%)',  icon: <Clock size={11} /> },
+    'Consent Pending': { bg: 'rgba(245,158,11,0.10)', border: 'hsl(38 92% 50%)',  text: 'hsl(38 92% 50%)',  icon: <Clock size={11} /> },
+    'GFE Pending':     { bg: 'rgba(245,158,11,0.10)', border: 'hsl(38 92% 50%)',  text: 'hsl(38 92% 50%)',  icon: <AlertTriangle size={11} /> },
+    'Dispatch Pending':{ bg: 'rgba(245,158,11,0.10)', border: 'hsl(38 92% 50%)',  text: 'hsl(38 92% 50%)',  icon: <AlertTriangle size={11} /> },
   };
   const c = map[status] || map['Intake Pending'];
   return (
@@ -247,7 +259,7 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.4, delay: idx * 0.04, ease: EASE }}
       style={{
-        background: '#141414',
+        background: 'hsl(var(--card))',
         border: `1px solid ${status === 'Blocked' ? 'rgba(239,68,68,0.25)' : status === 'Cleared' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)'}`,
         borderRadius: 10,
         overflow: 'hidden',
@@ -271,7 +283,7 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
             <p style={{
               fontFamily: 'var(--font-heading)',
               fontSize: 17,
-              color: '#ffffff',
+              color: 'hsl(var(--foreground))',
               margin: 0,
               letterSpacing: '0.04em',
             }}>{item.client}</p>
@@ -281,8 +293,8 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
                 fontSize: 9,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
-                color: '#c9a84c',
-                border: '1px solid rgba(201,168,76,0.35)',
+                color: 'hsl(var(--accent))',
+                border: '1px solid hsl(var(--accent) / 0.35)',
                 borderRadius: 4,
                 padding: '2px 6px',
               }}>VIP</span>
@@ -291,7 +303,7 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
           <p style={{
             fontFamily: 'var(--font-body)',
             fontSize: 12,
-            color: '#ffffffaa',
+            color: 'hsl(var(--foreground) / 0.66)',
             margin: '2px 0 0',
           }}>{item.therapy} · {item.date} {item.time}</p>
         </div>
@@ -336,21 +348,35 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
               {/* detail grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
                 <Detail label="Location" value={item.location} />
-                <Detail label="Nurse" value={item.nurse || 'Unassigned'} accent={!item.nurse ? '#f59e0b' : undefined} />
-                <Detail label="Payment" value={item.payment} accent={item.payment === 'Pending' ? '#ef4444' : item.payment === 'Paid' ? '#10b981' : undefined} />
+                <Detail label="Nurse" value={item.nurse || 'Unassigned'} accent={!item.nurse ? 'hsl(38 92% 50%)' : undefined} />
+                <Detail label="Payment" value={item.payment} accent={item.payment === 'Pending' ? 'hsl(var(--destructive))' : item.payment === 'Paid' ? 'hsl(160 84% 39%)' : undefined} />
                 <Detail label="Source" value={item.source} />
               </div>
 
               {item.notes && (
                 <div>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffffff55', margin: '0 0 4px' }}>Notes</p>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#ffffffbb', margin: 0 }}>{item.notes}</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(var(--foreground) / 0.33)', margin: '0 0 4px' }}>Notes</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'hsl(var(--foreground) / 0.73)', margin: 0 }}>{item.notes}</p>
+                </div>
+              )}
+
+              {item.clearance && (
+                <div style={{
+                  border: '1px solid rgba(245,158,11,0.18)',
+                  background: 'rgba(245,158,11,0.06)',
+                  borderRadius: 10,
+                  padding: 14,
+                }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(38 92% 50%)', margin: '0 0 6px' }}>Dispatch Gate</p>
+                  <p style={{ fontFamily: 'var(--font-heading)', fontSize: 22, lineHeight: 1, color: 'hsl(var(--foreground))', margin: 0, textTransform: 'uppercase' }}>{item.clearance.label}</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'hsl(var(--foreground) / 0.66)', margin: '8px 0 0' }}>{item.clearance.summary}</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'hsl(var(--foreground) / 0.47)', margin: '4px 0 0' }}>{item.clearance.nextAction}</p>
                 </div>
               )}
 
               {/* quick actions */}
               <div>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffffff55', margin: '0 0 10px' }}>Clinical Actions</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(var(--foreground) / 0.33)', margin: '0 0 10px' }}>Clinical Actions</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {item.intake !== 'Received' && (
                     <QBtn
@@ -411,8 +437,8 @@ function ClearanceCard({ item, idx, onUpdate, toast }) {
 function Detail({ label, value, accent }) {
   return (
     <div>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffffff44', margin: '0 0 3px' }}>{label}</p>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: accent || '#ffffffcc', margin: 0 }}>{value || '—'}</p>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(var(--foreground) / 0.27)', margin: '0 0 3px' }}>{label}</p>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: accent || 'hsl(var(--foreground) / 0.80)', margin: 0 }}>{value || '—'}</p>
     </div>
   );
 }
@@ -421,10 +447,37 @@ function Detail({ label, value, accent }) {
 
 export default function Invoicing() {
   const { toast } = useToast();
-  const [items, setItems] = useState(REQUESTS);
+  const [items, setItems] = useState(() => {
+    const latest = readLastBooking();
+    return latest
+      ? [buildClinicalClearanceQueueItem(latest), ...REQUESTS.filter((item) => item.id !== latest.id)]
+      : REQUESTS;
+  });
   const [activeTab, setActiveTab] = useState('All');
 
   function handleUpdate(id, patch) {
+    const target = items.find((item) => item.id === id);
+    if (target?.isLocalBooking) {
+      const current = readLastBooking();
+      const nextBooking = { ...(current || target.bookingSnapshot || {}) };
+      if (patch.intake === 'Received') nextBooking.intake = 'Done';
+      if (patch.consent === 'Signed') nextBooking.consent = 'Done';
+      if (patch.gfe === 'Cleared') {
+        const clearedAt = new Date();
+        const expiresAt = new Date(clearedAt.getTime());
+        expiresAt.setDate(expiresAt.getDate() + 365);
+        nextBooking.gfe = 'Cleared';
+        nextBooking.gfeClearedAt = clearedAt.toISOString();
+        nextBooking.gfeExpiresAt = expiresAt.toISOString();
+      }
+      if (patch.gfe === 'Blocked') {
+        nextBooking.gfe = 'Blocked';
+        nextBooking.status = 'Clearance Pending';
+      }
+      const rebuilt = buildClinicalClearanceQueueItem(saveLastBooking(nextBooking));
+      setItems((prev) => prev.map((r) => r.id === id ? rebuilt : r));
+      return;
+    }
     setItems((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r));
   }
 
@@ -457,10 +510,10 @@ export default function Invoicing() {
 
         {/* summary strip */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <SummaryTile label="Needs Attention" value={summary.needs} accent={summary.needs > 0 ? '#f59e0b' : '#ffffff'} />
-          <SummaryTile label="Cleared" value={summary.cleared} accent="#10b981" />
-          <SummaryTile label="Blocked" value={summary.blocked} accent={summary.blocked > 0 ? '#ef4444' : '#ffffff'} />
-          <SummaryTile label="GFE Pending" value={summary.gfe} accent={summary.gfe > 0 ? '#f59e0b' : '#ffffff'} />
+          <SummaryTile label="Needs Attention" value={summary.needs} accent={summary.needs > 0 ? 'hsl(38 92% 50%)' : 'hsl(var(--foreground))'} />
+          <SummaryTile label="Cleared" value={summary.cleared} accent="hsl(160 84% 39%)" />
+          <SummaryTile label="Blocked" value={summary.blocked} accent={summary.blocked > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))'} />
+          <SummaryTile label="GFE Pending" value={summary.gfe} accent={summary.gfe > 0 ? 'hsl(38 92% 50%)' : 'hsl(var(--foreground))'} />
         </div>
 
         {/* filter chips */}
@@ -480,7 +533,7 @@ export default function Invoicing() {
                 style={{
                   fontFamily: 'var(--font-body)',
                   fontSize: 14,
-                  color: '#ffffff55',
+                  color: 'hsl(var(--foreground) / 0.33)',
                   padding: '40px 0',
                   textAlign: 'center',
                 }}

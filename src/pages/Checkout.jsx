@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Droplets, Syringe, ArrowRight, ArrowLeft,
-  Check, X, MapPin, User, CreditCard,
+  Check, X, CreditCard,
   Sparkles, Loader2, RefreshCw, Calendar,
+  ShieldCheck,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
@@ -13,11 +14,13 @@ import { COVERED_ZIPS } from '@/lib/serviceArea';
 import { useSeo } from '@/lib/seo';
 import { acuityTypeForCart } from '@/lib/acuityAppointmentTypes';
 import { avalonErrorClass, avalonLabelClass, avalonLightFieldClass } from '@/components/ui/formStyles';
+import { orchestrateOrderHandoff } from '@/lib/platformOps';
+import { readBookingDraft, readLastBooking } from '@/lib/localOs';
+import { getDepositAmountDollars } from '@/lib/checkoutConfig';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
+import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
 
-const EASE = [0.16, 1, 0.3, 1];
-
-const STEPS = ['Review', 'Appointment', 'Contact', 'Payment'];
-const STEP_ICONS = [Check, MapPin, User, CreditCard];
+const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 
 /* ─── Step indicator ─────────────────────────────────────────── */
 function StepBar({ current }) {
@@ -37,11 +40,11 @@ function StepBar({ current }) {
               }`}>
                 {done
                   ? <Check className="w-3.5 h-3.5 text-background" strokeWidth={2.5} />
-                  : <Icon className={`w-3.5 h-3.5 ${active ? 'text-foreground' : 'text-foreground/30'}`} strokeWidth={1.8} />
+                  : <Icon className={`w-3.5 h-3.5 ${active ? 'text-foreground' : 'text-foreground/45'}`} strokeWidth={1.8} />
                 }
               </div>
               <span className={`font-body text-[9px] tracking-[0.2em] uppercase hidden sm:block ${
-                active ? 'text-foreground' : done ? 'text-accent' : 'text-foreground/30'
+                active ? 'text-foreground' : done ? 'text-accent' : 'text-foreground/45'
               }`}>{label}</span>
             </div>
             {i < STEPS.length - 1 && (
@@ -56,6 +59,55 @@ function StepBar({ current }) {
   );
 }
 
+function CheckoutTrustConsole({ current, items, membership, appointment }) {
+  const hasVisit = items.length > 0;
+  const rail = [
+    {
+      icon: CreditCard,
+      label: hasVisit ? 'Deposit' : 'Billing',
+      value: hasVisit ? `$${DEPOSIT_DUE}` : (membership ? `$${membership.price}` : 'Ready'),
+      active: current >= 0,
+    },
+    {
+      icon: Calendar,
+      label: 'Acuity',
+      value: appointment?.acuitySlot ? 'Locked' : 'Slot',
+      active: current >= 1,
+    },
+    {
+      icon: ShieldCheck,
+      label: 'GFE',
+      value: 'Queued',
+      active: current >= 2,
+    },
+    {
+      icon: Sparkles,
+      label: 'RN',
+      value: 'Open',
+      active: current >= 3,
+    },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
+      className="mb-7 grid grid-cols-4 gap-2 rounded-[1.35rem] border border-accent/20 bg-accent/[0.055] p-2 shadow-[0_18px_70px_hsl(var(--accent)/0.08)] backdrop-blur-xl"
+    >
+      {rail.map(({ icon: Icon, label, value, active }) => (
+        <div key={label} className={`rounded-xl border px-2 py-2.5 text-center transition-colors ${
+          active ? 'border-accent/24 bg-background/55' : 'border-foreground/[0.08] bg-background/30'
+        }`}>
+          <Icon className={`mx-auto h-3.5 w-3.5 ${active ? 'text-accent' : 'text-foreground/45'}`} strokeWidth={1.6} />
+          <p className="mt-1 font-body text-[8px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
+          <p className="mt-0.5 truncate font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
 /* ─── Step 0: Review ─────────────────────────────────────────── */
 function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext }) {
   const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
@@ -63,10 +115,19 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
 
   if (!hasItems) {
     return (
-      <div className="text-center py-16">
-        <p className="font-body text-foreground/40 text-sm tracking-widest uppercase mb-6">Your cart is empty</p>
-        <Link to="/#treatments" className="font-body text-xs tracking-widest uppercase text-accent hover:text-accent/70 transition-colors">
-          ← Browse Treatments
+      <div className="mx-auto max-w-sm py-16 text-center">
+        <h1 className="font-heading text-h1 uppercase text-foreground">Empty Cart</h1>
+        <p className="mt-3 font-body text-sm leading-relaxed text-foreground/52">
+          Start with a visit, then return here to confirm timing and payment.
+        </p>
+        <Link
+          to="/book"
+          className="mt-7 flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-foreground px-6 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background transition-opacity hover:opacity-85"
+        >
+          Start Booking <ArrowRight className="h-4 w-4" strokeWidth={2} />
+        </Link>
+        <Link to="/protocols" className="mt-4 inline-flex min-h-10 items-center font-body text-xs uppercase tracking-[0.16em] text-foreground/45 transition-colors hover:text-foreground/70">
+          Browse Protocols
         </Link>
       </div>
     );
@@ -74,7 +135,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
 
   return (
     <div className="space-y-4">
-      <h2 className="font-heading text-3xl md:text-5xl text-foreground tracking-wide uppercase mb-6">Review Order</h2>
+      <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Review Order</h1>
 
       {/* One-time items */}
       {items.length > 0 && (
@@ -93,7 +154,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
                 <p className="font-body text-[10px] text-foreground/40">{item.type === 'iv' ? '/ session' : 'per shot'}</p>
               </div>
               <span className="font-heading text-xl text-foreground tracking-wide">${item.price.toLocaleString()}</span>
-              <button type="button" onClick={() => onRemoveItem(item.cartKey)} className="text-foreground/30 hover:text-foreground transition-colors p-1 focus:outline-none">
+              <button type="button" onClick={() => onRemoveItem(item.cartKey)} aria-label={`Remove ${item.label}`} className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
                 <X className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </div>
@@ -102,7 +163,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
             <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Visit Subtotal</span>
             <span className="font-heading text-2xl text-foreground tracking-wide">${itemsTotal.toLocaleString()}</span>
           </div>
-          <p className="font-body text-[10px] text-foreground/30 px-1">Card authorized now, charged after your appointment.</p>
+          <p className="font-body text-[10px] text-foreground/45 px-1">${DEPOSIT_DUE} deposit at confirmation. Balance after visit.</p>
         </div>
       )}
 
@@ -122,11 +183,11 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
               <span className="font-heading text-xl text-foreground tracking-wide">${membership.price.toLocaleString()}</span>
               <p className="font-body text-[10px] text-foreground/40">/{membership.billing === 'annual' ? 'yr' : 'mo'}</p>
             </div>
-            <button type="button" onClick={onClearMembership} className="text-foreground/30 hover:text-foreground transition-colors p-1 focus:outline-none">
+            <button type="button" onClick={onClearMembership} aria-label="Remove subscription from cart" className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
               <X className="w-4 h-4" strokeWidth={1.8} />
             </button>
           </div>
-          <p className="font-body text-[10px] text-foreground/30 px-1">Recurring {membership.billing} charge. Cancel anytime.</p>
+          <p className="font-body text-[10px] text-foreground/45 px-1">Recurring {membership.billing} charge. Cancel anytime.</p>
         </div>
       )}
 
@@ -144,19 +205,8 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
 }
 
 /* ─── Step 1: Appointment scheduling ─────────────────────────── */
-const TZ = 'America/Los_Angeles';
-
-function formatTimeLabel(isoString) {
-  const d = new Date(isoString);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ });
-}
-
-function todayString() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD
-}
-
 function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: defaultValues || {
       date: '',
       address: '',
@@ -219,12 +269,15 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         if (!res.ok) continue;
         const data = await res.json();
         if (data?.length > 0) {
-          // Programmatically update the date field via react-hook-form setValue
           setSlots(data);
+          setNextAvailLoading(false);
           return dateStr;
         }
       }
-    } catch {}
+    } catch (err) {
+      setSlotsError('Could not find available slots. Please try again.');
+      if (import.meta.env?.DEV) console.warn('[checkout-next-available]', err);
+    }
     setNextAvailLoading(false);
     return null;
   }, [appointmentTypeId]);
@@ -244,14 +297,15 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <h2 className="font-heading text-3xl md:text-5xl text-foreground tracking-wide uppercase mb-6">Appointment</h2>
+      <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Appointment</h1>
 
       {/* Address */}
       <div>
-        <label className={labelClass}>Service Address *</label>
+        <label htmlFor="co-service-address" className={labelClass}>Service Address *</label>
         <input
+          id="co-service-address"
           {...register('address', { required: 'Address required' })}
-          placeholder="123 Main St, San Francisco, CA"
+          placeholder="Street, unit, city"
           className={fieldClass}
         />
         {errors.address && <p className={errClass}>{errors.address.message}</p>}
@@ -259,8 +313,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       {/* ZIP code — service area enforcement */}
       <div>
-        <label className={labelClass}>ZIP Code *</label>
+        <label htmlFor="co-zip-code" className={labelClass}>ZIP Code *</label>
         <input
+          id="co-zip-code"
           {...register('zip', {
             required: 'ZIP code required',
             pattern: { value: /^\d{5}$/, message: 'Enter a valid 5-digit ZIP' },
@@ -279,8 +334,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       {/* Date picker */}
       <div>
-        <label className={labelClass}>Select Date *</label>
+        <label htmlFor="co-appt-date" className={labelClass}>Select Date *</label>
         <input
+          id="co-appt-date"
           type="date"
           {...register('date', { required: 'Date required' })}
           className={fieldClass}
@@ -329,7 +385,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
             {!slotsLoading && !slotsError && slots.length === 0 && selectedDate && (
               <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <Calendar className="w-4 h-4 text-foreground/35 shrink-0" strokeWidth={1.5} />
+                  <Calendar className="w-4 h-4 text-foreground/45 shrink-0" strokeWidth={1.5} />
                   <p className="font-body text-xs text-foreground/50">No availability on this date.</p>
                 </div>
                 <button
@@ -337,8 +393,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                   onClick={async () => {
                     const next = await findNextAvailable(selectedDate);
                     if (next) {
-                      const el = document.querySelector('input[type="date"]');
-                      if (el) { el.value = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
+                      setValue('date', next);
                     }
                     setNextAvailLoading(false);
                   }}
@@ -369,7 +424,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                         timeLabel: label,
                         timezone: TZ,
                       })}
-                      className={`py-2.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
+                      className={`py-3.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
                         active
                           ? 'bg-accent text-background shadow-[0_0_10px_-2px_hsl(var(--accent)/0.5)]'
                           : 'border border-white/15 text-foreground/70 hover:border-accent/50 hover:text-foreground'
@@ -387,8 +442,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>Date of Birth *</label>
+          <label htmlFor="co-dob" className={labelClass}>Date of Birth *</label>
           <input
+            id="co-dob"
             type="date"
             {...register('dob', { required: 'Date of birth required' })}
             className={fieldClass}
@@ -396,8 +452,8 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
           {errors.dob && <p className={errClass}>{errors.dob.message}</p>}
         </div>
         <div>
-          <label className={labelClass}>Guests *</label>
-          <select {...register('guests', { required: true })} className={fieldClass}>
+          <label htmlFor="co-guests" className={labelClass}>Guests *</label>
+          <select id="co-guests" {...register('guests', { required: true })} className={fieldClass}>
             {['1', '2', '3', '4', '5+'].map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
         </div>
@@ -405,8 +461,8 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <label className={labelClass}>Medical Conditions *</label>
-          <select {...register('medicalConditions', { required: true })} className={fieldClass}>
+          <label htmlFor="co-medical-conditions" className={labelClass}>Medical Conditions *</label>
+          <select id="co-medical-conditions" {...register('medicalConditions', { required: true })} className={fieldClass}>
             {[
               'None of the above',
               'Allergies',
@@ -427,8 +483,8 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
             ['ivBefore', 'IV before?'],
           ].map(([name, label]) => (
             <div key={name}>
-              <label className={labelClass}>{label}</label>
-              <select {...register(name, { required: true })} className={fieldClass}>
+              <label htmlFor={`co-${name}`} className={labelClass}>{label}</label>
+              <select id={`co-${name}`} {...register(name, { required: true })} className={fieldClass}>
                 <option value="No">No</option>
                 <option value="Yes">Yes</option>
               </select>
@@ -439,8 +495,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       {/* Notes */}
       <div>
-        <label className={labelClass}>Notes for your RN</label>
+        <label htmlFor="co-medical-notes" className={labelClass}>Notes for your RN</label>
         <textarea
+          id="co-medical-notes"
           {...register('notes')}
           rows={3}
           placeholder="Allergies, access notes, health conditions, preferences…"
@@ -449,8 +506,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       <div>
-        <label className={labelClass}>Allergies or Sensitivities</label>
+        <label htmlFor="co-allergies" className={labelClass}>Allergies or Sensitivities</label>
         <textarea
+          id="co-allergies"
           {...register('allergies')}
           rows={2}
           placeholder="None, or list details"
@@ -459,8 +517,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       <div>
-        <label className={labelClass}>Medications / Supplements</label>
+        <label htmlFor="co-medications" className={labelClass}>Medications / Supplements</label>
         <textarea
+          id="co-medications"
           {...register('medications')}
           rows={2}
           placeholder="None, or list details"
@@ -469,8 +528,9 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       <div>
-        <label className={labelClass}>Emergency Contact *</label>
+        <label htmlFor="co-emergency-contact" className={labelClass}>Emergency Contact *</label>
         <input
+          id="co-emergency-contact"
           {...register('emergencyContact', { required: 'Emergency contact required' })}
           placeholder="Name + phone"
           className={fieldClass}
@@ -479,7 +539,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       <div className="space-y-0 rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/35 px-4 pt-4 pb-3">
+        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/45 px-4 pt-4 pb-3">
           Acknowledgments — all required to continue
         </p>
         {[
@@ -514,7 +574,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onBack} className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
+        <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
         <button
@@ -527,7 +587,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       {!selectedSlot && selectedDate && slots.length > 0 && (
-        <p className="font-body text-[10px] text-foreground/35 text-center -mt-1">Select a time slot to continue</p>
+        <p className="font-body text-[10px] text-foreground/45 text-center -mt-1">Select a time slot to continue</p>
       )}
     </form>
   );
@@ -543,24 +603,25 @@ function ContactStep({ onNext, onBack, defaultValues }) {
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-5">
-      <h2 className="font-heading text-3xl md:text-5xl text-foreground tracking-wide uppercase mb-6">Contact Info</h2>
+      <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Contact Info</h1>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>First Name *</label>
-          <input {...register('firstName', { required: 'Required' })} placeholder="First" className={fieldClass} />
+          <label htmlFor="co-first-name" className={labelClass}>First Name *</label>
+          <input id="co-first-name" {...register('firstName', { required: 'Required' })} placeholder="First" className={fieldClass} />
           {errors.firstName && <p className={errClass}>{errors.firstName.message}</p>}
         </div>
         <div>
-          <label className={labelClass}>Last Name *</label>
-          <input {...register('lastName', { required: 'Required' })} placeholder="Last" className={fieldClass} />
+          <label htmlFor="co-last-name" className={labelClass}>Last Name *</label>
+          <input id="co-last-name" {...register('lastName', { required: 'Required' })} placeholder="Last" className={fieldClass} />
           {errors.lastName && <p className={errClass}>{errors.lastName.message}</p>}
         </div>
       </div>
 
       <div>
-        <label className={labelClass}>Email *</label>
+        <label htmlFor="co-email" className={labelClass}>Email *</label>
         <input
+          id="co-email"
           type="email"
           inputMode="email"
           {...register('email', {
@@ -574,8 +635,9 @@ function ContactStep({ onNext, onBack, defaultValues }) {
       </div>
 
       <div>
-        <label className={labelClass}>Phone *</label>
+        <label htmlFor="co-phone" className={labelClass}>Phone *</label>
         <input
+          id="co-phone"
           type="tel"
           inputMode="tel"
           {...register('phone', { required: 'Phone required' })}
@@ -586,7 +648,7 @@ function ContactStep({ onNext, onBack, defaultValues }) {
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onBack} className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
+        <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
         <button type="submit" className="flex-1 flex items-center justify-center gap-2.5 py-3.5 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-colors">
@@ -597,18 +659,52 @@ function ContactStep({ onNext, onBack, defaultValues }) {
   );
 }
 
-/* ─── Step 3: Payment ────────────────────────────────────────── */
+/* ─── Step 3: Reserve ────────────────────────────────────────── */
 function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const paymentMethod = 'card';
+  const safeContact = contact || {};
 
   const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
   const hasMembership = !!membership;
   const hasItems = items.length > 0;
+  const subscriptionDue = membership?.price || 0;
+  const dueToday = (hasItems ? DEPOSIT_DUE : 0) + subscriptionDue || DEPOSIT_DUE;
+  const futureBalance = Math.max(0, itemsTotal - (hasItems ? DEPOSIT_DUE : 0));
+  const paymentMethods = [
+    { id: 'card', label: 'Card checkout', helper: 'Secure card handoff', icon: CreditCard, status: 'Active', active: true },
+  ];
 
   const handleCheckout = async () => {
+    if (!safeContact.firstName || !safeContact.email) {
+      setError('Add client contact before checkout.');
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'legacy_checkout',
+        reason: 'contact_missing',
+        has_membership: hasMembership,
+        item_count: items.length,
+      });
+      return;
+    }
+    if (paymentMethod !== 'card') {
+      setError('That payment method is not connected yet.');
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'legacy_checkout',
+        reason: 'payment_method_unavailable',
+        method: paymentMethod,
+      });
+      return;
+    }
     setLoading(true);
     setError(null);
+    track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
+      funnel: 'legacy_checkout',
+      mode: hasMembership ? 'subscription' : 'payment',
+      has_membership: hasMembership,
+      item_count: items.length,
+      deposit_due: DEPOSIT_DUE,
+    });
     try {
       // Determine mode — if there's a subscription, that goes first
       // (one-time items can be a separate session or combined)
@@ -622,11 +718,11 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           items: hasItems ? items : [],
           membership: hasMembership ? membership : null,
           contact: {
-            name: `${contact.firstName} ${contact.lastName}`,
-            firstName: contact.firstName,
-            lastName: contact.lastName,
-            email: contact.email,
-            phone: contact.phone,
+            name: `${safeContact.firstName} ${safeContact.lastName || ''}`.trim(),
+            firstName: safeContact.firstName,
+            lastName: safeContact.lastName,
+            email: safeContact.email,
+            phone: safeContact.phone,
           },
           appointment: appointment
             ? {
@@ -643,10 +739,50 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
+      orchestrateOrderHandoff({
+        id: `CHK-${Date.now().toString().slice(-6)}`,
+        service: membership ? `${membership.name} Subscription` : (items[0]?.label || 'Avalon visit'),
+        plan: membership?.name,
+        date: appointment?.date || 'First visit pending',
+        time: appointment?.acuitySlot?.timeLabel || 'Schedule intake',
+        address: appointment?.address || 'Service area pending',
+        items,
+        subtotal: itemsTotal,
+        contact: {
+          name: `${safeContact.firstName} ${safeContact.lastName || ''}`.trim(),
+          firstName: safeContact.firstName,
+          lastName: safeContact.lastName,
+          email: safeContact.email,
+          phone: safeContact.phone,
+        },
+        nurse: 'Unassigned',
+        gfe: 'Pending',
+        gfeRequired: true,
+        depositAmount: DEPOSIT_DUE,
+        status: membership ? 'Subscription intake' : 'Scheduling received',
+        source: membership ? 'Subscription checkout' : 'Checkout',
+        subscription: Boolean(membership),
+        orderType: membership ? 'subscription' : 'recovery',
+        productFamily: membership ? 'subscription' : 'iv',
+        appointmentChannel: 'mobile',
+        isNewClient: true,
+        visitCount: 0,
+      }, {
+        source: membership ? 'subscription' : 'checkout',
+        type: membership ? 'Subscription' : 'One-time visit',
+        scope: membership ? 'All subscription dates' : 'Single appointment',
+        depositAmount: DEPOSIT_DUE,
+      });
       if (data.url) window.location.href = data.url;
     } catch (err) {
       setError(err.message);
       setLoading(false);
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'legacy_checkout',
+        reason: err.message || 'checkout_request_failed',
+        has_membership: hasMembership,
+        item_count: items.length,
+      });
     }
   };
 
@@ -654,10 +790,10 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading text-3xl md:text-5xl text-foreground tracking-wide uppercase mb-6">Payment</h2>
+      <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Reserve</h1>
 
       {/* Order summary */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+      <div className="rounded-[1.35rem] border border-white/10 bg-background/62 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-xl space-y-3">
         <p className={labelClass}>Order Summary</p>
         {items.map((item) => (
           <div key={item.cartKey} className="flex justify-between items-center">
@@ -672,14 +808,62 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </div>
         )}
         <div className="border-t border-white/10 pt-3 flex justify-between items-center">
-          <span className={labelClass}>Total Due Today</span>
+          <span className={labelClass}>{hasItems && !hasMembership ? 'Deposit Due Today' : 'Due Today'}</span>
           <span className="font-heading text-2xl text-foreground tracking-wide">
-            ${(itemsTotal + (membership?.price || 0)).toLocaleString()}
+            ${dueToday.toLocaleString()}
           </span>
         </div>
-        {hasItems && !hasMembership && (
-          <p className="font-body text-[10px] text-foreground/30">Card authorized now. Charged after your visit is completed.</p>
+        {hasItems && futureBalance > 0 && (
+          <div className="flex justify-between items-center">
+            <span className={labelClass}>Balance After Visit</span>
+            <span className="font-body text-xs font-semibold text-foreground/70">${futureBalance.toLocaleString()}</span>
+          </div>
         )}
+        {hasItems && !hasMembership && (
+          <p className="font-body text-[10px] text-foreground/45">Deposit locks the slot. Balance after your visit.</p>
+        )}
+      </div>
+
+      <div className="rounded-[1.35rem] border border-white/10 bg-background/62 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-xl space-y-3">
+        <p className={labelClass}>Reserve Method</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {paymentMethods.map((method) => {
+            const Icon = method.icon;
+            const selected = paymentMethod === method.id;
+            return (
+              <button
+                key={method.id}
+                type="button"
+                onClick={() => {}}
+                disabled={!method.active}
+                className={`min-h-[64px] rounded-2xl border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-55 ${
+                  selected ? 'border-accent/45 bg-accent/[0.08]' : 'border-foreground/[0.10] bg-background/[0.18] hover:border-foreground/25'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${
+                    selected ? 'border-accent/35 bg-accent/[0.12] text-accent' : 'border-foreground/[0.10] text-foreground/55'
+                  }`}>
+                    <Icon className="h-4 w-4" strokeWidth={1.7} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+                      {method.label}
+                    </span>
+                    <span className="mt-0.5 block truncate font-body text-[10px] text-foreground/42">
+                      {method.helper}
+                    </span>
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.12em] ${
+                    method.active ? 'bg-emerald-500/10 text-emerald-300' : 'bg-foreground/[0.06] text-foreground/45'
+                  }`}>
+                    {method.status}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Appointment + contact recap */}
@@ -697,9 +881,9 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         )}
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
           <p className={`${labelClass} mb-1`}>Contact</p>
-          <p className="font-body text-xs text-foreground">{contact.firstName} {contact.lastName}</p>
-          <p className="font-body text-[10px] text-foreground/50 mt-0.5">{contact.email}</p>
-          <p className="font-body text-[10px] text-foreground/50">{contact.phone}</p>
+          <p className="font-body text-xs text-foreground">{safeContact.firstName || 'Missing'} {safeContact.lastName || ''}</p>
+          <p className="font-body text-[10px] text-foreground/50 mt-0.5">{safeContact.email || 'Add email'}</p>
+          <p className="font-body text-[10px] text-foreground/50">{safeContact.phone || 'Add phone'}</p>
         </div>
       </div>
 
@@ -710,13 +894,13 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       )}
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onBack} className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
+        <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
         <button
           type="button"
           onClick={handleCheckout}
-          disabled={loading}
+          disabled={loading || paymentMethod !== 'card'}
           className="flex-1 flex items-center justify-center gap-2.5 py-3.5 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 disabled:opacity-50 transition-colors"
         >
           {loading ? (
@@ -726,14 +910,14 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             </span>
           ) : (
             <>
-              Confirm Booking <CreditCard className="w-4 h-4" strokeWidth={2} />
+              {hasItems ? `Confirm — $${DEPOSIT_DUE} Deposit` : 'Start Subscription'} <CreditCard className="w-4 h-4" strokeWidth={2} />
             </>
           )}
         </button>
       </div>
 
-      <p className="font-body text-[10px] text-center text-foreground/25 tracking-wide">
-        Secure scheduling · checkout handoff when payments are enabled
+      <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
+        Secure reserve · Acuity handoff · GFE before dispatch
       </p>
     </div>
   );
@@ -748,9 +932,29 @@ export default function Checkout() {
   });
   const { items, membership, removeItem, clearMembership } = useCart();
   const appointmentTypeId = acuityTypeForCart(items, membership);
+  const [prefill] = useState(() => {
+    const draft = readBookingDraft();
+    const lastBooking = readLastBooking();
+    const sourceAppointment = draft?.appointment || lastBooking || {};
+    const sourceContact = draft?.contact || lastBooking?.contact || {};
+    return {
+      appointment: sourceAppointment.address || sourceAppointment.zip || sourceAppointment.date ? {
+        address: sourceAppointment.address || '',
+        zip: sourceAppointment.zip || '',
+        date: sourceAppointment.date || '',
+        notes: sourceAppointment.notes || '',
+      } : null,
+      contact: sourceContact.email || sourceContact.phone || sourceContact.name ? {
+        firstName: sourceContact.firstName || String(sourceContact.name || '').trim().split(/\s+/)[0] || '',
+        lastName: sourceContact.lastName || String(sourceContact.name || '').trim().split(/\s+/).slice(1).join(' '),
+        email: sourceContact.email || '',
+        phone: sourceContact.phone || '',
+      } : null,
+    };
+  });
   const [step, setStep] = useState(0);
-  const [appointment, setAppointment] = useState(null);
-  const [contact, setContact] = useState(null);
+  const [appointment, setAppointment] = useState(prefill.appointment);
+  const [contact, setContact] = useState(prefill.contact || {});
 
   const variants = {
     enter: (dir) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
@@ -760,9 +964,25 @@ export default function Checkout() {
   const [dir, setDir] = useState(1);
 
   const goTo = (next) => {
+    track(ANALYTICS_EVENTS.STEP_COMPLETED, {
+      funnel: 'legacy_checkout',
+      step_index: step,
+      step_name: STEPS[step],
+      next_step_index: next,
+    });
     setDir(next > step ? 1 : -1);
     setStep(next);
   };
+
+  useEffect(() => {
+    track(ANALYTICS_EVENTS.STEP_VIEWED, {
+      funnel: 'legacy_checkout',
+      step_index: step,
+      step_name: STEPS[step],
+      has_membership: Boolean(membership),
+      item_count: items.length,
+    });
+  }, [step, membership, items.length]);
 
   // Skip appointment step if only subscription
   const hasOnlyMembership = membership && items.length === 0;
@@ -771,53 +991,63 @@ export default function Checkout() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="max-w-lg mx-auto px-4 pt-28 pb-20">
-        <StepBar current={step} />
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="rounded-[1.75rem] border border-foreground/[0.12] bg-background/68 p-3 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl sm:p-5"
+        >
+          <StepBar current={step} />
+          <CheckoutTrustConsole current={step} items={items} membership={membership} appointment={appointment} />
 
-        <AnimatePresence mode="wait" custom={dir}>
-          <motion.div
-            key={step}
-            custom={dir}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.35, ease: EASE }}
-          >
-            {step === 0 && (
-              <ReviewStep
-                items={items}
-                membership={membership}
-                onRemoveItem={removeItem}
-                onClearMembership={clearMembership}
-                onNext={() => goTo(hasOnlyMembership ? 2 : 1)}
-              />
-            )}
-            {step === 1 && !hasOnlyMembership && (
-              <AppointmentStep
-                defaultValues={appointment}
-                appointmentTypeId={appointmentTypeId}
-                onNext={(data) => { setAppointment(data); goTo(2); }}
-                onBack={() => goTo(0)}
-              />
-            )}
-            {step === 2 && (
-              <ContactStep
-                defaultValues={contact}
-                onNext={(data) => { setContact(data); goTo(3); }}
-                onBack={() => goTo(hasOnlyMembership ? 0 : 1)}
-              />
-            )}
-            {step === 3 && (
-              <PaymentStep
-                items={items}
-                membership={membership}
-                contact={contact}
-                appointment={appointment}
-                onBack={() => goTo(2)}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+          <div className="px-1 sm:px-2">
+            <AnimatePresence mode="wait" custom={dir}>
+              <motion.div
+                key={step}
+                custom={dir}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.35, ease: EASE }}
+              >
+                {step === 0 && (
+                  <ReviewStep
+                    items={items}
+                    membership={membership}
+                    onRemoveItem={removeItem}
+                    onClearMembership={clearMembership}
+                    onNext={() => goTo(hasOnlyMembership ? 2 : 1)}
+                  />
+                )}
+                {step === 1 && !hasOnlyMembership && (
+                  <AppointmentStep
+                    defaultValues={appointment}
+                    appointmentTypeId={appointmentTypeId}
+                    onNext={(data) => { setAppointment(data); goTo(2); }}
+                    onBack={() => goTo(0)}
+                  />
+                )}
+                {step === 2 && (
+                  <ContactStep
+                    defaultValues={contact}
+                    onNext={(data) => { setContact(data); goTo(3); }}
+                    onBack={() => goTo(hasOnlyMembership ? 0 : 1)}
+                  />
+                )}
+                {step === 3 && (
+                  <PaymentStep
+                    items={items}
+                    membership={membership}
+                    contact={contact}
+                    appointment={appointment}
+                    onBack={() => goTo(2)}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

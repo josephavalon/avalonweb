@@ -2,43 +2,16 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      // Hard scroll-to-top on every load — beats iOS Safari's auto-restore.
-      // Strategy: disable browser restore, then force scroll on every lifecycle hook.
-      (function () {
-        try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
-        function stripHashAndTop() {
-          try {
-            if (location.hash) history.replaceState(null, '', location.pathname + location.search);
-          } catch (e) {}
-          window.scrollTo(0, 0);
-          if (document.documentElement) document.documentElement.scrollTop = 0;
-          if (document.body) document.body.scrollTop = 0;
-        }
-        // 1) immediately
-        stripHashAndTop();
-        // 2) after DOM parsed
-        document.addEventListener('DOMContentLoaded', stripHashAndTop);
-        // 3) after pageshow (covers bfcache too)
-        window.addEventListener('pageshow', stripHashAndTop);
-        // 4) after full load
-        window.addEventListener('load', stripHashAndTop);
-        // 5) two rAF ticks after first paint, to outrun Safari's restore
-        requestAnimationFrame(function () {
-          requestAnimationFrame(stripHashAndTop);
-        });
-      })();
-    </script>
+    <script src="/scroll-restore.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A0A0A" />
 
     <!-- Primary -->
-    <title>Avalon Vitality — Mobile Recovery Therapy</title>
-    <meta name="description" content="Luxury mobile IV therapy delivered to your home, hotel, office, or event in the San Francisco Bay Area. Physician-supervised, RN-administered. Presale memberships open." />
+    <title>Avalon Vitality — Premium Recovery, Delivered</title>
+    <meta name="description" content="Clinical recovery delivered to your home, hotel, office, or launch. Licensed RN visits, clinical clearance, flat pricing, and fast mobile booking in the Bay Area." />
     <meta name="keywords" content="mobile IV therapy San Francisco, NAD+ IV Bay Area, at-home IV drip, vitamin IV, IV hydration SF, luxury wellness Bay Area" />
     <meta name="author" content="Avalon Vitality" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <link rel="canonical" href="https://avalonvitality.co/" />
 
     <!-- Icons -->
     <link rel="icon" type="image/png" href="/favicon.png?v=2" />
@@ -47,31 +20,32 @@
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph -->
+    <link rel="canonical" href="https://www.avalonvitality.co/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Avalon Vitality" />
-    <meta property="og:title" content="Avalon Vitality — Mobile IV Therapy in San Francisco" />
-    <meta property="og:description" content="Luxury mobile IV therapy delivered to you in the Bay Area. Physician-supervised, RN-administered. Presale memberships open." />
-    <meta property="og:url" content="https://avalonvitality.co/" />
-    <meta property="og:image" content="https://avalonvitality.co/og-image.svg" />
+    <meta property="og:title" content="Avalon Vitality — Premium Recovery, Delivered" />
+    <meta property="og:description" content="Clinical recovery delivered to your home, hotel, office, or launch. Licensed RN visits, clinical clearance, flat pricing, and fast mobile booking in the Bay Area." />
+    <meta property="og:url" content="https://www.avalonvitality.co/" />
+    <meta property="og:image" content="https://www.avalonvitality.co/og-image.png?v=20260524" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Avalon Vitality — Mobile IV Therapy in San Francisco" />
+    <meta property="og:image:alt" content="Avalon Vitality — Recovery on Demand" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Avalon Vitality — Mobile IV Therapy in San Francisco" />
-    <meta name="twitter:description" content="Luxury mobile IV therapy delivered to you in the Bay Area. Physician-supervised, RN-administered. Presale memberships open." />
-    <meta name="twitter:image" content="https://avalonvitality.co/og-image.svg" />
-    <meta name="twitter:image:alt" content="Avalon Vitality — Mobile IV Therapy" />
+    <meta name="twitter:title" content="Avalon Vitality — Premium Recovery, Delivered" />
+    <meta name="twitter:description" content="Clinical recovery delivered to your home, hotel, office, or launch. Licensed RN visits, clinical clearance, flat pricing, and fast mobile booking in the Bay Area." />
+    <meta name="twitter:image" content="https://www.avalonvitality.co/og-image.png?v=20260524" />
+    <meta name="twitter:image:alt" content="Avalon Vitality — Recovery on Demand" />
 
-    <!-- Fonts preconnect (perf) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts — self-hosted to remove third-party render dependency -->
+    <link rel="preload" href="/fonts/inter-400.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/bebas-neue-400.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="/fonts/avalon-fonts.css" />
 
-    <!-- Hero image CDN — preconnect + preload so it downloads before JS runs -->
-    <link rel="preconnect" href="https://media.base44.com" crossorigin />
-    <link rel="preload" as="image" href="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png" fetchpriority="high" />
+    <!-- Hero image preload so it downloads before JS runs -->
+    <link rel="preload" as="image" href="/images/avalon-hero.webp" imagesrcset="/images/avalon-hero-512.webp 512w, /images/avalon-hero-768.webp 768w, /images/avalon-hero.webp 1024w" imagesizes="100vw" fetchpriority="high" />
     
     <!-- Structured Data: LocalBusiness -->
     <script type="application/ld+json">
@@ -80,20 +54,32 @@
       "@type": "MedicalBusiness",
       "name": "Avalon Vitality",
       "description": "Mobile IV therapy and wellness service for the San Francisco Bay Area. Physician-supervised, RN-administered.",
-      "url": "https://avalonvitality.co",
+      "url": "https://www.avalonvitality.co",
+      "telephone": "+14159807708",
       "email": "support@avalonvitality.co",
       "priceRange": "$$$",
-      "image": "https://avalonvitality.co/og-image.png",
-      "areaServed": {
-        "@type": "City",
-        "name": "San Francisco Bay Area"
-      },
+      "image": "https://www.avalonvitality.co/og-image.png?v=20260524",
+      "areaServed": [
+        { "@type": "AdministrativeArea", "name": "San Francisco Bay Area" },
+        { "@type": "City", "name": "San Francisco" },
+        { "@type": "City", "name": "Oakland" },
+        { "@type": "City", "name": "San Jose" },
+        { "@type": "City", "name": "Palo Alto" },
+        { "@type": "City", "name": "Napa" },
+        { "@type": "City", "name": "Sonoma" }
+      ],
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "San Francisco",
         "addressRegion": "CA",
         "addressCountry": "US"
       },
+      "openingHoursSpecification": [{
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "opens": "08:00",
+        "closes": "20:00"
+      }],
       "sameAs": []
     }
     </script>
@@ -107,21 +93,7 @@
     <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
-    <!-- Pre-hydration theme bootstrap. Reads stored theme before React mounts
-         so the first paint already matches user preference. Prevents FOUC.
-         NOTE: 'dubs' must be included or switching to dubs then reloading causes FOUC. -->
-    <script>
-      (function () {
-        var VALID = ['dark', 'light', 'golden', 'dubs'];
-        try {
-          var stored = window.localStorage.getItem('avalon.theme');
-          var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
-          var cl = document.documentElement.classList;
-          cl.remove('dark', 'golden', 'dubs');
-          if (theme !== 'light') cl.add(theme);
-        } catch (e) { /* no-op — private mode, WebView, etc. */ }
-      })();
-    </script>
+    <script src="/theme-bootstrap.js"></script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
          These rules apply the correct background immediately from the theme class that
@@ -131,10 +103,22 @@
       html.dark, html.dark body { background-color: #0a0a0a; }
       html.golden, html.golden body { background-color: hsl(28,35%,12%); }
       html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
+
+      /* Suppress Google Translate toolbar — we use our own picker UI */
+      .goog-te-banner-frame, .goog-te-banner-frame.skiptranslate { display: none !important; }
+      .goog-te-gadget, .goog-te-gadget-simple { display: none !important; }
+      .goog-te-menu-value { display: none !important; }
+      body > .skiptranslate { display: none !important; }
+      body { top: 0 !important; }
+      /* Prevent Google's font injection from overriding ours */
+      font { display: inline !important; }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Google Translate target. The script is loaded lazily by LanguageSelect only when needed. -->
+    <div id="google_translate_element" style="display:none;visibility:hidden;position:absolute;"></div>
   </body>
 </html>

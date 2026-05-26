@@ -3,33 +3,27 @@ import { Link } from 'react-router-dom';
 import { Mail, Phone, Clock, MapPin, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { EASE, premiumTap } from '@/lib/motion';
+import LanguageSelect from '@/components/landing/LanguageSelect';
 
 const SERVICES = [
-  { label: 'Request a Visit',  to: '/book' },
-  { label: 'Subscription',     to: '/subscription' },
-  { label: 'Gift Cards',       to: '/gift' },
-  { label: 'For Athletes',     to: '/athlete' },
-  { label: 'For Teams',        to: '/corporate' },
-  { label: 'For Events',       to: '/events' },
-  { label: 'Hotel Delivery',   to: '/hotel' },
+  { label: 'Book',   to: '/book' },
+  { label: 'Plans',  to: '/subscription' },
+  { label: 'Protocols',   to: '/protocols' },
+  { label: 'Launches', to: '/launches' },
+  { label: 'Bay Area IV', to: '/mobile-iv-therapy-bay-area' },
+  { label: 'Locations', to: '/locations' },
+  { label: 'Learn', to: '/learn' },
 ];
 
 const COMPANY = [
-  { label: 'Our Story',          to: '/our-story' },
-  { label: 'Our Team',           to: '/team' },
-  { label: 'Service Area',       to: '/service-area' },
-  { label: 'FAQ',                to: '/faq' },
-  { label: 'Safety',             to: '/safety' },
-  { label: 'Ingredients',        to: '/ingredients' },
-  { label: 'Medical Direction',  to: '/medical-direction' },
-  { label: 'Press',              to: '/press' },
+  { label: 'Story',  to: '/our-story' },
+  { label: 'Safety', to: '/safety' },
+  { label: 'FAQ',    to: '/faq' },
 ];
 
 const LEGAL = [
-  { label: 'Terms of Service',  to: '/terms-of-service' },
-  { label: 'Privacy Policy',    to: '/privacy-policy' },
-  { label: 'Cookie Policy',     to: '/cookie-policy' },
-  { label: 'HIPAA Notice',      to: '/hipaa-notice' },
+  { label: 'Terms',   to: '/terms-of-service' },
+  { label: 'Privacy', to: '/privacy-policy' },
 ];
 
 const GROUPS = [
@@ -39,6 +33,12 @@ const GROUPS = [
   { label: 'Contact', type: 'contact' },
 ];
 
+const DESKTOP_LINK =
+  'flex min-h-11 items-center rounded-lg px-1.5 py-1 -mx-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
+
+const DESKTOP_CONTACT_LINK =
+  'flex min-h-11 items-center gap-2 rounded-lg px-1.5 py-1 -mx-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
+
 function FooterGroup({ group, open, onToggle }) {
   return (
     <motion.div
@@ -46,13 +46,17 @@ function FooterGroup({ group, open, onToggle }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-24px' }}
       transition={{ duration: 0.55, ease: EASE }}
-      className="w-full max-w-full rounded-2xl border border-foreground/10 bg-white/[0.055]"
+      className={`group w-full max-w-full rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.04)] backdrop-blur-xl transition-colors ${
+        open
+          ? 'border-accent/24 bg-accent/[0.055]'
+          : 'border-foreground/10 bg-background/58 hover:border-accent/24 hover:bg-accent/[0.045]'
+      }`}
     >
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
+        className="flex min-h-[56px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
         aria-expanded={open}
       >
         <span className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/60">
@@ -61,7 +65,7 @@ function FooterGroup({ group, open, onToggle }) {
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.32, ease: EASE }}
-          className="text-foreground/45"
+          className="text-foreground/45 transition-colors group-hover:text-foreground/65"
           aria-hidden="true"
         >
           <ChevronDown className="w-4 h-4" strokeWidth={2} />
@@ -79,11 +83,11 @@ function FooterGroup({ group, open, onToggle }) {
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-foreground/[0.07] px-4 py-3">
               {group.type === 'contact' ? (
                 <>
-                  <a href="mailto:support@avalonvitality.co" className="col-span-2 flex items-center gap-2 font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+                  <a href="mailto:support@avalonvitality.co" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground">
                     <Mail className="w-3.5 h-3.5 shrink-0" />
                     support@avalonvitality.co
                   </a>
-                  <a href="tel:+14159807708" className="col-span-2 flex items-center gap-2 font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+                  <a href="tel:+14159807708" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground">
                     <Phone className="w-3.5 h-3.5 shrink-0" />
                     (415) 980-7708
                   </a>
@@ -100,7 +104,7 @@ function FooterGroup({ group, open, onToggle }) {
                 <Link
                   key={l.label}
                   to={l.to}
-                  className="font-body text-xs leading-tight text-foreground/70 hover:text-foreground transition-colors duration-base ease-editorial"
+                  className="flex min-h-[44px] items-center rounded-xl px-2 py-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors duration-base ease-editorial hover:bg-accent/[0.075] hover:text-foreground"
                 >
                   {l.label}
                 </Link>
@@ -117,15 +121,15 @@ export default function Footer() {
   const [openGroup, setOpenGroup] = useState(null);
 
   return (
-    <footer className="pt-6 pb-5 px-4 md:pt-10 md:pb-8">
+    <footer className="pt-6 pb-4 px-4 md:pt-8 md:pb-5">
       <div className="max-w-6xl mx-auto">
 
         {/* Brand */}
-        <div className="mb-5 md:mb-8">
+        <div className="mb-5 md:mb-6">
           <div className="font-heading text-2xl tracking-widest text-foreground">AVALON</div>
           <div className="font-body text-xs tracking-[0.3em] text-foreground/60 -mt-1">VITALITY</div>
           <p className="font-body text-xs text-foreground/55 leading-relaxed mt-3 max-w-sm">
-            Intelligent wellness protocols administered by California-licensed clinicians across the SF Bay Area.
+            Clinician-led recovery across the Bay Area.
           </p>
         </div>
 
@@ -143,14 +147,14 @@ export default function Footer() {
         </div>
 
         {/* Mobile: single column stacked. Desktop: 4-col grid */}
-        <div className="hidden md:grid md:grid-cols-4 gap-8 mb-8">
+        <div className="hidden md:grid md:grid-cols-4 gap-x-7 gap-y-5 mb-5">
 
           {/* Services */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Services</p>
-            <div className="space-y-2.5">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Services</p>
+            <div className="space-y-1 lg:space-y-0.5">
               {SERVICES.map((l) => (
-                <Link key={l.label} to={l.to} className="block font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+                <Link key={l.label} to={l.to} className={DESKTOP_LINK}>
                   {l.label}
                 </Link>
               ))}
@@ -159,10 +163,10 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Company</p>
-            <div className="space-y-2.5">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Company</p>
+            <div className="space-y-1 lg:space-y-0.5">
               {COMPANY.map((l) => (
-                <Link key={l.label} to={l.to} className="block font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+                <Link key={l.label} to={l.to} className={DESKTOP_LINK}>
                   {l.label}
                 </Link>
               ))}
@@ -171,33 +175,33 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Contact</p>
-            <div className="space-y-3">
-              <a href="mailto:support@avalonvitality.co" className="flex items-center gap-2 font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Contact</p>
+            <div className="space-y-1">
+              <a href="mailto:support@avalonvitality.co" className={DESKTOP_CONTACT_LINK}>
                 <Mail className="w-3.5 h-3.5 shrink-0" />
                 support@avalonvitality.co
               </a>
-              <a href="tel:+14159807708" className="flex items-center gap-2 font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+              <a href="tel:+14159807708" className={DESKTOP_CONTACT_LINK}>
                 <Phone className="w-3.5 h-3.5 shrink-0" />
                 (415) 980-7708
               </a>
-              <div className="flex items-center gap-2 font-body text-xs text-foreground/50">
+              <div className="flex min-h-11 items-center gap-2 font-body text-xs text-foreground/50">
                 <Clock className="w-3.5 h-3.5 shrink-0" />
-                Mon–Sun · 8AM–8PM
+                8AM-8PM
               </div>
-              <div className="flex items-center gap-2 font-body text-xs text-foreground/50">
+              <div className="flex min-h-11 items-center gap-2 font-body text-xs text-foreground/50">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
-                San Francisco Bay Area · CA
+                SF Bay Area
               </div>
             </div>
           </div>
 
           {/* Legal */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Legal</p>
-            <div className="space-y-2.5">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Legal</p>
+            <div className="space-y-1 lg:space-y-0.5">
               {LEGAL.map((l) => (
-                <Link key={l.label} to={l.to} className="block font-body text-xs text-foreground/70 hover:text-foreground transition-colors">
+                <Link key={l.label} to={l.to} className={DESKTOP_LINK}>
                   {l.label}
                 </Link>
               ))}
@@ -207,18 +211,15 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-foreground/[0.07] pt-4 md:pt-6 space-y-1.5 md:space-y-3">
-          <p className="font-body text-[9px] md:text-[10px] text-foreground/35 leading-snug md:leading-relaxed">
-            © 2026 Avalon Vitality. All rights reserved.
-          </p>
-          <p className="font-body text-[9px] md:text-[10px] text-foreground/30 leading-snug md:leading-relaxed">
-            Services provided exclusively to California residents physically located in California at the time of service.
-          </p>
-          <p className="font-body text-[9px] md:text-[10px] text-foreground/25 leading-snug md:leading-relaxed">
-            Avalon Vitality provides wellness and recovery support. This is not emergency medical care. If you are experiencing a medical emergency, call 911 immediately.
-          </p>
-          <p className="font-body text-[9px] md:text-[10px] text-foreground/25 leading-snug md:leading-relaxed">
-            These statements have not been evaluated by the FDA. Not intended to diagnose, treat, cure, or prevent any disease.
+        <div className="border-t border-foreground/[0.07] pt-3 md:pt-4 space-y-1.5 md:space-y-2">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <p className="font-body text-[11px] text-foreground/45 leading-relaxed">
+              © 2026 Avalon Vitality. All rights reserved.
+            </p>
+            <LanguageSelect />
+          </div>
+          <p className="font-body text-[11px] text-foreground/45 leading-relaxed">
+            California wellness support only. Not emergency care or medical advice.
           </p>
         </div>
 

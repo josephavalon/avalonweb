@@ -3,7 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
-import { setProvider } from '@/lib/analytics'
+import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
 
 // One-time migration: reset old 'golden' default to 'dark'
 try {
@@ -11,16 +11,21 @@ try {
     localStorage.setItem('avalon.theme', 'dark');
     localStorage.setItem('avalon.theme.v2', '1');
   }
-} catch {}
+} catch (err) {
+  if (import.meta.env?.DEV) console.warn('[theme-migration]', err);
+}
 
+captureAttribution();
+getExperimentVariant('booking_entry_v1', ['protocol-first', 'fast-hold']);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <App />
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 )
 
-if (import.meta.env.DEV) {
-  setProvider((event) => {
-    // eslint-disable-next-line no-console
-    console.debug('[avalon:analytics]', event.name, event.props);
-  });
+if ('serviceWorker' in navigator && import.meta.env?.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }, { once: true });
 }

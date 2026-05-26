@@ -9,12 +9,12 @@ const EASE = [0.16, 1, 0.3, 1];
 
 const LAYERS = [
   { n: 0, name: 'Input',        desc: 'Share your goals and data.',      icon: ClipboardCheck },
-  { n: 1, name: 'Modalities',   desc: 'IVs, IMs, SCs, NAD+, CBD, Peptides, HRT, Supplements, Diet.', icon: Droplet },
-  { n: 2, name: 'Protocol',     desc: 'We design what\'s right for you.', icon: Sparkles },
+  { n: 1, name: 'Modalities',   desc: 'Eligible IV, IM, NAD+, and future protocol options.', icon: Droplet },
+  { n: 2, name: 'Protocol',     desc: 'Built after clinical review.', icon: Sparkles },
   { n: 3, name: 'Delivery',     desc: 'We ship or come to you.',         icon: Truck },
   { n: 4, name: 'Data',         desc: 'Everything tracked, end-to-end.', icon: BarChart3 },
   { n: 5, name: 'Intelligence', desc: 'We learn what works and what doesn\'t.', icon: Brain },
-  { n: 6, name: 'Autonomy',     desc: 'Your protocol runs itself.',     accentTail: 'Avalon delivers it.', icon: Orbit },
+  { n: 6, name: 'Autonomy',     desc: 'Your approved plan stays coordinated.',     accentTail: 'Avalon delivers it.', icon: Orbit },
 ];
 
 export default function AvalonOSPreview() {
@@ -51,11 +51,11 @@ export default function AvalonOSPreview() {
           className="text-left mb-6 md:mb-10"
         >
           <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">Coming Soon</p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+          <h1 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
             Avalon OS
-          </h2>
+          </h1>
           <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl mt-3 md:mt-5">
-            Intelligent delivery. Real-time data. Peak every day.
+            Intelligent delivery. Real-time data. Clinician-reviewed protocols.
           </p>
         </motion.div>
 
@@ -72,7 +72,12 @@ export default function AvalonOSPreview() {
               {LAYERS.map((l) => {
                 const Icon = l.icon;
                 return (
-                  <div key={l.n} className="flex items-center gap-2 md:gap-4 px-2 md:px-4 py-1.5 md:py-2 border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-xl">
+                  <motion.div
+                    key={l.n}
+                    whileHover={{ x: 3 }}
+                    transition={{ duration: 0.36, ease: EASE }}
+                    className="av-glass-sweep relative flex items-center gap-2 overflow-hidden rounded-xl border border-white/20 bg-white/[0.03] px-2 py-1.5 backdrop-blur-md md:gap-4 md:px-4 md:py-2"
+                  >
                     <span className="text-xs md:text-lg tracking-[0.15em] text-accent font-body uppercase w-4 md:w-7 shrink-0 text-center">{l.n}</span>
                     <div className="w-7 h-7 md:w-9 md:h-9 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
                       <Icon className="w-4 h-4 md:w-4 md:h-4" strokeWidth={1.5} />
@@ -84,7 +89,7 @@ export default function AvalonOSPreview() {
                       </p>
                     </div>
                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-accent/60 shrink-0" strokeWidth={1.6} />
-                  </div>
+                  </motion.div>
                 );
               })}
             </motion.div>
@@ -102,7 +107,7 @@ export default function AvalonOSPreview() {
               type="button"
               onClick={() => setZoomed(true)}
               aria-label="Zoom Avalon OS phone preview"
-              className="avalon-os-phone-wrap block w-full focus:outline-none cursor-zoom-in active:scale-[0.98] transition-transform"
+              className="avalon-os-phone-wrap flex min-h-[320px] w-full cursor-zoom-in items-start justify-center transition-transform active:scale-[0.98] focus:outline-none sm:min-h-[440px] md:min-h-[560px] lg:min-h-[640px]"
               style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
               <img
@@ -122,7 +127,7 @@ export default function AvalonOSPreview() {
             <button
               type="button"
               onClick={() => setZoomed(true)}
-              className="text-[10px] md:text-[11px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body inline-flex items-center gap-1.5"
+              className="inline-flex min-h-11 items-center gap-1.5 text-[10px] md:text-[11px] tracking-[0.25em] text-accent/80 hover:text-accent uppercase font-body"
             >
               <ZoomIn className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={1.6} />
               Tap to Zoom

@@ -7,7 +7,8 @@ function readLocalCart() {
   try {
     const raw = localStorage.getItem('av_cart');
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (err) {
+    if (import.meta.env?.DEV) console.warn('[cart-read]', err);
     return [];
   }
 }
@@ -26,7 +27,9 @@ export function CartProvider({ children }) {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem('av_cart', JSON.stringify(items));
-    } catch {}
+    } catch (err) {
+      if (import.meta.env?.DEV) console.warn('[cart-write]', err);
+    }
   }, [items]);
 
   const addItem = useCallback((item) => {

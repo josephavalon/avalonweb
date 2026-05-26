@@ -10,6 +10,7 @@
  */
 
 import { acuityFetch, resolveAppointmentTypeId } from './_acuity.js';
+import { isLiveApiEnabled, localAvailability } from './_lib/pre-api-guard.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -24,6 +25,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (!isLiveApiEnabled()) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(200).json(localAvailability({ date, appointmentTypeID: resolvedTypeId, timezone }));
+    }
+
     const params = new URLSearchParams({
       date,
       appointmentTypeID: String(resolvedTypeId),

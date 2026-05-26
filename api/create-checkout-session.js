@@ -1,5 +1,9 @@
 import Stripe from 'stripe';
-import { acuityFetch, resolveAppointmentTypeId } from './_acuity.js';
+import { acuityFetch, cancelAppointment, resolveAppointmentTypeId } from './_acuity.js';
+import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
+import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
+import { buildCheckoutReconciliationHint } from './_reconciliation.js';
+import { getDepositAmountDollars } from '../src/lib/checkoutConfig.js';
 
 const TZ = 'America/Los_Angeles';
 
@@ -7,28 +11,44 @@ function dollarsToCents(value) {
   return Math.max(0, Math.round(Number(value || 0) * 100));
 }
 
+function httpError(message, status = 500, code = 'server_error') {
+  return Object.assign(new Error(message), { status, code });
+}
+
+function assertSafeLiveBaseUrl(baseUrl) {
+  if (!isLiveApiEnabled()) return;
+  let parsed;
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    throw httpError('PUBLIC_SITE_URL must be a valid absolute URL', 503, 'public_site_url_invalid');
+  }
+  if (/^(localhost|127\.|0\.0\.0\.0)$/i.test(parsed.hostname) || parsed.hostname.endsWith('.local')) {
+    throw httpError('PUBLIC_SITE_URL cannot be localhost in live API mode', 503, 'public_site_url_unsafe');
+  }
+}
+
 function publicBaseUrl(req) {
-  if (process.env.PUBLIC_SITE_URL) return process.env.PUBLIC_SITE_URL.replace(/\/$/, '');
+  const configured = process.env.PUBLIC_SITE_URL?.replace(/\/$/, '');
+  if (configured) {
+    assertSafeLiveBaseUrl(configured);
+    return configured;
+  }
+  if (isLiveApiEnabled()) {
+    throw httpError('PUBLIC_SITE_URL is required before live checkout', 503, 'public_site_url_missing');
+  }
   const proto = req.headers?.['x-forwarded-proto'] || 'http';
   const host = req.headers?.host || '127.0.0.1:5173';
   return `${proto}://${host}`;
 }
 
-function orderSummary(items = [], membership = null) {
-  const lines = [];
-  if (items.length) {
-    lines.push('One-time visit:');
-    items.forEach((item) => lines.push(`- ${item.label} ($${item.price})`));
-  }
-  if (membership) {
-    lines.push(`Subscription: ${membership.name} (${membership.billing}) — $${membership.price}`);
-  }
-  return lines.join('\n');
-}
-
 function isDevRequest(req) {
   const host = req?.headers?.host || '';
   return host.startsWith('localhost') || host.startsWith('127.0.0.1');
+}
+
+function yesNo(value) {
+  return value === true || value === 'true' || value === 'Yes' ? 'Yes' : 'No';
 }
 
 function formatAddons(items = []) {
@@ -86,7 +106,7 @@ function requiresSpecialConsent(items = [], appointmentTypeID, needle) {
 function requiredSchedulingFields(appointment = {}, items = [], appointmentTypeID = '') {
   const medicalConditions = appointment.medicalConditions || 'None of the above';
   const fields = [
-    { id: 16968986, value: appointment.dob || '01/01/1990' },
+    { id: 16968986, value: appointment.dob || '' },
     { id: 16968987, value: appointment.address || '' },
     { id: 16978048, value: appointment.guests || '1' },
     { id: 16968998, value: appointment.covidPositive || 'No' },
@@ -97,16 +117,16 @@ function requiredSchedulingFields(appointment = {}, items = [], appointmentTypeI
     { id: 16969009, value: appointment.medications || '' },
     { id: 16968994, value: appointment.emergencyContact || '' },
     { id: 16969698, value: appointment.additionalComments || '' },
-    { id: 16969017, value: appointment.privacyAck ? 'Yes' : 'No' },
-    { id: 16969015, value: appointment.treatmentConsent ? 'Yes' : 'No' },
-    { id: 16969719, value: appointment.generalConsent ? 'Yes' : 'No' },
+    { id: 16969017, value: yesNo(appointment.privacyAck) },
+    { id: 16969015, value: yesNo(appointment.treatmentConsent) },
+    { id: 16969719, value: yesNo(appointment.generalConsent) },
   ];
 
   if (requiresSpecialConsent(items, appointmentTypeID, 'cbd')) {
-    fields.push({ id: 16969724, value: appointment.cbdConsent ? 'Yes' : 'Yes' });
+    fields.push({ id: 16969724, value: yesNo(appointment.cbdConsent) });
   }
   if (requiresSpecialConsent(items, appointmentTypeID, 'nad')) {
-    fields.push({ id: 16969727, value: appointment.nadConsent ? 'Yes' : 'Yes' });
+    fields.push({ id: 16969727, value: yesNo(appointment.nadConsent) });
   }
 
   return fields;
@@ -138,18 +158,30 @@ async function createSchedulingAppointment({ appointment, contact, items, member
   });
 }
 
-function stripeLineItems(items = [], membership = null) {
-  const lineItems = items.map((item) => ({
-    quantity: 1,
-    price_data: {
-      currency: 'usd',
-      unit_amount: dollarsToCents(item.price),
-      product_data: {
-        name: item.label || 'Avalon Visit',
-        metadata: { type: item.type || 'service', key: item.key || item.cartKey || '' },
-      },
-    },
-  }));
+function stripeLineItems(items = [], membership = null, { depositOnly = false, depositAmount = getDepositAmountDollars(process.env) } = {}) {
+  const lineItems = depositOnly && items.length
+    ? [{
+        quantity: 1,
+        price_data: {
+          currency: 'usd',
+          unit_amount: dollarsToCents(depositAmount),
+          product_data: {
+            name: 'Avalon appointment deposit',
+            metadata: { type: 'deposit' },
+          },
+        },
+      }]
+    : items.map((item) => ({
+        quantity: 1,
+        price_data: {
+          currency: 'usd',
+          unit_amount: dollarsToCents(item.price),
+          product_data: {
+            name: item.label || 'Avalon Visit',
+            metadata: { type: item.type || 'service', key: item.key || item.cartKey || '' },
+          },
+        },
+      }));
 
   if (membership) {
     lineItems.push({
@@ -176,8 +208,8 @@ export default async function handler(req, res) {
 
   const {
     mode = 'payment',
-    items = [],
-    membership = null,
+    items: rawItems = [],
+    membership: rawMembership = null,
     contact = {},
     appointment = {},
   } = req.body || {};
@@ -186,8 +218,45 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'First name and email are required' });
   }
 
+  let acuityAppointment = null;
   try {
-    const acuityAppointment = await createSchedulingAppointment({
+    const items = sanitizeCheckoutItems(rawItems);
+    const membership = sanitizeCheckoutMembership(rawMembership);
+
+    if (!items.length && !membership) {
+      return res.status(400).json({ error: 'No items to checkout' });
+    }
+
+    const baseUrl = publicBaseUrl(req);
+
+    if (!isLiveApiEnabled()) {
+      const localId = `local-${Date.now()}`;
+      const successUrl = `${baseUrl}/booking/confirmation?appointment=${encodeURIComponent(localId)}&preapi=1`;
+      return res.status(200).json({
+        ok: true,
+        provider: 'local-simulation',
+        previewOnly: true,
+        preApiHardWall: true,
+        code: 'pre_api_hard_wall',
+        appointment: {
+          id: localId,
+          provider: 'local-simulation',
+          type: items[0]?.label || membership?.name || 'Avalon local simulation',
+          datetime: appointment.acuityDatetime || null,
+          preApi: true,
+        },
+        url: successUrl,
+      });
+    }
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({
+        error: 'Secure checkout is not configured',
+        code: 'payment_provider_missing',
+      });
+    }
+
+    acuityAppointment = await createSchedulingAppointment({
       appointment,
       contact,
       items,
@@ -195,21 +264,18 @@ export default async function handler(req, res) {
       req,
     });
 
-    const baseUrl = publicBaseUrl(req);
-    const successUrl = `${baseUrl}/store/confirmation${acuityAppointment?.id ? `?appointment=${encodeURIComponent(acuityAppointment.id)}` : ''}`;
+    const successUrl = `${baseUrl}/booking/confirmation${acuityAppointment?.id ? `?appointment=${encodeURIComponent(acuityAppointment.id)}` : ''}`;
+    const successJoiner = successUrl.includes('?') ? '&' : '?';
     const cancelUrl = `${baseUrl}/checkout`;
 
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(200).json({
-        ok: true,
-        provider: 'scheduling',
-        appointment: acuityAppointment,
-        url: successUrl,
-      });
-    }
-
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const line_items = stripeLineItems(items, membership);
+    const visitSubtotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const hasVisitItems = items.length > 0;
+    const depositAmount = getDepositAmountDollars(process.env);
+    const line_items = stripeLineItems(items, membership, {
+      depositOnly: hasVisitItems,
+      depositAmount,
+    });
 
     if (!line_items.length) {
       return res.status(400).json({ error: 'No items to checkout' });
@@ -219,12 +285,14 @@ export default async function handler(req, res) {
       mode: mode === 'subscription' || membership ? 'subscription' : 'payment',
       customer_email: contact.email,
       line_items,
-      success_url: `${successUrl}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${successUrl}${successJoiner}session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
       metadata: {
         acuityAppointmentId: acuityAppointment?.id ? String(acuityAppointment.id) : '',
         customerName: contact.name || `${contact.firstName} ${contact.lastName || ''}`.trim(),
         phone: contact.phone || '',
+        visitSubtotal: visitSubtotal ? String(visitSubtotal) : '',
+        depositAmount: hasVisitItems ? String(depositAmount) : '',
       },
     });
 
@@ -235,7 +303,25 @@ export default async function handler(req, res) {
       url: session.url,
     });
   } catch (err) {
-    console.error('[create-checkout-session]', err.message, err.body || '');
-    return res.status(err.status || 500).json({ error: err.message || 'Checkout failed' });
+    if (acuityAppointment?.id) {
+      try {
+        await cancelAppointment(acuityAppointment.id, 'Stripe checkout failed before payment confirmation.');
+      } catch (rollbackErr) {
+        console.error('[create-checkout-session:rollback]', rollbackErr.message, rollbackErr.body || '');
+      }
+    }
+    const reconciliation = buildCheckoutReconciliationHint({ acuityAppointment, error: err });
+    console.error('[create-checkout-session]', err.message, err.body || '', reconciliation || '');
+    return res.status(err.status || 500).json({
+      error: err.message || 'Checkout failed',
+      reconciliation: reconciliation
+        ? {
+            caseType: reconciliation.case_type,
+            ownerRole: reconciliation.owner_role,
+            externalReference: reconciliation.external_reference,
+            requiredAction: reconciliation.payload.required_action,
+          }
+        : null,
+    });
   }
 }

@@ -1,27 +1,27 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Droplets, Calendar, Crown, User } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Home, Calendar, Crown, MessageCircle, User } from 'lucide-react';
+import { useCommunicationCenter } from '@/hooks/useCommunicationCenter';
 
-const BG = '#080807';
-const BAR = 'rgba(13,12,10,0.98)';
-const CARD = 'rgba(245,235,221,0.075)';
-const BORDER = 'rgba(245,235,221,0.12)';
-const ACTIVE_BORDER = 'rgba(245,235,221,0.20)';
-const MUTED = 'rgba(245,235,221,0.62)';
-const DIM = 'rgba(245,235,221,0.36)';
-const TEXT = '#F5EBDD';
+const BG = 'hsl(var(--background))';
+const BAR = 'hsl(var(--background) / 0.98)';
+const CARD = 'hsl(var(--foreground) / 0.075)';
+const BORDER = 'hsl(var(--foreground) / 0.12)';
+const ACTIVE_BORDER = 'hsl(var(--foreground) / 0.20)';
+const MUTED = 'hsl(var(--foreground) / 0.62)';
+const DIM = 'hsl(var(--foreground) / 0.42)';
+const TEXT = 'hsl(var(--foreground))';
 
 export default function MemberBottomNav() {
-  const { toast } = useToast();
   const { pathname } = useLocation();
+  const { snapshot } = useCommunicationCenter();
 
   const items = [
-    { icon: Home,     label: 'Home',       href: '/members/dashboard' },
-    { icon: Droplets, label: 'Store',      href: '/store' },
-    { icon: Calendar, label: 'Start',      href: '/store', primary: true },
-    { icon: Crown,    label: 'Subscription', href: '/subscription' },
-    { icon: User,     label: 'Account',    href: '#', onClick: () => toast({ title: 'Coming Soon', description: 'Account settings launching soon.' }) },
+    { icon: Home,          label: 'Home',    href: '/members/dashboard' },
+    { icon: MessageCircle, label: 'Message', href: '/members/messages', badge: snapshot.unreadTotal > 0 ? snapshot.unreadTotal : null },
+    { icon: Calendar,      label: 'Start',   href: '/book', primary: true },
+    { icon: Crown,         label: 'Plan',    href: '/subscription' },
+    { icon: User,          label: 'Account', href: '/members/account' },
   ];
 
   return (
@@ -58,7 +58,6 @@ function MemberNavItem({ item, active }) {
   return (
     <Link
       to={item.href}
-      onClick={item.onClick ? (e) => { e.preventDefault(); item.onClick(); } : undefined}
       className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-[1.15rem] px-1 text-center transition-transform active:scale-[0.97]"
       style={{ background, border }}
     >
@@ -73,8 +72,16 @@ function MemberNavItem({ item, active }) {
         </>
       ) : (
         <>
-          <span className="flex h-9 w-11 items-center justify-center rounded-full" style={{ color }}>
+          <span className="relative flex h-9 w-11 items-center justify-center rounded-full" style={{ color }}>
             <Icon className="h-5 w-5" strokeWidth={active ? 1.9 : 1.55} />
+            {item.badge && (
+              <span
+                className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center font-body text-[8px] font-bold"
+                style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))', padding: '0 3px' }}
+              >
+                {item.badge > 9 ? '9+' : item.badge}
+              </span>
+            )}
           </span>
           <span className="font-body text-[8px] uppercase leading-none tracking-[0.12em]" style={{ color: labelColor }}>
             {item.label}

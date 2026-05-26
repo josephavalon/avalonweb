@@ -65,10 +65,10 @@ function EventRow({ event, index }) {
               </div>
 
               <Link
-                to={`/events/${event.slug}`}
+                to={`/launches/${event.slug}`}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.05] border border-foreground/10 hover:bg-white/[0.10] hover:border-white/20 font-body text-[11px] tracking-[0.2em] uppercase text-foreground transition-all"
               >
-                Event Details <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+                Launch Details <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
               </Link>
             </div>
           </motion.div>
@@ -95,15 +95,15 @@ export default function EventsSection() {
             In the Field
           </p>
           <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
-            AVALON LAUNCHES
+            LAUNCHES
           </h2>
           <div className="w-10 h-[2px] bg-accent mt-3" />
           <p className="font-body text-sm text-foreground/50 leading-relaxed max-w-2xl mt-3">
-            Where you'll find us in the Bay — from finish lines to founder nights.
+            Private recovery for groups, hotels, and venues.
           </p>
         </motion.div>
 
-        {/* Event accordion rows */}
+        {/* Launch accordion rows */}
         <div className="space-y-2 mb-8">
           {events.map((event, i) => (
             <EventRow key={event.slug} event={event} index={i} />
@@ -112,10 +112,10 @@ export default function EventsSection() {
 
         {/* CTA */}
         <Link
-          to="/events"
+          to="/launches"
           className="inline-flex items-center gap-2 font-body text-[11px] tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors"
         >
-          All Events <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+          All Launches <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
         </Link>
 
       </div>

@@ -158,7 +158,7 @@ export default function Gift() {
                   <button
                     key={amount}
                     onClick={() => handlePreset(amount)}
-                    className={`px-4 py-2 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
+                    className={`min-h-[44px] px-4 py-2 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
                       isActive
                         ? 'bg-foreground text-background border-foreground'
                         : 'border-foreground/20 text-foreground/60 hover:border-foreground/40'
@@ -170,7 +170,7 @@ export default function Gift() {
               })}
               <button
                 onClick={handleCustomToggle}
-                className={`px-4 py-2 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
+                className={`min-h-[44px] px-4 py-2 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
                   customMode
                     ? 'bg-foreground text-background border-foreground'
                     : 'border-foreground/20 text-foreground/60 hover:border-foreground/40'
@@ -328,7 +328,7 @@ export default function Gift() {
                           key={occasion}
                           type="button"
                           onClick={() => handleOccasion(occasion)}
-                          className={`px-3 py-1.5 rounded-full font-body text-[10px] tracking-[0.1em] border transition-all duration-200 ${
+                          className={`min-h-[44px] px-3 py-1.5 rounded-full font-body text-[10px] tracking-[0.1em] border transition-all duration-200 ${
                             isActive
                               ? 'bg-accent/15 text-accent border-accent/40'
                               : 'border-foreground/15 text-foreground/50 hover:border-foreground/30'

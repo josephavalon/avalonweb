@@ -2,25 +2,37 @@
 // Swap signIn/signOut for Firebase, Supabase, or a JWT endpoint.
 // The user shape and hook API stay the same — nothing else needs to change.
 
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, useCallback, createContext, useContext } from 'react';
+import { appendActivity } from './localOs';
 import { seedDemoState } from './platformOps';
+import { isDemoAuthAllowed, PRE_API_SECURITY_MODE } from './preApiSecurity';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 // ── Demo accounts (replace with real auth before production) ──────────────
 const DEMO_USERS = {
   'ADMIN001':  { role: 'admin',    name: 'Admin',  redirect: '/admin',              status: 'active' },
   'CLIENT001': { role: 'client',   name: 'Sarah',       redirect: '/members/dashboard',  status: 'active' },
-  'NURSE001':  { role: 'provider', name: 'Stephanie R.', redirect: '/provider/dashboard', status: 'active' },
+  'NURSE001':  { role: 'provider', name: 'Stephanie R.', redirect: '/provider/shift', status: 'active' },
+  'NP001':     { role: 'np',       name: 'Mobile GFE NP', redirect: '/provider/role-os', status: 'active' },
+  'MD001':     { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os', status: 'active' },
 };
-const DEMO_PASSWORD = 'JonJones1986';
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
 // ─────────────────────────────────────────────────────────────────────────
 
 function readSession() {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const session = raw ? JSON.parse(raw) : null;
+    if (!session) return null;
+    if (session.expiresAt && Date.now() > new Date(session.expiresAt).getTime()) {
+      sessionStorage.removeItem(SESSION_KEY);
+      appendActivity('Session expired', { role: session.role, username: session.username });
+      return null;
+    }
+    return session;
   } catch { return null; }
 }
 
@@ -31,16 +43,36 @@ function writeSession(user) {
   } catch { /* private mode — non-fatal */ }
 }
 
+function createSessionId() {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+
+  if (cryptoApi?.getRandomValues) {
+    const values = cryptoApi.getRandomValues(new Uint32Array(2));
+    const token = Array.from(values, (value) => value.toString(36)).join('');
+    return `session-${Date.now()}-${token}`;
+  }
+
+  return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function AuthStoreProvider({ children }) {
   const [user, setUser]       = useState(() => readSession());
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
 
-  const signIn = async ({ email, password }) => {
+  const signIn = useCallback(async ({ email, password }) => {
     setLoading(true);
     setError(null);
     try {
       await new Promise((r) => setTimeout(r, 600)); // simulate network
+
+      if (!isDemoAuthAllowed()) {
+        throw new Error('Local demo auth is disabled outside Avalon simulation mode.');
+      }
+      if (!DEMO_PASSWORD) {
+        throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
+      }
 
       // Match against demo roster (case-insensitive username)
       const usernameKey = Object.keys(DEMO_USERS).find(
@@ -55,17 +87,23 @@ export function AuthStoreProvider({ children }) {
       if (profile.status === 'suspended') throw new Error('Account suspended. Contact support at hello@avalonvitality.co');
       if (profile.status === 'archived') throw new Error('This account is no longer active.');
       const sessionUser = {
-        id:       crypto.randomUUID(),
+        id:       createSessionId(),
         username: usernameKey,
         name:     profile.name,
         role:     profile.role,
         redirect: profile.redirect,
         seededAt: new Date().toISOString(),
+        lastActiveAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
+        authMode: PRE_API_SECURITY_MODE.mode,
+        mfa: 'placeholder',
+        securityWall: 'pre-api-hard-wall',
       };
 
       seedDemoState(usernameKey);
       setUser(sessionUser);
       writeSession(sessionUser);
+      appendActivity('Signed in', { role: sessionUser.role, username: usernameKey, authMode: sessionUser.authMode });
       return { ok: true, user: sessionUser };
     } catch (err) {
       const msg = err.message || 'Sign in failed.';
@@ -74,24 +112,24 @@ export function AuthStoreProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const requestPasswordReset = async () => {
+  const requestPasswordReset = useCallback(async () => {
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      return { ok: true };
+      throw new Error('Password reset is not connected yet. Use admin-assisted account recovery until Supabase Auth is live.');
     } catch (err) {
       return { ok: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const signOut = () => {
+  const signOut = useCallback(() => {
+    if (user) appendActivity('Signed out', { role: user.role, username: user.username });
     setUser(null);
     writeSession(null);
-  };
+  }, [user]);
 
   return React.createElement(
     AuthStoreContext.Provider,

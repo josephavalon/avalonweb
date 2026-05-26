@@ -12,7 +12,7 @@ const MEDICAL_DIRECTOR = {
   name: 'Dr. Jayson Weir',
   credentials: 'MD — Internal Medicine',
   title: 'Medical Director',
-  bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol. He reviews every formulation, signs off on every new modality before it reaches a subscriber, and owns every clinical escalation from the field.',
+  bio: 'An internist with more than a decade of hospital and concierge practice, Dr. Weir oversees clinical standards across every Avalon Protocol. He reviews every formulation, signs off on every new modality before it reaches clients, and owns every clinical escalation from the field.',
 };
 
 const PILLARS = [
@@ -29,7 +29,7 @@ const PILLARS = [
   {
     icon: Stethoscope,
     title: 'Reviewed continuously',
-    desc: 'Protocols are audited each quarter against current clinical literature. Subscribers are notified when their Protocol changes and why.',
+    desc: 'Protocols are audited each quarter against current clinical literature. Plan clients are notified when their protocol changes and why.',
   },
 ];
 

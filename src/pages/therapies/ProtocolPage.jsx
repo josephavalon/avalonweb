@@ -142,10 +142,10 @@ export default function ProtocolPage() {
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </Link>
             <Link
-              to={`/subscribe?protocol=${protocol.key}`}
+              to="/subscription"
               className="flex flex-1 items-center justify-between rounded-2xl border border-foreground/[0.14] bg-foreground/[0.04] px-6 py-4 font-body text-xs font-semibold tracking-[0.2em] uppercase text-foreground hover:bg-foreground/[0.08] transition-colors"
             >
-              Subscribe & Save 10%
+              View Plans
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </Link>
           </motion.div>
@@ -174,13 +174,13 @@ function getBestFor(protocol) {
     energy:       'High performers, professionals, and athletes looking to sharpen focus and sustain output.',
     immunity:     'Anyone feeling run down, fighting something off, or wanting to front-load their defenses.',
     beauty:       'Those looking to support skin clarity, hair strength, and a natural glow from the inside out.',
-    recovery:     'Post-workout recovery, hangover relief, or anytime you need to feel human again fast.',
+    recovery:     'Post-workout, travel, event, or late-night hydration support.',
     jetlag:       'Travelers crossing time zones who need to land sharp and stay that way.',
     myers:        'Anyone wanting the most well-rounded, clinically proven IV protocol available.',
     postnight:    'The morning after a long night — fast return to baseline, no questions asked.',
-    nad:       'Those focused on longevity, cellular repair, energy optimization, and cognitive clarity.',
-    cbd:       'Clients seeking deep relaxation, inflammation support, and full-bioavailability cannabidiol.',
-    exosomes:  'Clients serious about regenerative support — recovery, anti-aging, and cellular renewal.',
+    nad:       'Clients interested in clinician-reviewed NAD+ support with longer appointment windows.',
+    cbd:       'CBD IV information is held for clinical approval, legal review, and compliance-approved copy.',
+    exosomes:  'Clients interested in advanced wellness support after clinician review.',
   };
   return map[protocol.key] || protocol.tagline;
 }

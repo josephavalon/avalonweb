@@ -1,81 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
-  <!-- Background: Avalon off-black with a subtle warm spotlight behind the lockup. -->
   <defs>
-    <radialGradient id="spot" cx="50%" cy="45%" r="55%">
-      <stop offset="0%" stop-color="#D4B578" stop-opacity="0.18"/>
-      <stop offset="55%" stop-color="#D4B578" stop-opacity="0.04"/>
-      <stop offset="100%" stop-color="#0A0A0A" stop-opacity="0"/>
+    <radialGradient id="glow" cx="76%" cy="24%" r="58%">
+      <stop offset="0%" stop-color="#D7B56D" stop-opacity="0.2"/>
+      <stop offset="48%" stop-color="#D7B56D" stop-opacity="0.055"/>
+      <stop offset="100%" stop-color="#050505" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="vignette" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0A0A0A" stop-opacity="0"/>
-      <stop offset="75%" stop-color="#0A0A0A" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#0A0A0A" stop-opacity="0.75"/>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.035"/>
     </linearGradient>
   </defs>
 
-  <rect width="1200" height="630" fill="#0A0A0A"/>
-  <rect width="1200" height="630" fill="url(#spot)"/>
-  <rect width="1200" height="630" fill="url(#vignette)"/>
+  <rect width="1200" height="630" fill="#050505"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <!-- Top rule -->
-  <line x1="72" y1="72" x2="1128" y2="72" stroke="#F1F1F0" stroke-opacity="0.18" stroke-width="1"/>
+  <rect x="48" y="46" width="1104" height="538" rx="38" fill="none" stroke="#F4F2EA" stroke-opacity="0.13" stroke-width="1.5"/>
+  <rect x="76" y="74" width="1048" height="482" rx="28" fill="url(#glass)" stroke="#F4F2EA" stroke-opacity="0.08" stroke-width="1"/>
 
-  <!-- Eyebrow -->
-  <text x="72" y="110"
-        font-family="Inter, system-ui, sans-serif"
-        font-size="16" letter-spacing="6"
-        fill="#D4B578"
-        font-weight="500">
-    PRESALE — LIMITED SPOTS
-  </text>
-
-  <!-- Wordmark -->
-  <text x="72" y="300"
-        font-family="'Bebas Neue', 'Oswald', 'Arial Narrow', sans-serif"
-        font-size="220" letter-spacing="4"
-        fill="#F1F1F0"
-        font-weight="400">
+  <text x="106" y="126"
+        font-family="Inter, Arial, sans-serif"
+        font-size="24"
+        letter-spacing="12"
+        fill="#F6F3EA"
+        font-weight="700">
     AVALON
   </text>
-  <text x="72" y="470"
-        font-family="'Bebas Neue', 'Oswald', 'Arial Narrow', sans-serif"
-        font-size="220" letter-spacing="4"
-        fill="#F1F1F0"
-        font-weight="400">
+  <text x="108" y="164"
+        font-family="Inter, Arial, sans-serif"
+        font-size="15"
+        letter-spacing="8"
+        fill="#F6F3EA"
+        fill-opacity="0.58"
+        font-weight="600">
     VITALITY
   </text>
 
-  <!-- Divider -->
-  <line x1="72" y1="510" x2="360" y2="510" stroke="#F1F1F0" stroke-opacity="0.35" stroke-width="1"/>
-
-  <!-- Subhead -->
-  <text x="72" y="552"
-        font-family="Inter, system-ui, sans-serif"
-        font-size="22" letter-spacing="1"
-        fill="#F1F1F0" fill-opacity="0.88"
+  <text x="106" y="268"
+        font-family="'Bebas Neue', 'Arial Narrow', Impact, sans-serif"
+        font-size="112"
+        letter-spacing="2"
+        fill="#FFFFFF"
         font-weight="400">
-    Mobile IV therapy in San Francisco.
+    RECOVERY
   </text>
-  <text x="72" y="584"
-        font-family="Inter, system-ui, sans-serif"
-        font-size="18" letter-spacing="5"
-        fill="#F1F1F0" fill-opacity="0.65"
-        font-weight="500">
-    RN-ADMINISTERED  ·  PHYSICIAN-SUPERVISED  ·  HIPAA-SECURE
+  <text x="106" y="378"
+        font-family="'Bebas Neue', 'Arial Narrow', Impact, sans-serif"
+        font-size="112"
+        letter-spacing="2"
+        fill="#FFFFFF"
+        font-weight="400">
+    ON DEMAND
   </text>
 
-  <!-- Accent mark -->
-  <circle cx="1090" cy="112" r="6" fill="#D4B578"/>
-  <text x="970" y="116"
-        font-family="Inter, system-ui, sans-serif"
-        font-size="13" letter-spacing="4"
-        fill="#F1F1F0" fill-opacity="0.7"
-        text-anchor="end"
+  <line x1="106" y1="420" x2="392" y2="420" stroke="#D7B56D" stroke-opacity="0.72" stroke-width="2"/>
+
+  <text x="106" y="468"
+        font-family="Inter, Arial, sans-serif"
+        font-size="26"
+        fill="#F6F3EA"
+        fill-opacity="0.88"
         font-weight="500">
+    Clinical recovery. Delivered.
+  </text>
+
+  <text x="106" y="518"
+        font-family="Inter, Arial, sans-serif"
+        font-size="17"
+        letter-spacing="5"
+        fill="#F6F3EA"
+        fill-opacity="0.58"
+        font-weight="600">
+    LICENSED RN VISITS  /  CLINICAL CLEARANCE  /  BAY AREA
+  </text>
+
+  <circle cx="1038" cy="122" r="6" fill="#D7B56D"/>
+  <text x="1008" y="128"
+        font-family="Inter, Arial, sans-serif"
+        font-size="14"
+        letter-spacing="5"
+        fill="#F6F3EA"
+        fill-opacity="0.58"
+        text-anchor="end"
+        font-weight="600">
     AVALONVITALITY.CO
   </text>
 
-  <!-- Bottom rule -->
-  <line x1="72" y1="558" x2="1128" y2="558" stroke="#F1F1F0" stroke-opacity="0.06" stroke-width="1"/>
+  <text x="870" y="348"
+        font-family="'Bebas Neue', 'Arial Narrow', Impact, sans-serif"
+        font-size="250"
+        letter-spacing="8"
+        fill="#FFFFFF"
+        fill-opacity="0.045"
+        text-anchor="middle">
+    AV
+  </text>
 </svg>

@@ -6,6 +6,7 @@ export const publicRoutes = [
   '/careers',
   '/faq',
   '/corporate',
+  '/launches',
   '/events',
   '/hotel',
   '/service-area',
@@ -23,6 +24,7 @@ export const publicRoutes = [
 ];
 
 export const shopRoutes = [
+  '/protocols',
   '/menu',
   '/store',
   '/book',

@@ -5,8 +5,7 @@ import { ArrowRight, Plus } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 
-// Visual reference: baytobreakers.com (cream bg, distressed black display, pink stars,
-// mint accent). Original layout. Avalon brand crossed in via the teardrop + voice.
+// Group recovery landing for teams, events, hotels, and offices.
 
 function StarBurst({ className, style }) {
   return (
@@ -107,33 +106,25 @@ function RevealCard({ children, index = 0, delayBase = 0.10, className = '' }) {
 
 export default function B2B() {
   useSeo({
-    title: 'B2B Presale — Avalon Vitality',
-    description: 'Race-day IV, shots, and recovery for Bay to Breakers 2026. Pre-buy at the expo and hit the finish line dialed.',
+    title: 'Group Recovery — Avalon Vitality',
+    description: 'Private mobile IV, shots, and recovery support for teams, events, hotels, and offices across the San Francisco Bay Area.',
     path: '/b2b',
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Event',
-      name: 'Bay to Breakers — Avalon Vitality Recovery',
-      startDate: '2026-05-17T09:00:00-07:00',
-      endDate: '2026-05-17T14:00:00-07:00',
-      eventStatus: 'https://schema.org/EventScheduled',
-      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      location: {
-        '@type': 'Place',
-        name: 'Finish line · Ocean Beach',
-        address: { '@type': 'PostalAddress', addressLocality: 'San Francisco', addressRegion: 'CA', addressCountry: 'US' },
-      },
-      image: ['https://avalonvitality.co/og-b2b.png'],
-      description: 'Race-day IV, shots, and recovery for Bay to Breakers 2026.',
+      '@type': 'Service',
+      name: 'Avalon Vitality Group Recovery',
+      serviceType: 'Mobile IV therapy and group wellness recovery',
+      areaServed: 'San Francisco Bay Area',
+      image: ['https://www.avalonvitality.co/og-b2b.png'],
+      description: 'Private mobile IV, shots, and recovery support for teams, events, hotels, and offices.',
       offers: {
         '@type': 'Offer',
-        url: 'https://avalonvitality.co/b2b',
+        url: 'https://www.avalonvitality.co/b2b',
         price: '150.00',
         priceCurrency: 'USD',
         availability: 'https://schema.org/InStock',
-        validFrom: '2026-04-29T00:00:00-07:00',
       },
-      organizer: { '@type': 'Organization', name: 'Avalon Vitality', url: 'https://avalonvitality.co' },
+      provider: { '@type': 'Organization', name: 'Avalon Vitality', url: 'https://www.avalonvitality.co' },
     },
   });
 
@@ -293,7 +284,7 @@ export default function B2B() {
         </defs>
       </svg>
       {/* Scattered B2B starbursts — decorative, behind content */}
-      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
+      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden">
         <StarBurst className="absolute b2b-pink"  style={{ top: '4%',   left: '6%',  width: '34px', height: '34px', transform: 'rotate(-14deg)', opacity: 0.85 }} />
         <StarBurst className="absolute b2b-pink"  style={{ top: '7%',   right: '8%', width: '46px', height: '46px', transform: 'rotate(18deg)',  opacity: 0.95 }} />
         <StarBurst className="absolute b2b-pink"  style={{ top: '13%',  left: '38%', width: '22px', height: '22px', transform: 'rotate(-6deg)',  opacity: 0.55 }} />
@@ -337,8 +328,8 @@ export default function B2B() {
       </div>
       <style>{`
         .b2b-root {
-          background-color: #FFFEE4;
-          color: #0A0A0A;
+          background-color: hsl(var(--background));
+          color: hsl(var(--foreground));
           scroll-behavior: smooth;
         }
         @media (prefers-reduced-motion: reduce) {
@@ -375,11 +366,12 @@ export default function B2B() {
         .b2b-qty {
           appearance: none;
           -webkit-appearance: none;
-          background-color: #ffffff;
-          color: #0A0A0A;
-          border: 2px solid #0A0A0A;
+          background-color: hsl(var(--foreground));
+          color: hsl(var(--background));
+          border: 1px solid rgba(245, 243, 237, 0.24);
           border-radius: 8px;
           padding: 4px 28px 4px 10px;
+          min-height: 40px;
           font-family: 'Bebas Neue', 'Impact', sans-serif;
           font-size: 14px;
           letter-spacing: 0.08em;
@@ -389,7 +381,7 @@ export default function B2B() {
           background-position: right 8px center;
           transition: border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .b2b-qty:focus { outline: none; border-color: #ED7AC3; }
+        .b2b-qty:focus { outline: none; border-color: hsl(var(--accent)); }
         @media (prefers-reduced-motion: reduce) {
           .b2b-qty { transition: none; }
         }
@@ -399,26 +391,26 @@ export default function B2B() {
           letter-spacing: 0.02em;
           font-weight: 400;
         }
-        .b2b-pink { color: #ED7AC3; }
-        .b2b-bg-pink { background-color: #ED7AC3; }
+        .b2b-pink { color: hsl(var(--accent)); }
+        .b2b-bg-pink { background-color: hsl(var(--accent)); }
         .b2b-sticky-buy {
-          background-color: rgba(237, 122, 195, 0.95);
-          color: #0A0A0A;
-          border: 2px solid #0A0A0A;
-          box-shadow: 4px 4px 0 #0A0A0A;
+          background-color: rgba(245, 243, 237, 0.95);
+          color: hsl(var(--background));
+          border: 1px solid rgba(245, 243, 237, 0.22);
+          box-shadow: 0 -18px 70px rgba(0, 0, 0, 0.32);
           backdrop-filter: saturate(140%) blur(6px);
           -webkit-backdrop-filter: saturate(140%) blur(6px);
         }
         .b2b-sticky-buy:active {
           transform: translate(2px, 2px);
-          box-shadow: 2px 2px 0 #0A0A0A;
+          box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.28);
         }
-        .b2b-mint { background-color: #80C7D3; }
-        .b2b-soft-yellow { background-color: #F8EC82; }
+        .b2b-mint { background-color: hsl(var(--success)); }
+        .b2b-soft-yellow { background-color: hsl(var(--warning)); }
         .b2b-heart-card {
           position: relative;
-          background-color: #FFE9F2;
-          color: #0A0A0A;
+          background-color: rgba(245, 243, 237, 0.08);
+          color: hsl(var(--foreground));
           padding: 26% 8% 18% 8%;
           display: flex;
           flex-direction: column;
@@ -432,12 +424,12 @@ export default function B2B() {
           font: inherit;
         }
         .b2b-heart-card:hover {
-          background-color: #FCD9E8;
+          background-color: rgba(245, 243, 237, 0.12);
           transform: scale(1.01);
         }
         .b2b-heart-card.active {
-          background-color: #ED7AC3;
-          color: #ffffff;
+          background-color: hsl(var(--accent));
+          color: hsl(var(--background));
         }
         .b2b-heart-card.active * { color: inherit !important; }
         @media (prefers-reduced-motion: reduce) {
@@ -446,20 +438,20 @@ export default function B2B() {
         }
 
         .b2b-flair {
-          background-color: #ED7AC3;
-          color: #ffffff;
-          border: 2.5px solid #0A0A0A;
+          background-color: hsl(var(--accent));
+          color: hsl(var(--background));
+          border: 1px solid rgba(245, 243, 237, 0.22);
           letter-spacing: 0.04em;
           font-weight: 400;
           transform: rotate(8deg);
           transform-origin: center;
-          box-shadow: 4px 4px 0 #0A0A0A;
+          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.24);
         }
         @media (prefers-reduced-motion: reduce) {
           .b2b-heart-card {
           position: relative;
-          background-color: #FFE9F2;
-          color: #0A0A0A;
+          background-color: rgba(245, 243, 237, 0.08);
+          color: hsl(var(--foreground));
           padding: 26% 8% 18% 8%;
           display: flex;
           flex-direction: column;
@@ -473,12 +465,12 @@ export default function B2B() {
           font: inherit;
         }
         .b2b-heart-card:hover {
-          background-color: #FCD9E8;
+          background-color: rgba(245, 243, 237, 0.12);
           transform: scale(1.01);
         }
         .b2b-heart-card.active {
-          background-color: #ED7AC3;
-          color: #ffffff;
+          background-color: hsl(var(--accent));
+          color: hsl(var(--background));
         }
         .b2b-heart-card.active * { color: inherit !important; }
         @media (prefers-reduced-motion: reduce) {
@@ -489,45 +481,45 @@ export default function B2B() {
         .b2b-flair { transform: none; }
         }
         .b2b-card {
-          background-color: #ffffff;
-          border: 2px solid #0A0A0A;
+          background-color: rgba(245, 243, 237, 0.065);
+          border: 1px solid rgba(245, 243, 237, 0.18);
           border-radius: 1.25rem;
-          box-shadow: 6px 6px 0 0 #0A0A0A;
+          box-shadow: 0 18px 70px rgba(0, 0, 0, 0.20);
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .b2b-card:hover {
           transform: translate(-1px, -1px);
-          box-shadow: 7px 7px 0 0 #0A0A0A;
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.26);
         }
         .b2b-card.active {
-          background-color: #FFE9F2;
-          border-color: #ED7AC3;
-          border-width: 3px;
-          box-shadow: 6px 6px 0 0 #ED7AC3;
+          background-color: rgba(201, 168, 76, 0.12);
+          border-color: rgba(201, 168, 76, 0.75);
+          border-width: 1px;
+          box-shadow: 0 22px 80px rgba(201, 168, 76, 0.14);
           transform: translate(-2px, -2px);
         }
 
         .b2b-btn-primary {
-          background-color: #ED7AC3;
-          color: #0A0A0A;
-          border: 2px solid #0A0A0A;
+          background-color: hsl(var(--foreground));
+          color: hsl(var(--background));
+          border: 1px solid rgba(245, 243, 237, 0.28);
           border-radius: 999px;
           font-family: 'Bebas Neue', 'Impact', sans-serif;
           letter-spacing: 0.15em;
           padding: 1rem 2rem;
           font-size: 1.1rem;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 4px 4px 0 0 #0A0A0A;
+          box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
         }
         .b2b-btn-primary:hover {
-          background-color: #d96aae;
+          background-color: hsl(var(--muted));
           transform: translate(-1px, -1px);
-          box-shadow: 5px 5px 0 0 #0A0A0A;
+          box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
         }
         .b2b-btn-secondary {
-          background-color: #9DD9D2;
-          color: #0A0A0A;
-          border: 2px solid #0A0A0A;
+          background-color: rgba(245, 243, 237, 0.08);
+          color: hsl(var(--foreground));
+          border: 1px solid rgba(245, 243, 237, 0.18);
           border-radius: 999px;
           padding: 0.6rem 1.4rem;
           font-family: 'Bebas Neue', 'Impact', sans-serif;
@@ -537,24 +529,24 @@ export default function B2B() {
         }
         .b2b-btn-secondary:hover { transform: translate(-1px, -1px); }
         .b2b-input {
-          background-color: #ffffff;
-          border: 2px solid #0A0A0A;
+          background-color: rgba(245, 243, 237, 0.92);
+          border: 1px solid rgba(245, 243, 237, 0.24);
           border-radius: 999px;
           padding: 0.75rem 1.25rem;
           font-family: 'Bebas Neue', 'Impact', sans-serif;
           letter-spacing: 0.18em;
           font-size: 0.95rem;
-          color: #0A0A0A;
+          color: hsl(var(--background));
         }
-        .b2b-input:focus { outline: 2px solid #ED7AC3; outline-offset: 2px; }
+        .b2b-input:focus { outline: 2px solid hsl(var(--accent)); outline-offset: 2px; }
       `}</style>
 
 
       {/* Hero */}
       <section className="relative z-10 px-5 md:px-10 pt-1 md:pt-2 pb-0 overflow-hidden">
         {/* Star accents */}
-        <StarBurst className="absolute top-8 left-6 w-6 h-6 b2b-pink rotate-12" />
-        <StarBurst className="absolute top-20 right-8 w-8 h-8 b2b-pink -rotate-12" />
+        <StarBurst className="absolute top-8 left-6 hidden w-6 h-6 b2b-pink rotate-12" />
+        <StarBurst className="absolute top-20 right-8 hidden w-8 h-8 b2b-pink -rotate-12" />
 
         <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center">
           {/* Avalon brand mark — full-width clickable band, links home */}
@@ -563,53 +555,36 @@ export default function B2B() {
             aria-label="Avalon Vitality home"
             className="group flex w-full items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3 py-3 md:py-4 -my-1 hover:opacity-70 transition-opacity cursor-pointer"
           >
-            <img src="/favicon.png" alt="" width="32" height="32" className="w-9 h-9 md:w-12 md:h-12 transition-transform group-hover:scale-105" aria-hidden="true" />
+            <img src="/favicon.png" alt="" width="32" height="32" loading="eager" fetchPriority="high" decoding="async" className="w-9 h-9 invert md:w-12 md:h-12 transition-transform group-hover:scale-105" aria-hidden="true" />
             <span className="b2b-display text-3xl md:text-5xl tracking-[0.18em] uppercase leading-none">Avalon Vitality</span>
           </a>
 
-          {/* Bay to Breakers co-brand wordmark — supporting partnership badge */}
-          <div className="flex items-center justify-center gap-3 mb-1 md:mb-2">
-            <span className="b2b-display text-base md:text-xl tracking-[0.3em] uppercase b2b-pink leading-none">×</span>
-            <picture>
-              <source srcSet="/bay-to-breakers-logo.webp" type="image/webp" />
-              <img
-                src="/bay-to-breakers-logo.png"
-                alt="Bay to Breakers"
-                width="1164"
-                height="531"
-                decoding="async"
-                className="block h-20 md:h-32 w-auto"
-              />
-            </picture>
-          </div>
+          <p className="mb-2 rounded-full border border-white/15 px-4 py-2 font-body text-[11px] uppercase tracking-[0.24em] text-white/58">
+            Teams · Events · Hotels · Offices
+          </p>
 
-          {/* H1 — Post Race Recovery Lounge */}
           <h1 className="m-0 b2b-display text-5xl md:text-8xl uppercase leading-[0.85] text-center">
-            <span className="block b2b-pink text-2xl md:text-4xl tracking-[0.18em] mb-0.5 md:mb-1">Post Race</span>
-            Recovery Lounge
+            <span className="block b2b-pink text-2xl md:text-4xl tracking-[0.18em] mb-0.5 md:mb-1">Private</span>
+            Group Recovery
           </h1>
 
-          {/* Official partner — small caps eyebrow */}
           <p className="mt-2 md:mt-3 b2b-display text-sm md:text-lg tracking-[0.3em] uppercase b2b-pink text-center">
-            Official Bay to Breakers Recovery Partner
+            Mobile IV + recovery support
           </p>
 
-          {/* Date / Time */}
           <p className="mt-1 md:mt-2 b2b-display text-2xl md:text-6xl tracking-[0.04em] md:tracking-[0.08em] uppercase text-center leading-[0.85] whitespace-nowrap">
-            Sunday &middot; May 17 &middot; 9 AM &ndash; 2 PM
+            Built for groups
           </p>
 
-          {/* Location pin */}
-          <p className="mt-1 md:mt-2 b2b-display text-sm md:text-lg tracking-[0.22em] uppercase text-center text-black/70 leading-tight inline-flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="#ED7AC3" className="w-4 h-4 md:w-5 md:h-5 inline-block" aria-hidden="true">
+          <p className="mt-1 md:mt-2 b2b-display text-sm md:text-lg tracking-[0.22em] uppercase text-center text-white/62 leading-tight inline-flex items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="hsl(var(--accent))" className="w-4 h-4 md:w-5 md:h-5 inline-block" aria-hidden="true">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
-            Right next to the finish line
+            San Francisco Bay Area
           </p>
 
-          {/* Urgency stat line — capped quantities + presale deadline */}
-          <p className="mt-3 md:mt-4 b2b-display text-[10px] md:text-xs tracking-[0.32em] uppercase text-center text-black/60">
-            200 IV slots &middot; 1,000 shots &middot; presale ends may 16th
+          <p className="mt-3 md:mt-4 font-body text-[11px] md:text-xs tracking-[0.24em] uppercase text-center text-white/45">
+            RN-administered · physician-supervised · mobile
           </p>
         </div>
       </section>
@@ -622,9 +597,9 @@ export default function B2B() {
             {isLoading
               ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-h-${i}`} variant="step" />)
               : [
-                  { n: '01', t: 'Pre-buy', d: 'Lock your slot now. Confirmation email + race-morning text from Avalon.' },
-                  { n: '02', t: 'Run your race', d: 'Cross the line. Walk to the Avalon recovery zone (location texted that morning).' },
-                  { n: '03', t: 'Recover', d: 'Sit down, hydrate, IV / shot / boots, walk out feeling human.' },
+                  { n: '01', t: 'Choose', d: 'Pick individual care or a group bundle.' },
+                  { n: '02', t: 'Coordinate', d: 'Avalon confirms timing, location, and clinical staffing.' },
+                  { n: '03', t: 'Recover', d: 'Your group receives IVs, shots, or boots on site.' },
                 ].map((s, i) => (
                   <RevealCard key={s.n} index={i} className="h-full">
                     <div className="b2b-card p-3 md:p-5 h-full flex flex-col">
@@ -664,7 +639,7 @@ export default function B2B() {
                         aria-pressed={active}
                       >
                         {active && (
-                          <span className="absolute -top-2 -left-2 md:-top-3 md:-left-3 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full b2b-bg-pink text-white border-2 border-black shadow-md z-20" aria-hidden="true">
+                          <span className="absolute -top-2 -left-2 md:-top-3 md:-left-3 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full b2b-bg-pink text-background border border-white/20 shadow-md z-20" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 md:w-4 md:h-4">
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
@@ -692,7 +667,7 @@ export default function B2B() {
                         </div>
                         {!cardSoldOut && (
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <label className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase text-black/60" htmlFor={`qty-${p.id}`}>Qty</label>
+                            <label className="b2b-display text-[11px] md:text-xs tracking-[0.16em] uppercase text-white/45" htmlFor={`qty-${p.id}`}>Qty</label>
                             <select
                               id={`qty-${p.id}`}
                               className="b2b-qty"
@@ -765,7 +740,7 @@ export default function B2B() {
                         aria-pressed={active}
                       >
                         {active && (
-                          <span className="absolute -top-2 -left-2 md:-top-3 md:-left-3 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full b2b-bg-pink text-white border-2 border-black shadow-md z-20" aria-hidden="true">
+                          <span className="absolute -top-2 -left-2 md:-top-3 md:-left-3 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full b2b-bg-pink text-background border border-white/20 shadow-md z-20" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 md:w-4 md:h-4">
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
@@ -798,7 +773,7 @@ export default function B2B() {
                         </div>
                         {!ivCardSoldOut && (
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <label className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase text-black/60" htmlFor={`qty-${p.id}`}>Qty</label>
+                            <label className="b2b-display text-[11px] md:text-xs tracking-[0.16em] uppercase text-white/45" htmlFor={`qty-${p.id}`}>Qty</label>
                             <select
                               id={`qty-${p.id}`}
                               className="b2b-qty"
@@ -821,14 +796,14 @@ export default function B2B() {
 
           {/* Team rates contact card — full-width below bundle grid */}
           <a
-            href="mailto:rob@avalonvitality.co?subject=Bay%20to%20Breakers%20team%20rate&body=Hi%20Rob%2C%0A%0AWe%27re%20a%20team%20of%20%5B%5D%20heading%20to%20Bay%20to%20Breakers.%20Curious%20about%20group%20rates%20for%20IV%20%2B%20shots%20%2B%20boots%20at%20the%20finish%20line.%0A%0AThanks%21"
+            href="mailto:rob@avalonvitality.co?subject=Group%20recovery%20rate&body=Hi%20Rob%2C%0A%0AWe%27re%20planning%20recovery%20support%20for%20a%20group%20of%20%5B%5D.%20Curious%20about%20IV%20%2B%20shots%20%2B%20boots.%0A%0AThanks%21"
             className="b2b-card mt-5 md:mt-6 p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-5 hover:translate-x-[-2px] hover:translate-y-[-2px] transition-transform"
             style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
           >
             <div className="flex-1">
               <p className="b2b-display text-[10px] md:text-xs tracking-[0.3em] uppercase b2b-pink mb-1.5 md:mb-2">Team rates</p>
-              <h3 className="b2b-display text-xl md:text-3xl uppercase mb-1 md:mb-2 leading-tight">Got a team? Contact us for special rates.</h3>
-              <p className="text-sm md:text-base">Centipede crews, corporate teams, sponsors. Email Rob and we&rsquo;ll build you a finish-line package.</p>
+              <h3 className="b2b-display text-xl md:text-3xl uppercase mb-1 md:mb-2 leading-tight">Private group?</h3>
+              <p className="text-sm md:text-base">Email Rob. We&rsquo;ll build the recovery plan.</p>
             </div>
             <span className="b2b-display text-sm md:text-base tracking-[0.2em] uppercase b2b-pink inline-flex items-center gap-2 shrink-0">
               rob@avalonvitality.co
@@ -838,7 +813,7 @@ export default function B2B() {
         </div>
       </section>
 
-      {/* Your visit — what to expect on race day */}
+      {/* Your visit */}
       <section className="relative z-10 px-5 md:px-10 pb-8 md:pb-12">
         <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Your visit</p>
@@ -864,7 +839,7 @@ export default function B2B() {
             {/* Order summary + checkout */}
       <section id="b2b-checkout" className="relative z-10 px-5 md:px-10 pb-14 md:pb-20 scroll-mt-20">
         <div className="max-w-3xl mx-auto b2b-card p-6 md:p-8">
-          <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-5">Your race day</p>
+          <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-5">Your group</p>
 
           <div className="space-y-3 mb-5">
             <div className="flex justify-between gap-4">
@@ -886,17 +861,17 @@ export default function B2B() {
           </div>
 
           {/* Gift toggle */}
-          <div className="border-t-2 border-black pt-4 mb-4">
+          <div className="border-t border-white/15 pt-4 mb-4">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isGift}
                 onChange={(e) => setIsGift(e.target.checked)}
-                className="mt-1 w-4 h-4 accent-[#ED7AC3]"
+                className="h-11 w-11 shrink-0 accent-foreground"
               />
               <span className="text-sm md:text-base leading-snug">
-                <span className="b2b-display uppercase tracking-wide">This is a gift for a runner</span>
-                <span className="block text-xs md:text-sm text-black/70 mt-0.5">We&rsquo;ll send the confirmation to them. Pickup-name will be the recipient.</span>
+                <span className="b2b-display uppercase tracking-wide">This is a gift</span>
+                <span className="block text-xs md:text-sm text-white/55 mt-0.5">We&rsquo;ll send the confirmation to the recipient.</span>
               </span>
             </label>
             {isGift && (
@@ -906,32 +881,32 @@ export default function B2B() {
                   placeholder="Recipient name"
                   value={giftRecipientName}
                   onChange={(e) => setGiftRecipientName(e.target.value)}
-                  className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm md:text-base bg-white focus:outline-none focus:ring-2 focus:ring-[#ED7AC3]"
+                  className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 text-sm text-background focus:outline-none focus:ring-2 focus:ring-foreground md:text-base"
                 />
                 <input
                   type="email"
                   placeholder="Recipient email"
                   value={giftRecipientEmail}
                   onChange={(e) => setGiftRecipientEmail(e.target.value)}
-                  className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm md:text-base bg-white focus:outline-none focus:ring-2 focus:ring-[#ED7AC3]"
+                  className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 text-sm text-background focus:outline-none focus:ring-2 focus:ring-foreground md:text-base"
                 />
               </div>
             )}
           </div>
 
-          <div className="flex justify-between items-baseline border-t-2 border-black pt-4 mb-3">
+          <div className="flex justify-between items-baseline border-t border-white/15 pt-4 mb-3">
             <span className="b2b-display text-2xl md:text-3xl uppercase">Total</span>
             <span className="b2b-display text-4xl md:text-5xl">${total}</span>
           </div>
           <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-4 md:mb-5">
-            Full refund before May 16
+            Confirmation before dispatch
           </p>
 
           {b2bSubmitted ? (
-            <div className="rounded-2xl border-2 border-black bg-[#F8EC82] p-6 text-center space-y-3">
+            <div className="rounded-2xl border border-accent/25 bg-accent/[0.08] p-6 text-center space-y-3">
               <p className="b2b-display text-2xl uppercase tracking-wide">We'll be in touch within 24 hours.</p>
-              <p className="text-sm text-black/70">Your inquiry has been received. Our team will reach out to confirm details and payment.</p>
-              <p className="b2b-display text-xs tracking-[0.2em] uppercase text-black/60">Ref: {b2bRef}</p>
+              <p className="text-sm text-white/60">Your inquiry has been received. Our team will reach out to confirm details and payment.</p>
+              <p className="b2b-display text-xs tracking-[0.2em] uppercase text-white/45">Ref: {b2bRef}</p>
             </div>
           ) : selectedSoldOut ? (
             <button
@@ -951,8 +926,8 @@ export default function B2B() {
             </button>
           )}
 
-          <p className="mt-4 text-xs leading-relaxed text-black/70">
-            Slot reserved instantly. Payment processed securely by Square. Race-morning text from Avalon with the location.
+          <p className="mt-4 text-xs leading-relaxed text-white/55">
+            Slot reserved instantly. Payment processed securely by Square. Avalon confirms details by text.
           </p>
         </div>
       </section>
@@ -960,28 +935,28 @@ export default function B2B() {
             {/* FAQ */}
       <section className="relative z-10 px-5 md:px-10 pb-12 md:pb-16">
         <div className="max-w-3xl mx-auto">
-          <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Race-day questions</p>
+          <p className="b2b-display text-2xl md:text-3xl mb-5 md:mb-7 uppercase tracking-wide">Group questions</p>
           <div className="space-y-3">
             {[
               {
-                q: 'Where will Avalon be?',
-                a: 'At the finish line with limited space. A second site is TBD and will be announced soon. Location texted to your phone the morning of the race.',
+                q: 'Where does Avalon set up?',
+                a: 'Homes, hotels, offices, venues, and private recovery spaces across the SF Bay Area.',
               },
               {
-                q: 'Do I need to schedule a time?',
-                a: 'No. First come, first served once you cross. Slots typically clear in 20–30 minutes during peak.',
+                q: 'Do we need a schedule?',
+                a: 'Yes. Groups work best with a confirmed arrival window and a light intake flow ahead of time.',
               },
               {
-                q: 'Can I bring a friend?',
-                a: 'Of course. Friends without a ticket can hang out — service requires a ticket. Group bundles available, email support@avalonvitality.co.',
+                q: 'Can guests add services on site?',
+                a: 'Usually, as inventory allows. Group bundles are the cleanest way to reserve enough stock.',
               },
               {
-                q: 'What if I can\'t make it?',
-                a: 'Email support@avalonvitality.co before May 16 for a full refund.',
+                q: 'What if timing changes?',
+                a: 'Email support@avalonvitality.co as early as possible. We will adjust staffing when clinically and operationally feasible.',
               },
               {
                 q: 'Is this medical care?',
-                a: 'No. Avalon delivers IV hydration and intramuscular injections under standing-order medical direction for educational and wellness use. Not for the diagnosis or treatment of any condition.',
+                a: 'No. Avalon provides wellness support under physician oversight. Not diagnosis or treatment.',
               },
             ].map((item) => (
               <details key={item.q} className="b2b-card p-4 md:p-5 group">
@@ -996,32 +971,22 @@ export default function B2B() {
         </div>
       </section>
 
-{/* Confetti accent strip — small geometric shapes scattered before footer */}
-      <div className="relative h-12 md:h-16 overflow-hidden">
-        <svg className="absolute left-[5%] top-1 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
-        <svg className="absolute left-[20%] top-3 w-6 h-6 fill-current" style={{color:'#F8EC82'}} viewBox="0 0 20 20"><rect width="20" height="20" /></svg>
-        <svg className="absolute left-[35%] top-5 w-7 h-7 fill-current" style={{color:'#FF6347'}} viewBox="0 0 20 20"><polygon points="10,0 20,10 10,20 0,10" /></svg>
-        <svg className="absolute left-[55%] top-2 w-8 h-8 b2b-pink fill-current" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" /></svg>
-        <svg className="absolute left-[72%] top-4 w-6 h-6 fill-current" style={{color:'#80C7D3'}} viewBox="0 0 20 20"><polygon points="0,0 20,0 14,18" /></svg>
-        <svg className="absolute left-[88%] top-1 w-7 h-7 fill-current" style={{color:'#F8EC82'}} viewBox="0 0 20 20"><rect width="20" height="20" transform="rotate(15 10 10)" /></svg>
-      </div>
-
       {/* Footer / disclaimer — centered, generously spaced */}
-      <footer className="relative z-10 px-5 md:px-10 py-10 md:py-14 border-t-2 border-black mt-auto">
+      <footer className="relative z-10 px-5 md:px-10 py-10 md:py-14 border-t border-white/12 mt-auto">
         <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-5 md:gap-6">
           <p className="b2b-display text-sm md:text-base uppercase tracking-[0.3em]">
             Avalon Vitality &middot; California-licensed clinicians
           </p>
-          <p className="text-sm md:text-base leading-relaxed text-black/70 max-w-xl">
-            San Francisco&rsquo;s mobile IV therapy + longevity platform. RN-administered, physician-supervised.
+          <p className="text-sm md:text-base leading-relaxed text-white/55 max-w-xl">
+            Mobile recovery, RN-administered.
           </p>
-          <Link to="/" className="b2b-display text-xs md:text-sm uppercase tracking-[0.25em] hover:b2b-pink transition-colors inline-flex items-center gap-2">
+          <Link to="/" className="b2b-display inline-flex min-h-10 items-center gap-2 text-xs uppercase tracking-[0.25em] transition-colors hover:b2b-pink md:text-sm">
             Back to avalonvitality.co
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
-        <p className="max-w-3xl mx-auto mt-8 md:mt-10 text-[11px] md:text-xs leading-relaxed text-black/55 text-center">
-          Avalon Vitality is the official Bay to Breakers Recovery Partner for 2026. Statements made by Avalon Vitality have not been evaluated by the U.S. Food and Drug Administration. Services not intended to diagnose, treat, cure, or prevent any disease. Individual results vary. Consult your physician before any therapy. Need accessibility accommodations? Email support@avalonvitality.co before May 16 and we&rsquo;ll arrange them.
+        <p className="max-w-3xl mx-auto mt-8 md:mt-10 text-[11px] md:text-xs leading-relaxed text-white/45 text-center">
+          Wellness support only. Individual results vary.
         </p>
       </footer>
       {/* Sticky mobile CTA — appears after hero scroll, hidden on desktop */}

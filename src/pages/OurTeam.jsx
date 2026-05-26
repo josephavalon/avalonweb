@@ -39,8 +39,8 @@ const NURSING_TEAM = [
     experience: null,
     bio: 'Board-certified physician overseeing all Avalon clinical protocols, standing orders, and nurse credentialing. Clinical background in internal medicine with a focus on integrative health.',
     badge: 'Physician Oversight',
-    avatarColor: '#1a1a2e',
-    avatarText: '#C9A84C',
+    avatarColor: 'hsl(var(--card))',
+    avatarText: 'hsl(var(--accent))',
   },
   {
     initials: 'SK',
@@ -51,8 +51,8 @@ const NURSING_TEAM = [
     experience: '8 years',
     bio: 'Former ICU nurse at UCSF Medical Center. Specializes in high-complexity IV protocols including NAD+ and high-dose vitamin C.',
     badge: null,
-    avatarColor: '#0f2027',
-    avatarText: '#C9A84C',
+    avatarColor: 'hsl(var(--card))',
+    avatarText: 'hsl(var(--accent))',
   },
   {
     initials: 'MT',
@@ -63,8 +63,8 @@ const NURSING_TEAM = [
     experience: '6 years',
     bio: 'ER-trained nurse with extensive experience in rapid IV access and adverse event management. Based in the South Bay.',
     badge: null,
-    avatarColor: '#0f2027',
-    avatarText: '#C9A84C',
+    avatarColor: 'hsl(var(--card))',
+    avatarText: 'hsl(var(--accent))',
   },
   {
     initials: 'PL',
@@ -75,8 +75,8 @@ const NURSING_TEAM = [
     experience: '5 years',
     bio: 'Background in oncology nursing with deep expertise in nutritional IV therapy. Serves clients across SF and Marin.',
     badge: null,
-    avatarColor: '#0f2027',
-    avatarText: '#C9A84C',
+    avatarColor: 'hsl(var(--card))',
+    avatarText: 'hsl(var(--accent))',
   },
   {
     initials: 'DC',
@@ -87,8 +87,8 @@ const NURSING_TEAM = [
     experience: '7 years',
     bio: 'Works with professional athletes and performance coaches. Specializes in recovery and performance IV protocols.',
     badge: null,
-    avatarColor: '#0f2027',
-    avatarText: '#C9A84C',
+    avatarColor: 'hsl(var(--card))',
+    avatarText: 'hsl(var(--accent))',
   },
 ];
 

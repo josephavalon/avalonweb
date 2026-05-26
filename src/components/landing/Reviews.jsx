@@ -16,49 +16,13 @@ const CLIENT_LOGOS = [
 
 // ── Featured (punchy / notable clients) — shown first ──────────────────────
 const FEATURED = [
-  { name: 'J.G.',       tag: 'NAD+ IV',         quote: "I'm a founder who codes 20hrs a day now. NAD+ makes it happen." },
-  { name: 'R.D.',       tag: 'NAD+ 1000mg',      quote: "I love NAD+. I knock one out before any big pitch. It's part of my routine now." },
-  { name: 'J.L.',       tag: 'Performance IV',   quote: "I'm an AI founder. Every day I gain new abilities. Avalon holds me down through the storm." },
-  { name: 'A.G.',       tag: 'Beauty IV',        quote: 'Beauty IV is my weekly. Glutathione drip, every time.' },
-  { name: 'G.B.',       tag: 'Event Recovery',   quote: 'Booked Avalon for a festival. Green room was lit. They set up an entire recovery lounge backstage. Artists and crew loved it.' },
-  { name: 'C.A.',       tag: 'CBD',              quote: "Who knew CBD IVs were a thing? Zero THC. The most relaxing drip experience I've had. Already booked my next bag." },
+  { name: 'J.G.', tag: 'NAD+ IV',       quote: 'Sharp, calm, ready.' },
+  { name: 'A.G.', tag: 'Beauty IV',     quote: 'Glutathione drip, every week.' },
+  { name: 'C.D.', tag: 'Group Recovery', quote: 'Two nurses. Six guests. Effortless.' },
 ];
 
 // ── Long-form client reviews ────────────────────────────────────────────────
-const REVIEWS = [
-  {
-    name: 'Sarah M.',  tag: 'Post-Marathon',    date: 'March 2025',    stars: 5,
-    quote: 'I finished my first marathon and could barely move. Within the hour the RN arrived, set everything up in my living room, and I was genuinely calm for the first time all day. Felt restored by evening — completely unexpected how peaceful the whole experience was.',
-  },
-  {
-    name: 'James K.',  tag: 'Business Travel',  date: 'February 2025', stars: 5,
-    quote: "Red-eye from NYC, pitch at 9am the next morning. I booked Avalon the night I landed and the RN came straight to my hotel. I can't fully explain it but I felt noticeably sharper in that meeting. Definitely doing this every trip.",
-  },
-  {
-    name: 'Priya S.',  tag: 'Next-Morning',     date: 'January 2025',  stars: 5,
-    quote: "Bachelorette party. I'll leave it at that. The next morning was rough for all eight of us. Called Avalon at 9am, RN arrived in 75 minutes, and we were back to normal by noon. We ordered brunch. It was a miracle.",
-  },
-  {
-    name: 'David L.',  tag: 'Weekly Wellness',  date: 'April 2025',    stars: 5,
-    quote: "I've made this a weekly ritual and I genuinely think it's a competitive advantage. The consistency is what makes it worth it — not any single session, but the cumulative effect of just staying ahead of it. My schedule is brutal and this helps.",
-  },
-  {
-    name: 'Maya R.',   tag: 'Pre-Event',        date: 'March 2025',    stars: 5,
-    quote: 'Had a gala I really wanted to show up for at my best. The RN was discreet, professional, and somehow made the whole thing feel like self-care rather than a medical procedure. I felt genuinely looked after, not just serviced.',
-  },
-  {
-    name: 'Tom B.',    tag: 'Athletic Recovery', date: 'February 2025', stars: 5,
-    quote: "I compete in CrossFit regionals and used to drive to IV bars after events. Having it come to the gym after a competition is a completely different level of convenience. I can actually rest while I recover instead of sitting in a waiting room.",
-  },
-  {
-    name: 'Anika W.',  tag: 'Immune Support',   date: 'January 2025',  stars: 5,
-    quote: "I'd been dragging for about a week — exhausted, run down, the works. Booked a session just to support my body a bit. Two days after I noticed a real shift in how I was feeling. Hard to say exactly what changed, but something definitely did.",
-  },
-  {
-    name: 'Chris D.',  tag: 'Team Booking',     date: 'April 2025',    stars: 5,
-    quote: "Booked for a six-person team offsite. Avalon sent two nurses and the whole thing ran in under two hours. Everyone was impressed it was even logistically possible. Already planning to do it again at our next quarterly.",
-  },
-];
+const REVIEWS = [];
 
 function StarRow({ count }) {
   return (
@@ -142,7 +106,7 @@ export default function Reviews() {
             Trusted
           </h2>
           <p className="font-body text-sm text-foreground/50 leading-relaxed mt-3 max-w-md">
-            For private clients, events, and venues across the Bay Area.
+            Private clients. Groups. Hotels.
           </p>
           <div className="grid grid-cols-3 gap-2 mt-5 max-w-md">
             {[
@@ -203,24 +167,24 @@ export default function Reviews() {
 
       {/* Disclaimer */}
       <div className="max-w-6xl mx-auto mt-6">
-        <p className="font-body text-[10px] text-foreground/30 leading-relaxed max-w-2xl">
-          Testimonials reflect individual client experiences. Names may be initials or stage names at each client&rsquo;s request. Individual results vary and are not guaranteed. No clients were compensated in cash; some received complimentary sessions. Educational information only — not medical advice.
+          <p className="font-body text-[10px] text-foreground/30 leading-relaxed max-w-2xl">
+          Individual experiences vary. Not medical advice.
         </p>
       </div>
 
       <style>{`
         /* Fade right edge only — left padding already frames the first card */
         .reviews-fade-wrap {
-          -webkit-mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
-                  mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, black 0%, black 92%, transparent 100%);
+                  mask-image: linear-gradient(to right, black 0%, black 92%, transparent 100%);
         }
         .reviews-fade-wrap ::-webkit-scrollbar { display: none; }
 
         /* Logo marquee */
         .logo-strip-wrap {
           overflow: hidden;
-          -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
-                  mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+                  mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
         }
         .logo-strip-track {
           display: flex;

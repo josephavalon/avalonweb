@@ -1,33 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, Sun, Moon, Sunset, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { EASE, premiumTap } from '@/lib/motion';
+import { ArrowLeft, LogOut, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { EASE, premiumSelectionTransition, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
+import PremiumButton from '@/components/ui/PremiumButton';
 
-const Thirty = (props) => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <text x="12" y="19.5" textAnchor="middle" fontSize="22" fontWeight="900" fill="currentColor" fontFamily="'Bebas Neue', 'Impact', 'Arial Black', sans-serif" letterSpacing="0.02em">30</text>
-  </svg>
-);
-
-const THEMES = ['dark', 'light', 'golden', 'dubs'];
+const THEMES = ['dark', 'light'];
 const THEME_STORAGE_KEY = 'avalon.theme';
 
 const readInitialTheme = () => {
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (stored && THEMES.includes(stored)) return stored;
-  } catch {}
+  } catch (err) {
+    if (import.meta.env?.DEV) console.warn('[navbar-theme-read]', err);
+  }
   return 'dark';
 };
 
 
 const mainLinks = [
-  { to: '/menu', label: 'Menu' },
-  { to: '/subscription', label: 'Subscription' },
-  { to: '/events', label: 'Launches' },
-  { to: '/service-area', label: 'Locations' },
+  { to: '/protocols', label: 'Protocols' },
+  { to: '/subscription', label: 'Plans' },
+  { to: '/launches', label: 'Launches' },
 ];
 
 const dashboardPathFor = (user) => {
@@ -40,7 +36,7 @@ const dashboardPathFor = (user) => {
 export default function Navbar({ showBack = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState(readInitialTheme);
+  const [theme] = useState(readInitialTheme);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
@@ -60,14 +56,10 @@ export default function Navbar({ showBack = false }) {
     if (theme !== 'light') document.documentElement.classList.add(theme);
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch {}
+    } catch (err) {
+      if (import.meta.env?.DEV) console.warn('[navbar-theme-write]', err);
+    }
   }, [theme]);
-
-  const cycleTheme = () => {
-    setTheme(prev => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length]);
-  };
-
-  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : theme === 'dubs' ? Thirty : Sunset;
 
   const handleLogoClick = (e) => {
     if (location.pathname === '/') {
@@ -88,14 +80,20 @@ export default function Navbar({ showBack = false }) {
     navigate('/login');
   };
 
-  const linkClass = "inline-flex items-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
+  const linkClass = "inline-flex min-h-11 items-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
+  const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
+  const mobileLinks = [
+    ...mainLinks,
+    { to: '/book', label: 'Book', primary: true },
+    { to: dashboardPathFor(user), label: user ? 'Dashboard' : 'Login' },
+  ];
 
   return (
     <motion.nav
-      initial={{ opacity: 0, y: -18, filter: 'blur(10px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: -18 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, delay: 0.08, ease: EASE }}
-      className={`fixed left-4 right-4 z-40 rounded-3xl transition-all duration-700 ease-editorial ${
+      className={`av-motion-rail fixed left-4 right-4 z-40 rounded-3xl transition-all duration-700 ease-editorial ${
       scrolled
         ? 'top-2 bg-background/60 backdrop-blur-2xl border border-foreground/10 shadow-lg shadow-black/25'
         : 'top-4 bg-background/60 backdrop-blur-2xl border border-foreground/10'
@@ -112,32 +110,47 @@ export default function Navbar({ showBack = false }) {
             <button
               type="button"
               onClick={goBack}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-foreground/10 text-foreground transition-colors hover:bg-foreground/10"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 text-foreground transition-colors hover:bg-foreground/10"
               aria-label="Go back"
               title="Back"
             >
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
           )}
-          <Link to="/" onClick={handleLogoClick} className="shrink-0 leading-none">
+          <Link to="/" onClick={handleLogoClick} className="inline-flex min-h-11 shrink-0 flex-col justify-center leading-none">
             <span className="block font-heading text-[17px] tracking-[0.22em] text-foreground leading-none">AVALON</span>
             <span className="block font-body text-[8px] tracking-[0.38em] text-foreground/60 uppercase mt-0.5">VITALITY</span>
           </Link>
         </div>
 
         {/* Col 2 — nav links, auto width, inherently centered */}
-        <div className="flex items-center gap-8">
-          {mainLinks.map((link) => (
-            <Link key={link.to} to={link.to} className={linkClass}>{link.label}</Link>
-          ))}
-          {user ? (
-            <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>
-          ) : (
-            <Link to="/login" className={linkClass}>Login</Link>
-          )}
-        </div>
+        <LayoutGroup id="desktop-nav-links">
+          <div className="flex items-center gap-2 rounded-full border border-foreground/[0.07] bg-foreground/[0.025] p-1 backdrop-blur-xl">
+            {mainLinks.map((link) => {
+              const active = isActiveLink(link.to);
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`relative isolate inline-flex min-h-11 items-center overflow-hidden rounded-full px-3 py-2 font-body text-xs uppercase leading-none tracking-[0.18em] transition-colors ${
+                    active ? 'text-foreground' : 'text-foreground/58 hover:text-foreground'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="desktop-nav-active"
+                      className="absolute inset-0 rounded-full bg-foreground/[0.095] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]"
+                      transition={premiumSelectionTransition}
+                    />
+                  )}
+                  <span className="relative z-10">{link.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </LayoutGroup>
 
-        {/* Col 3 — theme toggle + BUY NOW CTA, right-aligned */}
+        {/* Col 3 — account link + booking CTA, right-aligned */}
         <div className="flex items-center justify-end gap-4">
           {user && (
             <button
@@ -149,32 +162,15 @@ export default function Navbar({ showBack = false }) {
               Sign Out
             </button>
           )}
-          <button
-            onClick={cycleTheme}
-            className="theme-toggle-btn p-1.5 rounded-full hover:bg-white/10 transition-all duration-base ease-editorial text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label={`Switch theme — currently ${theme}`}
-            title={`Theme: ${theme}`}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={theme}
-                initial={{ opacity: 0, rotate: -24, scale: 0.82 }}
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, rotate: 24, scale: 0.82 }}
-                transition={{ duration: 0.32, ease: EASE }}
-                className="block"
-              >
-                <ThemeIcon className="w-4 h-4" />
-              </motion.span>
-            </AnimatePresence>
-          </button>
-          <Link
+          <Link to={dashboardPathFor(user)} className={linkClass}>{user ? 'Dashboard' : 'Login'}</Link>
+          <PremiumButton
+            as={Link}
             to="/book"
-            className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 font-body text-[11px] font-semibold tracking-[0.22em] uppercase text-background transition-opacity hover:opacity-85"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-5 py-2.5 font-body text-[11px] font-semibold tracking-[0.22em] uppercase text-background transition-opacity hover:opacity-85"
           >
-            Buy Now
+            Book
             <ArrowLeft className="h-3.5 w-3.5 rotate-180" strokeWidth={2.2} />
-          </Link>
+          </PremiumButton>
         </div>
       </div>
 
@@ -199,25 +195,6 @@ export default function Navbar({ showBack = false }) {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={cycleTheme}
-            className="theme-toggle-btn flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 transition-all duration-base ease-editorial text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            aria-label={`Switch theme — currently ${theme}`}
-            title={`Theme: ${theme}`}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={theme}
-                initial={{ opacity: 0, rotate: -24, scale: 0.82 }}
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, rotate: 24, scale: 0.82 }}
-                transition={{ duration: 0.32, ease: EASE }}
-                className="block"
-              >
-                <ThemeIcon className="w-5 h-5" />
-              </motion.span>
-            </AnimatePresence>
-          </button>
           <motion.button
             onClick={() => setMobileOpen(!mobileOpen)}
             whileTap={premiumTap}
@@ -246,89 +223,89 @@ export default function Navbar({ showBack = false }) {
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.45, ease: EASE }}
+              initial={{ opacity: 0, height: 0, y: -8, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, height: 'auto', y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, height: 0, y: -8, filter: 'blur(8px)' }}
+              transition={{ duration: 0.54, ease: EASE }}
+              className="px-2 pb-2"
             >
-              <div className="border-t border-white/[0.08] mx-4 mb-1" />
               <motion.div
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 variants={{
-                  hidden: { transition: { staggerChildren: 0.035, staggerDirection: -1 } },
-                  visible: { transition: { staggerChildren: 0.055, delayChildren: 0.08 } },
+                  hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
+                  visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="px-6 py-4 flex flex-col items-end gap-4"
+                className="relative overflow-hidden rounded-[24px] border border-foreground/[0.10] bg-background/[0.42] p-2 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/[0.34]"
               >
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(140deg,hsl(var(--foreground)/0.10),transparent_34%,hsl(var(--accent)/0.08))]" />
+                <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-foreground/20" />
+
                 {showBack && (
-                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: EASE } } }}>
+                  <motion.div
+                    className="relative"
+                    variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
+                  >
                     <button
                       type="button"
                       onClick={() => {
                         close();
                         goBack();
                       }}
-                      className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
+                      className="flex min-h-[48px] w-full items-center justify-between rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
                     >
-                      Back
+                      <span>Back</span>
+                      <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
                     </button>
                   </motion.div>
                 )}
 
-                {mainLinks.map((item) => (
-                  <motion.div
-                    key={item.to}
-                    variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: EASE } } }}
-                  >
-                    <Link
-                      to={item.to}
-                      onClick={close}
-                      className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
+                <div className="relative grid gap-1.5">
+                  {mobileLinks.map((item) => {
+                  const active = isActiveLink(item.to);
+                  return (
+                    <motion.div
+                      key={item.to}
+                      variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
                     >
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                ))}
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: EASE } } }}>
-                  <Link
-                    to="/book"
-                    onClick={close}
-                    className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
-                  >
-                    Buy Now
-                  </Link>
-                </motion.div>
-
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: EASE } } }}>
-                  {user ? (
-                    <Link
-                      to={dashboardPathFor(user)}
-                      onClick={close}
-                      className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
-                    >
-                      Dashboard
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/login"
-                      onClick={close}
-                      className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
-                    >
-                      Login
-                    </Link>
-                  )}
-                </motion.div>
+                      <Link
+                        to={item.to}
+                        onClick={close}
+                        className={`group flex min-h-[48px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] transition-all duration-300 ${
+                          item.primary
+                            ? 'border-foreground/80 bg-foreground text-background hover:opacity-90'
+                            : active
+                              ? 'border-foreground/[0.16] bg-foreground/[0.09] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]'
+                              : 'border-transparent bg-transparent text-foreground/66 hover:border-foreground/[0.10] hover:bg-foreground/[0.055] hover:text-foreground'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <span className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                          item.primary
+                            ? 'bg-background/60'
+                            : active
+                              ? 'bg-accent'
+                              : 'bg-foreground/18 group-hover:bg-foreground/42'
+                        }`} />
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+                </div>
 
                 {user && (
-                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: EASE } } }}>
+                  <motion.div
+                    className="relative mt-1"
+                    variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
+                  >
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="block text-sm tracking-widest text-foreground hover:text-foreground/70 font-body uppercase transition-colors text-right"
+                      className="flex min-h-[44px] w-full items-center justify-between rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
                     >
-                      Sign Out
+                      <span>Sign Out</span>
+                      <LogOut className="h-3.5 w-3.5" strokeWidth={1.7} />
                     </button>
                   </motion.div>
                 )}
