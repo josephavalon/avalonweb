@@ -375,8 +375,14 @@ function workloadRows(nurses = []) {
 
 export function buildDispatchBrainSnapshot({ requests = [], nurses = [], inventory = [], booking = null } = {}) {
   const rows = buildDispatchBrainMatrix({ requests, nurses, inventory, booking });
-  const allScores = rows.flatMap((row) => row.candidates);
-  const topDecisions = rows.map((row) => ({ ...row.best, row })).filter(Boolean);
+  const allScores = rows.flatMap((row) => Array.isArray(row.candidates) ? row.candidates : []);
+  const topDecisions = rows
+    .filter((row) => row.best)
+    .map((row) => ({
+      inventoryRisk: [],
+      ...row.best,
+      row,
+    }));
   const blocked = topDecisions.filter((item) => item.grade === 'Block');
   const dispatchable = topDecisions.filter((item) => ['Dispatch', 'Offer'].includes(item.grade));
   const etaRisk = topDecisions.filter((item) => item.etaMinutes > 45).length;

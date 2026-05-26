@@ -268,7 +268,14 @@ export function buildProviderCompetencySnapshot({ requests = [], nurses = [], bo
       scores,
     };
   }).sort((a, b) => (b.best?.score || 0) - (a.best?.score || 0));
-  const allScores = rows.flatMap((row) => row.scores);
+  const allScores = rows
+    .flatMap((row) => Array.isArray(row.scores) ? row.scores : [])
+    .filter(Boolean)
+    .map((score) => ({
+      requiredModules: [],
+      blockers: [],
+      ...score,
+    }));
   const nurseRows = nurses.map((nurse) => {
     const nurseScores = allScores.filter((score) => score.nurseId === (nurse.id || slug(nurse.name || 'nurse')));
     const best = nurseScores.sort((a, b) => b.score - a.score)[0] || null;
