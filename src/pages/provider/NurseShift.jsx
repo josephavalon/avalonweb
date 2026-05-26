@@ -59,6 +59,26 @@ const GOLD           = 'hsl(var(--accent))';
 const DISPATCH_PHONE = 'tel:+14155550101';
 const EASE           = [0.16, 1, 0.3, 1];
 
+const DEMO_NURSE_RECORD = {
+  id: 's2',
+  name: 'Stephanie R.',
+  status: 'Assigned',
+  area: 'SF',
+  city: 'San Francisco',
+  kit: 'Ready / stocked',
+  kitStatus: 'Ready',
+  certifications: ['RN', 'IV therapy', 'NAD review'],
+  protocols: ['hydration', 'recovery', 'myers'],
+  visits: 2,
+  nurseys: { status: 'Clear', state: 'CA' },
+  trainingModules: [
+    { id: 'iv-start-safety', status: 'Clear', tone: 'ready', daysLeft: 180 },
+    { id: 'myers-add-ons', status: 'Clear', tone: 'ready', daysLeft: 120 },
+    { id: 'emergency-response', status: 'Clear', tone: 'ready', daysLeft: 90 },
+    { id: 'acuity-closeout', status: 'Clear', tone: 'ready', daysLeft: 180 },
+  ],
+};
+
 // ── helpers ────────────────────────────────────────────────────────────────────
 function formatElapsed(secs) {
   const m = String(Math.floor(secs / 60)).padStart(2, '0');
@@ -90,7 +110,7 @@ function normalizeNurseVisitStatus(status = 'scheduled') {
 
 function nurseRecordForName(name = '') {
   const needle = String(name || '').toLowerCase();
-  return NURSES.find((nurse) => String(nurse.name || '').toLowerCase() === needle) || NURSES[0];
+  return NURSES.find((nurse) => String(nurse.name || '').toLowerCase() === needle) || NURSES[0] || DEMO_NURSE_RECORD;
 }
 
 function trainingIdsForService(serviceName = '') {
@@ -100,6 +120,66 @@ function trainingIdsForService(serviceName = '') {
   if (/myers|performance|glutathione|vip|magnesium|b-complex/.test(service)) ids.add('myers-add-ons');
   if (/\bim\b|b12|shot|injection/.test(service)) ids.add('im-shot-review');
   return ids;
+}
+
+function nextDemoAppointmentIso() {
+  const date = new Date();
+  date.setHours(date.getHours() + 1, 0, 0, 0);
+  return date.toISOString();
+}
+
+function demoClientFromBooking(booking = {}) {
+  const name = booking.contact?.name || [booking.contact?.firstName, booking.contact?.lastName].filter(Boolean).join(' ');
+  const [firstName = 'Preview', ...lastParts] = String(name || 'Preview Client').split(' ');
+  return {
+    id: 'demo-client-preview',
+    first_name: firstName,
+    last_name: lastParts.join(' ') || 'Client',
+    phone: booking.contact?.phone || '(415) 980-7708',
+    source: booking.source || 'Beta demo',
+    visit_count: 3,
+    tags: ['RETURNING', 'GFE CLEAR'],
+    intake_completed: true,
+  };
+}
+
+function demoServiceFromBooking(booking = {}) {
+  return {
+    id: 'demo-service-preview',
+    name: booking.service || 'Recovery Protocol',
+    duration_minutes: /nad/i.test(booking.service || '') ? 90 : 45,
+    base_price: Number(booking.subtotal || 325),
+  };
+}
+
+function buildDemoNurseAppointment(booking = {}) {
+  const address = booking.address && booking.address !== 'Client address pending'
+    ? booking.address
+    : '188 King St, Suite 2205';
+  return {
+    id: 'demo-nurse-shift-001',
+    client_id: 'demo-client-preview',
+    service_id: 'demo-service-preview',
+    nurse_id: 's2',
+    status: readLocal('visitStatus.demo-nurse-shift-001', 'confirmed'),
+    scheduled_at: nextDemoAppointmentIso(),
+    location_address: address,
+    location_city: booking.city || 'San Francisco',
+    location_notes: booking.notes || 'Concierge arrival. Text client before elevator.',
+    clinical_notes: 'Acuity closeout placeholder. Confirm ID, vitals, consent, and protocol before start.',
+    shiftValue: Number(booking.subtotal || 325),
+    shift_pay: 95,
+    _demoClient: demoClientFromBooking(booking),
+    _demoService: demoServiceFromBooking(booking),
+  };
+}
+
+function resolveClient(appt) {
+  return getClient(appt.client_id) || appt._demoClient;
+}
+
+function resolveService(appt) {
+  return getService(appt.service_id) || appt._demoService;
 }
 
 // ── sub-components ─────────────────────────────────────────────────────────────
@@ -248,8 +328,8 @@ function VisitCard({ appt, visitNumber, nurseName = 'Nurse', nurseRecord, onStat
   }
 
   const elapsed = useTimer(timerRunning);
-  const client  = getClient(appt.client_id);
-  const service = getService(appt.service_id);
+  const client  = resolveClient(appt);
+  const service = resolveService(appt);
 
   if (!client || !service) return null;
 
@@ -1136,6 +1216,11 @@ export default function NurseShift() {
   // Show today's visits when present; otherwise keep NURSE001 useful in demo mode
   // by showing Stephanie's active assigned queue.
   const todayStr = new Date().toISOString().slice(0, 10);
+  const demoSeed = readLocal('demoSeed', null);
+  const latestBooking = readLocal('lastBooking', null);
+  const shouldShowDemoShift = APPOINTMENTS.length === 0
+    && (demoSeed?.username === 'NURSE001' || user?.name === 'Stephanie R.');
+  const demoAppts = shouldShowDemoShift ? [buildDemoNurseAppointment(latestBooking || {})] : [];
   const assignedAppts = APPOINTMENTS.filter(a => {
     const isNurse = a.nurse_id === 's2';
     const notCancelled = a.status !== 'cancelled';
@@ -1147,7 +1232,7 @@ export default function NurseShift() {
     return isToday;
   });
   const activeAssigned = assignedAppts.filter(a => a.status !== 'completed');
-  const myAppts  = (todayAppts.length ? todayAppts : activeAssigned.length ? activeAssigned : assignedAppts).sort((a, b) => {
+  const myAppts  = (todayAppts.length ? todayAppts : activeAssigned.length ? activeAssigned : assignedAppts.length ? assignedAppts : demoAppts).sort((a, b) => {
     const aStatus = apptStatuses[a.id] || a.status;
     const bStatus = apptStatuses[b.id] || b.status;
     if (statusOrder(aStatus) !== statusOrder(bStatus)) {
