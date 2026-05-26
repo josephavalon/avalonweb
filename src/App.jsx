@@ -115,7 +115,7 @@ const Athlete = lazyRoute(() => import('./pages/Athlete'));
 const Hangover = lazyRoute(() => import('./pages/Hangover'));
 const JetLag = lazyRoute(() => import('./pages/JetLag'));
 const Press = lazyRoute(() => import('./pages/Press'));
-const AdminCommand = lazyRoute(() => import('./pages/admin/Command'));
+const AdminEssentials = lazyRoute(() => import('./pages/admin/AdminEssentials'));
 const AdminAcuityControl = lazyRoute(() => import('./pages/admin/AcuityControl'));
 const AdminAttioControl = lazyRoute(() => import('./pages/admin/AttioControl'));
 const AdminFinanceControl = lazyRoute(() => import('./pages/admin/FinanceControl'));
@@ -258,19 +258,10 @@ function AppRoutes() {
             <Route path="/provider/role-os" element={<RequireAuth allowedRoles={['provider', 'admin']}><RoleOS /></RequireAuth>} />
             <Route path="/provider/reports" element={<RequireAuth allowedRoles={['provider', 'admin']}><ProviderReports /></RequireAuth>} />
             <Route path="/provider/settings" element={<RequireAuth allowedRoles={['provider', 'admin']}><ProviderSettings /></RequireAuth>} />
-            <Route path="/admin" element={<RequireAuth allowedRoles={['admin']}><AdminCommand /></RequireAuth>} />
-            <Route path="/admin/acuity" element={<RequireAuth allowedRoles={['admin']}><AdminAcuityControl /></RequireAuth>} />
-            <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin']}><AdminAttioControl /></RequireAuth>} />
-            <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin']}><AdminFinanceControl /></RequireAuth>} />
-            <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
-            <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
-            <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />
-            <Route path="/admin/kits" element={<RequireAuth allowedRoles={['admin']}><AdminKitControl /></RequireAuth>} />
-            <Route path="/admin/training" element={<RequireAuth allowedRoles={['admin']}><AdminTrainingControl /></RequireAuth>} />
-            <Route path="/admin/role-os" element={<RequireAuth allowedRoles={['admin']}><RoleOS /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
             <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><AdminInventory /></RequireAuth>} />
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin']}><AdminBookings /></RequireAuth>} />
-            <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminCommand /></RequireAuth>} />
+            <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/gift" element={<Gift />} />

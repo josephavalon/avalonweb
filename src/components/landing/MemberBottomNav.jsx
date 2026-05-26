@@ -4,10 +4,10 @@ import { Home, Calendar, Crown, MessageCircle, User } from 'lucide-react';
 import { useCommunicationCenter } from '@/hooks/useCommunicationCenter';
 
 const BG = 'hsl(var(--background))';
-const BAR = 'hsl(var(--background) / 0.98)';
+const BAR = 'hsl(var(--background) / 0.96)';
 const CARD = 'hsl(var(--foreground) / 0.075)';
 const BORDER = 'hsl(var(--foreground) / 0.12)';
-const ACTIVE_BORDER = 'hsl(var(--foreground) / 0.20)';
+const ACTIVE_BORDER = 'hsl(var(--foreground) / 0.18)';
 const MUTED = 'hsl(var(--foreground) / 0.62)';
 const DIM = 'hsl(var(--foreground) / 0.42)';
 const TEXT = 'hsl(var(--foreground))';
@@ -17,11 +17,11 @@ export default function MemberBottomNav() {
   const { snapshot } = useCommunicationCenter();
 
   const items = [
-    { icon: Home,          label: 'Home',    href: '/members/dashboard' },
-    { icon: MessageCircle, label: 'Message', href: '/members/messages', badge: snapshot.unreadTotal > 0 ? snapshot.unreadTotal : null },
-    { icon: Calendar,      label: 'Start',   href: '/book', primary: true },
-    { icon: Crown,         label: 'Plan',    href: '/subscription' },
-    { icon: User,          label: 'Account', href: '/members/account' },
+    { icon: Home,          label: 'Home', href: '/members/dashboard' },
+    { icon: MessageCircle, label: 'Chat', href: '/members/messages', badge: snapshot.unreadTotal > 0 ? snapshot.unreadTotal : null },
+    { icon: Calendar,      label: 'Book', href: '/book', primary: true },
+    { icon: Crown,         label: 'Plan', href: '/subscription' },
+    { icon: User,          label: 'Me',   href: '/members/account' },
   ];
 
   return (
@@ -29,13 +29,14 @@ export default function MemberBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 px-3 pt-2 backdrop-blur-2xl"
       aria-label="Member navigation"
       style={{
-        background: `linear-gradient(180deg, rgba(8,8,7,0), ${BAR} 18%)`,
-        borderTop: `1px solid ${BORDER}`,
-        boxShadow: '0 -18px 48px rgba(0,0,0,0.42)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)',
+        background: `linear-gradient(180deg, rgba(8,8,7,0), ${BAR} 24%)`,
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.7rem)',
       }}
     >
-      <div className="mx-auto grid max-w-2xl grid-cols-5 gap-1.5">
+      <div
+        className="mx-auto grid max-w-md grid-cols-5 gap-1.5 rounded-[24px] p-1.5"
+        style={{ background: 'hsl(var(--background) / 0.82)', border: `1px solid ${BORDER}`, boxShadow: '0 -18px 54px rgba(0,0,0,0.34)' }}
+      >
         {items.map((item) => (
           <MemberNavItem
             key={item.label}
@@ -58,16 +59,16 @@ function MemberNavItem({ item, active }) {
   return (
     <Link
       to={item.href}
-      className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-[1.15rem] px-1 text-center transition-transform active:scale-[0.97]"
+      className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-1 text-center transition-transform active:scale-[0.96]"
       style={{ background, border }}
     >
       {item.primary ? (
         <>
-          <span className="flex h-9 w-11 items-center justify-center rounded-full" style={{ background: TEXT, color: BG }}>
+          <span className="flex h-9 w-11 items-center justify-center rounded-full" style={{ background: TEXT, color: BG, boxShadow: '0 10px 30px hsl(var(--foreground) / 0.18)' }}>
             <Icon className="h-5 w-5" strokeWidth={2} />
           </span>
           <span className="font-body text-[9px] font-semibold uppercase leading-none tracking-[0.16em]" style={{ color: labelColor }}>
-            Start
+            {item.label}
           </span>
         </>
       ) : (

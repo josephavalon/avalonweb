@@ -29,16 +29,16 @@ export default function StickyBookBar() {
           aria-label="Quick booking bar"
         >
           {/* Opaque frosted bar */}
-          <div className="relative isolate mx-4 mb-4 px-5 py-4 rounded-[1.75rem] overflow-hidden bg-[hsl(var(--background))] backdrop-blur-3xl border border-foreground/[0.14] shadow-[0_18px_70px_hsl(var(--foreground)/0.18)] flex items-center gap-3">
+          <div className="relative isolate mx-3 mb-3 flex items-center gap-3 overflow-hidden rounded-[24px] border border-foreground/[0.12] bg-[hsl(var(--background)/0.86)] px-4 py-3.5 shadow-[0_18px_70px_rgba(0,0,0,0.32)] backdrop-blur-3xl">
             <div className="absolute inset-0 -z-10 bg-[hsl(var(--background))]" aria-hidden="true" />
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white/[0.14] via-white/[0.06] to-foreground/[0.05]" aria-hidden="true" />
             {/* Label */}
             <div className="flex-1 min-w-0">
               <p className="font-body text-[10px] tracking-[0.26em] uppercase text-foreground/55">
-                Shop now
+                Book now
               </p>
               <p className="font-body text-[11px] tracking-[0.16em] uppercase text-foreground font-semibold truncate">
-                Same-day mobile IV
+                Recovery delivered
               </p>
             </div>
 
@@ -46,9 +46,9 @@ export default function StickyBookBar() {
             <motion.div whileTap={premiumTap} className="shrink-0">
             <Link
               to="/book"
-              className="group inline-flex items-center gap-2 px-4 py-3.5 rounded-full bg-foreground text-background font-body text-[11px] tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors duration-base ease-editorial"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-background font-body text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-base ease-editorial hover:bg-foreground/85"
             >
-              Shop
+              Book
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2} />
             </Link>
             </motion.div>

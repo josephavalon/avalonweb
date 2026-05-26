@@ -1368,13 +1368,13 @@ export default function NurseShift() {
       </div>
 
       {/* ── BOTTOM QUICK ACTIONS ── */}
-      <div className="fixed bottom-0 inset-x-0 backdrop-blur-2xl border-t border-foreground/[0.06] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] z-[100]" style={{ background: 'hsl(var(--background) / 0.96)' }}>
-        <div className="max-w-[512px] mx-auto flex gap-2.5">
+      <div className="fixed bottom-0 inset-x-0 z-[100] px-3 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-2 backdrop-blur-2xl" style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--background) / 0.96) 24%)' }}>
+        <div className="mx-auto flex max-w-[512px] gap-1.5 rounded-[24px] border border-white/[0.10] bg-background/82 p-1.5 shadow-[0_-18px_54px_rgba(0,0,0,0.34)]">
 
           {/* Call Dispatch */}
           <a
             href={DISPATCH_PHONE}
-            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-white/5 border border-white/[0.06] rounded-xl no-underline text-white"
+            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl border border-transparent text-white/70 no-underline transition-transform active:scale-[0.96]"
           >
             <Phone size={18} className="text-white/50" />
             <span className="text-[11px] text-white font-semibold tracking-[0.04em]">DISPATCH</span>
@@ -1383,7 +1383,7 @@ export default function NurseShift() {
           {/* Supplies */}
           <button
             onClick={() => setSupplyModal(true)}
-            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-white/5 border border-white/[0.06] rounded-xl cursor-pointer"
+            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl border border-white/[0.10] bg-white/[0.055] text-white transition-transform active:scale-[0.96]"
           >
             <Package size={18} className="text-white/50" />
             <span className="text-[11px] text-white font-semibold tracking-[0.04em]">SUPPLIES</span>
@@ -1392,10 +1392,10 @@ export default function NurseShift() {
           {/* End Shift */}
           <button
             onClick={handleEndShift}
-            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-red-400/[0.08] border border-red-400/25 rounded-xl cursor-pointer"
+            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl border border-transparent text-red-300/80 transition-transform active:scale-[0.96]"
           >
-            <LogOut size={18} className="text-red-400" />
-            <span className="text-[11px] text-red-400 font-semibold tracking-[0.04em]">END SHIFT</span>
+            <LogOut size={18} className="text-red-300/75" />
+            <span className="text-[11px] text-red-300/80 font-semibold tracking-[0.04em]">END</span>
           </button>
         </div>
       </div>
