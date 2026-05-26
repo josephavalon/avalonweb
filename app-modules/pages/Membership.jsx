@@ -84,7 +84,8 @@ const tiers = [
 ];
 
 function FeaturedTier({ tier, onSelect }) {
-  const concisePerks = tier.perks.slice(0, 3);
+  const concisePerks = tier.perks.slice(0, tier.custom ? 4 : 3);
+  const actionLabel = tier.custom ? 'Design Custom' : `Start ${tier.name}`;
 
   return (
     <motion.div
@@ -93,16 +94,16 @@ function FeaturedTier({ tier, onSelect }) {
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.24em] text-accent">Recommended</p>
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.24em] text-accent">{tier.badge || tier.tagline}</p>
           <h3 className="mt-2 font-heading text-5xl uppercase leading-none text-foreground md:text-6xl">{tier.name}</h3>
         </div>
         <div className="rounded-full border border-foreground/10 bg-foreground/[0.04] px-3 py-1.5">
-          <span className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground">{tier.sessions}/mo</span>
+          <span className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground">{tier.sessions ? `${tier.sessions}/mo` : 'Custom'}</span>
         </div>
       </div>
 
       <div className="mt-5 flex items-end gap-2">
-        <span className="font-heading text-6xl leading-none text-foreground">${tier.price.toLocaleString()}</span>
+        <span className="font-heading text-6xl leading-none text-foreground">{tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}</span>
         <span className="mb-1 font-body text-sm text-foreground/45">{tier.unit}</span>
       </div>
       <p className="mt-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/45">{tier.perSessionNote}</p>
@@ -123,31 +124,54 @@ function FeaturedTier({ tier, onSelect }) {
         onClick={() => onSelect(tier)}
         className="mt-6 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-xs font-semibold uppercase tracking-[0.2em] text-background transition-opacity hover:opacity-85"
       >
-        Start Pro <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        {actionLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
       </button>
     </motion.div>
   );
 }
 
-function CompactTierCard({ tier, onSelect }) {
+function TierSwitch({ tier, active, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(tier)}
+      aria-pressed={active}
+      className={`min-h-[58px] rounded-2xl border px-3 text-left transition-colors ${
+        active
+          ? 'border-foreground bg-foreground text-background'
+          : 'border-foreground/10 bg-foreground/[0.025] text-foreground hover:border-foreground/25 hover:bg-foreground/[0.045]'
+      }`}
+    >
+      <span className="block font-body text-[9px] uppercase tracking-[0.2em] opacity-55">{tier.tagline}</span>
+      <span className="mt-1 block font-body text-[11px] font-semibold uppercase tracking-[0.18em]">{tier.name}</span>
+    </button>
+  );
+}
+
+function CompactTierCard({ tier, active, onSelect }) {
   return (
     <motion.button
       type="button"
       onClick={() => onSelect(tier)}
-      className="rounded-2xl border border-foreground/[0.10] bg-foreground/[0.025] p-4 text-left transition-colors hover:border-foreground/25 hover:bg-foreground/[0.045]"
+      aria-pressed={active}
+      className={`rounded-2xl border p-4 text-left transition-colors ${
+        active
+          ? 'border-foreground bg-foreground text-background'
+          : 'border-foreground/[0.10] bg-foreground/[0.025] hover:border-foreground/25 hover:bg-foreground/[0.045]'
+      }`}
       {...fadeUp}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">{tier.tagline}</p>
-          <h3 className="mt-1 font-heading text-3xl uppercase leading-none text-foreground">{tier.name}</h3>
+          <p className={`font-body text-[11px] uppercase tracking-[0.22em] ${active ? 'text-background/55' : 'text-foreground/45'}`}>{tier.tagline}</p>
+          <h3 className={`mt-1 font-heading text-3xl uppercase leading-none ${active ? 'text-background' : 'text-foreground'}`}>{tier.name}</h3>
         </div>
-        <ArrowRight className="mt-1 h-4 w-4 text-foreground/35" strokeWidth={1.8} />
+        <ArrowRight className={`mt-1 h-4 w-4 ${active ? 'text-background/55' : 'text-foreground/35'}`} strokeWidth={1.8} />
       </div>
-      <p className="mt-4 font-heading text-4xl leading-none text-foreground">
+      <p className={`mt-4 font-heading text-4xl leading-none ${active ? 'text-background' : 'text-foreground'}`}>
         {tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}
       </p>
-      <p className="mt-1 font-body text-xs text-foreground/45">
+      <p className={`mt-1 font-body text-xs ${active ? 'text-background/55' : 'text-foreground/45'}`}>
         {tier.price ? `${tier.sessions} session${tier.sessions > 1 ? 's' : ''} monthly` : tier.perSessionNote}
       </p>
     </motion.button>
@@ -180,8 +204,11 @@ export default function Subscription() {
     },
   });
   const [selectedTier, setSelectedTier] = useState(null);
-  const featuredTier = tiers.find((tier) => tier.name === 'Pro');
-  const supportingTiers = tiers.filter((tier) => tier.name !== 'Pro');
+  const [activeTierName, setActiveTierName] = useState('Pro');
+  const activeTier = tiers.find((tier) => tier.name === activeTierName) || tiers[1];
+  const supportingTiers = tiers.filter((tier) => tier.name !== activeTier.name);
+  const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
+  const switchTier = (tier) => setActiveTierName(tier.name);
 
   return (
     <div className="bg-background min-h-screen w-full">
@@ -200,7 +227,7 @@ export default function Subscription() {
                   Membership<br />Made Simple
                 </motion.h1>
                 <motion.p className="mt-4 max-w-md font-body text-sm leading-relaxed text-foreground/58" {...fadeUp}>
-                  Start with Pro. Adjust anytime.
+                  Pick a tier. Switch instantly. Adjust anytime.
                 </motion.p>
                 <motion.div className="mt-6 flex flex-wrap gap-2" {...fadeUp}>
                   <span className="rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[11px] text-foreground/55">Priority booking</span>
@@ -209,12 +236,19 @@ export default function Subscription() {
                 </motion.div>
               </div>
 
-              {featuredTier && <FeaturedTier tier={featuredTier} onSelect={setSelectedTier} />}
+              <div className="space-y-3">
+                <motion.div className="grid grid-cols-2 gap-2 sm:grid-cols-4" {...fadeUp}>
+                  {tiers.map((tier) => (
+                    <TierSwitch key={tier.name} tier={tier} active={activeTier.name === tier.name} onSelect={switchTier} />
+                  ))}
+                </motion.div>
+                <FeaturedTier tier={activeTier} onSelect={setSelectedTier} />
+              </div>
             </div>
 
             <div className="mt-5 grid gap-3 md:grid-cols-3">
               {supportingTiers.map((tier) => (
-                <CompactTierCard key={tier.name} tier={tier} onSelect={setSelectedTier} />
+                <CompactTierCard key={tier.name} tier={tier} active={activeTier.name === tier.name} onSelect={switchTier} />
               ))}
             </div>
           </div>
@@ -234,10 +268,10 @@ export default function Subscription() {
                 </p>
               </div>
               <button
-                onClick={() => setSelectedTier(tiers[1])}
+                onClick={() => setSelectedTier(activeTier)}
                 className="flex-shrink-0 px-8 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors text-center"
               >
-                Start Subscription
+                {activeActionLabel}
               </button>
             </motion.div>
           </div>
@@ -254,17 +288,17 @@ export default function Subscription() {
               Ready
             </motion.p>
             <motion.h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-6" {...fadeUp}>
-              Start Pro
+              {activeTier.custom ? 'Custom Plan' : `Start ${activeTier.name}`}
             </motion.h2>
             <motion.p className="font-body text-sm text-foreground/50 mb-10 max-w-sm mx-auto" {...fadeUp}>
-              Two monthly IV credits.
+              {activeTier.perSessionNote}
             </motion.p>
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6" {...fadeUp}>
               <button
-                onClick={() => setSelectedTier(tiers[1])}
+                onClick={() => setSelectedTier(activeTier)}
                 className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
               >
-                Start Pro <ArrowRight className="w-3.5 h-3.5" />
+                {activeActionLabel} <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setSelectedTier(tiers[3])}
@@ -288,10 +322,10 @@ export default function Subscription() {
       >
         <div className="pointer-events-auto rounded-[1.75rem] border border-foreground/10 bg-background/85 backdrop-blur-2xl shadow-[0_-18px_70px_rgba(0,0,0,0.28)] p-2">
           <button
-            onClick={() => setSelectedTier(tiers[1])}
+            onClick={() => setSelectedTier(activeTier)}
             className="min-h-[58px] w-full rounded-full bg-foreground px-5 font-body text-[11px] font-semibold tracking-[0.2em] uppercase text-background flex items-center justify-center gap-2"
           >
-            Start Inner Circle <ArrowRight className="h-3.5 w-3.5" />
+            {activeActionLabel} <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </motion.div>

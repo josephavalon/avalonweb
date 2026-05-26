@@ -232,6 +232,8 @@ try {
   await clickText(cdp, 'Recover');
   await clickText(cdp, 'One-Time');
   await clickText(cdp, 'Choose');
+  await clickText(cdp, 'No add-ons today');
+  await clickText(cdp, 'Continue');
   await fillByLabel(cdp, 'Home address', '188 King St, San Francisco');
   await fillByLabel(cdp, 'ZIP', '94107');
   await clickText(cdp, 'Continue');
