@@ -69,7 +69,7 @@ const CATEGORIES = [
       },
       {
         name: 'Zinc',
-        description: 'Trace mineral involved in immune function and wound healing.',
+        description: 'Trace mineral involved in normal immune function.',
       },
       {
         name: 'Selenium',
@@ -119,11 +119,11 @@ const CATEGORIES = [
     ingredients: [
       {
         name: 'NAD+ (Nicotinamide Adenine Dinucleotide)',
-        description: 'Coenzyme involved in cellular energy production and DNA repair processes.',
+        description: 'Coenzyme involved in cellular energy production and normal metabolic processes.',
       },
       {
-        name: 'CBD (Cannabidiol, 33mg, Zero THC)',
-        description: 'Non-psychoactive cannabinoid. Zero THC. Full bioavailability via IV delivery.',
+        name: 'CBD (Cannabidiol)',
+        description: 'CBD IV information is held for clinical approval, legal review, and compliance-approved copy.',
       },
     ],
   },
@@ -174,7 +174,7 @@ export default function Ingredients() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveCategory(null)}
-                className={`font-body text-xs tracking-[0.15em] uppercase px-4 py-2 rounded-full border transition-colors duration-200 ${
+                className={`min-h-10 font-body text-xs tracking-[0.15em] uppercase px-4 py-2 rounded-full border transition-colors duration-200 ${
                   activeCategory === null
                     ? 'border-accent text-accent bg-accent/10'
                     : 'border-foreground/[0.12] text-foreground/50 hover:border-foreground/30 hover:text-foreground/80'
@@ -186,7 +186,7 @@ export default function Ingredients() {
                 <button
                   key={cat.label}
                   onClick={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
-                  className={`font-body text-xs tracking-[0.15em] uppercase px-4 py-2 rounded-full border transition-colors duration-200 ${
+                  className={`min-h-10 font-body text-xs tracking-[0.15em] uppercase px-4 py-2 rounded-full border transition-colors duration-200 ${
                     activeCategory === cat.label
                       ? 'border-accent text-accent bg-accent/10'
                       : 'border-foreground/[0.12] text-foreground/50 hover:border-foreground/30 hover:text-foreground/80'
@@ -266,10 +266,10 @@ export default function Ingredients() {
         {/* Footer links */}
         <section className="py-12 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto flex flex-wrap gap-6">
-            <Link to="/safety" className="font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
+            <Link to="/safety" className="inline-flex min-h-10 items-center font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
               Safety Standards →
             </Link>
-            <Link to="/medical-direction" className="font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
+            <Link to="/medical-direction" className="inline-flex min-h-10 items-center font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
               Medical Direction →
             </Link>
           </div>

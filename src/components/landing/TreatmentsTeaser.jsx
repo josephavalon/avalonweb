@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   Droplets, Zap, ShieldCheck, Sparkles, FlaskConical,
   Syringe, Star, Plus, ArrowRight, ChevronDown, ChevronRight,
 } from 'lucide-react';
-import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion(Link);
+const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -52,9 +53,8 @@ const ADDONS = [
 const TOP_CATEGORIES = [
   {
     key: 'vitamin',
-    label: 'Vitamin IVs',
-    sub: 'Hydration · Energy · Immunity · Beauty',
-    preview: 'From $150 · 5 core protocols',
+    label: 'Hydration',
+    sub: 'Live now',
     icon: Droplets,
     type: 'flat-treatments',
     data: [
@@ -67,18 +67,16 @@ const TOP_CATEGORIES = [
   },
   {
     key: 'specialty',
-    label: 'Specialty IVs',
-    sub: 'NAD+ · CBD · Exosomes',
-    preview: 'From $350 · longevity stack',
+    label: 'Longevity',
+    sub: 'Consultation',
     icon: FlaskConical,
     type: 'nested',
     data: SPECIALTY_IVS,
   },
   {
     key: 'addons',
-    label: 'Add-Ons',
-    sub: 'IM shots & boosters — from $35',
-    preview: 'From $35 · add to any visit',
+    label: 'Boosters',
+    sub: 'By review',
     icon: Plus,
     type: 'flat',
     data: ADDONS,
@@ -91,24 +89,22 @@ function SubRow({ sub }) {
   const Icon = sub.icon;
 
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+    <motion.div layout className="av-treatment-subcard overflow-hidden rounded-xl border">
       <motion.button
         type="button"
         onClick={() => setOpen(o => !o)}
         whileTap={premiumTap}
-        className="w-full flex items-center justify-between px-4 py-3 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors duration-base ease-editorial"
+        className="w-full flex items-center justify-between px-4 py-3 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-foreground/[0.035]"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2.5">
           <Icon className="w-3.5 h-3.5 text-accent/70" strokeWidth={1.5} />
           <span className="font-body text-xs font-semibold tracking-[0.15em] uppercase text-foreground/80">{sub.label}</span>
-          <span className="font-body text-[9px] text-foreground/30 tracking-[0.1em]">{sub.treatments.length} drips</span>
+          <span className="font-body text-[9px] text-foreground/30 tracking-[0.1em]">{sub.treatments.length} options</span>
         </div>
-        <ChevronRight
-          className="w-3 h-3 text-foreground/25 shrink-0 transition-transform duration-250"
-          style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
-          strokeWidth={2}
-        />
+        <motion.span animate={{ rotate: open ? 90 : 0 }} transition={FOLDOUT_TRANSITION} className="shrink-0 text-foreground/25">
+          <ChevronRight className="w-3 h-3" strokeWidth={2} />
+        </motion.span>
       </motion.button>
 
       <AnimatePresence initial={false}>
@@ -117,28 +113,35 @@ function SubRow({ sub }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.38, ease: EASE }}
+            transition={FOLDOUT_TRANSITION}
             style={{ overflow: 'hidden' }}
           >
-            <div className="border-t border-white/[0.05] px-4 pb-4 pt-3 grid grid-cols-2 gap-1.5">
+            <motion.div
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              variants={premiumListContainer(0.04, 0.06)}
+              className="grid grid-cols-2 gap-1.5 border-t border-foreground/[0.06] px-4 pb-4 pt-3"
+            >
               {sub.treatments.map((t) => (
-                <Link
+                <MotionLink
                   key={t.label}
                   to="/book"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.06] hover:bg-white/[0.09] hover:border-white/20 transition-all duration-base ease-editorial group"
+                  variants={premiumListItem}
+                  className="av-treatment-chip flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-base ease-editorial group"
                 >
                   <t.icon className="w-3 h-3 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                   <div className="min-w-0">
                     <p className="font-body text-[11px] text-foreground/80 leading-snug truncate">{t.label}</p>
                     <p className="font-body text-[9px] text-foreground/35">From ${t.price}</p>
                   </div>
-                </Link>
+                </MotionLink>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -148,29 +151,26 @@ function CategoryRow({ cat, index, open, onToggle }) {
 
   return (
     <motion.div
+      layout
       whileHover={premiumHover}
-      className={`rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial ${
-        open
-          ? 'border-accent/35 bg-white/[0.12]'
-          : 'border-foreground/10 bg-white/[0.08] hover:border-foreground/20 hover:bg-white/[0.105]'
-      }`}
+      transition={{ layout: FOLDOUT_TRANSITION }}
+      className={`av-treatment-card rounded-2xl border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
       {/* Header */}
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors duration-base ease-editorial"
+        className="w-full flex items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-foreground/[0.025]"
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
+          <div className="av-treatment-icon w-9 h-9 rounded-xl border flex items-center justify-center shrink-0">
             <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
           </div>
           <div className="text-left">
             <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">{cat.label}</p>
             <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
-            <p className="font-body text-[9px] text-accent/70 tracking-[0.15em] uppercase mt-1">{cat.preview}</p>
           </div>
         </div>
         <motion.div
@@ -189,10 +189,16 @@ function CategoryRow({ cat, index, open, onToggle }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.42, ease: EASE }}
+            transition={FOLDOUT_TRANSITION}
             style={{ overflow: 'hidden' }}
           >
-            <div className="border-t border-white/[0.06] px-4 pb-4 pt-4 space-y-2">
+            <motion.div
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              variants={premiumListContainer(0.045, 0.07)}
+              className="space-y-2 border-t border-foreground/[0.06] px-4 pb-4 pt-4"
+            >
               {cat.type === 'nested' ? (
                 // Sub-category rows
                 cat.data.map((sub) => <SubRow key={sub.label} sub={sub} />)
@@ -200,21 +206,22 @@ function CategoryRow({ cat, index, open, onToggle }) {
                 // Flat grid (add-ons and flat-treatments)
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {cat.data.map((addon) => (
-                    <Link
+                    <MotionLink
                       key={addon.label}
                       to="/book"
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.06] hover:bg-white/[0.09] hover:border-white/20 transition-all duration-base ease-editorial group"
+                      variants={premiumListItem}
+                      className="av-treatment-chip flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-base ease-editorial group"
                     >
                       <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                       <div>
                         <p className="font-body text-xs text-foreground/80 leading-snug">{addon.label}</p>
                         <p className="font-body text-[9px] text-foreground/35">From ${addon.price}</p>
                       </div>
-                    </Link>
+                    </MotionLink>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -239,43 +246,45 @@ export default function TreatmentsTeaser() {
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10"
         >
           <div>
-            <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Our Menu</p>
-            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Therapies</h2>
+            <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Avalon Protocols</p>
+            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Choose Your Protocol</h2>
             <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
-              Start with a core drip, step up to specialty protocols, then layer in boosters as needed.
+              Hydration is live. Final protocols and add-ons may be adjusted by the clinical team.
             </p>
           </div>
         </motion.div>
 
         {/* Category accordions */}
-        <div className="space-y-2 mb-8">
-          {TOP_CATEGORIES.map((cat, i) => (
-            <CategoryRow
-              key={cat.key}
-              cat={cat}
-              index={i}
-              open={openCategory === cat.key}
-              onToggle={() => setOpenCategory(current => current === cat.key ? null : cat.key)}
-            />
-          ))}
-        </div>
+        <LayoutGroup id="treatment-teaser-accordion">
+          <div className="space-y-2 mb-8">
+            {TOP_CATEGORIES.map((cat, i) => (
+              <CategoryRow
+                key={cat.key}
+                cat={cat}
+                index={i}
+                open={openCategory === cat.key}
+                onToggle={() => setOpenCategory(current => current === cat.key ? null : cat.key)}
+              />
+            ))}
+          </div>
+        </LayoutGroup>
 
         {/* CTA card */}
         <motion.div
           whileHover={premiumHover}
         >
           <MotionLink
-            to="/menu"
+            to="/protocols"
             whileTap={premiumTap}
-            className="flex items-center justify-between px-5 py-4 rounded-2xl border border-foreground/10 bg-white/[0.08] hover:bg-white/[0.105] hover:border-foreground/20 transition-colors duration-base ease-editorial group shadow-[0_18px_70px_hsl(var(--foreground)/0.035)]"
+            className="av-treatment-card flex items-center justify-between px-5 py-4 rounded-2xl border transition-colors duration-base ease-editorial group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
+              <div className="av-treatment-icon w-9 h-9 rounded-xl border flex items-center justify-center shrink-0">
                 <ArrowRight className="w-4 h-4 text-accent" strokeWidth={1.5} />
               </div>
               <div className="text-left">
-                <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">View Full Menu</p>
-                <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">Browse all drips & pricing</p>
+                <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">All Protocols</p>
+                <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">Live + next</p>
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-foreground/30 group-hover:text-foreground transition-all duration-base ease-editorial group-hover:translate-x-1 shrink-0" strokeWidth={2} />

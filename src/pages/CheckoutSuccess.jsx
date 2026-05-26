@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useSeo } from '@/lib/seo';
 import { motion } from 'framer-motion';
@@ -14,7 +14,33 @@ export default function CheckoutSuccess() {
     path: '/checkout/success',
   });
   const [params] = useSearchParams();
-  const type = params.get('type'); // 'onetime' | 'membership'
+  const type = params.get('type'); // 'onetime' | 'subscription'
+  const sessionId = params.get('session_id');
+  const preApi = params.get('preapi') === '1';
+  const [verification, setVerification] = useState(() => preApi ? 'local' : sessionId ? 'checking' : 'missing');
+
+  useEffect(() => {
+    if (preApi || !sessionId) return;
+    let cancelled = false;
+    fetch('/api/checkout/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data?.paid) throw new Error(data?.error || 'Payment not verified');
+        if (!cancelled) setVerification('paid');
+      })
+      .catch(() => {
+        if (!cancelled) setVerification('failed');
+      });
+    return () => { cancelled = true; };
+  }, [preApi, sessionId]);
+
+  const verified = verification === 'paid' || verification === 'local';
+  const isChecking = verification === 'checking';
+  const isSubscription = type === 'subscription' || type === 'membership';
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,14 +61,18 @@ export default function CheckoutSuccess() {
           transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
         >
           <p className="font-body text-[11px] tracking-[0.35em] uppercase text-accent mb-4">
-            {type === 'membership' ? 'Subscription Confirmed' : 'Request Received'}
+            {isChecking ? 'Verifying' : verified ? (isSubscription ? 'Subscription Confirmed' : 'Request Received') : 'Not Verified'}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide uppercase leading-[0.95] mb-6">
-            {type === 'membership' ? "You're In." : "We'll Be In Touch."}
+            {isChecking ? 'Hold Tight.' : verified ? (isSubscription ? "You're In." : "We'll Be In Touch.") : 'Payment Check Needed.'}
           </h1>
           <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-sm mx-auto mb-10">
-            {type === 'membership'
-              ? 'Your subscription is active. A subscriber concierge will reach out within 24 hours to book your first session.'
+            {isChecking
+              ? 'We are verifying the checkout session before confirming this request.'
+              : !verified
+                ? 'This page needs a verified checkout session before it can show confirmation. Return to checkout or contact support if you already paid.'
+                : isSubscription
+              ? 'Your subscription is active. Your care team will reach out within 24 hours to book your first session.'
               : 'Your card has been authorized. A licensed RN will confirm your appointment details and arrival window shortly.'
             }
           </p>
@@ -54,7 +84,7 @@ export default function CheckoutSuccess() {
             >
               Back to Avalon <ArrowRight className="w-4 h-4" strokeWidth={2} />
             </Link>
-            {type === 'membership' && (
+            {verified && isSubscription && (
               <Link
                 to="/members"
                 className="flex items-center justify-center gap-2 w-full py-3.5 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors"

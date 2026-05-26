@@ -39,7 +39,7 @@ const SECTIONS = [
     h: '6. Subscriptions and credits',
     p: [
       'Avalon offers tiered subscriptions, including our presale cohort, with monthly or annual billing. Subscription credits accrue per the terms of your selected tier and apply toward eligible services.',
-      'Unused credits may roll over for a limited period as defined in your subscriber agreement. Subscriptions auto-renew unless cancelled in accordance with the cancellation policy below.',
+      'Unused credits may roll over for a limited period as defined in your subscription agreement. Subscriptions auto-renew unless cancelled in accordance with the cancellation policy below.',
     ],
   },
   {

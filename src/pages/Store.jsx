@@ -115,7 +115,9 @@ export default function Store() {
         ...payload,
         updatedAt: new Date().toISOString(),
       }));
-    } catch {}
+    } catch (err) {
+      if (import.meta.env?.DEV) console.warn('[store-draft]', err);
+    }
   };
 
   const continueGuided = () => {
@@ -343,10 +345,10 @@ export default function Store() {
                 <MessageCircle className="h-4 w-4" /> Call
               </a>
               <Link
-                to="/events"
+                to="/launches"
                 className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.035] font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/68"
               >
-                <Users className="h-4 w-4" /> Events
+                <Users className="h-4 w-4" /> Launches
               </Link>
             </div>
           </section>

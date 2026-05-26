@@ -82,7 +82,7 @@ const REPORT_CARDS = [
   },
   {
     id: 'rc8',
-    title: 'Membership Interest',
+    title: 'Plan Interest',
     value: '5 leads',
     sub: '2 contacted',
     icon: Users,
@@ -109,6 +109,7 @@ const THERAPIES = [
 ];
 
 const MAX_THERAPY = Math.max(...THERAPIES.map(t => t.count));
+const REPORTS_CLINICAL_NOTE = 'Operational counts only. Clinical review governs care.';
 
 // ── ReportCard ────────────────────────────────────────────────────────────────
 
@@ -164,9 +165,16 @@ function BarRow({ label, pct, count, max }) {
 
 function SectionHeader({ label }) {
   return (
-    <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 font-medium mb-3">
-      {label}
-    </h2>
+    <div className="mb-3">
+      <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 font-medium">
+        {label}
+      </h2>
+      {label === 'Therapies' && (
+        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.16em] text-foreground/30">
+          {REPORTS_CLINICAL_NOTE}
+        </p>
+      )}
+    </div>
   );
 }
 

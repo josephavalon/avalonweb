@@ -1,6 +1,7 @@
 // Seed data used as fallback when Supabase is not configured.
 // When VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set, this data is
 // ignored and real DB rows are loaded instead.
+// Operational inventory only; clinical administration requires protocol approval.
 
 export const SEED_FOLDERS = [
   { id:'f-root',    name:'Avalon Vitality',  parentId:null,        color:'#d4a754', itemCount:21, updatedAt:'2026-05-18' },

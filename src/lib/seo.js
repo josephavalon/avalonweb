@@ -1,10 +1,25 @@
 import { useEffect } from 'react';
+import { SEO_BASE_URL } from '@/data/seoArchitecture';
 
 // Lightweight SEO utility for SPA routes.
 // Updates document.title + meta description + canonical when a route mounts.
 // Also injects JSON-LD structured data scoped to the route.
 
-export function useSeo({ title, description, path, jsonLd }) {
+const jsonLdMatchesPath = (scriptEl, expectedUrl) => {
+  if (!scriptEl || !expectedUrl) return false;
+  try {
+    const parsed = JSON.parse(scriptEl.textContent || '{}');
+    const nodes = Array.isArray(parsed['@graph']) ? parsed['@graph'] : [parsed];
+    return nodes.some((node) => {
+      const nodeUrl = node?.url || node?.mainEntityOfPage;
+      return nodeUrl === expectedUrl;
+    });
+  } catch {
+    return false;
+  }
+};
+
+export function useSeo({ title, description, path, jsonLd, robots = 'index, follow, max-image-preview:large' }) {
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
@@ -42,28 +57,33 @@ export function useSeo({ title, description, path, jsonLd }) {
     };
 
     if (description) setMeta('description', description);
+    setMeta('robots', robots);
     if (description) setProp('og:description', description);
     if (title) setProp('og:title', title);
     if (path) {
-      const url = `https://avalonvitality.co${path.startsWith('/') ? path : '/' + path}`;
+      const url = `${SEO_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
       setCanonical(url);
       setProp('og:url', url);
     }
 
     let scriptEl = null;
     if (jsonLd) {
-      scriptEl = document.createElement('script');
-      scriptEl.type = 'application/ld+json';
-      scriptEl.id = 'route-jsonld';
-      scriptEl.text = JSON.stringify(jsonLd);
-      // Replace any prior route JSON-LD before injecting new
       const prior = document.getElementById('route-jsonld');
       if (prior) prior.remove();
-      document.head.appendChild(scriptEl);
+      const staticJsonLd = document.getElementById('static-jsonld');
+      const expectedUrl = path ? `${SEO_BASE_URL}${path.startsWith('/') ? path : '/' + path}` : null;
+      if (!jsonLdMatchesPath(staticJsonLd, expectedUrl)) {
+        if (staticJsonLd) staticJsonLd.remove();
+        scriptEl = document.createElement('script');
+        scriptEl.type = 'application/ld+json';
+        scriptEl.id = 'route-jsonld';
+        scriptEl.text = JSON.stringify(jsonLd);
+        document.head.appendChild(scriptEl);
+      }
     }
 
     return () => {
       if (scriptEl && scriptEl.parentNode) scriptEl.remove();
     };
-  }, [title, description, path, JSON.stringify(jsonLd)]);
+  }, [title, description, path, robots, JSON.stringify(jsonLd)]);
 }

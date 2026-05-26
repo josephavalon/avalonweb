@@ -184,7 +184,7 @@ export default function Testimonials() {
 
         <div className="mt-8 md:mt-10 max-w-2xl">
           <p className="font-body text-xs md:text-sm tracking-[0.05em] text-muted-foreground leading-relaxed">
-            Testimonials reflect the individual experience of real Avalon clients. Names and handles may be initials or stage names at each client&rsquo;s request. Individual experiences vary; results are not typical and are not guaranteed. No clients were compensated in cash for these statements; some received complimentary sessions. Educational information only — not medical advice.
+            Individual experiences vary. Not medical advice.
           </p>
         </div>
       </div>

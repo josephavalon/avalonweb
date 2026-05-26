@@ -1,32 +1,30 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Minus } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { EASE } from '@/lib/motion';
 
-const ROWS = [
-  { feature: 'Licensed RN on every visit',         avalon: true,  drip: true,  reviv: true  },
-  { feature: 'Physician medical direction',         avalon: true,  drip: true,  reviv: true  },
-  { feature: 'Comes to you (mobile)',               avalon: true,  drip: true,  reviv: false },
-  { feature: 'Same-day booking',                    avalon: true,  drip: true,  reviv: false },
-  { feature: 'NAD+ IV (250–1000mg)',                avalon: true,  drip: null,  reviv: null  },
-  { feature: 'Exosome IV therapy',                  avalon: true,  drip: false, reviv: false },
-  { feature: 'Subscription / credits model',        avalon: true,  drip: false, reviv: false },
-  { feature: 'Personalized protocol builder',       avalon: true,  drip: false, reviv: false },
-  { feature: 'Home, hotel, office & event delivery',avalon: true,  drip: true,  reviv: false },
-  { feature: 'SF Bay Area coverage',                avalon: true,  drip: true,  reviv: null  },
-  { feature: 'Luxury concierge experience',         avalon: true,  drip: false, reviv: false },
+const POINTS = [
+  {
+    label: 'CBD + NAD+',
+    body: 'Specialty protocols are available only when clinically appropriate and approved by the care team.',
+  },
+  {
+    label: 'Transparent Pricing',
+    body: 'No hidden fees. No surprise service charges. Clear pricing before care begins.',
+  },
+  {
+    label: 'Custom Subscriptions',
+    body: 'Build a cadence around your actual recovery rhythm, not a rigid package.',
+  },
+  {
+    label: 'White-Glove Service',
+    body: 'Home, hotel, office, event, or private venue. Licensed care brought wherever you are.',
+  },
 ];
-
-// true = ✓, false = ✗, null = varies / not confirmed
-function Cell({ value }) {
-  if (value === true)  return <Check  className="w-4 h-4 text-accent mx-auto" strokeWidth={2.5} />;
-  if (value === false) return <X      className="w-3.5 h-3.5 text-foreground/20 mx-auto" strokeWidth={2} />;
-  return <Minus className="w-3.5 h-3.5 text-foreground/25 mx-auto" strokeWidth={2} />;
-}
 
 export default function ComparisonTable() {
   return (
-    <section className="pt-10 pb-10 md:pt-16 md:pb-16 px-4">
+    <section className="px-4 py-10 md:py-16">
       <div className="max-w-6xl mx-auto">
 
         <motion.div
@@ -38,59 +36,38 @@ export default function ComparisonTable() {
         >
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Why Avalon</p>
           <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
-            How We Stack Up
+            What Others Miss
           </h2>
-          <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
-            Mobile IV therapy, compared.
+          <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-xl">
+            Specialty protocols, clean pricing, flexible subscriptions, and service
+            that meets you where you are. Final care is subject to clinical approval.
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-24px' }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="rounded-2xl border border-foreground/10 overflow-hidden"
-        >
-          {/* Header */}
-          <div className="grid grid-cols-[1fr_80px_80px_80px] md:grid-cols-[1fr_120px_120px_120px] border-b border-foreground/10 bg-white/[0.04]">
-            <div className="px-4 md:px-5 py-3" />
-            {['Avalon', 'Drip', 'REVIV'].map((name, i) => (
-              <div key={name} className={`py-3 text-center ${i === 0 ? 'bg-accent/[0.06]' : ''}`}>
-                <p className={`font-body text-[10px] tracking-[0.2em] uppercase font-semibold ${i === 0 ? 'text-accent' : 'text-foreground/40'}`}>
-                  {name}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Rows */}
-          {ROWS.map(({ feature, avalon, drip, reviv }, i) => (
-            <div
-              key={feature}
-              className={`grid grid-cols-[1fr_80px_80px_80px] md:grid-cols-[1fr_120px_120px_120px] border-b border-foreground/[0.06] last:border-0 ${
-                i % 2 === 0 ? 'bg-white/[0.015]' : ''
-              }`}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {POINTS.map((point, index) => (
+            <motion.div
+              key={point.label}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-24px' }}
+              transition={{ duration: 0.65, delay: index * 0.04, ease: EASE }}
+              className="flex min-h-[13rem] flex-col rounded-3xl border border-foreground/10 bg-foreground/[0.035] p-5 md:p-6"
             >
-              <div className="px-4 md:px-5 py-3.5 flex items-center">
-                <p className="font-body text-xs text-foreground/70 leading-snug">{feature}</p>
+              <div className="mb-8 flex items-start justify-between gap-4">
+                <p className="max-w-[11rem] font-heading text-3xl leading-none text-foreground md:text-[2.35rem]">
+                  {point.label}
+                </p>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-background">
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                </div>
               </div>
-              <div className="py-3.5 flex items-center justify-center bg-accent/[0.03]">
-                <Cell value={avalon} />
-              </div>
-              <div className="py-3.5 flex items-center justify-center">
-                <Cell value={drip} />
-              </div>
-              <div className="py-3.5 flex items-center justify-center">
-                <Cell value={reviv} />
-              </div>
-            </div>
+              <p className="mt-auto font-body text-sm leading-relaxed text-foreground/58">
+                {point.body}
+              </p>
+            </motion.div>
           ))}
-        </motion.div>
-
-        <p className="font-body text-[10px] text-foreground/25 tracking-[0.1em] mt-3">
-          Competitor info based on publicly available data. Subject to change.
-        </p>
+        </div>
 
       </div>
     </section>

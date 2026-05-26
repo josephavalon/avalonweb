@@ -1,0 +1,17 @@
+{
+  "extends": "./jsconfig.json",
+  "compilerOptions": {
+    "checkJs": true,
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/lib/localRepository.js",
+    "src/lib/noApiCapabilityGate.js",
+    "src/data/noApiCompletionMap.js",
+    "src/data/clinicalPlaceholderPolicy.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

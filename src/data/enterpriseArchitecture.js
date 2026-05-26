@@ -1,0 +1,228 @@
+export const ENTERPRISE_PLATFORM_GOAL = 'Operating system for mobile medical operators';
+
+export const ENTERPRISE_ARCHITECTURE_PRINCIPLES = [
+  'Client demand stays brutally minimalist.',
+  'Provider supply gets the strongest operating tools.',
+  'Dispatch is the marketplace brain.',
+  'Identity and compliance are isolated from booking speed.',
+  'Clinical data remains placeholder-only until the clinical source of record is shared.',
+  'Inventory is supply-side truth, not a side table.',
+  'Payments are abstracted so wallet infrastructure can exist later.',
+  'Every domain emits events before APIs replace local truth.',
+];
+
+export const ENTERPRISE_MARKETPLACE_SIDES = [
+  {
+    id: 'demand',
+    label: 'Client Experience',
+    standard: 'Jony Ive-era Apple minimalism: one decision per screen, zero cognitive load, lounge-grade digital feel.',
+    owns: ['Booking intent', 'Protocol selection', 'Status confidence', 'Payment/hold intent', 'Concierge communication'],
+  },
+  {
+    id: 'supply',
+    label: 'Provider Operating System',
+    standard: 'Dedicated supply-side dashboard for routing, credentialing, charting support, training, and inventory.',
+    owns: ['Shift acceptance', 'ETA control', 'Route packet', 'Credential readiness', 'Kit inventory', 'Closeout proof'],
+  },
+  {
+    id: 'core',
+    label: 'Dispatch Engine',
+    standard: 'Algorithmic matching by value, location, protocol certification, inventory availability, and operational risk.',
+    owns: ['Matching', 'SLA pressure', 'Coverage', 'Exception handling', 'Reassignment', 'Capacity'],
+  },
+];
+
+export const ENTERPRISE_DOMAIN_SERVICES = [
+  {
+    id: 'identity-compliance',
+    label: 'Identity & Compliance Service',
+    boundary: 'HIPAA posture, consent forms, annual GFE placeholders, credential verification placeholders, audit events.',
+    ownedSurface: 'Compliance / GFE',
+    status: 'modeled',
+    buildNow: ['Annual GFE placeholder resolver', 'Consent completeness placeholder', 'Scope matrix placeholder', 'Audit trail', 'Nursys placeholder'],
+    laterApi: ['Nursys', 'Qualiphy fallback', 'Acuity clinical record', 'ID verification'],
+    events: ['consent.completed', 'gfe.validated', 'credential.flagged', 'audit.recorded'],
+    licenseValue: 'Keeps medical operators compliant without slowing booking conversion.',
+  },
+  {
+    id: 'booking-scheduling',
+    label: 'Booking & Scheduling Service',
+    boundary: 'Outcome-first booking, appointment state, time intent, deposit gate, Acuity handoff.',
+    ownedSurface: 'Booking',
+    status: 'modeled',
+    buildNow: ['Under-60-second booking', 'Booking state machine', 'Confirmation packet', 'Acuity placeholder'],
+    laterApi: ['Acuity availability', 'Acuity booking', 'Acuity webhook'],
+    events: ['booking.started', 'booking.held', 'booking.confirmed', 'booking.blocked'],
+    licenseValue: 'Turns premium intent into operationally valid appointments.',
+  },
+  {
+    id: 'client-experience',
+    label: 'Client Experience Service',
+    boundary: 'Minimal client portal, visit status, prep, aftercare, and concierge support.',
+    ownedSurface: 'Client Portal',
+    status: 'modeled',
+    buildNow: ['Real status timeline', 'ETA display', 'Prep checklist', 'Care thread'],
+    laterApi: ['SMS delivery', 'Email delivery', 'Payment receipts'],
+    events: ['client.status_viewed', 'client.message_sent', 'eta.updated', 'aftercare.sent'],
+    licenseValue: 'Makes medical logistics feel like a luxury service instead of medical software.',
+  },
+  {
+    id: 'provider-os',
+    label: 'Provider Operating System',
+    boundary: 'Nurse and practitioner workflow: claim, route, execute, Acuity closeout proof, inventory, training.',
+    ownedSurface: 'Nurse Portal',
+    status: 'modeled',
+    buildNow: ['Shift claim', 'Nurse ETA', 'Route packet', 'Bring-list', 'Thin closeout', 'Training review'],
+    laterApi: ['Live SMS reply', 'Acuity writeback', 'Maps routing', 'Credential verification'],
+    events: ['shift.claimed', 'provider.eta_set', 'visit.started', 'visit.closed'],
+    licenseValue: 'Owns supply-side execution, the defensible wedge.',
+  },
+  {
+    id: 'dispatch-engine',
+    label: 'Dispatch Engine',
+    boundary: 'Matching high-value clients with certified providers based on location, protocol, inventory, and SLA.',
+    ownedSurface: 'Dispatch',
+    status: 'modeled',
+    buildNow: ['Open shift board', 'Eligibility score', 'Coverage heatmap placeholder', 'Reassignment flow'],
+    laterApi: ['H3/PostGIS geospatial index', 'Live provider location', 'SMS acceptance', 'Route optimization'],
+    events: ['dispatch.match_scored', 'dispatch.offer_sent', 'dispatch.exception_opened', 'dispatch.reassigned'],
+    licenseValue: 'Marketplace brain that converts supply and demand into reliable visits.',
+  },
+  {
+    id: 'geo-routing',
+    label: 'Real-Time Geolocation Service',
+    boundary: 'Provider location, route distance, service density, coverage zones, and dynamic matching.',
+    ownedSurface: 'Dispatch',
+    status: 'contract-only',
+    buildNow: ['Service area score', 'Coverage model', 'Route packet placeholder', 'ETA exception flag'],
+    laterApi: ['H3 index', 'PostGIS', 'Google/Apple Maps routing', 'Live location consent'],
+    events: ['geo.provider_ping', 'geo.zone_scored', 'route.eta_changed', 'coverage.gap_detected'],
+    licenseValue: 'Lets Avalon behave like a logistics network, not a calendar.',
+  },
+  {
+    id: 'inventory-supply',
+    label: 'Inventory & Supply Service',
+    boundary: 'Central stock, nurse kits, visit deductions, waste, expiry, cold chain, restock.',
+    ownedSurface: 'Inventory / Kits',
+    status: 'modeled',
+    buildNow: ['Kit inventory', 'Deduction ledger', 'Restock thresholds', 'Waste log', 'Expiry alerts'],
+    laterApi: ['Barcode scanner', 'Supplier ordering', 'Cold-chain hardware', 'Warehouse sync'],
+    events: ['inventory.deducted', 'kit.reconciled', 'waste.logged', 'restock.needed'],
+    licenseValue: 'Owns the supply side completely; every visit becomes inventory intelligence.',
+  },
+  {
+    id: 'payments-wallet',
+    label: 'Payments & Wallet Service',
+    boundary: 'Deposit state, refunds, visit economics, settlement abstraction, future wallet routing.',
+    ownedSurface: 'Finance Placeholders',
+    status: 'modeled',
+    buildNow: ['Deposit placeholder', 'Refund state', 'Margin proxy', 'No-PHI finance export'],
+    laterApi: ['Stripe', 'Mercury', 'Gusto', 'QuickBooks', 'Avalon wallet ledger'],
+    events: ['payment.hold_created', 'payment.settled', 'refund.queued', 'wallet.ledger_posted'],
+    licenseValue: 'Abstracts money flow so Avalon can capture more transaction value over time.',
+  },
+  {
+    id: 'messaging-alerts',
+    label: 'Messaging & Alerts Service',
+    boundary: 'Client messages, provider broadcasts, announcements, escalations, templates, audit.',
+    ownedSurface: 'Messaging / Alerts',
+    status: 'modeled',
+    buildNow: ['Client thread', 'Nurse broadcast', 'Announcements', 'Templates', 'Ack model'],
+    laterApi: ['Twilio', 'Resend', 'Push notifications', 'Delivery receipts'],
+    events: ['message.sent', 'broadcast.acknowledged', 'alert.escalated', 'template.used'],
+    licenseValue: 'Replaces Connecteam/Signal chaos with an auditable communication layer.',
+  },
+  {
+    id: 'launches-events',
+    label: 'Launches & Events Service',
+    boundary: 'Future launch sales, presales, guest redemption, group intake, capacity, post-event learning.',
+    ownedSurface: 'Launches / Events',
+    status: 'modeled',
+    buildNow: ['Presale editor', 'Code generation', 'Guest redemption', 'Pre-event GFE queue'],
+    laterApi: ['Ticketing', 'Acuity event appointment types', 'SMS/email reminders'],
+    events: ['launch.created', 'ticket.redeemed', 'group_intake.completed', 'event.learned'],
+    licenseValue: 'Turns events into repeatable marketplace demand generation.',
+  },
+  {
+    id: 'observability-qa',
+    label: 'Observability & QA Service',
+    boundary: 'Route QA, visual QA, compliance scan, privacy scan, release gates, platform health.',
+    ownedSurface: 'QA / Release',
+    status: 'modeled',
+    buildNow: ['Mobile matrix', 'Visual screenshots', 'Compliance scanner', 'Privacy scanner', 'Kernel checks'],
+    laterApi: ['CI pipeline', 'Error monitoring', 'Uptime checks', 'Data warehouse'],
+    events: ['qa.failed', 'release.blocked', 'route.checked', 'health.degraded'],
+    licenseValue: 'Enterprise buyers trust systems that can prove their own health.',
+  },
+  {
+    id: 'integration-boundary',
+    label: 'Integration Boundary Service',
+    boundary: 'Vendor contracts, source-of-record ownership, no-PHI export rules, integration readiness.',
+    ownedSurface: 'Data Contracts / State',
+    status: 'modeled',
+    buildNow: ['Acuity boundary', 'Attio boundary', 'Finance no-PHI rules', 'Integration health placeholders'],
+    laterApi: ['Acuity', 'Attio', 'Stripe', 'Twilio', 'Nursys', 'Qualiphy', 'Mercury', 'Gusto', 'QuickBooks'],
+    events: ['integration.healthy', 'integration.failed', 'vendor.sync_queued', 'source_record.changed'],
+    licenseValue: 'Lets operators plug into their stack without turning Avalon into brittle glue.',
+  },
+];
+
+export const ENTERPRISE_EVENT_SPINE = [
+  'booking.started',
+  'booking.confirmed',
+  'gfe.validated',
+  'dispatch.match_scored',
+  'shift.claimed',
+  'provider.eta_set',
+  'visit.started',
+  'inventory.deducted',
+  'visit.closed',
+  'payment.settled',
+  'message.sent',
+  'audit.recorded',
+];
+
+export function buildEnterpriseArchitectureSnapshot() {
+  const services = ENTERPRISE_DOMAIN_SERVICES.map((service) => ({
+    ...service,
+    readiness:
+      service.status === 'modeled' ? 72 :
+      service.status === 'contract-only' ? 48 :
+      60,
+    buildCount: service.buildNow.length,
+    apiCount: service.laterApi.length,
+    eventCount: service.events.length,
+  }));
+  const modeled = services.filter((service) => service.status === 'modeled').length;
+  const contractOnly = services.filter((service) => service.status === 'contract-only').length;
+  const averageReadiness = Math.round(services.reduce((sum, service) => sum + service.readiness, 0) / services.length);
+
+  return {
+    goal: ENTERPRISE_PLATFORM_GOAL,
+    architectureMode: 'Domain-driven service boundaries now; deployable microservices when the backend replaces local truth.',
+    principles: ENTERPRISE_ARCHITECTURE_PRINCIPLES,
+    sides: ENTERPRISE_MARKETPLACE_SIDES,
+    services,
+    serviceCount: services.length,
+    modeled,
+    contractOnly,
+    eventSpine: ENTERPRISE_EVENT_SPINE,
+    eventCount: ENTERPRISE_EVENT_SPINE.length,
+    averageReadiness,
+    licenseTargets: [
+      'Mobile IV operators',
+      'Event medical operators',
+      'Concierge wellness groups',
+      'Mobile nurse networks',
+      'Physician-owned wellness clinics',
+    ],
+    nonNegotiables: [
+      'Client UI must stay minimal.',
+      'Supply-side tooling must be stronger than the demand UI.',
+      'Dispatch must consider provider certification and inventory, not just time.',
+      'Compliance must be its own service boundary.',
+      'Clinical data is placeholder-only until shared through the clinical source of record.',
+      'Payments must remain abstracted from day one.',
+    ],
+  };
+}

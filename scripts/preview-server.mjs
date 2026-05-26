@@ -1,0 +1,208 @@
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, '..');
+const dist = path.join(repoRoot, 'dist');
+
+function argValue(name, fallback) {
+  const index = process.argv.indexOf(name);
+  if (index !== -1 && process.argv[index + 1]) return process.argv[index + 1];
+  const inline = process.argv.find((arg) => arg.startsWith(`${name}=`));
+  if (inline) return inline.slice(name.length + 1);
+  return fallback;
+}
+
+const host = argValue('--host', process.env.HOST || '127.0.0.1');
+const port = Number(argValue('--port', process.env.PORT || '4173'));
+
+const mimeTypes = new Map([
+  ['.avif', 'image/avif'],
+  ['.css', 'text/css; charset=utf-8'],
+  ['.gif', 'image/gif'],
+  ['.html', 'text/html; charset=utf-8'],
+  ['.ico', 'image/x-icon'],
+  ['.jpg', 'image/jpeg'],
+  ['.jpeg', 'image/jpeg'],
+  ['.js', 'text/javascript; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.map', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml; charset=utf-8'],
+  ['.txt', 'text/plain; charset=utf-8'],
+  ['.webp', 'image/webp'],
+  ['.xml', 'application/xml; charset=utf-8'],
+]);
+
+function safeJoin(root, requestPath) {
+  const decoded = decodeURIComponent(requestPath.split('?')[0] || '/');
+  const normalized = path.normalize(decoded).replace(/^(\.\.[/\\])+/, '');
+  return path.join(root, normalized);
+}
+
+function readIfFile(file) {
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile()) return null;
+    return fs.readFileSync(file);
+  } catch {
+    return null;
+  }
+}
+
+function isPrivateRoute(urlPath) {
+  return ['/admin', '/provider', '/members', '/api'].some((prefix) => urlPath === prefix || urlPath.startsWith(`${prefix}/`));
+}
+
+function routeUrl(urlPath) {
+  const normalized = urlPath === '/' ? '/' : urlPath.replace(/\/+$/, '');
+  return `https://www.avalonvitality.co${normalized === '/' ? '/' : normalized}`;
+}
+
+function withCrawlerMeta(htmlBuffer, {
+  robots = 'noindex, nofollow',
+  title = 'Page Not Found | Avalon Vitality',
+  description = 'This Avalon Vitality page is not available for indexing.',
+  canonicalPath = '/',
+  body = null,
+} = {}) {
+  let html = htmlBuffer.toString('utf8');
+  const replacements = [
+    [/<title>[^<]*<\/title>/i, `<title>${title}</title>`],
+    [/<meta name="description" content="[^"]*"\s*\/?>/i, `<meta name="description" content="${description}" />`],
+    [/<meta name="robots" content="[^"]*"\s*\/?>/i, `<meta name="robots" content="${robots}" />`],
+    [/<link rel="canonical" href="[^"]*"\s*\/?>/i, `<link rel="canonical" href="${routeUrl(canonicalPath)}" />`],
+    [/<meta property="og:title" content="[^"]*"\s*\/?>/i, `<meta property="og:title" content="${title}" />`],
+    [/<meta property="og:description" content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${description}" />`],
+    [/<meta property="og:url" content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${routeUrl(canonicalPath)}" />`],
+  ];
+
+  for (const [pattern, tag] of replacements) {
+    html = pattern.test(html) ? html.replace(pattern, tag) : html.replace('</head>', `    ${tag}\n  </head>`);
+  }
+
+  if (body) html = html.replace(/<div id="root">[\s\S]*<\/div>\s*<!-- Google Translate target/i, `<div id="root">${body}\n    </div>\n\n    <!-- Google Translate target`);
+  return Buffer.from(html);
+}
+
+function unavailableBody(label, detail) {
+  return `
+      <div id="seo-prerender" style="min-height:100vh;background:#0a0a0a;color:#f4f4f1;font-family:Inter,Arial,sans-serif;padding:48px 24px;">
+        <main style="max-width:760px;margin:0 auto;">
+          <p style="font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(244,244,241,.52);margin:0 0 18px;">Avalon Vitality</p>
+          <h1 style="font-family:Arial,sans-serif;font-size:clamp(42px,10vw,82px);line-height:.9;text-transform:uppercase;margin:0 0 24px;">${label}</h1>
+          <p style="max-width:620px;font-size:18px;line-height:1.65;color:rgba(244,244,241,.68);margin:0;">${detail}</p>
+        </main>
+      </div>`;
+}
+
+function resolveRootHtml(baseName) {
+  const canonical = path.join(dist, `${baseName}.html`);
+  if (fs.existsSync(canonical)) return canonical;
+  const escaped = baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const fallback = fs.readdirSync(dist)
+    .find((name) => new RegExp(`^${escaped} \\d+\\.html$`).test(name));
+  return fallback ? path.join(dist, fallback) : canonical;
+}
+
+if (!readIfFile(resolveRootHtml('index'))) {
+  console.error('[preview-server] dist/index.html missing. Run npm run build first.');
+  process.exit(1);
+}
+
+function candidateFiles(urlPath) {
+  const exact = safeJoin(dist, urlPath);
+  const candidates = [exact];
+
+  if (!path.extname(exact)) {
+    candidates.push(`${exact}.html`);
+    candidates.push(path.join(exact, 'index.html'));
+  }
+
+  if (urlPath.endsWith('/')) candidates.push(path.join(exact, 'index.html'));
+  return candidates;
+}
+
+function send(res, status, file, body, method) {
+  const ext = path.extname(file);
+  const base = path.basename(file);
+  const isCrawlControl = base === 'robots.txt' || base === 'sitemap.xml';
+  const headers = {
+    'Content-Type': mimeTypes.get(ext) || 'application/octet-stream',
+    'Cache-Control': ext === '.html' || isCrawlControl ? 'no-cache' : 'public, max-age=31536000, immutable',
+  };
+  if (ext === '.html' && Buffer.isBuffer(body) && body.includes('noindex')) {
+    headers['X-Robots-Tag'] = 'noindex, nofollow';
+  }
+  res.writeHead(status, headers);
+  if (method === 'HEAD') {
+    res.end();
+    return;
+  }
+  res.end(body);
+}
+
+const server = http.createServer((req, res) => {
+  const method = req.method || 'GET';
+  if (!['GET', 'HEAD'].includes(method)) {
+    res.writeHead(405, { Allow: 'GET, HEAD' });
+    res.end();
+    return;
+  }
+
+  const url = new URL(req.url || '/', `http://${host}:${port}`);
+  const isAssetLike = /\.[a-z0-9]+$/i.test(url.pathname);
+
+  for (const file of candidateFiles(url.pathname)) {
+    const live = readIfFile(file);
+    if (live) {
+      send(res, 200, file, live, method);
+      return;
+    }
+  }
+
+  if (!isAssetLike) {
+    const indexPath = resolveRootHtml('index');
+    const liveIndex = readIfFile(indexPath);
+    if (liveIndex) {
+      if (isPrivateRoute(url.pathname)) {
+        const body = unavailableBody('Portal', 'This application route is private and is blocked from search indexing. Sign in through Avalon to continue.');
+        send(res, 200, indexPath, withCrawlerMeta(liveIndex, {
+          title: 'Avalon Portal | Avalon Vitality',
+          description: 'Private Avalon Vitality portal route. This page is not indexable.',
+          canonicalPath: '/login',
+          body,
+        }), method);
+        return;
+      }
+      const body = unavailableBody('Page Not Found', 'The requested Avalon Vitality page does not exist or has moved.');
+      send(res, 404, indexPath, withCrawlerMeta(liveIndex, {
+        title: 'Page Not Found | Avalon Vitality',
+        description: 'This Avalon Vitality page does not exist or has moved.',
+        canonicalPath: url.pathname,
+        body,
+      }), method);
+      return;
+    }
+    res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('dist/index.html missing. Run npm run build first.');
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+  if (method === 'HEAD') res.end();
+  else res.end('Not found');
+});
+
+server.listen(port, host, () => {
+  console.log(`  ➜  Local:   http://${host}:${port}/`);
+});
+
+function shutdown() {
+  server.close(() => process.exit(0));
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

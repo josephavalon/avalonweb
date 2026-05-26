@@ -7,15 +7,15 @@ import { productsByCategory } from '@/data/products';
 export default function IVVitamins() {
   useSeo({
     title: 'IV Vitamins — Avalon Vitality',
-    description: 'IV vitamin therapy formulas in the SF Bay Area — Myers, Recovery, Athletic, Glow, Immunity. RN-administered, MD-supervised.',
+    description: 'IV vitamin therapy formulas in the SF Bay Area with licensed RN administration and physician-supervised clinical review.',
     path: '/services/iv-vitamins',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Service',
       serviceType: 'IV Vitamins',
-      provider: { '@type': 'MedicalBusiness', name: 'Avalon Vitality', url: 'https://avalonvitality.co' },
+      provider: { '@type': 'MedicalBusiness', name: 'Avalon Vitality', url: 'https://www.avalonvitality.co' },
       areaServed: { '@type': 'City', name: 'San Francisco Bay Area' },
-      description: 'IV vitamin therapy formulas in the SF Bay Area — Myers, Recovery, Athletic, Glow, Immunity. RN-administered, MD-supervised.',
+      description: 'IV vitamin therapy formulas in the SF Bay Area with licensed RN administration and physician-supervised clinical review.',
     },
   });
   const cat = productsByCategory['iv-vitamins'];

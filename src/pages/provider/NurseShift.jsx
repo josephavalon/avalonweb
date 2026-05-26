@@ -4,13 +4,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import {
   APPOINTMENTS,
-  INVENTORY,
+  NURSES,
   getClient,
   getService,
   formatTime,
 } from '@/fixtures/commandMockData';
+import { SEED_ITEMS } from '@/data/inventorySeed';
 import { appendActivity, readLocal, writeLocal } from '@/lib/localOs';
-import { deductVisitInventory } from '@/lib/osRules';
+import { useSeo } from '@/lib/seo';
+import {
+  buildAcuityCloseoutPacket,
+  evaluateAcuityCloseout,
+  readAcuityCloseoutDraft,
+  saveAcuityCloseoutDraft,
+  saveAcuityCloseoutPacket,
+} from '@/lib/acuityCloseout';
+import {
+  buildKitControlTower,
+  buildTrainingControlTower,
+  NURSE_CLIENT_CONTACT_TEMPLATES,
+  queueClientRouteBridgeUpdate,
+  queueGustoPayrollProof,
+  queueKitDeduction,
+  queueNurseClientContact,
+  syncVisitKitUsage,
+} from '@/lib/platformOps';
 import {
   ChevronRight,
   MapPin,
@@ -18,6 +36,7 @@ import {
   CheckCircle,
   CheckCircle2,
   Circle,
+  MessageCircle,
   Phone,
   AlertCircle,
   ArrowRight,
@@ -28,11 +47,15 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  Package,
+  GraduationCap,
+  ShieldCheck,
+  Navigation,
 } from 'lucide-react';
 
 // ── constants ──────────────────────────────────────────────────────────────────
 // GOLD reserved only for: START VISIT / COMPLETE VISIT / SEND ALERT buttons + AV logo + accent bar
-const GOLD           = '#c9a84c';
+const GOLD           = 'hsl(var(--accent))';
 const DISPATCH_PHONE = 'tel:+14155550101';
 const EASE           = [0.16, 1, 0.3, 1];
 
@@ -56,6 +79,29 @@ function statusOrder(s) {
   return 4;
 }
 
+function normalizeNurseVisitStatus(status = 'scheduled') {
+  const value = String(status || '').toLowerCase();
+  if (/complete/.test(value)) return 'completed';
+  if (/post_visit/.test(value)) return 'post_visit';
+  if (/progress|started/.test(value)) return 'in_progress';
+  if (/confirm|assigned|route|arrived/.test(value)) return 'confirmed';
+  return value || 'scheduled';
+}
+
+function nurseRecordForName(name = '') {
+  const needle = String(name || '').toLowerCase();
+  return NURSES.find((nurse) => String(nurse.name || '').toLowerCase() === needle) || NURSES[0];
+}
+
+function trainingIdsForService(serviceName = '') {
+  const service = String(serviceName).toLowerCase();
+  const ids = new Set(['iv-start-safety', 'emergency-response', 'acuity-closeout']);
+  if (service.includes('nad')) ids.add('nad-protocol-review');
+  if (/myers|performance|glutathione|vip|magnesium|b-complex/.test(service)) ids.add('myers-add-ons');
+  if (/\bim\b|b12|shot|injection/.test(service)) ids.add('im-shot-review');
+  return ids;
+}
+
 // ── sub-components ─────────────────────────────────────────────────────────────
 
 function StatusIcon({ status, size = 22 }) {
@@ -69,6 +115,77 @@ function TagPill({ label }) {
     <span className="inline-block px-2.5 py-0.5 rounded-full border border-white/[0.06] text-[11px] text-white bg-white/[0.06] font-semibold tracking-[0.04em] uppercase">
       {label}
     </span>
+  );
+}
+
+function MissionItem({ icon: Icon, label, status, detail, tone = 'default' }) {
+  const toneStyle = {
+    ready: { color: 'hsl(142 71% 45%)', background: 'rgba(74,222,128,0.07)', border: 'rgba(74,222,128,0.2)' },
+    action: { color: GOLD, background: 'hsl(var(--accent) / 0.08)', border: 'hsl(var(--accent) / 0.22)' },
+    critical: { color: 'hsl(var(--destructive))', background: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.24)' },
+    default: { color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.08)' },
+  }[tone] || {};
+  return (
+    <div className="rounded-[10px] p-3" style={{ background: toneStyle.background, border: `1px solid ${toneStyle.border}` }}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-2.5">
+          <Icon size={15} className="mt-0.5 shrink-0" style={{ color: toneStyle.color }} />
+          <div className="min-w-0">
+            <div className="text-[11px] text-white tracking-[0.1em] font-semibold uppercase">{label}</div>
+            <div className="text-[11px] text-white/48 mt-1 leading-snug">{detail}</div>
+          </div>
+        </div>
+        <span className="shrink-0 text-[9px] px-2 py-0.5 rounded-full uppercase tracking-[0.11em] font-semibold" style={{ color: toneStyle.color, border: `1px solid ${toneStyle.border}` }}>
+          {status}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AcuityCloseoutGate({ verdict }) {
+  const ready = verdict.complete;
+  const tone = ready ? 'hsl(142 71% 45%)' : GOLD;
+
+  return (
+    <div className="rounded-[14px] p-3.5 mb-3.5" style={{ background: 'rgba(255,255,255,0.035)', border: `1px solid ${ready ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.08)'}` }}>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <div className="text-[11px] text-white tracking-[0.12em] font-semibold">
+            ACUITY CLOSEOUT
+          </div>
+          <div className="text-[11px] text-white/45 mt-1">
+            Acuity is the record. This blocks local completion only.
+          </div>
+        </div>
+        <span className="shrink-0 text-[10px] px-2 py-1 rounded-full uppercase tracking-[0.12em] font-semibold" style={{ color: tone, background: `${tone}18`, border: `1px solid ${tone}35` }}>
+          {verdict.label}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+        {verdict.sections.map((section) => (
+          <div
+            key={section.key}
+            className="rounded-lg px-2.5 py-2 flex items-center justify-between gap-2"
+            style={{ background: section.complete ? 'rgba(74,222,128,0.07)' : 'rgba(255,255,255,0.04)', border: `1px solid ${section.complete ? 'rgba(74,222,128,0.18)' : 'rgba(255,255,255,0.07)'}` }}
+          >
+            <span className="text-[10px] text-white/65 uppercase tracking-[0.11em] truncate">
+              {section.label}
+            </span>
+            {section.complete ? (
+              <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle size={13} style={{ color: GOLD }} className="shrink-0" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="text-[11px] text-white/55 leading-relaxed">
+        {verdict.nextAction}
+      </div>
+    </div>
   );
 }
 
@@ -90,9 +207,11 @@ function useTimer(running) {
 }
 
 // ── VisitCard ──────────────────────────────────────────────────────────────────
-function VisitCard({ appt, visitNumber, onStatusChange }) {
+function VisitCard({ appt, visitNumber, nurseName = 'Nurse', nurseRecord, onStatusChange }) {
   const [expanded,      setExpanded]      = useState(false);
-  const [localStatus,   setLocalStatus]   = useState(() => readLocal(`visitStatus.${appt.id}`, appt.status));
+  const [localStatus,   setLocalStatus]   = useState(() => normalizeNurseVisitStatus(readLocal(`visitStatus.${appt.id}`, appt.status)));
+  const [etaDraft,      setEtaDraft]      = useState(() => readLocal(`routeEta.${appt.id}`, '20 min'));
+  const [lastContact,   setLastContact]   = useState(() => readLocal(`clientContact.${appt.id}`, ''));
   const [clinicalNotes, setClinicalNotes] = useState(appt.clinical_notes || '');
   const [completedAt,   setCompletedAt]   = useState(null);
   const [timerRunning,  setTimerRunning]  = useState(false);
@@ -103,22 +222,26 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
     consent_signed:   false,
   });
 
-  // ── Visit notes state ─────────────────────────────────────────────────────────
-  const NOTES_KEY = `av.visit.${appt.id}.notes`;
+  // ── Visit closeout state ──────────────────────────────────────────────────────
+  const NOTES_KEY = `visit.${appt.id}.closeoutProof`;
   const [notesOpen, setNotesOpen] = useState(false);
-  const [visitNote, setVisitNote] = useState(() => {
-    try { const s = localStorage.getItem(NOTES_KEY); return s ? JSON.parse(s).notes || '' : ''; } catch { return ''; }
-  });
-  const [bp, setBp] = useState(() => {
-    try { const s = localStorage.getItem(NOTES_KEY); return s ? JSON.parse(s).bp || '' : ''; } catch { return ''; }
-  });
-  const [hr, setHr] = useState(() => {
-    try { const s = localStorage.getItem(NOTES_KEY); return s ? JSON.parse(s).hr || '' : ''; } catch { return ''; }
-  });
+  const [acuityCloseout, setAcuityCloseout] = useState(() => readAcuityCloseoutDraft(appt.id));
+  const [visitNote, setVisitNote] = useState('');
+  const [bp, setBp] = useState('');
+  const [hr, setHr] = useState('');
   const [notesSaved, setNotesSaved] = useState(false);
 
+  function updateAcuityCloseout(patch) {
+    setAcuityCloseout(saveAcuityCloseoutDraft(appt.id, patch));
+  }
+
   function saveNotes() {
-    try { localStorage.setItem(NOTES_KEY, JSON.stringify({ notes: visitNote, bp, hr })); } catch {}
+    writeLocal(NOTES_KEY, {
+      saved: true,
+      hasNotes: Boolean(visitNote.trim()),
+      vitalsCaptured: Boolean(bp.trim() || hr.trim()),
+      updatedAt: new Date().toISOString(),
+    });
     appendActivity(`Saved visit notes for ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
     setNotesSaved(true);
     setTimeout(() => setNotesSaved(false), 2000);
@@ -130,7 +253,70 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
 
   if (!client || !service) return null;
 
+  const missionVisit = {
+    id: appt.id,
+    client: `${client.first_name} ${client.last_name}`,
+    service: service.name,
+    therapy: service.name,
+    nurseName,
+  };
+  const activeNurse = nurseRecord || nurseRecordForName(nurseName);
+  const kitTower = buildKitControlTower({ inventory: SEED_ITEMS, nurses: [activeNurse], visits: [missionVisit] });
+  const nurseKit = kitTower.kits[0];
+  const kitShort = nurseKit?.missing?.length || 0;
+  const trainingTower = buildTrainingControlTower({ nurses: [activeNurse] });
+  const trainingRow = trainingTower.nurseRows[0];
+  const requiredTraining = trainingRow?.modules?.filter((module) => trainingIdsForService(service.name).has(module.id)) || [];
+  const expiredTraining = requiredTraining.filter((module) => module.status === 'Expired');
+  const dueTraining = requiredTraining.filter((module) => module.status !== 'Clear');
+  const clearanceReady = client.intake_completed;
+  const clientName = `${client.first_name} ${client.last_name}`;
+  const visitAddress = `${appt.location_address}, ${appt.location_city}`;
+
+  function queueRouteUpdate(status) {
+    const eta = /arrived/i.test(status) ? 'Arrived' : /completed|complete/i.test(status) ? 'Complete' : etaDraft;
+    writeLocal(`routeEta.${appt.id}`, eta);
+    queueClientRouteBridgeUpdate({
+      visitId: appt.id,
+      status,
+      eta,
+      nurseName,
+      client: clientName,
+      clientPhone: client.phone,
+      address: visitAddress,
+      service: service.name,
+      source: 'Nurse Shift',
+    });
+  }
+
+  function sendEta() {
+    queueRouteUpdate('En Route');
+    appendActivity(`Nurse ETA set for ${clientName}: ${etaDraft}`, { role: 'nurse', visit: appt.id });
+  }
+
+  function markArrived() {
+    queueRouteUpdate('Arrived');
+    setLocalStatus('confirmed');
+    writeLocal(`visitStatus.${appt.id}`, 'confirmed');
+    onStatusChange(appt.id, 'confirmed');
+    appendActivity(`Nurse arrived: ${clientName}`, { role: 'nurse', visit: appt.id });
+  }
+
+  function sendClientContact(template) {
+    queueNurseClientContact({
+      visitId: appt.id,
+      templateId: template.id,
+      nurseName,
+      client: clientName,
+      clientPhone: client.phone,
+      source: 'Nurse Shift',
+    });
+    writeLocal(`clientContact.${appt.id}`, template.label);
+    setLastContact(template.label);
+  }
+
   function startVisit() {
+    queueRouteUpdate('In Progress');
     setLocalStatus('in_progress');
     writeLocal(`visitStatus.${appt.id}`, 'in_progress');
     appendActivity(`Started visit: ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
@@ -148,18 +334,60 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
 
   function completeVisit() {
     const now = new Date();
+    const closeoutPacket = saveAcuityCloseoutPacket(buildAcuityCloseoutPacket({
+      appointment: appt,
+      client,
+      service,
+      closeout: acuityCloseout,
+      note: clinicalNotes,
+      nurseName,
+      completedAt: now.toISOString(),
+    }));
+    if (closeoutPacket.eventFlagged) {
+      const incidents = readLocal('clinicalIncidents', []);
+      writeLocal('clinicalIncidents', [{
+        id: `incident-${appt.id}-${Date.now()}`,
+        visitId: appt.id,
+        clientName: `${client.first_name} ${client.last_name}`,
+        service: service.name,
+        summary: closeoutPacket.adverseEvent,
+        sourceOfRecord: 'Acuity',
+        status: 'Needs review',
+        createdAt: now.toISOString(),
+      }, ...incidents].slice(0, 80));
+      appendActivity(`Event follow-up flagged for ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id, sourceOfRecord: 'Acuity' });
+    }
     setCompletedAt(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
     setLocalStatus('completed');
     writeLocal(`visitStatus.${appt.id}`, 'completed');
-    writeLocal('inventorySimulation', deductVisitInventory(readLocal('inventorySimulation', INVENTORY), {
+    const kitVisit = {
+      id: appt.id,
+      client: `${client.first_name} ${client.last_name}`,
       service: service.name,
       therapy: service.name,
-    }));
+      nurseName,
+    };
+    queueKitDeduction(kitVisit, SEED_ITEMS);
+    syncVisitKitUsage({ inventory: SEED_ITEMS, visits: [kitVisit], actor: nurseName });
+    queueGustoPayrollProof({
+      visitId: appt.id,
+      nurseName,
+      service: service.name,
+      shiftValue: appt.shiftValue || appt.shift_pay,
+      chartStatus: closeoutPacket.acuityStatus,
+      completedAt: now.toISOString(),
+    });
+    queueRouteUpdate('Completed');
+    writeLocal(`visitStatus.${appt.id}`, 'completed');
     appendActivity(`Completed visit: ${client.first_name} ${client.last_name}`, { role: 'nurse', visit: appt.id });
     onStatusChange(appt.id, 'completed');
   }
 
   const allVitalsChecked = Object.values(vitals).every(Boolean);
+  const acuityVerdict = evaluateAcuityCloseout(acuityCloseout);
+  const closeoutMissing = acuityVerdict.missing;
+  const closeoutComplete = acuityVerdict.complete;
+  const canCompleteVisit = allVitalsChecked && closeoutComplete;
 
   const statusLabel = {
     scheduled:   'Scheduled',
@@ -171,9 +399,9 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
 
   const statusColor = {
     scheduled:   'rgba(255,255,255,0.5)',
-    confirmed:   '#4ade80',
-    in_progress: '#4ade80',
-    post_visit:  '#4ade80',
+    confirmed:   'hsl(142 71% 45%)',
+    in_progress: 'hsl(142 71% 45%)',
+    post_visit:  'hsl(142 71% 45%)',
     completed:   'rgba(255,255,255,0.7)',
   }[localStatus];
 
@@ -183,7 +411,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: EASE }}
-      className={`bg-[#141414] rounded-2xl overflow-hidden mb-3 transition-colors border ${
+      className={`bg-[hsl(var(--card))] rounded-2xl overflow-hidden mb-3 transition-colors border ${
         expanded ? 'border-white/[0.18]' : 'border-white/[0.06]'
       }`}
     >
@@ -274,6 +502,139 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                 </div>
               </a>
 
+              {/* ── nurse-owned eta ── */}
+              <div className="mb-5 rounded-[14px] p-3.5" style={{ background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="font-heading text-[13px] tracking-[0.12em] text-white/45">
+                      NURSE ETA
+                    </div>
+                    <div className="mt-1 text-[11px] text-white/50 leading-relaxed">
+                      You set it. Client sees your latest update.
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full px-2 py-0.5 text-[9px] uppercase tracking-[0.12em] text-emerald-300" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.18)' }}>
+                    Final say
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2.5 sm:grid-cols-4 sm:gap-1.5">
+                  {['10 min', '20 min', '30 min', '45 min'].map((eta) => (
+                    <button
+                      key={eta}
+                      type="button"
+                      onClick={() => setEtaDraft(eta)}
+                      className="min-h-[44px] rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em]"
+                      style={{
+                        background: etaDraft === eta ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${etaDraft === eta ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.08)'}`,
+                        color: etaDraft === eta ? 'hsl(var(--background))' : 'rgba(255,255,255,0.72)',
+                      }}
+                    >
+                      {eta}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={sendEta}
+                    className="min-h-[44px] rounded-xl text-[11px] font-semibold uppercase tracking-[0.16em]"
+                    style={{ background: GOLD, color: 'hsl(var(--background))', border: '1px solid hsl(var(--accent))' }}
+                  >
+                    Send ETA
+                  </button>
+                  <button
+                    type="button"
+                    onClick={markArrived}
+                    className="min-h-[44px] rounded-xl text-[11px] font-semibold uppercase tracking-[0.16em]"
+                    style={{ background: 'rgba(255,255,255,0.05)', color: 'hsl(var(--foreground))', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    Arrived
+                  </button>
+                </div>
+              </div>
+
+              {/* ── client contact ── */}
+              <div className="mb-5 rounded-[14px] p-3.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-heading text-[13px] tracking-[0.12em] text-white/45">
+                      CLIENT CONTACT
+                    </div>
+                    <div className="mt-1 text-[11px] text-white/50 leading-relaxed">
+                      Operational only. No PHI.
+                    </div>
+                  </div>
+                  <MessageCircle size={16} className="shrink-0 text-white/40" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {NURSE_CLIENT_CONTACT_TEMPLATES.map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      onClick={() => sendClientContact(template)}
+                      className="min-h-[42px] rounded-xl px-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                      style={{
+                        background: lastContact === template.label ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.045)',
+                        border: `1px solid ${lastContact === template.label ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.08)'}`,
+                        color: lastContact === template.label ? 'hsl(var(--background))' : 'rgba(255,255,255,0.72)',
+                      }}
+                    >
+                      {template.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── mission packet ── */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <div className="font-heading text-[13px] tracking-[0.12em] text-white/40">
+                    MISSION PACKET
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/[0.08] text-white/45 uppercase tracking-[0.12em]">
+                    No PHI in ops
+                  </span>
+                </div>
+                <div className="grid gap-2">
+                  <MissionItem
+                    icon={ShieldCheck}
+                    label="Clearance"
+                    status={clearanceReady ? 'Ready' : 'Block'}
+                    detail={clearanceReady ? 'Intake present. GFE remains Acuity/clinical source.' : 'Do not start until intake/GFE path is clear.'}
+                    tone={clearanceReady ? 'ready' : 'critical'}
+                  />
+                  <MissionItem
+                    icon={Package}
+                    label="Kit"
+                    status={kitShort ? 'Restock' : 'Ready'}
+                    detail={kitShort ? nurseKit.missing.slice(0, 2).map((item) => item.match).join(' · ') : `${nurseKit?.kitInventory?.length || 0} carried kit lines ready.`}
+                    tone={kitShort ? 'action' : 'ready'}
+                  />
+                  <MissionItem
+                    icon={GraduationCap}
+                    label="Protocol"
+                    status={expiredTraining.length ? 'Block' : dueTraining.length ? 'Review' : 'Ready'}
+                    detail={dueTraining.length ? dueTraining.slice(0, 2).map((item) => item.title).join(' · ') : 'Required protocol reviews current.'}
+                    tone={expiredTraining.length ? 'critical' : dueTraining.length ? 'action' : 'ready'}
+                  />
+                  <MissionItem
+                    icon={Navigation}
+                    label="Route"
+                    status="Ready"
+                    detail={`${appt.location_address}, ${appt.location_city}`}
+                    tone="default"
+                  />
+                  <MissionItem
+                    icon={FileText}
+                    label="Closeout"
+                    status={localStatus === 'post_visit' ? (closeoutComplete ? 'Ready' : 'Needed') : 'Armed'}
+                    detail={localStatus === 'post_visit' ? acuityVerdict.nextAction : 'Acuity closeout gates completion after service.'}
+                    tone={localStatus === 'post_visit' ? (closeoutComplete ? 'ready' : 'action') : 'default'}
+                  />
+                </div>
+              </div>
+
               {/* ── client intake summary ── */}
               <div className="mb-5">
                 <div className="font-heading text-[13px] tracking-[0.12em] text-white/40 mb-2.5">
@@ -337,7 +698,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
 
               {/* COMPLETED STATE */}
               {localStatus === 'completed' && (
-                <div className="bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.25)] rounded-[10px] p-3.5">
+                <div className="bg-accent/[0.08] border border-accent/25 rounded-[10px] p-3.5">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle size={16} style={{ color: GOLD }} />
                     <span className="text-white font-bold text-sm">
@@ -359,8 +720,8 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                   className="w-full py-4 border-0 rounded-xl cursor-pointer flex items-center justify-center gap-2.5"
                   style={{ background: GOLD }}
                 >
-                  <Play size={18} color="#0A0A0A" />
-                  <span className="font-heading text-xl tracking-[0.08em]" style={{ color: '#0A0A0A' }}>
+                  <Play size={18} color="hsl(var(--background))" />
+                  <span className="font-heading text-xl tracking-[0.08em]" style={{ color: 'hsl(var(--background))' }}>
                     START VISIT
                   </span>
                 </button>
@@ -378,7 +739,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                     </div>
                     <div
                       className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"
-                      style={{ boxShadow: '0 0 8px #4ade80' }}
+                      style={{ boxShadow: '0 0 8px hsl(142 71% 45%)' }}
                     />
                   </div>
 
@@ -394,26 +755,28 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                 </div>
               )}
 
-              {/* POST-VISIT — SOAP notes + vitals + complete */}
+              {/* POST-VISIT — Acuity closeout + complete */}
               {localStatus === 'post_visit' && (
                 <div>
+                  <AcuityCloseoutGate verdict={acuityVerdict} />
+
                   <div className="mb-3.5">
                     <label className="block text-[11px] text-white tracking-[0.08em] mb-2 font-semibold">
-                      CLINICAL NOTES (SOAP)
+                      ACUITY NOTE
                     </label>
                     <textarea
                       value={clinicalNotes}
                       onChange={e => setClinicalNotes(e.target.value)}
-                      placeholder="Subjective, Objective, Assessment, Plan..."
+                      placeholder="Brief factual note for Acuity closeout..."
                       rows={4}
                       className="w-full bg-white/[0.04] border border-white/[0.06] rounded-[10px] p-3 text-white text-sm resize-y font-[inherit] outline-none placeholder:text-white/35"
                     />
                   </div>
 
-                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-[10px] px-3.5 py-3 mb-3.5">
-                    <div className="text-[11px] text-white tracking-[0.08em] mb-2.5 font-semibold">
-                      VISIT CHECKLIST
-                    </div>
+	                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-[10px] px-3.5 py-3 mb-3.5">
+	                    <div className="text-[11px] text-white tracking-[0.08em] mb-2.5 font-semibold">
+	                      VISIT CHECKLIST
+	                    </div>
                     {[
                       { key: 'bp_checked',     label: 'BP checked'       },
                       { key: 'iv_assessed',    label: 'IV site assessed' },
@@ -426,40 +789,169 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                           checked={vitals[key]}
                           onChange={e => setVitals(v => ({ ...v, [key]: e.target.checked }))}
                           className="w-4 h-4 cursor-pointer"
-                          style={{ accentColor: '#4ade80' }}
+                          style={{ accentColor: 'hsl(142 71% 45%)' }}
                         />
                         <span className="text-sm text-white">{label}</span>
                         {vitals[key] && <CheckCircle size={14} className="text-emerald-400" />}
-                      </label>
-                    ))}
-                  </div>
+	                      </label>
+	                    ))}
+	                  </div>
 
-                  <button
-                    onClick={completeVisit}
-                    disabled={!allVitalsChecked}
-                    className="w-full py-4 border-0 rounded-xl flex items-center justify-center gap-2.5 transition-colors"
-                    style={{
-                      background: allVitalsChecked ? GOLD : 'rgba(201,168,76,0.2)',
-                      cursor: allVitalsChecked ? 'pointer' : 'not-allowed',
-                    }}
-                  >
-                    <CheckCircle
-                      size={18}
-                      style={{ color: allVitalsChecked ? '#0A0A0A' : 'rgba(201,168,76,0.5)' }}
-                    />
-                    <span
-                      className="font-heading text-xl tracking-[0.08em]"
-                      style={{ color: allVitalsChecked ? '#0A0A0A' : 'rgba(201,168,76,0.5)' }}
-                    >
-                      COMPLETE VISIT
-                    </span>
-                  </button>
+	                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-[10px] px-3.5 py-3 mb-3.5">
+	                    <div className="flex items-center justify-between gap-3 mb-3">
+	                      <div>
+	                        <div className="text-[11px] text-white tracking-[0.08em] font-semibold">
+	                          ACUITY REQUIRED FIELDS
+	                        </div>
+	                        <div className="text-[11px] text-white/45 mt-1">
+	                          Acuity remains the source of record.
+	                        </div>
+	                      </div>
+	                      <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/[0.08] text-white/50">
+	                        {closeoutComplete ? 'READY' : `${closeoutMissing.length} LEFT`}
+	                      </span>
+	                    </div>
 
-                  {!allVitalsChecked && (
-                    <div className="text-[11px] text-white text-center mt-2">
-                      Complete all checklist items to finish the visit
-                    </div>
-                  )}
+	                    <div className="grid grid-cols-1 gap-2 mb-3">
+	                      {[
+	                        ['identityVerified', 'ID/DOB verified'],
+	                        ['consentVerified', 'Consent verified'],
+	                        ['gfeVerified', 'GFE verified'],
+	                        ['allergiesReviewed', 'Allergies reviewed'],
+	                        ['medicationsReviewed', 'Meds reviewed'],
+	                        ['expirationChecked', 'Lot/expiration checked'],
+	                      ].map(([key, label]) => (
+	                        <label key={key} className="flex items-center gap-2.5 cursor-pointer">
+	                          <input
+	                            type="checkbox"
+	                            checked={acuityCloseout[key]}
+	                            onChange={e => updateAcuityCloseout({ [key]: e.target.checked })}
+	                            className="w-4 h-4 cursor-pointer"
+	                            style={{ accentColor: 'hsl(142 71% 45%)' }}
+	                          />
+	                          <span className="text-sm text-white">{label}</span>
+	                        </label>
+	                      ))}
+	                    </div>
+
+	                    <div className="grid grid-cols-3 gap-2 mb-2">
+	                      {[
+	                        ['preBp', 'Pre BP'],
+	                        ['preHr', 'Pre HR'],
+	                        ['preSpo2', 'Pre SpO2'],
+	                        ['postBp', 'Post BP'],
+	                        ['postHr', 'Post HR'],
+	                        ['postSpo2', 'Post SpO2'],
+	                      ].map(([key, label]) => (
+	                        <input
+	                          key={key}
+	                          value={acuityCloseout[key]}
+	                          onChange={e => updateAcuityCloseout({ [key]: e.target.value })}
+	                          placeholder={label}
+	                          className="min-w-0 rounded-lg px-2 py-2 text-xs font-[inherit] outline-none placeholder:text-white/30"
+	                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
+	                        />
+	                      ))}
+	                    </div>
+
+	                    <div className="grid grid-cols-1 gap-2 mb-2">
+	                      <input
+	                        value={acuityCloseout.routeSite}
+	                        onChange={e => updateAcuityCloseout({ routeSite: e.target.value })}
+	                        placeholder="Route/site, e.g. IV left AC, IM right deltoid"
+	                        className="rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
+	                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
+	                      />
+	                      <input
+	                        value={acuityCloseout.lotOrKitId}
+	                        onChange={e => updateAcuityCloseout({ lotOrKitId: e.target.value })}
+	                        placeholder="Medication lot or kit ID"
+	                        className="rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
+	                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
+	                      />
+	                      <textarea
+	                        value={acuityCloseout.adverseEvent}
+	                        onChange={e => updateAcuityCloseout({ adverseEvent: e.target.value })}
+	                        rows={2}
+	                        placeholder="Adverse event note. Enter None if no event."
+	                        className="rounded-lg px-3 py-2 text-sm resize-none font-[inherit] outline-none placeholder:text-white/30"
+	                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
+	                      />
+	                      <input
+	                        value={acuityCloseout.dischargeCondition}
+	                        onChange={e => updateAcuityCloseout({ dischargeCondition: e.target.value })}
+	                        placeholder="Discharge condition"
+	                        className="rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
+	                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
+	                      />
+	                      <input
+	                        value={acuityCloseout.nurseSignature}
+	                        onChange={e => updateAcuityCloseout({ nurseSignature: e.target.value })}
+	                        placeholder="Nurse signature"
+	                        className="rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
+	                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
+	                      />
+	                    </div>
+
+	                    <label className="flex items-start gap-2.5 cursor-pointer">
+	                      <input
+	                        type="checkbox"
+	                        checked={acuityCloseout.attestation}
+	                        onChange={e => updateAcuityCloseout({ attestation: e.target.checked })}
+	                        className="w-4 h-4 mt-0.5 cursor-pointer"
+	                        style={{ accentColor: 'hsl(142 71% 45%)' }}
+	                      />
+	                      <span className="text-xs text-white leading-relaxed">
+	                        I attest the Acuity closeout is accurate and complete for this visit.
+	                      </span>
+	                    </label>
+
+	                    <label className="flex items-start gap-2.5 cursor-pointer mt-3">
+	                      <input
+	                        type="checkbox"
+	                        checked={acuityCloseout.acuityEntered}
+	                        onChange={e => updateAcuityCloseout({ acuityEntered: e.target.checked })}
+	                        className="w-4 h-4 mt-0.5 cursor-pointer"
+	                        style={{ accentColor: 'hsl(142 71% 45%)' }}
+	                      />
+	                      <span className="text-xs text-white leading-relaxed">
+	                        Acuity updated manually.
+	                      </span>
+	                    </label>
+
+	                    {!closeoutComplete && (
+	                      <div className="text-[11px] text-white/55 mt-3">
+	                        Missing: {closeoutMissing.slice(0, 6).join(', ')}{closeoutMissing.length > 6 ? '...' : ''}
+	                      </div>
+	                    )}
+	                  </div>
+
+	                  <button
+	                    onClick={completeVisit}
+	                    disabled={!canCompleteVisit}
+	                    className="w-full py-4 border-0 rounded-xl flex items-center justify-center gap-2.5 transition-colors"
+	                    style={{
+	                      background: canCompleteVisit ? GOLD : 'hsl(var(--accent) / 0.2)',
+	                      cursor: canCompleteVisit ? 'pointer' : 'not-allowed',
+	                    }}
+	                  >
+	                    <CheckCircle
+	                      size={18}
+	                      style={{ color: canCompleteVisit ? 'hsl(var(--background))' : 'hsl(var(--accent) / 0.5)' }}
+	                    />
+	                    <span
+	                      className="font-heading text-xl tracking-[0.08em]"
+	                      style={{ color: canCompleteVisit ? 'hsl(var(--background))' : 'hsl(var(--accent) / 0.5)' }}
+	                    >
+	                      COMPLETE VISIT
+	                    </span>
+	                  </button>
+
+	                  {!canCompleteVisit && (
+	                    <div className="text-[11px] text-white text-center mt-2">
+	                      Complete field check and Acuity closeout to finish.
+	                    </div>
+	                  )}
                 </div>
               )}
 
@@ -470,8 +962,8 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                   onClick={() => setNotesOpen(v => !v)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.06em] transition-colors"
                   style={{
-                    background: notesOpen ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${notesOpen ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    background: notesOpen ? 'hsl(var(--accent) / 0.12)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${notesOpen ? 'hsl(var(--accent) / 0.3)' : 'rgba(255,255,255,0.08)'}`,
                     color: notesOpen ? GOLD : 'rgba(255,255,255,0.55)',
                   }}
                 >
@@ -495,7 +987,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                           placeholder="Visit notes..."
                           rows={3}
                           className="w-full rounded-lg p-3 text-sm resize-none font-[inherit] outline-none placeholder:text-white/30"
-                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
                         />
                         <div className="flex gap-2">
                           <input
@@ -504,7 +996,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                             onChange={e => setBp(e.target.value)}
                             placeholder="120/80"
                             className="flex-1 rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
-                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
                             aria-label="Blood pressure"
                           />
                           <input
@@ -513,7 +1005,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                             onChange={e => setHr(e.target.value)}
                             placeholder="72"
                             className="flex-1 rounded-lg px-3 py-2 text-sm font-[inherit] outline-none placeholder:text-white/30"
-                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}
                             aria-label="Heart rate"
                           />
                         </div>
@@ -522,7 +1014,7 @@ function VisitCard({ appt, visitNumber, onStatusChange }) {
                             type="button"
                             onClick={saveNotes}
                             className="px-4 py-1.5 rounded-lg text-sm font-semibold tracking-[0.06em] transition-colors"
-                            style={{ background: GOLD, color: '#0A0A0A' }}
+                            style={{ background: GOLD, color: 'hsl(var(--background))' }}
                           >
                             Save
                           </button>
@@ -557,6 +1049,9 @@ function SupplyAlertModal({ onClose }) {
 
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Nurse shift action"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -570,7 +1065,7 @@ function SupplyAlertModal({ onClose }) {
         exit={{ y: 80, opacity: 0 }}
         transition={{ duration: 0.35, ease: EASE }}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-[480px] mx-auto bg-[#141414] border border-white/[0.06] rounded-[20px] p-6"
+        className="w-full max-w-[480px] mx-auto bg-[hsl(var(--card))] border border-white/[0.06] rounded-[20px] p-6"
       >
         <div className="flex justify-between items-center mb-4">
           <div className="font-heading text-xl text-white tracking-[0.06em]">
@@ -601,7 +1096,7 @@ function SupplyAlertModal({ onClose }) {
             <button
               onClick={handleSend}
               className="w-full py-3.5 border-0 rounded-xl font-heading text-[18px] tracking-[0.08em] cursor-pointer"
-              style={{ background: GOLD, color: '#0A0A0A' }}
+              style={{ background: GOLD, color: 'hsl(var(--background))' }}
             >
               SEND ALERT
             </button>
@@ -614,8 +1109,26 @@ function SupplyAlertModal({ onClose }) {
 
 // ── NurseShift (main export) ───────────────────────────────────────────────────
 export default function NurseShift() {
+  useSeo({
+    title: 'Nurse Shift Command - Avalon Vitality',
+    description: 'Avalon nurse shift command for live visits, routing, inventory, training, and closeout.',
+    path: '/provider/shift',
+    robots: 'noindex, nofollow',
+  });
   const { user } = useAuthStore();
   const navigate = useNavigate();
+
+  // Sync theme from localStorage so admin theme changes carry through here too
+  useEffect(() => {
+    const THEMES = ['dark', 'light', 'golden', 'dubs'];
+    const saved = localStorage.getItem('avalon.theme') || 'dark';
+    const el = document.documentElement;
+    THEMES.forEach(t => el.classList.remove(t));
+    el.classList.add(saved);
+    return () => {
+      // Clean up only if no AdminLayout will re-apply (defensive)
+    };
+  }, []);
 
   const [apptStatuses, setApptStatuses] = useState({});
   const [supplyModal,  setSupplyModal]  = useState(false);
@@ -664,12 +1177,13 @@ export default function NurseShift() {
   }
 
   const nurseName = user?.name || 'Nurse';
+  const nurseRecord = nurseRecordForName(nurseName);
 
   return (
-    <div className="min-h-dvh bg-[#0A0A0A] text-white font-body">
+    <div className="min-h-dvh bg-background text-foreground font-body">
 
       {/* ── TOP BAR ── */}
-      <div className="sticky top-0 z-[100] bg-[rgba(10,10,10,0.92)] backdrop-blur-xl border-b border-white/[0.06] px-4 h-14 flex items-center justify-between">
+      <div className="sticky top-0 z-[100] backdrop-blur-xl border-b border-foreground/[0.06] px-4 h-14 flex items-center justify-between" style={{ background: 'hsl(var(--background) / 0.92)' }}>
         <div className="flex items-baseline gap-2">
           <span className="font-heading text-[22px] tracking-[0.08em]" style={{ color: GOLD }}>AV</span>
           <span className="font-heading text-[11px] text-white tracking-[0.18em]">SHIFT VIEW</span>
@@ -694,7 +1208,7 @@ export default function NurseShift() {
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: EASE }}
-          className="bg-[#141414] border border-white/[0.06] rounded-[20px] p-5 mb-6 relative overflow-hidden"
+          className="bg-[hsl(var(--card))] border border-white/[0.06] rounded-[20px] p-5 mb-6 relative overflow-hidden"
         >
           {/* gold accent bar */}
           <div
@@ -706,9 +1220,9 @@ export default function NurseShift() {
             TODAY'S SHIFT
           </div>
 
-          <div className="font-heading text-[64px] text-white leading-[0.95] mb-1.5">
+          <h1 className="font-heading text-[64px] text-white leading-[0.95] mb-1.5">
             {myAppts.length} VISIT{myAppts.length !== 1 ? 'S' : ''}
-          </div>
+          </h1>
 
           {nextTime && (
             <div className="text-sm text-white mb-4">
@@ -750,6 +1264,8 @@ export default function NurseShift() {
               key={appt.id}
               appt={appt}
               visitNumber={i + 1}
+              nurseName={nurseName}
+              nurseRecord={nurseRecord}
               onStatusChange={handleStatusChange}
             />
           ))
@@ -757,7 +1273,7 @@ export default function NurseShift() {
       </div>
 
       {/* ── BOTTOM QUICK ACTIONS ── */}
-      <div className="fixed bottom-0 inset-x-0 bg-[rgba(10,10,10,0.96)] backdrop-blur-2xl border-t border-white/[0.06] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] z-[100]">
+      <div className="fixed bottom-0 inset-x-0 backdrop-blur-2xl border-t border-foreground/[0.06] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] z-[100]" style={{ background: 'hsl(var(--background) / 0.96)' }}>
         <div className="max-w-[512px] mx-auto flex gap-2.5">
 
           {/* Call Dispatch */}

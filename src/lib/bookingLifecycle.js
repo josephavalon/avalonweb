@@ -17,10 +17,10 @@ export const BOOKING_STATUSES = [
 
 export const BOOKING_TRANSITIONS = {
   Draft: ['Scheduling received', 'Cancelled'],
-  'Scheduling received': ['Intake Pending', 'Clearance Pending', 'Cleared', 'Cancelled'],
+  'Scheduling received': ['Confirmed', 'Intake Pending', 'Clearance Pending', 'Cleared', 'Cancelled'],
   Confirmed: ['Cleared', 'Nurse Assigned', 'Cancelled'],
   'Intake Pending': ['Clearance Pending', 'Cancelled'],
-  'Clearance Pending': ['Cleared', 'Cancelled'],
+  'Clearance Pending': ['Cleared', 'Nurse Assigned', 'Cancelled'],
   Cleared: ['Nurse Assigned', 'Cancelled'],
   'Nurse Assigned': ['Ready for Visit', 'En Route', 'Cancelled'],
   'Ready for Visit': ['En Route', 'Cancelled'],
@@ -32,10 +32,74 @@ export const BOOKING_TRANSITIONS = {
   Cancelled: [],
 };
 
+export const GFE_VALID_DAYS = 365;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const HIGH_REVIEW_TERMS = ['nad', 'exosome', 'cbd', 'vitamin c', 'high dose', 'group', 'event'];
 
 export function normalizeBookingStatus(status = 'Draft') {
   return BOOKING_STATUSES.includes(status) ? status : 'Draft';
+}
+
+function parseDate(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function addDays(date, days) {
+  const parsed = parseDate(date);
+  if (!parsed) return null;
+  return new Date(parsed.getTime() + Number(days || 0) * DAY_MS);
+}
+
+function gfeField(gfe, key) {
+  return gfe && typeof gfe === 'object' ? gfe[key] : '';
+}
+
+export function isGfeCurrent(gfe = {}, now = new Date()) {
+  const record = typeof gfe === 'string' ? { status: gfe } : gfe || {};
+  const status = String(record.status || record.state || '').toLowerCase();
+  const expiresAt = parseDate(record.expiresAt || record.validUntil || record.validThrough || record.expirationDate);
+  const clearedAt = parseDate(record.clearedAt || record.completedAt || record.approvedAt);
+  const derivedExpiresAt = expiresAt || (clearedAt ? addDays(clearedAt, GFE_VALID_DAYS) : null);
+
+  if (!/valid|clear|approved|complete/.test(status)) return false;
+  if (!derivedExpiresAt) return false;
+  return derivedExpiresAt.getTime() > now.getTime();
+}
+
+export function resolveGfeRequirement(booking = {}, now = new Date()) {
+  const rawGfe = booking.gfeRecord || booking.gfe || {};
+  const status = typeof rawGfe === 'string' ? rawGfe : rawGfe.status;
+  const visitCount = Number(booking.visitCount ?? booking.client?.visitCount ?? booking.contact?.visitCount ?? 0);
+  const isNewClient = booking.isNewClient ?? (booking.clientType === 'new' || visitCount === 0);
+  const expiresAt = booking.gfeExpiresAt || gfeField(rawGfe, 'expiresAt') || gfeField(rawGfe, 'validUntil') || gfeField(rawGfe, 'validThrough');
+  const clearedAt = booking.gfeClearedAt || gfeField(rawGfe, 'clearedAt') || gfeField(rawGfe, 'completedAt') || gfeField(rawGfe, 'approvedAt');
+  const record = { status, expiresAt, clearedAt };
+  const current = isGfeCurrent(record, now);
+
+  if (current) {
+    const derivedExpiresAt = parseDate(expiresAt) || addDays(clearedAt, GFE_VALID_DAYS);
+    return {
+      required: false,
+      status: 'Valid',
+      isNewClient: Boolean(isNewClient),
+      visitCount,
+      expiresAt: derivedExpiresAt?.toISOString() || expiresAt || '',
+      reason: derivedExpiresAt
+        ? `GFE valid through ${derivedExpiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.`
+        : 'Current GFE is on file.',
+    };
+  }
+
+  return {
+    required: true,
+    status: 'Required',
+    isNewClient: Boolean(isNewClient),
+    visitCount,
+    expiresAt: '',
+    reason: isNewClient ? 'New client requires GFE before dispatch.' : 'GFE is missing or older than one year.',
+  };
 }
 
 export function bookingNeedsClinicalReview(booking = {}) {
@@ -66,6 +130,7 @@ export function validateBookingForCheckout(booking = {}, { coveredZips } = {}) {
   };
   const zip = String(booking.zip || '').trim();
   const guests = Number(booking.guests || 1);
+  const gfeRequirement = resolveGfeRequirement(booking);
 
   if (!booking.service && !booking.protocolKey) errors.push('Choose a protocol before checkout.');
   if (!booking.address) errors.push('Add a service address.');
@@ -79,6 +144,7 @@ export function validateBookingForCheckout(booking = {}, { coveredZips } = {}) {
   if (!contact.phone || String(contact.phone).replace(/\D/g, '').length < 10) errors.push('Add a valid phone number.');
   if (guests > 4) errors.push('Groups over 4 require direct coordination.');
   if (bookingNeedsClinicalReview(booking)) warnings.push('Clinical review required before dispatch.');
+  if (gfeRequirement.required) warnings.push(gfeRequirement.reason);
 
   return {
     ok: errors.length === 0,
@@ -89,14 +155,20 @@ export function validateBookingForCheckout(booking = {}, { coveredZips } = {}) {
 }
 
 export function createBookingRecord(input = {}) {
-  const review = bookingNeedsClinicalReview(input);
+  const gfeRequirement = resolveGfeRequirement(input);
+  const review = bookingNeedsClinicalReview(input) || gfeRequirement.required;
   const initialStatus = input.status && !(input.status === 'Scheduling received' && review)
     ? input.status
     : review ? 'Clearance Pending' : 'Scheduling received';
   return {
     ...input,
     status: initialStatus,
-    gfe: input.gfe || (review ? 'Pending' : 'Not Started'),
+    gfe: input.gfe || (gfeRequirement.required ? 'Pending' : 'Cleared'),
+    gfeRequired: gfeRequirement.required,
+    gfeExpiresAt: input.gfeExpiresAt || gfeRequirement.expiresAt || '',
+    gfeStatusReason: input.gfeStatusReason || gfeRequirement.reason,
+    isNewClient: gfeRequirement.isNewClient,
+    visitCount: gfeRequirement.visitCount,
     nurse: input.nurse || 'Unassigned',
     payment: input.payment || 'Pending',
     audit: input.audit || [
@@ -127,12 +199,14 @@ export function validateTransition(booking = {}, nextStatus, { override = false 
   const next = normalizeBookingStatus(nextStatus);
   const allowed = BOOKING_TRANSITIONS[current] || [];
   const errors = [];
+  const gfeRequirement = resolveGfeRequirement(booking);
+  const clinicallyCleared = !gfeRequirement.required;
 
   if (!override && current !== next && !allowed.includes(next)) {
     errors.push(`Cannot move from ${current} to ${next}.`);
   }
-  if (next === 'Nurse Assigned' && booking.gfe !== 'Cleared') {
-    errors.push('Clinical clearance is required before nurse assignment.');
+  if (['Ready for Visit', 'En Route', 'Arrived', 'In Progress', 'Completed'].includes(next) && !clinicallyCleared) {
+    errors.push('GFE clearance is required before dispatch.');
   }
   if (['Ready for Visit', 'En Route', 'Arrived', 'In Progress', 'Completed'].includes(next) && (!booking.nurse || booking.nurse === 'Unassigned')) {
     errors.push('Assign a nurse before dispatching this visit.');

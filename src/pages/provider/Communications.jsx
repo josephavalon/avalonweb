@@ -5,18 +5,18 @@ import {
 import AdminLayout from '@/layouts/AdminLayout';
 import { FOLLOWUPS } from '@/fixtures/commandMockData';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthStore } from '@/lib/useAuthStore';
+import CommunicationCenter from '@/components/messaging/CommunicationCenter';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const FILTERS = [
   { id: 'all',        label: 'All' },
   { id: 'overdue',    label: 'Overdue' },
-  { id: 'high',       label: 'High Priority' },
-  { id: 'postvisit',  label: 'Post-Visit' },
+  { id: 'high',       label: 'High' },
   { id: 'review',     label: 'Review' },
   { id: 'rebook',     label: 'Rebook' },
-  { id: 'membership', label: 'Membership' },
-  { id: 'vip',        label: 'VIP' },
+  { id: 'membership', label: 'Plans' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ function applyFilter(items, filter) {
     case 'postvisit':  return items.filter(f => f.type === 'Post-visit check-in');
     case 'review':     return items.filter(f => f.type === 'Review request');
     case 'rebook':     return items.filter(f => f.type === 'Rebook prompt');
-    case 'membership': return items.filter(f => f.type === 'Membership upsell');
+    case 'membership': return items.filter(f => f.type === 'Plan follow-up' || f.type === 'Membership upsell');
     case 'vip':        return items.filter(f => f.type === 'VIP follow-up');
     default:           return items;
   }
@@ -154,31 +154,22 @@ function FollowUpCard({ item, onStatusChange, toast }) {
       {!isDone && (
         <div className="flex flex-wrap gap-2 pt-1">
           <ActionBtn
-            icon={MessageSquare}
-            label="Text"
-            onClick={() => toast({ title: `Text queued`, description: `Message to ${item.client} — not active in local mode.` })}
-          />
-          <ActionBtn
             icon={Check}
-            label="Mark Done"
+            label="Done"
             onClick={() => onStatusChange(item.id, 'Done')}
             accent
           />
-          <ActionBtn
-            icon={PlusCircle}
-            label="Add Note"
-            onClick={() => toast({ title: `Note`, description: `Notes for ${item.client} — not active in local mode.` })}
-          />
-          <ActionBtn
-            icon={RefreshCw}
-            label="Create Rebook"
-            onClick={() => toast({ title: `Rebook`, description: `Rebook flow for ${item.client} — not active in local mode.` })}
-          />
-          <ActionBtn
-            icon={Star}
-            label="Membership Follow-Up"
-            onClick={() => toast({ title: `Membership`, description: `Follow-up flow for ${item.client} — not active in local mode.` })}
-          />
+          <details className="relative">
+            <summary className="list-none cursor-pointer rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium text-foreground/70" style={{ background: 'hsl(var(--foreground) / 0.06)', borderColor: 'hsl(var(--foreground) / 0.1)' }}>
+              More
+            </summary>
+            <div className="absolute left-0 top-full z-20 mt-2 flex min-w-[160px] flex-col gap-1 rounded-xl border bg-background p-2 shadow-xl" style={{ borderColor: 'hsl(var(--foreground) / 0.1)' }}>
+              <ActionBtn icon={MessageSquare} label="Text" onClick={() => toast({ title: 'Text queued', description: item.client })} />
+              <ActionBtn icon={PlusCircle} label="Note" onClick={() => toast({ title: 'Note', description: item.client })} />
+              <ActionBtn icon={RefreshCw} label="Rebook" onClick={() => toast({ title: 'Rebook', description: item.client })} />
+              <ActionBtn icon={Star} label="Plan" onClick={() => toast({ title: 'Plan', description: item.client })} />
+            </div>
+          </details>
         </div>
       )}
 
@@ -213,8 +204,10 @@ function SummaryChip({ label, value, color }) {
 
 export default function Communications() {
   const { toast } = useToast();
+  const { user } = useAuthStore();
   const [activeFilter, setActiveFilter] = useState('all');
   const [items, setItems] = useState(FOLLOWUPS);
+  const isNurse = user?.role === 'provider';
 
   const handleStatusChange = (id, newStatus) => {
     setItems(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
@@ -235,34 +228,40 @@ export default function Communications() {
       <div className="mb-6 space-y-1">
         <div className="flex items-baseline gap-3 flex-wrap">
           <h1 className="font-heading text-2xl tracking-[0.15em] text-foreground uppercase">
-            Follow-Ups
+            Communications
           </h1>
-          <span
-            className="font-body text-[11px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full border"
-            style={{
-              color:       'hsl(var(--accent))',
-              borderColor: 'hsl(var(--accent) / 0.35)',
-              background:  'hsl(var(--accent) / 0.08)',
-            }}
-          >
-            {filtered.length}
-          </span>
+          {!isNurse && (
+            <span
+              className="font-body text-[11px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full border"
+              style={{
+                color:       'hsl(var(--accent))',
+                borderColor: 'hsl(var(--accent) / 0.35)',
+                background:  'hsl(var(--accent) / 0.08)',
+              }}
+            >
+              {filtered.length}
+            </span>
+          )}
         </div>
         <p className="font-body text-[12px] text-foreground/45 tracking-wide">
-          Retention &amp; Recovery Queue
+          {isNurse ? 'Dispatch thread' : 'Messaging queue'}
         </p>
       </div>
 
+      <div className="mb-6">
+        <CommunicationCenter />
+      </div>
+
       {/* Summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      {!isNurse && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <SummaryChip label="Overdue"       value={overdueCount}  color="text-red-400" />
         <SummaryChip label="Due Today"     value={dueTodayCount} color="text-amber-400" />
         <SummaryChip label="Pending"       value={pendingCount}  color="text-foreground/70" />
-        <SummaryChip label="Done This Week" value={doneWeekCount} color="text-emerald-400" />
-      </div>
+        <SummaryChip label="Done" value={doneWeekCount} color="text-emerald-400" />
+      </div>}
 
       {/* Filter chips */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      {!isNurse && <div className="flex flex-wrap gap-2 mb-6">
         {FILTERS.map(f => (
           <button
             key={f.id}
@@ -277,10 +276,10 @@ export default function Communications() {
             {f.label}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* Card list */}
-      {filtered.length === 0 ? (
+      {!isNurse && (filtered.length === 0 ? (
         <div
           className="rounded-xl border p-10 text-center"
           style={{
@@ -303,7 +302,7 @@ export default function Communications() {
             />
           ))}
         </div>
-      )}
+      ))}
     </AdminLayout>
   );
 }

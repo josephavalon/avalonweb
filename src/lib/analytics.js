@@ -47,6 +47,13 @@ export const ANALYTICS_EVENTS = Object.freeze({
   DRIP_COMPLETED: 'drip_completed',
   DRIP_CANCELED: 'drip_canceled',
 
+  // Booking funnel
+  STEP_VIEWED: 'step_viewed',
+  STEP_COMPLETED: 'step_completed',
+  CHECKOUT_STARTED: 'checkout_started',
+  CHECKOUT_FAILED: 'checkout_failed',
+  BOOKING_CONFIRMED: 'booking_confirmed',
+
   // Cross-vertical crossover — the LTV unlock.
   VERTICAL_CROSSOVER: 'vertical_crossover',
   PROTOCOL_ACTIVATED: 'protocol_activated',
@@ -76,8 +83,11 @@ export const ANALYTICS_EVENTS = Object.freeze({
 
 const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 const QUEUE_CAP = 200; // Drop oldest beyond this — prevents memory leaks.
+const LOCAL_EVENT_KEY = 'av.analytics.events';
+const LOCAL_ATTRIBUTION_KEY = 'av.analytics.attribution';
+const LOCAL_EXPERIMENT_PREFIX = 'av.experiment.';
 
-let provider = null;
+let provider = localAnalyticsProvider;
 /** @type {AnalyticsEvent[]} */
 const queue = [];
 /** @type {AnalyticsContext} */
@@ -110,6 +120,59 @@ export function setProvider(fn) {
 export function setContext(next) {
   if (!next || typeof next !== 'object') return;
   context = { ...context, ...next };
+}
+
+export function captureAttribution(search = '') {
+  if (typeof window === 'undefined') return null;
+  try {
+    const params = new URLSearchParams(search || window.location.search || '');
+    const attribution = {};
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid']) {
+      const value = params.get(key);
+      if (value) attribution[key] = value.slice(0, 180);
+    }
+    const existing = readLocalJson(LOCAL_ATTRIBUTION_KEY, null);
+    const next = Object.keys(attribution).length
+      ? { ...existing, ...attribution, firstSeenAt: existing?.firstSeenAt || new Date().toISOString(), lastSeenAt: new Date().toISOString() }
+      : existing;
+    if (next) {
+      window.localStorage.setItem(LOCAL_ATTRIBUTION_KEY, JSON.stringify(next));
+      setContext({ attribution_id: stableHash(JSON.stringify(next)) });
+    }
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+export function getAttribution() {
+  if (typeof window === 'undefined') return null;
+  return readLocalJson(LOCAL_ATTRIBUTION_KEY, null);
+}
+
+export function getExperimentVariant(name, variants = ['control', 'variant']) {
+  if (typeof window === 'undefined' || !name || !variants.length) return variants[0] || 'control';
+  const key = `${LOCAL_EXPERIMENT_PREFIX}${name}`;
+  try {
+    const saved = window.localStorage.getItem(key);
+    if (saved && variants.includes(saved)) return saved;
+    const index = Math.abs(stableHash(`${name}:${window.navigator.userAgent}:${Date.now()}`)) % variants.length;
+    const assigned = variants[index];
+    window.localStorage.setItem(key, assigned);
+    track('experiment_assigned', { experiment: name, variant: assigned });
+    return assigned;
+  } catch {
+    return variants[0] || 'control';
+  }
+}
+
+export function trackPageView({ path, title, referrer } = {}) {
+  track(ANALYTICS_EVENTS.PAGE_VIEW, {
+    path: path || (typeof window !== 'undefined' ? window.location.pathname : ''),
+    title: title || (typeof document !== 'undefined' ? document.title : ''),
+    referrer: referrer || (typeof document !== 'undefined' ? document.referrer : ''),
+    attribution: getAttribution(),
+  });
 }
 
 /**
@@ -167,9 +230,42 @@ function safeDispatch(event) {
   } catch (err) {
     if (IS_DEV) {
       // eslint-disable-next-line no-console
-      console.warn('[analytics] provider threw, dropping event:', err);
+      if (import.meta.env?.DEV) console.warn('[analytics] provider threw, dropping event:', err);
     }
   }
+}
+
+function localAnalyticsProvider(event) {
+  if (typeof window === 'undefined') {
+    queue.push(event);
+    if (queue.length > QUEUE_CAP) queue.splice(0, queue.length - QUEUE_CAP);
+    return;
+  }
+  const saved = readLocalJson(LOCAL_EVENT_KEY, []);
+  saved.push(event);
+  const bounded = saved.slice(-QUEUE_CAP);
+  window.localStorage.setItem(LOCAL_EVENT_KEY, JSON.stringify(bounded));
+  window.dispatchEvent(new CustomEvent('avalon:analytics', { detail: event }));
+}
+
+function readLocalJson(key, fallback) {
+  try {
+    if (typeof window === 'undefined') return fallback;
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function stableHash(value) {
+  const string = String(value || '');
+  let hash = 0;
+  for (let index = 0; index < string.length; index += 1) {
+    hash = ((hash << 5) - hash) + string.charCodeAt(index);
+    hash |= 0;
+  }
+  return hash;
 }
 
 // Guard against accidental PII leakage. Strip common sensitive keys at the
@@ -209,5 +305,15 @@ function sanitize(props) {
 }
 
 // Default export mirrors the named exports for ergonomics at callsites.
-const analytics = { track, setProvider, setContext, resetContext, events: ANALYTICS_EVENTS };
+const analytics = {
+  track,
+  trackPageView,
+  captureAttribution,
+  getAttribution,
+  getExperimentVariant,
+  setProvider,
+  setContext,
+  resetContext,
+  events: ANALYTICS_EVENTS,
+};
 export default analytics;

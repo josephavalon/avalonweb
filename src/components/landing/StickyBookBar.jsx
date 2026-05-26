@@ -46,7 +46,7 @@ export default function StickyBookBar() {
             <motion.div whileTap={premiumTap} className="shrink-0">
             <Link
               to="/book"
-              className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-foreground text-background font-body text-[11px] tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors duration-base ease-editorial"
+              className="group inline-flex items-center gap-2 px-4 py-3.5 rounded-full bg-foreground text-background font-body text-[11px] tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors duration-base ease-editorial"
             >
               Shop
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2} />

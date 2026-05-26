@@ -1,10 +1,27 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   ToggleLeft, ToggleRight, Settings2,
-  Zap, AlertCircle,
+  Zap, AlertCircle, FileText, Bell, Save, RotateCcw,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useToast } from '@/components/ui/use-toast';
+import { ATTIO_PLACEHOLDER, isAttioConfigured } from '@/lib/attioPlaceholder';
+import {
+  GUSTO_PAYROLL_PLACEHOLDER,
+  MERCURY_BANKING_PLACEHOLDER,
+  NURSEYS_CREDENTIAL_PLACEHOLDER,
+  QUALIPHY_GFE_PLACEHOLDER,
+  QUICKBOOKS_ACCOUNTING_PLACEHOLDER,
+  integrationConfigured,
+} from '@/lib/financeIntegrations';
+import {
+  ACUITY_OPERATING_CONTRACT,
+  AVALON_COMMS_CONTRACT,
+  DEFAULT_NURSE_ALERT_SETTINGS,
+  readNurseAlertSettings,
+  saveNurseAlertSettings,
+} from '@/lib/platformOps';
 
 // ── Toggle data ───────────────────────────────────────────────────────────────
 
@@ -32,8 +49,8 @@ const INITIAL_TOGGLES = [
   },
   {
     id: 't4',
-    label: 'Membership Requests',
-    description: 'Accept membership interest and pipeline entry from the site.',
+    label: 'Plan Requests',
+    description: 'Accept subscription interest and pipeline entry from the site.',
     defaultOn: true,
     disabled: false,
   },
@@ -60,8 +77,8 @@ const INITIAL_TOGGLES = [
   },
   {
     id: 't8',
-    label: 'Payment Required Before Visit',
-    description: 'Require full payment collection before nurse dispatch. Disabled during launch — invoice-based.',
+    label: 'Deposit Before Dispatch',
+    description: 'Collect the $50 booking deposit before dispatch. Balance can stay manual during launch.',
     defaultOn: false,
     disabled: false,
   },
@@ -72,45 +89,54 @@ const INITIAL_TOGGLES = [
 const INTEGRATIONS = [
   {
     id: 'int1',
-    service: 'Payments (Square)',
+    service: 'Payments (Stripe/Acuity)',
     badgeStatus: 'Manual',
-    description: 'Manual payment tracking active. Square links sent individually per client.',
+    description: '$50 booking deposit, then manual balance review.',
   },
   {
     id: 'int2',
-    service: 'Scheduling',
-    badgeStatus: 'Manual',
-    description: 'Manual booking via phone and email. No calendar API connected.',
+    service: ACUITY_OPERATING_CONTRACT.service,
+    badgeStatus: ACUITY_OPERATING_CONTRACT.badgeStatus,
+    description: ACUITY_OPERATING_CONTRACT.description,
+    capabilities: ACUITY_OPERATING_CONTRACT.capabilities,
+    contractLabel: 'Acuity Boundary',
   },
   {
     id: 'int3',
-    service: 'SMS / Email',
-    badgeStatus: 'Manual',
-    description: 'Manual outreach via text and email during launch. No automation active.',
+    service: AVALON_COMMS_CONTRACT.service,
+    badgeStatus: AVALON_COMMS_CONTRACT.badgeStatus,
+    description: AVALON_COMMS_CONTRACT.description,
+    capabilities: AVALON_COMMS_CONTRACT.capabilities,
+    contractLabel: 'Comms Contract',
   },
   {
     id: 'int4',
-    service: 'CRM',
-    badgeStatus: 'Placeholder',
-    description: 'Client data stored locally in admin command center. No external CRM connected.',
+    service: ATTIO_PLACEHOLDER.service,
+    badgeStatus: ATTIO_PLACEHOLDER.badgeStatus,
+    description: ATTIO_PLACEHOLDER.description,
+    contractLabel: 'CRM Sync Contract',
   },
   {
     id: 'int5',
     service: 'Dispatch',
     badgeStatus: 'Manual',
-    description: 'Nurse assignment handled manually. No automated routing.',
+    description: 'Avalon owns nurse assignment, broadcasts, Y/N replies, route handoff, and client ETA messaging.',
   },
   {
     id: 'int6',
-    service: 'Nursys License Checks',
-    badgeStatus: 'Future',
-    description: 'Planned post-launch. License verification will pull from Nursys API.',
+    service: NURSEYS_CREDENTIAL_PLACEHOLDER.service,
+    badgeStatus: NURSEYS_CREDENTIAL_PLACEHOLDER.badgeStatus,
+    description: NURSEYS_CREDENTIAL_PLACEHOLDER.description,
+    capabilities: NURSEYS_CREDENTIAL_PLACEHOLDER.capabilities,
+    contractLabel: 'Credential Contract',
   },
   {
     id: 'int7',
-    service: 'Stripe Connect / Payroll',
-    badgeStatus: 'Future',
-    description: 'Planned post-launch. Nurse pay splits and payroll disbursement via Stripe Connect.',
+    service: GUSTO_PAYROLL_PLACEHOLDER.service,
+    badgeStatus: GUSTO_PAYROLL_PLACEHOLDER.badgeStatus,
+    description: GUSTO_PAYROLL_PLACEHOLDER.description,
+    capabilities: GUSTO_PAYROLL_PLACEHOLDER.capabilities,
+    contractLabel: 'Payroll Contract',
   },
   {
     id: 'int8',
@@ -120,15 +146,33 @@ const INTEGRATIONS = [
   },
   {
     id: 'int9',
-    service: 'GFE Automation',
-    badgeStatus: 'Placeholder',
-    description: 'Manual clearance review active. GFE workflow automation planned for post-launch.',
+    service: QUALIPHY_GFE_PLACEHOLDER.service,
+    badgeStatus: QUALIPHY_GFE_PLACEHOLDER.badgeStatus,
+    description: QUALIPHY_GFE_PLACEHOLDER.description,
+    capabilities: QUALIPHY_GFE_PLACEHOLDER.capabilities,
+    contractLabel: 'GFE Fallback Contract',
   },
   {
     id: 'int10',
     service: 'Analytics',
     badgeStatus: 'Future',
     description: 'Reports snapshot mode active. Full analytics API integration planned post-launch.',
+  },
+  {
+    id: 'int11',
+    service: MERCURY_BANKING_PLACEHOLDER.service,
+    badgeStatus: MERCURY_BANKING_PLACEHOLDER.badgeStatus,
+    description: MERCURY_BANKING_PLACEHOLDER.description,
+    capabilities: MERCURY_BANKING_PLACEHOLDER.capabilities,
+    contractLabel: 'Banking Contract',
+  },
+  {
+    id: 'int12',
+    service: QUICKBOOKS_ACCOUNTING_PLACEHOLDER.service,
+    badgeStatus: QUICKBOOKS_ACCOUNTING_PLACEHOLDER.badgeStatus,
+    description: QUICKBOOKS_ACCOUNTING_PLACEHOLDER.description,
+    capabilities: QUICKBOOKS_ACCOUNTING_PLACEHOLDER.capabilities,
+    contractLabel: 'Books Contract',
   },
 ];
 
@@ -139,6 +183,7 @@ function IntegrationStatusBadge({ status }) {
     Manual:       'bg-blue-500/15 text-blue-400 border-blue-500/30',
     Placeholder:  'bg-amber-500/15 text-amber-400 border-amber-500/30',
     Future:       'bg-foreground/10 text-foreground/50 border-foreground/20',
+    Configured:    'bg-teal-500/15 text-teal-300 border-teal-500/30',
     Active:       'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
     'Active Later': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   };
@@ -209,8 +254,16 @@ function ToggleRow({ item, value, onChange }) {
 // ── IntegrationRow ────────────────────────────────────────────────────────────
 
 function IntegrationRow({ item, toast }) {
+  const isAttio = item.service === ATTIO_PLACEHOLDER.service;
+  const capabilities = item.capabilities || (isAttio ? ATTIO_PLACEHOLDER.capabilities : []);
+  const configured = isAttio ? isAttioConfigured() : integrationConfigured(item.service);
   const handleConfigure = () => {
-    toast({ title: `${item.service}`, description: 'Integration configuration not active in local mode.' });
+    toast({
+      title: `${item.service}`,
+      description: configured
+        ? 'Credentials detected. Connection screen is still pending.'
+        : 'Staged for local launch mode.',
+    });
   };
 
   return (
@@ -221,11 +274,26 @@ function IntegrationRow({ item, toast }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <span className="font-body text-[13px] font-medium text-foreground">{item.service}</span>
-          <IntegrationStatusBadge status={item.badgeStatus} />
+          <IntegrationStatusBadge status={configured ? 'Configured' : item.badgeStatus} />
         </div>
         <p className="font-body text-[11px] text-foreground/45 leading-relaxed">
           {item.description}
         </p>
+        {capabilities.length > 0 && (
+          <div className="mt-3 rounded-lg border border-foreground/[0.08] bg-foreground/[0.025] px-3 py-2">
+            <div className="mb-2 flex items-center gap-2">
+              <FileText className="h-3.5 w-3.5 text-foreground/35" strokeWidth={1.5} />
+              <span className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/35">{item.contractLabel || 'Sync Contract'}</span>
+            </div>
+            <div className="grid gap-1">
+              {capabilities.map((capability) => (
+                <p key={capability} className="font-body text-[10px] leading-relaxed text-foreground/45">
+                  {capability}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <button
         onClick={handleConfigure}
@@ -242,11 +310,199 @@ function IntegrationRow({ item, toast }) {
   );
 }
 
+function AlertChannelToggle({ label, description, enabled, onChange }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!enabled)}
+      className="flex min-h-[72px] items-center justify-between gap-4 rounded-xl border px-4 text-left transition-all active:scale-[0.99]"
+      style={{
+        background: enabled ? 'hsl(var(--accent) / 0.07)' : 'hsl(var(--foreground) / 0.025)',
+        borderColor: enabled ? 'hsl(var(--accent) / 0.24)' : 'hsl(var(--foreground) / 0.08)',
+      }}
+    >
+      <span>
+        <span className="block font-body text-[13px] font-medium text-foreground">{label}</span>
+        <span className="mt-1 block font-body text-[11px] leading-relaxed text-foreground/45">{description}</span>
+      </span>
+      {enabled ? (
+        <ToggleRight className="h-8 w-8 shrink-0" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1.5} />
+      ) : (
+        <ToggleLeft className="h-8 w-8 shrink-0 text-foreground/30" strokeWidth={1.5} />
+      )}
+    </button>
+  );
+}
+
+function NurseAlertSettings({ toast }) {
+  const [settings, setSettings] = useState(() => readNurseAlertSettings());
+  const update = (patch) => setSettings((current) => ({
+    ...current,
+    ...patch,
+    channels: {
+      ...current.channels,
+      ...(patch.channels || {}),
+    },
+  }));
+
+  const save = () => {
+    const next = saveNurseAlertSettings(settings);
+    setSettings(next);
+    toast({
+      title: 'Nurse alerts updated',
+      description: `Broadcasts repeat every ${next.repeatMinutes} minutes until assignment.`,
+    });
+  };
+
+  const reset = () => {
+    setSettings(DEFAULT_NURSE_ALERT_SETTINGS);
+    saveNurseAlertSettings(DEFAULT_NURSE_ALERT_SETTINGS);
+    toast({ title: 'Nurse alerts reset', description: 'Default local alert settings restored.' });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div
+        className="rounded-xl border px-5 py-4"
+        style={{ background: 'hsl(var(--foreground) / 0.03)', borderColor: 'hsl(var(--foreground) / 0.08)' }}
+      >
+        <div className="mb-1 flex items-center gap-2">
+          <Bell className="h-4 w-4 text-foreground/50" strokeWidth={1.5} />
+          <span className="font-body text-[12px] font-medium tracking-wide text-foreground/70">Assignment Broadcast Rules</span>
+        </div>
+        <p className="font-body text-[11px] leading-relaxed text-foreground/45">
+          These controls edit the local nurse alert system. Real SMS/email/chat delivery can plug into this contract later without changing the nurse workflow.
+        </p>
+      </div>
+
+      <div
+        className="rounded-xl border p-5"
+        style={{ background: 'hsl(var(--foreground) / 0.02)', borderColor: 'hsl(var(--foreground) / 0.08)' }}
+      >
+        <div className="mb-5 flex items-start justify-between gap-4 border-b border-foreground/[0.07] pb-5">
+          <div>
+            <p className="font-body text-[13px] font-medium text-foreground">Enable Nurse Assignment Alerts</p>
+            <p className="mt-1 font-body text-[11px] leading-relaxed text-foreground/45">
+              When enabled, new one-time visits and subscription starts create nurse assignment broadcasts.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => update({ enabled: !settings.enabled })}
+            aria-label="Toggle nurse assignment alerts"
+          >
+            {settings.enabled ? (
+              <ToggleRight className="h-9 w-9" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1.5} />
+            ) : (
+              <ToggleLeft className="h-9 w-9 text-foreground/30" strokeWidth={1.5} />
+            )}
+          </button>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <AlertChannelToggle
+            label="Avalon Group"
+            description="Posts into Avalon Comms for dispatch and on-call nurses."
+            enabled={settings.channels.chat}
+            onChange={(value) => update({ channels: { chat: value } })}
+          />
+          <AlertChannelToggle
+            label="Text Placeholder"
+            description="Marks SMS as queued until a real provider is connected."
+            enabled={settings.channels.sms}
+            onChange={(value) => update({ channels: { sms: value } })}
+          />
+          <AlertChannelToggle
+            label="Email Placeholder"
+            description="Marks email as queued until delivery is connected."
+            enabled={settings.channels.email}
+            onChange={(value) => update({ channels: { email: value } })}
+          />
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-foreground/40">Repeat Every Minutes</span>
+            <input
+              type="number"
+              min="1"
+              value={settings.repeatMinutes}
+              onChange={(event) => update({ repeatMinutes: event.target.value })}
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-foreground/[0.10] bg-foreground/[0.03] px-4 font-body text-sm text-foreground outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-foreground/40">Escalate After Minutes</span>
+            <input
+              type="number"
+              min="1"
+              value={settings.escalationAfterMinutes}
+              onChange={(event) => update({ escalationAfterMinutes: event.target.value })}
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-foreground/[0.10] bg-foreground/[0.03] px-4 font-body text-sm text-foreground outline-none"
+            />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-foreground/40">Recipients</span>
+            <input
+              type="text"
+              value={settings.recipients}
+              onChange={(event) => update({ recipients: event.target.value })}
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-foreground/[0.10] bg-foreground/[0.03] px-4 font-body text-sm text-foreground outline-none"
+            />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-foreground/40">Alert Template</span>
+            <textarea
+              value={settings.template}
+              onChange={(event) => update({ template: event.target.value })}
+              rows={3}
+              className="mt-2 w-full resize-none rounded-xl border border-foreground/[0.10] bg-foreground/[0.03] px-4 py-3 font-body text-sm leading-relaxed text-foreground outline-none"
+            />
+            <span className="mt-1 block font-body text-[10px] text-foreground/35">
+              Available variables: {'{{client}}'}, {'{{service}}'}, {'{{date}}'}, {'{{time}}'}, {'{{address}}'}
+            </span>
+          </label>
+          <label className="block md:col-span-2">
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-foreground/40">Escalation Note</span>
+            <textarea
+              value={settings.escalationNote}
+              onChange={(event) => update({ escalationNote: event.target.value })}
+              rows={2}
+              className="mt-2 w-full resize-none rounded-xl border border-foreground/[0.10] bg-foreground/[0.03] px-4 py-3 font-body text-sm leading-relaxed text-foreground outline-none"
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={save}
+            className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-foreground px-4 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-background"
+          >
+            <Save className="h-4 w-4" strokeWidth={1.7} /> Save Alerts
+          </button>
+          <button
+            type="button"
+            onClick={reset}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] px-4 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/60"
+          >
+            <RotateCcw className="h-4 w-4" strokeWidth={1.7} /> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Settings() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('launch');
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(() => (
+    ['launch', 'alerts', 'integrations'].includes(requestedTab) ? requestedTab : 'launch'
+  ));
   const [toggleValues, setToggleValues] = useState(() => {
     const map = {};
     INITIAL_TOGGLES.forEach(t => { map[t.id] = t.defaultOn; });
@@ -256,8 +512,6 @@ export default function Settings() {
   const handleToggleChange = (id, newValue) => {
     setToggleValues(prev => ({ ...prev, [id]: newValue }));
   };
-
-  const allActive = INITIAL_TOGGLES.every(t => t.disabled || toggleValues[t.id]);
 
   return (
     <AdminLayout>
@@ -278,6 +532,7 @@ export default function Settings() {
       >
         {[
           { id: 'launch',       label: 'Launch Controls' },
+          { id: 'alerts', label: 'Nurse Alerts' },
           { id: 'integrations', label: 'Integrations' },
         ].map(tab => (
           <button
@@ -362,6 +617,8 @@ export default function Settings() {
           </div>
         </div>
       )}
+
+      {activeTab === 'alerts' && <NurseAlertSettings toast={toast} />}
 
       {/* ── Integrations tab ─────────────────────────────────────────────────── */}
       {activeTab === 'integrations' && (

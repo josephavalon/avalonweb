@@ -6,10 +6,10 @@ import { EASE } from '@/lib/motion';
 // Tuesday morning vignette — paints the actual experience.
 // Most powerful copy on the site for someone who hasn't bought yet.
 const STEPS = [
-  { time: '6:45 AM', text: 'Text Avalon. Drip request: NAD+ 500mg + B-complex.' },
-  { time: '7:00 AM', text: 'Avalon nurse arrives. Vitals, IV in 8 minutes.' },
-  { time: '7:30 AM', text: 'You’re on Zoom. Drip running. Standup goes long, no problem.' },
-  { time: '8:15 AM', text: 'Bag empties. Nurse out. You’re on, sharp, no afternoon dip ahead.' },
+  { time: '6:45 AM', text: 'Request Avalon. Pick your goal, place, and time.' },
+  { time: '7:00 AM', text: 'Clinical review clears the eligible protocol.' },
+  { time: '7:30 AM', text: 'Avalon nurse arrives. Vitals first, service after approval.' },
+  { time: '8:15 AM', text: 'Visit complete. Plan, notes, and follow-up stay visible.' },
 ];
 
 export default function DayInTheLife() {

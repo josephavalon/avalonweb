@@ -69,7 +69,7 @@ function folderFromDb(row) {
     id:        row.id,
     name:      row.name,
     parentId:  row.parent_id  || null,
-    color:     row.color      || '#6b7280',
+    color:     row.color      || 'hsl(220 9% 46%)',
     itemCount: row.item_count ?? 0,
     updatedAt: row.updated_at ? row.updated_at.slice(0, 10) : null,
   };
@@ -79,14 +79,14 @@ function folderToDb(folder) {
   const d = {
     name:      folder.name,
     parent_id: folder.parentId || null,
-    color:     folder.color    || '#6b7280',
+    color:     folder.color    || 'hsl(220 9% 46%)',
   };
   if (folder.id && !String(folder.id).startsWith('f-temp_')) d.id = folder.id;
   return d;
 }
 
 function tagFromDb(row) {
-  return { id: row.id, name: row.name, color: row.color || '#60a5fa' };
+  return { id: row.id, name: row.name, color: row.color || 'hsl(213 94% 68%)' };
 }
 
 function settingsFromDb(row) {
@@ -157,7 +157,7 @@ export function useInventoryData() {
       .from('folders')
       .select('*')
       .order('created_at', { ascending: true });
-    if (error) { console.error('loadFolders', error); return; }
+    if (error) { if (import.meta.env?.DEV) console.error('loadFolders', error); return; }
 
     // Compute item counts client-side after items are loaded
     setFolders(data.map(folderFromDb));
@@ -169,7 +169,7 @@ export function useInventoryData() {
       .from('items')
       .select('*, item_tags(tag_id)')
       .order('created_at', { ascending: true });
-    if (error) { console.error('loadItems', error); return; }
+    if (error) { if (import.meta.env?.DEV) console.error('loadItems', error); return; }
 
     setItems(data.filter(r => !r.deleted_at).map(itemFromDb));
     setTrashedItems(data.filter(r => r.deleted_at).map(itemFromDb));
@@ -181,7 +181,7 @@ export function useInventoryData() {
       .from('tags')
       .select('*')
       .order('name', { ascending: true });
-    if (error) { console.error('loadTags', error); return; }
+    if (error) { if (import.meta.env?.DEV) console.error('loadTags', error); return; }
     setTags(data.map(tagFromDb));
   }, []);
 
@@ -202,7 +202,7 @@ export function useInventoryData() {
       .from('custom_field_definitions')
       .select('*')
       .order('sort_order', { ascending: true });
-    if (error) { console.error('loadCustomFieldDefs', error); return; }
+    if (error) { if (import.meta.env?.DEV) console.error('loadCustomFieldDefs', error); return; }
     setCustomFieldDefs(data.map(r => ({
       id:        r.id,
       name:      r.name,
@@ -501,7 +501,7 @@ export function useInventoryData() {
     const tempId = 'f-temp_' + Date.now();
     const optimistic = {
       id: tempId, name: data.name, parentId: data.parentId || null,
-      color: data.color || '#6b7280', itemCount: 0, updatedAt: TODAY(),
+      color: data.color || 'hsl(220 9% 46%)', itemCount: 0, updatedAt: TODAY(),
     };
     setFolders(prev => [...prev, optimistic]);
 
@@ -555,14 +555,14 @@ export function useInventoryData() {
 
   async function handleAddTag(tag) {
     const tempId = 'tag-temp_' + Date.now();
-    const optimistic = { id: tempId, name: tag.name, color: tag.color || '#60a5fa' };
+    const optimistic = { id: tempId, name: tag.name, color: tag.color || 'hsl(213 94% 68%)' };
     setTags(prev => [...prev, optimistic]);
 
     if (!hasSupabase) return;
 
     const { data, error } = await supabase
       .from('tags')
-      .insert([{ name: tag.name, color: tag.color || '#60a5fa' }])
+      .insert([{ name: tag.name, color: tag.color || 'hsl(213 94% 68%)' }])
       .select()
       .single();
 

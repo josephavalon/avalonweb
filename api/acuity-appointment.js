@@ -10,6 +10,7 @@
  */
 
 import { acuityFetch } from './_acuity.js';
+import { isLiveApiEnabled, localAppointment, requireInternalAccess } from './_lib/pre-api-guard.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -23,6 +24,13 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (!isLiveApiEnabled()) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(200).json(localAppointment(id));
+    }
+
+    if (!requireInternalAccess(req, res, 'Acuity appointment detail')) return;
+
     const appointment = await acuityFetch(`/appointments/${encodeURIComponent(id)}`);
     return res.status(200).json(appointment);
   } catch (err) {

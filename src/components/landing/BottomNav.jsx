@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, CalendarCheck, Menu, RefreshCw } from 'lucide-react';
+import { Home, CalendarCheck, Menu, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -8,8 +8,8 @@ const EASE = [0.16, 1, 0.3, 1];
 const TABS = [
   { to: '/',            label: 'Home',      icon: Home         },
   { to: '/book',        label: 'Book',      icon: CalendarCheck },
-  { to: '/menu',        label: 'Menu',      icon: Menu         },
-  { to: '/subscription',label: 'Subscribe', icon: RefreshCw    },
+  { to: '/protocols',   label: 'Protocol',  icon: Menu         },
+  { to: '/subscription',label: 'Plan',      icon: Crown       },
 ];
 
 export default function BottomNav() {

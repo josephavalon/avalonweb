@@ -26,7 +26,7 @@ export default function ServicePageLayout({
       <section className="relative h-[32vh] md:h-[50vh] flex items-end justify-start overflow-hidden">
         {heroImage && (
           <div className="absolute inset-0">
-            <img src={heroImage} alt={title} className={imgClass} />
+            <img src={heroImage} alt={title} loading="eager" fetchPriority="high" decoding="async" className={imgClass} />
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
           </div>
         )}
@@ -68,7 +68,7 @@ export default function ServicePageLayout({
               Not yet available
             </h2>
             <p className="font-body text-sm text-muted-foreground leading-relaxed">
-              {comingSoonNote || "This protocol isn't part of our launch menu yet. Browse the live treatments to see what's available today."}
+              {comingSoonNote || "This protocol is not live yet. Browse the active protocol set to see what is available today."}
             </p>
           </div>
         </section>
@@ -86,6 +86,8 @@ export default function ServicePageLayout({
                         <img
                           src={t.image}
                           alt={t.name}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity"
                         />
                       </div>

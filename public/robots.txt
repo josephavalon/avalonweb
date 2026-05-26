@@ -9,4 +9,4 @@ Disallow: /provider/
 Disallow: /members
 Disallow: /members/
 
-Sitemap: https://avalonvitality.co/sitemap.xml
+Sitemap: https://www.avalonvitality.co/sitemap.xml

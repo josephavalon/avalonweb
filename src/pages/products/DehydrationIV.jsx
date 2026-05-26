@@ -23,7 +23,7 @@ export default function DehydrationIV() {
     'California-licensed RNs',
     'Physician supervised',
     'Priority scheduling',
-    'Exclusive member pricing',
+    'Plan client pricing',
     '20% off additional treatments',
   ];
 
@@ -41,8 +41,10 @@ export default function DehydrationIV() {
             transition={{ duration: 0.8 }}
           >
             <img
-              src="https://avalonvitality.co/wp-content/uploads/2025/07/Dehydration-1000ml.jpg"
+              src="https://www.avalonvitality.co/wp-content/uploads/2025/07/Dehydration-1000ml.jpg"
               alt="Dehydration IV"
+              loading="lazy"
+              decoding="async"
               className="w-full rounded-3xl"
             />
           </motion.div>
@@ -73,7 +75,7 @@ export default function DehydrationIV() {
             </div>
 
             <Link
-              to="/apply"
+              to="/book?protocol=hydration"
               className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-4 hover:bg-foreground/90 transition-colors mb-6"
             >
               BUY NOW
@@ -105,7 +107,7 @@ export default function DehydrationIV() {
               HOW YOU GET IT
             </h2>
             <p className="font-body text-base text-muted-foreground max-w-2xl mx-auto">
-              Choose your commitment level—single treatment or membership access.
+              Choose your commitment level: single treatment or subscription access.
             </p>
           </motion.div>
 
@@ -130,7 +132,7 @@ export default function DehydrationIV() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                SUBSCRIBE & SAVE
+                VIEW PLAN
               </button>
             </div>
           </div>
@@ -167,7 +169,7 @@ export default function DehydrationIV() {
                 </ul>
 
                 <a
-                   href="/apply"
+                   href="/book?protocol=hydration"
                    className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
                  >
                    BUY NOW
@@ -207,10 +209,10 @@ export default function DehydrationIV() {
                 </ul>
 
                 <a
-                  href="/apply"
+                  href="/subscription"
                   className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
                 >
-                  SUBSCRIBE & SAVE
+                  VIEW PLAN
                 </a>
               </motion.div>
             )}

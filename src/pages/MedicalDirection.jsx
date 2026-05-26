@@ -154,11 +154,11 @@ export default function MedicalDirection() {
                   <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Medical Director</p>
                 </div>
                 <p className="font-heading text-2xl md:text-3xl text-foreground uppercase leading-tight mb-2">
-                  Name Pending Announcement
+                  Dr. Jayson Weir, MD
                 </p>
-                <p className="font-body text-sm text-foreground/40 mb-4">Credentials pending announcement</p>
+                <p className="font-body text-sm text-foreground/40 mb-4">Internal Medicine · Medical Director</p>
                 <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-xl">
-                  Our medical director oversees all clinical protocols, reviews every formulation, and maintains physician-level availability throughout Avalon operating hours. Full announcement will be published before launch.
+                  Our medical director oversees clinical protocols, reviews formulations, and maintains physician-level escalation coverage during Avalon operating hours. License verification is maintained on file; public credential details should be rechecked before live medical launch.
                 </p>
               </div>
             </motion.div>
@@ -224,10 +224,10 @@ export default function MedicalDirection() {
         {/* Footer links */}
         <section className="py-12 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto flex flex-wrap gap-6">
-            <Link to="/safety" className="font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
+            <Link to="/safety" className="inline-flex min-h-10 items-center font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
               Safety Standards →
             </Link>
-            <Link to="/team" className="font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200 flex items-center gap-1">
+            <Link to="/team" className="flex min-h-10 items-center gap-1 font-body text-sm text-foreground/50 hover:text-foreground transition-colors duration-200">
               <ArrowLeft className="w-3 h-3" /> Our Team
             </Link>
           </div>

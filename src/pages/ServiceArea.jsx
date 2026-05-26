@@ -95,19 +95,19 @@ const serviceAreaJsonLd = {
   '@graph': [
     {
       '@type': 'WebPage',
-      '@id': 'https://avalonvitality.co/service-area#webpage',
-      url: 'https://avalonvitality.co/service-area',
+      '@id': 'https://www.avalonvitality.co/service-area#webpage',
+      url: 'https://www.avalonvitality.co/service-area',
       name: 'Mobile IV Therapy Service Area in the San Francisco Bay Area',
       description:
         'Avalon Vitality provides mobile IV therapy and IM injections across San Francisco, Marin, the Peninsula, South Bay, and East Bay.',
-      isPartOf: { '@id': 'https://avalonvitality.co/#website' },
-      about: { '@id': 'https://avalonvitality.co/#localbusiness' },
+      isPartOf: { '@id': 'https://www.avalonvitality.co/#website' },
+      about: { '@id': 'https://www.avalonvitality.co/#localbusiness' },
     },
     {
       '@type': 'MedicalBusiness',
-      '@id': 'https://avalonvitality.co/#localbusiness',
+      '@id': 'https://www.avalonvitality.co/#localbusiness',
       name: 'Avalon Vitality',
-      url: 'https://avalonvitality.co',
+      url: 'https://www.avalonvitality.co',
       medicalSpecialty: 'IV Therapy',
       address: {
         '@type': 'PostalAddress',
@@ -128,10 +128,10 @@ const serviceAreaJsonLd = {
     },
     {
       '@type': 'Service',
-      '@id': 'https://avalonvitality.co/service-area#mobile-iv-therapy',
+      '@id': 'https://www.avalonvitality.co/service-area#mobile-iv-therapy',
       name: 'Mobile IV Therapy in the San Francisco Bay Area',
       serviceType: 'Mobile IV therapy and IM injections',
-      provider: { '@id': 'https://avalonvitality.co/#localbusiness' },
+      provider: { '@id': 'https://www.avalonvitality.co/#localbusiness' },
       areaServed: PRIMARY_SERVICE_AREAS.map((name) => ({
         '@type': 'City',
         name,
@@ -414,7 +414,7 @@ export default function ServiceArea() {
               className="font-body text-xs text-foreground/25 mt-6"
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE, delay: 0.3 }}
             >
-              Don't see your area? <a href="mailto:hello@avalonvitality.co" className="text-accent hover:text-foreground transition-colors">Contact us</a> — we'll do our best to accommodate.
+              Don't see your area? <a href="mailto:hello@avalonvitality.co" className="inline-flex min-h-[44px] items-center text-accent hover:text-foreground transition-colors">Contact us</a> — we'll do our best to accommodate.
             </motion.p>
           </div>
         </section>

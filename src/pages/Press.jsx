@@ -48,7 +48,7 @@ const FAST_FACTS = [
   { label: 'Location', value: 'San Francisco, CA' },
   { label: 'Clinicians', value: 'Licensed RNs' },
   { label: 'Delivery', value: 'Mobile — at your location' },
-  { label: 'Model', value: 'Membership + à la carte' },
+  { label: 'Model', value: 'Subscription + à la carte' },
   { label: 'Launch', value: 'SF Bay Area, 2026' },
 ];
 
@@ -83,7 +83,7 @@ export default function Press() {
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.22 }}
               href="mailto:press@avalonvitality.co"
-              className="inline-flex items-center gap-2 font-body text-sm text-accent hover:text-accent/80 transition-colors duration-200"
+              className="inline-flex min-h-[44px] items-center gap-2 font-body text-sm text-accent hover:text-accent/80 transition-colors duration-200"
             >
               <Mail className="w-4 h-4" />
               press@avalonvitality.co
@@ -115,7 +115,7 @@ export default function Press() {
               </p>
               <a
                 href="mailto:press@avalonvitality.co"
-                className="mt-6 inline-flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-accent border border-accent/30 px-5 py-2.5 rounded-full hover:bg-accent/10 transition-colors duration-200"
+                className="mt-6 inline-flex min-h-10 items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-accent border border-accent/30 px-5 py-2.5 rounded-full hover:bg-accent/10 transition-colors duration-200"
               >
                 <Mail className="w-3.5 h-3.5" />
                 Request Early Coverage
@@ -156,7 +156,7 @@ export default function Press() {
                       <p className="font-body text-sm text-foreground/55 leading-relaxed mb-4">{asset.desc}</p>
                       <a
                         href="mailto:press@avalonvitality.co"
-                        className="inline-flex items-center gap-1.5 font-body text-xs tracking-[0.15em] uppercase text-foreground/35 border border-foreground/[0.1] px-3 py-1.5 rounded-full hover:border-foreground/25 hover:text-foreground/55 transition-colors duration-200"
+                        className="inline-flex min-h-[44px] items-center gap-1.5 font-body text-xs tracking-[0.15em] uppercase text-foreground/35 border border-foreground/[0.1] px-3 py-1.5 rounded-full hover:border-foreground/25 hover:text-foreground/55 transition-colors duration-200"
                       >
                         <Download className="w-3 h-3" />
                         {asset.action}
@@ -189,7 +189,7 @@ export default function Press() {
                 </p>
                 <a
                   href="mailto:press@avalonvitality.co"
-                  className="font-body text-sm text-accent hover:text-accent/80 transition-colors duration-200"
+                  className="inline-flex min-h-[44px] items-center font-body text-sm text-accent hover:text-accent/80 transition-colors duration-200"
                 >
                   press@avalonvitality.co
                 </a>

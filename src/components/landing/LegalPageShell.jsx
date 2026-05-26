@@ -27,7 +27,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
       '@type': 'WebPage',
       name: `${title} — Avalon Vitality`,
       description: introText,
-      url: `https://avalonvitality.co${pathname}`,
+      url: `https://www.avalonvitality.co${pathname}`,
       dateModified: lastUpdated,
     },
   });
@@ -42,12 +42,12 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE }}
-            className="mb-5 rounded-2xl border border-foreground/[0.10] bg-white/[0.045] p-5 backdrop-blur-xl md:mb-8 md:p-8"
+            className="mb-5 rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 p-5 shadow-[0_28px_110px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:mb-8 md:p-8"
           >
             <div className="grid gap-6 md:grid-cols-[1.1fr_0.7fr] md:items-end">
               <div>
                 <p className="mb-4 font-body text-[10px] uppercase tracking-[0.34em] text-accent">{eyebrow}</p>
-                <h1 className="font-heading text-[3.7rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-8xl">
+                <h1 className="font-heading text-[3.5rem] uppercase leading-[0.84] tracking-tight text-foreground md:text-[6.6rem]">
                   {title}
                 </h1>
               </div>
@@ -63,7 +63,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                   </p>
                 )}
                 <p className="mt-3 font-body text-xs leading-relaxed text-foreground/42">
-                  Applies to California residents and Avalon Vitality services.
+                  California services.
                 </p>
               </div>
             </div>
@@ -73,7 +73,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                 {introText}
               </p>
               {intro && intro.length > 1 && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 hidden space-y-3 md:block">
                   {intro.slice(1).map((p, i) => (
                     <p key={i} className="font-body text-sm leading-relaxed text-foreground/58 md:text-base">{p}</p>
                   ))}
@@ -87,18 +87,20 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
-              className="rounded-2xl border border-foreground/[0.10] bg-white/[0.035] p-4 backdrop-blur-xl lg:sticky lg:top-24"
+              className="av-motion-rail hidden rounded-2xl border border-foreground/[0.10] bg-background/58 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl lg:sticky lg:top-24 lg:block"
             >
               <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/35">On this page</p>
               <div className="grid grid-cols-1 gap-1.5">
                 {sections.slice(0, 10).map((s) => (
-                  <a
+                  <motion.a
                     key={s.h}
                     href={`#${slugify(s.h)}`}
-                    className="rounded-lg px-3 py-2 font-body text-xs leading-tight text-foreground/58 transition-colors hover:bg-foreground/[0.04] hover:text-foreground"
+                    whileHover={{ x: 3 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="flex min-h-11 items-center rounded-lg px-3 py-2 font-body text-xs leading-tight text-foreground/58 transition-colors hover:bg-foreground/[0.04] hover:text-foreground"
                   >
                     {s.h.replace(/^\d+\.\s*/, '')}
-                  </a>
+                  </motion.a>
                 ))}
               </div>
 
@@ -107,7 +109,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                   <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/35">Related</p>
                   <div className="grid gap-1.5">
                     {related.map((r) => (
-                      <Link key={r.to} to={r.to} className="rounded-lg px-3 py-2 font-body text-xs text-foreground/58 transition-colors hover:bg-foreground/[0.04] hover:text-foreground">
+                      <Link key={r.to} to={r.to} className="flex min-h-11 items-center rounded-lg px-3 py-2 font-body text-xs text-foreground/58 transition-colors hover:bg-foreground/[0.04] hover:text-foreground">
                         {r.label}
                       </Link>
                     ))}
@@ -125,7 +127,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-10%' }}
                   transition={{ duration: 0.5, delay: 0.04 + i * 0.015, ease: EASE }}
-                  className="scroll-mt-28 rounded-2xl border border-foreground/[0.08] bg-white/[0.035] p-5 backdrop-blur-md md:p-6"
+                  className="av-glass-sweep relative scroll-mt-28 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-background/58 p-5 shadow-[0_18px_70px_hsl(var(--foreground)/0.045)] backdrop-blur-xl md:p-6"
                 >
                   <h2 className="mb-4 font-heading text-2xl uppercase leading-none tracking-tight text-foreground md:text-3xl">
                     {s.h}
@@ -157,7 +159,7 @@ export default function LegalPageShell({ eyebrow = 'Legal', title, lastUpdated, 
                     <Link
                       key={r.to}
                       to={r.to}
-                      className="rounded-full border border-foreground/[0.10] px-4 py-2 font-body text-[10px] uppercase tracking-[0.2em] text-foreground/55 transition-colors hover:border-foreground/25 hover:text-foreground"
+                      className="inline-flex min-h-11 items-center rounded-full border border-foreground/[0.10] px-4 py-2 font-body text-[10px] uppercase tracking-[0.2em] text-foreground/55 transition-colors hover:border-foreground/25 hover:text-foreground"
                     >
                       {r.label}
                     </Link>

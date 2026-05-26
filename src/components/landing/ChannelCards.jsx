@@ -6,7 +6,7 @@ import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const CHANNELS = [
   { icon: Building2, label: 'Corporate Teams',      detail: 'Volume pricing and office wellness programs. Request a proposal — we come to you.', href: '/corporate', cta: 'Request a Proposal' },
-  { icon: Calendar,  label: 'Events & Activations', detail: 'IV therapy activations for conferences, retreats, music events, and private experiences.', href: '/events', cta: 'Book an Activation' },
+  { icon: Calendar,  label: 'Launches', detail: 'Recovery activations for conferences, retreats, music launches, and private experiences.', href: '/launches', cta: 'Plan a Launch' },
   { icon: Sparkles,  label: 'VIPs',                 detail: 'Pre- and post-performance recovery protocols for performers, competitors, and high-output individuals.', href: '/athlete', cta: 'View Protocols' },
 ];
 
@@ -89,7 +89,7 @@ export default function ChannelCards() {
             More Ways to Book
           </h2>
           <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
-            Private visits are the core flow. Teams, events, and VIP protocols get a more tailored path.
+            Private visits are the core flow. Teams, launches, and VIP protocols get a tailored path.
           </p>
         </motion.div>
 

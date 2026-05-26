@@ -22,16 +22,18 @@
 
 import crypto from 'crypto';
 import { getAppointment } from '../../_acuity.js';
+import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
+import { buildReconciliationCase } from '../../_reconciliation.js';
 
 // ── Supabase client (initialised lazily once env is available) ─────────────
 let _supabase = null;
-function getSupabase() {
+async function getSupabase() {
   if (_supabase) return _supabase;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null; // DB not yet wired — graceful fallback
   // Dynamic import so the module doesn't hard-fail in environments without the package
-  const { createClient } = require('@supabase/supabase-js');
+  const { createClient } = await import('@supabase/supabase-js');
   _supabase = createClient(url, key, { auth: { persistSession: false } });
   return _supabase;
 }
@@ -40,6 +42,34 @@ function getSupabase() {
 
 function payloadHash(body) {
   return crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16);
+}
+
+function safeEqual(left = '', right = '') {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function verifyWebhookSignature(req, body) {
+  const secret = process.env.ACUITY_WEBHOOK_SECRET;
+  if (!secret) return { required: false, valid: null };
+
+  const supplied = String(
+    req.headers?.['x-acuity-signature']
+    || req.headers?.['x-webhook-signature']
+    || req.headers?.['x-signature']
+    || ''
+  ).replace(/^sha256=/i, '');
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(body))
+    .digest('hex');
+
+  return {
+    required: true,
+    valid: Boolean(supplied) && safeEqual(supplied, expected),
+  };
 }
 
 function appointmentToBooking(appt) {
@@ -69,12 +99,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (!requireLiveWebhook(req, res, { provider: 'acuity', secretEnv: 'ACUITY_WEBHOOK_SECRET' })) return;
+
   const body   = req.body || {};
   const action = body.action; // scheduled | rescheduled | canceled | changed
   const apptId = body.id;
+  const signature = verifyWebhookSignature(req, body);
 
   if (!action || !apptId) {
     return res.status(400).json({ error: 'Missing action or appointment id' });
+  }
+
+  if (signature.required && !signature.valid) {
+    console.warn(`[acuity/webhook] invalid signature action=${action} apptId=${apptId}`);
+    return res.status(401).json({ error: 'Invalid webhook signature' });
   }
 
   const hash = payloadHash(body);
@@ -83,7 +121,7 @@ export default async function handler(req, res) {
   // (Vercel functions are synchronous; this pattern logs and returns 200 fast)
   console.log(`[acuity/webhook] action=${action} apptId=${apptId} hash=${hash}`);
 
-  const db = getSupabase();
+  const db = await getSupabase();
 
   if (!db) {
     // Supabase not yet configured — log and return 200 so provider doesn't retry
@@ -115,6 +153,7 @@ export default async function handler(req, res) {
         action,
         calendar_id:              String(body.calendarID || ''),
         appointment_type_id:      String(body.appointmentTypeID || ''),
+        signature_valid:          signature.valid,
         raw_payload_json:         body,
         processed_status:         'pending',
         created_at:               new Date().toISOString(),
@@ -139,6 +178,16 @@ export default async function handler(req, res) {
         error_message:    err.message,
         processed_at:     new Date().toISOString(),
       }).eq('id', eventId);
+      await db.from('reconciliation_cases').insert(buildReconciliationCase({
+        caseType: 'appointment_drift',
+        provider: 'acuity',
+        externalReference: String(apptId),
+        payload: {
+          action,
+          eventId,
+          error: err.message,
+        },
+      }));
       console.error('[acuity/webhook] fetch appt failed', err.message);
       return res.status(200).json({ ok: true, note: 'appt_fetch_failed' });
     }

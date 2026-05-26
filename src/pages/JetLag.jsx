@@ -17,16 +17,16 @@ const REVEAL = {
 
 const PROTOCOL_INGREDIENTS = [
   { name: 'Normal Saline', note: 'Rehydration base — 1L IV fluid to counter cabin dehydration' },
-  { name: 'B-Complex Vitamins', note: 'Supports energy metabolism and may help with fatigue associated with travel' },
+  { name: 'B-Complex Vitamins', note: 'Supports normal energy metabolism during travel-heavy weeks' },
   { name: 'Magnesium', note: 'Supports muscle relaxation and sleep quality' },
   { name: 'Vitamin C', note: 'Antioxidant replenishment after long-haul travel' },
   { name: 'Electrolytes', note: 'Restores mineral balance depleted during flight' },
 ];
 
 const ADD_ONS = [
-  { name: 'Melatonin IM Shot', description: 'Intramuscular melatonin to support circadian rhythm reset', price: '+$35' },
+  { name: 'Melatonin IM Shot', description: 'Melatonin support when clinically appropriate', price: '+$35' },
   { name: 'B12 Shot', description: 'High-dose B12 injection associated with energy and alertness support', price: '+$25' },
-  { name: 'Glutathione Push', description: 'Antioxidant support after radiation exposure at altitude', price: '+$40' },
+  { name: 'Glutathione Push', description: 'Antioxidant support after long travel days', price: '+$40' },
 ];
 
 const STEPS = [
@@ -42,8 +42,8 @@ const STEPS = [
   },
   {
     number: '03',
-    headline: 'Reset and Recover',
-    description: 'Relax during your 45–60 minute drip. Recover in hours instead of days.',
+    headline: 'Hydrate and Unwind',
+    description: 'Relax during your 45-60 minute drip while the clinical team keeps the visit simple.',
   },
 ];
 
@@ -56,7 +56,7 @@ const STATS = [
 export default function JetLag() {
   useSeo({
     title: 'Jet Lag IV Therapy San Francisco — Avalon Vitality',
-    description: 'Recover from jet lag faster with mobile IV therapy in San Francisco. Delivered to your hotel or home by licensed RNs.',
+    description: 'Travel hydration support with mobile IV therapy in San Francisco. Delivered to your hotel or home by licensed RNs after clinical approval.',
     path: '/jet-lag',
   });
 
@@ -69,21 +69,21 @@ export default function JetLag() {
         <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20">
           <div className="max-w-5xl mx-auto">
             <motion.p {...REVEAL} className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3">
-              Jet Lag Recovery
+              Travel Hydration
             </motion.p>
             <motion.h1
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
               className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-4"
             >
-              Jet Lag Recovery
+              Travel Hydration
             </motion.h1>
             <motion.p
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.14 }}
               className="font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-xl mb-3"
             >
-              Reset your internal clock. Recover in hours, not days.
+              Hydration support for long travel days.
             </motion.p>
             <motion.p
               {...REVEAL}
@@ -297,7 +297,7 @@ export default function JetLag() {
             <p className="font-body text-sm text-foreground/50">Ready to reset?</p>
             <Link
               to="/store"
-              className="font-body text-sm text-foreground/70 hover:text-foreground transition-colors duration-200 flex items-center gap-1"
+              className="flex min-h-10 items-center gap-1 font-body text-sm text-foreground/70 hover:text-foreground transition-colors duration-200"
             >
               BUY NOW <ArrowRight className="w-3.5 h-3.5" />
             </Link>

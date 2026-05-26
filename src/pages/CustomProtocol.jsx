@@ -80,7 +80,7 @@ function QtyPicker({ value, onChange }) {
             key={q}
             type="button"
             onClick={() => onChange(q)}
-            className={`w-8 h-8 rounded-lg font-body text-xs font-semibold transition-all duration-150 ${
+            className={`h-11 w-11 rounded-lg font-body text-xs font-semibold transition-all duration-150 ${
               value === q
                 ? 'bg-foreground text-background'
                 : 'border border-foreground/15 bg-card/[0.45] text-foreground/50 hover:border-foreground/40 hover:text-foreground'
@@ -109,7 +109,7 @@ function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, chi
         <button
           type="button"
           onClick={onToggle}
-          className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+          className={`mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
             active
               ? 'bg-foreground border-foreground text-background'
               : 'border-border/60 text-foreground/40 hover:border-foreground/50 hover:text-foreground/70'
@@ -302,8 +302,8 @@ export default function CustomProtocol() {
               {/* ── IV CBD ── */}
               <TreatmentRow
                 icon={CannabisLeaf}
-                title="IV CBD"
-                tag="Recovery & Calm · Zero THC"
+                title="CBD IV Review"
+                tag="Approval gated"
                 fromPrice={250}
                 active={cbdOn}
                 onToggle={() => setCbdOn(v => !v)}
@@ -445,13 +445,13 @@ export default function CustomProtocol() {
                       key={mode}
                       type="button"
                       onClick={() => setBillingMode(mode)}
-                      className={`flex-1 rounded-xl py-2.5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-200 ${
+                      className={`flex-1 min-h-10 rounded-xl py-2.5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-200 ${
                         billingMode === mode
                           ? 'bg-foreground text-background shadow-sm'
                           : 'text-foreground/50 hover:text-foreground/80'
                       }`}
                     >
-                      {mode === 'onetime' ? 'One Time' : 'Subscribe'}
+                      {mode === 'onetime' ? 'One Time' : 'Subscription'}
                     </button>
                   ))}
                 </div>

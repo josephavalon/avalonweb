@@ -12,15 +12,15 @@ import { CLIENTS, APPOINTMENTS, INVOICES } from '@/fixtures/adminMockData';
 const EASE = [0.16, 1, 0.3, 1];
 
 const TAG_STYLES = {
-  vip:       { bg: 'rgba(201,168,76,0.15)',  color: '#c9a84c',  label: 'VIP' },
-  recurring: { bg: 'rgba(100,160,255,0.12)', color: '#64a0ff',  label: 'Recurring' },
-  athlete:   { bg: 'rgba(160,100,255,0.12)', color: '#a064ff',  label: 'Athlete' },
-  corporate: { bg: 'rgba(0,200,180,0.12)',   color: '#00c8b4',  label: 'Corporate' },
+  vip:       { bg: 'hsl(var(--accent) / 0.15)',  color: 'hsl(var(--accent))',  label: 'VIP' },
+  recurring: { bg: 'rgba(100,160,255,0.12)', color: 'hsl(217 100% 70%)',  label: 'Recurring' },
+  athlete:   { bg: 'rgba(160,100,255,0.12)', color: 'hsl(262 100% 70%)',  label: 'Athlete' },
+  corporate: { bg: 'rgba(0,200,180,0.12)',   color: 'hsl(174 100% 39%)',  label: 'Corporate' },
 };
 
 const AVATAR_COLORS = [
-  '#c9a84c', '#64a0ff', '#a064ff', '#00c8b4',
-  '#ff6464', '#64dc82', '#ff9f43', '#54a0ff',
+  'hsl(var(--accent))', 'hsl(217 100% 70%)', 'hsl(262 100% 70%)', 'hsl(174 100% 39%)',
+  'hsl(0 100% 70%)', 'hsl(135 64% 63%)', 'hsl(29 100% 63%)', 'hsl(215 100% 66%)',
 ];
 
 const TAG_FILTERS = ['All', 'VIP', 'Recurring', 'Athlete', 'Corporate'];
@@ -33,7 +33,7 @@ function avatarColor(name) {
 }
 
 function TagPill({ tag }) {
-  const s = TAG_STYLES[tag] || { bg: 'rgba(255,255,255,0.08)', color: '#ffffff', label: tag };
+  const s = TAG_STYLES[tag] || { bg: 'rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))', label: tag };
   return (
     <span
       className="text-[10px] tracking-[0.12em] uppercase font-medium px-2 py-0.5 rounded-full"
@@ -47,12 +47,12 @@ function TagPill({ tag }) {
 function IntakeBadge({ completed }) {
   return completed ? (
     <span className="flex items-center gap-1 text-[10px] tracking-[0.12em] uppercase font-medium px-2 py-0.5 rounded-full"
-      style={{ background: 'rgba(100,220,130,0.12)', color: '#64dc82' }}>
+      style={{ background: 'rgba(100,220,130,0.12)', color: 'hsl(135 64% 63%)' }}>
       <Check className="w-2.5 h-2.5" strokeWidth={2.5} /> Complete
     </span>
   ) : (
     <span className="flex items-center gap-1 text-[10px] tracking-[0.12em] uppercase font-medium px-2 py-0.5 rounded-full"
-      style={{ background: 'rgba(201,168,76,0.15)', color: '#c9a84c' }}>
+      style={{ background: 'hsl(var(--accent) / 0.15)', color: 'hsl(var(--accent))' }}>
       <Clock className="w-2.5 h-2.5" strokeWidth={2.5} /> Pending
     </span>
   );
@@ -122,21 +122,24 @@ function AddClientModal({ onClose, onAdd }) {
   }
 
   const inputStyle = {
-    background: '#1a1a1a',
+    background: 'hsl(var(--card))',
     border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 8,
-    color: '#ffffff',
+    color: 'hsl(var(--foreground))',
     padding: '10px 12px',
     fontSize: 14,
     width: '100%',
     outline: 'none',
   };
 
-  const labelStyle = { fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#ffffff', marginBottom: 6, display: 'block' };
+  const labelStyle = { fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'hsl(var(--foreground))', marginBottom: 6, display: 'block' };
 
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Add new client"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -149,13 +152,13 @@ function AddClientModal({ onClose, onAdd }) {
         exit={{ opacity: 0, scale: 0.95, y: 16 }}
         transition={{ duration: 0.3, ease: EASE }}
         className="rounded-2xl w-full max-w-lg overflow-hidden"
-        style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.08)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Modal header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div>
-            <p className="text-[10px] tracking-[0.25em] uppercase font-medium" style={{ color: '#c9a84c' }}>Clients</p>
+            <p className="text-[10px] tracking-[0.25em] uppercase font-medium" style={{ color: 'hsl(var(--accent))' }}>Clients</p>
             <h2 className="font-heading text-xl text-white tracking-wider">ADD NEW CLIENT</h2>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10">
@@ -168,7 +171,7 @@ function AddClientModal({ onClose, onAdd }) {
             <div>
               <label style={labelStyle}>First Name</label>
               <input
-                style={{ ...inputStyle, borderColor: errors.first_name ? '#ff5050' : 'rgba(255,255,255,0.1)' }}
+                style={{ ...inputStyle, borderColor: errors.first_name ? 'hsl(var(--destructive))' : 'rgba(255,255,255,0.1)' }}
                 value={form.first_name}
                 onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
                 placeholder="Alex"
@@ -178,7 +181,7 @@ function AddClientModal({ onClose, onAdd }) {
             <div>
               <label style={labelStyle}>Last Name</label>
               <input
-                style={{ ...inputStyle, borderColor: errors.last_name ? '#ff5050' : 'rgba(255,255,255,0.1)' }}
+                style={{ ...inputStyle, borderColor: errors.last_name ? 'hsl(var(--destructive))' : 'rgba(255,255,255,0.1)' }}
                 value={form.last_name}
                 onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))}
                 placeholder="Chen"
@@ -191,7 +194,7 @@ function AddClientModal({ onClose, onAdd }) {
             <label style={labelStyle}>Email</label>
             <input
               type="email"
-              style={{ ...inputStyle, borderColor: errors.email ? '#ff5050' : 'rgba(255,255,255,0.1)' }}
+              style={{ ...inputStyle, borderColor: errors.email ? 'hsl(var(--destructive))' : 'rgba(255,255,255,0.1)' }}
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               placeholder="client@email.com"
@@ -227,7 +230,7 @@ function AddClientModal({ onClose, onAdd }) {
               value={form.source}
               onChange={e => setForm(f => ({ ...f, source: e.target.value }))}
             >
-              {SOURCES.map(s => <option key={s} value={s} style={{ background: '#1a1a1a' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+              {SOURCES.map(s => <option key={s} value={s} style={{ background: 'hsl(var(--card))' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
             </select>
           </div>
 
@@ -244,7 +247,7 @@ function AddClientModal({ onClose, onAdd }) {
                     className="text-[10px] tracking-[0.12em] uppercase font-medium px-3 py-1.5 rounded-full transition-all"
                     style={{
                       background: active ? s.bg : 'rgba(255,255,255,0.05)',
-                      color: active ? s.color : '#ffffff',
+                      color: active ? s.color : 'hsl(var(--foreground))',
                       border: `1px solid ${active ? s.color + '44' : 'rgba(255,255,255,0.1)'}`,
                     }}
                   >
@@ -267,7 +270,7 @@ function AddClientModal({ onClose, onAdd }) {
             <button
               type="submit"
               className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors"
-              style={{ background: '#c9a84c', color: '#0A0A0A' }}
+              style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))' }}
             >
               Add Client
             </button>
@@ -294,18 +297,18 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
     .slice(0, 3);
 
   const INVOICE_STATUS_STYLE = {
-    paid:    { bg: 'rgba(100,220,130,0.12)', color: '#64dc82' },
-    draft:   { bg: 'rgba(255,255,255,0.06)', color: '#ffffff' },
-    sent:    { bg: 'rgba(100,160,255,0.12)', color: '#64a0ff' },
-    overdue: { bg: 'rgba(255,80,80,0.12)',   color: '#ff5050' },
+    paid:    { bg: 'rgba(100,220,130,0.12)', color: 'hsl(135 64% 63%)' },
+    draft:   { bg: 'rgba(255,255,255,0.06)', color: 'hsl(var(--foreground))' },
+    sent:    { bg: 'rgba(100,160,255,0.12)', color: 'hsl(217 100% 70%)' },
+    overdue: { bg: 'rgba(255,80,80,0.12)',   color: 'hsl(var(--destructive))' },
   };
 
   const APPT_STATUS_STYLE = {
-    scheduled:   { color: '#64a0ff' },
-    confirmed:   { color: '#64dc82' },
-    completed:   { color: '#64dc82' },
-    cancelled:   { color: '#ff5050' },
-    in_progress: { color: '#c9a84c' },
+    scheduled:   { color: 'hsl(217 100% 70%)' },
+    confirmed:   { color: 'hsl(135 64% 63%)' },
+    completed:   { color: 'hsl(135 64% 63%)' },
+    cancelled:   { color: 'hsl(var(--destructive))' },
+    in_progress: { color: 'hsl(var(--accent))' },
   };
 
   return (
@@ -323,7 +326,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
       {/* Drawer */}
       <motion.div
         className="fixed right-0 top-0 bottom-0 z-50 flex flex-col overflow-hidden"
-        style={{ width: 420, background: '#0f0f0f', borderLeft: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ width: 420, background: 'hsl(var(--card))', borderLeft: '1px solid rgba(255,255,255,0.08)' }}
         initial={{ x: 420 }}
         animate={{ x: 0 }}
         exit={{ x: 420 }}
@@ -331,7 +334,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-[10px] tracking-[0.25em] uppercase font-medium" style={{ color: '#c9a84c' }}>Client Profile</p>
+          <p className="text-[10px] tracking-[0.25em] uppercase font-medium" style={{ color: 'hsl(var(--accent))' }}>Client Profile</p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setEditing(e => !e)}
@@ -364,18 +367,18 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
 
             <div className="space-y-2">
               <div className="flex items-center gap-2.5">
-                <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#c9a84c' }} />
+                <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--accent))' }} />
                 <span className="text-sm text-white">{client.email}</span>
               </div>
               {client.phone && (
                 <div className="flex items-center gap-2.5">
-                  <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#c9a84c' }} />
+                  <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--accent))' }} />
                   <span className="text-sm text-white">{client.phone}</span>
                 </div>
               )}
               {client.city && (
                 <div className="flex items-center gap-2.5">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#c9a84c' }} />
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--accent))' }} />
                   <span className="text-sm text-white">{client.city}{client.zip ? ` ${client.zip}` : ''}</span>
                 </div>
               )}
@@ -396,7 +399,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
               { label: 'Last Visit', value: client.last_visit ? new Date(client.last_visit).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—', icon: Calendar },
             ].map(({ label, value, icon: Icon }) => (
               <div key={label} className="px-4 py-4 text-center" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <Icon className="w-3.5 h-3.5 mx-auto mb-1.5" style={{ color: '#c9a84c' }} />
+                <Icon className="w-3.5 h-3.5 mx-auto mb-1.5" style={{ color: 'hsl(var(--accent))' }} />
                 <p className="text-lg font-light text-white">{value}</p>
                 <p className="text-[10px] tracking-[0.15em] uppercase text-white mt-0.5">{label}</p>
               </div>
@@ -408,7 +411,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
             <span className="text-sm font-medium text-white">Account Active</span>
             <button onClick={() => onToggleActive(client.id)} className="transition-opacity hover:opacity-80">
               {client.is_active
-                ? <ToggleRight className="w-7 h-7" style={{ color: '#64dc82' }} />
+                ? <ToggleRight className="w-7 h-7" style={{ color: 'hsl(135 64% 63%)' }} />
                 : <ToggleLeft className="w-7 h-7" style={{ color: 'rgba(255,255,255,0.3)' }} />
               }
             </button>
@@ -417,14 +420,14 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
           {/* Intake */}
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase font-medium" style={{ color: '#c9a84c' }}>Intake Form</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase font-medium" style={{ color: 'hsl(var(--accent))' }}>Intake Form</p>
               <div className="mt-1"><IntakeBadge completed={client.intake_completed} /></div>
             </div>
             {!client.intake_completed && (
               <button
                 onClick={() => onMarkIntakeComplete(client.id)}
                 className="text-[11px] tracking-[0.12em] uppercase font-medium px-3 py-1.5 rounded-lg transition-colors"
-                style={{ background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' }}
+                style={{ background: 'hsl(var(--accent) / 0.15)', color: 'hsl(var(--accent))', border: '1px solid hsl(var(--accent) / 0.3)' }}
               >
                 Mark Complete
               </button>
@@ -434,7 +437,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
           {/* Recent Appointments */}
           <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-[10px] tracking-[0.2em] uppercase font-medium mb-3 text-white">
-              <Calendar className="w-3 h-3 inline mr-1.5" style={{ color: '#c9a84c' }} />
+              <Calendar className="w-3 h-3 inline mr-1.5" style={{ color: 'hsl(var(--accent))' }} />
               Recent Appointments
             </p>
             {appts.length === 0 ? (
@@ -442,7 +445,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
             ) : (
               <div className="space-y-2">
                 {appts.map(a => {
-                  const sc = APPT_STATUS_STYLE[a.status] || { color: '#ffffff' };
+                  const sc = APPT_STATUS_STYLE[a.status] || { color: 'hsl(var(--foreground))' };
                   return (
                     <div key={a.id} className="flex items-center justify-between rounded-lg px-3 py-2.5"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -464,7 +467,7 @@ function ClientDrawer({ client, onClose, onToggleActive, onMarkIntakeComplete })
           {/* Recent Invoices */}
           <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-[10px] tracking-[0.2em] uppercase font-medium mb-3 text-white">
-              <FileText className="w-3 h-3 inline mr-1.5" style={{ color: '#c9a84c' }} />
+              <FileText className="w-3 h-3 inline mr-1.5" style={{ color: 'hsl(var(--accent))' }} />
               Recent Invoices
             </p>
             {invoices.length === 0 ? (
@@ -570,10 +573,10 @@ export default function Clients() {
   }
 
   const inputStyle = {
-    background: '#141414',
+    background: 'hsl(var(--card))',
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 8,
-    color: '#ffffff',
+    color: 'hsl(var(--foreground))',
     fontSize: 14,
     outline: 'none',
   };
@@ -586,7 +589,7 @@ export default function Clients() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen p-6 lg:p-8" style={{ background: '#0A0A0A' }}>
+      <div className="min-h-screen p-6 lg:p-8 bg-background">
 
         {/* Header */}
         <motion.div
@@ -595,10 +598,10 @@ export default function Clients() {
           transition={{ duration: 0.5, ease: EASE }}
           className="mb-8"
         >
-          <p className="text-[11px] tracking-[0.3em] uppercase font-medium mb-1" style={{ color: '#c9a84c' }}>Clients</p>
+          <p className="text-[11px] tracking-[0.3em] uppercase font-medium mb-1" style={{ color: 'hsl(var(--accent))' }}>Clients</p>
           <div className="flex items-center gap-4">
             <h1 className="font-heading text-4xl text-white tracking-wider">CLIENT ROSTER</h1>
-            <span className="text-sm font-medium px-3 py-1 rounded-full text-white" style={{ background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.25)' }}>
+            <span className="text-sm font-medium px-3 py-1 rounded-full text-white" style={{ background: 'hsl(var(--accent) / 0.15)', border: '1px solid hsl(var(--accent) / 0.25)' }}>
               {clients.length} total
             </span>
           </div>
@@ -628,15 +631,15 @@ export default function Clients() {
           </div>
 
           {/* Tag filter */}
-          <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.08)' }}>
             {TAG_FILTERS.map(t => (
               <button
                 key={t}
                 onClick={() => setTagFilter(t)}
                 className="text-[11px] tracking-[0.12em] uppercase font-medium px-3 py-1.5 rounded-md transition-all"
                 style={{
-                  background: tagFilter === t ? '#c9a84c' : 'transparent',
-                  color: tagFilter === t ? '#0A0A0A' : '#ffffff',
+                  background: tagFilter === t ? 'hsl(var(--accent))' : 'transparent',
+                  color: tagFilter === t ? 'hsl(var(--background))' : 'hsl(var(--foreground))',
                 }}
               >
                 {t}
@@ -645,7 +648,7 @@ export default function Clients() {
           </div>
 
           {/* Status filter */}
-          <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.08)' }}>
             {['All', 'Active', 'Inactive'].map(s => (
               <button
                 key={s}
@@ -653,7 +656,7 @@ export default function Clients() {
                 className="text-[11px] tracking-[0.12em] uppercase font-medium px-3 py-1.5 rounded-md transition-all"
                 style={{
                   background: statusFilter === s ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color: '#ffffff',
+                  color: 'hsl(var(--foreground))',
                 }}
               >
                 {s}
@@ -668,7 +671,7 @@ export default function Clients() {
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
-            style={{ background: '#c9a84c', color: '#0A0A0A' }}
+            style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))' }}
           >
             <Plus className="w-4 h-4" />
             Add Client
@@ -681,7 +684,7 @@ export default function Clients() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.12, ease: EASE }}
           className="rounded-xl overflow-hidden"
-          style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           {/* Table head */}
           <div className="hidden lg:grid grid-cols-[2fr_1fr_1.2fr_0.8fr_0.8fr_0.8fr_1fr_0.7fr] px-5 py-3"
@@ -751,7 +754,7 @@ export default function Clients() {
                       className="transition-opacity hover:opacity-80"
                     >
                       {client.is_active
-                        ? <ToggleRight className="w-6 h-6" style={{ color: '#64dc82' }} />
+                        ? <ToggleRight className="w-6 h-6" style={{ color: 'hsl(135 64% 63%)' }} />
                         : <ToggleLeft className="w-6 h-6" style={{ color: 'rgba(255,255,255,0.25)' }} />
                       }
                     </button>

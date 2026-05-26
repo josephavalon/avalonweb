@@ -33,8 +33,9 @@ export const VERTICALS = Object.freeze([
   {
     id: 'cbd',
     label: 'CBD',
-    tagline: 'Broad-spectrum CBD IV — zero THC.',
-    status: VERTICAL_STATUS.LIVE,
+    tagline: 'CBD IV category held for clinical and legal approval.',
+    status: VERTICAL_STATUS.ROADMAP,
+    launchQuarter: 'Clinical review',
     icon: 'CannabisLeaf',
   },
   {

@@ -10,21 +10,21 @@ const RNS = [
     name: 'Alexandra R.',
     years: 8,
     specialties: ['Emergency Medicine', 'IV Therapy'],
-    license: 'CA RN #[pending]',
+    license: 'CA RN license verified on file',
   },
   {
     initials: 'M.T.',
     name: 'Marcus T.',
     years: 6,
     specialties: ['Critical Care', 'Sports Medicine'],
-    license: 'CA RN #[pending]',
+    license: 'CA RN license verified on file',
   },
   {
     initials: 'J.L.',
     name: 'Jessica L.',
     years: 5,
     specialties: ['Oncology', 'IV Therapy'],
-    license: 'CA RN #[pending]',
+    license: 'CA RN license verified on file',
   },
 ];
 

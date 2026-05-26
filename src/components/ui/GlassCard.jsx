@@ -1,11 +1,21 @@
 import React from 'react';
 
-// Single source of truth for the glass surface used across the site.
-// Defaults: border-white/10, bg-white/[0.03], backdrop-blur-md, rounded-3xl.
-// Use `tone="heavy"` for emphasized cards (Membership tiers, partner cards).
-// Use `radius="2xl" | "3xl" | "xl" | "lg"` to match the host section.
-//
-// Usage: <GlassCard className="p-5 flex flex-col gap-4">...</GlassCard>
+const TONES = {
+  default: 'border-white/10 bg-white/[0.035] shadow-[0_18px_70px_hsl(var(--foreground)/0.04)]',
+  soft: 'border-foreground/[0.08] bg-foreground/[0.025] shadow-[0_14px_48px_hsl(var(--foreground)/0.025)]',
+  command: 'border-foreground/[0.12] bg-background/70 shadow-[0_24px_90px_hsl(var(--foreground)/0.10)]',
+  selected: 'border-accent/35 bg-accent/[0.075] shadow-[0_24px_90px_hsl(var(--accent)/0.13)]',
+  heavy: 'border-white/12 bg-white/[0.055] shadow-[0_24px_90px_hsl(var(--foreground)/0.08)]',
+};
+
+const BLUR = {
+  soft: 'backdrop-blur-md',
+  default: 'backdrop-blur-xl',
+  command: 'backdrop-blur-2xl',
+  selected: 'backdrop-blur-xl',
+  heavy: 'backdrop-blur-2xl',
+};
+
 export function GlassCard({
   as: Tag = 'div',
   tone = 'default',
@@ -14,7 +24,8 @@ export function GlassCard({
   children,
   ...rest
 }) {
-  const surface = tone === 'heavy' ? 'bg-white/[0.04]' : 'bg-white/[0.03]';
+  const surface = TONES[tone] || TONES.default;
+  const blur = BLUR[tone] || BLUR.default;
   const rounded =
     radius === 'xl' ? 'rounded-xl' :
     radius === '2xl' ? 'rounded-2xl' :
@@ -22,7 +33,7 @@ export function GlassCard({
     'rounded-3xl';
   return (
     <Tag
-      className={`border border-white/10 ${surface} backdrop-blur-md ${rounded} ${className}`}
+      className={`border ${surface} ${blur} ${rounded} ${className}`}
       {...rest}
     >
       {children}

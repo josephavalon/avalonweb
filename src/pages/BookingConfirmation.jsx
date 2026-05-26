@@ -8,9 +8,13 @@ import { ArrowLeft, CalendarPlus, User,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import ConsumerTruthLayer from '@/components/consumer/ConsumerTruthLayer';
+import ClinicalClearancePanel from '@/components/clinical/ClinicalClearancePanel';
 import { useSeo } from '@/lib/seo';
 import { readLastBooking, saveLastBooking, appendActivity } from '@/lib/localOs';
+import { buildConsumerTruthLayer } from '@/lib/consumerTruth';
 import { readVisitPrep, saveVisitPrep } from '@/lib/platformOps';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
@@ -137,18 +141,84 @@ const PREP_CARDS = [
 const TIMELINE = [
   {
     number: '01',
-    title: 'Text Confirmation',
-    body: "You'll receive a text with your nurse's name and ETA 30 minutes before arrival.",
+    title: 'Deposit Paid',
+    body: 'Your $50 deposit holds the appointment while the care team prepares the visit.',
   },
   {
     number: '02',
-    title: 'Nurse En Route',
-    body: 'Your licensed RN arrives within your scheduled window with all supplies — nothing to prep on your end.',
+    title: 'Appointment Booked',
+    body: 'The visit is sent to Acuity scheduling and your confirmation details stay available here.',
   },
   {
     number: '03',
-    title: 'Your Session',
-    body: 'Sessions run 30–90 minutes. Relax while your nurse handles everything, then cleans up before leaving.',
+    title: 'GFE Check',
+    body: 'New clients are routed for GFE review. Existing approvals are checked before dispatch.',
+  },
+  {
+    number: '04',
+    title: 'RN Assignment',
+    body: 'Open shifts are offered to the on-call RN team. Your assigned nurse is confirmed by text.',
+  },
+  {
+    number: '05',
+    title: 'Visit',
+    body: 'Your RN arrives with supplies, completes the session, and closes the balance after care.',
+  },
+];
+
+const GFE_VALID_TIMELINE = [
+  {
+    number: '01',
+    title: 'Deposit Held',
+    body: 'Your $50 deposit holds the appointment while the care team prepares the visit.',
+  },
+  {
+    number: '02',
+    title: 'Appointment Booked',
+    body: 'The visit is sent to Acuity scheduling and your confirmation details stay available here.',
+  },
+  {
+    number: '03',
+    title: 'GFE Valid',
+    body: 'Your annual GFE is current. No repeat GFE is needed for this visit.',
+  },
+  {
+    number: '04',
+    title: 'RN Assignment',
+    body: 'Open shifts are offered to the on-call RN team. Your assigned nurse confirms ETA.',
+  },
+  {
+    number: '05',
+    title: 'Visit',
+    body: 'Your RN arrives with supplies, completes the session, and closes the balance after care.',
+  },
+];
+
+const FAST_HOLD_TIMELINE = [
+  {
+    number: '01',
+    title: 'Hold Received',
+    body: 'Your request is saved.',
+  },
+  {
+    number: '02',
+    title: 'Deposit',
+    body: 'The $50 hold confirms the appointment.',
+  },
+  {
+    number: '03',
+    title: 'Clearance',
+    body: 'Clinical review happens before service.',
+  },
+  {
+    number: '04',
+    title: 'Nurse',
+    body: 'A licensed RN accepts and sets ETA.',
+  },
+  {
+    number: '05',
+    title: 'Visit',
+    body: 'Avalon comes to you.',
   },
 ];
 
@@ -161,11 +231,13 @@ function TimelineStep({ step, index, isLast }) {
       className="flex gap-4"
     >
       <div className="flex flex-col items-center shrink-0">
-        <span className="font-heading text-4xl text-accent/30 leading-none">{step.number}</span>
-        {!isLast && <div className="w-px flex-1 mt-3 bg-foreground/[0.08]" style={{ minHeight: '2rem' }} />}
+        <span className="flex h-10 w-10 items-center justify-center rounded-full border border-accent/24 bg-accent/[0.08] font-body text-[10px] font-semibold tracking-[0.12em] text-accent">
+          {step.number}
+        </span>
+        {!isLast && <div className="w-px flex-1 mt-3 bg-gradient-to-b from-accent/35 to-foreground/[0.06]" style={{ minHeight: '2rem' }} />}
       </div>
       <div className={`flex-1 min-w-0 pt-1 ${isLast ? '' : 'pb-8'}`}>
-        <p className="font-heading text-xl text-foreground tracking-wide mb-1">{step.title}</p>
+        <p className="font-heading text-xl text-foreground tracking-wide mb-1 uppercase">{step.title}</p>
         <p className="font-body text-sm text-foreground/60 leading-relaxed">{step.body}</p>
       </div>
     </motion.div>
@@ -182,11 +254,12 @@ export default function BookingConfirmation() {
   const [apptLoading, setApptLoading] = useState(!!appointmentId);
   const [apptError, setApptError] = useState(null);
   const [prep, setPrep] = useState(() => readVisitPrep());
+  const isFastHold = localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold';
 
   useSeo({
     title: 'Session Confirmed — Avalon Vitality',
     description: 'Your IV wellness session has been confirmed. A licensed RN will be in touch shortly.',
-    path: '/store/confirmation',
+    path: '/booking/confirmation',
   });
 
   useEffect(() => {
@@ -234,6 +307,19 @@ export default function BookingConfirmation() {
     }
   }, [appt, localBooking]);
 
+  useEffect(() => {
+    const bookingId = appt?.id || localBooking?.id || appointmentId;
+    if (!bookingId) return;
+    track(ANALYTICS_EVENTS.BOOKING_CONFIRMED, {
+      funnel: localBooking?.source === 'Fast Hold' ? 'fast_hold' : 'webstore',
+      booking_id: String(bookingId),
+      order_type: localBooking?.orderType || 'recovery',
+      product_family: localBooking?.productFamily || 'protocol',
+      gfe_required: localBooking?.gfeRequired ?? true,
+      has_appointment: Boolean(appt?.datetime || localBooking?.datetime || localBooking?.date),
+    });
+  }, [appt?.id, appt?.datetime, localBooking, appointmentId]);
+
   // Scheduling self-service reschedule/cancel links
   const rescheduleUrl = appt?.confirmationPage || null;
   // The confirmation page URL has cancel/reschedule links built in
@@ -249,6 +335,20 @@ export default function BookingConfirmation() {
   const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : localBooking?.date || null;
   const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time || null;
   const apptAddress = appt?.location || localBooking?.address || null;
+  const confirmationBooking = (localBooking || appt?.id) ? {
+    ...(localBooking || {}),
+    id: appt?.id || localBooking?.id,
+    service: serviceLabel,
+    datetime: appt?.datetime || localBooking?.datetime,
+    date: localBooking?.date || apptDate,
+    time: appt?.datetime ? apptTime : localBooking?.time,
+    address: apptAddress || localBooking?.address,
+    reference: localBooking?.reference || appt?.id,
+    status: localBooking?.status || (appt?.id ? 'Scheduling received' : undefined),
+  } : null;
+  const truthLayer = buildConsumerTruthLayer({ booking: confirmationBooking });
+  const hasValidAnnualGfe = localBooking && localBooking.gfeRequired === false;
+  const timelineSteps = isFastHold ? FAST_HOLD_TIMELINE : hasValidAnnualGfe ? GFE_VALID_TIMELINE : TIMELINE;
   const togglePrep = (index) => {
     const next = prep.map((item, i) => i === index ? { ...item, done: !item.done } : item);
     setPrep(saveVisitPrep(next));
@@ -275,10 +375,12 @@ export default function BookingConfirmation() {
             transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}
           >
             <h1 className="font-heading text-5xl md:text-6xl text-foreground uppercase tracking-tight leading-none mb-4">
-              Your Session Is Confirmed.
+              {isFastHold ? 'Hold Received.' : 'Confirmed.'}
             </h1>
             <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-sm mx-auto mb-6">
-              A licensed RN will reach out shortly with arrival details. Keep your phone nearby.
+              {isFastHold
+                ? 'Complete the deposit. Clinical clearance comes next. RN dispatch waits until approved.'
+                : 'Your RN will text arrival details. Keep your phone nearby.'}
             </p>
 
             {/* Loading state */}
@@ -310,6 +412,9 @@ export default function BookingConfirmation() {
                 {localBooking?.subtotal != null && (
                   <DetailPill icon={CreditCard} label="Estimated Total" value={`$${Number(localBooking.subtotal).toLocaleString()}`} />
                 )}
+                {localBooking?.depositAmount != null && (
+                  <DetailPill icon={CreditCard} label="Deposit" value={`$${Number(localBooking.depositAmount).toLocaleString()} ${isFastHold ? 'pending' : 'due'}`} />
+                )}
               </div>
             )}
 
@@ -324,6 +429,16 @@ export default function BookingConfirmation() {
           </motion.div>
         </motion.div>
 
+        {confirmationBooking && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.58 }}
+          >
+            <ClinicalClearancePanel booking={confirmationBooking} title="Dispatch Gate" />
+          </motion.div>
+        )}
+
         {/* ── 2. What to Expect ───────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -331,12 +446,28 @@ export default function BookingConfirmation() {
           transition={{ duration: 0.6, ease: EASE, delay: 0.65 }}
           className="space-y-4"
         >
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">What to Expect</p>
-          <div className="rounded-2xl border border-foreground/[0.08] bg-background/80 backdrop-blur-xl px-5 pt-5 pb-4">
-            {TIMELINE.map((step, i) => (
-              <TimelineStep key={step.number} step={step} index={i} isLast={i === TIMELINE.length - 1} />
+          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 px-1">Status</p>
+          <div className="rounded-[1.35rem] border border-foreground/[0.12] bg-background/72 px-5 pt-5 pb-4 shadow-[0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
+            {timelineSteps.map((step, i) => (
+              <TimelineStep key={step.number} step={step} index={i} isLast={i === timelineSteps.length - 1} />
             ))}
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.82 }}
+        >
+          <ConsumerTruthLayer
+            truth={truthLayer}
+            eyebrow="Real Visit OS"
+            title="Visit Truth"
+            intro="Avalon tracks the parts that matter: payment, clearance, nurse, route, text."
+            compact
+            limit={5}
+            showGroups={false}
+          />
         </motion.div>
 
         {/* ── 3. Before Your Visit — premium cards ────────────── */}
@@ -419,6 +550,16 @@ export default function BookingConfirmation() {
           transition={{ duration: 0.6, ease: EASE, delay: 1.28 }}
           className="space-y-3 pt-2"
         >
+          {/* Complete deposit */}
+          {isFastHold && (
+            <Link
+              to="/checkout"
+              className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background shadow-[0_16px_50px_hsl(var(--foreground)/0.14)] transition-opacity hover:opacity-88"
+            >
+              Complete Deposit <CreditCard className="h-4 w-4" strokeWidth={2} />
+            </Link>
+          )}
+
           {/* Add to Calendar */}
           {appt?.datetime && (
             <button
@@ -443,7 +584,7 @@ export default function BookingConfirmation() {
                     href={rescheduleUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-2.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-3.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
                   >
                     Reschedule <ExternalLink className="w-3 h-3" strokeWidth={2} />
                   </a>
@@ -451,7 +592,7 @@ export default function BookingConfirmation() {
                     href={rescheduleUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-2.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-3.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
                   >
                     Cancel <ExternalLink className="w-3 h-3" strokeWidth={2} />
                   </a>
@@ -459,7 +600,7 @@ export default function BookingConfirmation() {
               ) : (
                 <a
                   href="sms:+14157070818"
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-2.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-foreground/[0.12] py-3.5 font-body text-xs tracking-widest uppercase text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5" strokeWidth={1.8} />
                   Text Us to Reschedule
@@ -474,7 +615,7 @@ export default function BookingConfirmation() {
           {/* Back home */}
           <Link
             to="/"
-            className="flex items-center gap-1.5 font-body text-xs tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors justify-center pt-2"
+            className="flex items-center gap-1.5 min-h-[44px] font-body text-xs tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors justify-center pt-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
             Back to Avalon

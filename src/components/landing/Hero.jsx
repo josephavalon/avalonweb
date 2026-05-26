@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Tag, MapPin, ShieldCheck, Stethoscope } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion(Link);
@@ -25,15 +25,18 @@ export default function Hero() {
         className={`absolute inset-0 pointer-events-none${isMobile ? '' : ' will-change-transform'}`}
       >
         <motion.img
-          src="https://media.base44.com/images/public/69e5682f98e509792c71ef21/3a0a1cbc3_winner.png"
-          alt="Avalon Vitality IV therapy"
+          src="/images/avalon-hero.webp"
+          srcSet="/images/avalon-hero-512.webp 512w, /images/avalon-hero-768.webp 768w, /images/avalon-hero.webp 1024w"
+          sizes="100vw"
+          alt="Avalon Vitality mobile recovery"
+          width="1024"
+          height="683"
           className="w-full h-full object-cover"
           style={{ objectPosition: '30% 55%', transformOrigin: '38% 62%' }}
-          initial={{ scale: 1.28 }}
-          animate={{ scale: 1.22 }}
+          initial={{ scale: 1.06 }}
+          animate={{ scale: 1.0 }}
           transition={{ duration: 3.2, ease: EASE }}
           loading="eager"
-          fetchpriority="high"
         />
         <div className="absolute inset-0 bg-background/65" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
@@ -49,23 +52,23 @@ export default function Hero() {
 
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
 
-        {/* Mobile: flex spacer pushes content to lower half */}
-        <div className="flex-1 md:hidden" />
+        {/* Mobile: fixed spacer keeps the CTA inside the first viewport. */}
+        <div className="h-[28svh] shrink-0 md:hidden" />
 
         <motion.p
           {...premiumFadeUp(0.18)}
-          initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
-          className="font-body text-[16px] tracking-[0.3em] uppercase mb-3 md:mb-5"
-          style={{ color: 'hsl(var(--foreground) / 0.5)' }}
+          initial={{ opacity: 0, y: 10 }}
+          className="font-body text-[15px] tracking-[0.34em] uppercase mb-3 md:mb-5"
+          style={{ color: 'hsl(var(--foreground) / 0.44)' }}
         >
-          Avalon Vitality
+          Avalon
         </motion.p>
 
         <motion.h1
           {...premiumFadeUp(0.38)}
-          initial={{ opacity: 0, y: 38, filter: 'blur(12px)' }}
+          initial={{ opacity: 0, y: 38 }}
           transition={{ duration: 1.6, delay: 0.38, ease: EASE }}
-          className="font-heading text-[15vw] sm:text-[12vw] md:text-[9vw] lg:text-[8rem] leading-[0.88] tracking-tight text-foreground uppercase max-w-3xl"
+          className="font-heading text-display-xl text-foreground uppercase max-w-3xl"
           style={{ willChange: 'opacity, transform' }}
         >
           Recovery<br />On Demand
@@ -73,60 +76,51 @@ export default function Hero() {
 
         <motion.p
           {...premiumFadeUp(0.72)}
-          initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 1.15, delay: 0.72, ease: EASE }}
-          className="font-body text-base md:text-lg leading-snug mt-4 md:mt-6"
-          style={{ color: 'hsl(var(--foreground) / 0.75)' }}
+          className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
+          style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          Your protocol.<br />Delivered by a licensed RN.<br />At home, hotel, office, or event.
+          Clinical recovery. Delivered.
         </motion.p>
 
         <motion.div
           {...premiumFadeUp(0.98)}
-          initial={{ opacity: 0, y: 22, filter: 'blur(7px)' }}
+          initial={{ opacity: 0, y: 22 }}
           transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
-          className="flex flex-col gap-3 mt-7 md:mt-8 w-full max-w-sm"
+          className="flex flex-col gap-2.5 mt-5 md:mt-8 w-full max-w-[19rem]"
         >
           <MotionLink
             to="/book"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
+            className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
           >
-            <span>Buy Now</span>
+            <span>Choose Protocol</span>
             <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
           </MotionLink>
           <MotionLink
             to="/subscription"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex items-center justify-between px-6 py-4 font-body text-xs tracking-[0.15em] uppercase font-semibold rounded-xl bg-white/[0.03] border border-foreground/35 text-foreground hover:bg-white/[0.10] hover:border-foreground/55 transition-all duration-base ease-editorial backdrop-blur-sm"
+            className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-white/[0.025] border border-foreground/22 text-foreground/76 hover:bg-white/[0.08] hover:border-foreground/45 hover:text-foreground transition-all duration-base ease-editorial backdrop-blur-sm"
           >
-            <span>Subscribe & Save 10%</span>
+            <span>Plans</span>
             <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
           </MotionLink>
         </motion.div>
 
-        {/* Trust strip */}
+        {/* Proof rail */}
         <motion.div
           {...premiumFadeUp(1.18)}
-          initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 14 }}
           transition={{ duration: 1.0, delay: 1.18, ease: EASE }}
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 md:mt-10"
+          className="mt-5 flex w-full max-w-[19rem] flex-wrap gap-x-4 gap-y-2 md:mt-8 md:max-w-none"
         >
-          {[
-            { icon: Tag,        label: 'No Hidden Fees' },
-            { icon: MapPin,     label: 'SF Bay Area' },
-            { icon: ShieldCheck, label: 'Licensed RNs' },
-            { icon: Stethoscope, label: 'MD Supervised' },
-          ].map(({ icon: Icon, label }, i) => (
-            <React.Fragment key={label}>
-              {i > 0 && <span className="hidden sm:block w-px h-3.5 bg-foreground/20" />}
-              <span className="flex items-center gap-1.5">
-                <Icon className="w-3.5 h-3.5 text-foreground/45" strokeWidth={1.6} />
-                <span className="font-body text-[11px] tracking-[0.12em] text-foreground/55 uppercase">{label}</span>
-              </span>
-            </React.Fragment>
+          {['Licensed clinicians', 'Clinical review', 'Mobile'].map((label) => (
+            <span key={label} className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/42">
+              {label}
+            </span>
           ))}
         </motion.div>
 
