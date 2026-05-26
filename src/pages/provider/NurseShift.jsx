@@ -1149,7 +1149,7 @@ function SupplyAlertModal({ onClose }) {
       >
         <div className="flex justify-between items-center mb-4">
           <div className="font-heading text-xl text-white tracking-[0.06em]">
-            SUPPLY ISSUE
+            SUPPLIES
           </div>
           <button
             onClick={onClose}
@@ -1370,13 +1370,13 @@ export default function NurseShift() {
             <span className="text-[11px] text-white font-semibold tracking-[0.04em]">DISPATCH</span>
           </a>
 
-          {/* Supply Issue */}
+          {/* Supplies */}
           <button
             onClick={() => setSupplyModal(true)}
             className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 bg-white/5 border border-white/[0.06] rounded-xl cursor-pointer"
           >
-            <AlertCircle size={18} className="text-yellow-400" />
-            <span className="text-[11px] text-white font-semibold tracking-[0.04em]">SUPPLY ISSUE</span>
+            <Package size={18} className="text-white/50" />
+            <span className="text-[11px] text-white font-semibold tracking-[0.04em]">SUPPLIES</span>
           </button>
 
           {/* End Shift */}

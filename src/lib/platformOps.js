@@ -5705,6 +5705,23 @@ export function seedDemoState(username = 'CLIENT001') {
   ]);
   writeLocal('supportThread', DEMO_SUPPORT);
   writeLocal('visitStatus.a1', key === 'NURSE001' ? 'in_progress' : 'confirmed');
+
+  if (key === 'NURSE001') {
+    const now = new Date().toISOString();
+    writeLocal('visitStatus.demo-nurse-shift-001', 'confirmed');
+    writeLocal('routeEta.demo-nurse-shift-001', '20 min');
+    writeLocal('clientContact.demo-nurse-shift-001', '');
+    writeLocal('kitDeductionLedger', []);
+    writeLocal('kitRestockQueue', []);
+    writeLocal('inventorySimulation', null);
+    writeLocal('nurseTrainingReviews', [
+      { id: 'training-s2-iv-start-safety', nurseId: 's2', nurseName: 'Stephanie R.', moduleId: 'iv-start-safety', title: 'IV Start Safety', category: 'Clinical', reviewedAt: now, reviewedBy: 'Demo seed', phiExcluded: true },
+      { id: 'training-s2-myers-add-ons', nurseId: 's2', nurseName: 'Stephanie R.', moduleId: 'myers-add-ons', title: 'Myers Add-On Review', category: 'Protocol', reviewedAt: now, reviewedBy: 'Demo seed', phiExcluded: true },
+      { id: 'training-s2-emergency-response', nurseId: 's2', nurseName: 'Stephanie R.', moduleId: 'emergency-response', title: 'Emergency Response', category: 'Safety', reviewedAt: now, reviewedBy: 'Demo seed', phiExcluded: true },
+      { id: 'training-s2-acuity-closeout', nurseId: 's2', nurseName: 'Stephanie R.', moduleId: 'acuity-closeout', title: 'Acuity Closeout', category: 'Charting', reviewedAt: now, reviewedBy: 'Demo seed', phiExcluded: true },
+    ]);
+  }
+
   writeLocal('demoSeed', { username: key, seededAt: new Date().toISOString(), bookingId: roleBooking.id });
 
   appendActivity(
