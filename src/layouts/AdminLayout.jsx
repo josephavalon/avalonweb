@@ -45,7 +45,7 @@ const NAV = [
   { to: '/provider/shift',          icon: Syringe,         label: 'My Shift',   roles: ['provider'], primary: true },
   { to: '/provider/communications', icon: MessageSquare,   label: 'Messages',   roles: ['provider'], primary: true },
   { to: '/provider/acuity',         icon: CalendarClock,   label: 'Acuity',     roles: ['provider'], primary: true },
-  { to: '/provider/role-os',        icon: Grid3X3,         label: 'Role OS',    roles: ['provider'], primary: true },
+  { to: '/provider/role-os',        icon: Grid3X3,         label: 'Tools',      roles: ['provider'], primary: true },
   { to: '/provider/crm',            icon: Mail,            label: 'CRM',        roles: ['provider'] },
   { to: '/provider/finance',        icon: CreditCard,      label: 'Finance',    roles: ['provider'] },
   { to: '/provider/credentials',    icon: Shield,          label: 'Credentials',roles: ['provider'] },

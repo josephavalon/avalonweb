@@ -397,7 +397,7 @@ export default function NurseDashboard() {
           <ActionButton icon={Route} label="Route" href={nextStop ? appleMapsUrl(nextStop.address) : undefined} tone={TEXT} />
           <ActionButton icon={Package} label="Kits" to="/provider/kits" tone={TEXT} />
           <ActionButton icon={GraduationCap} label="Training" to="/provider/training" tone={TEXT} />
-          <ActionButton icon={LayoutDashboard} label="Role OS" to="/provider/role-os" tone={TEXT} />
+          <ActionButton icon={LayoutDashboard} label="Tools" to="/provider/role-os" tone={TEXT} />
         </section>
 
         <section className="rounded-[26px] p-4 sm:p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
@@ -673,7 +673,7 @@ export default function NurseDashboard() {
         <div className="max-w-5xl mx-auto grid grid-cols-4 gap-2">
           <Link to="/provider/dashboard" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD_STRONG, color: ACCENT, border: `1px solid ${BORDER}` }}>Command</Link>
           <Link to="/provider/shift" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Shift</Link>
-          <Link to="/provider/role-os" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Role OS</Link>
+          <Link to="/provider/role-os" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Tools</Link>
           <Link to="/provider/settings" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Settings</Link>
         </div>
       </nav>
