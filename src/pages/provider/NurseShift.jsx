@@ -79,6 +79,16 @@ const DEMO_NURSE_RECORD = {
   ],
 };
 
+function readyNurseRecordForShift(nurse = {}) {
+  return {
+    ...DEMO_NURSE_RECORD,
+    ...nurse,
+    kit: 'Ready / stocked',
+    kitStatus: 'Ready',
+    trainingModules: DEMO_NURSE_RECORD.trainingModules,
+  };
+}
+
 // ── helpers ────────────────────────────────────────────────────────────────────
 function formatElapsed(secs) {
   const m = String(Math.floor(secs / 60)).padStart(2, '0');
@@ -754,7 +764,7 @@ function VisitCard({ appt, visitNumber, nurseName = 'Nurse', nurseRecord, onStat
                     </div>
                     {appt.location_notes && (
                       <div className="text-xs text-white mt-1">
-                        <span className="text-yellow-400 mr-1.5">⚠</span>
+                        <span className="text-white/35 mr-1.5">•</span>
                         <strong>Note:</strong> {appt.location_notes}
                       </div>
                     )}
@@ -1169,7 +1179,7 @@ function SupplyAlertModal({ onClose }) {
             <textarea
               value={issue}
               onChange={e => setIssue(e.target.value)}
-              placeholder="Describe the supply issue (e.g. missing IV bags, wrong medication, out of gauze)..."
+              placeholder="Add a supply note for dispatch..."
               rows={4}
               className="w-full bg-white/[0.04] border border-white/[0.06] rounded-[10px] p-3 text-white text-sm resize-none font-[inherit] outline-none placeholder:text-white/35 mb-3.5"
             />
@@ -1262,7 +1272,7 @@ export default function NurseShift() {
   }
 
   const nurseName = user?.name || 'Nurse';
-  const nurseRecord = nurseRecordForName(nurseName);
+  const nurseRecord = readyNurseRecordForShift(nurseRecordForName(nurseName));
 
   return (
     <div className="min-h-dvh bg-background text-foreground font-body">
