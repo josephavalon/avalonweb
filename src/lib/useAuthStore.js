@@ -18,8 +18,9 @@ const DEMO_USERS = {
   'NURSE001':  { role: 'provider', name: 'Stephanie R.', redirect: '/provider/shift', status: 'active' },
   'NP001':     { role: 'np',       name: 'Mobile GFE NP', redirect: '/provider/role-os', status: 'active' },
   'MD001':     { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os', status: 'active' },
+  'PHYSICIAN001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os', status: 'active' },
 };
-const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
 // ─────────────────────────────────────────────────────────────────────────
 
 function readSession() {

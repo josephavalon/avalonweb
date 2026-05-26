@@ -12,10 +12,10 @@ const DEMO_SHORTCUTS = [
   { username: 'CLIENT001', label: 'Client', detail: 'booking, prep, support', icon: UserRound },
   { username: 'NURSE001', label: 'Nurse', detail: 'shift, route, chart', icon: Stethoscope },
   { username: 'NP001', label: 'NP', detail: 'GFE, approvals', icon: ShieldCheck },
-  { username: 'MD001', label: 'MD', detail: 'standing orders', icon: ShieldCheck },
+  { username: 'PHYSICIAN001', label: 'MD', detail: 'standing orders', icon: ShieldCheck },
   { username: 'ADMIN001', label: 'Admin', detail: 'handoff, dispatch, ops', icon: ShieldCheck },
 ];
-const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
 const PASSKEY_ENABLED = false;
 
 // ── Reusable field ────────────────────────────────────────────────────────────
