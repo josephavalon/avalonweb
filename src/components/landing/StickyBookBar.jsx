@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight } from 'lucide-react';
 
 import { EASE, premiumTap } from '@/lib/motion';

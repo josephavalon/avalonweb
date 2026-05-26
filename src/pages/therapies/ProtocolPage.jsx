@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowLeft, ArrowRight, Clock, Sparkles, FlaskConical } from 'lucide-react';
 import { EASE } from '@/lib/motion';
 import Navbar from '@/components/landing/Navbar';

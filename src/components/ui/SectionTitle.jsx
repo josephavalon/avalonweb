@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { REVEAL } from '@/lib/motion';
 
 // Single source of truth for the section title block:

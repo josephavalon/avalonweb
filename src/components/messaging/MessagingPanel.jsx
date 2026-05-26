@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { ArrowLeft, Send, MessageSquare, Plus, X } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { useAuthStore } from '@/lib/useAuthStore';

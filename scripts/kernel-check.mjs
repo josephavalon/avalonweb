@@ -158,32 +158,43 @@ const adminPath = path.join(root, 'src/pages/admin/Command.jsx');
 const memberPath = path.join(root, 'src/pages/members/Dashboard.jsx');
 const nursePath = path.join(root, 'src/pages/provider/NurseDashboard.jsx');
 
-const kernel = fs.readFileSync(kernelPath, 'utf8');
-const noApi = fs.readFileSync(noApiPath, 'utf8');
-const enterprise = fs.readFileSync(enterprisePath, 'utf8');
-const enterpriseSpine = fs.readFileSync(enterpriseSpinePath, 'utf8');
-const noApiGate = fs.readFileSync(noApiGatePath, 'utf8');
-const localRepository = fs.readFileSync(localRepositoryPath, 'utf8');
-const dispatchBrain = fs.readFileSync(dispatchBrainPath, 'utf8');
-const supplyBrain = fs.readFileSync(supplyBrainPath, 'utf8');
-const providerCompetency = fs.readFileSync(providerCompetencyPath, 'utf8');
-const shiftMarketplace = fs.readFileSync(shiftMarketplacePath, 'utf8');
-const arrivalMission = fs.readFileSync(arrivalMissionPath, 'utf8');
-const visitCloseout = fs.readFileSync(visitCloseoutPath, 'utf8');
-const kitReconciliation = fs.readFileSync(kitReconciliationPath, 'utf8');
-const postVisitQuality = fs.readFileSync(postVisitQualityPath, 'utf8');
-const localExecution = fs.readFileSync(localExecutionPath, 'utf8');
-const localReliability = fs.readFileSync(localReliabilityPath, 'utf8');
-const localScale = fs.readFileSync(localScalePath, 'utf8');
-const localEnterpriseFinish = fs.readFileSync(localEnterpriseFinishPath, 'utf8');
-const productionHealthcareCore = fs.readFileSync(productionHealthcareCorePath, 'utf8');
-const preApiPhaseRoadmap = fs.readFileSync(preApiPhaseRoadmapPath, 'utf8');
-const productionHealthcareMigration = fs.readFileSync(productionHealthcareMigrationPath, 'utf8');
-const clinicalPolicy = fs.readFileSync(clinicalPolicyPath, 'utf8');
-const adminMock = fs.readFileSync(adminMockPath, 'utf8');
-const admin = fs.readFileSync(adminPath, 'utf8');
-const member = fs.readFileSync(memberPath, 'utf8');
-const nurse = fs.readFileSync(nursePath, 'utf8');
+function readWithReexports(filePath, seen = new Set()) {
+  if (seen.has(filePath)) return '';
+  seen.add(filePath);
+  const text = fs.readFileSync(filePath, 'utf8');
+  const dir = path.dirname(filePath);
+  const reexportText = [...text.matchAll(/export\s+\*\s+from\s+['"]([^'"]+)['"]/g)]
+    .map((match) => readWithReexports(path.resolve(dir, match[1]), seen))
+    .join('\n');
+  return `${text}\n${reexportText}`;
+}
+
+const kernel = readWithReexports(kernelPath);
+const noApi = readWithReexports(noApiPath);
+const enterprise = readWithReexports(enterprisePath);
+const enterpriseSpine = readWithReexports(enterpriseSpinePath);
+const noApiGate = readWithReexports(noApiGatePath);
+const localRepository = readWithReexports(localRepositoryPath);
+const dispatchBrain = readWithReexports(dispatchBrainPath);
+const supplyBrain = readWithReexports(supplyBrainPath);
+const providerCompetency = readWithReexports(providerCompetencyPath);
+const shiftMarketplace = readWithReexports(shiftMarketplacePath);
+const arrivalMission = readWithReexports(arrivalMissionPath);
+const visitCloseout = readWithReexports(visitCloseoutPath);
+const kitReconciliation = readWithReexports(kitReconciliationPath);
+const postVisitQuality = readWithReexports(postVisitQualityPath);
+const localExecution = readWithReexports(localExecutionPath);
+const localReliability = readWithReexports(localReliabilityPath);
+const localScale = readWithReexports(localScalePath);
+const localEnterpriseFinish = readWithReexports(localEnterpriseFinishPath);
+const productionHealthcareCore = readWithReexports(productionHealthcareCorePath);
+const preApiPhaseRoadmap = readWithReexports(preApiPhaseRoadmapPath);
+const productionHealthcareMigration = readWithReexports(productionHealthcareMigrationPath);
+const clinicalPolicy = readWithReexports(clinicalPolicyPath);
+const adminMock = readWithReexports(adminMockPath);
+const admin = readWithReexports(adminPath);
+const member = readWithReexports(memberPath);
+const nurse = readWithReexports(nursePath);
 
 const buildItemLines = kernel
   .split('\n')

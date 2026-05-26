@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useMotionValue, useTransform, animate } from 'framer-motion';
+import { useMotionValue, useTransform, animate } from '@/components/ui/PageTransitionMotion';
 
 /**
  * Counts from previous value to `value` on change using editorial easing.

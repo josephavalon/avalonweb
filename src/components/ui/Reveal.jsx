@@ -16,7 +16,7 @@
  *   - pointerEvents:'none' in initial state prevents opacity:0 sections from
  *     intercepting scroll gestures before they animate in.
  */
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 
 const EASE = [0.16, 1, 0.3, 1];
 

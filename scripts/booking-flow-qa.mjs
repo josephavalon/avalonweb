@@ -115,7 +115,9 @@ async function evalOnPage(cdp, expression) {
     awaitPromise: true,
     returnByValue: true,
   });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'Page evaluation failed.');
+  if (result.exceptionDetails) {
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text || 'Page evaluation failed.');
+  }
   return result.result.value;
 }
 

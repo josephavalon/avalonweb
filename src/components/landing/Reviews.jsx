@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumHover } from '@/lib/motion';
 
 // Venue / partner text strip — pure text, never breaks on load.
