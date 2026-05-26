@@ -13,12 +13,18 @@ const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 // ── Demo accounts (replace with real auth before production) ──────────────
 const DEMO_USERS = {
-  'ADMIN001':  { role: 'admin',    name: 'Admin',  redirect: '/admin',              status: 'active' },
-  'CLIENT001': { role: 'client',   name: 'Sarah',       redirect: '/members/dashboard',  status: 'active' },
-  'NURSE001':  { role: 'provider', name: 'Stephanie R.', redirect: '/provider/shift', status: 'active' },
-  'NP001':     { role: 'np',       name: 'Mobile GFE NP', redirect: '/provider/role-os', status: 'active' },
-  'MD001':     { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os', status: 'active' },
-  'PHYSICIAN001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os', status: 'active' },
+  'ADMIN001':     { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
+  'ADMIN0001':    { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
+  'CLIENT001':    { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
+  'CLIENT0001':   { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
+  'NURSE001':     { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
+  'NURSE0001':    { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
+  'NP001':        { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
+  'NP0001':       { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
+  'MD001':        { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
+  'MD0001':       { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
+  'PHYSICIAN001': { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
+  'PHYSICIAN0001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
 };
 const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
 // ─────────────────────────────────────────────────────────────────────────
@@ -90,6 +96,7 @@ export function AuthStoreProvider({ children }) {
       const sessionUser = {
         id:       createSessionId(),
         username: usernameKey,
+        canonicalUsername: profile.canonical || usernameKey,
         name:     profile.name,
         role:     profile.role,
         redirect: profile.redirect,
@@ -101,7 +108,7 @@ export function AuthStoreProvider({ children }) {
         securityWall: 'pre-api-hard-wall',
       };
 
-      seedDemoState(usernameKey);
+      seedDemoState(profile.canonical || usernameKey);
       setUser(sessionUser);
       writeSession(sessionUser);
       appendActivity('Signed in', { role: sessionUser.role, username: usernameKey, authMode: sessionUser.authMode });

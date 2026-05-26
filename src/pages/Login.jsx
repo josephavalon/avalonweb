@@ -9,10 +9,10 @@ import { PRE_API_SECURITY_MODE, isDemoAuthAllowed } from '@/lib/preApiSecurity';
 const EASE = [0.16, 1, 0.3, 1];
 
 const DEMO_SHORTCUTS = [
-  { username: 'CLIENT001', label: 'Client', detail: 'booking, prep, support', icon: UserRound },
-  { username: 'NURSE001', label: 'Nurse', detail: 'shift, route, chart', icon: Stethoscope },
-  { username: 'NP001', label: 'NP', detail: 'GFE, approvals', icon: ShieldCheck },
-  { username: 'PHYSICIAN001', label: 'MD', detail: 'standing orders', icon: ShieldCheck },
+  { username: 'CLIENT0001', label: 'Client', detail: 'booking, prep, support', icon: UserRound },
+  { username: 'NURSE0001', label: 'Nurse', detail: 'shift, route, chart', icon: Stethoscope },
+  { username: 'NP0001', label: 'NP', detail: 'GFE, approvals', icon: ShieldCheck },
+  { username: 'PHYSICIAN0001', label: 'MD', detail: 'standing orders', icon: ShieldCheck },
   { username: 'ADMIN001', label: 'Admin', detail: 'handoff, dispatch, ops', icon: ShieldCheck },
 ];
 const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
@@ -182,7 +182,7 @@ function SignInTab({ onSwitchTab }) {
       <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>
         <Field id="username" label="Username or Email" value={username}
           onChange={(e) => { setUsername(e.target.value); setFieldError(''); }}
-          autoComplete="username" placeholder="CLIENT001, NURSE001, ADMIN001" />
+          autoComplete="username" placeholder="CLIENT0001, NURSE0001, ADMIN001" />
 
         <Field id="password" label="Password" type={showPw ? 'text' : 'password'} value={password}
           onChange={(e) => { setPassword(e.target.value); setFieldError(''); }}
@@ -222,10 +222,11 @@ function SignInTab({ onSwitchTab }) {
               type="button"
               onClick={() => handleDemoSignIn(demoUsername)}
               disabled={loading}
-              className="min-h-[64px] cursor-pointer rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2 py-2 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
+              className="min-h-[72px] cursor-pointer rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2 py-2 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
             >
               <Icon className="mb-2 h-3.5 w-3.5 text-foreground/55" strokeWidth={1.7} />
               <p className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">{label}</p>
+              <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-foreground/38">{demoUsername}</p>
             </button>
           ))}
         </div>
