@@ -231,7 +231,7 @@ function SignInTab({ onSwitchTab }) {
           ))}
         </div>
           <p className="mt-2 font-body text-[10px] leading-relaxed text-foreground/34">
-            Local simulation only. {PRE_API_SECURITY_MODE.label}. No live clinical access.
+            Local simulation only. {PRE_API_SECURITY_MODE.label}. Beta/demo access. No live clinical access.
           </p>
       </div>
       )}

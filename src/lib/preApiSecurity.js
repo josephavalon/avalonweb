@@ -8,6 +8,10 @@ const PRIVATE_HOST_PATTERNS = [
   /^172\.(1[6-9]|2\d|3[0-1])\./,
 ];
 
+const BETA_HOST_PATTERNS = [
+  /^snooches\.avalonvitality\.co$/i,
+];
+
 function currentHost() {
   if (typeof window === 'undefined') return '';
   return window.location.hostname || '';
@@ -15,6 +19,10 @@ function currentHost() {
 
 export function isLocalSimulationHost(host = currentHost()) {
   return PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(String(host)));
+}
+
+export function isBetaSimulationHost(host = currentHost()) {
+  return BETA_HOST_PATTERNS.some((pattern) => pattern.test(String(host)));
 }
 
 export function isLiveApiArmed() {
@@ -25,15 +33,20 @@ export function isLiveApiArmed() {
 export function isDemoAuthAllowed() {
   const env = import.meta.env || {};
   if (env.VITE_AVALON_DEMO_AUTH === 'false') return false;
-  return !isLiveApiArmed() && isLocalSimulationHost();
+  return !isLiveApiArmed() && (isLocalSimulationHost() || isBetaSimulationHost());
 }
 
 export const PRE_API_SECURITY_MODE = {
   mode: isLiveApiArmed() ? 'live-api-armed' : 'pre-api-hard-wall',
   localSimulation: isLocalSimulationHost(),
+  betaSimulation: isBetaSimulationHost(),
   liveApiArmed: isLiveApiArmed(),
   demoAuthAllowed: isDemoAuthAllowed(),
-  label: isLiveApiArmed() ? 'Live API armed' : 'Local simulation only',
+  label: isLiveApiArmed()
+    ? 'Live API armed'
+    : isBetaSimulationHost()
+      ? 'Beta simulation only'
+      : 'Local simulation only',
 };
 
 export const PHI_STORAGE_KEYS = [
