@@ -100,9 +100,12 @@ export default function Navbar({ showBack = false }) {
     }`}>
 
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
-      <div className={`hidden md:grid md:grid-cols-[1fr_auto_1fr] items-center px-8 transition-all duration-500 ease-editorial ${
+      <div
+        className={`hidden md:grid items-center px-8 transition-all duration-500 ease-editorial ${
         scrolled ? 'h-14' : 'h-16'
-      }`}>
+        }`}
+        style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
+      >
 
         {/* Col 1 — logo, left-aligned */}
         <div className="flex items-center gap-4">

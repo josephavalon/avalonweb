@@ -277,16 +277,16 @@ export default function Subscription() {
       <Footer />
 
       <motion.div
-        className="md:hidden fixed inset-x-0 z-40 px-3 pt-2 pointer-events-none"
-        style={{ bottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}
+        className="md:hidden fixed inset-x-0 z-40 px-2 pt-1 pointer-events-none"
+        style={{ bottom: 'max(env(safe-area-inset-bottom), 0.2rem)' }}
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: EASE, delay: 0.35 }}
       >
-        <div className="pointer-events-auto rounded-[1.75rem] border border-foreground/10 bg-background/85 backdrop-blur-2xl shadow-[0_-18px_70px_rgba(0,0,0,0.28)] p-2">
+        <div className="pointer-events-auto rounded-[1.1rem] border border-foreground/10 bg-background/85 backdrop-blur-2xl shadow-[0_-12px_36px_rgba(0,0,0,0.22)] p-1">
           <button
             onClick={() => setSelectedTier(activeTier)}
-            className="min-h-[58px] w-full rounded-full bg-foreground px-5 font-body text-[11px] font-semibold tracking-[0.2em] uppercase text-background flex items-center justify-center gap-2"
+            className="min-h-[44px] w-full rounded-full bg-foreground px-3.5 font-body text-[9px] font-semibold tracking-[0.15em] uppercase text-background flex items-center justify-center gap-1.5"
           >
             {activeActionLabel} <ArrowRight className="h-3.5 w-3.5" />
           </button>

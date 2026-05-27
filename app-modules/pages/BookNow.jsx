@@ -1069,10 +1069,10 @@ export default function BookNow() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-3 rounded-[1.35rem] border border-foreground/10 bg-background/86 p-2 shadow-[0_-18px_80px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
+      <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 lg:hidden">
+        <div className="mx-auto flex max-w-lg items-center gap-1.5 rounded-[1rem] border border-foreground/10 bg-background/86 p-1 shadow-[0_-12px_40px_hsl(var(--foreground)/0.09)] backdrop-blur-2xl">
           {step > 0 && (
-            <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[52px] rounded-full border border-foreground/12 px-5 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/62">
+            <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[44px] rounded-full border border-foreground/12 px-3.5 font-body text-[9px] font-semibold uppercase tracking-[0.12em] text-foreground/62">
               Back
             </button>
           )}
@@ -1081,7 +1081,7 @@ export default function BookNow() {
             onClick={step < LAST_STEP ? next : submit}
             disabled={step === LAST_STEP && !canSubmit}
             aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
-            className="flex min-h-[52px] flex-1 items-center justify-between rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background disabled:opacity-35"
+            className="flex min-h-[44px] flex-1 items-center justify-between rounded-full bg-foreground px-3.5 font-body text-[9px] font-semibold uppercase tracking-[0.13em] text-background disabled:opacity-35"
           >
             <span>{step < LAST_STEP ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`}</span>
             <span>{currency(subtotal)}</span>

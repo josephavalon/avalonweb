@@ -20,7 +20,7 @@ const Z_INDEX_CLASS = {
   high: 'z-[100]',
 };
 
-const shellBackground = 'linear-gradient(180deg, transparent, hsl(var(--background) / 0.96) 24%)';
+const shellBackground = 'linear-gradient(180deg, transparent, hsl(var(--background) / 0.94) 34%)';
 
 function resolveActive(pathname, item) {
   if (typeof item.active === 'boolean') return item.active;
@@ -77,14 +77,14 @@ export default function MobileNavBar({
 
   return (
     <nav
-      className={`fixed inset-x-0 bottom-0 ${zIndexClass} px-3 pt-2 backdrop-blur-2xl ${mobileOnly ? 'md:hidden' : ''} ${className}`}
+      className={`fixed inset-x-0 bottom-0 ${zIndexClass} px-2 pt-1 backdrop-blur-2xl ${mobileOnly ? 'md:hidden' : ''} ${className}`}
       aria-label={ariaLabel}
       style={{
         background: shellBackground,
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.7rem)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.2rem)',
       }}
     >
-      <div className={`mx-auto grid ${maxWidthClass} ${gridClass} gap-1.5 rounded-[24px] border border-foreground/[0.10] bg-background/82 p-1.5 shadow-[0_-18px_54px_rgba(0,0,0,0.34)]`}>
+      <div className={`mx-auto grid ${maxWidthClass} ${gridClass} gap-0.5 rounded-[18px] border border-foreground/[0.10] bg-background/82 p-0.5 shadow-[0_-12px_34px_rgba(0,0,0,0.24)]`}>
         {items.map((item) => {
           const active = resolveActive(pathname, item);
           const Icon = item.icon;
@@ -98,14 +98,14 @@ export default function MobileNavBar({
           const content = (
             <>
               <span
-                className="relative flex h-9 w-11 items-center justify-center rounded-full transition-colors"
+                className="relative flex h-7 w-10 items-center justify-center rounded-full transition-colors"
                 style={{
                   background: primary ? 'hsl(var(--foreground))' : active ? 'hsl(var(--foreground) / 0.07)' : 'transparent',
                   color: primary ? 'hsl(var(--background))' : active ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.48)',
                   boxShadow: primary ? '0 10px 30px hsl(var(--foreground) / 0.18)' : 'none',
                 }}
               >
-                {Icon && <Icon className="h-5 w-5" strokeWidth={primary || active ? 1.95 : 1.55} />}
+                {Icon && <Icon className="h-[18px] w-[18px]" strokeWidth={primary || active ? 1.95 : 1.55} />}
                 {item.badge ? (
                   <span className="absolute right-1.5 top-1.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-accent px-[3px] font-body text-[8px] font-bold text-background">
                     {item.badge > 9 ? '9+' : item.badge}
@@ -113,7 +113,7 @@ export default function MobileNavBar({
                 ) : null}
               </span>
               <span
-                className="font-body text-[8px] font-bold uppercase leading-none tracking-[0.14em]"
+                className="font-body text-[7px] font-bold uppercase leading-none tracking-[0.13em]"
                 style={{ color: primary || active ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.58)' }}
               >
                 {item.label}
@@ -124,7 +124,7 @@ export default function MobileNavBar({
           return renderAction(
             { ...item, disabled },
             content,
-            `flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-1 text-center transition-all duration-200 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 disabled:pointer-events-none disabled:opacity-40 ${item.className || ''}`,
+            `flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-center transition-all duration-200 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 disabled:pointer-events-none disabled:opacity-40 ${item.className || ''}`,
             itemStyle,
             active ? 'page' : undefined,
             item.to || item.href || item.label

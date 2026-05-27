@@ -34,10 +34,10 @@ const GROUPS = [
 ];
 
 const DESKTOP_LINK =
-  'flex min-h-11 items-center rounded-lg px-1.5 py-1 -mx-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
+  'avalon-footer-link flex min-h-11 items-center rounded-md px-1.5 py-1 -mx-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
 
 const DESKTOP_CONTACT_LINK =
-  'flex min-h-11 items-center gap-2 rounded-lg px-1.5 py-1 -mx-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
+  'avalon-footer-link flex min-h-11 items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
 
 function FooterGroup({ group, open, onToggle }) {
   return (
@@ -121,11 +121,11 @@ export default function Footer() {
   const [openGroup, setOpenGroup] = useState(null);
 
   return (
-    <footer className="pt-6 pb-4 px-4 md:pt-8 md:pb-5">
+    <footer className="pt-6 pb-4 px-4 md:pt-6 md:pb-4">
       <div className="max-w-6xl mx-auto">
 
         {/* Brand */}
-        <div className="mb-5 md:mb-6">
+        <div className="mb-5 md:mb-4">
           <div className="font-heading text-2xl tracking-widest text-foreground">AVALON</div>
           <div className="font-body text-xs tracking-[0.3em] text-foreground/60 -mt-1">VITALITY</div>
           <p className="font-body text-xs text-foreground/55 leading-relaxed mt-3 max-w-sm">
@@ -147,12 +147,12 @@ export default function Footer() {
         </div>
 
         {/* Mobile: single column stacked. Desktop: 4-col grid */}
-        <div className="hidden md:grid md:grid-cols-4 gap-x-7 gap-y-5 mb-5">
+        <div className="hidden md:grid md:grid-cols-4 gap-x-6 gap-y-4 mb-4">
 
           {/* Services */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Services</p>
-            <div className="space-y-1 lg:space-y-0.5">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2">Services</p>
+            <div className="space-y-0.5">
               {SERVICES.map((l) => (
                 <Link key={l.label} to={l.to} className={DESKTOP_LINK}>
                   {l.label}
@@ -163,8 +163,8 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Company</p>
-            <div className="space-y-1 lg:space-y-0.5">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2">Company</p>
+            <div className="space-y-0.5">
               {COMPANY.map((l) => (
                 <Link key={l.label} to={l.to} className={DESKTOP_LINK}>
                   {l.label}
@@ -175,8 +175,8 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Contact</p>
-            <div className="space-y-1">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2">Contact</p>
+            <div className="space-y-0.5">
               <a href="mailto:support@avalonvitality.co" className={DESKTOP_CONTACT_LINK}>
                 <Mail className="w-3.5 h-3.5 shrink-0" />
                 support@avalonvitality.co
@@ -185,11 +185,11 @@ export default function Footer() {
                 <Phone className="w-3.5 h-3.5 shrink-0" />
                 (415) 980-7708
               </a>
-              <div className="flex min-h-11 items-center gap-2 font-body text-xs text-foreground/50">
+              <div className="avalon-footer-link flex min-h-11 items-center gap-2 font-body text-xs text-foreground/50">
                 <Clock className="w-3.5 h-3.5 shrink-0" />
                 8AM-8PM
               </div>
-              <div className="flex min-h-11 items-center gap-2 font-body text-xs text-foreground/50">
+              <div className="avalon-footer-link flex min-h-11 items-center gap-2 font-body text-xs text-foreground/50">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
                 SF Bay Area
               </div>
@@ -198,8 +198,8 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2.5">Legal</p>
-            <div className="space-y-1 lg:space-y-0.5">
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-2">Legal</p>
+            <div className="space-y-0.5">
               {LEGAL.map((l) => (
                 <Link key={l.label} to={l.to} className={DESKTOP_LINK}>
                   {l.label}
@@ -211,7 +211,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-foreground/[0.07] pt-3 md:pt-4 space-y-1.5 md:space-y-2">
+        <div className="border-t border-foreground/[0.07] pt-3 md:pt-3 space-y-1.5 md:space-y-1">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <p className="font-body text-[11px] text-foreground/45 leading-relaxed">
               © 2026 Avalon Vitality. All rights reserved.
