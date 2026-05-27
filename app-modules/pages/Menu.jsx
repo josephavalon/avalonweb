@@ -21,6 +21,7 @@ import { useSeo } from '@/lib/seo';
 import { EASE, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import PremiumButton from '@/components/ui/PremiumButton';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -113,7 +114,6 @@ const FEATURED_ORDER = new Map(FEATURED_KEYS.map((key, index) => [key, index]));
 
 const CONTROL_TRANSITION = { duration: 0.48, ease: EASE };
 const CARD_TRANSITION = { duration: 0.54, ease: EASE };
-const FOLDOUT_TRANSITION = { duration: 0.58, ease: EASE };
 const MotionLink = motion.create(Link);
 
 function priceFor(session) {
@@ -299,7 +299,7 @@ function CompactRow({ item, type = 'addon' }) {
 function Foldout({ title, sub, icon: Icon, children }) {
   const [open, setOpen] = useState(false);
   return (
-    <motion.div layout transition={{ layout: FOLDOUT_TRANSITION }} className="av-glass-sweep relative overflow-hidden rounded-[1.1rem] border border-foreground/[0.10] bg-background/58 shadow-[0_18px_70px_hsl(var(--foreground)/0.04)] backdrop-blur-xl md:rounded-[1.45rem]">
+    <div className="av-glass-sweep relative overflow-hidden rounded-[1.1rem] border border-foreground/[0.10] bg-background/58 shadow-[0_18px_70px_hsl(var(--foreground)/0.04)] backdrop-blur-xl md:rounded-[1.45rem]">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -317,31 +317,20 @@ function Foldout({ title, sub, icon: Icon, children }) {
           <ChevronDown className="h-4 w-4" strokeWidth={1.8} />
         </motion.span>
       </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0, y: -8, filter: 'blur(6px)' }}
-            animate={{ height: 'auto', opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ height: 0, opacity: 0, y: -8, filter: 'blur(6px)' }}
-            transition={FOLDOUT_TRANSITION}
-            className="overflow-hidden"
-          >
-            <motion.div
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              variants={{
-                hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
-                show: { transition: { staggerChildren: 0.045, delayChildren: 0.08 } },
-              }}
-              className="border-t border-foreground/[0.06] px-4"
-            >
-              {children}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      <SmoothDisclosure open={open}>
+        <motion.div
+          initial={false}
+          animate={open ? 'show' : 'hidden'}
+          variants={{
+            hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
+            show: { transition: { staggerChildren: 0.04, delayChildren: 0.04 } },
+          }}
+          className="border-t border-foreground/[0.06] px-4"
+        >
+          {children}
+        </motion.div>
+      </SmoothDisclosure>
+    </div>
   );
 }
 
@@ -527,7 +516,7 @@ export default function Menu() {
         </section>
 
         <section className="mt-8 grid gap-2 md:mt-14 md:grid-cols-2 md:gap-3">
-          <Foldout title="IV Add-ons" sub="Boosters added to select IV visits" icon={Droplets}>
+          <Foldout title="IV Enhancements" sub="Optional protocol additions for select IV visits" icon={Droplets}>
             {standardAddons.map((item) => (
               <CompactRow key={item.label} item={item} />
             ))}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { Plus, Minus, Search } from 'lucide-react';
-import { EASE_OUT_EXPO } from '@/lib/motion';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const FAQ_SECTIONS = [
   {
@@ -46,7 +46,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Can I customize my drip?',
-        a: 'Yes. Every session can be enhanced with add-ons: extra fluids, high-dose Vitamin C, glutathione push, NAD+ (250mg), magnesium boost, and more.',
+        a: 'Yes. Every session can be enhanced with add-ons: extra fluids, high-dose Vitamin C, glutathione push, NAD+ (250mg), magnesium support, and more.',
       },
       {
         q: 'How long does a session take?',
@@ -138,20 +138,11 @@ function FAQItem({ faq, isOpen, onToggle }) {
           }
         </div>
       </div>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
-          >
-            <div className="px-5 pb-4">
-              <p className="font-body text-sm text-foreground/70 leading-relaxed pt-2">{faq.a}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SmoothDisclosure open={isOpen}>
+        <div className="px-5 pb-4">
+          <p className="font-body text-sm text-foreground/70 leading-relaxed pt-2">{faq.a}</p>
+        </div>
+      </SmoothDisclosure>
     </div>
   );
 }

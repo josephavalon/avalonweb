@@ -37,6 +37,7 @@ import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
 import { getDepositAmountDollars } from '@/lib/checkoutConfig';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { BOOKABLE_SUBSCRIPTION_TIERS, FEATURED_SUBSCRIPTION_TIER_KEY } from '@/config/subscriptionTiers';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
@@ -343,15 +344,15 @@ function buildAddonCatalog(product) {
   const imShots = IM_SHOTS.map((item) => ({ ...item, type: 'im', cartKey: `im-${item.label}` }));
   const byLabel = new Map([...ivAddons, ...imShots].map((item) => [item.label, item]));
 
-  const coreLabels = ['Extra Fluid', 'Extra Ingredients', 'Magnesium Boost', 'Glutathione Push · 600mg', 'Glutathione Push · 1200mg'];
+  const coreLabels = ['Extra Fluid', 'Extra Ingredients', 'Magnesium Support', 'Glutathione Push · 600mg', 'Glutathione Push · 1200mg'];
   const advancedLabels = ['Vitamin C IV Push · 5g', 'Vitamin C IV Push · 10g', 'Vitamin C IV Push · 15g', 'NAD+ (250mg)', 'NAD+ (500mg)', 'NAD+ (1000mg)'];
   const shotLabels = ['B12', 'MIC', 'NAD+', 'Glutathione IM · 200mg', 'Glutathione IM · 400mg', 'Vitamin C IM · 500mg', 'Vitamin D', 'Biotin'];
 
   const groups = [
     {
       key: 'core',
-      label: 'Core boosts',
-      sub: 'Fast add-ons the nurse can deploy with the IV.',
+      label: 'Core enhancements',
+      sub: 'Fast protocol options the nurse can deploy with the IV.',
       items: coreLabels.map((label) => byLabel.get(label)).filter(Boolean),
     },
     {
@@ -372,6 +373,59 @@ function buildAddonCatalog(product) {
     all: [...byLabel.values()],
     groups,
   };
+}
+
+function AddOnGroup({ group, defaultOpen = false, selectedCount, selectedLabels, onToggle }) {
+  const [open, setOpen] = useState(defaultOpen || selectedCount > 0);
+
+  useEffect(() => {
+    if (selectedCount > 0) setOpen(true);
+  }, [selectedCount]);
+
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03]">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex min-h-[64px] w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-foreground/[0.035]"
+      >
+        <div>
+          <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/72">{group.label}</p>
+          <p className="mt-1 font-body text-xs text-foreground/45">{group.sub}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/52">
+          {selectedCount ? `${selectedCount} on` : open ? 'Close' : 'Open'}
+        </span>
+      </button>
+      <SmoothDisclosure open={open}>
+        <div className="grid gap-2 border-t border-foreground/8 p-3 sm:grid-cols-2">
+          {group.items.map((item) => {
+            const active = selectedLabels.includes(item.label);
+            return (
+              <button
+                key={`${group.key}-${item.label}`}
+                type="button"
+                onClick={() => onToggle(item.label)}
+                className={`flex min-h-[62px] items-center justify-between gap-3 rounded-2xl border px-3 text-left transition-colors ${
+                  active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-background/35 text-foreground hover:border-foreground/22'
+                }`}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-body text-xs font-semibold">{item.label}</span>
+                  <span className={`mt-1 block truncate font-body text-[10px] ${active ? 'text-background/58' : 'text-foreground/42'}`}>{item.desc || item.type}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2 font-body text-xs font-semibold">
+                  {currency(item.price)}
+                  {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </SmoothDisclosure>
+    </div>
+  );
 }
 
 function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, onNone, onToggle, onContinue }) {
@@ -411,45 +465,14 @@ function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, 
         {groups.map((group, index) => {
           const selectedInGroup = group.items.filter((item) => state.addOns.includes(item.label)).length;
           return (
-            <details
+            <AddOnGroup
               key={group.key}
-              open={index === 0 || selectedInGroup > 0}
-              className="group overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03]"
-            >
-              <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-                <div>
-                  <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/72">{group.label}</p>
-                  <p className="mt-1 font-body text-xs text-foreground/45">{group.sub}</p>
-                </div>
-                <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/52">
-                  {selectedInGroup ? `${selectedInGroup} on` : 'Open'}
-                </span>
-              </summary>
-              <div className="grid gap-2 border-t border-foreground/8 p-3 sm:grid-cols-2">
-                {group.items.map((item) => {
-                  const active = state.addOns.includes(item.label);
-                  return (
-                    <button
-                      key={`${group.key}-${item.label}`}
-                      type="button"
-                      onClick={() => onToggle(item.label)}
-                      className={`flex min-h-[62px] items-center justify-between gap-3 rounded-2xl border px-3 text-left transition-colors ${
-                        active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-background/35 text-foreground hover:border-foreground/22'
-                      }`}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate font-body text-xs font-semibold">{item.label}</span>
-                        <span className={`mt-1 block truncate font-body text-[10px] ${active ? 'text-background/58' : 'text-foreground/42'}`}>{item.desc || item.type}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2 font-body text-xs font-semibold">
-                        {currency(item.price)}
-                        {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </details>
+              group={group}
+              defaultOpen={index === 0}
+              selectedCount={selectedInGroup}
+              selectedLabels={state.addOns}
+              onToggle={onToggle}
+            />
           );
         })}
       </div>

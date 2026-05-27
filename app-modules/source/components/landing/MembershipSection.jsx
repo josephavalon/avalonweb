@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
+import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import { Circle, CircleDot, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 import { BOOKABLE_SUBSCRIPTION_TIERS, FEATURED_SUBSCRIPTION_TIER_KEY } from '@/config/subscriptionTiers';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const MotionLink = motion.create(Link);
 
@@ -46,22 +47,13 @@ function TierComparator() {
         </motion.span>
       </motion.button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={premiumExpandTransition}
-            style={{ overflow: 'hidden' }}
-          >
-            <motion.div
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              variants={premiumListContainer(0.035, 0.05)}
-              className="border-t border-foreground/[0.07]"
-            >
+      <SmoothDisclosure open={open}>
+        <motion.div
+          initial={false}
+          animate={open ? 'show' : 'hidden'}
+          variants={premiumListContainer(0.025, 0.03)}
+          className="border-t border-foreground/[0.07]"
+        >
               {/* Header */}
               <div className="grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.07] bg-white/[0.02]">
                 <div className="px-4 py-2.5" />
@@ -90,10 +82,8 @@ function TierComparator() {
                   ))}
                 </motion.div>
               ))}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      </SmoothDisclosure>
     </div>
   );
 }

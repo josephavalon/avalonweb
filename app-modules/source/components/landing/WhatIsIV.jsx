@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { FlaskConical, Clock, ShieldCheck, Stethoscope, SlidersHorizontal, UserCheck, TrendingUp, Minus, ChevronDown } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const MODALITIES = [
   {
@@ -104,22 +105,11 @@ function FaqItem({ item }) {
           strokeWidth={2}
         />
       </motion.button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="body"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <p className="px-4 pb-4 pt-1 font-body text-xs text-foreground/50 leading-relaxed border-t border-white/[0.05]">
-              {item.body}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SmoothDisclosure open={open}>
+        <p className="px-4 pb-4 pt-1 font-body text-xs text-foreground/50 leading-relaxed border-t border-white/[0.05]">
+          {item.body}
+        </p>
+      </SmoothDisclosure>
     </div>
   );
 }
@@ -154,16 +144,8 @@ function ModalityRow({ mod, index, open, onToggle }) {
         </motion.div>
       </motion.button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
+      <SmoothDisclosure open={open}>
+        <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
 
               {/* Compact stat pills */}
               <div className="flex flex-wrap gap-2">
@@ -186,10 +168,8 @@ function ModalityRow({ mod, index, open, onToggle }) {
                 ))}
               </div>
 
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }

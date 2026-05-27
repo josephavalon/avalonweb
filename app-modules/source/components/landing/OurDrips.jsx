@@ -6,6 +6,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -188,17 +189,8 @@ export default function OurDrips() {
                 </button>
 
                 {/* Expanded drip list */}
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      key="drips"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: EASE }}
-                      style={{ overflow: 'hidden' }}
-                    >
-                      <div className="border-t border-white/[0.06] px-6 pb-5 pt-4 space-y-2">
+                <SmoothDisclosure open={isOpen}>
+                  <div className="border-t border-white/[0.06] px-6 pb-5 pt-4 space-y-2">
                         {cat.drips.map((drip) => (
                           <div
                             key={drip.name}
@@ -214,10 +206,8 @@ export default function OurDrips() {
                         >
                           View & Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
                         </Link>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                </SmoothDisclosure>
               </motion.div>
             );
           })}

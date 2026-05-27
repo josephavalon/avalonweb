@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
+import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
   Droplets, Zap, ShieldCheck, Sparkles, FlaskConical,
   Syringe, Star, Plus, ArrowRight, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
@@ -75,7 +76,7 @@ const TOP_CATEGORIES = [
   },
   {
     key: 'addons',
-    label: 'Boosters',
+    label: 'Enhancements',
     sub: 'By review',
     icon: Plus,
     type: 'flat',
@@ -89,7 +90,7 @@ function SubRow({ sub }) {
   const Icon = sub.icon;
 
   return (
-    <motion.div layout className="av-treatment-subcard overflow-hidden rounded-xl border">
+    <div className="av-treatment-subcard overflow-hidden rounded-xl border">
       <motion.button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -107,22 +108,13 @@ function SubRow({ sub }) {
         </motion.span>
       </motion.button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={FOLDOUT_TRANSITION}
-            style={{ overflow: 'hidden' }}
-          >
-            <motion.div
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              variants={premiumListContainer(0.04, 0.06)}
-              className="grid grid-cols-2 gap-1.5 border-t border-foreground/[0.06] px-4 pb-4 pt-3"
-            >
+      <SmoothDisclosure open={open}>
+        <motion.div
+          initial={false}
+          animate={open ? 'show' : 'hidden'}
+          variants={premiumListContainer(0.025, 0.03)}
+          className="grid grid-cols-2 gap-1.5 border-t border-foreground/[0.06] px-4 pb-4 pt-3"
+        >
               {sub.treatments.map((t) => (
                 <MotionLink
                   key={t.label}
@@ -137,11 +129,9 @@ function SubRow({ sub }) {
                   </div>
                 </MotionLink>
               ))}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+        </motion.div>
+      </SmoothDisclosure>
+    </div>
   );
 }
 
@@ -151,9 +141,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
 
   return (
     <motion.div
-      layout
       whileHover={premiumHover}
-      transition={{ layout: FOLDOUT_TRANSITION }}
       className={`av-treatment-card rounded-2xl border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
       {/* Header */}
@@ -183,22 +171,13 @@ function CategoryRow({ cat, index, open, onToggle }) {
       </motion.button>
 
       {/* Expanded body */}
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={FOLDOUT_TRANSITION}
-            style={{ overflow: 'hidden' }}
-          >
-            <motion.div
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              variants={premiumListContainer(0.045, 0.07)}
-              className="space-y-2 border-t border-foreground/[0.06] px-4 pb-4 pt-4"
-            >
+      <SmoothDisclosure open={open}>
+        <motion.div
+          initial={false}
+          animate={open ? 'show' : 'hidden'}
+          variants={premiumListContainer(0.03, 0.04)}
+          className="space-y-2 border-t border-foreground/[0.06] px-4 pb-4 pt-4"
+        >
               {cat.type === 'nested' ? (
                 // Sub-category rows
                 cat.data.map((sub) => <SubRow key={sub.label} sub={sub} />)
@@ -221,10 +200,8 @@ function CategoryRow({ cat, index, open, onToggle }) {
                   ))}
                 </div>
               )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }

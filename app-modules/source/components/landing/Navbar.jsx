@@ -5,6 +5,7 @@ import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransi
 import { EASE, premiumSelectionTransition, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import PremiumButton from '@/components/ui/PremiumButton';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const THEMES = ['dark', 'light'];
 const THEME_STORAGE_KEY = 'avalon.theme';
@@ -223,19 +224,10 @@ export default function Navbar({ showBack = false }) {
 
       {/* Mobile dropdown */}
       <div className="md:hidden overflow-hidden rounded-b-3xl">
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, y: -8, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, height: 'auto', y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, height: 0, y: -8, filter: 'blur(8px)' }}
-              transition={{ duration: 0.54, ease: EASE }}
-              className="px-2 pb-2"
-            >
+        <SmoothDisclosure open={mobileOpen} className="px-2" innerClassName="pb-2">
               <motion.div
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
+                initial={false}
+                animate={mobileOpen ? 'visible' : 'hidden'}
                 variants={{
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
@@ -314,9 +306,7 @@ export default function Navbar({ showBack = false }) {
                 )}
 
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </SmoothDisclosure>
       </div>
     </motion.nav>
   );

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { ChevronDown } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const STEPS = [
   {
@@ -71,21 +72,11 @@ function StepCard({ step, index, open, onToggle }) {
         </motion.div>
       </motion.button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.42, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="border-t border-white/[0.06] px-5 pb-5 pt-4">
-              <p className="font-body text-xs text-foreground/50 leading-relaxed">{step.desc}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SmoothDisclosure open={open}>
+        <div className="border-t border-white/[0.06] px-5 pb-5 pt-4">
+          <p className="font-body text-xs text-foreground/50 leading-relaxed">{step.desc}</p>
+        </div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }

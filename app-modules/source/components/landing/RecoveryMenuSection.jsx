@@ -7,6 +7,7 @@ import {
   Flame, BatteryCharging, Shield, Info, LayoutGrid,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -23,12 +24,12 @@ const SESSIONS = [
 
 const IV_ADDONS = [
   { label: 'Extra Fluid',         price: 25,  desc: 'Additional 500ml saline' },
-  { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals & amino boost' },
+  { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals, and amino support' },
   { label: 'High Dose Vitamin C', price: 45,  desc: '5,000mg IV push' },
   { label: 'CBD Review',          price: 250, desc: 'Approval-gated clinical review' },
   { label: 'NAD+ (250mg)',        price: 350, desc: 'Clinician-reviewed NAD+ add-on' },
   { label: 'Glutathione Push',    price: 60,  desc: 'Antioxidant support · 600mg' },
-  { label: 'Magnesium Boost',     price: 30,  desc: 'Muscle + nerve support' },
+  { label: 'Magnesium Support',   price: 30,  desc: 'Muscle + nerve support' },
 ];
 
 const IM_SHOTS = [
@@ -265,10 +266,8 @@ export default function RecoveryMenuSection() {
                 <span className="font-body text-[10px] text-foreground/30">{session.duration}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-foreground/30 transition-transform duration-300 ${insideOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
               </button>
-              <AnimatePresence>
-                {insideOpen && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
-                    <div className="px-4 pt-2 pb-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] space-y-2">
+              <SmoothDisclosure open={insideOpen}>
+                <div className="px-4 pt-2 pb-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] space-y-2">
                       <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Formulated with</p>
                       <div className="flex flex-wrap gap-1.5">
                         {session.inside.split(' · ').map((ing) => (
@@ -276,10 +275,8 @@ export default function RecoveryMenuSection() {
                         ))}
                       </div>
                       <p className="font-body text-[10px] text-foreground/30 pt-1">For educational purposes only. Formulation may vary based on clinical assessment.</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                </div>
+              </SmoothDisclosure>
 
               {/* Add to IV */}
               <button type="button" onClick={() => setAddonsOpen((v) => !v)}
@@ -288,10 +285,8 @@ export default function RecoveryMenuSection() {
                 <span className="flex-1 font-body text-xs tracking-[0.1em] uppercase text-foreground/60">Add to your IV</span>
                 {ivSelected.size > 0 && <span className="font-body text-xs text-foreground/50">+${selIV.reduce((s, x) => s + x.price, 0)} · {ivSelected.size} added</span>}
               </button>
-              <AnimatePresence>
-                {addonsOpen && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
-                    <div className="space-y-1.5 pt-1">
+              <SmoothDisclosure open={addonsOpen}>
+                <div className="space-y-1.5 pt-1">
                       {IV_ADDONS.map((addon) => {
                         const sel = ivSelected.has(addon.label);
                         return (
@@ -308,10 +303,8 @@ export default function RecoveryMenuSection() {
                           </button>
                         );
                       })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                </div>
+              </SmoothDisclosure>
 
               {/* IM shots as add-on */}
               <div className="border border-foreground/15 rounded-2xl overflow-hidden">
@@ -322,9 +315,8 @@ export default function RecoveryMenuSection() {
                   {imSelected.size > 0 && <span className="font-body text-xs text-foreground/50 mr-1">+${selIM.reduce((s, x) => s + x.price, 0)} · {imSelected.size} selected</span>}
                   <ChevronDown className={`w-4 h-4 text-foreground/40 transition-transform duration-300 shrink-0 ${imDropOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
                 </button>
-                <AnimatePresence>
-                  {imDropOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden border-t border-foreground/[0.08]">
+                <SmoothDisclosure open={imDropOpen}>
+                  <div className="border-t border-foreground/[0.08]">
                       {IM_SHOTS.map((shot) => {
                         const sel = imSelected.has(shot.label);
                         return (
@@ -340,9 +332,8 @@ export default function RecoveryMenuSection() {
                           </button>
                         );
                       })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                </SmoothDisclosure>
               </div>
 
               {/* Group booking */}
@@ -352,10 +343,8 @@ export default function RecoveryMenuSection() {
                   <span className="font-body text-xs text-foreground/50 tracking-[0.1em]">Booking for a group?</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-foreground/40 transition-transform duration-300 ${groupOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
                 </button>
-                <AnimatePresence>
-                  {groupOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
-                      <div className="mt-3 rounded-2xl border border-foreground/15 p-4 space-y-3">
+                <SmoothDisclosure open={groupOpen}>
+                  <div className="mt-3 rounded-2xl border border-foreground/15 p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-body text-xs text-foreground">Number of guests</p>
@@ -370,10 +359,8 @@ export default function RecoveryMenuSection() {
                         {groupCount >= 8 && (
                           <p className="font-body text-[10px] text-foreground/50">For groups of 9+, <Link to="/launches" className="text-accent hover:text-accent/80 transition-colors">use Launch booking →</Link></p>
                         )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                </SmoothDisclosure>
               </div>
 
               {/* Total + CTA */}

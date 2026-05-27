@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, LockKeyhole,
@@ -12,6 +12,7 @@ import { useCart } from '@/context/CartContext';
 import { getProduct } from '@/data/products';
 import { useSeo } from '@/lib/seo';
 import { appendActivity } from '@/lib/localOs';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { buildProductJsonLd } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -105,21 +106,11 @@ function AccordionRow({ title, children, defaultOpen = false }) {
           <ChevronDown className="h-4 w-4 text-foreground/45" strokeWidth={1.8} />
         </motion.span>
       </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            className="overflow-hidden"
-          >
-            <div className="pb-5 font-body text-sm leading-relaxed text-foreground/55">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SmoothDisclosure open={open}>
+        <div className="pb-5 font-body text-sm leading-relaxed text-foreground/55">
+          {children}
+        </div>
+      </SmoothDisclosure>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { COVERED_ZIPS } from '@/lib/serviceArea';
 import { matchServiceArea } from '@/lib/osRules';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -256,35 +257,24 @@ function RegionAccordion({ zone, defaultOpen = false }) {
         />
       </button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.4, ease: EASE }}
-            className="overflow-hidden"
-          >
-            <div className="px-6 pb-6 border-t border-foreground/[0.06]">
-              {/* Hidden SEO text — all city/neighborhood names as a paragraph Google can crawl */}
-              <p className="sr-only">
-                Avalon Vitality provides mobile IV therapy and IM injection services in {zone.region}, including: {zone.areas.join(', ')}.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-5">
-                {zone.areas.map((area) => (
-                  <span
-                    key={area}
-                    className="font-body text-[11px] tracking-[0.1em] text-foreground/55 border border-foreground/[0.08] rounded-full px-3.5 py-1.5"
-                  >
-                    {area}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SmoothDisclosure open={open}>
+        <div className="px-6 pb-6 border-t border-foreground/[0.06]">
+          {/* Hidden SEO text — all city/neighborhood names as a paragraph Google can crawl */}
+          <p className="sr-only">
+            Avalon Vitality provides mobile IV therapy and IM injection services in {zone.region}, including: {zone.areas.join(', ')}.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-5">
+            {zone.areas.map((area) => (
+              <span
+                key={area}
+                className="font-body text-[11px] tracking-[0.1em] text-foreground/55 border border-foreground/[0.08] rounded-full px-3.5 py-1.5"
+              >
+                {area}
+              </span>
+            ))}
+          </div>
+        </div>
+      </SmoothDisclosure>
     </div>
   );
 }

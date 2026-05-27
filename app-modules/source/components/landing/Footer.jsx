@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, Clock, MapPin, ChevronDown } from 'lucide-react';
-import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import LanguageSelect from '@/components/landing/LanguageSelect';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const SERVICES = [
   { label: 'Book',   to: '/book' },
@@ -71,48 +72,38 @@ function FooterGroup({ group, open, onToggle }) {
           <ChevronDown className="w-4 h-4" strokeWidth={2} />
         </motion.span>
       </motion.button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.38, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-foreground/[0.07] px-4 py-3">
-              {group.type === 'contact' ? (
-                <>
-                  <a href="mailto:support@avalonvitality.co" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground">
-                    <Mail className="w-3.5 h-3.5 shrink-0" />
-                    support@avalonvitality.co
-                  </a>
-                  <a href="tel:+14159807708" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground">
-                    <Phone className="w-3.5 h-3.5 shrink-0" />
-                    (415) 980-7708
-                  </a>
-                  <div className="col-span-2 flex items-center gap-2 font-body text-[11px] text-foreground/55">
-                    <Clock className="w-3.5 h-3.5 shrink-0" />
-                    8AM-8PM
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2 font-body text-[11px] text-foreground/55">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    SF Bay Area
-                  </div>
-                </>
-              ) : group.links.map((l) => (
-                <Link
-                  key={l.label}
-                  to={l.to}
-                  className="flex min-h-[44px] items-center rounded-xl px-2 py-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors duration-base ease-editorial hover:bg-accent/[0.075] hover:text-foreground"
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SmoothDisclosure open={open}>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-foreground/[0.07] px-4 py-3">
+          {group.type === 'contact' ? (
+            <>
+              <a href="mailto:support@avalonvitality.co" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground">
+                <Mail className="w-3.5 h-3.5 shrink-0" />
+                support@avalonvitality.co
+              </a>
+              <a href="tel:+14159807708" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground">
+                <Phone className="w-3.5 h-3.5 shrink-0" />
+                (415) 980-7708
+              </a>
+              <div className="col-span-2 flex items-center gap-2 font-body text-[11px] text-foreground/55">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                8AM-8PM
+              </div>
+              <div className="col-span-2 flex items-center gap-2 font-body text-[11px] text-foreground/55">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                SF Bay Area
+              </div>
+            </>
+          ) : group.links.map((l) => (
+            <Link
+              key={l.label}
+              to={l.to}
+              className="flex min-h-[44px] items-center rounded-xl px-2 py-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors duration-base ease-editorial hover:bg-accent/[0.075] hover:text-foreground"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }

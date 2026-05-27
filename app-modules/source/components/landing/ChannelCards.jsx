@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { Building2, Calendar, Sparkles, ChevronDown, ArrowRight } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const CHANNELS = [
   { icon: Building2, label: 'Corporate Teams',      detail: 'Volume pricing and office wellness programs. Request a proposal — we come to you.', href: '/corporate', cta: 'Request a Proposal' },
@@ -40,28 +41,18 @@ function ChannelRow({ channel, index, open, onToggle }) {
         </motion.div>
       </motion.button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.42, ease: EASE }}
-            style={{ overflow: 'hidden' }}
+      <SmoothDisclosure open={open}>
+        <div className="px-5 pb-5 pt-0 border-t border-foreground/[0.06]">
+          <p className="font-body text-sm text-foreground/60 leading-relaxed mb-3 mt-4">{detail}</p>
+          <Link
+            to={href}
+            className="group inline-flex items-center gap-1.5 font-body text-[11px] tracking-[0.15em] uppercase text-accent hover:text-accent/80 transition-colors duration-base ease-editorial"
           >
-            <div className="px-5 pb-5 pt-0 border-t border-foreground/[0.06]">
-              <p className="font-body text-sm text-foreground/60 leading-relaxed mb-3 mt-4">{detail}</p>
-              <Link
-                to={href}
-                className="group inline-flex items-center gap-1.5 font-body text-[11px] tracking-[0.15em] uppercase text-accent hover:text-accent/80 transition-colors duration-base ease-editorial"
-              >
-                {cta}
-                <ArrowRight className="w-3 h-3 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {cta}
+            <ArrowRight className="w-3 h-3 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </Link>
+        </div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }

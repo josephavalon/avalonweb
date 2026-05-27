@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { MapPin, Calendar, ChevronDown, ArrowRight, Users } from 'lucide-react';
 import { events } from '../../../../src/data/events';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -41,16 +42,8 @@ function EventRow({ event, index }) {
       </button>
 
       {/* Expanded */}
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
+      <SmoothDisclosure open={open}>
+        <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
               <p className="font-body text-sm text-foreground/65 leading-relaxed">{event.desc}</p>
 
               <div className="flex flex-col gap-2">
@@ -70,10 +63,8 @@ function EventRow({ event, index }) {
               >
                 Launch Details <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
               </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }
