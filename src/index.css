@@ -807,5 +807,21 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   to { transform: scaleX(1); }
 }
 
+.av-loader-lockup {
+  animation: av-loader-pulse 1180ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes av-loader-pulse {
+  0%, 100% { opacity: 0.78; transform: scale(0.985); }
+  50% { opacity: 1; transform: scale(1.015); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .av-loader-lockup {
+    animation: none;
+  }
+}
+
 /* v2 */
 :root { --av-build: 2; }
