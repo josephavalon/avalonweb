@@ -70,7 +70,7 @@ export default function Hero() {
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          Clinical recovery. Delivered.
+          Your protocol.<br />Delivered by an RN.
         </motion.p>
 
         <motion.div
