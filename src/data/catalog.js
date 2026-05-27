@@ -195,7 +195,7 @@ export const IV_SESSIONS = [
 
 export const IV_ADDONS = [
   { label: 'Extra Fluid', price: 25, desc: 'Additional 500ml saline' },
-  { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals & amino boost' },
+  { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals, and amino support' },
   { label: 'Vitamin C IV Push · 5g', price: 45, desc: 'Entry high-dose antioxidant support' },
   { label: 'Vitamin C IV Push · 10g', price: 85, desc: 'Higher-dose vitamin C support' },
   { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support' },
@@ -207,7 +207,7 @@ export const IV_ADDONS = [
   { label: 'Glutathione Push · 600mg', price: 60, desc: 'Antioxidant support' },
   { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support' },
   { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push' },
-  { label: 'Magnesium Boost', price: 30, desc: 'Magnesium support' },
+  { label: 'Magnesium Support', price: 30, desc: 'Magnesium support' },
 ];
 
 export const IM_SHOTS = [

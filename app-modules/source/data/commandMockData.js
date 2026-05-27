@@ -38,7 +38,7 @@ export const REQUESTS = [
     date: '2026-05-12',
     time: '2:00 PM',
     therapy: 'VIP Recovery Package',
-    addOns: ['Glutathione Push', 'Extra B12 Shot', 'Magnesium Boost'],
+    addOns: ['Glutathione Push', 'Extra B12 Shot', 'Magnesium Support'],
     guests: 1,
     total: 525,
     source: 'Direct / VIP Line',
