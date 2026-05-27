@@ -1,18 +1,6 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumHover } from '@/lib/motion';
-
-// Venue / partner text strip — pure text, never breaks on load.
-const CLIENT_LOGOS = [
-  { name: '111 Minna' },
-  { name: 'Secret Party' },
-  { name: 'Hereticon' },
-  { name: 'Maxim Magazine' },
-  { name: 'SF Pride' },
-  { name: 'The Midway' },
-  { name: 'Club Discourse' },
-  { name: 'The Loom' },
-];
 
 // ── Featured (punchy / notable clients) — shown first ──────────────────────
 const FEATURED = [
@@ -60,32 +48,6 @@ function ReviewCard({ review, index }) {
   );
 }
 
-const Dot = () => (
-  <span aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/15 shrink-0 inline-block" />
-);
-
-// Text-only marquee row — never breaks due to image load failures
-function LogoRow({ ariaHidden = false }) {
-  return (
-    <ul
-      aria-hidden={ariaHidden}
-      className="flex items-center gap-6 md:gap-9 shrink-0 list-none m-0 p-0 pr-6 md:pr-9"
-    >
-      {CLIENT_LOGOS.map((logo, i) => (
-        <React.Fragment key={`${ariaHidden ? 'b' : 'a'}-${logo.name}`}>
-          {i > 0 && <li aria-hidden="true" className="shrink-0"><Dot /></li>}
-          <li className="shrink-0">
-            <span className="font-heading text-[11px] md:text-xs tracking-[0.22em] uppercase text-foreground/30 whitespace-nowrap">
-              {logo.name}
-            </span>
-          </li>
-        </React.Fragment>
-      ))}
-      <li aria-hidden="true" className="shrink-0"><Dot /></li>
-    </ul>
-  );
-}
-
 export default function Reviews() {
   const scrollRef = useRef(null);
 
@@ -121,21 +83,6 @@ export default function Reviews() {
             ))}
           </div>
         </motion.div>
-      </div>
-
-      {/* "Seen At" logo marquee */}
-      <div className="mb-10 -mx-4">
-        <div className="max-w-6xl mx-auto mb-4 px-4">
-          <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/25">
-            Seen At
-          </p>
-        </div>
-        <div className="logo-strip-wrap">
-          <div className="logo-strip-track">
-            <LogoRow />
-            <LogoRow ariaHidden />
-          </div>
-        </div>
       </div>
 
       {/* Combined carousel */}
@@ -179,36 +126,6 @@ export default function Reviews() {
                   mask-image: linear-gradient(to right, black 0%, black 92%, transparent 100%);
         }
         .reviews-fade-wrap ::-webkit-scrollbar { display: none; }
-
-        /* Logo marquee */
-        .logo-strip-wrap {
-          overflow: hidden;
-          -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
-                  mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
-        }
-        .logo-strip-track {
-          display: flex;
-          align-items: center;
-          width: max-content;
-          flex-wrap: nowrap;
-          gap: 0;
-          animation: logo-strip-scroll 24s linear infinite;
-          will-change: transform;
-          padding: 0.25rem 0;
-        }
-        @media (min-width: 768px) {
-          .logo-strip-track { animation-duration: 32s; }
-        }
-        @keyframes logo-strip-scroll {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        @media (hover: hover) {
-          .logo-strip-wrap:hover .logo-strip-track { animation-play-state: paused; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .logo-strip-track { animation: none; }
-        }
       `}</style>
     </section>
   );

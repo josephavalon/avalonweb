@@ -3,66 +3,26 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import { Circle, CircleDot, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
+import { BOOKABLE_SUBSCRIPTION_TIERS, FEATURED_SUBSCRIPTION_TIER_KEY } from '@/config/subscriptionTiers';
 
 const MotionLink = motion.create(Link);
 
-const TIERS = [
-  {
-    icon: Circle,
-    name: 'Starter',
-    price: '$200',
-    unit: '/mo',
-    note: '1 IV per month',
-    benefits: [
-      '1 core IV credit per month',
-      '15% off add-ons & extras',
-      'Same-day priority booking',
-      '3-month minimum commitment',
-    ],
-    href: '/subscription',
-  },
-  {
-    icon: CircleDot,
-    name: 'Premium',
-    price: '$400',
-    unit: '/mo',
-    note: '2 IVs per month',
-    benefits: [
-      '2 IV credits per month',
-      '1 advanced drip credit (up to $250 value)',
-      '20% off add-ons & extras',
-      '1 free add-on per visit',
-      'Priority arrival window',
-    ],
-    href: '/subscription',
-  },
-  {
-    icon: Sparkles,
-    name: 'VIP',
-    price: '$800',
-    unit: '/mo',
-    note: '4 IVs per month',
-    benefits: [
-      '4 IV credits per month',
-      '1 NAD+ 500mg or Exosomes 30B credit',
-      '25% off add-ons & extras',
-      'Unlimited add-ons at plan rate',
-      'Dedicated nurse — 90-min window',
-      'Shareable with one designated partner',
-    ],
-    href: '/subscription',
-  },
-];
+const ICONS = { starter: Circle, pro: CircleDot, vip: Sparkles };
+
+const TIERS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
+  ...tier,
+  icon: ICONS[tier.key] || Circle,
+  price: `$${tier.price.toLocaleString()}`,
+  href: '/subscription',
+}));
 
 const COMPARE_ROWS = [
-  { label: 'Monthly IV credits',       starter: '1',     premium: '2',      vip: '4'    },
-  { label: 'Advanced drip credit',     starter: '—',     premium: '1×/mo',  vip: '1×/mo' },
-  { label: 'NAD+ / Exosomes credit',   starter: '—',     premium: '—',      vip: '1×/mo' },
-  { label: 'Add-on discount',          starter: '15%',   premium: '20%',    vip: '25%'  },
-  { label: 'Free add-on per visit',    starter: '—',     premium: '1',      vip: 'Unlimited' },
-  { label: 'Arrival window',           starter: 'Standard', premium: '90 min', vip: '90 min' },
-  { label: 'Dedicated nurse',          starter: '—',     premium: '—',      vip: '✓'    },
-  { label: 'Share with partner',       starter: '—',     premium: '—',      vip: '✓'    },
+  { label: 'Monthly IV credits', starter: '1', pro: '2', vip: '4' },
+  { label: 'Add-on discount', starter: '20%', pro: '25%', vip: '30%' },
+  { label: 'IM shot credit', starter: '—', pro: '1/mo', vip: '2/mo' },
+  { label: 'Priority booking', starter: '✓', pro: '✓', vip: '✓' },
+  { label: 'Dedicated RN', starter: '—', pro: '—', vip: '✓' },
+  { label: 'Household sharing', starter: '—', pro: '—', vip: '✓' },
 ];
 
 function TierComparator() {
@@ -105,14 +65,14 @@ function TierComparator() {
               {/* Header */}
               <div className="grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.07] bg-white/[0.02]">
                 <div className="px-4 py-2.5" />
-                {['Starter', 'Premium', 'VIP'].map((t) => (
-                  <div key={t} className="py-2.5 text-center">
-                    <span className={`font-body text-[9px] tracking-[0.2em] uppercase ${t === 'Premium' ? 'text-accent' : 'text-foreground/40'}`}>{t}</span>
+                {TIERS.map((tier) => (
+                  <div key={tier.key} className="py-2.5 text-center">
+                    <span className={`font-body text-[9px] tracking-[0.2em] uppercase ${tier.key === FEATURED_SUBSCRIPTION_TIER_KEY ? 'text-accent' : 'text-foreground/40'}`}>{tier.name}</span>
                   </div>
                 ))}
               </div>
               {/* Rows */}
-              {COMPARE_ROWS.map(({ label, starter, premium, vip }, i) => (
+              {COMPARE_ROWS.map(({ label, starter, pro, vip }, i) => (
                 <motion.div
                   key={label}
                   variants={premiumListItem}
@@ -121,7 +81,7 @@ function TierComparator() {
                   <div className="px-4 py-3 flex items-center">
                     <span className="font-body text-[11px] text-foreground/60">{label}</span>
                   </div>
-                  {[starter, premium, vip].map((val, j) => (
+                  {[starter, pro, vip].map((val, j) => (
                     <div key={j} className="py-3 flex items-center justify-center">
                       <span className={`font-body text-[11px] text-center ${val === '—' ? 'text-foreground/20' : j === 1 ? 'text-accent' : 'text-foreground/75'}`}>
                         {val}
@@ -140,7 +100,7 @@ function TierComparator() {
 
 function TierRow({ tier, index }) {
   const Icon = tier.icon;
-  const featured = tier.name === 'Premium';
+  const featured = tier.key === FEATURED_SUBSCRIPTION_TIER_KEY;
   return (
     <motion.div
       layout

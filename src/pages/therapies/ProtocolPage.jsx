@@ -1,7 +1,6 @@
-import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowLeft, ArrowRight, Clock, Sparkles, FlaskConical } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Clock, FlaskConical, ShieldCheck, Sparkles } from 'lucide-react';
 import { EASE } from '@/lib/motion';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -19,11 +18,30 @@ export default function ProtocolPage() {
   const navigate = useNavigate();
 
   const protocol = IV_SESSIONS.find((s) => s.key === slug);
+  const price = priceForProtocol(protocol);
+  const ingredients = getComposition(protocol);
+  const mechanism = getMechanism(protocol);
+  const doseOptions = getDoseOptions(protocol);
 
   useSeo({
     title: protocol ? `${protocol.label} IV Therapy — Avalon Vitality` : 'Protocol Not Found — Avalon Vitality',
     description: protocol?.tagline || 'Explore Avalon Vitality mobile IV therapy protocols.',
     path: `/therapies/${slug}`,
+    jsonLd: protocol ? {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalProcedure',
+      name: `${protocol.label} IV Therapy`,
+      description: protocol.desc || protocol.tagline,
+      procedureType: 'Mobile IV therapy',
+      howPerformed: 'A licensed RN administers the protocol after clinical clearance and eligibility review.',
+      preparation: 'Clinical clearance and intake are required before treatment. Final protocol may be adjusted by the clinical team.',
+      followup: 'Post-visit instructions and support are provided when appropriate.',
+      provider: {
+        '@type': 'MedicalBusiness',
+        name: 'Avalon Vitality',
+        areaServed: 'San Francisco Bay Area',
+      },
+    } : undefined,
   });
 
   if (!protocol) {
@@ -37,7 +55,6 @@ export default function ProtocolPage() {
   }
 
   const Icon = protocol.icon;
-  const ingredients = protocol.inside ? protocol.inside.split(' · ') : [];
 
   return (
     <>
@@ -83,7 +100,7 @@ export default function ProtocolPage() {
           >
             <div>
               <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Price</p>
-              <p className="font-heading text-3xl text-foreground">${protocol.price}</p>
+              <p className="font-heading text-3xl text-foreground">${price}</p>
             </div>
             {protocol.duration && (
               <div>
@@ -96,16 +113,16 @@ export default function ProtocolPage() {
             )}
             <div>
               <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Category</p>
-              <p className="font-body text-sm font-semibold text-foreground capitalize">{protocol.category}</p>
+              <p className="font-body text-sm font-semibold text-foreground capitalize">{protocol.category || 'protocol'}</p>
             </div>
           </motion.div>
 
-          {/* What's inside */}
+          {/* Composition */}
           {ingredients.length > 0 && (
             <motion.div {...fadeUp(0.44)} className="mb-14">
               <div className="flex items-center gap-2 mb-6">
                 <FlaskConical className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
-                <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">What's Inside</p>
+                <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Composition</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ingredients.map((item) => (
@@ -121,8 +138,44 @@ export default function ProtocolPage() {
             </motion.div>
           )}
 
+          {/* Mechanism */}
+          <motion.div {...fadeUp(0.48)} className="mb-14">
+            <div className="flex items-center gap-2 mb-6">
+              <ShieldCheck className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
+              <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">How It Works</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {mechanism.map((item) => (
+                <div key={item.title} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4">
+                  <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/42">{item.title}</p>
+                  <p className="mt-3 font-body text-sm leading-snug text-foreground/62">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {doseOptions.length > 0 && (
+            <motion.div {...fadeUp(0.5)} className="mb-14">
+              <div className="flex items-center gap-2 mb-6">
+                <Clock className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
+                <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Options</p>
+              </div>
+              <div className="grid gap-2">
+                {doseOptions.map((dose) => (
+                  <div key={dose.key || dose.label} className="flex min-h-[64px] items-center justify-between gap-4 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4">
+                    <div>
+                      <p className="font-body text-sm font-semibold text-foreground">{dose.label}</p>
+                      <p className="mt-1 font-body text-xs text-foreground/45">{dose.duration || protocol.duration || 'Timing confirmed before visit'}</p>
+                    </div>
+                    <p className="font-heading text-2xl text-foreground">${Number(dose.price || price).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Who it's for */}
-          <motion.div {...fadeUp(0.52)} className="mb-16">
+          <motion.div {...fadeUp(0.54)} className="mb-16">
             <div className="flex items-center gap-2 mb-6">
               <Sparkles className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
               <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Best For</p>
@@ -130,6 +183,14 @@ export default function ProtocolPage() {
             <p className="font-body text-base leading-relaxed text-foreground/60 max-w-lg">
               {getBestFor(protocol)}
             </p>
+            <div className="mt-6 grid gap-2 sm:grid-cols-3">
+              {['Clinical clearance required', 'Licensed RN visit', 'Final protocol may be adjusted'].map((item) => (
+                <div key={item} className="flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-3 py-3">
+                  <Check className="h-3.5 w-3.5 text-foreground/45" strokeWidth={1.8} />
+                  <span className="font-body text-xs text-foreground/58">{item}</span>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           {/* CTAs */}
@@ -166,6 +227,51 @@ export default function ProtocolPage() {
       <Footer />
     </>
   );
+}
+
+function priceForProtocol(protocol) {
+  return Number(protocol?.price || protocol?.doses?.[0]?.price || 250).toLocaleString();
+}
+
+function getComposition(protocol) {
+  if (!protocol) return [];
+  if (protocol.inside) return protocol.inside.split(' · ').map((item) => item.trim()).filter(Boolean);
+  return (protocol.features || []).map((item) => String(item).trim()).filter(Boolean);
+}
+
+function getDoseOptions(protocol) {
+  if (!protocol?.doses?.length) return [];
+  return protocol.doses;
+}
+
+function getMechanism(protocol) {
+  const common = [
+    {
+      title: 'Hydrate',
+      body: 'Fluids help replenish volume. Electrolytes support normal fluid balance and comfort after travel, heat, or high-output days.',
+    },
+    {
+      title: 'Replenish',
+      body: 'Selected vitamins, minerals, or amino acids are paired to the protocol and reviewed for eligibility before treatment.',
+    },
+    {
+      title: 'Review',
+      body: 'The clinical team may adjust, hold, or decline a protocol based on intake, annual GFE status, contraindications, and vitals.',
+    },
+  ];
+  const map = {
+    nad: [
+      { title: 'NAD+', body: 'NAD+ is a molecule involved in cellular energy pathways. Appointment length and dose are reviewed before service.' },
+      { title: 'Slow Infusion', body: 'NAD+ visits can run longer than standard hydration. The nurse monitors comfort and pauses or slows as needed.' },
+      common[2],
+    ],
+    cbd: [
+      { title: 'Approval Gated', body: 'CBD IV content is held until legal, physician, and compliance review are complete.' },
+      { title: 'No Claims', body: 'Avalon will not publish disease-treatment, pain-cure, anxiety-cure, or guaranteed-result claims.' },
+      common[2],
+    ],
+  };
+  return map[protocol?.key] || common;
 }
 
 function getBestFor(protocol) {

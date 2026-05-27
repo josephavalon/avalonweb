@@ -201,6 +201,21 @@ export default function LocationPage() {
                   ))}
                 </div>
               </div>
+              {page.zipExamples?.length > 0 && (
+                <div>
+                  <p className="mb-3 font-body text-[9px] uppercase tracking-[0.24em] text-foreground/36">ZIP-aware coverage check</p>
+                  <div className="flex flex-wrap gap-2">
+                    {page.zipExamples.map((item) => (
+                      <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/52">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-3 font-body text-xs leading-relaxed text-foreground/48">
+                    ZIP examples help route local availability. Final nurse coverage, ETA, and protocol eligibility are confirmed before dispatch.
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="mb-3 font-body text-[9px] uppercase tracking-[0.24em] text-foreground/36">Clinical standard</p>
                 <div className="space-y-2">

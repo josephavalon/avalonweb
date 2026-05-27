@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
+import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
   ArrowRight,
   BatteryCharging,
@@ -36,6 +36,7 @@ import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout 
 import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
 import { getDepositAmountDollars } from '@/lib/checkoutConfig';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
+import { BOOKABLE_SUBSCRIPTION_TIERS, FEATURED_SUBSCRIPTION_TIER_KEY } from '@/config/subscriptionTiers';
 
 const EASE = [0.16, 1, 0.3, 1];
 const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
@@ -43,6 +44,7 @@ const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
 const STEPS = ['Goal', 'Visit', 'Protocol', 'Add-ons', 'Where', 'When', 'Confirm'];
 const LAST_STEP = STEPS.length - 1;
+const BOOKING_DRAFT_VERSION = 2;
 
 const OUTCOMES = [
   {
@@ -118,16 +120,33 @@ const WHO_OPTIONS = [
   { key: 'group', label: 'Group' },
 ];
 
-const MEMBERSHIP_OPTIONS = [
-  { key: 'monthly-one', label: 'Monthly Protocol', price: 199, sub: '1 visit/mo · priority booking' },
-  { key: 'monthly-two', label: 'Recovery Plus', price: 389, sub: '2 visits/mo · preferred pricing' },
-  { key: 'concierge', label: 'Concierge', price: 899, sub: '4 visits/mo · VIP coordination' },
-];
+const MEMBERSHIP_OPTIONS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
+  key: tier.key,
+  label: tier.name,
+  price: tier.price,
+  sub: `${tier.sessions} session${tier.sessions === 1 ? '' : 's'}/mo · ${tier.discount} off add-ons`,
+}));
 
 const EVENT_TYPES = ['Private', 'Hotel', 'Office', 'Festival', 'Venue'];
 const CLIENT_TYPES = [
   { key: 'new', label: 'New', sub: 'GFE needed before first treatment.' },
   { key: 'returning', label: 'Returning', sub: 'Annual GFE checked before dispatch.' },
+];
+
+const PUBLIC_BOOKING_PROTOCOL_KEYS = new Set(OUTCOMES.flatMap((item) => item.productKeys));
+
+const ADDRESS_SUGGESTIONS = [
+  { label: 'Home · Pacific Heights', address: '2100 Webster St, San Francisco, CA', zip: '94115', locationType: 'home' },
+  { label: 'Hotel · Union Square', address: '335 Powell St, San Francisco, CA', zip: '94102', locationType: 'hotel' },
+  { label: 'Office · SoMa', address: '535 Mission St, San Francisco, CA', zip: '94105', locationType: 'office' },
+  { label: 'Venue · Oakland', address: '517 8th St, Oakland, CA', zip: '94607', locationType: 'event' },
+  { label: 'Hotel · Napa', address: '1300 1st St, Napa, CA', zip: '94559', locationType: 'hotel' },
+];
+
+const AVAILABILITY_WINDOWS = [
+  { key: 'today-3', label: 'Today', time: '15:00', display: '3:00 PM', nurse: '2 RNs available', eta: '90 min window' },
+  { key: 'today-5', label: 'Today', time: '17:00', display: '5:00 PM', nurse: '1 RN available', eta: '120 min window' },
+  { key: 'tomorrow-11', label: 'Tomorrow', time: '11:00', display: '11:00 AM', nurse: '3 RNs available', eta: 'Priority window' },
 ];
 
 function todayDate(offset = 0) {
@@ -154,13 +173,22 @@ function protocolDuration(protocol) {
 }
 
 function getProductByKey(key) {
-  return IV_SESSIONS.find((item) => item.key === key) || IV_SESSIONS[0];
+  return IV_SESSIONS.find((item) => item.key === key) || null;
 }
 
 function safeProtocol(protocol) {
-  if (!protocol) return getProductByKey('recovery');
+  if (!protocol) return null;
   if (protocol.key === 'cbd') return { ...protocol, label: 'CBD Review', tagline: 'Held for clinical and legal approval.' };
   return protocol;
+}
+
+function formatTimeLabel(time) {
+  const [rawHours, rawMinutes] = String(time || '15:00').split(':').map(Number);
+  const hours = Number.isFinite(rawHours) ? rawHours : 15;
+  const minutes = Number.isFinite(rawMinutes) ? rawMinutes : 0;
+  const suffix = hours >= 12 ? 'PM' : 'AM';
+  const hour = ((hours + 11) % 12) + 1;
+  return `${hour}:${String(minutes).padStart(2, '0')} ${suffix}`;
 }
 
 function buildSlot(date, timeIntent, customTime) {
@@ -169,9 +197,16 @@ function buildSlot(date, timeIntent, customTime) {
   return {
     datetime: `${rawDate}T${time}:00`,
     timezone: TZ,
-    timeLabel: timeIntent === 'today' ? 'Today · ASAP' : timeIntent === 'tomorrow' ? 'Tomorrow · 11:00 AM' : `${rawDate} · ${time}`,
+    timeLabel: timeIntent === 'today' ? 'Today · ASAP' : timeIntent === 'tomorrow' ? 'Tomorrow · 11:00 AM' : formatTimeLabel(time),
     appointmentTypeID: `ACUITY-${timeIntent || 'manual'}`,
   };
+}
+
+function bookingTimeSummary(state) {
+  if (state.timeIntent === 'today') return 'Today · ASAP';
+  if (state.timeIntent === 'tomorrow') return 'Tomorrow · 11:00 AM';
+  if (state.customDate && state.customTime) return `${state.customDate} · ${formatTimeLabel(state.customTime)}`;
+  return 'Time pending';
 }
 
 function SectionTitle({ kicker, title, sub }) {
@@ -341,7 +376,7 @@ function buildAddonCatalog(product) {
 
 function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, onNone, onToggle, onContinue }) {
   const selectedRevenue = selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
-  const protocolTotal = protocolPrice(product);
+  const protocolTotal = product ? protocolPrice(product) : 0;
   const hasDecision = Boolean(state.addOnDecision);
   const noAddonsSelected = hasDecision && selectedAddons.length === 0;
 
@@ -509,7 +544,7 @@ function SummaryRail({ state, product, subtotal, onSubmit }) {
           </div>
           <div className="space-y-2 border-t border-foreground/8 pt-4 font-body text-xs text-foreground/52">
             <p>{state.address || 'Address pending'}</p>
-            <p>{state.timeIntent === 'today' ? 'Today · ASAP' : state.timeIntent === 'tomorrow' ? 'Tomorrow · 11:00 AM' : state.customDate || 'Time pending'}</p>
+            <p>{bookingTimeSummary(state)}</p>
             {state.addOns.length > 0 && <p>{state.addOns.length} add-on{state.addOns.length > 1 ? 's' : ''} selected</p>}
           </div>
           <button
@@ -526,10 +561,11 @@ function SummaryRail({ state, product, subtotal, onSubmit }) {
 }
 
 const defaultState = {
+  draftVersion: BOOKING_DRAFT_VERSION,
   outcome: 'recover',
   visitType: 'one-time',
-  productKey: 'recovery',
-  planKey: 'monthly-one',
+  productKey: '',
+  planKey: FEATURED_SUBSCRIPTION_TIER_KEY,
   clientType: 'new',
   eventType: 'Private',
   locationType: 'home',
@@ -568,16 +604,25 @@ export default function BookNow() {
   const [step, setStep] = useState(0);
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
+  const shouldResetDraft = searchParams.get('reset') === '1';
   const [state, setState] = useState(() => {
-    const savedWebstore = readBookingDraft()?.webstore || {};
+    const draft = shouldResetDraft ? {} : readBookingDraft()?.webstore || {};
+    const savedWebstore = draft.draftVersion === BOOKING_DRAFT_VERSION ? draft : {};
+    const savedProductKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(savedWebstore.productKey) ? savedWebstore.productKey : '';
     return {
       ...defaultState,
       clientType: profileGfe.required ? 'new' : 'returning',
       ...savedWebstore,
-      addOnDecision: Boolean(savedWebstore.addOnDecision || savedWebstore.addOns?.length),
+      productKey: savedProductKey,
+      addOns: savedProductKey ? (savedWebstore.addOns || []) : [],
+      addOnDecision: savedProductKey ? Boolean(savedWebstore.addOnDecision || savedWebstore.addOns?.length) : false,
     };
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (shouldResetDraft) clearBookingDraft();
+  }, [shouldResetDraft]);
 
   const scrollStepIntoView = (behavior = 'smooth') => {
     if (typeof window === 'undefined') return;
@@ -603,7 +648,7 @@ export default function BookNow() {
     const outcomeParam = searchParams.get('outcome');
     const protocolParam = searchParams.get('protocol');
     const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
-    if (protocolParam && IV_SESSIONS.some((item) => item.key === protocolParam)) {
+    if (protocolParam && PUBLIC_BOOKING_PROTOCOL_KEYS.has(protocolParam)) {
       const inferredOutcome = nextOutcome || outcomeForProtocol(protocolParam);
       setState((current) => ({
         ...current,
@@ -617,7 +662,9 @@ export default function BookNow() {
       setState((current) => ({
         ...current,
         outcome: nextOutcome.key,
-        productKey: nextOutcome.productKeys[0],
+        productKey: '',
+        addOns: [],
+        addOnDecision: false,
       }));
       setStep(1);
     }
@@ -629,7 +676,7 @@ export default function BookNow() {
     () => outcome.productKeys.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean).slice(0, 3),
     [outcome]
   );
-  const product = safeProtocol(getProductByKey(state.productKey)) || productOptions[0];
+  const product = state.productKey ? safeProtocol(getProductByKey(state.productKey)) : null;
   const plan = MEMBERSHIP_OPTIONS.find((item) => item.key === state.planKey) || MEMBERSHIP_OPTIONS[0];
   const isReturningClient = state.clientType === 'returning';
   const bookingGfeRequirement = resolveGfeRequirement({
@@ -643,7 +690,14 @@ export default function BookNow() {
     () => addonCatalog.all.filter((item) => state.addOns.includes(item.label)),
     [addonCatalog, state.addOns]
   );
-  const subtotal = protocolPrice(product) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const subtotal = (product ? protocolPrice(product) : 0) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const addressSuggestions = useMemo(() => {
+    const query = `${state.address} ${state.zip}`.trim().toLowerCase();
+    if (!query) return ADDRESS_SUGGESTIONS.slice(0, 3);
+    return ADDRESS_SUGGESTIONS
+      .filter((item) => `${item.label} ${item.address} ${item.zip}`.toLowerCase().includes(query))
+      .slice(0, 3);
+  }, [state.address, state.zip]);
 
   useEffect(() => {
     saveBookingDraft({ webstore: state, step, subtotal, updatedAt: new Date().toISOString() });
@@ -677,7 +731,7 @@ export default function BookNow() {
     setState((current) => ({
       ...current,
       outcome: key,
-      productKey: nextOutcome.productKeys[0],
+      productKey: '',
       addOns: [],
       addOnDecision: false,
     }));
@@ -713,6 +767,28 @@ export default function BookNow() {
     setStep(3);
   };
 
+  const chooseAddressSuggestion = (item) => {
+    setError('');
+    setState((current) => ({
+      ...current,
+      address: item.address,
+      zip: item.zip,
+      locationType: item.locationType,
+    }));
+  };
+
+  const chooseAvailabilityWindow = (slot) => {
+    const dayOffset = slot.label === 'Tomorrow' ? 1 : 0;
+    setError('');
+    setState((current) => ({
+      ...current,
+      timeIntent: 'choose',
+      customDate: todayDate(dayOffset),
+      customTime: slot.time,
+      availabilityWindow: slot.key,
+    }));
+  };
+
   const toggleAddon = (label) => {
     setError('');
     setState((current) => ({
@@ -745,7 +821,7 @@ export default function BookNow() {
 
   const canAdvance = () => {
     if (step === 2) return Boolean(state.productKey);
-    if (step === 3) return Boolean(state.addOnDecision);
+    if (step === 3) return Boolean(state.productKey && state.addOnDecision);
     if (step === 4) return Boolean(state.address.trim() && String(state.zip).trim().length === 5);
     if (step === 5) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
     return true;
@@ -753,7 +829,7 @@ export default function BookNow() {
 
   const next = () => {
     if (!canAdvance()) {
-      const reason = step === 3 ? 'Choose add-ons or none.' : step === 4 ? 'Add address and ZIP.' : 'Choose a date and time.';
+      const reason = step === 2 ? 'Choose your protocol.' : step === 3 ? 'Choose add-ons or none.' : step === 4 ? 'Add address and ZIP.' : 'Choose a date and time.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -787,6 +863,7 @@ export default function BookNow() {
   };
 
   const buildBooking = () => {
+    if (!product) return null;
     const { firstName, lastName } = splitName(state.name);
     const date = state.timeIntent === 'tomorrow' ? todayDate(1) : state.timeIntent === 'choose' ? state.customDate : todayDate();
     const slot = buildSlot(date, state.timeIntent, state.customTime);
@@ -870,12 +947,22 @@ export default function BookNow() {
         !COVERED_ZIPS.has(String(state.zip || '').trim()) && 'Service-area review required.',
         state.visitType === 'event' && 'Pre-launch GFE coordination required.',
       ].filter(Boolean),
+      notificationPreview: {
+        sms: state.phone.trim() ? `Confirmation text queued to ${state.phone.trim()}` : 'Phone required before SMS confirmation.',
+        calendar: 'Calendar invite generated locally until Apple/Google calendar is connected.',
+        availability: state.availabilityWindow ? 'RN availability window selected locally.' : 'RN availability will be confirmed before dispatch.',
+      },
     };
   };
 
   const canSubmit = Boolean(state.name.trim() && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
 
   const submit = () => {
+    if (!product) {
+      setError('Choose your protocol.');
+      setStep(2);
+      return;
+    }
     if (!canSubmit) {
       setError('Add name, phone, email, address, and ZIP.');
       setStep(LAST_STEP);
@@ -888,6 +975,7 @@ export default function BookNow() {
       return;
     }
     const candidate = buildBooking();
+    if (!candidate) return;
     const check = validateBookingForCheckout(candidate, { coveredZips: COVERED_ZIPS });
     const localBooking = createBookingRecord({
       ...candidate,
@@ -941,14 +1029,12 @@ export default function BookNow() {
                 {error}
               </p>
             )}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: -12, filter: 'blur(8px)' }}
-                transition={{ duration: 0.42, ease: EASE }}
-              >
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.28, ease: EASE }}
+            >
                 {step === 0 && (
                   <>
                     <SectionTitle kicker="Book in under 60 seconds" title="Choose your protocol." sub="No menu hell. Pick the outcome. Avalon handles the rest." />
@@ -981,7 +1067,7 @@ export default function BookNow() {
                         <ProductCard
                           key={item.key}
                           product={item}
-                          active={product.key === item.key}
+                          active={product?.key === item.key}
                           onClick={() => chooseProduct(item.key)}
                           onPlan={() => chooseProduct(item.key, { visitType: 'subscription' })}
                         />
@@ -1018,6 +1104,19 @@ export default function BookNow() {
                       <TextInput label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'} value={state.address} onChange={(value) => setValue('address', value)} placeholder="Street, unit, city" required />
                       <TextInput label="ZIP" value={state.zip} onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))} placeholder="94107" required />
                     </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      {addressSuggestions.map((item) => (
+                        <button
+                          key={item.address}
+                          type="button"
+                          onClick={() => chooseAddressSuggestion(item)}
+                          className="min-h-[58px] rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-3 text-left font-body text-xs text-foreground/58 transition-colors hover:border-foreground/24 hover:text-foreground"
+                        >
+                          <span className="block font-semibold text-foreground/72">{item.label}</span>
+                          <span className="mt-1 block truncate">{item.address}</span>
+                        </button>
+                      ))}
+                    </div>
                     <div className="mt-5 grid gap-2 sm:grid-cols-3">
                       {WHO_OPTIONS.map((item) => (
                         <button key={item.key} type="button" onClick={() => setValue('who', item.key)} className={`min-h-[48px] rounded-full border px-4 font-body text-[10px] font-semibold uppercase tracking-[0.14em] ${state.who === item.key ? 'border-foreground bg-foreground text-background' : 'border-foreground/12 text-foreground/58'}`}>
@@ -1046,6 +1145,27 @@ export default function BookNow() {
                       {TIME_INTENTS.map((item) => (
                         <SelectCard key={item.key} item={{ ...item, sub: item.window, icon: Clock }} active={state.timeIntent === item.key} onClick={() => setValue('timeIntent', item.key)} />
                       ))}
+                    </div>
+                    <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                      {AVAILABILITY_WINDOWS.map((slot) => {
+                        const active = state.availabilityWindow === slot.key;
+                        return (
+                          <button
+                            key={slot.key}
+                            type="button"
+                            onClick={() => chooseAvailabilityWindow(slot)}
+                            className={`min-h-[76px] rounded-[1rem] border p-3 text-left transition-colors ${
+                              active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-foreground/[0.03] text-foreground'
+                            }`}
+                          >
+                            <span className="block font-body text-[10px] font-semibold uppercase tracking-[0.18em]">{slot.label}</span>
+                            <span className="mt-1 block font-heading text-2xl uppercase leading-none">{slot.display}</span>
+                            <span className={`mt-1 block font-body text-[10px] leading-snug ${active ? 'text-background/62' : 'text-foreground/45'}`}>
+                              {slot.nurse} · {slot.eta}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                     {state.timeIntent === 'choose' && (
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -1127,8 +1247,7 @@ export default function BookNow() {
                     </div>
                   </>
                 )}
-              </motion.div>
-            </AnimatePresence>
+            </motion.div>
 
             <div className="mt-7 hidden gap-3 lg:flex">
               {step > 0 && (

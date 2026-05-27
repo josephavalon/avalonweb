@@ -6,6 +6,7 @@ import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 import SubscriptionFaq from '@/components/subscription/SubscriptionFaq';
+import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 
 const SubscriptionCheckoutDrawer = lazy(() => import('@/components/subscription/SubscriptionCheckoutDrawer'));
 
@@ -18,70 +19,7 @@ const fadeUp = {
   transition: { duration: 0.7, ease: EASE },
 };
 
-const tiers = [
-  {
-    name: 'Starter',
-    sessions: 1,
-    tagline: 'The foundation.',
-    price: 199,
-    unit: '/mo',
-    perSessionNote: '$199 / session',
-    perks: [
-      '1 IV session credit per month',
-      '20% off all add-ons',
-      'Priority booking window',
-      'Plan scheduling portal',
-    ],
-  },
-  {
-    name: 'Pro',
-    sessions: 2,
-    tagline: 'The sweet spot.',
-    badge: 'Recommended',
-    price: 389,
-    unit: '/mo',
-    perSessionNote: '$195 / session',
-    perks: [
-      '2 IV session credits per month',
-      '25% off all add-ons',
-      '1 complimentary IM shot per month',
-      'Priority booking window',
-      'Plan scheduling portal',
-    ],
-  },
-  {
-    name: 'VIP',
-    sessions: 4,
-    tagline: 'Full access.',
-    price: 899,
-    unit: '/mo',
-    perSessionNote: '$225 / session',
-    perks: [
-      '4 IV session credits per month',
-      '30% off all add-ons',
-      '2 complimentary IM shots per month',
-      'Dedicated registered nurse',
-      'Custom protocol design',
-      'Household partner sharing',
-    ],
-  },
-  {
-    name: 'Custom',
-    sessions: null,
-    tagline: 'Fully bespoke.',
-    price: null,
-    unit: '',
-    perSessionNote: 'Bespoke pricing',
-    custom: true,
-    perks: [
-      'Any protocol, any frequency',
-      'Add IM shots à la carte',
-      'Designed with medical director',
-      'Adjust anytime',
-      'No commitment to inquire',
-    ],
-  },
-];
+const tiers = SUBSCRIPTION_TIERS.map((tier) => ({ ...tier, perks: tier.benefits }));
 
 function FeaturedTier({ tier, onSelect }) {
   const concisePerks = tier.perks.slice(0, tier.custom ? 4 : 3);
@@ -174,10 +112,10 @@ export default function Subscription() {
     },
   });
   const [selectedTier, setSelectedTier] = useState(null);
-  const [activeTierName, setActiveTierName] = useState('Pro');
-  const activeTier = tiers.find((tier) => tier.name === activeTierName) || tiers[1];
+  const [activeTierKey, setActiveTierKey] = useState(FEATURED_SUBSCRIPTION_TIER_KEY);
+  const activeTier = tiers.find((tier) => tier.key === activeTierKey) || tiers[1];
   const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
-  const switchTier = (tier) => setActiveTierName(tier.name);
+  const switchTier = (tier) => setActiveTierKey(tier.key);
 
   return (
     <div className="bg-background min-h-screen w-full">
@@ -208,7 +146,7 @@ export default function Subscription() {
               <div className="space-y-3">
                 <motion.div className="grid grid-cols-2 gap-2 sm:grid-cols-4" {...fadeUp}>
                   {tiers.map((tier) => (
-                    <TierSwitch key={tier.name} tier={tier} active={activeTier.name === tier.name} onSelect={switchTier} />
+                    <TierSwitch key={tier.key} tier={tier} active={activeTier.key === tier.key} onSelect={switchTier} />
                   ))}
                 </motion.div>
                 <FeaturedTier tier={activeTier} onSelect={setSelectedTier} />

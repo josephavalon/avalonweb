@@ -335,6 +335,26 @@ export default function BookingConfirmation() {
   const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : localBooking?.date || null;
   const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time || null;
   const apptAddress = appt?.location || localBooking?.address || null;
+  const notificationPreview = localBooking
+    ? localBooking.notificationPreview || {
+        sms: 'Confirmation text queued after deposit and clearance handoff.',
+        calendar: 'Calendar invite is ready for Apple or Google Calendar.',
+        availability: localBooking.acuitySlot || localBooking.datetime
+          ? 'RN availability window selected locally.'
+          : 'RN availability will be confirmed before dispatch.',
+      }
+    : null;
+  const calendarAppointment = appt?.datetime
+    ? appt
+    : localBooking?.datetime
+      ? {
+          id: localBooking.id,
+          datetime: localBooking.datetime,
+          duration: localBooking.duration || 60,
+          type: localBooking.service,
+          location: localBooking.address,
+        }
+      : null;
   const confirmationBooking = (localBooking || appt?.id) ? {
     ...(localBooking || {}),
     id: appt?.id || localBooking?.id,
@@ -543,6 +563,16 @@ export default function BookingConfirmation() {
               </p>
             </div>
           </div>
+          {notificationPreview && (
+            <div className="mt-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.025] px-4 py-3">
+              <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/35">Notifications</p>
+              <div className="mt-2 space-y-1.5 font-body text-xs leading-snug text-foreground/52">
+                <p>{notificationPreview.sms}</p>
+                <p>{notificationPreview.calendar}</p>
+                <p>{notificationPreview.availability}</p>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* ── 5. Actions ───────────────────────────────────────── */}
@@ -563,10 +593,10 @@ export default function BookingConfirmation() {
           )}
 
           {/* Add to Calendar */}
-          {appt?.datetime && (
+          {calendarAppointment && (
             <button
               type="button"
-              onClick={() => downloadIcs(appt)}
+              onClick={() => downloadIcs(calendarAppointment)}
               className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
             >
               <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />

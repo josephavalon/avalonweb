@@ -72,14 +72,12 @@ export function useSeo({ title, description, path, jsonLd, robots = 'index, foll
       if (prior) prior.remove();
       const staticJsonLd = document.getElementById('static-jsonld');
       const expectedUrl = path ? `${SEO_BASE_URL}${path.startsWith('/') ? path : '/' + path}` : null;
-      if (!jsonLdMatchesPath(staticJsonLd, expectedUrl)) {
-        if (staticJsonLd) staticJsonLd.remove();
-        scriptEl = document.createElement('script');
-        scriptEl.type = 'application/ld+json';
-        scriptEl.id = 'route-jsonld';
-        scriptEl.text = JSON.stringify(jsonLd);
-        document.head.appendChild(scriptEl);
-      }
+      if (staticJsonLd && !jsonLdMatchesPath(staticJsonLd, expectedUrl)) staticJsonLd.remove();
+      scriptEl = document.createElement('script');
+      scriptEl.type = 'application/ld+json';
+      scriptEl.id = 'route-jsonld';
+      scriptEl.text = JSON.stringify(jsonLd);
+      document.head.appendChild(scriptEl);
     }
 
     return () => {

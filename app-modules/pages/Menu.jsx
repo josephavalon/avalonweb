@@ -98,15 +98,17 @@ const PROTOCOL_MODULES = [
 ];
 
 const PLATFORM_LAYERS = [
-  ['Webstore', 'Choose your protocol'],
-  ['Avalon OS', 'Route handoff'],
-  ['Clinical', 'Review first'],
-  ['Field', 'RN arrives'],
+  ['Choose', 'Pick protocol'],
+  ['Schedule', 'Request window'],
+  ['Review', 'Safety check'],
+  ['Visit', 'RN arrives'],
 ];
 
 const FEATURED_KEYS = ['myers', 'hydration', 'recovery', 'immunity'];
 const ADVANCED_KEYS = ['nad', 'cbd', 'exosomes'];
-const DEFAULT_ORDER = new Map(IV_SESSIONS.map((session, index) => [session.key, index]));
+const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set(['exosomes']);
+const PUBLIC_SESSIONS = IV_SESSIONS.filter((session) => !HIDDEN_PUBLIC_PROTOCOL_KEYS.has(session.key));
+const DEFAULT_ORDER = new Map(PUBLIC_SESSIONS.map((session, index) => [session.key, index]));
 const FEATURED_ORDER = new Map(FEATURED_KEYS.map((key, index) => [key, index]));
 
 const CONTROL_TRANSITION = { duration: 0.48, ease: EASE };
@@ -356,7 +358,7 @@ export default function Menu() {
       '@type': 'OfferCatalog',
       name: 'Avalon Vitality Protocols',
       url: 'https://www.avalonvitality.co/protocols',
-      itemListElement: IV_SESSIONS.map((session) => ({
+      itemListElement: PUBLIC_SESSIONS.map((session) => ({
         '@type': 'Offer',
         itemOffered: {
           '@type': 'Service',
@@ -374,7 +376,7 @@ export default function Menu() {
   });
 
   const filtered = useMemo(() => {
-    const sessions = filter === 'all' ? IV_SESSIONS : IV_SESSIONS.filter((session) => categoryFor(session) === filter);
+    const sessions = filter === 'all' ? PUBLIC_SESSIONS : PUBLIC_SESSIONS.filter((session) => categoryFor(session) === filter);
     return sortSessions(sessions, sort);
   }, [filter, sort]);
   const standardAddons = IV_ADDONS.filter((item) => !item.group).slice(0, 8);
