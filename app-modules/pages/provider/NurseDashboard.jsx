@@ -65,6 +65,23 @@ const DIM = 'hsl(var(--foreground) / 0.34)';
 const ACCENT = 'hsl(var(--accent))';
 const RED = 'rgb(248,113,113)';
 
+function fallbackNurseRecord(user) {
+  return {
+    id: 'nurse-local-preview',
+    name: user?.name || 'Avalon Nurse',
+    status: 'Ready',
+    area: 'Bay Area',
+    phone: '',
+    credentialStatus: 'Clear',
+    credStatus: 'Clear',
+    nurseys: { status: 'Clear' },
+    kitStatus: 'Ready',
+    todayVisits: 0,
+    visitsToday: 0,
+    source: 'local-preview-fallback',
+  };
+}
+
 function nurseIdForUser(user) {
   if (user?.username === 'NURSE001') return 's2';
   return 's2';
@@ -72,7 +89,9 @@ function nurseIdForUser(user) {
 
 function nurseRecordForUser(user) {
   const name = String(user?.name || '').toLowerCase();
-  return NURSES.find((nurse) => String(nurse.name || '').toLowerCase() === name) || NURSES[0];
+  return NURSES.filter(Boolean).find((nurse) => String(nurse.name || '').toLowerCase() === name)
+    || NURSES.filter(Boolean)[0]
+    || fallbackNurseRecord(user);
 }
 
 function sortAppointments(a, b) {
