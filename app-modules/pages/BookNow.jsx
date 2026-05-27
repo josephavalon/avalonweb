@@ -341,22 +341,36 @@ function buildAddonCatalog(product) {
 
 function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, onNone, onToggle, onContinue }) {
   const selectedRevenue = selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
-  const deployedCount = 1 + selectedAddons.length;
+  const protocolTotal = protocolPrice(product);
+  const hasDecision = Boolean(state.addOnDecision);
+  const noAddonsSelected = hasDecision && selectedAddons.length === 0;
 
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-2 sm:grid-cols-3">
-        {[
-          ['Deployable', deployedCount],
-          ['Add-ons', currency(selectedRevenue)],
-          ['Estimate', currency(subtotal)],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.025] p-3">
-            <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{label}</p>
-            <p className="mt-1 font-body text-xs font-semibold text-foreground/72">{value}</p>
-          </div>
-        ))}
-      </div>
+    <div className="grid gap-3">
+      <button
+        type="button"
+        onClick={onNone}
+        className={`group flex min-h-[78px] items-center justify-between gap-4 rounded-[1.25rem] border px-4 py-3 text-left transition-colors ${
+          noAddonsSelected
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-foreground/10 bg-foreground/[0.035] text-foreground hover:border-foreground/24'
+        }`}
+      >
+        <span className="min-w-0">
+          <span className={`block font-body text-[9px] font-semibold uppercase tracking-[0.2em] ${noAddonsSelected ? 'text-background/56' : 'text-foreground/42'}`}>
+            Fast path
+          </span>
+          <span className="mt-1 block font-heading text-[2rem] uppercase leading-none">No add-ons</span>
+          <span className={`mt-1 block truncate font-body text-xs ${noAddonsSelected ? 'text-background/62' : 'text-foreground/48'}`}>
+            Continue with {product?.label || 'your protocol'} only.
+          </span>
+        </span>
+        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
+          noAddonsSelected ? 'border-background/18 bg-background/10' : 'border-foreground/10 bg-background/30 group-hover:border-foreground/24'
+        }`}>
+          {noAddonsSelected ? <Check className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+        </span>
+      </button>
 
       <div className="space-y-2">
         {groups.map((group, index) => {
@@ -404,25 +418,39 @@ function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, 
           );
         })}
       </div>
-      <div className="sticky bottom-[4.75rem] z-10 grid gap-2 rounded-[1.25rem] border border-foreground/10 bg-background/88 p-2 shadow-[0_18px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl sm:static sm:grid-cols-[1fr_1.4fr] sm:bg-foreground/[0.025] sm:shadow-none lg:bottom-5">
+      <div className="rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.025] p-3">
+        <div className="grid gap-2 font-body text-xs">
+          <div className="flex items-center justify-between gap-3 text-foreground/50">
+            <span>Protocol</span>
+            <span>{currency(protocolTotal)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-foreground/50">
+            <span>Add-ons</span>
+            <span>{selectedAddons.length ? `${selectedAddons.length} selected / ${currency(selectedRevenue)}` : currency(0)}</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-3 border-t border-foreground/10 pt-3">
+            <span className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42">Total</span>
+            <span className="font-heading text-[2.15rem] uppercase leading-none text-foreground">{currency(subtotal)}</span>
+          </div>
+        </div>
         <button
           type="button"
-          onClick={onNone}
-          className={`min-h-[50px] rounded-full border px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
-            state.addOnDecision && state.addOns.length === 0
-              ? 'border-foreground bg-foreground text-background'
-              : 'border-foreground/12 text-foreground/58 hover:border-foreground/24 hover:text-foreground'
+          disabled={!hasDecision}
+          onClick={onContinue}
+          className={`mt-3 flex min-h-[50px] w-full items-center justify-between gap-3 rounded-full px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] transition-opacity ${
+            hasDecision
+              ? 'bg-foreground text-background hover:opacity-90'
+              : 'cursor-not-allowed border border-foreground/10 text-foreground/34'
           }`}
         >
-          No Add-ons
-        </button>
-        <button
-          type="button"
-          onClick={onContinue}
-          className="flex min-h-[50px] items-center justify-between gap-3 rounded-full bg-foreground px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background transition-opacity hover:opacity-90"
-        >
-          <span>{selectedAddons.length ? `Continue With ${selectedAddons.length}` : 'Choose Add-ons Or None'}</span>
-          <span>{currency(subtotal)}</span>
+          <span>
+            {selectedAddons.length
+              ? `Continue with ${selectedAddons.length} add-on${selectedAddons.length === 1 ? '' : 's'}`
+              : noAddonsSelected
+                ? 'Continue with no add-ons'
+                : 'Choose a path'}
+          </span>
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -752,7 +780,7 @@ export default function BookNow() {
 
   const primaryActionLabel = () => {
     if (step === 2) return 'Add-ons next';
-    if (step === 3) return state.addOnDecision ? 'Location next' : 'Pick add-ons or none';
+    if (step === 3) return state.addOnDecision ? 'Location next' : 'Choose a path';
     if (step === 4 && !canAdvance()) return 'Add location';
     if (step === 5 && !canAdvance()) return 'Pick time';
     return step < LAST_STEP ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`;
@@ -964,7 +992,7 @@ export default function BookNow() {
 
                 {step === 3 && (
                   <>
-                    <SectionTitle kicker={product?.label || 'Protocol'} title="Add-ons." sub="Choose none, or deploy more value to the visit." />
+                    <SectionTitle kicker={product?.label || 'Protocol'} title="Add-ons." sub="Start with no. Add only what should ride with the nurse." />
                     <AddOnDecisionPanel
                       product={product}
                       groups={addonCatalog.groups}
