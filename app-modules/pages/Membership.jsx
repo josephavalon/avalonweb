@@ -5,9 +5,9 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
+import SubscriptionFaq from '@/components/subscription/SubscriptionFaq';
 
 const SubscriptionCheckoutDrawer = lazy(() => import('@/components/subscription/SubscriptionCheckoutDrawer'));
-const SubscriptionFaq = lazy(() => import('@/components/subscription/SubscriptionFaq'));
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -234,9 +234,7 @@ export default function Subscription() {
           </div>
         </Reveal>
 
-        <Suspense fallback={null}>
-          <SubscriptionFaq />
-        </Suspense>
+        <SubscriptionFaq />
 
       </main>
       <Footer />
