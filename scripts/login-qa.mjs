@@ -102,6 +102,7 @@ async function removeProfileDir(dir) {
 class CdpClient {
   constructor(wsUrl) {
     this.wsUrl = wsUrl;
+    this.targetId = null;
     this.nextId = 1;
     this.pending = new Map();
     this.consoleIssues = [];
@@ -165,10 +166,21 @@ class CdpClient {
 async function createPageClient() {
   const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
   const client = new CdpClient(target.webSocketDebuggerUrl);
+  client.targetId = target.id;
   await client.connect();
   await client.send('Page.enable');
   await client.send('Runtime.enable');
   return client;
+}
+
+async function closePageClient(client) {
+  if (!client) return;
+  const targetId = client.targetId;
+  client.close();
+  if (!targetId) return;
+  try {
+    await fetch(`http://127.0.0.1:${PORT}/json/close/${encodeURIComponent(targetId)}`);
+  } catch {}
 }
 
 async function waitForReady(cdp) {
@@ -210,7 +222,10 @@ async function openLogin(cdp) {
   cdp.consoleIssues = [];
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
-  await cdp.send('Page.navigate', { url: `${BASE_URL}/login` });
+  await cdp.send('Runtime.evaluate', {
+    expression: `location.href = ${JSON.stringify(`${BASE_URL}/login`)}; true;`,
+    returnByValue: true,
+  });
   await waitForReady(cdp);
   await wait(350);
   await evalOnPage(cdp, `(() => {
@@ -314,19 +329,19 @@ try {
 
   await waitForChrome();
   for (const testCase of MANUAL_CASES) {
-    cdp?.close();
+    await closePageClient(cdp);
     cdp = await createPageClient();
     await runManualLogin(cdp, testCase);
   }
   for (const testCase of SHORTCUT_CASES) {
-    cdp?.close();
+    await closePageClient(cdp);
     cdp = await createPageClient();
     await runShortcutLogin(cdp, testCase);
   }
 
   console.log(`Login QA passed ${MANUAL_CASES.length + SHORTCUT_CASES.length} mobile beta login checks.`);
 } finally {
-  cdp?.close();
+  await closePageClient(cdp);
   await stopChrome(chrome);
   await removeProfileDir(profileDir);
 }
