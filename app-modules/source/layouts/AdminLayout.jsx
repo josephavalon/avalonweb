@@ -54,7 +54,6 @@ const NAV = [
   { to: '/provider/accounting',     icon: FileText,        label: 'Payments',   roles: ['admin', 'superadmin'] },
   { to: '/provider/services',       icon: Star,            label: 'Memberships',roles: ['admin', 'superadmin'] },
   { to: '/admin/communications',    icon: MessageSquare,   label: 'Messages',   roles: ['admin', 'superadmin'] },
-  { to: '/admin/role-os',           icon: Grid3X3,         label: 'Role OS',    roles: ['admin', 'superadmin'] },
   { to: '/provider/reports',        icon: TrendingUp,      label: 'Reports',    roles: ['admin', 'superadmin'] },
   { to: '/admin/inventory',         icon: Package,         label: 'Inventory',  roles: ['admin', 'superadmin'] },
   { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['admin', 'superadmin'] },

@@ -6,15 +6,62 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import {
-  RefreshCw, ChevronLeft, Calendar, Clock, MapPin, Phone, Mail, Hash, AlertCircle,
+  RefreshCw, Calendar, Clock, MapPin, Phone, Mail, Hash, AlertCircle,
   ChevronDown, ExternalLink,
 } from 'lucide-react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
+
+const fallbackDate = (days, hour, minute = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
+};
+
+const LOCAL_PREVIEW_APPOINTMENTS = [
+  {
+    id: 'local-101',
+    firstName: 'Avery',
+    lastName: 'Stone',
+    type: 'Recovery IV',
+    datetime: fallbackDate(0, 14, 30),
+    duration: 60,
+    location: 'San Francisco · Hotel visit',
+    email: 'client.preview@avalon.local',
+    phone: '(415) 555-0101',
+    price: 250,
+    notes: 'Local preview appointment. Replace with scheduling API when live.',
+  },
+  {
+    id: 'local-102',
+    firstName: 'Maya',
+    lastName: 'Patel',
+    type: 'Hydration IV',
+    datetime: fallbackDate(1, 10, 0),
+    duration: 45,
+    location: 'Marin · Home visit',
+    email: 'client.two@avalon.local',
+    phone: '(415) 555-0102',
+    price: 150,
+  },
+  {
+    id: 'local-103',
+    firstName: 'Jordan',
+    lastName: 'Reed',
+    type: 'Launch / Group',
+    datetime: fallbackDate(2, 16, 0),
+    duration: 120,
+    location: 'Oakland · Office',
+    email: 'events@avalon.local',
+    phone: '(415) 555-0103',
+    price: 900,
+  },
+];
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 function fmtDate(iso) {
@@ -201,6 +248,12 @@ export default function AdminBookings() {
     try {
       const params = new URLSearchParams({ max: '100', direction: 'asc' });
       const res = await fetch(`/api/scheduling-appointments?${params}`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        setAppointments(LOCAL_PREVIEW_APPOINTMENTS);
+        setLastRefreshed(new Date());
+        return;
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load appointments');
       setAppointments(Array.isArray(data) ? data : []);
@@ -222,46 +275,14 @@ export default function AdminBookings() {
   const upcomingCount = appointments.filter((a) => !a.canceled && new Date(a.datetime) >= new Date()).length;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-foreground/[0.06]">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link
-              to="/admin"
-              className="flex items-center gap-1.5 font-body text-xs tracking-widest uppercase text-foreground/40 hover:text-foreground transition-colors"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} />
-              Admin
-            </Link>
-            <span className="text-foreground/20">/</span>
-            <span className="font-body text-xs tracking-widest uppercase text-foreground">Bookings</span>
-          </div>
-          <div className="flex items-center gap-3">
-            {lastRefreshed && (
-              <span className="font-body text-[9px] text-foreground/30 hidden sm:block">
-                Updated {lastRefreshed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={load}
-              disabled={loading}
-              className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground/50 hover:text-foreground transition-colors disabled:opacity-40"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} />
-              Refresh
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+    <AdminLayout>
+      <div className="mx-auto w-full max-w-3xl space-y-6">
 
         {/* Summary bar */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl md:text-4xl text-foreground uppercase tracking-wide">Bookings</h1>
+            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/36">Admin</p>
+            <h1 className="mt-2 font-heading text-4xl uppercase leading-none tracking-wide text-foreground md:text-5xl">Visits</h1>
             {!loading && (
               <p className="font-body text-xs text-foreground/40 mt-1">
                 {upcomingCount} upcoming · {appointments.length} total loaded
@@ -269,14 +290,32 @@ export default function AdminBookings() {
             )}
           </div>
 
-          {/* Filter tabs */}
-          <div className="flex gap-1 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] p-1">
-            {['upcoming', 'all'].map((f) => (
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {lastRefreshed && (
+              <span className="hidden font-body text-[9px] text-foreground/30 sm:block">
+                Updated {lastRefreshed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={load}
+              disabled={loading}
+              className="flex min-h-10 items-center gap-1.5 rounded-full border border-foreground/[0.10] bg-foreground/[0.045] px-3 font-body text-[10px] uppercase tracking-widest text-foreground/56 transition-colors hover:text-foreground disabled:opacity-40"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Filter tabs */}
+        <div className="flex w-full gap-1 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-1 sm:w-fit">
+          {['upcoming', 'all'].map((f) => (
               <button
                 key={f}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`font-body text-[10px] tracking-widest uppercase px-3 py-1.5 rounded-lg transition-all ${
+              className={`min-h-10 flex-1 rounded-xl px-4 font-body text-[10px] uppercase tracking-widest transition-all sm:flex-none ${
                   filter === f
                     ? 'bg-foreground text-background'
                     : 'text-foreground/50 hover:text-foreground'
@@ -284,8 +323,7 @@ export default function AdminBookings() {
               >
                 {f}
               </button>
-            ))}
-          </div>
+          ))}
         </div>
 
         {/* Loading */}
@@ -334,6 +372,6 @@ export default function AdminBookings() {
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }
