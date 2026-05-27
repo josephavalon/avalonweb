@@ -474,9 +474,9 @@ export const publicStaticRoutes = [
   },
   {
     path: '/subscription',
-    title: 'Memberships | Avalon Vitality',
-    description: 'Avalon membership options for recurring mobile recovery support, credits, appointment planning, and clinician-reviewed service.',
-    h1: 'Memberships',
+    title: 'Subscriptions | Avalon Vitality',
+    description: 'Avalon subscriptions for recurring mobile recovery support, credits, appointment planning, and clinician-reviewed service.',
+    h1: 'Subscriptions',
     priority: '0.8',
     changefreq: 'weekly',
   },

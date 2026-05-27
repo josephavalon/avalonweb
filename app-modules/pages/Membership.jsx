@@ -148,45 +148,15 @@ function TierSwitch({ tier, active, onSelect }) {
   );
 }
 
-function CompactTierCard({ tier, active, onSelect }) {
-  return (
-    <motion.button
-      type="button"
-      onClick={() => onSelect(tier)}
-      aria-pressed={active}
-      className={`rounded-2xl border p-4 text-left transition-colors ${
-        active
-          ? 'border-foreground bg-foreground text-background'
-          : 'border-foreground/[0.10] bg-foreground/[0.025] hover:border-foreground/25 hover:bg-foreground/[0.045]'
-      }`}
-      {...fadeUp}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={`font-body text-[11px] uppercase tracking-[0.22em] ${active ? 'text-background/55' : 'text-foreground/45'}`}>{tier.tagline}</p>
-          <h3 className={`mt-1 font-heading text-3xl uppercase leading-none ${active ? 'text-background' : 'text-foreground'}`}>{tier.name}</h3>
-        </div>
-        <ArrowRight className={`mt-1 h-4 w-4 ${active ? 'text-background/55' : 'text-foreground/35'}`} strokeWidth={1.8} />
-      </div>
-      <p className={`mt-4 font-heading text-4xl leading-none ${active ? 'text-background' : 'text-foreground'}`}>
-        {tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}
-      </p>
-      <p className={`mt-1 font-body text-xs ${active ? 'text-background/55' : 'text-foreground/45'}`}>
-        {tier.price ? `${tier.sessions} session${tier.sessions > 1 ? 's' : ''} monthly` : tier.perSessionNote}
-      </p>
-    </motion.button>
-  );
-}
-
 export default function Subscription() {
   useSeo({
-    title: 'Subscription — Avalon Vitality',
+    title: 'Subscriptions — Avalon Vitality',
     description: 'Monthly IV therapy subscriptions starting from $199/mo. Credits roll over, no long-term lock-in.',
     path: '/subscription',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Product',
-      name: 'Avalon Vitality Subscription',
+      name: 'Avalon Vitality Subscriptions',
       description: 'Monthly mobile IV therapy subscription plans with credits, rollover flexibility, and subscriber pricing across the SF Bay Area.',
       brand: {
         '@type': 'Brand',
@@ -206,7 +176,6 @@ export default function Subscription() {
   const [selectedTier, setSelectedTier] = useState(null);
   const [activeTierName, setActiveTierName] = useState('Pro');
   const activeTier = tiers.find((tier) => tier.name === activeTierName) || tiers[1];
-  const supportingTiers = tiers.filter((tier) => tier.name !== activeTier.name);
   const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
   const switchTier = (tier) => setActiveTierName(tier.name);
 
@@ -224,7 +193,7 @@ export default function Subscription() {
             <div className="grid gap-5 md:grid-cols-[0.92fr_1.08fr] md:items-center">
               <div>
                 <motion.h1 className="font-heading text-5xl uppercase leading-[0.9] text-foreground md:text-7xl" {...fadeUp}>
-                  Membership<br />Made Simple
+                  Subscriptions
                 </motion.h1>
                 <motion.p className="mt-4 max-w-md font-body text-sm leading-relaxed text-foreground/58" {...fadeUp}>
                   Pick a tier. Switch instantly. Adjust anytime.
@@ -244,12 +213,6 @@ export default function Subscription() {
                 </motion.div>
                 <FeaturedTier tier={activeTier} onSelect={setSelectedTier} />
               </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              {supportingTiers.map((tier) => (
-                <CompactTierCard key={tier.name} tier={tier} active={activeTier.name === tier.name} onSelect={switchTier} />
-              ))}
             </div>
           </div>
         </section>
