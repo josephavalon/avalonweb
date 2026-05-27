@@ -6,6 +6,7 @@ const PRIVATE_HOST_PATTERNS = [
   /^10\./,
   /^192\.168\./,
   /^172\.(1[6-9]|2\d|3[0-1])\./,
+  /^.+\.local$/i,
 ];
 
 const BETA_HOST_PATTERNS = [

@@ -33,6 +33,7 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, autoCom
           onChange={onChange}
           autoComplete={autoComplete}
           autoCapitalize="none"
+          autoCorrect="off"
           spellCheck={false}
           placeholder={placeholder}
           className="min-h-[46px] w-full rounded-xl border border-foreground/15 bg-foreground/[0.03] px-4 py-3 font-body text-base text-foreground placeholder:text-foreground/20 transition-colors focus:border-foreground/40 focus:outline-none sm:text-sm"
@@ -102,6 +103,60 @@ function SubmitBtn({ loading, label, loadingLabel }) {
         : <ArrowRight className="w-4 h-4" strokeWidth={2} />
       }
     </motion.button>
+  );
+}
+
+function DemoShortcutsPanel({ demoAuthAllowed, loading, onDemoSignIn }) {
+  if (!demoAuthAllowed) {
+    return (
+      <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.055] p-3">
+        <p className="font-body text-[10px] uppercase tracking-[0.2em] text-amber-200">Production guard</p>
+        <p className="mt-1 font-body text-xs leading-relaxed text-foreground/52">
+          Demo access is blocked outside local or beta simulation.
+        </p>
+      </div>
+    );
+  }
+
+  const modeLabel = PRE_API_SECURITY_MODE.betaSimulation ? 'Beta only' : 'Local only';
+
+  return (
+    <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/55">
+            Beta access
+          </p>
+          <p className="mt-1 font-body text-[11px] leading-relaxed text-foreground/38">
+            Tap a role. Password fills automatically.
+          </p>
+        </div>
+        <p className="shrink-0 rounded-full border border-foreground/10 px-2 py-1 font-body text-[9px] uppercase tracking-[0.16em] text-foreground/34">
+          {modeLabel}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {DEMO_SHORTCUTS.map(({ username: demoUsername, label, detail, icon: Icon }) => (
+          <button
+            key={demoUsername}
+            type="button"
+            onClick={() => onDemoSignIn(demoUsername)}
+            disabled={loading}
+            className="min-h-[78px] cursor-pointer rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2.5 py-2.5 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
+          >
+            <Icon className="mb-2 h-3.5 w-3.5 text-foreground/55" strokeWidth={1.7} />
+            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">{label}</p>
+            <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-foreground/38">{demoUsername}</p>
+            <p className="mt-1 font-body text-[9px] leading-snug text-foreground/28">{detail}</p>
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-2 font-body text-[10px] leading-relaxed text-foreground/34">
+        Password: <span className="font-mono text-foreground/50">{DEMO_PASSWORD}</span>. {PRE_API_SECURITY_MODE.label}. No live clinical access.
+      </p>
+    </div>
   );
 }
 
@@ -179,6 +234,12 @@ function SignInTab({ onSwitchTab }) {
 
   return (
     <div className="space-y-3.5">
+      <DemoShortcutsPanel
+        demoAuthAllowed={demoAuthAllowed}
+        loading={loading}
+        onDemoSignIn={handleDemoSignIn}
+      />
+
       <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>
         <Field id="username" label="Username or Email" value={username}
           onChange={(e) => { setUsername(e.target.value); setFieldError(''); }}
@@ -203,45 +264,6 @@ function SignInTab({ onSwitchTab }) {
           {passkeyLoading ? <span className="w-3.5 h-3.5 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" /> : <Fingerprint className="w-3.5 h-3.5 text-foreground/60" strokeWidth={1.5} />}
           {passkeyLoading ? 'Authenticating…' : 'Use Passkey'}
         </button>
-      )}
-
-      {demoAuthAllowed && (
-      <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-3">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/48">
-            Preview accounts
-          </p>
-          <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/30">
-            Local only
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {DEMO_SHORTCUTS.map(({ username: demoUsername, label, icon: Icon }) => (
-            <button
-              key={demoUsername}
-              type="button"
-              onClick={() => handleDemoSignIn(demoUsername)}
-              disabled={loading}
-              className="min-h-[72px] cursor-pointer rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2 py-2 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
-            >
-              <Icon className="mb-2 h-3.5 w-3.5 text-foreground/55" strokeWidth={1.7} />
-              <p className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">{label}</p>
-              <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-foreground/38">{demoUsername}</p>
-            </button>
-          ))}
-        </div>
-          <p className="mt-2 font-body text-[10px] leading-relaxed text-foreground/34">
-            Local simulation only. {PRE_API_SECURITY_MODE.label}. Beta/demo access. No live clinical access.
-          </p>
-      </div>
-      )}
-      {!demoAuthAllowed && (
-        <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.055] p-3">
-          <p className="font-body text-[10px] uppercase tracking-[0.2em] text-amber-200">Production guard</p>
-          <p className="mt-1 font-body text-xs leading-relaxed text-foreground/52">
-            Demo access is blocked outside local simulation.
-          </p>
-        </div>
       )}
     </div>
   );

@@ -14,6 +14,7 @@
     "test:preapi": "node scripts/pre-api-readiness-qa.mjs",
     "test:day": "node scripts/operating-day-qa.mjs",
     "test:booking": "node scripts/booking-flow-qa.mjs",
+    "test:login": "node scripts/login-qa.mjs",
     "test:mobile": "node scripts/mobile-qa.mjs",
     "test:stability": "node scripts/route-stability-qa.mjs",
     "test:visual": "node scripts/visual-qa.mjs",

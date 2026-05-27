@@ -13,21 +13,31 @@ const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 // ── Demo accounts (replace with real auth before production) ──────────────
 const DEMO_USERS = {
+  'ADMIN':        { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
   'ADMIN001':     { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
   'ADMIN0001':    { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
+  'CLIENT':       { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
   'CLIENT001':    { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
   'CLIENT0001':   { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
+  'NURSE':        { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
   'NURSE001':     { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
   'NURSE0001':    { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
+  'NP':           { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
   'NP001':        { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
   'NP0001':       { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
+  'MD':           { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
   'MD001':        { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
   'MD0001':       { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
+  'PHYSICIAN':    { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
   'PHYSICIAN001': { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
   'PHYSICIAN0001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
 };
 const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
 // ─────────────────────────────────────────────────────────────────────────
+
+function normalizeLoginIdentifier(value = '') {
+  return String(value).trim().replace(/\s+/g, '').toUpperCase();
+}
 
 function readSession() {
   try {
@@ -81,12 +91,13 @@ export function AuthStoreProvider({ children }) {
         throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
       }
 
-      // Match against demo roster (case-insensitive username)
+      // Match against demo roster, forgiving mobile autocase and accidental spacing.
+      const submittedUsername = normalizeLoginIdentifier(email);
       const usernameKey = Object.keys(DEMO_USERS).find(
-        (k) => k.toLowerCase() === email.trim().toLowerCase()
+        (k) => normalizeLoginIdentifier(k) === submittedUsername
       );
 
-      if (!usernameKey || password !== DEMO_PASSWORD) {
+      if (!usernameKey || String(password || '').trim() !== DEMO_PASSWORD) {
         throw new Error('Invalid username or password.');
       }
 
