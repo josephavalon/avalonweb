@@ -30,6 +30,10 @@ function removeFinderSuffixArtifacts(dir) {
   for (const name of fs.readdirSync(dir)) {
     const file = path.join(dir, name);
     const stat = fs.statSync(file);
+    if (stat.isDirectory() && / \d+$/i.test(name)) {
+      fs.rmSync(file, { recursive: true, force: true });
+      continue;
+    }
     if (stat.isDirectory()) {
       removeFinderSuffixArtifacts(file);
       continue;
