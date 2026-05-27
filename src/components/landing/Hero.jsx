@@ -96,7 +96,7 @@ export default function Hero() {
             whileTap={premiumTap}
             className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
           >
-            <span>Choose Protocol</span>
+            <span>Choose Your Protocol</span>
             <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
           </MotionLink>
           <MotionLink

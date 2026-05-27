@@ -98,7 +98,7 @@ const PROTOCOL_MODULES = [
 ];
 
 const PLATFORM_LAYERS = [
-  ['Webstore', 'Choose protocol'],
+  ['Webstore', 'Choose your protocol'],
   ['Avalon OS', 'Route handoff'],
   ['Clinical', 'Review first'],
   ['Field', 'RN arrives'],

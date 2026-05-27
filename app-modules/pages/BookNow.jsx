@@ -41,7 +41,8 @@ const EASE = [0.16, 1, 0.3, 1];
 const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Goal', 'Visit', 'Protocol', 'Where', 'When', 'Confirm'];
+const STEPS = ['Goal', 'Visit', 'Protocol', 'Add-ons', 'Where', 'When', 'Confirm'];
+const LAST_STEP = STEPS.length - 1;
 
 const OUTCOMES = [
   {
@@ -298,6 +299,133 @@ function ProductCard({ product, active, onClick, onPlan }) {
   );
 }
 
+function buildAddonCatalog(product) {
+  const allowAdvanced = product?.key !== 'nad';
+  const ivAddons = IV_ADDONS
+    .filter((item) => item.group !== 'cbd')
+    .filter((item) => allowAdvanced || item.group !== 'nad')
+    .map((item) => ({ ...item, type: 'addon', cartKey: `addon-${item.label}` }));
+  const imShots = IM_SHOTS.map((item) => ({ ...item, type: 'im', cartKey: `im-${item.label}` }));
+  const byLabel = new Map([...ivAddons, ...imShots].map((item) => [item.label, item]));
+
+  const coreLabels = ['Extra Fluid', 'Extra Ingredients', 'Magnesium Boost', 'Glutathione Push · 600mg', 'Glutathione Push · 1200mg'];
+  const advancedLabels = ['Vitamin C IV Push · 5g', 'Vitamin C IV Push · 10g', 'Vitamin C IV Push · 15g', 'NAD+ (250mg)', 'NAD+ (500mg)', 'NAD+ (1000mg)'];
+  const shotLabels = ['B12', 'MIC', 'NAD+', 'Glutathione IM · 200mg', 'Glutathione IM · 400mg', 'Vitamin C IM · 500mg', 'Vitamin D', 'Biotin'];
+
+  const groups = [
+    {
+      key: 'core',
+      label: 'Core boosts',
+      sub: 'Fast add-ons the nurse can deploy with the IV.',
+      items: coreLabels.map((label) => byLabel.get(label)).filter(Boolean),
+    },
+    {
+      key: 'advanced',
+      label: 'Advanced IV',
+      sub: product?.key === 'nad' ? 'NAD+ is already the protocol. Vitamin support stays optional.' : 'Higher-ticket IV add-ons when clinically appropriate.',
+      items: advancedLabels.map((label) => byLabel.get(label)).filter(Boolean),
+    },
+    {
+      key: 'shots',
+      label: 'IM shots',
+      sub: 'Quick intramuscular add-ons for extra visit value.',
+      items: shotLabels.map((label) => byLabel.get(label)).filter(Boolean),
+    },
+  ].filter((group) => group.items.length);
+
+  return {
+    all: [...byLabel.values()],
+    groups,
+  };
+}
+
+function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, onNone, onToggle }) {
+  const selectedRevenue = selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const deployedCount = 1 + selectedAddons.length;
+
+  return (
+    <div className="grid gap-4">
+      <button
+        type="button"
+        onClick={onNone}
+        className={`flex min-h-[76px] w-full items-center justify-between gap-4 rounded-[1.25rem] border p-4 text-left transition-colors ${
+          state.addOnDecision && state.addOns.length === 0
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-foreground/10 bg-foreground/[0.035] text-foreground hover:border-foreground/22 hover:bg-foreground/[0.055]'
+        }`}
+      >
+        <div>
+          <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em]">No add-ons today</p>
+          <p className={`mt-1 font-body text-sm ${state.addOnDecision && state.addOns.length === 0 ? 'text-background/62' : 'text-foreground/50'}`}>
+            Fastest visit. Keep {product?.label || 'the protocol'} clean.
+          </p>
+        </div>
+        {state.addOnDecision && state.addOns.length === 0 ? <Check className="h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}
+      </button>
+
+      <div className="grid gap-2 sm:grid-cols-3">
+        {[
+          ['Deployable', deployedCount],
+          ['Add-ons', currency(selectedRevenue)],
+          ['Estimate', currency(subtotal)],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.025] p-3">
+            <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{label}</p>
+            <p className="mt-1 font-body text-xs font-semibold text-foreground/72">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {groups.map((group, index) => {
+          const selectedInGroup = group.items.filter((item) => state.addOns.includes(item.label)).length;
+          return (
+            <details
+              key={group.key}
+              open={index === 0 || selectedInGroup > 0}
+              className="group overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03]"
+            >
+              <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                <div>
+                  <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/72">{group.label}</p>
+                  <p className="mt-1 font-body text-xs text-foreground/45">{group.sub}</p>
+                </div>
+                <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/52">
+                  {selectedInGroup ? `${selectedInGroup} on` : 'Open'}
+                </span>
+              </summary>
+              <div className="grid gap-2 border-t border-foreground/8 p-3 sm:grid-cols-2">
+                {group.items.map((item) => {
+                  const active = state.addOns.includes(item.label);
+                  return (
+                    <button
+                      key={`${group.key}-${item.label}`}
+                      type="button"
+                      onClick={() => onToggle(item.label)}
+                      className={`flex min-h-[62px] items-center justify-between gap-3 rounded-2xl border px-3 text-left transition-colors ${
+                        active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-background/35 text-foreground hover:border-foreground/22'
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-body text-xs font-semibold">{item.label}</span>
+                        <span className={`mt-1 block truncate font-body text-[10px] ${active ? 'text-background/58' : 'text-foreground/42'}`}>{item.desc || item.type}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2 font-body text-xs font-semibold">
+                        {currency(item.price)}
+                        {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function formatGfeDate(value) {
   if (!value) return '';
   const date = new Date(value);
@@ -388,7 +516,7 @@ const defaultState = {
 
 export default function BookNow() {
   useSeo({
-    title: 'Choose Protocol — Avalon Vitality',
+    title: 'Choose Your Protocol — Avalon Vitality',
     description: 'Book a premium mobile recovery protocol in the Bay Area with flat pricing, licensed clinicians, and clinical clearance before treatment.',
     path: '/book',
   });
@@ -424,8 +552,10 @@ export default function BookNow() {
         ...current,
         ...(nextOutcome ? { outcome: nextOutcome.key } : {}),
         productKey: protocolParam,
+        addOns: [],
+        addOnDecision: false,
       }));
-      setStep(2);
+      setStep(3);
     } else if (nextOutcome) {
       setState((current) => ({
         ...current,
@@ -451,13 +581,11 @@ export default function BookNow() {
     gfe: isReturningClient ? clientProfile.gfe : {},
     gfeExpiresAt: isReturningClient ? clientProfile.gfe?.validUntil : '',
   });
-  const selectedAddons = useMemo(() => {
-    const pool = [
-      ...IV_ADDONS.slice(0, 8).map((item) => ({ ...item, type: 'addon', cartKey: `addon-${item.label}` })),
-      ...IM_SHOTS.slice(0, 6).map((item) => ({ ...item, type: 'im', cartKey: `im-${item.label}` })),
-    ];
-    return pool.filter((item) => state.addOns.includes(item.label));
-  }, [state.addOns]);
+  const addonCatalog = useMemo(() => buildAddonCatalog(product), [product]);
+  const selectedAddons = useMemo(
+    () => addonCatalog.all.filter((item) => state.addOns.includes(item.label)),
+    [addonCatalog, state.addOns]
+  );
   const subtotal = protocolPrice(product) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
 
   useEffect(() => {
@@ -511,6 +639,23 @@ export default function BookNow() {
     setStep(2);
   };
 
+  const chooseProduct = (key, overrides = {}) => {
+    track(ANALYTICS_EVENTS.STEP_COMPLETED, {
+      funnel: 'webstore',
+      step_index: 2,
+      step_name: STEPS[2],
+      protocol_key: key,
+    });
+    setState((current) => ({
+      ...current,
+      productKey: key,
+      addOns: [],
+      addOnDecision: false,
+      ...overrides,
+    }));
+    setStep(3);
+  };
+
   const toggleAddon = (label) => {
     setState((current) => ({
       ...current,
@@ -530,21 +675,22 @@ export default function BookNow() {
   };
 
   const canAdvance = () => {
-    if (step === 2) return Boolean(state.productKey && state.addOnDecision);
-    if (step === 3) return Boolean(state.address.trim() && String(state.zip).trim().length === 5);
-    if (step === 4) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
+    if (step === 2) return Boolean(state.productKey);
+    if (step === 3) return Boolean(state.addOnDecision);
+    if (step === 4) return Boolean(state.address.trim() && String(state.zip).trim().length === 5);
+    if (step === 5) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
     return true;
   };
 
   const next = () => {
     if (!canAdvance()) {
-      const reason = step === 2 ? 'Choose add-ons or none.' : step === 3 ? 'Add address and ZIP.' : 'Choose a date and time.';
+      const reason = step === 3 ? 'Choose add-ons or none.' : step === 4 ? 'Add address and ZIP.' : 'Choose a date and time.';
       setError(reason);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
         step_index: step,
         step_name: STEPS[step],
-        reason: step === 2 ? 'addon_decision_missing' : step === 3 ? 'address_zip_missing' : 'time_missing',
+        reason: step === 3 ? 'addon_decision_missing' : step === 4 ? 'address_zip_missing' : 'time_missing',
       });
       return;
     }
@@ -557,7 +703,7 @@ export default function BookNow() {
       visit_type: state.visitType,
       protocol_key: state.productKey,
     });
-    setStep((current) => Math.min(current + 1, STEPS.length - 1));
+    setStep((current) => Math.min(current + 1, LAST_STEP));
   };
 
   const back = () => setStep((current) => Math.max(current - 1, 0));
@@ -653,11 +799,11 @@ export default function BookNow() {
   const submit = () => {
     if (!canSubmit) {
       setError('Add name, phone, email, address, and ZIP.');
-      setStep(5);
+      setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
-        step_index: 5,
-        step_name: STEPS[5],
+        step_index: LAST_STEP,
+        step_name: STEPS[LAST_STEP],
         reason: 'required_fields_missing',
       });
       return;
@@ -704,13 +850,6 @@ export default function BookNow() {
     navigate('/booking/confirmation');
   };
 
-  const addonPool = [
-    ...IV_ADDONS.filter((item) => !item.group).slice(0, 4),
-    ...IM_SHOTS.slice(0, 4),
-  ];
-  const addonDecisionMade = Boolean(state.addOnDecision);
-  const selectedDeploymentCount = 1 + selectedAddons.length;
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar showBack />
@@ -728,7 +867,7 @@ export default function BookNow() {
               >
                 {step === 0 && (
                   <>
-                    <SectionTitle kicker="Book in under 60 seconds" title="Choose protocol." sub="No menu hell. Pick the outcome. Avalon handles the rest." />
+                    <SectionTitle kicker="Book in under 60 seconds" title="Choose your protocol." sub="No menu hell. Pick the outcome. Avalon handles the rest." />
                     <LayoutGroup id="outcomes">
                       <div className="grid gap-3 sm:grid-cols-2">
                         {OUTCOMES.map((item) => (
@@ -752,77 +891,37 @@ export default function BookNow() {
 
                 {step === 2 && (
                   <>
-                    <SectionTitle kicker={outcome.label} title="Pick the protocol." sub="Curated. Flat. Clinician-reviewed before treatment." />
+                    <SectionTitle kicker={outcome.label} title="Choose your protocol." sub="Curated. Flat. Clinician-reviewed before treatment." />
                     <div className="grid gap-3">
                       {productOptions.map((item) => (
                         <ProductCard
                           key={item.key}
                           product={item}
                           active={product.key === item.key}
-                          onClick={() => {
-                            setValue('productKey', item.key);
-                          }}
-                          onPlan={() => {
-                            setState((current) => ({ ...current, productKey: item.key, visitType: 'subscription' }));
-                          }}
+                          onClick={() => chooseProduct(item.key)}
+                          onPlan={() => chooseProduct(item.key, { visitType: 'subscription' })}
                         />
                       ))}
-                    </div>
-                    <div className="mt-5 rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03] p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/42">Add-ons</p>
-                          <p className="mt-1 font-body text-xs text-foreground/50">Select add-ons or choose none to continue.</p>
-                        </div>
-                        <p className="rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[10px] text-foreground/55">{state.addOns.length} selected</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={chooseNoAddons}
-                        className={`mb-2 flex min-h-[48px] w-full items-center justify-between rounded-2xl border px-3 text-left font-body text-xs transition-colors ${
-                          addonDecisionMade && state.addOns.length === 0
-                            ? 'border-foreground bg-foreground text-background'
-                            : 'border-foreground/10 text-foreground/62'
-                        }`}
-                      >
-                        <span>No add-ons today</span>
-                        <span className="flex items-center gap-2 font-semibold">Fastest visit {addonDecisionMade && state.addOns.length === 0 ? <Check className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}</span>
-                      </button>
-                      <div className="mb-3 grid gap-2 sm:grid-cols-3">
-                        {[
-                          ['Deployable items', selectedDeploymentCount],
-                          ['Add-on revenue', currency(selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0))],
-                          ['Visit value', currency(subtotal)],
-                        ].map(([label, value]) => (
-                          <div key={label} className="rounded-2xl border border-foreground/8 bg-background/40 p-3">
-                            <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/38">{label}</p>
-                            <p className="mt-1 font-body text-xs font-semibold text-foreground/72">{value}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {addonPool.map((item) => {
-                          const active = state.addOns.includes(item.label);
-                          return (
-                            <button
-                              key={item.label}
-                              type="button"
-                              onClick={() => toggleAddon(item.label)}
-                              className={`flex min-h-[48px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body text-xs transition-colors ${
-                                active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 text-foreground/62'
-                              }`}
-                            >
-                              <span>{item.label}</span>
-                              <span className="flex items-center gap-2 font-semibold">{currency(item.price)} {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
                     </div>
                   </>
                 )}
 
                 {step === 3 && (
+                  <>
+                    <SectionTitle kicker={product?.label || 'Protocol'} title="Add-ons." sub="Choose none, or deploy more value to the visit." />
+                    <AddOnDecisionPanel
+                      product={product}
+                      groups={addonCatalog.groups}
+                      state={state}
+                      selectedAddons={selectedAddons}
+                      subtotal={subtotal}
+                      onNone={chooseNoAddons}
+                      onToggle={toggleAddon}
+                    />
+                  </>
+                )}
+
+                {step === 4 && (
                   <>
                     <SectionTitle kicker="Location" title="Where should we come?" sub="Home, hotel, office, or launch. The stack stays invisible." />
                     <div className="grid gap-2 sm:grid-cols-4">
@@ -855,7 +954,7 @@ export default function BookNow() {
                   </>
                 )}
 
-                {step === 4 && (
+                {step === 5 && (
                   <>
                     <SectionTitle kicker="Timing" title="When do you want us?" sub="Acuity will own live scheduling. This creates the Avalon handoff." />
                     <div className="grid gap-3 sm:grid-cols-3">
@@ -883,7 +982,7 @@ export default function BookNow() {
                   </>
                 )}
 
-                {step === 5 && (
+                {step === 6 && (
                   <>
                     <SectionTitle kicker="Secure hold" title="Avalon is coming." sub="Clinical clearance is required before treatment. If you are not eligible, the visit is adjusted or refunded according to policy." />
                     <div className="mb-4 rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.03] p-4">
@@ -954,7 +1053,7 @@ export default function BookNow() {
                   Back
                 </button>
               )}
-              {step < 5 ? (
+              {step < LAST_STEP ? (
                 <button type="button" onClick={next} aria-label={`Continue from ${STEPS[step]}`} className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background">
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
@@ -979,12 +1078,12 @@ export default function BookNow() {
           )}
           <button
             type="button"
-            onClick={step < 5 ? next : submit}
-            disabled={step === 5 && !canSubmit}
-            aria-label={step < 5 ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
+            onClick={step < LAST_STEP ? next : submit}
+            disabled={step === LAST_STEP && !canSubmit}
+            aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
             className="flex min-h-[52px] flex-1 items-center justify-between rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background disabled:opacity-35"
           >
-            <span>{step < 5 ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`}</span>
+            <span>{step < LAST_STEP ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`}</span>
             <span>{currency(subtotal)}</span>
           </button>
         </div>
