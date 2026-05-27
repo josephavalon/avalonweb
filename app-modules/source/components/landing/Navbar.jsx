@@ -237,7 +237,7 @@ export default function Navbar({ showBack = false }) {
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="relative overflow-hidden rounded-[24px] border border-foreground/[0.10] bg-background/[0.42] p-2 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/[0.34]"
+                className="relative overflow-hidden rounded-[24px] border border-foreground/[0.10] bg-background/82 p-1.5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl"
               >
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(140deg,hsl(var(--foreground)/0.10),transparent_34%,hsl(var(--accent)/0.08))]" />
                 <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-foreground/20" />
@@ -253,7 +253,7 @@ export default function Navbar({ showBack = false }) {
                         close();
                         goBack();
                       }}
-                      className="flex min-h-[48px] w-full items-center justify-between rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+                      className="flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-foreground/[0.045] px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 transition-colors hover:bg-foreground/[0.075] hover:text-foreground"
                     >
                       <span>Back</span>
                       <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
@@ -272,11 +272,11 @@ export default function Navbar({ showBack = false }) {
                       <Link
                         to={item.to}
                         onClick={close}
-                        className={`group flex min-h-[48px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] transition-all duration-300 ${
+                        className={`group flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] transition-all duration-300 ${
                           item.primary
                             ? 'border-foreground/80 bg-foreground text-background hover:opacity-90'
                             : active
-                              ? 'border-foreground/[0.16] bg-foreground/[0.09] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]'
+                              ? 'border-foreground/[0.18] bg-foreground/[0.075] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]'
                               : 'border-transparent bg-transparent text-foreground/66 hover:border-foreground/[0.10] hover:bg-foreground/[0.055] hover:text-foreground'
                         }`}
                       >
@@ -302,7 +302,7 @@ export default function Navbar({ showBack = false }) {
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="flex min-h-[44px] w-full items-center justify-between rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+                      className="flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-foreground/[0.035] px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
                     >
                       <span>Sign Out</span>
                       <LogOut className="h-3.5 w-3.5" strokeWidth={1.7} />

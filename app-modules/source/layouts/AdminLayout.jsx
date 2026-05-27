@@ -11,6 +11,7 @@ import {
   Zap, Grid3X3, Send, MapPin, GraduationCap,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
+import MobileNavBar from '@/components/navigation/MobileNavBar';
 
 // ─── Theme sync ──────────────────────────────────────────────────────────────
 const THEMES = ['dark', 'light'];
@@ -236,57 +237,22 @@ export default function AdminLayout({ children, fullBleed = false }) {
       </div>
 
       {/* ── Mobile bottom tab bar ──────────────────────────────────── */}
-      <div
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-foreground/[0.08] bg-background/88 shadow-[0_-18px_70px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}
-      >
-        <div className="flex items-stretch">
-          {/* Primary tabs */}
-          <LayoutGroup id="provider-bottom-tabs">
-          {bottomTabs.map(({ to, icon: Icon, label }) => {
-            const active = isActive(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 transition-colors"
-                style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.45)' }}
-              >
-                {/* Active indicator bar */}
-                {active && (
-                  <motion.span
-                    layoutId="provider-bottom-active"
-                    className="absolute top-0 h-[2px] w-8 rounded-full bg-accent"
-                    transition={{ duration: 0.48, ease: EASE }}
-                  />
-                )}
-                <Icon className="w-5 h-5 shrink-0" strokeWidth={active ? 2 : 1.5} />
-                <span className="font-body text-[9px] tracking-[0.12em] uppercase leading-none">{label}</span>
-              </Link>
-            );
-          })}
-          </LayoutGroup>
-
-          {/* More tab — only shown when there are overflow items */}
-          {overflowNav.length > 0 && (
-            <button
-              onClick={() => setMoreOpen(true)}
-              className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors relative"
-              style={{ color: overflowNav.some(n => isActive(n.to)) ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.45)' }}
-              aria-label="More navigation"
-            >
-              {overflowNav.some(n => isActive(n.to)) && (
-                <span
-                  className="absolute top-0 h-[2px] w-8 rounded-full"
-                  style={{ background: 'hsl(var(--accent))' }}
-                />
-              )}
-              <MoreHorizontal className="w-5 h-5 shrink-0" strokeWidth={1.5} />
-              <span className="font-body text-[9px] tracking-[0.12em] uppercase leading-none">More</span>
-            </button>
-          )}
-        </div>
-      </div>
+      <MobileNavBar
+        ariaLabel="Provider navigation"
+        zIndex="low"
+        columns={overflowNav.length > 0 ? 5 : bottomTabs.length}
+        items={[
+          ...bottomTabs.map(({ to, icon, label }) => ({ to, icon, label })),
+          ...(overflowNav.length > 0
+            ? [{
+              label: 'More',
+              icon: MoreHorizontal,
+              onClick: () => setMoreOpen(true),
+              active: overflowNav.some(n => isActive(n.to)),
+            }]
+            : []),
+        ]}
+      />
 
       {/* ── More sheet (mobile) ────────────────────────────────────── */}
       <AnimatePresence>

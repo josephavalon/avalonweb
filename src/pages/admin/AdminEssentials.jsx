@@ -10,10 +10,10 @@ import {
   ShieldCheck,
   UserRound,
   Users,
-  X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
+import MobileNavBar from '@/components/navigation/MobileNavBar';
 import { APPOINTMENTS, NURSES, getClient, getService, formatTime } from '@/fixtures/commandMockData';
 import { readActivity, readLastBooking } from '@/lib/localOs';
 
@@ -83,23 +83,6 @@ function ReadinessRow({ icon: Icon, label, detail, yes = true, status }) {
       </div>
       <Status yes={yes} label={status} />
     </div>
-  );
-}
-
-function BottomAction({ to, icon: Icon, label, active }) {
-  return (
-    <Link
-      to={to}
-      className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl transition-transform active:scale-[0.96]"
-      style={{
-        background: active ? 'hsl(var(--foreground) / 0.09)' : 'transparent',
-        border: `1px solid ${active ? 'hsl(var(--foreground) / 0.14)' : 'transparent'}`,
-        color: active ? TEXT : MUTED,
-      }}
-    >
-      <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.55} />
-      <span className="font-body text-[8px] font-bold uppercase leading-none tracking-[0.14em]">{label}</span>
-    </Link>
   );
 }
 
@@ -217,21 +200,17 @@ export default function AdminEssentials() {
         </div>
       </section>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-2 backdrop-blur-2xl md:hidden" style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--background) / 0.96) 22%)' }} aria-label="Admin quick navigation">
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5 rounded-[24px] border border-foreground/[0.10] bg-background/82 p-1.5 shadow-[0_-18px_54px_rgba(0,0,0,0.34)]">
-          <BottomAction to="/admin" icon={Check} label="Core" active />
-          <BottomAction to="/admin/bookings" icon={ClipboardList} label="Visits" />
-          <BottomAction to="/admin/inventory" icon={Package} label="Stock" />
-          <BottomAction to="/members/messages" icon={MessageCircle} label="Comms" />
-          <Link
-            to="/"
-            className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl text-foreground/58 transition-transform active:scale-[0.96]"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={1.55} />
-            <span className="font-body text-[8px] font-bold uppercase leading-none tracking-[0.14em]">Site</span>
-          </Link>
-        </div>
-      </nav>
+      <MobileNavBar
+        ariaLabel="Admin quick navigation"
+        columns={5}
+        items={[
+          { to: '/admin', icon: Check, label: 'Core', exact: true },
+          { to: '/admin/bookings', icon: ClipboardList, label: 'Visits' },
+          { to: '/admin/inventory', icon: Package, label: 'Stock' },
+          { to: '/members/messages', icon: MessageCircle, label: 'Comms' },
+          { to: '/', icon: ArrowLeft, label: 'Site', exact: true },
+        ]}
+      />
     </main>
   );
 }

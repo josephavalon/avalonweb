@@ -1,19 +1,9 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { Home, Calendar, Crown, MessageCircle, User } from 'lucide-react';
 import { useCommunicationCenter } from '@/hooks/useCommunicationCenter';
-
-const BG = 'hsl(var(--background))';
-const BAR = 'hsl(var(--background) / 0.96)';
-const CARD = 'hsl(var(--foreground) / 0.075)';
-const BORDER = 'hsl(var(--foreground) / 0.12)';
-const ACTIVE_BORDER = 'hsl(var(--foreground) / 0.18)';
-const MUTED = 'hsl(var(--foreground) / 0.62)';
-const DIM = 'hsl(var(--foreground) / 0.42)';
-const TEXT = 'hsl(var(--foreground))';
+import MobileNavBar from '@/components/navigation/MobileNavBar';
 
 export default function MemberBottomNav() {
-  const { pathname } = useLocation();
   const { snapshot } = useCommunicationCenter();
 
   const items = [
@@ -25,70 +15,11 @@ export default function MemberBottomNav() {
   ];
 
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-40 px-3 pt-2 backdrop-blur-2xl"
-      aria-label="Member navigation"
-      style={{
-        background: `linear-gradient(180deg, rgba(8,8,7,0), ${BAR} 24%)`,
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.7rem)',
-      }}
-    >
-      <div
-        className="mx-auto grid max-w-md grid-cols-5 gap-1.5 rounded-[24px] p-1.5"
-        style={{ background: 'hsl(var(--background) / 0.82)', border: `1px solid ${BORDER}`, boxShadow: '0 -18px 54px rgba(0,0,0,0.34)' }}
-      >
-        {items.map((item) => (
-          <MemberNavItem
-            key={item.label}
-            item={item}
-            active={item.href !== '#' && (pathname === item.href || pathname.startsWith(`${item.href}/`))}
-          />
-        ))}
-      </div>
-    </nav>
-  );
-}
-
-function MemberNavItem({ item, active }) {
-  const Icon = item.icon;
-  const color = item.primary ? BG : active ? TEXT : DIM;
-  const labelColor = item.primary ? TEXT : active ? TEXT : MUTED;
-  const background = item.primary ? 'transparent' : active ? CARD : 'transparent';
-  const border = item.primary ? '1px solid transparent' : active ? `1px solid ${ACTIVE_BORDER}` : '1px solid transparent';
-
-  return (
-    <Link
-      to={item.href}
-      className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-1 text-center transition-transform active:scale-[0.96]"
-      style={{ background, border }}
-    >
-      {item.primary ? (
-        <>
-          <span className="flex h-9 w-11 items-center justify-center rounded-full" style={{ background: TEXT, color: BG, boxShadow: '0 10px 30px hsl(var(--foreground) / 0.18)' }}>
-            <Icon className="h-5 w-5" strokeWidth={2} />
-          </span>
-          <span className="font-body text-[9px] font-semibold uppercase leading-none tracking-[0.16em]" style={{ color: labelColor }}>
-            {item.label}
-          </span>
-        </>
-      ) : (
-        <>
-          <span className="relative flex h-9 w-11 items-center justify-center rounded-full" style={{ color }}>
-            <Icon className="h-5 w-5" strokeWidth={active ? 1.9 : 1.55} />
-            {item.badge && (
-              <span
-                className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center font-body text-[8px] font-bold"
-                style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))', padding: '0 3px' }}
-              >
-                {item.badge > 9 ? '9+' : item.badge}
-              </span>
-            )}
-          </span>
-          <span className="font-body text-[8px] uppercase leading-none tracking-[0.12em]" style={{ color: labelColor }}>
-            {item.label}
-          </span>
-        </>
-      )}
-    </Link>
+    <MobileNavBar
+      items={items.map(({ href, ...item }) => ({ ...item, to: href }))}
+      ariaLabel="Member navigation"
+      columns={5}
+      zIndex="default"
+    />
   );
 }

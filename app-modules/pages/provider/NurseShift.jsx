@@ -12,6 +12,7 @@ import {
 import { SEED_ITEMS } from '@/data/inventorySeed';
 import { appendActivity, readLocal, writeLocal } from '@/lib/localOs';
 import { useSeo } from '@/lib/seo';
+import MobileNavBar from '@/components/navigation/MobileNavBar';
 import {
   buildAcuityCloseoutPacket,
   evaluateAcuityCloseout,
@@ -1368,37 +1369,18 @@ export default function NurseShift() {
       </div>
 
       {/* ── BOTTOM QUICK ACTIONS ── */}
-      <div className="fixed bottom-0 inset-x-0 z-[100] px-3 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-2 backdrop-blur-2xl" style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--background) / 0.96) 24%)' }}>
-        <div className="mx-auto flex max-w-[512px] gap-1.5 rounded-[24px] border border-white/[0.10] bg-background/82 p-1.5 shadow-[0_-18px_54px_rgba(0,0,0,0.34)]">
-
-          {/* Call Dispatch */}
-          <a
-            href={DISPATCH_PHONE}
-            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl border border-transparent text-white/70 no-underline transition-transform active:scale-[0.96]"
-          >
-            <Phone size={18} className="text-white/50" />
-            <span className="text-[11px] text-white font-semibold tracking-[0.04em]">DISPATCH</span>
-          </a>
-
-          {/* Supplies */}
-          <button
-            onClick={() => setSupplyModal(true)}
-            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl border border-white/[0.10] bg-white/[0.055] text-white transition-transform active:scale-[0.96]"
-          >
-            <Package size={18} className="text-white/50" />
-            <span className="text-[11px] text-white font-semibold tracking-[0.04em]">SUPPLIES</span>
-          </button>
-
-          {/* End Shift */}
-          <button
-            onClick={handleEndShift}
-            className="flex-1 flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl border border-transparent text-red-300/80 transition-transform active:scale-[0.96]"
-          >
-            <LogOut size={18} className="text-red-300/75" />
-            <span className="text-[11px] text-red-300/80 font-semibold tracking-[0.04em]">END</span>
-          </button>
-        </div>
-      </div>
+      <MobileNavBar
+        ariaLabel="Shift actions"
+        columns={3}
+        mobileOnly={false}
+        zIndex="high"
+        maxWidth="shift"
+        items={[
+          { href: DISPATCH_PHONE, icon: Phone, label: 'Dispatch' },
+          { onClick: () => setSupplyModal(true), icon: Package, label: 'Supplies', active: true },
+          { onClick: handleEndShift, icon: LogOut, label: 'End' },
+        ]}
+      />
 
       {/* ── SUPPLY MODAL ── */}
       <AnimatePresence>

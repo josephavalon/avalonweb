@@ -17,6 +17,7 @@ import {
   Package,
   Route,
   Send,
+  Settings,
   ShieldCheck,
   Stethoscope,
 } from 'lucide-react';
@@ -47,6 +48,7 @@ import {
 } from '@/lib/localRepository';
 import { evaluateClinicalClearance } from '@/lib/clinicalClearance';
 import { SEED_ITEMS } from '@/data/inventorySeed';
+import MobileNavBar from '@/components/navigation/MobileNavBar';
 import {
   APPOINTMENTS,
   NURSES,
@@ -688,14 +690,18 @@ export default function NurseDashboard() {
         </section>
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-40 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] backdrop-blur-2xl" style={{ background: 'rgba(8,8,7,0.9)', borderTop: `1px solid ${BORDER}` }}>
-        <div className="max-w-5xl mx-auto grid grid-cols-4 gap-2">
-          <Link to="/provider/dashboard" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD_STRONG, color: ACCENT, border: `1px solid ${BORDER}` }}>Command</Link>
-          <Link to="/provider/shift" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Shift</Link>
-          <Link to="/provider/role-os" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Tools</Link>
-          <Link to="/provider/settings" className="flex min-h-[56px] items-center justify-center rounded-2xl text-center font-body text-[10px] tracking-[0.18em] uppercase" style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}>Settings</Link>
-        </div>
-      </nav>
+      <MobileNavBar
+        ariaLabel="Nurse navigation"
+        columns={4}
+        mobileOnly={false}
+        maxWidth="lg"
+        items={[
+          { to: '/provider/dashboard', icon: LayoutDashboard, label: 'Command', exact: true },
+          { to: '/provider/shift', icon: Stethoscope, label: 'Shift', primary: true },
+          { to: '/provider/role-os', icon: Package, label: 'Tools' },
+          { to: '/provider/settings', icon: Settings, label: 'Settings' },
+        ]}
+      />
     </div>
   );
 }
