@@ -804,9 +804,9 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
 
 @media (min-width: 1024px) {
   .avalon-footer-link {
-    min-height: 2.75rem !important;
-    padding-top: 0.375rem !important;
-    padding-bottom: 0.375rem !important;
+    min-height: 1.75rem !important;
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
     font-size: 11px !important;
     border-radius: 0.375rem;
   }
