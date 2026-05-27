@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { track } from '@/lib/analytics';
 import { useCart } from '@/context/CartContext';
 import { Droplets, Zap, Syringe, ChevronDown, ArrowRight, Check, Plus } from 'lucide-react';
@@ -163,8 +163,9 @@ function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, chi
 
 export default function CustomProtocol() {
   useSeo({ title: 'Custom Protocol — Avalon Vitality', description: 'Build a fully custom IV therapy protocol with your choice of drip, add-ons, and frequency.', path: '/custom' });
-  const { addItem, clearItems } = useCart();
+  const { addItem, clearItems, setMembershipTier, clearMembership } = useCart();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   // Treatment on/off
   const [vitaminsOn, setVitaminsOn] = useState(true);
   const [cbdOn, setCbdOn]           = useState(false);
@@ -176,7 +177,7 @@ export default function CustomProtocol() {
   const [nadDose, setNadDose]                 = useState(NAD_DOSES[0]);
 
   // Billing mode
-  const [billingMode, setBillingMode] = useState('onetime'); // 'onetime' | 'subscription'
+  const [billingMode, setBillingMode] = useState(() => searchParams.get('mode') === 'subscription' ? 'subscription' : 'onetime'); // 'onetime' | 'subscription'
   const isSubscription = billingMode === 'subscription';
 
   // Per-treatment quantities (per visit for one-time; per month for subscription)
@@ -547,6 +548,22 @@ export default function CustomProtocol() {
                           items.push({ cartKey: `im-${shotKey}-${i}`, label: shot.label, price: shot.price, type: 'im' });
                       }
                     });
+                    if (billingMode === 'subscription') {
+                      clearMembership?.();
+                      setMembershipTier?.({
+                        key: 'custom',
+                        name: 'Custom Subscription',
+                        billing: 'monthly',
+                        price: monthlyTotal,
+                        ivCount: effectiveVitaminsQty + effectiveCbdQty + effectiveNadQty,
+                        custom: true,
+                        items,
+                      });
+                      track('protocol_completed', { item_count: items.length, billing: billingMode });
+                      navigate('/checkout');
+                      return;
+                    }
+                    clearMembership?.();
                     items.forEach(item => addItem?.(item));
                     track('protocol_completed', { item_count: items.length, billing: billingMode });
                     navigate('/checkout');

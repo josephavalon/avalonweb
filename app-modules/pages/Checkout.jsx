@@ -15,7 +15,7 @@ import { useSeo } from '@/lib/seo';
 import { acuityTypeForCart } from '@/lib/acuityAppointmentTypes';
 import { avalonErrorClass, avalonLabelClass, avalonLightFieldClass } from '@/components/ui/formStyles';
 import { orchestrateOrderHandoff } from '@/lib/platformOps';
-import { readBookingDraft, readLastBooking } from '@/lib/localOs';
+import { readBookingDraft, readLastBooking, readLocal } from '@/lib/localOs';
 import { getDepositAmountDollars } from '@/lib/checkoutConfig';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
@@ -120,6 +120,9 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
 function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext }) {
   const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
   const hasItems = items.length > 0 || membership;
+  const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
+    ? membership.name
+    : `${membership?.name || 'Membership'} Subscription`;
 
   if (!hasItems) {
     return (
@@ -184,7 +187,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
               <Sparkles className="w-4 h-4 text-accent" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-body text-xs tracking-widest uppercase text-foreground">{membership.name} Subscription</p>
+              <p className="font-body text-xs tracking-widest uppercase text-foreground">{membershipTitle}</p>
               <p className="font-body text-[10px] text-foreground/40 capitalize">{membership.billing} billing · {membership.ivCount} IV{membership.ivCount > 1 ? 's' : ''}/mo</p>
             </div>
             <div className="text-right">
@@ -689,6 +692,9 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
   const hasMembership = !!membership;
   const hasItems = items.length > 0;
+  const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
+    ? membership.name
+    : `${membership?.name || 'Membership'} Subscription`;
   const subscriptionDue = membership?.price || 0;
   const dueToday = (hasItems ? DEPOSIT_DUE : 0) + subscriptionDue || DEPOSIT_DUE;
   const futureBalance = Math.max(0, itemsTotal - (hasItems ? DEPOSIT_DUE : 0));
@@ -761,7 +767,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       orchestrateOrderHandoff({
         id: `CHK-${Date.now().toString().slice(-6)}`,
-        service: membership ? `${membership.name} Subscription` : (items[0]?.label || 'Avalon visit'),
+        service: membership ? membershipTitle : (items[0]?.label || 'Avalon visit'),
         plan: membership?.name,
         date: appointment?.date || 'First visit pending',
         time: appointment?.acuitySlot?.timeLabel || 'Schedule intake',
@@ -823,7 +829,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         ))}
         {membership && (
           <div className="flex justify-between items-center">
-            <span className="font-body text-xs text-foreground tracking-wide">{membership.name} Subscription ({membership.billing})</span>
+            <span className="font-body text-xs text-foreground tracking-wide">{membershipTitle} ({membership.billing})</span>
             <span className="font-body text-xs text-foreground">${membership.price.toLocaleString()}/{membership.billing === 'annual' ? 'yr' : 'mo'}</span>
           </div>
         )}
@@ -955,14 +961,15 @@ export default function Checkout() {
   const [prefill] = useState(() => {
     const draft = readBookingDraft();
     const lastBooking = readLastBooking();
+    const subscriptionIntake = readLocal('webstore.subscriptionIntake', {});
     const sourceAppointment = draft?.appointment || lastBooking || {};
-    const sourceContact = draft?.contact || lastBooking?.contact || {};
+    const sourceContact = subscriptionIntake?.intake || draft?.contact || lastBooking?.contact || {};
     return {
-      appointment: sourceAppointment.address || sourceAppointment.zip || sourceAppointment.date ? {
-        address: sourceAppointment.address || '',
-        zip: sourceAppointment.zip || '',
-        date: sourceAppointment.date || '',
-        notes: sourceAppointment.notes || '',
+      appointment: sourceAppointment.address || subscriptionIntake?.intake?.address || sourceAppointment.zip || sourceAppointment.date ? {
+        address: sourceAppointment.address || subscriptionIntake?.intake?.address || '',
+        zip: sourceAppointment.zip || subscriptionIntake?.intake?.zip || '',
+        date: sourceAppointment.date || subscriptionIntake?.intake?.customDate || '',
+        notes: sourceAppointment.notes || subscriptionIntake?.intake?.notes || '',
       } : null,
       contact: sourceContact.email || sourceContact.phone || sourceContact.name ? {
         firstName: sourceContact.firstName || String(sourceContact.name || '').trim().split(/\s+/)[0] || '',

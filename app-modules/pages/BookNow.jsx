@@ -36,7 +36,7 @@ import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout 
 import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
 import { getDepositAmountDollars } from '@/lib/checkoutConfig';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
-import { BOOKABLE_SUBSCRIPTION_TIERS, FEATURED_SUBSCRIPTION_TIER_KEY } from '@/config/subscriptionTiers';
+import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -121,11 +121,16 @@ const WHO_OPTIONS = [
   { key: 'group', label: 'Group' },
 ];
 
-const MEMBERSHIP_OPTIONS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
+const MEMBERSHIP_OPTIONS = SUBSCRIPTION_TIERS.map((tier) => ({
   key: tier.key,
   label: tier.name,
   price: tier.price,
-  sub: `${tier.sessions} session${tier.sessions === 1 ? '' : 's'}/mo · ${tier.discount} off add-ons`,
+  sessions: tier.sessions,
+  discount: tier.discount,
+  custom: Boolean(tier.custom),
+  sub: tier.custom
+    ? 'Build your monthly protocol.'
+    : `${tier.sessions} session${tier.sessions === 1 ? '' : 's'}/mo · ${tier.discount} off add-ons`,
 }));
 
 const EVENT_TYPES = ['Private', 'Hotel', 'Office', 'Festival', 'Venue'];
@@ -162,6 +167,7 @@ function splitName(name = '') {
 }
 
 function currency(value) {
+  if (value === null || value === undefined || value === '') return 'Custom';
   return `$${Number(value || 0).toLocaleString()}`;
 }
 
@@ -224,26 +230,38 @@ function SectionTitle({ kicker, title, sub }) {
 
 function StepProgress({ step }) {
   return (
-    <div className="mb-5 flex items-center gap-2">
-      {STEPS.map((item, index) => (
-        <React.Fragment key={item}>
-          <div className={`h-2.5 w-2.5 rounded-full border transition-colors ${index <= step ? 'border-foreground bg-foreground' : 'border-foreground/18'}`} />
-          {index < STEPS.length - 1 && (
-            <div className="h-px flex-1 bg-foreground/12">
-              <motion.div
-                className="h-full bg-foreground/48"
-                initial={false}
-                animate={{ scaleX: index < step ? 1 : 0 }}
-                transition={{ duration: 0.45, ease: EASE }}
-                style={{ originX: 0 }}
-              />
+    <div className="mb-5 rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-2">
+      <div className="flex items-center gap-1.5 md:gap-2">
+        {STEPS.map((item, index) => {
+          const active = index === step;
+          const complete = index < step;
+          return (
+            <div key={item} className="flex min-w-0 flex-1 items-center gap-1.5">
+              <div
+                className={`flex h-7 min-w-7 items-center justify-center rounded-full border font-body text-[9px] font-semibold transition-colors ${
+                  active || complete
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-foreground/18 bg-background/45 text-foreground/42'
+                }`}
+                aria-current={active ? 'step' : undefined}
+              >
+                {complete ? <Check className="h-3 w-3" strokeWidth={2.2} /> : index + 1}
+              </div>
+              <span className={`hidden truncate font-body text-[9px] font-semibold uppercase tracking-[0.12em] md:block ${active ? 'text-foreground' : 'text-foreground/34'}`}>
+                {item}
+              </span>
             </div>
-          )}
-        </React.Fragment>
-      ))}
-      <span className="ml-2 shrink-0 font-body text-[10px] uppercase tracking-[0.18em] text-foreground/45">
-        {STEPS[step]}
-      </span>
+          );
+        })}
+      </div>
+      <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/10">
+        <motion.div
+          className="h-full rounded-full bg-foreground"
+          initial={false}
+          animate={{ width: `${(step / LAST_STEP) * 100}%` }}
+          transition={{ duration: 0.35, ease: EASE }}
+        />
+      </div>
     </div>
   );
 }
@@ -542,7 +560,8 @@ function TextInput({ label, value, onChange, placeholder, type = 'text', require
   );
 }
 
-function SummaryRail({ state, product, subtotal, onSubmit }) {
+function SummaryRail({ state, product, plan, subtotal, onSubmit }) {
+  const isSubscription = state.visitType === 'subscription';
   return (
     <aside className="hidden lg:block">
       <div className="sticky top-28 rounded-[1.5rem] border border-foreground/10 bg-background/70 p-5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
@@ -554,8 +573,8 @@ function SummaryRail({ state, product, subtotal, onSubmit }) {
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
-              ['Due now', currency(DEPOSIT_DUE)],
-              ['Estimate', currency(subtotal)],
+              ['Due now', isSubscription ? (plan.custom ? 'Custom' : `${currency(plan.price)}/mo`) : currency(DEPOSIT_DUE)],
+              [isSubscription ? 'Protocol' : 'Estimate', currency(subtotal)],
               ['Scheduling', 'Queued'],
               ['Clearance', 'Before visit'],
             ].map(([label, value]) => (
@@ -575,7 +594,7 @@ function SummaryRail({ state, product, subtotal, onSubmit }) {
             onClick={onSubmit}
             className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background"
           >
-            Hold Visit <ArrowRight className="h-4 w-4" />
+            {isSubscription ? (plan.custom ? 'Design Custom' : `Start ${plan.label}`) : 'Hold Visit'} <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -616,7 +635,7 @@ export default function BookNow() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { clearItems, addItem } = useCart();
+  const { clearItems, addItem, setMembershipTier, clearMembership } = useCart();
   const clientProfile = useMemo(() => readClientProfile(), []);
   const profileGfe = useMemo(() => resolveGfeRequirement({
     isNewClient: false,
@@ -882,6 +901,7 @@ export default function BookNow() {
     if (step === 3) return state.addOnDecision ? 'Location next' : 'Choose a path';
     if (step === 4 && !canAdvance()) return 'Add location';
     if (step === 5 && !canAdvance()) return 'Pick time';
+    if (step === LAST_STEP && state.visitType === 'subscription') return plan.custom ? 'Design Custom' : `Start ${plan.label}`;
     return step < LAST_STEP ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`;
   };
 
@@ -986,6 +1006,18 @@ export default function BookNow() {
       setStep(2);
       return;
     }
+    if (state.visitType === 'subscription' && plan.custom) {
+      writeLocal('webstore.customSubscriptionDraft', {
+        outcome: outcome.label,
+        protocol: product.label,
+        addOns: selectedAddons.map((item) => item.label),
+        subtotal,
+        updatedAt: new Date().toISOString(),
+      });
+      clearBookingDraft();
+      navigate('/custom?mode=subscription');
+      return;
+    }
     if (!canSubmit) {
       setError('Add name, phone, email, address, and ZIP.');
       setStep(LAST_STEP);
@@ -995,6 +1027,58 @@ export default function BookNow() {
         step_name: STEPS[LAST_STEP],
         reason: 'required_fields_missing',
       });
+      return;
+    }
+    if (state.visitType === 'subscription') {
+      const subscriptionPlan = {
+        key: plan.key,
+        name: plan.label,
+        billing: 'monthly',
+        price: Number(plan.price || 0),
+        ivCount: Number(plan.sessions || 0),
+        discount: plan.discount,
+        preferredOutcome: outcome.label,
+        preferredProtocol: product.label,
+        addOns: selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
+        intake: {
+          name: state.name.trim(),
+          email: state.email.trim(),
+          phone: state.phone.trim(),
+          address: state.address.trim(),
+          zip: String(state.zip || '').trim(),
+          locationType: state.locationType,
+          timeIntent: state.timeIntent,
+          customDate: state.customDate,
+          customTime: state.customTime,
+          notes: state.notes,
+          clientType: state.clientType,
+        },
+      };
+
+      clearItems();
+      clearMembership?.();
+      setMembershipTier?.(subscriptionPlan);
+      writeLocal('webstore.subscriptionIntake', {
+        ...subscriptionPlan,
+        subtotal,
+        updatedAt: new Date().toISOString(),
+      });
+      appendActivity(`Subscription checkout started: ${plan.label} · ${product.label}`, {
+        role: 'client',
+        orderType: 'subscription',
+        protocolKey: product.key,
+      });
+      track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
+        funnel: 'webstore',
+        order_type: 'subscription',
+        product_family: 'subscription',
+        protocol_key: product.key,
+        plan_key: plan.key,
+        addon_count: selectedAddons.length,
+        subtotal,
+      });
+      clearBookingDraft();
+      navigate('/checkout');
       return;
     }
     const candidate = buildBooking();
@@ -1197,14 +1281,40 @@ export default function BookNow() {
                       </div>
                     )}
                     {state.visitType === 'subscription' && (
-                      <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                        {MEMBERSHIP_OPTIONS.map((item) => (
-                          <button key={item.key} type="button" onClick={() => setValue('planKey', item.key)} className={`min-h-[92px] rounded-[1rem] border p-3 text-left ${state.planKey === item.key ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-foreground/[0.03]'}`}>
-                            <p className="font-body text-xs font-semibold">{item.label}</p>
-                            <p className="mt-1 font-heading text-2xl">{currency(item.price)}/mo</p>
-                            <p className={`mt-1 font-body text-[10px] leading-snug ${state.planKey === item.key ? 'text-background/62' : 'text-foreground/42'}`}>{item.sub}</p>
+                      <div className="mt-5 rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.025] p-3">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/58">Subscription path</p>
+                            <p className="mt-1 font-body text-xs text-foreground/45">Choose a monthly tier or back out to one-time.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setValue('visitType', 'one-time')}
+                            className="min-h-[40px] rounded-full border border-foreground/12 px-4 font-body text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground/58 transition-colors hover:border-foreground/28 hover:text-foreground"
+                          >
+                            One-time instead
                           </button>
-                        ))}
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                          {MEMBERSHIP_OPTIONS.map((item) => {
+                            const active = state.planKey === item.key;
+                            return (
+                              <button
+                                key={item.key}
+                                type="button"
+                                onClick={() => setValue('planKey', item.key)}
+                                className={`min-h-[112px] rounded-[1rem] border p-3 text-left transition-colors ${
+                                  active ? 'border-foreground bg-foreground text-background' : 'border-foreground/10 bg-background/35 text-foreground hover:border-foreground/24'
+                                }`}
+                              >
+                                <p className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] opacity-70">{item.custom ? 'Generator' : 'Monthly'}</p>
+                                <p className="mt-2 font-heading text-3xl uppercase leading-none">{item.label}</p>
+                                <p className="mt-1 font-heading text-2xl">{item.custom ? 'Custom' : `${currency(item.price)}/mo`}</p>
+                                <p className={`mt-1 font-body text-[10px] leading-snug ${active ? 'text-background/62' : 'text-foreground/42'}`}>{item.sub}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </>
@@ -1290,7 +1400,7 @@ export default function BookNow() {
             </div>
           </section>
 
-          <SummaryRail state={state} product={product} subtotal={subtotal} onSubmit={submit} />
+          <SummaryRail state={state} product={product} plan={plan} subtotal={subtotal} onSubmit={submit} />
         </div>
       </main>
 
