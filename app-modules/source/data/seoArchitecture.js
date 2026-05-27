@@ -346,9 +346,9 @@ export const indexedSeoPaths = [
 export const publicStaticRoutes = [
   {
     path: '/',
-    title: 'Avalon Vitality | Premium Recovery, Delivered',
+    title: 'Avalon Vitality | Mobile Recovery Therapy',
     description: 'Avalon Vitality delivers clinical recovery to homes, hotels, offices, and launches with licensed RN visits, clinical clearance, flat pricing, and fast Bay Area booking.',
-    h1: 'Premium Recovery, Delivered',
+    h1: 'Mobile Recovery Therapy',
     priority: '1.0',
     changefreq: 'weekly',
   },

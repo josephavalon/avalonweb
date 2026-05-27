@@ -26,7 +26,7 @@ const Footer = lazy(() => import('../components/landing/Footer'));
 // produces opacity multiplication (t²) which creates the visible flash highlight.
 export default function Home() {
   useSeo({
-    title: 'Avalon Vitality — Premium Recovery, Delivered',
+    title: 'Avalon Vitality — Mobile Recovery Therapy',
     description: 'Avalon Vitality is a premium recovery platform for clinician-reviewed protocols across hydration, recovery, performance, longevity, launches, and mobile appointments.',
     path: '/',
   });
