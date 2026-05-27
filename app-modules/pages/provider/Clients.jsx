@@ -27,6 +27,60 @@ const TAG_FILTERS = ['All', 'VIP', 'Recurring', 'Athlete', 'Corporate'];
 
 const SOURCES = ['website', 'referral', 'instagram', 'google', 'yelp', 'corporate', 'other'];
 
+const PREVIEW_CLIENTS = [
+  {
+    id: 'preview-client-1',
+    first_name: 'Alexandra',
+    last_name: 'Montgomery',
+    email: 'alexandra.montgomery.preview@avalon.local',
+    phone: '(415) 555-1101',
+    city: 'San Francisco',
+    zip: '94105',
+    tags: ['vip', 'recurring'],
+    intake_completed: true,
+    is_active: true,
+    source: 'website',
+    total_spent: 1840,
+    visit_count: 9,
+    last_visit: '2026-05-08',
+    created_at: '2026-02-01',
+  },
+  {
+    id: 'preview-client-2',
+    first_name: 'Maya',
+    last_name: 'Patel',
+    email: 'maya.patel.preview@avalon.local',
+    phone: '(415) 555-1102',
+    city: 'Marin',
+    zip: '94941',
+    tags: ['recurring'],
+    intake_completed: true,
+    is_active: true,
+    source: 'referral',
+    total_spent: 940,
+    visit_count: 4,
+    last_visit: '2026-04-28',
+    created_at: '2026-02-14',
+  },
+  {
+    id: 'preview-client-3',
+    first_name: 'Tyler',
+    last_name: 'Brooks-Wellington',
+    email: 'tyler.brooks-wellington.corporate@avalon.local',
+    phone: '(415) 555-1103',
+    city: 'Palo Alto',
+    zip: '94301',
+    tags: ['corporate', 'athlete'],
+    intake_completed: false,
+    is_active: true,
+    source: 'corporate',
+    total_spent: 2200,
+    visit_count: 11,
+    last_visit: '2026-05-02',
+    created_at: '2026-03-10',
+  },
+];
+
 function avatarColor(name) {
   const code = name.charCodeAt(0) % AVATAR_COLORS.length;
   return AVATAR_COLORS[code];
@@ -531,7 +585,7 @@ export default function Clients() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
 
-  const [clients, setClients] = useState(CLIENTS);
+  const [clients, setClients] = useState(() => (CLIENTS.length ? CLIENTS : PREVIEW_CLIENTS));
   const [search, setSearch] = useState('');
   const [tagFilter, setTagFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -589,7 +643,7 @@ export default function Clients() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen p-6 lg:p-8 bg-background">
+      <div className="min-h-screen bg-background px-3 py-4 sm:px-5 lg:p-8">
 
         {/* Header */}
         <motion.div
@@ -599,8 +653,8 @@ export default function Clients() {
           className="mb-8"
         >
           <p className="text-[11px] tracking-[0.3em] uppercase font-medium mb-1" style={{ color: 'hsl(var(--accent))' }}>Clients</p>
-          <div className="flex items-center gap-4">
-            <h1 className="font-heading text-4xl text-white tracking-wider">CLIENT ROSTER</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <h1 className="font-heading text-[2.45rem] leading-none text-white tracking-wide sm:text-4xl sm:tracking-wider">CLIENT ROSTER</h1>
             <span className="text-sm font-medium px-3 py-1 rounded-full text-white" style={{ background: 'hsl(var(--accent) / 0.15)', border: '1px solid hsl(var(--accent) / 0.25)' }}>
               {clients.length} total
             </span>
@@ -761,21 +815,38 @@ export default function Clients() {
                   </div>
 
                   {/* Mobile row */}
-                  <div className="lg:hidden flex items-center gap-3 px-4 py-4">
-                    <Avatar first={client.first_name} last={client.last_name} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white">{client.first_name} {client.last_name}</p>
-                      <p className="text-xs text-white truncate">{client.email}</p>
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {client.tags.map(t => <TagPill key={t} tag={t} />)}
-                        <IntakeBadge completed={client.intake_completed} />
+                  <div className="lg:hidden px-3 py-3.5 sm:px-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <Avatar first={client.first_name} last={client.last_name} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="break-words text-[15px] font-semibold leading-snug text-white">{client.first_name} {client.last_name}</p>
+                            <p className="mt-0.5 break-all text-xs leading-snug text-white/58">{client.email}</p>
+                          </div>
+                          <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="font-body text-[9px] uppercase tracking-[0.16em] text-white/32">Spent</p>
+                            <p className="mt-0.5 truncate text-sm font-semibold text-white">{formatCurrency(client.total_spent)}</p>
+                          </div>
+                          <div className="min-w-0 text-right">
+                            <p className="font-body text-[9px] uppercase tracking-[0.16em] text-white/32">Visits</p>
+                            <p className="mt-0.5 truncate text-sm font-semibold text-white">{client.visit_count}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-2.5 flex min-w-0 flex-wrap gap-1.5">
+                          {client.tags.length > 0
+                            ? client.tags.map(t => <TagPill key={t} tag={t} />)
+                            : <span className="text-xs text-white/35">No tags</span>
+                          }
+                          <IntakeBadge completed={client.intake_completed} />
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-medium text-white">{formatCurrency(client.total_spent)}</p>
-                      <p className="text-xs text-white">{client.visit_count} visits</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }} />
                   </div>
                 </motion.div>
               ))}
