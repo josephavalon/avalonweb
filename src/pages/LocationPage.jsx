@@ -60,8 +60,15 @@ export function LocationsHub() {
             Mobile Recovery Across the Bay
           </h1>
           <p className="mt-6 max-w-2xl font-body text-base leading-relaxed text-foreground/62 md:text-lg">
-            Avalon location pages explain mobile recovery protocols, IV therapy, NAD+ appointments, recovery support, hotel service, launch service, and mobile appointment availability by market.
+            City-specific recovery pages for homes, hotels, offices, launches, and private events across the Bay Area.
           </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {['San Francisco', 'Peninsula', 'South Bay', 'East Bay', 'North Bay', 'Wine Country'].map((item) => (
+              <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/45">
+                {item}
+              </span>
+            ))}
+          </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {locationPages.map((item) => (
               <Link
@@ -71,7 +78,14 @@ export function LocationsHub() {
               >
                 <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{item.region}</p>
                 <h2 className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">{item.city}</h2>
-                <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.description}</p>
+                <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.communityRecovery}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {item.neighborhoods.slice(0, 3).map((neighborhood) => (
+                    <span key={neighborhood} className="rounded-full border border-foreground/10 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">
+                      {neighborhood}
+                    </span>
+                  ))}
+                </div>
                 <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
                   Open market <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                 </span>
@@ -163,6 +177,29 @@ export default function LocationPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <RouteLink to="/book">Request appointment</RouteLink>
               <RouteLink to="/service-area">Check service area</RouteLink>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-foreground/[0.07] px-5 py-12 md:px-12 md:py-16 lg:px-20">
+          <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/38">Community Recovery</p>
+              <h2 className="mt-4 max-w-lg font-heading text-5xl uppercase leading-none text-foreground md:text-6xl">
+                Built for {page.city}
+              </h2>
+            </div>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-6">
+              <p className="font-body text-base leading-relaxed text-foreground/62">
+                {page.communityRecovery}
+              </p>
+              <div className="mt-6 grid gap-3 md:grid-cols-3">
+                {page.localUseCases.map((item) => (
+                  <div key={item} className="rounded-xl border border-foreground/[0.08] bg-background/35 p-4">
+                    <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/58">{item}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
