@@ -18,7 +18,7 @@ export const LOCAL_BUSINESS_PROFILE = {
   telephone: '+14159807708',
   email: 'support@avalonvitality.co',
   priceRange: '$$$',
-  image: `${SEO_BASE_URL}/og-homepage.png?v=20260527`,
+  image: `${SEO_BASE_URL}/og-homepage.jpg?v=20260527`,
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'San Francisco',
