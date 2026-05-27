@@ -50,10 +50,9 @@ export const DEFAULT_SHIFT_VALUE = 85;
 export const AVALON_COMMS_CONTRACT = {
   service: 'Avalon Comms',
   badgeStatus: 'Live',
-  replaces: ['Connecteam', 'Signal'],
   description: 'Avalon-owned group communications for dispatch, nurses, announcements, alerts, and Y/N shift replies.',
   capabilities: [
-    'Replace Connecteam and Signal for internal group threads',
+    'Run governed internal group threads',
     'Run dispatch, nurse, clinical, and admin channels in one place',
     'Queue SMS/email placeholders while preserving the same workflow',
     'Attach messages to shifts, GFE routing, incidents, and follow-up',

@@ -334,7 +334,7 @@ function buildCommsOrchestration({ kernel, arrival, exceptions, execution } = {}
       audience: 'Team',
       status: broadcastLimit.status || 'Ready',
       trigger: 'Before bulk alert',
-      action: 'Prevent noisy group comms and duplicate nurse pings.',
+      action: 'Prevent noisy threads and duplicate nurse pings.',
     }),
     commsRoute({
       id: 'incident-alert',

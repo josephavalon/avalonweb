@@ -130,7 +130,7 @@ export const ENTERPRISE_DOMAIN_SERVICES = [
     buildNow: ['Client thread', 'Nurse broadcast', 'Announcements', 'Templates', 'Ack model'],
     laterApi: ['Twilio', 'Resend', 'Push notifications', 'Delivery receipts'],
     events: ['message.sent', 'broadcast.acknowledged', 'alert.escalated', 'template.used'],
-    licenseValue: 'Replaces Connecteam/Signal chaos with an auditable communication layer.',
+    licenseValue: 'Creates an auditable communication layer for mobile clinical operations.',
   },
   {
     id: 'launches-events',

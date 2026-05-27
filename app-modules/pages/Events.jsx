@@ -18,7 +18,7 @@ const fadeUp = {
 };
 
 const launchTypes = [
-  { name: 'Corporate Retreats', desc: 'Reward teams. Signal investment in their wellbeing.' },
+  { name: 'Corporate Retreats', desc: 'Reward teams. Show investment in their wellbeing.' },
   { name: 'Product Launches', desc: 'Stand-out activations that guests remember.' },
   { name: 'Wellness Festivals', desc: 'On-brand, medically credible, high-engagement.' },
   { name: 'Private Parties', desc: 'Recovery-forward hospitality. Elevated hosting.' },

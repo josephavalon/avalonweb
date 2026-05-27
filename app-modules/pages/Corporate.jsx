@@ -17,7 +17,7 @@ const fadeUp = {
 const benefits = [
   {
     title: 'A Benefit They\'ll Remember',
-    body: 'IV therapy as a workplace perk is memorable. It signals real investment in your team\'s wellbeing — and it gets talked about.',
+    body: 'IV therapy as a workplace perk is memorable. It shows real investment in your team\'s wellbeing — and it gets talked about.',
     icon: '↓',
   },
   {

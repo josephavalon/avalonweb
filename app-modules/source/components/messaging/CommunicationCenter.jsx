@@ -681,7 +681,7 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
       <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="font-body text-[9px] uppercase tracking-[0.28em] text-foreground/40">
-            {isClient ? 'Care channel' : `${AVALON_COMMS_CONTRACT.replaces.join(' + ')} replacement`}
+            {isClient ? 'Care channel' : 'Team communications'}
           </p>
           <h2 className="mt-1 font-heading text-3xl uppercase leading-none tracking-[0.04em] text-foreground md:text-4xl">
             {isClient ? 'Care Comms' : AVALON_COMMS_CONTRACT.service}
