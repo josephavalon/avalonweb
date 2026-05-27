@@ -23,10 +23,12 @@ const replacements = [
   { from: /<meta property="og:url" content="[^"]*"/, to: '<meta property="og:url" content="https://avalonvitality.co/b2b"' },
   { from: /<meta property="og:image" content="[^"]*"/, to: '<meta property="og:image" content="https://avalonvitality.co/og-b2b.png"' },
   { from: /<meta property="og:image:alt" content="[^"]*"/, to: '<meta property="og:image:alt" content="Avalon Vitality x Bay to Breakers presale"' },
+  { from: /"image": "https:\/\/avalonvitality\.co\/[^"]+"/, to: '"image": "https://avalonvitality.co/og-b2b.png"' },
   { from: /<link rel="canonical" href="[^"]*"/, to: '<link rel="canonical" href="https://avalonvitality.co/b2b"' },
   { from: /<meta name="twitter:title" content="[^"]*"/, to: '<meta name="twitter:title" content="Avalon Vitality × Bay to Breakers"' },
   { from: /<meta name="twitter:description" content="[^"]*"/, to: '<meta name="twitter:description" content="Finish-line IV, shots, & recovery. Sunday, May 17, 2026."' },
   { from: /<meta name="twitter:image" content="[^"]*"/, to: '<meta name="twitter:image" content="https://avalonvitality.co/og-b2b.png"' },
+  { from: /<meta name="twitter:image:alt" content="[^"]*"/, to: '<meta name="twitter:image:alt" content="Avalon Vitality x Bay to Breakers presale"' },
 ];
 
 let applied = 0;
