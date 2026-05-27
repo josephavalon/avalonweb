@@ -51,7 +51,7 @@ export default function ProtocolPage() {
             {...fadeUp(0.05)}
             type="button"
             onClick={() => navigate(-1)}
-            className="mb-10 flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/45 hover:text-foreground transition-colors"
+            className="mb-10 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-foreground/[0.10] px-4 font-body text-xs tracking-[0.2em] uppercase text-foreground/45 transition-colors hover:border-foreground/22 hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
             Back
