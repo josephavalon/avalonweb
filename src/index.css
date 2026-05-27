@@ -812,6 +812,14 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   }
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  a.avalon-footer-link {
+    min-height: 2.75rem !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+}
+
 @keyframes av-loader-progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }

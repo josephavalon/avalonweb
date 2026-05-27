@@ -371,7 +371,7 @@ export default function B2B() {
           border: 1px solid rgba(245, 243, 237, 0.24);
           border-radius: 8px;
           padding: 4px 28px 4px 10px;
-          min-height: 40px;
+          min-height: 44px;
           font-family: 'Bebas Neue', 'Impact', sans-serif;
           font-size: 14px;
           letter-spacing: 0.08em;

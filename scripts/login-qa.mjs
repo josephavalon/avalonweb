@@ -143,7 +143,7 @@ class CdpClient {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`CDP command timed out: ${method}`));
-      }, 20_000);
+      }, 45_000);
       this.pending.set(id, {
         resolve: (value) => {
           clearTimeout(timeout);
@@ -160,6 +160,15 @@ class CdpClient {
   close() {
     this.ws?.close();
   }
+}
+
+async function createPageClient() {
+  const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  await client.connect();
+  await client.send('Page.enable');
+  await client.send('Runtime.enable');
+  return client;
 }
 
 async function waitForReady(cdp) {
@@ -187,6 +196,16 @@ async function evalOnPage(cdp, expression) {
   return result.result?.value;
 }
 
+async function waitForPageCondition(cdp, expression, label, timeout = 8_000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const ok = await evalOnPage(cdp, expression);
+    if (ok) return;
+    await wait(160);
+  }
+  throw new Error(`Timed out waiting for ${label}.`);
+}
+
 async function openLogin(cdp) {
   cdp.consoleIssues = [];
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
@@ -201,6 +220,12 @@ async function openLogin(cdp) {
     } catch {}
     return true;
   })()`);
+  await waitForPageCondition(cdp, `(() => {
+    const username = document.querySelector('#username');
+    const password = document.querySelector('#password');
+    const submit = document.querySelector('form button[type="submit"]');
+    return Boolean(username && password && submit);
+  })()`, 'login controls');
 }
 
 async function waitForPath(cdp, expectedPath) {
@@ -288,14 +313,16 @@ try {
   ], { stdio: 'ignore' });
 
   await waitForChrome();
-  const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
-  cdp = new CdpClient(target.webSocketDebuggerUrl);
-  await cdp.connect();
-  await cdp.send('Page.enable');
-  await cdp.send('Runtime.enable');
-
-  for (const testCase of MANUAL_CASES) await runManualLogin(cdp, testCase);
-  for (const testCase of SHORTCUT_CASES) await runShortcutLogin(cdp, testCase);
+  for (const testCase of MANUAL_CASES) {
+    cdp?.close();
+    cdp = await createPageClient();
+    await runManualLogin(cdp, testCase);
+  }
+  for (const testCase of SHORTCUT_CASES) {
+    cdp?.close();
+    cdp = await createPageClient();
+    await runShortcutLogin(cdp, testCase);
+  }
 
   console.log(`Login QA passed ${MANUAL_CASES.length + SHORTCUT_CASES.length} mobile beta login checks.`);
 } finally {

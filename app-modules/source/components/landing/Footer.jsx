@@ -35,10 +35,10 @@ const GROUPS = [
 ];
 
 const DESKTOP_LINK =
-  'avalon-footer-link flex min-h-7 items-center rounded-md px-1.5 py-0.5 -mx-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
+  'avalon-footer-link flex min-h-7 items-center rounded-md px-1.5 py-0.5 -mx-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground md:min-h-10 lg:min-h-7';
 
 const DESKTOP_CONTACT_LINK =
-  'avalon-footer-link flex min-h-7 items-center gap-2 rounded-md px-1.5 py-0.5 -mx-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground';
+  'avalon-footer-link flex min-h-7 items-center gap-2 rounded-md px-1.5 py-0.5 -mx-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors hover:bg-accent/[0.075] hover:text-foreground md:min-h-10 lg:min-h-7';
 
 function FooterGroup({ group, open, onToggle }) {
   return (

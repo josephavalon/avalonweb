@@ -87,6 +87,12 @@ try {
   await run('npm', ['run', 'test:booking'], {
     env: { ...process.env, BOOKING_QA_BASE_URL: BASE_URL },
   });
+  await run('npm', ['run', 'test:login'], {
+    env: { ...process.env, LOGIN_QA_BASE_URL: BASE_URL },
+  });
+  await run('npm', ['run', 'test:interaction'], {
+    env: { ...process.env, INTERACTION_QA_BASE_URL: BASE_URL },
+  });
   await run('npm', ['run', 'test:mobile'], {
     env: { ...process.env, MOBILE_QA_BASE_URL: BASE_URL },
   });

@@ -13,6 +13,7 @@
     "test:kernel": "node scripts/kernel-check.mjs",
     "test:preapi": "node scripts/pre-api-readiness-qa.mjs",
     "test:day": "node scripts/operating-day-qa.mjs",
+    "test:interaction": "node scripts/interaction-qa.mjs",
     "test:booking": "node scripts/booking-flow-qa.mjs",
     "test:login": "node scripts/login-qa.mjs",
     "test:mobile": "node scripts/mobile-qa.mjs",
