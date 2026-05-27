@@ -429,9 +429,16 @@ export const productsByCategory = {
   },
 };
 
+const PRODUCT_SLUG_ALIASES = {
+  'iv-vitamins': {
+    myers: 'myers-cocktail',
+  },
+};
+
 export function getProduct(categorySlug, productSlug) {
   const cat = productsByCategory[categorySlug];
   if (!cat) return null;
-  const treatment = cat.treatments.find((item) => slugify(item.name) === productSlug);
+  const resolvedSlug = PRODUCT_SLUG_ALIASES[categorySlug]?.[productSlug] || productSlug;
+  const treatment = cat.treatments.find((item) => slugify(item.name) === resolvedSlug);
   return treatment ? { category: cat, treatment } : null;
 }
