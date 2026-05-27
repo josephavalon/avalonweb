@@ -18,12 +18,13 @@ import {
   publicStaticRoutes,
   servicePillars,
 } from '../src/data/seoArchitecture.js';
+import { IV_SESSIONS, productsByCategory, slugify } from '../src/data/catalog.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const dist = path.join(repoRoot, 'dist');
 const indexPath = path.join(dist, 'index.html');
-const TODAY = '2026-05-24';
+const TODAY = new Date().toISOString().slice(0, 10);
 
 function removeFinderSuffixArtifacts(dir) {
   for (const name of fs.readdirSync(dir)) {
@@ -317,9 +318,37 @@ const articleRoutes = educationArticles.map((page) => ({
   changefreq: 'monthly',
 }));
 
+const protocolRoutes = IV_SESSIONS.map((session) => ({
+  path: `/therapies/${session.key}`,
+  title: `${session.label} Protocol | Avalon Vitality`,
+  description: `${session.label} mobile recovery protocol information from Avalon Vitality. Service is subject to intake, clinical review, eligibility, and location availability.`,
+  h1: `${session.label} Protocol`,
+  priority: session.key === 'cbd' ? '0.0' : '0.55',
+  changefreq: 'monthly',
+  noindex: session.key === 'cbd',
+}));
+
+const productRoutes = Object.entries(productsByCategory).flatMap(([categorySlug, category]) => (
+  (category.treatments || []).map((treatment) => {
+    const productSlug = slugify(treatment.name);
+    const noindex = categorySlug === 'cbd';
+    return {
+      path: `/products/${categorySlug}/${productSlug}`,
+      title: `${treatment.name} | Avalon Vitality`,
+      description: `${treatment.name} protocol details from Avalon Vitality. Final service is subject to clinical review, eligibility, and appointment availability.`,
+      h1: treatment.name,
+      priority: noindex ? '0.0' : '0.5',
+      changefreq: 'monthly',
+      noindex,
+    };
+  })
+));
+
 const renderRoutes = dedupeRoutes([
   ...publicStaticRoutes,
   ...serviceRoutes,
+  ...protocolRoutes,
+  ...productRoutes,
   locationHub,
   ...locationRoutes,
   learnHub,
@@ -338,6 +367,8 @@ renderRoutes.forEach((route) => {
 writeSitemap(dedupeRoutes([
   ...publicStaticRoutes,
   ...indexedServicePillars.map((page) => ({ ...page, priority: '0.85', changefreq: 'weekly' })),
+  ...protocolRoutes.filter((page) => !page.noindex),
+  ...productRoutes.filter((page) => !page.noindex),
   locationHub,
   ...locationRoutes,
   learnHub,

@@ -22,6 +22,14 @@ import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEP
 
 const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 
+function localPreviewSlots(date) {
+  const base = date || todayString();
+  return ['10:00', '12:30', '15:00', '17:30'].map((time) => ({
+    time: `${base}T${time}:00`,
+    localPreview: true,
+  }));
+}
+
 /* ─── Step indicator ─────────────────────────────────────────── */
 function StepBar({ current }) {
   return (
@@ -70,13 +78,13 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
     },
     {
       icon: Calendar,
-      label: 'Acuity',
-      value: appointment?.acuitySlot ? 'Locked' : 'Slot',
+      label: 'Schedule',
+      value: appointment?.acuitySlot ? 'Ready' : 'Window',
       active: current >= 1,
     },
     {
       icon: ShieldCheck,
-      label: 'GFE',
+      label: 'Clearance',
       value: 'Queued',
       active: current >= 2,
     },
@@ -243,6 +251,12 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       const params = new URLSearchParams({ date, timezone: TZ });
       if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
       const res = await fetch(`/api/scheduling-availability?${params}`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        setSlots(localPreviewSlots(date));
+        setSlotsError(null);
+        return;
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load availability');
       setSlots(data);
@@ -267,6 +281,12 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         if (appointmentTypeId) params.set('appointmentTypeID', appointmentTypeId);
         const res = await fetch(`/api/scheduling-availability?${params}`);
         if (!res.ok) continue;
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          setSlots(localPreviewSlots(dateStr));
+          setNextAvailLoading(false);
+          return dateStr;
+        }
         const data = await res.json();
         if (data?.length > 0) {
           setSlots(data);
@@ -760,7 +780,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         gfeRequired: true,
         depositAmount: DEPOSIT_DUE,
         status: membership ? 'Subscription intake' : 'Scheduling received',
-        source: membership ? 'Subscription checkout' : 'Checkout',
+        source: membership ? 'Subscription request' : 'Checkout',
         subscription: Boolean(membership),
         orderType: membership ? 'subscription' : 'recovery',
         productFamily: membership ? 'subscription' : 'iv',
@@ -917,7 +937,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
-        Secure reserve · Acuity handoff · GFE before dispatch
+        Secure reserve · scheduling handoff · clearance before dispatch
       </p>
     </div>
   );

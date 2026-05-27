@@ -37,7 +37,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
       role="dialog"
       aria-modal="true"
-      aria-label="Subscription checkout"
+      aria-label="Subscription request"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -113,7 +113,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
                     <span className="inline-block w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
                   ) : (
                     <>
-                      {tier.custom ? 'Request My Protocol' : `Start ${tier.name}`}
+                      {tier.custom ? 'Request My Protocol' : `Request ${tier.name}`}
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -130,9 +130,9 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
             <div className="w-12 h-12 rounded-full bg-foreground/[0.06] border border-foreground/[0.1] flex items-center justify-center mx-auto mb-6">
               <Check className="w-5 h-5 text-foreground" />
             </div>
-            <h3 className="font-heading text-3xl text-foreground uppercase mb-3">You're In.</h3>
+            <h3 className="font-heading text-3xl text-foreground uppercase mb-3">Request Sent.</h3>
             <p className="font-body text-sm text-foreground/50 mb-6 max-w-xs mx-auto">
-              We'll confirm your <span className="text-foreground">{tier.name}</span> subscription and schedule your clinical intake within 24 hours.
+              We'll confirm your <span className="text-foreground">{tier.name}</span> subscription request and schedule your clinical intake within 24 hours.
             </p>
             <button
               onClick={onClose}

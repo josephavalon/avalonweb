@@ -17,14 +17,14 @@ const REVEAL = {
 
 const PROTOCOL_INGREDIENTS = [
   { name: 'Normal Saline', note: 'Rehydration base — 1L IV fluid' },
-  { name: 'B-Vitamin Complex', note: 'Replenishes vitamins depleted by alcohol' },
+  { name: 'B-Vitamin Complex', note: 'Supports vitamin replenishment after alcohol use' },
   { name: 'Ondansetron (Zofran)', note: 'May help with nausea and stomach discomfort' },
-  { name: 'Ketorolac (Toradol)', note: 'Associated with relief from headache and body aches' },
+  { name: 'Ketorolac (Toradol)', note: 'Available only when clinically appropriate and provider-reviewed' },
   { name: 'Vitamin C', note: 'Antioxidant support during recovery' },
 ];
 
 const ADD_ONS = [
-  { name: 'Glutathione Push', description: 'Antioxidant support associated with liver recovery', price: '+$40' },
+  { name: 'Glutathione Push', description: 'Antioxidant wellness support when clinically appropriate', price: '+$40' },
   { name: 'Extra B12', description: 'Additional energy-supporting vitamin replenishment', price: '+$25' },
   { name: 'Extra Fluids', description: 'Additional 500mL saline for deeper rehydration', price: '+$30' },
 ];
@@ -55,8 +55,8 @@ const STATS = [
 
 export default function Hangover() {
   useSeo({
-    title: 'Hangover IV Therapy San Francisco — Avalon Vitality',
-    description: "Same-day hangover IV relief delivered to your home or hotel in San Francisco. Licensed RNs. Myers' Cocktail, anti-nausea, rehydration.",
+    title: 'Hangover IV Support San Francisco — Avalon Vitality',
+    description: "Same-day hydration support delivered to your home or hotel in San Francisco. Licensed RNs. Clinical review required before treatment.",
     path: '/hangover',
   });
 
@@ -76,7 +76,7 @@ export default function Hangover() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
               className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-4"
             >
-              Hangover Relief
+              Hangover Support
             </motion.h1>
             <motion.p
               {...REVEAL}
@@ -132,7 +132,7 @@ export default function Hangover() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
               className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-4"
             >
-              Hangover Recovery Drip
+              Hangover Recovery Support
             </motion.h2>
             <motion.p
               {...REVEAL}

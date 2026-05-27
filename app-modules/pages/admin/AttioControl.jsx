@@ -346,7 +346,7 @@ export default function AttioControl() {
               Sweep
             </button>
             <Link
-              to="/provider/communications"
+              to="/admin/communications"
               className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full border border-foreground/14 bg-background/48 px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/64 transition-colors hover:text-foreground"
             >
               <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />

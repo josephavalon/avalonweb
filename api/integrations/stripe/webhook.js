@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     provider: 'Stripe',
     secretEnv: 'STRIPE_WEBHOOK_SECRET',
   });
-  if (!gate.ok) return null;
+  if (!gate) return null;
 
   if (!process.env.STRIPE_SECRET_KEY) {
     return res.status(503).json({ error: 'Stripe is not configured' });

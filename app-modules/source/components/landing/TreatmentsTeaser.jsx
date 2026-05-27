@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
 
 // ── Data ─────────────────────────────────────────────────────────────────────

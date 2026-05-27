@@ -339,30 +339,12 @@ function buildAddonCatalog(product) {
   };
 }
 
-function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, onNone, onToggle }) {
+function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, onNone, onToggle, onContinue }) {
   const selectedRevenue = selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
   const deployedCount = 1 + selectedAddons.length;
 
   return (
     <div className="grid gap-4">
-      <button
-        type="button"
-        onClick={onNone}
-        className={`flex min-h-[76px] w-full items-center justify-between gap-4 rounded-[1.25rem] border p-4 text-left transition-colors ${
-          state.addOnDecision && state.addOns.length === 0
-            ? 'border-foreground bg-foreground text-background'
-            : 'border-foreground/10 bg-foreground/[0.035] text-foreground hover:border-foreground/22 hover:bg-foreground/[0.055]'
-        }`}
-      >
-        <div>
-          <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em]">No add-ons today</p>
-          <p className={`mt-1 font-body text-sm ${state.addOnDecision && state.addOns.length === 0 ? 'text-background/62' : 'text-foreground/50'}`}>
-            Fastest visit. Keep {product?.label || 'the protocol'} clean.
-          </p>
-        </div>
-        {state.addOnDecision && state.addOns.length === 0 ? <Check className="h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}
-      </button>
-
       <div className="grid gap-2 sm:grid-cols-3">
         {[
           ['Deployable', deployedCount],
@@ -422,8 +404,33 @@ function AddOnDecisionPanel({ product, groups, state, selectedAddons, subtotal, 
           );
         })}
       </div>
+      <div className="sticky bottom-[4.75rem] z-10 grid gap-2 rounded-[1.25rem] border border-foreground/10 bg-background/88 p-2 shadow-[0_18px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl sm:static sm:grid-cols-[1fr_1.4fr] sm:bg-foreground/[0.025] sm:shadow-none lg:bottom-5">
+        <button
+          type="button"
+          onClick={onNone}
+          className={`min-h-[50px] rounded-full border px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
+            state.addOnDecision && state.addOns.length === 0
+              ? 'border-foreground bg-foreground text-background'
+              : 'border-foreground/12 text-foreground/58 hover:border-foreground/24 hover:text-foreground'
+          }`}
+        >
+          No Add-ons
+        </button>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="flex min-h-[50px] items-center justify-between gap-3 rounded-full bg-foreground px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background transition-opacity hover:opacity-90"
+        >
+          <span>{selectedAddons.length ? `Continue With ${selectedAddons.length}` : 'Choose Add-ons Or None'}</span>
+          <span>{currency(subtotal)}</span>
+        </button>
+      </div>
     </div>
   );
+}
+
+function outcomeForProtocol(protocolKey) {
+  return OUTCOMES.find((item) => item.productKeys.includes(protocolKey)) || OUTCOMES[0];
 }
 
 function formatGfeDate(value) {
@@ -449,7 +456,7 @@ function TextInput({ label, value, onChange, placeholder, type = 'text', require
   );
 }
 
-function SummaryRail({ state, product, subtotal, canSubmit, onSubmit }) {
+function SummaryRail({ state, product, subtotal, onSubmit }) {
   return (
     <aside className="hidden lg:block">
       <div className="sticky top-28 rounded-[1.5rem] border border-foreground/10 bg-background/70 p-5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
@@ -463,8 +470,8 @@ function SummaryRail({ state, product, subtotal, canSubmit, onSubmit }) {
             {[
               ['Due now', currency(DEPOSIT_DUE)],
               ['Estimate', currency(subtotal)],
-              ['Acuity', 'Queued'],
-              ['GFE', 'Before visit'],
+              ['Scheduling', 'Queued'],
+              ['Clearance', 'Before visit'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
                 <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
@@ -479,9 +486,8 @@ function SummaryRail({ state, product, subtotal, canSubmit, onSubmit }) {
           </div>
           <button
             type="button"
-            disabled={!canSubmit}
             onClick={onSubmit}
-            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background disabled:opacity-35"
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background"
           >
             Hold Visit <ArrowRight className="h-4 w-4" />
           </button>
@@ -570,9 +576,10 @@ export default function BookNow() {
     const protocolParam = searchParams.get('protocol');
     const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
     if (protocolParam && IV_SESSIONS.some((item) => item.key === protocolParam)) {
+      const inferredOutcome = nextOutcome || outcomeForProtocol(protocolParam);
       setState((current) => ({
         ...current,
-        ...(nextOutcome ? { outcome: nextOutcome.key } : {}),
+        outcome: inferredOutcome.key,
         productKey: protocolParam,
         addOns: [],
         addOnDecision: false,
@@ -802,9 +809,10 @@ export default function BookNow() {
       depositAmount: DEPOSIT_DUE,
       payment: `$${DEPOSIT_DUE} hold pending`,
       status: 'Scheduling received',
+      holdType: 'fast',
       nextStep: gfeRequirement.required
-        ? 'Clinical review, annual GFE, $50 hold, and Acuity scheduling handoff'
-        : 'Annual GFE valid. Clinical review, $50 hold, and Acuity scheduling handoff',
+        ? 'Clinical review, annual GFE, deposit hold, and scheduling handoff'
+        : 'Annual GFE valid. Clinical review, deposit hold, and scheduling handoff',
       intake: 'Needed',
       consent: 'Needed',
       gfe: gfeRequirement.required ? 'Pending' : 'Cleared',
@@ -830,7 +838,7 @@ export default function BookNow() {
           ? 'Annual GFE required before dispatch.'
           : `Annual GFE valid${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
         'Clinical review required before treatment.',
-        'Acuity scheduling handoff is represented locally until connected.',
+        'Scheduling handoff is represented locally until connected.',
         !COVERED_ZIPS.has(String(state.zip || '').trim()) && 'Service-area review required.',
         state.visitType === 'event' && 'Pre-launch GFE coordination required.',
       ].filter(Boolean),
@@ -882,7 +890,7 @@ export default function BookNow() {
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
-      stack: ['Avalon OS', 'Acuity placeholder', 'GFE routing', 'Nurse dispatch', 'Inventory deduction', 'CRM-safe follow-up'],
+      stack: ['Avalon OS', 'Scheduling placeholder', 'Clearance routing', 'Nurse dispatch', 'Inventory deduction', 'CRM-safe follow-up'],
       noThirdPartyCalls: true,
       updatedAt: new Date().toISOString(),
     });
@@ -965,13 +973,14 @@ export default function BookNow() {
                       subtotal={subtotal}
                       onNone={chooseNoAddons}
                       onToggle={toggleAddon}
+                      onContinue={next}
                     />
                   </>
                 )}
 
                 {step === 4 && (
                   <>
-                    <SectionTitle kicker="Location" title="Where should we come?" sub="Home, hotel, office, or launch. The stack stays invisible." />
+                    <SectionTitle kicker="Location" title="Where should we come?" sub="Home, hotel, office, or launch." />
                     <div className="grid gap-2 sm:grid-cols-4">
                       {LOCATION_TYPES.map((item) => (
                         <SelectCard key={item.key} item={{ ...item, sub: item.placeholder }} active={state.locationType === item.key} onClick={() => setValue('locationType', item.key)} className="min-h-[132px]" />
@@ -1004,7 +1013,7 @@ export default function BookNow() {
 
                 {step === 5 && (
                   <>
-                    <SectionTitle kicker="Timing" title="When do you want us?" sub="Acuity will own live scheduling. This creates the Avalon handoff." />
+                    <SectionTitle kicker="Timing" title="When do you want us?" sub="Pick a window. Avalon confirms before dispatch." />
                     <div className="grid gap-3 sm:grid-cols-3">
                       {TIME_INTENTS.map((item) => (
                         <SelectCard key={item.key} item={{ ...item, sub: item.window, icon: Clock }} active={state.timeIntent === item.key} onClick={() => setValue('timeIntent', item.key)} />
@@ -1084,7 +1093,7 @@ export default function BookNow() {
                       />
                     </label>
                     <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                      {['Secure checkout placeholder', 'Flat transparent pricing', 'No hidden fees'].map((item) => (
+                      {['Secure hold', 'Flat transparent pricing', 'No hidden fees'].map((item) => (
                         <div key={item} className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-3 font-body text-xs text-foreground/55">{item}</div>
                       ))}
                     </div>
@@ -1104,14 +1113,14 @@ export default function BookNow() {
                   {primaryActionLabel()} <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
-                <button type="button" disabled={!canSubmit} onClick={submit} aria-label="Hold visit and continue to checkout" className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background disabled:opacity-35">
+                <button type="button" onClick={submit} aria-label="Hold visit and continue to checkout" className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background">
                   Hold Visit <CreditCard className="h-4 w-4" />
                 </button>
               )}
             </div>
           </section>
 
-          <SummaryRail state={state} product={product} subtotal={subtotal} canSubmit={canSubmit} onSubmit={submit} />
+          <SummaryRail state={state} product={product} subtotal={subtotal} onSubmit={submit} />
         </div>
       </main>
 
@@ -1125,9 +1134,8 @@ export default function BookNow() {
           <button
             type="button"
             onClick={step < LAST_STEP ? next : submit}
-            disabled={step === LAST_STEP && !canSubmit}
             aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
-            className="flex min-h-[44px] flex-1 items-center justify-between rounded-full bg-foreground px-3.5 font-body text-[9px] font-semibold uppercase tracking-[0.13em] text-background disabled:opacity-35"
+            className="flex min-h-[44px] flex-1 items-center justify-between rounded-full bg-foreground px-3.5 font-body text-[9px] font-semibold uppercase tracking-[0.13em] text-background"
           >
             <span>{primaryActionLabel()}</span>
             <span>{currency(subtotal)}</span>

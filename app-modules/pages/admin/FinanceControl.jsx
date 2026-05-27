@@ -424,7 +424,7 @@ export default function FinanceControl() {
               Sweep
             </button>
             <Link
-              to="/provider/accounting"
+              to="/admin/finance"
               className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full border border-foreground/14 bg-background/48 px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/64 transition-colors hover:text-foreground"
             >
               <CreditCard className="h-3.5 w-3.5" strokeWidth={2} />
@@ -518,13 +518,13 @@ export default function FinanceControl() {
               <BoundaryPanel tower={tower} />
               <Ledger tower={tower} onLandBank={handleLandBank} onPostBooks={handlePostBooks} />
               <Link
-                to="/provider/communications"
+                to="/admin/communications"
                 className="inline-flex w-full min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/14 bg-background/48 px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/54 transition-colors hover:text-foreground"
               >
                 Comms <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
               </Link>
               <Link
-                to="/provider/accounting"
+                to="/admin/finance"
                 className="inline-flex w-full min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/14 bg-background/48 px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/54 transition-colors hover:text-foreground"
               >
                 Accounting <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />

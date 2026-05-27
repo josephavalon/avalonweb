@@ -655,21 +655,26 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
   const [activeTab, setActiveTab] = useState(initialTab);
   const visibleAlerts = alerts.filter((alert) => alert.status !== 'resolved');
   const isClient = role === 'client';
+  const isAdmin = role === 'admin' || role === 'superadmin';
   const visibleTabs = isClient
     ? tabs.filter((tab) => ['alerts', 'messages', 'announcements', 'timeline'].includes(tab.id))
-    : tabs;
+    : isAdmin
+      ? tabs
+      : tabs.filter((tab) => ['alerts', 'messages', 'announcements', 'timeline'].includes(tab.id));
 
   const send = (text, options) => {
     sendMessage(text, options);
-    toast({ title: 'Message sent', description: isClient ? 'Care team thread updated.' : 'Avalon Comms updated.' });
+      toast({ title: 'Message sent', description: isClient ? 'Care team thread updated.' : 'Team thread updated.' });
   };
 
   const broadcast = (payload) => {
+    if (!isAdmin) return;
     sendBroadcast(payload);
-    toast({ title: 'Broadcast queued', description: 'Avalon Comms routed it.' });
+    toast({ title: 'Broadcast queued', description: 'Team communications routed it.' });
   };
 
   const sweep = () => {
+    if (!isAdmin) return;
     const result = runEscalations();
     toast({ title: 'Sweep complete', description: `${result.length} rule${result.length === 1 ? '' : 's'} checked.` });
   };
@@ -715,7 +720,7 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
         ))}
       </div>
 
-      {!isClient ? <EscalationRail escalations={escalations} onRun={sweep} /> : null}
+      {isAdmin ? <EscalationRail escalations={escalations} onRun={sweep} /> : null}
 
       <AnimatePresence mode="wait">
         {activeTab === 'alerts' ? (
@@ -748,7 +753,7 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
           </motion.div>
         ) : null}
 
-        {activeTab === 'channels' && !isClient ? (
+        {activeTab === 'channels' && isAdmin ? (
           <motion.div
             key="channels"
             initial={{ opacity: 0, y: 10 }}
@@ -759,7 +764,7 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
           </motion.div>
         ) : null}
 
-        {activeTab === 'broadcast' && !isClient ? (
+        {activeTab === 'broadcast' && isAdmin ? (
           <motion.div
             key="broadcast"
             initial={{ opacity: 0, y: 10 }}

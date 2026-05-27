@@ -91,7 +91,7 @@ export function AuthStoreProvider({ children }) {
         throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
       }
 
-      // Match against demo roster, forgiving mobile autocase and accidental spacing.
+      // Match against demo roster (case-insensitive username)
       const submittedUsername = normalizeLoginIdentifier(email);
       const usernameKey = Object.keys(DEMO_USERS).find(
         (k) => normalizeLoginIdentifier(k) === submittedUsername

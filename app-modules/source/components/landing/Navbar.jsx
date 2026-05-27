@@ -29,7 +29,7 @@ const mainLinks = [
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
   if (user.role === 'admin') return '/admin';
-  if (user.role === 'provider') return '/provider/shift';
+  if (['provider', 'np', 'physician'].includes(user.role)) return '/provider/shift';
   return '/members/dashboard';
 };
 

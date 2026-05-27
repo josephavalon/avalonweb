@@ -169,6 +169,7 @@ async function applyLanguage(code) {
   if (normalized === 'en') {
     setComboLanguage('en');
     resetGoogleTranslateDom();
+    window.sessionStorage?.setItem('av.skipSplashOnce', '1');
     window.setTimeout(() => window.location.reload(), 80);
     return true;
   }

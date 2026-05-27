@@ -221,7 +221,7 @@ export default function Subscription() {
         <Reveal as="section" className="py-10 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.div
-              className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+              className="max-w-xl"
               {...fadeUp}
             >
               <div>
@@ -230,12 +230,6 @@ export default function Subscription() {
                   Pause anytime. Cancel after 3 months with 7 days notice.
                 </p>
               </div>
-              <button
-                onClick={() => setSelectedTier(activeTier)}
-                className="flex-shrink-0 px-8 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors text-center"
-              >
-                {activeActionLabel}
-              </button>
             </motion.div>
           </div>
         </Reveal>
@@ -243,35 +237,6 @@ export default function Subscription() {
         <Suspense fallback={null}>
           <SubscriptionFaq />
         </Suspense>
-
-        {/* Bottom CTA */}
-        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
-          <div className="max-w-5xl mx-auto text-center">
-            <motion.p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-3" {...fadeUp}>
-              Ready
-            </motion.p>
-            <motion.h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-6" {...fadeUp}>
-              {activeTier.custom ? 'Custom Plan' : `Start ${activeTier.name}`}
-            </motion.h2>
-            <motion.p className="font-body text-sm text-foreground/50 mb-10 max-w-sm mx-auto" {...fadeUp}>
-              {activeTier.perSessionNote}
-            </motion.p>
-            <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6" {...fadeUp}>
-              <button
-                onClick={() => setSelectedTier(activeTier)}
-                className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
-              >
-                {activeActionLabel} <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setSelectedTier(tiers[3])}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-foreground/20 text-foreground/60 font-body text-xs tracking-[0.2em] uppercase font-semibold hover:border-foreground/40 hover:text-foreground transition-colors"
-              >
-                Design Custom Protocol
-              </button>
-            </motion.div>
-          </div>
-        </Reveal>
 
       </main>
       <Footer />

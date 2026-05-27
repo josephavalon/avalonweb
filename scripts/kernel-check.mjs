@@ -1347,7 +1347,8 @@ assert.doesNotMatch(adminMock, /clinical_notes: '[^']{3,}'/, 'Mock admin data mu
 const clinicalSnapshot = buildClinicalPlaceholderSnapshot();
 assert.equal(CLINICAL_DATA_MODE, 'placeholder-only', 'Clinical data mode must remain placeholder-only.');
 assert.equal(clinicalSnapshot.blocked.includes('Do not store real clinical notes'), true, 'Clinical policy must block real clinical notes.');
-assert.match(member, /Real Status/, 'Client portal must surface hardened real-status tracker.');
+assert.match(member, /Visit Status/, 'Client portal must surface a client-safe visit status layer.');
+assert.doesNotMatch(member, /Real Status|Launch OS|Record Spine|Friction/, 'Client portal must not expose internal operating-system scaffolding.');
 assert.match(nurse, /setKernelNurseEta/, 'Nurse portal must let nurse set final ETA.');
 
 const annualGfe = {

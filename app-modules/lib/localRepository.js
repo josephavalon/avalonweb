@@ -122,6 +122,18 @@ function number(value, fallback = 0) {
   return match ? Number(match[0]) : fallback;
 }
 
+function roleRules(role) {
+  if (role === 'provider') return ROLE_VISIBILITY_RULES.nurse;
+  if (role === 'np' || role === 'physician') return ROLE_VISIBILITY_RULES.clinical;
+  return ROLE_VISIBILITY_RULES[role] || ROLE_VISIBILITY_RULES.client;
+}
+
+function redactEntityData(data = {}, fields = []) {
+  return Object.fromEntries(Object.entries(data || {}).map(([key, value]) => (
+    fields.includes(key) ? [key, '[redacted-local-simulation]'] : [key, value]
+  )));
+}
+
 function slug(value, fallback = 'item') {
   const next = text(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return next || fallback;
@@ -588,11 +600,15 @@ export function queueCrossPortalEvent({ type = 'state.sync', payload = {}, actor
 
 export function buildRoleSafeRepositorySnapshot(role = 'admin', seed = {}) {
   const snapshot = buildLocalRepositorySnapshot(seed);
-  const rules = ROLE_VISIBILITY_RULES[role] || ROLE_VISIBILITY_RULES.client;
-  const visibleEntities = snapshot.entities.filter((entity) => rules.canSee.includes(entity.type));
-  const redactedFields = visibleEntities.reduce((sum, entity) => (
+  const rules = roleRules(role);
+  const rawVisibleEntities = snapshot.entities.filter((entity) => rules.canSee.includes(entity.type));
+  const redactedFields = rawVisibleEntities.reduce((sum, entity) => (
     sum + rules.redact.filter((field) => Object.prototype.hasOwnProperty.call(entity.data || {}, field)).length
   ), 0);
+  const visibleEntities = rawVisibleEntities.map((entity) => ({
+    ...entity,
+    data: redactEntityData(entity.data, rules.redact),
+  }));
 
   return {
     role,

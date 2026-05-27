@@ -30,8 +30,8 @@ const readInitialTheme = () => {
 // ─── Nav items ─────────────────────────────────────────────────────────────
 const NAV = [
   // Primary — always visible
-  { to: '/provider/dashboard',      icon: Zap,             label: 'Command',    roles: ['admin', 'superadmin'], primary: true },
-  { to: '/provider/appointments',   icon: ClipboardList,   label: 'Requests',   roles: ['admin', 'superadmin'], primary: true, badge: 8 },
+  { to: '/admin',                   icon: Zap,             label: 'Command',    roles: ['admin', 'superadmin'], primary: true },
+  { to: '/admin/bookings',          icon: ClipboardList,   label: 'Visits',     roles: ['admin', 'superadmin'], primary: true, badge: 8 },
   { to: '/admin/acuity',            icon: CalendarClock,   label: 'Acuity',     roles: ['admin', 'superadmin'], primary: true },
   { to: '/provider/clients',        icon: Users,           label: 'Clients',    roles: ['admin', 'superadmin'], primary: true },
   { to: '/admin/dispatch',          icon: Send,            label: 'Dispatch',   roles: ['admin', 'superadmin'] },
@@ -43,22 +43,17 @@ const NAV = [
   { to: '/provider/staff',          icon: UserCheck,       label: 'Nurses',     roles: ['admin', 'superadmin'], primary: true },
   { to: '/admin/credentials',       icon: Shield,          label: 'Credentials',roles: ['admin', 'superadmin'] },
   // Nurse shift view
-  { to: '/provider/shift',          icon: Syringe,         label: 'My Shift',   roles: ['provider'], primary: true },
-  { to: '/provider/communications', icon: MessageSquare,   label: 'Messages',   roles: ['provider'], primary: true },
-  { to: '/provider/acuity',         icon: CalendarClock,   label: 'Acuity',     roles: ['provider'], primary: true },
-  { to: '/provider/role-os',        icon: Grid3X3,         label: 'Tools',      roles: ['provider'], primary: true },
-  { to: '/provider/crm',            icon: Mail,            label: 'CRM',        roles: ['provider'] },
-  { to: '/provider/finance',        icon: CreditCard,      label: 'Finance',    roles: ['provider'] },
-  { to: '/provider/credentials',    icon: Shield,          label: 'Credentials',roles: ['provider'] },
-  { to: '/provider/dispatch',       icon: Send,            label: 'Dispatch',   roles: ['provider'] },
-  { to: '/provider/field',          icon: MapPin,          label: 'Field',      roles: ['provider'] },
-  { to: '/provider/kits',           icon: Package,         label: 'Kits',       roles: ['provider'] },
-  { to: '/provider/training',       icon: GraduationCap,   label: 'Training',   roles: ['provider'] },
+  { to: '/provider/shift',          icon: Syringe,         label: 'Shift',      roles: ['provider', 'np', 'physician'], primary: true },
+  { to: '/provider/appointments',   icon: CalendarClock,   label: 'Visits',     roles: ['provider', 'np', 'physician'], primary: true },
+  { to: '/provider/communications', icon: MessageSquare,   label: 'Messages',   roles: ['provider', 'np', 'physician'], primary: true },
+  { to: '/provider/role-os',        icon: Grid3X3,         label: 'Tools',      roles: ['provider', 'np', 'physician'], primary: true },
+  { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['provider', 'np', 'physician'] },
+  { to: '/provider/invoicing',      icon: Shield,          label: 'Clearance',  roles: ['np', 'physician'] },
   // Extended — overflow on mobile
   { to: '/provider/invoicing',      icon: CreditCard,      label: 'Clearance',  roles: ['admin', 'superadmin'] },
   { to: '/provider/accounting',     icon: FileText,        label: 'Payments',   roles: ['admin', 'superadmin'] },
   { to: '/provider/services',       icon: Star,            label: 'Memberships',roles: ['admin', 'superadmin'] },
-  { to: '/provider/communications', icon: MessageSquare,   label: 'Messages',   roles: ['admin', 'superadmin'] },
+  { to: '/admin/communications',    icon: MessageSquare,   label: 'Messages',   roles: ['admin', 'superadmin'] },
   { to: '/admin/role-os',           icon: Grid3X3,         label: 'Role OS',    roles: ['admin', 'superadmin'] },
   { to: '/provider/reports',        icon: TrendingUp,      label: 'Reports',    roles: ['admin', 'superadmin'] },
   { to: '/admin/inventory',         icon: Package,         label: 'Inventory',  roles: ['admin', 'superadmin'] },
@@ -107,8 +102,10 @@ export default function AdminLayout({ children, fullBleed = false }) {
   }, [theme]);
 
   const role = user?.role || 'provider';
-  const navRole = ['np', 'physician'].includes(role) ? 'provider' : role;
-  const visibleNav = NAV.filter(n => n.roles.includes(navRole));
+  const isAdminRole = role === 'admin' || role === 'superadmin';
+  const shellLabel = isAdminRole ? 'Avalon Admin' : 'Avalon Field';
+  const navAriaLabel = isAdminRole ? 'Admin menu' : 'Provider menu';
+  const visibleNav = NAV.filter(n => n.roles.includes(role));
   const bottomTabs = visibleNav.slice(0, BOTTOM_TAB_COUNT);
   const overflowNav = visibleNav.slice(BOTTOM_TAB_COUNT);
   const isActive = (to) => location.pathname === to;
@@ -222,7 +219,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
             </p>
             <button
               onClick={handleSignOut}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-foreground/50 hover:text-red-400 transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/50 hover:text-red-400 transition-colors"
               aria-label="Sign out"
             >
               <LogOut className="w-4 h-4" strokeWidth={1.5} />
@@ -274,7 +271,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
               key="more-sheet"
               role="dialog"
               aria-modal="true"
-              aria-label="Admin menu"
+              aria-label={navAriaLabel}
               initial={{ y: '105%', opacity: 0, filter: 'blur(10px)' }}
               animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
               exit={{ y: '105%', opacity: 0, filter: 'blur(8px)' }}
@@ -291,7 +288,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
               <div className="flex items-center justify-between px-5 py-3 border-b border-foreground/[0.08]">
                 <div>
                   <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50 mb-0.5">
-                    Avalon Admin
+                    {shellLabel}
                   </p>
                   <p className="font-body text-[13px] font-medium text-foreground">
                     {user?.name || 'Provider'} &nbsp;
@@ -302,7 +299,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
                 </div>
                 <button
                   onClick={() => setMoreOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-foreground/[0.06] text-foreground/60 hover:text-foreground transition-colors"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground/60 hover:text-foreground transition-colors"
                 >
                   <X className="w-4 h-4" strokeWidth={1.5} />
                 </button>

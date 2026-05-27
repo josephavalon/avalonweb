@@ -392,7 +392,7 @@ export default function NurseDashboard() {
               value={credentialClear ? 'CLEAR' : 'HOLD'}
               detail={nurseRecord.nurseys?.status || nurseRecord.credentialStatus || 'Nurseys review'}
               tone={credentialClear ? ACCENT : RED}
-              to="/provider/credentials"
+              to="/provider/settings"
             />
             <ReadinessTile
               icon={Package}
@@ -400,7 +400,7 @@ export default function NurseDashboard() {
               value={kitShort ? `${kitShort} LOW` : 'READY'}
               detail={kitShort ? nurseKit.missing.slice(0, 2).map((item) => item.match).join(' · ') : `${nurseKit?.kitInventory?.length || 0} kit lines`}
               tone={kitShort ? RED : ACCENT}
-              to="/provider/kits"
+              to="/provider/role-os?focus=inventory"
             />
             <ReadinessTile
               icon={trainingRow?.critical?.length ? AlertTriangle : GraduationCap}
@@ -408,7 +408,7 @@ export default function NurseDashboard() {
               value={trainingRow?.critical?.length ? 'BLOCK' : trainingDue ? `${trainingDue} DUE` : 'CLEAR'}
               detail={trainingDue ? trainingRow.due.slice(0, 2).map((item) => item.title).join(' · ') : 'Protocol review current'}
               tone={trainingRow?.critical?.length ? RED : trainingDue ? ACCENT : ACCENT}
-              to="/provider/training"
+              to="/provider/role-os?focus=protocols"
             />
           </div>
         </section>
@@ -416,8 +416,8 @@ export default function NurseDashboard() {
         <section className="grid gap-3 sm:grid-cols-2">
           <ActionButton icon={Stethoscope} label="Shift" to="/provider/shift" tone={ACCENT} />
           <ActionButton icon={Route} label="Route" href={nextStop ? appleMapsUrl(nextStop.address) : undefined} tone={TEXT} />
-          <ActionButton icon={Package} label="Kits" to="/provider/kits" tone={TEXT} />
-          <ActionButton icon={GraduationCap} label="Training" to="/provider/training" tone={TEXT} />
+          <ActionButton icon={Package} label="Kits" to="/provider/role-os?focus=inventory" tone={TEXT} />
+          <ActionButton icon={GraduationCap} label="Training" to="/provider/role-os?focus=protocols" tone={TEXT} />
           <ActionButton icon={LayoutDashboard} label="Tools" to="/provider/role-os" tone={TEXT} />
         </section>
 
@@ -693,7 +693,6 @@ export default function NurseDashboard() {
       <MobileNavBar
         ariaLabel="Nurse navigation"
         columns={4}
-        mobileOnly={false}
         maxWidth="lg"
         items={[
           { to: '/provider/dashboard', icon: LayoutDashboard, label: 'Command', exact: true },

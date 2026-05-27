@@ -4,7 +4,7 @@ import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransi
 import { Circle, CircleDot, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 const TIERS = [
   {

@@ -1,27 +1,21 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from '@/components/ui/PageTransitionMotion';
+import React from 'react';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 export default function Hero() {
-  const ref = useRef(null);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
-  const { scrollYProgress } = useScroll({ target: isMobile ? { current: null } : ref, offset: ['start start', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.6], [0, 0.3]);
 
   return (
     <section
-      ref={isMobile ? null : ref}
       className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
       style={{ position: 'relative' }}
     >
       <motion.div
-        style={isMobile ? undefined : { y }}
+        style={undefined}
         className={`absolute inset-0 pointer-events-none${isMobile ? '' : ' will-change-transform'}`}
       >
         <motion.img
@@ -43,12 +37,7 @@ export default function Hero() {
         <div className="absolute bottom-0 left-0 right-0 h-[32rem] bg-gradient-to-t from-background from-20% via-background/60 via-60% to-transparent pointer-events-none" />
       </motion.div>
 
-      {!isMobile && (
-        <motion.div
-          style={{ opacity: overlayOpacity }}
-          className="absolute inset-0 bg-background pointer-events-none"
-        />
-      )}
+      {!isMobile && <div className="absolute inset-0 bg-background/0 pointer-events-none" />}
 
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
 
@@ -96,7 +85,7 @@ export default function Hero() {
             whileTap={premiumTap}
             className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
           >
-            <span>Choose Your Protocol</span>
+            <span>Start</span>
             <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
           </MotionLink>
           <MotionLink

@@ -232,7 +232,7 @@ try {
   await clickText(cdp, 'Recover');
   await clickText(cdp, 'One-Time');
   await clickText(cdp, 'Choose');
-  await clickText(cdp, 'No add-ons today');
+  await clickText(cdp, 'No Add-ons');
   const reachedLocation = await evalOnPage(cdp, `/Where should we come\\?|Home address/i.test(document.body.innerText || '')`);
   if (!reachedLocation) await clickText(cdp, 'Continue');
   await fillByLabel(cdp, 'Home address', '188 King St, San Francisco');
@@ -251,7 +251,7 @@ try {
     const handoff = JSON.parse(localStorage.getItem('av.local.webstore.latestHandoff') || 'null');
     return {
       path: location.pathname,
-      hasConfirmation: /HOLD|CONFIRMED|AVALON|CLEARANCE/i.test(document.body.innerText || ''),
+      hasConfirmation: /Appointment Request|Booking Request|Confirmation|Clinical clearance|Dispatch waits/i.test(document.body.innerText || ''),
       bookingId: booking?.id,
       service: booking?.service,
       orderType: booking?.orderType,

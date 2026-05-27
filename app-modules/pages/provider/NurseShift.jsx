@@ -1372,7 +1372,6 @@ export default function NurseShift() {
       <MobileNavBar
         ariaLabel="Shift actions"
         columns={3}
-        mobileOnly={false}
         zIndex="high"
         maxWidth="shift"
         items={[

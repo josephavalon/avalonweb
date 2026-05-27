@@ -146,8 +146,8 @@ const TIMELINE = [
   },
   {
     number: '02',
-    title: 'Appointment Booked',
-    body: 'The visit is sent to Acuity scheduling and your confirmation details stay available here.',
+    title: 'Appointment Request',
+    body: 'Avalon confirms the visit window, clearance path, and nurse assignment before dispatch.',
   },
   {
     number: '03',
@@ -174,8 +174,8 @@ const GFE_VALID_TIMELINE = [
   },
   {
     number: '02',
-    title: 'Appointment Booked',
-    body: 'The visit is sent to Acuity scheduling and your confirmation details stay available here.',
+    title: 'Appointment Request',
+    body: 'Avalon confirms the visit window, clearance path, and nurse assignment before dispatch.',
   },
   {
     number: '03',
@@ -374,13 +374,13 @@ export default function BookingConfirmation() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}
           >
-            <h1 className="font-heading text-5xl md:text-6xl text-foreground uppercase tracking-tight leading-none mb-4">
-              {isFastHold ? 'Hold Received.' : 'Confirmed.'}
+	            <h1 className="font-heading text-5xl md:text-6xl text-foreground uppercase tracking-tight leading-none mb-4">
+	              {isFastHold ? 'Hold Received.' : 'Request Received.'}
             </h1>
             <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-sm mx-auto mb-6">
               {isFastHold
                 ? 'Complete the deposit. Clinical clearance comes next. RN dispatch waits until approved.'
-                : 'Your RN will text arrival details. Keep your phone nearby.'}
+	                : 'Clinical clearance and scheduling confirmation come next. Dispatch waits until approved.'}
             </p>
 
             {/* Loading state */}
@@ -419,10 +419,10 @@ export default function BookingConfirmation() {
             )}
 
             {/* Fallback if no appointment data and no error */}
-            {!apptLoading && !appt && !apptError && (
+            {!apptLoading && !appt && !apptError && !referenceNum && !localBooking && (
               <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3">
                 <p className="font-body text-sm text-foreground/60">
-                  Your confirmation details will arrive by text shortly.
+                  Your final nurse and timing details will arrive by text shortly.
                 </p>
               </div>
             )}
@@ -459,15 +459,17 @@ export default function BookingConfirmation() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE, delay: 0.82 }}
         >
-          <ConsumerTruthLayer
-            truth={truthLayer}
-            eyebrow="Real Visit OS"
-            title="Visit Truth"
-            intro="Avalon tracks the parts that matter: payment, clearance, nurse, route, text."
-            compact
-            limit={5}
-            showGroups={false}
-          />
+	          <ConsumerTruthLayer
+	            truth={truthLayer}
+	            eyebrow="Visit status"
+	            title="Next"
+	            intro="Payment, clearance, nurse assignment, route, and follow-up stay visible."
+	            compact
+	            limit={5}
+	            showGroups={false}
+	            showSummary={false}
+	            showGuardrail={false}
+	          />
         </motion.div>
 
         {/* ── 3. Before Your Visit — premium cards ────────────── */}

@@ -135,6 +135,19 @@ function includedFor(product) {
   return ['IV fluids', 'Electrolytes', 'B-complex vitamins', 'Clinician-guided support'];
 }
 
+function protocolKeyForProduct(product = {}) {
+  const name = String(product.name || '').toLowerCase();
+  if (name.includes('nad')) return 'nad';
+  if (name.includes('cbd')) return 'cbd';
+  if (name.includes('myers')) return 'myers';
+  if (name.includes('dehydration') || name.includes('hydration')) return 'hydration';
+  if (name.includes('immunity') || name.includes('immune')) return 'immunity';
+  if (name.includes('beauty') || name.includes('glow')) return 'beauty';
+  if (name.includes('travel')) return 'jetlag';
+  if (name.includes('performance') || name.includes('energy')) return 'energy';
+  return 'recovery';
+}
+
 export default function ProductDetail() {
   const { category, slug } = useParams();
   const match = getProduct(category, slug);
@@ -179,7 +192,7 @@ export default function ProductDetail() {
       type: category === 'iv-vitamins' ? 'iv' : 'addon',
     });
     appendActivity(`Added product to checkout: ${treatment.name}`, { role: 'client', product: slug });
-    navigate(`/book?protocol=${encodeURIComponent(slug)}`);
+    navigate(`/book?protocol=${encodeURIComponent(protocolKeyForProduct(treatment))}`);
   };
 
   return (

@@ -142,7 +142,7 @@ export default function AdminEssentials() {
             <div className="mt-5 grid gap-2">
               <ActionLink to="/admin/bookings" icon={ClipboardList} label="Visits" primary />
               <ActionLink to="/admin/inventory" icon={Package} label="Inventory" />
-              <ActionLink to="/members/messages" icon={MessageCircle} label="Messages" />
+              <ActionLink to="/admin/communications" icon={MessageCircle} label="Messages" />
             </div>
           </div>
 
@@ -207,7 +207,7 @@ export default function AdminEssentials() {
           { to: '/admin', icon: Check, label: 'Core', exact: true },
           { to: '/admin/bookings', icon: ClipboardList, label: 'Visits' },
           { to: '/admin/inventory', icon: Package, label: 'Stock' },
-          { to: '/members/messages', icon: MessageCircle, label: 'Comms' },
+          { to: '/admin/communications', icon: MessageCircle, label: 'Comms' },
           { to: '/', icon: ArrowLeft, label: 'Site', exact: true },
         ]}
       />

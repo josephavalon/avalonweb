@@ -23,13 +23,8 @@ import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import ConsumerTruthLayer from '@/components/consumer/ConsumerTruthLayer';
 import { useSeo } from '@/lib/seo';
 import { appendActivity, readLastBooking } from '@/lib/localOs';
-import { buildAvalonKernelSnapshot } from '@/lib/avalonKernel';
 import { buildConsumerTruthLayer } from '@/lib/consumerTruth';
 import { evaluateClinicalClearance } from '@/lib/clinicalClearance';
-import {
-  buildUnifiedOperationalTruth,
-  syncLocalRepository,
-} from '@/lib/localRepository';
 import {
   buildClientAftercarePlan,
   buildClientCommandCenter,
@@ -389,19 +384,6 @@ export default function MemberDashboard() {
     };
   }, []);
 
-  const repositorySeed = {
-    requests: lastBooking ? [lastBooking] : [],
-    nurses: [],
-    inventory: [],
-    booking: lastBooking,
-  };
-  const operationalTruth = buildUnifiedOperationalTruth(repositorySeed);
-  const clientTruth = operationalTruth.roleViews.find((roleView) => roleView.role === 'client');
-
-  useEffect(() => {
-    syncLocalRepository(repositorySeed, 'Client Dashboard');
-  }, [lastBooking?.id, lastBooking?.status]);
-
   const handleSignOut = () => {
     signOut();
     navigate('/login');
@@ -438,7 +420,6 @@ export default function MemberDashboard() {
   const truthLayer = buildConsumerTruthLayer({ profile, booking: lastBooking, supportThread: thread });
   const clinicalGate = evaluateClinicalClearance(lastBooking || {}, { profile });
   const aftercarePlan = buildClientAftercarePlan({ profile, latestBooking: lastBooking });
-  const kernel = buildAvalonKernelSnapshot({ booking: lastBooking, role: 'client' });
 
   return (
     <div className="min-h-screen pb-[calc(11rem+env(safe-area-inset-bottom))]" style={{ background: BG, color: TEXT }}>
@@ -533,54 +514,20 @@ export default function MemberDashboard() {
         </section>
 
         <section>
-          <SectionHeading eyebrow="Launch OS" title="Visit Readiness" action="Message" to="/members/messages" />
+          <SectionHeading eyebrow="Visit Prep" title="Readiness" action="Message" to="/members/messages" />
           <LaunchChecklist items={localReadiness.client} />
         </section>
 
         <section>
           <ConsumerTruthLayer
             truth={truthLayer}
-            eyebrow="Real Visit OS"
-            title="Truth Center"
-            intro="Only backed records: booking, deposit, annual GFE, nurse assignment, ETA, messages, wallet, events, aftercare."
+            eyebrow="Visit Status"
+            title="What Is Next"
+            intro="Your booking, clearance, assignment, ETA, messages, wallet, and aftercare stay visible."
+            showSummary={false}
+            showGuardrail={false}
+            compact
           />
-        </section>
-
-        <section>
-          <SectionHeading eyebrow="Record Spine" title="Backed State" />
-          <div className="grid gap-2 sm:grid-cols-3">
-            {[
-              ['Visible', `${clientTruth?.visibleCount || 0}`],
-              ['Ledger', `${operationalTruth.ledger.eventCount}`],
-              ['Status', operationalTruth.status],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl p-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-                <p className="font-body text-[9px] tracking-[0.16em] uppercase" style={{ color: DIM }}>{label}</p>
-                <p className="mt-1 truncate font-body text-sm font-semibold" style={{ color: TEXT }}>{value}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <SectionHeading eyebrow="Tracker" title="Real Status" />
-          <div className="grid gap-2 sm:grid-cols-3">
-            {[
-              ['Now', kernel.clientTracker.status],
-              ['Next', kernel.clientTracker.next],
-              ['GFE', kernel.clientTracker.gfe.status],
-              ['ETA', kernel.clientTracker.eta?.eta || 'Nurse sets final ETA'],
-              ['Deposit', kernel.scale.depositGate.status],
-              ['Fit', kernel.scale.membershipFit.status],
-              ['Friction', `${kernel.scale.checkoutFriction.score}/100`],
-              ['Follow-Up', `${kernel.followUp.dueInDays}d`],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl p-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-                <p className="font-body text-[9px] tracking-[0.16em] uppercase" style={{ color: DIM }}>{label}</p>
-                <p className="mt-1 truncate font-body text-sm font-semibold" style={{ color: TEXT }}>{value}</p>
-              </div>
-            ))}
-          </div>
         </section>
 
         <RouteBridgePanel bridge={routeBridge} />

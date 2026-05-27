@@ -90,6 +90,20 @@ function canShowProviderFeature(feature, userRole = 'provider') {
   return feature.status === FEATURE_STATUS.live && Boolean(resolveFeatureRoute(feature, userRole));
 }
 
+function allowedFilterIdsForRole(userRole = 'provider') {
+  const role = normalize(userRole);
+  if (role === 'admin') return filters.map((filter) => filter.id);
+  if (role === 'np' || role === 'physician') return ['all', 'rn', 'authority'];
+  return ['all', 'rn'];
+}
+
+function roleCanSeeGroup(group, userRole = 'provider') {
+  const role = normalize(userRole);
+  if (role === 'admin') return true;
+  if (role === 'np' || role === 'physician') return group.role === 'RN' || group.id === 'authority';
+  return group.role === 'RN';
+}
+
 function cleanProviderText(value) {
   return String(value || '')
     .replace('Claim and work the live patient queue.', 'Claim and work patient visits.')
@@ -218,6 +232,7 @@ export default function RoleOS() {
   const { user } = useAuthStore();
   const userRole = user?.role || 'provider';
   const isAdmin = normalize(userRole) === 'admin';
+  const canUseClinicalAuthority = ['admin', 'np', 'physician'].includes(normalize(userRole));
   useSeo({
     title: `${isAdmin ? 'Admin Role OS' : 'Provider Tools'} - Avalon Vitality`,
     description: isAdmin
@@ -230,9 +245,11 @@ export default function RoleOS() {
   const params = new URLSearchParams(location.search);
   const initialFilter = params.get('focus') ? 'rn' : 'all';
   const [activeFilter, setActiveFilter] = useState(initialFilter);
-  const availableFilters = isAdmin ? filters : filters.filter((filter) => filter.id !== 'founder');
-  const selectedFilter = !isAdmin && activeFilter === 'founder' ? 'all' : activeFilter;
+  const availableFilterIds = allowedFilterIdsForRole(userRole);
+  const availableFilters = filters.filter((filter) => availableFilterIds.includes(filter.id));
+  const selectedFilter = availableFilterIds.includes(activeFilter) ? activeFilter : 'all';
   const groups = useMemo(() => ROLE_OPERATING_SYSTEM.filter((group) => {
+    if (!roleCanSeeGroup(group, userRole)) return false;
     if (selectedFilter === 'all') return true;
     if (selectedFilter === 'rn') return group.role === 'RN';
     if (selectedFilter === 'authority') return group.id === 'authority';
@@ -313,10 +330,14 @@ export default function RoleOS() {
             <p className="mt-4 font-body text-[10px] uppercase tracking-[0.18em] text-foreground/42">Broadcast</p>
             <p className="mt-1 font-heading text-2xl uppercase text-foreground">Comms</p>
           </Link>
-          <Link to="/provider/invoicing" className="rounded-2xl border border-foreground/10 bg-foreground/[0.035] p-4 transition-all hover:bg-foreground/[0.055]">
+          <Link to={canUseClinicalAuthority ? '/provider/invoicing' : '/provider/settings'} className="rounded-2xl border border-foreground/10 bg-foreground/[0.035] p-4 transition-all hover:bg-foreground/[0.055]">
             <ShieldCheck className="h-5 w-5 text-foreground/52" strokeWidth={1.7} />
-            <p className="mt-4 font-body text-[10px] uppercase tracking-[0.18em] text-foreground/42">Authority</p>
-            <p className="mt-1 font-heading text-2xl uppercase text-foreground">GFE</p>
+            <p className="mt-4 font-body text-[10px] uppercase tracking-[0.18em] text-foreground/42">
+              {canUseClinicalAuthority ? 'Authority' : 'Profile'}
+            </p>
+            <p className="mt-1 font-heading text-2xl uppercase text-foreground">
+              {canUseClinicalAuthority ? 'GFE' : 'Settings'}
+            </p>
           </Link>
           <Link to={isAdmin ? '/admin/inventory' : '/provider/dashboard'} className="rounded-2xl border border-foreground/10 bg-foreground/[0.035] p-4 transition-all hover:bg-foreground/[0.055]">
             <Boxes className="h-5 w-5 text-foreground/52" strokeWidth={1.7} />

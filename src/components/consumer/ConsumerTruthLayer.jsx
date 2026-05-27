@@ -91,10 +91,12 @@ function TruthCard({ item, compact = false }) {
         <p className="mt-3 line-clamp-3 font-body text-xs leading-relaxed text-foreground/58">{item.detail}</p>
       )}
 
-      <div className="mt-4 space-y-1.5 border-t border-foreground/[0.07] pt-3">
-        <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/35">Owner: <span className="text-foreground/60">{item.owner}</span></p>
-        <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/35">Updated: <span className="text-foreground/60">{item.updatedLabel}</span></p>
-      </div>
+      {!compact && (
+        <div className="mt-4 space-y-1.5 border-t border-foreground/[0.07] pt-3">
+          <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/35">Owner: <span className="text-foreground/60">{item.owner}</span></p>
+          <p className="font-body text-[9px] uppercase tracking-[0.16em] text-foreground/35">Updated: <span className="text-foreground/60">{item.updatedLabel}</span></p>
+        </div>
+      )}
 
       {!compact && (
         <div className="mt-3 flex items-center justify-between gap-3">
@@ -125,6 +127,8 @@ export default function ConsumerTruthLayer({
   compact = false,
   limit = null,
   showGroups = true,
+  showSummary = true,
+  showGuardrail = true,
 }) {
   const modules = limit ? truth.modules.slice(0, limit) : truth.modules;
   const grouped = modules.reduce((acc, item) => {
@@ -141,20 +145,24 @@ export default function ConsumerTruthLayer({
           <h2 className="mt-2 font-heading text-4xl uppercase leading-none text-foreground md:text-5xl">{title}</h2>
           <p className="mt-3 max-w-2xl font-body text-sm leading-relaxed text-foreground/56">{intro}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <SummaryPill label="Builds" value={`${truth.count}/${truth.targetCount}`} tone={truth.complete ? 'ready' : 'action'} />
-          <SummaryPill label="Ready" value={truth.summary.ready} tone="ready" />
-          <SummaryPill label="Action" value={truth.summary.action} tone={truth.summary.action ? 'action' : 'neutral'} />
-          {truth.summary.blocked ? <SummaryPill label="Blocked" value={truth.summary.blocked} tone="blocked" /> : null}
-        </div>
+        {showSummary && (
+          <div className="flex flex-wrap gap-2">
+            <SummaryPill label="Builds" value={`${truth.count}/${truth.targetCount}`} tone={truth.complete ? 'ready' : 'action'} />
+            <SummaryPill label="Ready" value={truth.summary.ready} tone="ready" />
+            <SummaryPill label="Action" value={truth.summary.action} tone={truth.summary.action ? 'action' : 'neutral'} />
+            {truth.summary.blocked ? <SummaryPill label="Blocked" value={truth.summary.blocked} tone="blocked" /> : null}
+          </div>
+        )}
       </div>
 
-      <div className="mt-5 flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-background/32 px-3 py-3">
-        <AlertTriangle className="h-4 w-4 shrink-0 text-foreground/40" strokeWidth={1.7} />
-        <p className="font-body text-[11px] leading-relaxed text-foreground/48">
-          If a status is not backed by a record, it shows as pending, armed, manual, or needed. No fake certainty.
-        </p>
-      </div>
+      {showGuardrail && (
+        <div className="mt-5 flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-background/32 px-3 py-3">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-foreground/40" strokeWidth={1.7} />
+          <p className="font-body text-[11px] leading-relaxed text-foreground/48">
+            If a status is not backed by a record, it shows as pending, armed, manual, or needed. No fake certainty.
+          </p>
+        </div>
+      )}
 
       {showGroups ? (
         <div className="mt-6 space-y-6">

@@ -112,7 +112,7 @@ const FEATURED_ORDER = new Map(FEATURED_KEYS.map((key, index) => [key, index]));
 const CONTROL_TRANSITION = { duration: 0.48, ease: EASE };
 const CARD_TRANSITION = { duration: 0.54, ease: EASE };
 const FOLDOUT_TRANSITION = { duration: 0.58, ease: EASE };
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 function priceFor(session) {
   return session.price || session.doses?.[0]?.price || 0;

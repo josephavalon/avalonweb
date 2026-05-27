@@ -376,7 +376,7 @@ export default function AcuityControl() {
               Sweep
             </button>
             <Link
-              to="/provider/communications"
+              to="/admin/communications"
               className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full border border-foreground/14 bg-background/48 px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/64 transition-colors hover:text-foreground"
             >
               <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
@@ -417,7 +417,7 @@ export default function AcuityControl() {
                   <h2 className="font-heading text-3xl uppercase leading-none tracking-tight text-foreground">Blockers</h2>
                 </div>
                 <Link
-                  to="/provider/appointments"
+                  to="/admin/bookings"
                   className="inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground"
                 >
                   Requests <ExternalLink className="h-3 w-3" strokeWidth={2} />

@@ -1000,9 +1000,12 @@ export function readRoleCommunications({ role = 'client', userId = '' } = {}) {
   const announcements = readAnnouncements().filter((item) => (
     item.status !== 'archived' && communicationVisibleToRole(item, role, userId)
   ));
+  const allMessages = readOpsMessages();
   const opsMessages = role === 'client'
-    ? readOpsMessages().filter((message) => message.threadId === 'client-texts')
-    : readOpsMessages().filter((message) => message.threadId !== 'client-texts' || role === 'admin');
+    ? allMessages.filter((message) => message.threadId === 'client-texts')
+    : role === 'admin' || role === 'superadmin'
+      ? allMessages
+      : allMessages.filter((message) => ['dispatch', 'nurses', 'gfe'].includes(message.threadId));
   const supportThread = readSupportThread();
   return { alerts, announcements, opsMessages, supportThread };
 }

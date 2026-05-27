@@ -90,7 +90,6 @@
     <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
-    <script>window.__AV_BOOT_STARTED_AT = Date.now();</script>
     <script src="/theme-bootstrap.js"></script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
@@ -119,6 +118,11 @@
       }
       .av-boot-splash[data-state="leaving"] {
         opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      html.av-skip-boot .av-boot-splash {
+        display: none;
         visibility: hidden;
         pointer-events: none;
       }
