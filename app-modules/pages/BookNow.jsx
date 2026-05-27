@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
@@ -532,6 +532,8 @@ export default function BookNow() {
     gfeExpiresAt: clientProfile.gfe?.validUntil,
   }), [clientProfile]);
   const [step, setStep] = useState(0);
+  const stepShellRef = useRef(null);
+  const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
     const savedWebstore = readBookingDraft()?.webstore || {};
     return {
@@ -542,6 +544,26 @@ export default function BookNow() {
     };
   });
   const [error, setError] = useState('');
+
+  const scrollStepIntoView = (behavior = 'smooth') => {
+    if (typeof window === 'undefined') return;
+    window.setTimeout(() => {
+      const target = stepShellRef.current;
+      if (!target) return;
+      const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 96);
+      window.scrollTo({ top, behavior: prefersReduced ? 'auto' : behavior });
+      target.focus({ preventScroll: true });
+    }, 50);
+  };
+
+  useEffect(() => {
+    if (!hasMountedStepRef.current) {
+      hasMountedStepRef.current = true;
+      return;
+    }
+    scrollStepIntoView();
+  }, [step]);
 
   useEffect(() => {
     const outcomeParam = searchParams.get('outcome');
@@ -657,6 +679,7 @@ export default function BookNow() {
   };
 
   const toggleAddon = (label) => {
+    setError('');
     setState((current) => ({
       ...current,
       addOnDecision: true,
@@ -667,11 +690,22 @@ export default function BookNow() {
   };
 
   const chooseNoAddons = () => {
+    setError('');
     setState((current) => ({
       ...current,
       addOns: [],
       addOnDecision: true,
     }));
+    track(ANALYTICS_EVENTS.STEP_COMPLETED, {
+      funnel: 'webstore',
+      step_index: 3,
+      step_name: STEPS[3],
+      protocol_key: state.productKey,
+      addon_count: 0,
+      addon_revenue: 0,
+      addon_decision: 'none',
+    });
+    setStep(4);
   };
 
   const canAdvance = () => {
@@ -686,6 +720,7 @@ export default function BookNow() {
     if (!canAdvance()) {
       const reason = step === 3 ? 'Choose add-ons or none.' : step === 4 ? 'Add address and ZIP.' : 'Choose a date and time.';
       setError(reason);
+      scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
         step_index: step,
@@ -707,6 +742,14 @@ export default function BookNow() {
   };
 
   const back = () => setStep((current) => Math.max(current - 1, 0));
+
+  const primaryActionLabel = () => {
+    if (step === 2) return 'Add-ons next';
+    if (step === 3) return state.addOnDecision ? 'Location next' : 'Pick add-ons or none';
+    if (step === 4 && !canAdvance()) return 'Add location';
+    if (step === 5 && !canAdvance()) return 'Pick time';
+    return step < LAST_STEP ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`;
+  };
 
   const buildBooking = () => {
     const { firstName, lastName } = splitName(state.name);
@@ -855,8 +898,13 @@ export default function BookNow() {
       <Navbar showBack />
       <main className="mx-auto max-w-6xl px-4 pb-32 pt-20 md:px-8 md:pt-28 lg:pb-16">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12">
-          <section className="min-w-0">
+          <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
             <StepProgress step={step} />
+            {error && (
+              <p role="alert" className="mb-4 rounded-2xl border border-red-400/20 bg-red-400/8 px-4 py-3 font-body text-xs text-red-300">
+                {error}
+              </p>
+            )}
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -1045,8 +1093,6 @@ export default function BookNow() {
               </motion.div>
             </AnimatePresence>
 
-            {error && <p className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/8 px-4 py-3 font-body text-xs text-red-300">{error}</p>}
-
             <div className="mt-7 hidden gap-3 lg:flex">
               {step > 0 && (
                 <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[52px] rounded-full border border-foreground/12 px-6 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/62">
@@ -1055,7 +1101,7 @@ export default function BookNow() {
               )}
               {step < LAST_STEP ? (
                 <button type="button" onClick={next} aria-label={`Continue from ${STEPS[step]}`} className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background">
-                  Continue <ArrowRight className="h-4 w-4" />
+                  {primaryActionLabel()} <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
                 <button type="button" disabled={!canSubmit} onClick={submit} aria-label="Hold visit and continue to checkout" className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-8 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-background disabled:opacity-35">
@@ -1083,7 +1129,7 @@ export default function BookNow() {
             aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
             className="flex min-h-[44px] flex-1 items-center justify-between rounded-full bg-foreground px-3.5 font-body text-[9px] font-semibold uppercase tracking-[0.13em] text-background disabled:opacity-35"
           >
-            <span>{step < LAST_STEP ? 'Continue' : `Hold ${currency(DEPOSIT_DUE)}`}</span>
+            <span>{primaryActionLabel()}</span>
             <span>{currency(subtotal)}</span>
           </button>
         </div>
