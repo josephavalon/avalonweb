@@ -485,7 +485,7 @@ export default function Menu() {
                         scrollChipIntoView(event);
                       }}
                       aria-label={`Sort by ${item.key === 'price' ? 'price' : item.label}`}
-                      className={`relative isolate min-h-[44px] min-w-[44px] shrink-0 overflow-hidden rounded-full border px-3.5 font-body text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors md:px-4 ${
+                      className={`relative isolate min-h-[44px] min-w-[54px] shrink-0 overflow-hidden rounded-full border px-3.5 font-body text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors md:px-4 ${
                         active ? 'border-accent text-background' : 'border-foreground/[0.10] text-foreground/50 hover:border-foreground/[0.22] hover:text-foreground'
                       }`}
                     >

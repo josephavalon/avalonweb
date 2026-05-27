@@ -5,6 +5,20 @@ import App from '@/App.jsx'
 import '@/index.css'
 import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
 
+function applyStoredTheme() {
+  try {
+    const stored = localStorage.getItem('avalon.theme') || 'dark';
+    const theme = ['dark', 'golden', 'dubs'].includes(stored) ? stored : 'dark';
+    const root = document.documentElement;
+    root.classList.remove('dark', 'golden', 'dubs');
+    root.classList.add(theme);
+    localStorage.setItem('avalon.theme', theme);
+  } catch (err) {
+    document.documentElement.classList.add('dark');
+    if (import.meta.env?.DEV) console.warn('[theme-boot]', err);
+  }
+}
+
 // One-time migration: reset old 'golden' default to 'dark'
 try {
   if (!localStorage.getItem('avalon.theme.v2')) {
@@ -15,6 +29,7 @@ try {
   if (import.meta.env?.DEV) console.warn('[theme-migration]', err);
 }
 
+applyStoredTheme();
 captureAttribution();
 getExperimentVariant('booking_entry_v1', ['protocol-first', 'fast-hold']);
 

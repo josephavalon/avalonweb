@@ -1,12 +1,4 @@
-/**
- * AppLoader — brief desktop-only splash that plays once on cold load.
- * Theme-aware: reads stored theme from localStorage to match colors.
- * AV logotype fades quickly, then the whole loader gets out of the way.
- * Does NOT re-fire on route changes — tracked via sessionStorage.
- */
 import { useState, useEffect } from 'react';
-
-const SEEN_KEY = 'avalon.loader.seen';
 
 const THEME_PALETTES = {
   dark:   { bg: 'hsl(var(--background))', text: 'hsl(var(--foreground))', accent: 'hsl(var(--foreground))', sub: 'hsl(var(--foreground) / 0.45)' },
@@ -23,26 +15,14 @@ function getThemePalette() {
 }
 
 export default function AppLoader() {
-  const [visible, setVisible] = useState(() => {
-    try {
-      if (window.matchMedia?.('(max-width: 767px)').matches) {
-        sessionStorage.setItem(SEEN_KEY, '1');
-        return false;
-      }
-      return !sessionStorage.getItem(SEEN_KEY);
-    } catch { return false; }
-  });
+  const [visible, setVisible] = useState(true);
 
   // Resolved once — palette never changes during the splash
   const [palette] = useState(getThemePalette);
 
   useEffect(() => {
     if (!visible) return;
-    try { sessionStorage.setItem(SEEN_KEY, '1'); } catch (err) {
-      if (import.meta.env?.DEV) console.warn('[app-loader-seen]', err);
-    }
-
-    const t = setTimeout(() => setVisible(false), 220);
+    const t = setTimeout(() => setVisible(false), 520);
     return () => clearTimeout(t);
   }, [visible]);
 
@@ -51,10 +31,11 @@ export default function AppLoader() {
       {visible ? (
         <div
           style={{ backgroundColor: palette.bg }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center animate-in fade-in duration-base"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background animate-in fade-in duration-base"
           role="status"
           aria-live="polite"
           aria-label="Loading Avalon Vitality"
+          data-mobile-qa-ignore
         >
           <p
             style={{ color: palette.text, fontFamily: 'inherit' }}
@@ -67,7 +48,7 @@ export default function AppLoader() {
             style={{ color: palette.sub }}
             className="font-body text-[10px] tracking-[0.4em] uppercase mt-2 select-none animate-in fade-in duration-reveal"
           >
-            Avalon Vitality
+            AVALON VITALITY
           </p>
 
           {/* Accent progress bar */}

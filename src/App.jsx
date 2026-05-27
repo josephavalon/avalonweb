@@ -5,6 +5,7 @@ import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
+import AppLoader from '@/components/AppLoader';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -286,6 +287,7 @@ function App() {
     <ErrorBoundary>
       <AuthStoreProvider>
       <CartProvider>
+        <AppLoader />
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <AnalyticsRouteTracker />
