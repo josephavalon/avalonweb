@@ -8,10 +8,10 @@ import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
 function applyStoredTheme() {
   try {
     const stored = localStorage.getItem('avalon.theme') || 'dark';
-    const theme = ['dark', 'golden', 'dubs'].includes(stored) ? stored : 'dark';
+    const theme = ['dark', 'light', 'golden', 'dubs'].includes(stored) ? stored : 'dark';
     const root = document.documentElement;
     root.classList.remove('dark', 'golden', 'dubs');
-    root.classList.add(theme);
+    if (theme !== 'light') root.classList.add(theme);
     localStorage.setItem('avalon.theme', theme);
   } catch (err) {
     document.documentElement.classList.add('dark');

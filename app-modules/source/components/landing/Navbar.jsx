@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumSelectionTransition, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -37,7 +37,7 @@ const dashboardPathFor = (user) => {
 export default function Navbar({ showBack = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme] = useState(readInitialTheme);
+  const [theme, setTheme] = useState(readInitialTheme);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
@@ -80,8 +80,13 @@ export default function Navbar({ showBack = false }) {
     close();
     navigate('/login');
   };
+  const cycleTheme = () => {
+    setTheme((current) => THEMES[(THEMES.indexOf(current) + 1) % THEMES.length]);
+  };
 
   const linkClass = "inline-flex min-h-11 items-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
+  const ThemeIcon = theme === 'dark' ? Sun : Moon;
+  const themeLabel = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const mobileLinks = [
     ...mainLinks,
@@ -156,6 +161,16 @@ export default function Navbar({ showBack = false }) {
 
         {/* Col 3 — account link + booking CTA, right-aligned */}
         <div className="flex items-center justify-end gap-4">
+          <motion.button
+            type="button"
+            onClick={cycleTheme}
+            whileTap={premiumTap}
+            className="theme-toggle-btn inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.10] bg-foreground/[0.035] text-foreground transition-colors hover:bg-foreground/[0.075] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35"
+            aria-label={themeLabel}
+            title={themeLabel}
+          >
+            <ThemeIcon className="h-4 w-4" strokeWidth={1.8} />
+          </motion.button>
           {user && (
             <button
               type="button"
@@ -236,6 +251,23 @@ export default function Navbar({ showBack = false }) {
               >
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(140deg,hsl(var(--foreground)/0.10),transparent_34%,hsl(var(--accent)/0.08))]" />
                 <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-foreground/20" />
+
+                <motion.div
+                  className="relative mb-1 flex items-center justify-between rounded-2xl border border-foreground/[0.10] bg-foreground/[0.035] px-4 py-2.5"
+                  variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
+                >
+                  <span className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52">Theme</span>
+                  <motion.button
+                    type="button"
+                    onClick={cycleTheme}
+                    whileTap={premiumTap}
+                    className="theme-toggle-btn flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.10] bg-background/45 text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35"
+                    aria-label={themeLabel}
+                    title={themeLabel}
+                  >
+                    <ThemeIcon className="h-4 w-4" strokeWidth={1.8} />
+                  </motion.button>
+                </motion.div>
 
                 {showBack && (
                   <motion.div
