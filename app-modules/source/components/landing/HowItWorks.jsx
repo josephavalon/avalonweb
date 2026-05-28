@@ -30,10 +30,10 @@ function StepCard({ step, index, open, onToggle }) {
   return (
     <motion.div
       whileHover={premiumHover}
-      className={`relative rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] backdrop-blur-xl transition-colors duration-base ease-editorial ${
+      className={`relative rounded-2xl border shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl transition-colors duration-base ease-editorial ${
         open
-          ? 'border-accent/35 bg-white/[0.12]'
-          : 'border-foreground/10 bg-white/[0.08] hover:border-foreground/20 hover:bg-white/[0.105]'
+          ? 'border-accent/40 bg-card'
+          : 'border-border/90 bg-card/95 hover:border-foreground/28 hover:bg-muted/55'
       }`}
     >
       <motion.span
@@ -41,40 +41,40 @@ function StepCard({ step, index, open, onToggle }) {
         animate={{ scale: open ? 1.08 : 1, opacity: open ? 1 : 0.55 }}
         transition={{ duration: 0.45, ease: EASE }}
         className={`absolute -left-[1.85rem] top-7 hidden h-3 w-3 rounded-full border md:block ${
-          open ? 'border-accent bg-accent shadow-[0_0_24px_hsl(var(--accent)/0.35)]' : 'border-foreground/18 bg-background'
+          open ? 'border-accent bg-accent shadow-[0_0_24px_hsl(var(--accent)/0.35)]' : 'border-border/90 bg-background'
         }`}
       />
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-white/[0.08] transition-colors duration-base ease-editorial"
+        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-muted/45 transition-colors duration-base ease-editorial"
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-foreground/10 flex items-center justify-center shrink-0">
-            <span className="font-body text-[10px] tracking-[0.2em] text-accent/70">{step.n}</span>
+          <div className="w-9 h-9 rounded-xl bg-background/70 border border-border/90 flex items-center justify-center shrink-0">
+            <span className="font-body text-[10px] tracking-[0.2em] text-accent/80">{step.n}</span>
           </div>
           <div className="text-left">
             <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">{step.title}</p>
-            <p className="font-body text-[9px] text-foreground/40 tracking-[0.15em] uppercase mt-1">{step.preview}</p>
+            <p className="font-body text-[9px] text-foreground/58 tracking-[0.15em] uppercase mt-1">{step.preview}</p>
           </div>
         </div>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.38, ease: EASE }}
-          className="text-foreground/30 shrink-0"
+          className="text-foreground/45 shrink-0"
         >
         <ChevronDown
-          className="w-4 h-4 text-foreground/30 shrink-0 transition-transform duration-300"
+          className="w-4 h-4 text-foreground/45 shrink-0 transition-transform duration-300"
           strokeWidth={2}
         />
         </motion.div>
       </motion.button>
 
       <SmoothDisclosure open={open}>
-        <div className="border-t border-white/[0.06] px-5 pb-5 pt-4">
-          <p className="font-body text-xs text-foreground/50 leading-relaxed">{step.desc}</p>
+        <div className="border-t border-border/70 px-5 pb-5 pt-4">
+          <p className="font-body text-xs text-foreground/62 leading-relaxed">{step.desc}</p>
         </div>
       </SmoothDisclosure>
     </motion.div>
