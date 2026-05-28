@@ -101,7 +101,7 @@ export default function HowItWorks() {
           </h2>
         </motion.div>
 
-        <div className="relative space-y-2 md:ml-7">
+        <div className="relative space-y-2">
           <motion.div
             initial={{ scaleY: 0, opacity: 0 }}
             whileInView={{ scaleY: 1, opacity: 1 }}
