@@ -85,8 +85,8 @@ export default function HowItWorks() {
   const [openStep, setOpenStep] = useState(null);
 
   return (
-    <section id="how-it-works" className="pt-12 pb-10 md:pt-20 md:pb-16 px-4 scroll-mt-20">
-      <div className="max-w-6xl mx-auto">
+    <section id="how-it-works" className="pt-12 pb-10 md:pt-20 md:pb-16 px-5 md:px-12 scroll-mt-20">
+      <div className="max-w-6xl">
 
         <motion.div
           initial={{ opacity: 0, y: 8 }}
