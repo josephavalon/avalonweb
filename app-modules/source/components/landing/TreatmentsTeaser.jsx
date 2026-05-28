@@ -77,7 +77,7 @@ const TOP_CATEGORIES = [
   {
     key: 'addons',
     label: 'Enhancements',
-    sub: 'By review',
+    sub: 'Choose your add-ons',
     icon: Plus,
     type: 'flat',
     data: ADDONS,
