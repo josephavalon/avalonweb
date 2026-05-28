@@ -225,9 +225,6 @@ export default function TreatmentsTeaser() {
           <div>
             <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Avalon Protocols</p>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Choose Your Protocol</h2>
-            <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
-              Hydration is live. Final protocols and add-ons may be adjusted by the clinical team.
-            </p>
           </div>
         </motion.div>
 
