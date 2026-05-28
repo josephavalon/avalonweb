@@ -241,10 +241,39 @@ const locationDefinitions = [
     slug: 'san-francisco',
     city: 'San Francisco',
     region: 'San Francisco',
-    neighborhoods: ['SoMa', 'Pacific Heights', 'Marina', 'Mission District', 'Nob Hill', 'Mission Bay'],
+    neighborhoods: [
+      'SoMa',
+      'Financial District',
+      'Union Square',
+      'Nob Hill',
+      'Russian Hill',
+      'Pacific Heights',
+      'Marina',
+      'Cow Hollow',
+      'North Beach',
+      'Embarcadero',
+      'Mission District',
+      'Hayes Valley',
+      'Castro',
+      'Noe Valley',
+      'Mission Bay',
+      'Dogpatch',
+      'Potrero Hill',
+      'Presidio',
+      'Richmond District',
+      'Sunset District',
+    ],
     zipExamples: ['94102', '94103', '94107', '94109', '94115', '94123'],
     communityRecovery: 'San Francisco recovery is built around dense calendars, hotel stays, office days, launches, and late nights. Avalon helps eligible clients recover without adding a clinic commute to an already packed city day.',
     localUseCases: ['Hotel recovery near Union Square and Embarcadero', 'Post-launch and private event support', 'Office and founder schedule recovery'],
+    thingsToDo: [
+      'Union Square hotels and conference weeks',
+      'Moscone Center launches and trade shows',
+      'Chase Center and Mission Bay event nights',
+      'Marina, Cow Hollow, and North Beach weekends',
+      'Golden Gate Park festivals and long outdoor days',
+      'Presidio, waterfront, and bridge run recovery',
+    ],
   },
   {
     slug: 'oakland',
@@ -254,6 +283,7 @@ const locationDefinitions = [
     zipExamples: ['94607', '94609', '94610', '94611', '94618'],
     communityRecovery: 'Oakland requests often move between homes, creative spaces, venues, and office teams. Avalon supports local recovery with mobile visits planned around traffic, parking, building access, and clinical clearance.',
     localUseCases: ['Event recovery around Jack London Square', 'Home visits in Rockridge and Montclair', 'Team recovery for Oakland offices and studios'],
+    thingsToDo: ['Jack London Square events', 'Fox Theater and downtown nights', 'Lake Merritt weekends', 'Temescal dining and private gatherings'],
   },
   {
     slug: 'berkeley',
@@ -263,6 +293,7 @@ const locationDefinitions = [
     zipExamples: ['94702', '94703', '94704', '94705', '94707'],
     communityRecovery: 'Berkeley recovery is practical: students, founders, professors, athletes, and families need calm scheduling and clear clinical review. Avalon keeps the visit mobile and the protocol simple.',
     localUseCases: ['Recovery around campus and Downtown Berkeley', 'Wellness support for West Berkeley teams', 'Private home visits in North Berkeley and Elmwood'],
+    thingsToDo: ['UC Berkeley game days and campus visits', 'Greek Theatre concerts', 'Fourth Street dining', 'Tilden Park weekends'],
   },
   {
     slug: 'alameda',
@@ -272,6 +303,7 @@ const locationDefinitions = [
     zipExamples: ['94501', '94502'],
     communityRecovery: 'Alameda clients value convenience and predictability. Avalon helps mobile recovery fit around ferry commutes, family weekends, waterfront events, and private home visits.',
     localUseCases: ['Private appointments near Harbor Bay', 'Weekend recovery for waterfront events', 'Home visits for Alameda households'],
+    thingsToDo: ['Alameda waterfront weekends', 'Park Street dining', 'Bay Farm family events', 'Private home gatherings'],
   },
   {
     slug: 'hayward',
@@ -281,6 +313,7 @@ const locationDefinitions = [
     zipExamples: ['94541', '94542', '94544', '94545'],
     communityRecovery: 'Hayward sits at the center of East Bay routing. Avalon helps eligible clients recover at home or work with protocols planned around nurse coverage, supplies, and clinical review.',
     localUseCases: ['Workday recovery for local operators', 'Home visits across central Hayward', 'Group requests near event and family gatherings'],
+    thingsToDo: ['Downtown Hayward events', 'East Bay weekend gatherings', 'CSU East Bay area visits', 'Family celebrations and home recovery'],
   },
   {
     slug: 'san-mateo',
@@ -290,6 +323,7 @@ const locationDefinitions = [
     zipExamples: ['94401', '94402', '94403', '94404', '94010'],
     communityRecovery: 'San Mateo recovery often supports Peninsula families, travelers, and teams moving between SFO, hotels, offices, and homes. Avalon keeps the visit local and low-friction.',
     localUseCases: ['Hotel recovery near SFO routes', 'Office visits for Peninsula teams', 'Home appointments in San Mateo and Burlingame'],
+    thingsToDo: ['Downtown San Mateo dining', 'Hillsdale and Peninsula shopping days', 'SFO-adjacent hotel stays', 'Bay Meadows and private events'],
   },
   {
     slug: 'palo-alto',
@@ -299,6 +333,7 @@ const locationDefinitions = [
     zipExamples: ['94301', '94303', '94304', '94306', '94025', '94027'],
     communityRecovery: 'Palo Alto clients usually want precision: fast intake, clean expectations, and a clinically reviewed protocol that fits into founder, family, travel, or campus schedules.',
     localUseCases: ['Executive recovery near University Avenue', 'Home visits in Menlo Park and Atherton', 'Travel recovery around Stanford and Peninsula hotels'],
+    thingsToDo: ['University Avenue meetings and dinners', 'Stanford weekends', 'Founder offsites and executive travel', 'Menlo Park and Atherton home visits'],
   },
   {
     slug: 'redwood-city',
@@ -308,6 +343,7 @@ const locationDefinitions = [
     zipExamples: ['94061', '94062', '94063', '94065'],
     communityRecovery: 'Redwood City recovery is built around offices, homes, and Peninsula traffic. Avalon helps clients request mobile support without turning recovery into another errand.',
     localUseCases: ['Workday recovery for Peninsula teams', 'Home visits in Redwood Shores', 'Event support near downtown venues'],
+    thingsToDo: ['Downtown Redwood City dining', 'Fox Theatre nights', 'Redwood Shores workdays', 'Woodside-area weekends'],
   },
   {
     slug: 'mountain-view',
@@ -317,6 +353,7 @@ const locationDefinitions = [
     zipExamples: ['94040', '94041', '94043'],
     communityRecovery: 'Mountain View clients often need recovery around travel, product cycles, training, and long office days. Avalon keeps the protocol request fast and the visit mobile.',
     localUseCases: ['Office recovery in North Bayshore', 'Travel recovery near Shoreline hotels', 'Home visits around Cuesta Park'],
+    thingsToDo: ['Shoreline Amphitheatre events', 'Castro Street dinners', 'North Bayshore workdays', 'Startup and product launch weeks'],
   },
   {
     slug: 'sunnyvale',
@@ -326,6 +363,7 @@ const locationDefinitions = [
     zipExamples: ['94085', '94086', '94087', '94089'],
     communityRecovery: 'Sunnyvale recovery supports high-output work weeks, family schedules, and South Bay travel. Avalon helps eligible clients request RN-led visits with transparent clinical review.',
     localUseCases: ['Office and campus recovery', 'Home appointments across Sunnyvale neighborhoods', 'Travel support before or after South Bay trips'],
+    thingsToDo: ['Downtown Sunnyvale dining', 'South Bay office days', 'Heritage District weekends', 'Family and private home events'],
   },
   {
     slug: 'san-jose',
@@ -335,6 +373,7 @@ const locationDefinitions = [
     zipExamples: ['95110', '95112', '95113', '95125', '95126', '95008'],
     communityRecovery: 'San Jose needs range: homes, hotels, enterprise teams, festivals, and private events. Avalon helps the community recover with mobile visits planned around eligibility, routing, and kit inventory.',
     localUseCases: ['Event recovery near downtown and Santana Row', 'Home visits in Willow Glen and Rose Garden', 'Corporate recovery for South Bay teams'],
+    thingsToDo: ['SAP Center events', 'Santana Row dinners', 'Downtown San Jose conferences', 'Willow Glen and Rose Garden private gatherings'],
   },
   {
     slug: 'santa-clara',
@@ -344,6 +383,7 @@ const locationDefinitions = [
     zipExamples: ['95050', '95051', '95054'],
     communityRecovery: 'Santa Clara recovery often supports event days, sports weekends, offices, and hotels. Avalon keeps requests organized around mobile eligibility and nurse availability.',
     localUseCases: ['Event recovery near Levi’s Stadium corridors', 'Office recovery around North Santa Clara', 'Hotel and home appointments'],
+    thingsToDo: ['Levi’s Stadium game days', 'Santa Clara Convention Center events', 'North Santa Clara office weeks', 'University-area visits'],
   },
   {
     slug: 'cupertino',
@@ -353,6 +393,7 @@ const locationDefinitions = [
     zipExamples: ['95014', '95015'],
     communityRecovery: 'Cupertino clients tend to want quiet, reliable service at home or work. Avalon helps mobile recovery fit around family schedules, product deadlines, and travel.',
     localUseCases: ['Home visits in Monta Vista and Seven Springs', 'Workday recovery near campus corridors', 'Travel recovery before long flights'],
+    thingsToDo: ['Apple Park area workdays', 'Monta Vista home visits', 'Main Street Cupertino dinners', 'South Bay family weekends'],
   },
   {
     slug: 'fremont',
@@ -362,6 +403,7 @@ const locationDefinitions = [
     zipExamples: ['94536', '94538', '94539', '94555'],
     communityRecovery: 'Fremont coverage connects East Bay and South Bay recovery needs. Avalon supports eligible mobile appointments where routing, supplies, and clinical review line up.',
     localUseCases: ['Home visits near Mission San Jose', 'Workday recovery in Warm Springs', 'Group recovery for family and private events'],
+    thingsToDo: ['Mission Peak weekends', 'Warm Springs workdays', 'Niles events', 'Family celebrations across Fremont'],
   },
   {
     slug: 'pleasanton',
@@ -371,6 +413,7 @@ const locationDefinitions = [
     zipExamples: ['94566', '94568', '94588'],
     communityRecovery: 'Pleasanton clients often request recovery around family weekends, corporate schedules, golf days, and private events. Avalon keeps the experience discreet and mobile.',
     localUseCases: ['Home recovery near Ruby Hill and Foothill', 'Corporate visits around Hacienda', 'Private event recovery in the Tri-Valley'],
+    thingsToDo: ['Downtown Pleasanton events', 'Alameda County Fairgrounds weekends', 'Ruby Hill gatherings', 'Tri-Valley corporate offsites'],
   },
   {
     slug: 'walnut-creek',
@@ -380,6 +423,7 @@ const locationDefinitions = [
     zipExamples: ['94595', '94596', '94597', '94598', '94549', '94507'],
     communityRecovery: 'Walnut Creek recovery is built for families, executives, athletes, and private events across the 680 corridor. Avalon helps clients recover without leaving home.',
     localUseCases: ['Home visits in Walnut Creek and Alamo', 'Recovery for private gatherings', 'Concierge support around Lafayette and Orinda'],
+    thingsToDo: ['Broadway Plaza shopping days', 'Downtown Walnut Creek dinners', '680 corridor private events', 'Lafayette and Orinda weekend recovery'],
   },
   {
     slug: 'concord',
@@ -389,6 +433,7 @@ const locationDefinitions = [
     zipExamples: ['94518', '94519', '94520', '94521', '94523'],
     communityRecovery: 'Concord gives Avalon a practical East Bay recovery corridor for homes, workplaces, and local events. Requests are reviewed around nurse routing and clinical eligibility.',
     localUseCases: ['Home visits around Clayton Valley', 'Recovery for local events', 'Workday support near Concord and Pleasant Hill'],
+    thingsToDo: ['Concord Pavilion shows', 'Todos Santos Plaza events', 'Pleasant Hill-area weekends', 'Clayton Valley home visits'],
   },
   {
     slug: 'marin',
@@ -398,6 +443,7 @@ const locationDefinitions = [
     zipExamples: ['94901', '94920', '94925', '94941', '94945', '94965'],
     communityRecovery: 'Marin recovery is about discretion, homes, hotels, wellness weekends, and active lifestyles. Avalon helps eligible clients bring recovery to their location.',
     localUseCases: ['Home visits in Mill Valley and Tiburon', 'Hotel and guest recovery in Sausalito', 'Post-activity recovery for active weekends'],
+    thingsToDo: ['Sausalito hotel weekends', 'Mill Valley trail days', 'Tiburon private gatherings', 'San Rafael and Larkspur events'],
   },
   {
     slug: 'napa',
@@ -407,6 +453,7 @@ const locationDefinitions = [
     zipExamples: ['94558', '94559', '94574', '94515', '94503'],
     communityRecovery: 'Napa recovery supports hospitality, weddings, retreats, tastings, and VIP travel. Avalon helps guests and hosts plan recovery before the day gets away from them.',
     localUseCases: ['Hotel and resort recovery', 'Wedding and group recovery support', 'Private home visits around Napa Valley'],
+    thingsToDo: ['Napa Valley winery weekends', 'Yountville hotel stays', 'Wedding and retreat recovery', 'Downtown Napa dining'],
   },
   {
     slug: 'sonoma',
@@ -416,13 +463,132 @@ const locationDefinitions = [
     zipExamples: ['95476', '95442', '95452', '94952', '95448'],
     communityRecovery: 'Sonoma recovery is ideal for retreats, hospitality, private estates, and weekend travel. Avalon helps eligible groups and guests request mobile support with clinical review.',
     localUseCases: ['Estate and retreat recovery', 'Hotel and guest support near Sonoma Plaza', 'Group recovery for private events'],
+    thingsToDo: ['Sonoma Plaza weekends', 'Healdsburg wine trips', 'Petaluma private events', 'Kenwood and Glen Ellen retreats'],
   },
-].map((location) => ({
-  ...location,
-  localAngle: `Built for ${location.city} homes, hotels, offices, and launches.`,
-}));
+];
 
-export const locationPages = locationDefinitions.map(({ slug, city, region, neighborhoods, zipExamples, communityRecovery, localUseCases, localAngle }) => ({
+const bayAreaCitySearchCoverage = [
+  { city: 'Albany', region: 'East Bay', neighborhoods: ['Solano Avenue', 'Westbrae', 'Albany Hill'], thingsToDo: ['Solano Avenue dining', 'Albany Bulb walks', 'East Bay family weekends'] },
+  { city: 'Dublin', region: 'Tri-Valley', neighborhoods: ['Downtown Dublin', 'Dublin Ranch', 'West Dublin'], thingsToDo: ['Tri-Valley office days', 'Dublin Ranch family events', 'Weekend gatherings near the 580 corridor'] },
+  { city: 'Emeryville', region: 'East Bay', neighborhoods: ['Bay Street', 'Watergate', 'Powell Street'], thingsToDo: ['Bay Street dining', 'Waterfront hotel stays', 'East Bay office recovery'] },
+  { city: 'Livermore', region: 'Tri-Valley', neighborhoods: ['Downtown Livermore', 'South Livermore', 'Springtown'], thingsToDo: ['Livermore Valley wine weekends', 'Downtown events', 'Tri-Valley retreats'] },
+  { city: 'Newark', region: 'East Bay', neighborhoods: ['NewPark', 'Old Town', 'Dumbarton corridor'], thingsToDo: ['Dumbarton commute recovery', 'East Bay family gatherings', 'South Bay workday support'] },
+  { city: 'Piedmont', region: 'East Bay', neighborhoods: ['Piedmont Avenue area', 'Central Piedmont', 'Highland Avenue'], thingsToDo: ['Private home visits', 'Oakland-adjacent events', 'Family and school weekends'] },
+  { city: 'San Leandro', region: 'East Bay', neighborhoods: ['Downtown San Leandro', 'Marina Faire', 'Bay-O-Vista'], thingsToDo: ['San Leandro Marina weekends', 'Downtown gatherings', 'East Bay home recovery'] },
+  { city: 'Union City', region: 'East Bay', neighborhoods: ['Union Landing', 'Decoto', 'Alvarado'], thingsToDo: ['Union Landing weekends', 'Family events', 'East Bay to South Bay travel recovery'] },
+  { city: 'Antioch', region: 'East Bay', neighborhoods: ['Downtown Antioch', 'Lone Tree', 'Black Diamond'], thingsToDo: ['Delta weekends', 'Black Diamond regional outings', 'Family and private events'] },
+  { city: 'Brentwood', region: 'East Bay', neighborhoods: ['Downtown Brentwood', 'Marsh Creek', 'Summerset'], thingsToDo: ['Brentwood winery days', 'Downtown dining', 'East Contra Costa private events'] },
+  { city: 'Clayton', region: 'East Bay', neighborhoods: ['Downtown Clayton', 'Oakhurst', 'Mount Diablo foothills'], thingsToDo: ['Mount Diablo weekends', 'Downtown Clayton events', 'Foothill home visits'] },
+  { city: 'Danville', region: 'East Bay', neighborhoods: ['Downtown Danville', 'Blackhawk', 'Diablo'], thingsToDo: ['Downtown Danville dinners', 'Blackhawk private gatherings', '680 corridor weekends'] },
+  { city: 'El Cerrito', region: 'East Bay', neighborhoods: ['San Pablo Avenue', 'El Cerrito Hills', 'Del Norte'], thingsToDo: ['Hillside home visits', 'East Bay dining', 'BART-adjacent travel recovery'] },
+  { city: 'Hercules', region: 'East Bay', neighborhoods: ['Waterfront', 'Refugio Valley', 'Victoria by the Bay'], thingsToDo: ['Waterfront weekends', 'Refugio Valley home visits', 'North East Bay gatherings'] },
+  { city: 'Lafayette', region: 'East Bay', neighborhoods: ['Downtown Lafayette', 'Burton Valley', 'Reliez Valley'], thingsToDo: ['Downtown Lafayette dining', 'Reservoir weekends', 'Private home recovery'] },
+  { city: 'Martinez', region: 'East Bay', neighborhoods: ['Downtown Martinez', 'Waterfront', 'Alhambra Valley'], thingsToDo: ['Waterfront events', 'Downtown Martinez weekends', 'Alhambra Valley private visits'] },
+  { city: 'Moraga', region: 'East Bay', neighborhoods: ['Rheem Valley', 'Campolindo', 'Saint Mary’s area'], thingsToDo: ['Saint Mary’s weekends', 'Rheem Valley home visits', 'LamOrinda private gatherings'] },
+  { city: 'Oakley', region: 'East Bay', neighborhoods: ['Downtown Oakley', 'Cypress Corridor', 'Delta area'], thingsToDo: ['Delta weekends', 'East Contra Costa family events', 'Home recovery near Cypress'] },
+  { city: 'Orinda', region: 'East Bay', neighborhoods: ['Theatre Square', 'Sleepy Hollow', 'Glorietta'], thingsToDo: ['Theatre Square evenings', 'Orinda hillside home visits', 'LamOrinda family weekends'] },
+  { city: 'Pinole', region: 'East Bay', neighborhoods: ['Old Town Pinole', 'Pinole Valley', 'Bayfront'], thingsToDo: ['Bayfront walks', 'Old Town weekends', 'Contra Costa home recovery'] },
+  { city: 'Pittsburg', region: 'East Bay', neighborhoods: ['Old Town Pittsburg', 'Marina', 'Buchanan Road'], thingsToDo: ['Marina weekends', 'Old Town events', 'East Contra Costa family gatherings'] },
+  { city: 'Pleasant Hill', region: 'East Bay', neighborhoods: ['Downtown Pleasant Hill', 'College Park', 'Poets Corner'], thingsToDo: ['Downtown Pleasant Hill dining', 'College Park area events', '680 corridor home visits'] },
+  { city: 'Richmond', region: 'East Bay', neighborhoods: ['Marina Bay', 'Point Richmond', 'Hilltop'], thingsToDo: ['Marina Bay weekends', 'Point Richmond dining', 'East Bay waterfront events'] },
+  { city: 'San Pablo', region: 'East Bay', neighborhoods: ['San Pablo Avenue', 'Rollingwood', 'Contra Costa College area'], thingsToDo: ['Local family gatherings', 'East Bay commute recovery', 'Home visits near San Pablo Avenue'] },
+  { city: 'San Ramon', region: 'East Bay', neighborhoods: ['City Center Bishop Ranch', 'Dougherty Valley', 'Gale Ranch'], thingsToDo: ['Bishop Ranch workdays', 'Dougherty Valley home visits', 'Tri-Valley corporate events'] },
+  { city: 'Belvedere', region: 'North Bay', neighborhoods: ['Belvedere Island', 'The Lagoon', 'Corinthian Island'], thingsToDo: ['Private waterfront gatherings', 'Tiburon weekend recovery', 'Marin home visits'] },
+  { city: 'Corte Madera', region: 'North Bay', neighborhoods: ['Town Center', 'Madera Gardens', 'Christmas Tree Hill'], thingsToDo: ['Marin shopping days', 'Private home visits', 'Larkspur and Corte Madera weekends'] },
+  { city: 'Fairfax', region: 'North Bay', neighborhoods: ['Downtown Fairfax', 'Deer Park', 'Cascade Canyon'], thingsToDo: ['Trail weekends', 'Downtown Fairfax events', 'Marin home recovery'] },
+  { city: 'Larkspur', region: 'North Bay', neighborhoods: ['Downtown Larkspur', 'Marin Country Mart', 'Baltimore Canyon'], thingsToDo: ['Marin Country Mart weekends', 'Ferry-adjacent travel recovery', 'Private home visits'] },
+  { city: 'Mill Valley', region: 'North Bay', neighborhoods: ['Downtown Mill Valley', 'Blithedale Canyon', 'Tam Valley'], thingsToDo: ['Mount Tam weekends', 'Downtown Mill Valley dining', 'Trail-day recovery'] },
+  { city: 'Novato', region: 'North Bay', neighborhoods: ['Downtown Novato', 'Hamilton', 'Black Point'], thingsToDo: ['Hamilton events', 'North Marin family weekends', 'Private home recovery'] },
+  { city: 'Ross', region: 'North Bay', neighborhoods: ['Ross Common', 'Lagunitas Road', 'Marin Art and Garden area'], thingsToDo: ['Private home visits', 'Marin weekend recovery', 'Family gatherings'] },
+  { city: 'San Anselmo', region: 'North Bay', neighborhoods: ['Downtown San Anselmo', 'Sleepy Hollow', 'Red Hill'], thingsToDo: ['Downtown San Anselmo dining', 'Sleepy Hollow home visits', 'Marin family weekends'] },
+  { city: 'San Rafael', region: 'North Bay', neighborhoods: ['Downtown San Rafael', 'Terra Linda', 'Peacock Gap'], thingsToDo: ['Downtown events', 'Peacock Gap weekends', 'North Bay travel recovery'] },
+  { city: 'Sausalito', region: 'North Bay', neighborhoods: ['Waterfront', 'Marinship', 'Hurricane Gulch'], thingsToDo: ['Waterfront hotel stays', 'Sausalito dining', 'Marin visitor recovery'] },
+  { city: 'Tiburon', region: 'North Bay', neighborhoods: ['Downtown Tiburon', 'Bel Aire', 'Paradise Cay'], thingsToDo: ['Waterfront dining', 'Private home gatherings', 'Weekend recovery near the bay'] },
+  { city: 'American Canyon', region: 'Wine Country', neighborhoods: ['Napa Junction', 'Broadway District', 'Wetlands edge'], thingsToDo: ['Napa gateway weekends', 'Wine Country travel recovery', 'Family and hotel visits'] },
+  { city: 'Calistoga', region: 'Wine Country', neighborhoods: ['Downtown Calistoga', 'Silverado Trail', 'Resort corridor'], thingsToDo: ['Resort weekends', 'Wine tasting trips', 'Retreat recovery'] },
+  { city: 'St. Helena', region: 'Wine Country', neighborhoods: ['Downtown St. Helena', 'Rutherford', 'Meadowood area'], thingsToDo: ['Wine weekends', 'Resort and retreat recovery', 'Private estate events'] },
+  { city: 'Yountville', region: 'Wine Country', neighborhoods: ['Downtown Yountville', 'Washington Street', 'Resort corridor'], thingsToDo: ['Restaurant weekends', 'Hotel recovery', 'Wine Country group visits'] },
+  { city: 'Atherton', region: 'Peninsula', neighborhoods: ['West Atherton', 'Lindenwood', 'Las Lomitas'], thingsToDo: ['Private home visits', 'Peninsula executive recovery', 'Family and travel weekends'] },
+  { city: 'Belmont', region: 'Peninsula', neighborhoods: ['Carlmont', 'Belmont Heights', 'Ralston corridor'], thingsToDo: ['Peninsula home recovery', 'Ralston corridor workdays', 'Weekend gatherings'] },
+  { city: 'Brisbane', region: 'Peninsula', neighborhoods: ['Central Brisbane', 'Sierra Point', 'Crocker Park'], thingsToDo: ['Sierra Point workdays', 'Hotel-adjacent recovery', 'North Peninsula events'] },
+  { city: 'Burlingame', region: 'Peninsula', neighborhoods: ['Downtown Burlingame', 'Broadway', 'Burlingame Hills'], thingsToDo: ['Burlingame Avenue dinners', 'SFO hotel stays', 'Peninsula private events'] },
+  { city: 'Colma', region: 'Peninsula', neighborhoods: ['Serramonte', 'Hillside', 'Collins Avenue'], thingsToDo: ['Serramonte area errands', 'Daly City-adjacent recovery', 'North Peninsula home visits'] },
+  { city: 'Daly City', region: 'Peninsula', neighborhoods: ['Westlake', 'Serramonte', 'St. Francis Heights'], thingsToDo: ['Westlake weekends', 'Serramonte area visits', 'San Francisco border recovery'] },
+  { city: 'East Palo Alto', region: 'Peninsula', neighborhoods: ['Ravenswood', 'University Circle', 'Baylands edge'], thingsToDo: ['University Circle workdays', 'Baylands weekends', 'Peninsula home recovery'] },
+  { city: 'Foster City', region: 'Peninsula', neighborhoods: ['Lagoon area', 'Metro Center', 'Shell Boulevard'], thingsToDo: ['Lagoon weekends', 'Peninsula office days', 'Home visits near the bay'] },
+  { city: 'Half Moon Bay', region: 'Coast', neighborhoods: ['Downtown Half Moon Bay', 'Pillar Point', 'El Granada'], thingsToDo: ['Coastal weekends', 'Pillar Point events', 'Hotel and retreat recovery'] },
+  { city: 'Hillsborough', region: 'Peninsula', neighborhoods: ['North Hillsborough', 'South Hillsborough', 'Burlingame border'], thingsToDo: ['Private home visits', 'Peninsula family events', 'Executive travel recovery'] },
+  { city: 'Menlo Park', region: 'Peninsula', neighborhoods: ['Downtown Menlo Park', 'Sharon Heights', 'Allied Arts'], thingsToDo: ['Sand Hill Road workdays', 'Downtown Menlo Park dinners', 'Atherton-adjacent home visits'] },
+  { city: 'Millbrae', region: 'Peninsula', neighborhoods: ['Downtown Millbrae', 'Mills Estate', 'SFO corridor'], thingsToDo: ['SFO travel recovery', 'Downtown Millbrae dining', 'Hotel stays'] },
+  { city: 'Pacifica', region: 'Coast', neighborhoods: ['Linda Mar', 'Sharp Park', 'Rockaway Beach'], thingsToDo: ['Beach weekends', 'Rockaway hotel stays', 'Coastal recovery after outdoor days'] },
+  { city: 'Portola Valley', region: 'Peninsula', neighborhoods: ['Central Portola Valley', 'Ladera', 'Westridge'], thingsToDo: ['Trail weekends', 'Private home visits', 'Woodside and Portola Valley recovery'] },
+  { city: 'San Bruno', region: 'Peninsula', neighborhoods: ['Downtown San Bruno', 'Crestmoor', 'The Shops area'], thingsToDo: ['SFO-adjacent travel recovery', 'Peninsula home visits', 'Shopping and family weekends'] },
+  { city: 'San Carlos', region: 'Peninsula', neighborhoods: ['Laurel Street', 'Devonshire', 'Brittan Acres'], thingsToDo: ['Laurel Street dining', 'Peninsula family weekends', 'Home recovery near the 101 corridor'] },
+  { city: 'South San Francisco', region: 'Peninsula', neighborhoods: ['Oyster Point', 'Downtown South City', 'Westborough'], thingsToDo: ['Oyster Point workdays', 'SFO hotel recovery', 'Biotech team visits'] },
+  { city: 'Woodside', region: 'Peninsula', neighborhoods: ['Central Woodside', 'Skyline', 'Woodside Hills'], thingsToDo: ['Equestrian and trail weekends', 'Private estate visits', 'Peninsula retreat recovery'] },
+  { city: 'Campbell', region: 'South Bay', neighborhoods: ['Downtown Campbell', 'Pruneyard', 'San Tomas'], thingsToDo: ['Pruneyard dining', 'Downtown Campbell weekends', 'South Bay home recovery'] },
+  { city: 'Gilroy', region: 'South Bay', neighborhoods: ['Downtown Gilroy', 'Hecker Pass', 'Eagle Ridge'], thingsToDo: ['Wine trail weekends', 'South County events', 'Family and private gatherings'] },
+  { city: 'Los Altos', region: 'South Bay', neighborhoods: ['Downtown Los Altos', 'North Los Altos', 'Loyola Corners'], thingsToDo: ['Downtown Los Altos dinners', 'Private home visits', 'Peninsula family weekends'] },
+  { city: 'Los Altos Hills', region: 'South Bay', neighborhoods: ['Foothills', 'Loyola', 'Page Mill corridor'], thingsToDo: ['Private home recovery', 'Foothill trail weekends', 'Executive travel support'] },
+  { city: 'Los Gatos', region: 'South Bay', neighborhoods: ['Downtown Los Gatos', 'Almond Grove', 'Vasona'], thingsToDo: ['Downtown Los Gatos dining', 'Vasona weekends', 'Private home and event recovery'] },
+  { city: 'Milpitas', region: 'South Bay', neighborhoods: ['Great Mall', 'McCarthy Ranch', 'Calaveras foothills'], thingsToDo: ['Great Mall area visits', 'South Bay office days', 'Foothill weekend recovery'] },
+  { city: 'Monte Sereno', region: 'South Bay', neighborhoods: ['Daves Avenue area', 'Winchester corridor', 'Los Gatos border'], thingsToDo: ['Private home visits', 'Los Gatos-adjacent weekends', 'South Bay family gatherings'] },
+  { city: 'Morgan Hill', region: 'South Bay', neighborhoods: ['Downtown Morgan Hill', 'Coyote Valley', 'Anderson Lake area'], thingsToDo: ['Wine and trail weekends', 'South County private events', 'Family home recovery'] },
+  { city: 'Saratoga', region: 'South Bay', neighborhoods: ['The Village', 'Golden Triangle', 'Saratoga Hills'], thingsToDo: ['Mountain Winery events', 'Saratoga Village dinners', 'Private hillside home visits'] },
+  { city: 'Benicia', region: 'North Bay', neighborhoods: ['Downtown Benicia', 'Southampton', 'Waterfront'], thingsToDo: ['Waterfront weekends', 'Downtown Benicia events', 'Solano private gatherings'] },
+  { city: 'Dixon', region: 'North Bay', neighborhoods: ['Downtown Dixon', 'Valley Glen', 'Pedrick corridor'], thingsToDo: ['Solano County event weekends', 'Family gatherings', 'Travel recovery between Sacramento and the Bay'] },
+  { city: 'Fairfield', region: 'North Bay', neighborhoods: ['Cordelia', 'Green Valley', 'Downtown Fairfield'], thingsToDo: ['Green Valley wine weekends', 'Solano events', 'Hotel and home recovery'] },
+  { city: 'Rio Vista', region: 'North Bay', neighborhoods: ['Downtown Rio Vista', 'Delta waterfront', 'Trilogy'], thingsToDo: ['Delta weekends', 'Waterfront gatherings', 'Home recovery near the river'] },
+  { city: 'Suisun City', region: 'North Bay', neighborhoods: ['Waterfront District', 'Lawler Ranch', 'Marina area'], thingsToDo: ['Waterfront events', 'Marina weekends', 'Solano home visits'] },
+  { city: 'Vacaville', region: 'North Bay', neighborhoods: ['Downtown Vacaville', 'Browns Valley', 'Nut Tree area'], thingsToDo: ['Nut Tree shopping days', 'Downtown events', 'Solano family gatherings'] },
+  { city: 'Vallejo', region: 'North Bay', neighborhoods: ['Mare Island', 'Downtown Vallejo', 'Glen Cove'], thingsToDo: ['Mare Island events', 'Ferry travel recovery', 'North Bay waterfront weekends'] },
+  { city: 'Cloverdale', region: 'Wine Country', neighborhoods: ['Downtown Cloverdale', 'Russian River corridor', 'Asti'], thingsToDo: ['Northern Sonoma wine weekends', 'River corridor retreats', 'Private estate gatherings'] },
+  { city: 'Cotati', region: 'Wine Country', neighborhoods: ['Downtown Cotati', 'Oliver’s area', 'East Cotati'], thingsToDo: ['Downtown Cotati music nights', 'Sonoma State area weekends', 'Wine Country family recovery'] },
+  { city: 'Healdsburg', region: 'Wine Country', neighborhoods: ['Healdsburg Plaza', 'Dry Creek Valley', 'Russian River'], thingsToDo: ['Healdsburg Plaza weekends', 'Dry Creek wine trips', 'Hotel and retreat recovery'] },
+  { city: 'Petaluma', region: 'Wine Country', neighborhoods: ['Downtown Petaluma', 'Theater District', 'West Petaluma'], thingsToDo: ['Downtown Petaluma events', 'Sonoma County weekends', 'Private home recovery'] },
+  { city: 'Rohnert Park', region: 'Wine Country', neighborhoods: ['Sonoma State area', 'Cotati border', 'Graton corridor'], thingsToDo: ['Graton resort weekends', 'Sonoma State events', 'Wine Country group visits'] },
+  { city: 'Santa Rosa', region: 'Wine Country', neighborhoods: ['Downtown Santa Rosa', 'Railroad Square', 'Fountaingrove'], thingsToDo: ['Railroad Square weekends', 'Sonoma County events', 'Hotel and home recovery'] },
+  { city: 'Sebastopol', region: 'Wine Country', neighborhoods: ['Downtown Sebastopol', 'The Barlow', 'Graton area'], thingsToDo: ['The Barlow weekends', 'West Sonoma retreats', 'Private event recovery'] },
+  { city: 'Windsor', region: 'Wine Country', neighborhoods: ['Town Green', 'Foothill Regional area', 'Airport corridor'], thingsToDo: ['Town Green events', 'Sonoma County wine weekends', 'Hotel and home recovery'] },
+];
+
+function slugifyCity(city) {
+  return city.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function buildDefaultThingsToDo(location) {
+  return [
+    `${location.city} hotel stays and private weekends`,
+    `${location.city} office days, events, and group plans`,
+    `${location.neighborhoods?.[0] || location.city} home and concierge recovery`,
+  ];
+}
+
+const existingLocationSlugs = new Set(locationDefinitions.map((location) => location.slug));
+const expandedLocationDefinitions = bayAreaCitySearchCoverage
+  .map((location) => ({
+    slug: slugifyCity(location.city),
+    zipExamples: [],
+    ...location,
+    communityRecovery: `${location.city} recovery is built around ${location.thingsToDo[0].toLowerCase()}, mobile home visits, hotel stays, and local event schedules. Avalon helps eligible clients request clinician-reviewed recovery support without adding a clinic trip to the day.`,
+    localUseCases: [
+      `Recovery around ${location.thingsToDo[0].toLowerCase()}`,
+      `Home and hotel appointments in ${location.city}`,
+      `Group recovery for ${location.region} events`,
+    ],
+  }))
+  .filter((location) => !existingLocationSlugs.has(location.slug));
+
+const allLocationDefinitions = [...locationDefinitions, ...expandedLocationDefinitions].map((location) => {
+  const thingsToDo = location.thingsToDo?.length ? location.thingsToDo : buildDefaultThingsToDo(location);
+  return {
+    ...location,
+    thingsToDo,
+    localAngle: `Built for ${location.city} homes, hotels, offices, launches, and local recovery days.`,
+  };
+});
+
+export const locationPages = allLocationDefinitions.map(({ slug, city, region, neighborhoods, zipExamples, communityRecovery, localUseCases, thingsToDo, localAngle }) => ({
   slug,
   city,
   region,
@@ -433,6 +599,7 @@ export const locationPages = locationDefinitions.map(({ slug, city, region, neig
   intro: `Avalon supports eligible clients in ${city} with mobile appointments that can include IV therapy, NAD+ review, recovery therapies, hotel service, launch service, and mobile wellness support. Every IV-related appointment is clinician-reviewed and subject to clinical approval.`,
   communityRecovery,
   localUseCases,
+  thingsToDo,
   localAngle,
   neighborhoods,
   zipExamples,

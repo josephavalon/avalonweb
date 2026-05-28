@@ -38,8 +38,8 @@ function RouteLink({ to, children }) {
 
 export function LocationsHub() {
   useSeo({
-    title: 'Bay Area Mobile IV Therapy Locations | Avalon Vitality',
-    description: 'Explore Avalon Vitality mobile recovery protocols, IV therapy, NAD+, recovery support, hotel service, launch service, and mobile appointment locations across the Bay Area.',
+    title: 'Bay Area Mobile IV Therapy City Pages | Avalon Vitality',
+    description: 'Explore Avalon Vitality city SEO pages for mobile recovery, IV therapy, NAD+, hotel service, launch service, neighborhoods, and things to do across the Bay Area.',
     path: '/locations',
     jsonLd: {
       '@context': 'https://schema.org',
@@ -57,17 +57,20 @@ export function LocationsHub() {
         <div className="mx-auto max-w-6xl">
           <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/42">Bay Area Locations</p>
           <h1 className="mt-5 max-w-4xl font-heading text-6xl uppercase leading-[0.88] tracking-tight text-foreground md:text-8xl">
-            Mobile Recovery Across the Bay
+            Mobile Recovery City Index
           </h1>
           <p className="mt-6 max-w-2xl font-body text-base leading-relaxed text-foreground/62 md:text-lg">
-            City-specific recovery pages for homes, hotels, offices, launches, and private events across the Bay Area.
+            City-specific recovery pages for homes, hotels, offices, launches, private events, neighborhoods, and local things to do across the Bay Area.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
-            {['San Francisco', 'Peninsula', 'South Bay', 'East Bay', 'North Bay', 'Wine Country'].map((item) => (
+            {[...new Set(locationPages.map((item) => item.region))].map((item) => (
               <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/45">
                 {item}
               </span>
             ))}
+            <span className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/45">
+              {locationPages.length} city pages
+            </span>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {locationPages.map((item) => (
@@ -86,6 +89,9 @@ export function LocationsHub() {
                     </span>
                   ))}
                 </div>
+                <p className="mt-4 line-clamp-2 font-body text-xs leading-relaxed text-foreground/42">
+                  {item.thingsToDo?.slice(0, 2).join(' · ')}
+                </p>
                 <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
                   Open market <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                 </span>
@@ -151,6 +157,8 @@ export default function LocationPage() {
           serviceType: 'Mobile IV therapy and recovery support',
           areaServed: { '@type': 'City', name: page.city },
           provider: { '@id': `${SEO_BASE_URL}/#localbusiness` },
+          category: page.region,
+          serviceOutput: page.thingsToDo?.join('; '),
         },
       ],
     } : null,
@@ -205,6 +213,30 @@ export default function LocationPage() {
         </section>
 
         <section className="border-t border-foreground/[0.07] px-5 py-12 md:px-12 md:py-16 lg:px-20">
+          <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/38">Things to do</p>
+              <h2 className="mt-4 max-w-lg font-heading text-5xl uppercase leading-none text-foreground md:text-6xl">
+                Recovery around {page.city}
+              </h2>
+              <p className="mt-5 max-w-md font-body text-sm leading-relaxed text-foreground/56">
+                These local anchors help Avalon write useful city pages instead of generic service pages. Mobile availability still depends on intake, nurse coverage, protocol eligibility, and address details.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {page.thingsToDo.map((item) => (
+                <div key={item} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4">
+                  <p className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/58">{item}</p>
+                  <p className="mt-3 font-body text-xs leading-relaxed text-foreground/44">
+                    Eligible clients can request mobile recovery support around this {page.city} use case, with clinical review before any IV-related appointment.
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-foreground/[0.07] px-5 py-12 md:px-12 md:py-16 lg:px-20">
           <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-5">
             {locationServices.map(({ icon: Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4">
@@ -237,6 +269,9 @@ export default function LocationPage() {
                     </span>
                   ))}
                 </div>
+                <p className="mt-3 font-body text-xs leading-relaxed text-foreground/48">
+                  Avalon uses neighborhood detail to make local routing, hotel support, event planning, and SEO search intent more precise.
+                </p>
               </div>
               {page.zipExamples?.length > 0 && (
                 <div>
