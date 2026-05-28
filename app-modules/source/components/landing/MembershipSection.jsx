@@ -147,11 +147,8 @@ export default function MembershipSection() {
           <div>
             <p className="font-body text-[11px] tracking-[0.3em] text-accent uppercase mb-2">Vitality Tiers</p>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
-              Subscriptions
+              Choose Your Subscription
             </h2>
-            <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
-              Built for people who want recovery to be part of the calendar, not another errand.
-            </p>
           </div>
         </motion.div>
 
