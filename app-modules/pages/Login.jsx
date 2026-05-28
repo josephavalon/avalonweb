@@ -121,39 +121,41 @@ function DemoShortcutsPanel({ demoAuthAllowed, loading, onDemoSignIn }) {
   const modeLabel = PRE_API_SECURITY_MODE.betaSimulation ? 'Beta only' : 'Local only';
 
   return (
-    <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-3">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/55">
+    <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-2.5">
+      <div className="mb-2 flex items-start justify-between gap-2.5">
+        <div className="min-w-0">
+          <p className="font-body text-[10px] uppercase tracking-[0.2em] text-foreground/55">
             Beta access
           </p>
-          <p className="mt-1 font-body text-[11px] leading-relaxed text-foreground/38">
-            Tap a role. Password fills automatically.
+          <p className="mt-0.5 font-body text-[10px] leading-snug text-foreground/38">
+            Tap role. Password autofills.
           </p>
         </div>
-        <p className="shrink-0 rounded-full border border-foreground/10 px-2 py-1 font-body text-[9px] uppercase tracking-[0.16em] text-foreground/34">
+        <p className="shrink-0 rounded-full border border-foreground/10 px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.14em] text-foreground/34">
           {modeLabel}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-1.5 md:grid-cols-3">
         {DEMO_SHORTCUTS.map(({ username: demoUsername, label, detail, icon: Icon }) => (
           <button
             key={demoUsername}
             type="button"
             onClick={() => onDemoSignIn(demoUsername)}
             disabled={loading}
-            className="min-h-[78px] cursor-pointer rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2.5 py-2.5 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
+            title={`${label}: ${detail}`}
+            className="flex min-h-[54px] cursor-pointer items-center gap-2 overflow-hidden rounded-xl border border-foreground/10 bg-foreground/[0.035] px-2.5 py-2 text-left transition-all hover:border-foreground/25 hover:bg-foreground/[0.06] active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
           >
-            <Icon className="mb-2 h-3.5 w-3.5 text-foreground/55" strokeWidth={1.7} />
-            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">{label}</p>
-            <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-foreground/38">{demoUsername}</p>
-            <p className="mt-1 font-body text-[9px] leading-snug text-foreground/28">{detail}</p>
+            <Icon className="h-3.5 w-3.5 shrink-0 text-foreground/55" strokeWidth={1.7} />
+            <span className="min-w-0">
+              <span className="block truncate font-body text-[10px] font-semibold uppercase tracking-[0.13em] text-foreground">{label}</span>
+              <span className="mt-0.5 block truncate font-mono text-[8.5px] uppercase tracking-[0.05em] text-foreground/38">{demoUsername}</span>
+            </span>
           </button>
         ))}
       </div>
 
-      <p className="mt-2 font-body text-[10px] leading-relaxed text-foreground/34">
+      <p className="mt-2 font-body text-[9.5px] leading-snug text-foreground/34">
         Password: <span className="font-mono text-foreground/50">{DEMO_PASSWORD}</span>. {PRE_API_SECURITY_MODE.label}. No live clinical access.
       </p>
     </div>
