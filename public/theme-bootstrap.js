@@ -1,5 +1,6 @@
 (function () {
   window.__AV_BOOT_STARTED_AT = Date.now();
+  document.documentElement.classList.add('av-js');
   var VALID = ['dark', 'light'];
   try {
     var stored = window.localStorage.getItem('avalon.theme');

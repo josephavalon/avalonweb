@@ -90,7 +90,7 @@
     <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
-    <script src="/theme-bootstrap.js?v=20260527"></script>
+    <script src="/theme-bootstrap.js?v=20260528"></script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
          These rules apply the correct background immediately from the theme class that
@@ -100,7 +100,12 @@
       html.dark, html.dark body { background-color: #0a0a0a; }
       html.golden, html.golden body { background-color: hsl(28,35%,12%); }
       html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
+      #root { min-height: 100dvh; background: inherit; }
       #root:empty { min-height: 100dvh; background: #0a0a0a; }
+      html.av-js #seo-prerender {
+        display: none !important;
+        visibility: hidden !important;
+      }
       .av-boot-splash {
         position: fixed;
         inset: 0;

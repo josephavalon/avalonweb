@@ -33,6 +33,8 @@ applyStoredTheme();
 captureAttribution();
 getExperimentVariant('booking_entry_v1', ['protocol-first', 'fast-hold']);
 
+document.getElementById('seo-prerender')?.remove();
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
