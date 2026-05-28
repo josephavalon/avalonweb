@@ -77,25 +77,25 @@ export default function Hero() {
           {...premiumFadeUp(0.98)}
           initial={{ opacity: 0, y: 22 }}
           transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
-          className="flex flex-col gap-2.5 mt-5 md:mt-8 w-full max-w-[19rem]"
+          className="flex w-full max-w-[38rem] flex-col gap-3 mt-5 md:mt-8"
         >
           <MotionLink
             to="/book"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
+            className="group flex min-h-[64px] w-full items-center justify-between rounded-[18px] bg-foreground px-6 font-body text-[11px] font-semibold uppercase tracking-[0.24em] text-background shadow-[0_18px_60px_hsl(var(--foreground)/0.14)] transition-all duration-base ease-editorial hover:bg-foreground/90 md:min-h-[72px] md:px-8"
           >
-            <span>Start</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
+            <span>Choose Protocol</span>
+            <ArrowRight className="h-5 w-5 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
           </MotionLink>
           <MotionLink
             to="/subscription"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-white/[0.025] border border-foreground/22 text-foreground/76 hover:bg-white/[0.08] hover:border-foreground/45 hover:text-foreground transition-all duration-base ease-editorial backdrop-blur-sm"
+            className="group flex min-h-[64px] w-full items-center justify-between rounded-[18px] border border-foreground/22 bg-white/[0.025] px-6 font-body text-[11px] font-semibold uppercase tracking-[0.24em] text-foreground/76 backdrop-blur-sm transition-all duration-base ease-editorial hover:border-foreground/45 hover:bg-white/[0.08] hover:text-foreground md:min-h-[72px] md:px-8"
           >
             <span>Plans</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
+            <ArrowRight className="h-5 w-5 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
           </MotionLink>
         </motion.div>
 
@@ -104,7 +104,7 @@ export default function Hero() {
           {...premiumFadeUp(1.18)}
           initial={{ opacity: 0, y: 14 }}
           transition={{ duration: 1.0, delay: 1.18, ease: EASE }}
-          className="mt-5 flex w-full max-w-[19rem] flex-wrap gap-x-4 gap-y-2 md:mt-8 md:max-w-none"
+          className="mt-5 flex w-full max-w-[38rem] flex-wrap gap-x-4 gap-y-2 md:mt-8 md:max-w-none"
         >
           {['Licensed clinicians', 'Clinical review', 'Mobile'].map((label) => (
             <span key={label} className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/42">
