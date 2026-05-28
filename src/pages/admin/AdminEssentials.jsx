@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,11 +9,14 @@ import {
   MessageCircle,
   Package,
   ShieldCheck,
+  Ticket,
   UserRound,
   Users,
 } from 'lucide-react';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
+import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import { APPOINTMENTS, NURSES, formatTime, getClient, getService } from '@/fixtures/commandMockData';
+import { readQuickPatients } from '@/lib/clientIntakeStore';
 import { readActivity, readLastBooking } from '@/lib/localOs';
 import { useSeo } from '@/lib/seo';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -103,6 +107,7 @@ export default function AdminEssentials() {
   const navigate = useNavigate();
   const latestBooking = readLastBooking();
   const activity = readActivity().slice(0, 3);
+  const [quickPatients, setQuickPatients] = useState(() => readQuickPatients(3));
   const activeVisits = APPOINTMENTS.filter((appt) => !['completed', 'cancelled'].includes(appt.status));
   const nextVisit = activeVisits[0];
   const nextClient = nextVisit ? getClient(nextVisit.client_id) : null;
@@ -152,7 +157,15 @@ export default function AdminEssentials() {
               Visits, nurses, stock, messages. No boards unless you choose them.
             </p>
             <div className="mt-5 grid gap-2">
+              <QuickPatientAdd
+                context="admin"
+                source="Admin portal"
+                triggerLabel="Add Client"
+                triggerClassName="flex min-h-[74px] items-center justify-between rounded-[22px] border border-foreground bg-foreground px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-background transition-transform active:scale-[0.985]"
+                onCreated={() => setQuickPatients(readQuickPatients(3))}
+              />
               <ActionLink to="/admin/bookings" icon={ClipboardList} label="Visits" detail="Queue and closeout" primary />
+              <ActionLink to="/admin/events" icon={Ticket} label="Events" detail="Guest roster" />
               <ActionLink to="/admin/inventory" icon={Package} label="Stock" detail="Kits and inventory" />
               <ActionLink to="/admin/communications" icon={MessageCircle} label="Comms" detail="Staff and client alerts" />
               <ActionLink to="/admin/credentials" icon={ShieldCheck} label="Safety" detail="Credentials and gates" />
@@ -197,6 +210,25 @@ export default function AdminEssentials() {
             <CheckRow icon={ShieldCheck} label="Chart" detail="External clinical record." tone="manual" />
           </div>
 
+          {quickPatients.length > 0 && (
+            <div className="rounded-[30px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              <p className="mb-3 font-body text-[9px] font-semibold uppercase tracking-[0.22em]" style={{ color: DIM }}>New Clients</p>
+              <div className="space-y-2">
+                {quickPatients.map((patient) => (
+                  <div key={patient.id} className="flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5" style={{ background: 'hsl(var(--foreground) / 0.035)' }}>
+                    <div className="min-w-0">
+                      <p className="truncate font-body text-xs font-semibold" style={{ color: TEXT }}>{patient.name}</p>
+                      <p className="truncate font-body text-[10px]" style={{ color: DIM }}>{patient.service} · {patient.gfeStatus}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full px-2 py-1 font-body text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgb(251,191,36)', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.22)' }}>
+                      New
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="rounded-[30px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
             <p className="mb-3 font-body text-[9px] font-semibold uppercase tracking-[0.22em]" style={{ color: DIM }}>Pulse</p>
             <div className="space-y-2">
@@ -222,8 +254,8 @@ export default function AdminEssentials() {
         items={[
           { to: '/admin', icon: Check, label: 'Core', exact: true },
           { to: '/admin/bookings', icon: ClipboardList, label: 'Visits' },
+          { to: '/admin/events', icon: Ticket, label: 'Events' },
           { to: '/admin/inventory', icon: Package, label: 'Stock' },
-          { to: '/admin/communications', icon: MessageCircle, label: 'Comms' },
           { to: '/', icon: ArrowLeft, label: 'Site', exact: true },
         ]}
       />

@@ -18,6 +18,7 @@ import { useSeo } from '@/lib/seo';
 import { readLastBooking } from '@/lib/localOs';
 import { setKernelNurseEta } from '@/lib/avalonKernel';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
+import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import { APPOINTMENTS, getClient, getService, formatTime } from '@/fixtures/commandMockData';
 
 const BG = 'hsl(var(--background))';
@@ -127,6 +128,7 @@ export default function NurseShift() {
   const visit = activeVisit();
   const [eta, setEta] = useState('20 min');
   const [stage, setStage] = useState('Ready');
+  const [latestPatient, setLatestPatient] = useState(null);
   const mapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(visit.address)}`;
   const textUrl = `sms:${visit.phone}?body=${encodeURIComponent(`Hi, this is ${user?.name || 'your Avalon nurse'}. My ETA is ${eta}.`)}`;
 
@@ -190,9 +192,23 @@ export default function NurseShift() {
         <div className="mt-4 grid gap-2">
           <Action href={mapsUrl} icon={Navigation} label="Route" primary />
           <Action href={textUrl} icon={MessageCircle} label="Text Client" />
+          <QuickPatientAdd
+            context="nurse"
+            source="Nurse shift"
+            triggerLabel="New Patient"
+            triggerClassName="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground transition-transform active:scale-[0.98]"
+            onCreated={(patient) => setLatestPatient(patient)}
+          />
           <Action to="/provider/role-os?focus=inventory" icon={Package} label="Kit" />
           <Action to="/provider/role-os?focus=protocols" icon={GraduationCap} label="Protocol" />
         </div>
+
+        {latestPatient && (
+          <div className="mt-4 rounded-[24px] border border-foreground/10 bg-foreground/[0.035] px-4 py-3">
+            <p className="font-body text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: DIM }}>Added</p>
+            <p className="mt-1 truncate text-sm" style={{ color: MUTED }}>{latestPatient.name} · intake needed</p>
+          </div>
+        )}
 
         <div className="mt-4 rounded-[28px] p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
           <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>Closeout</p>

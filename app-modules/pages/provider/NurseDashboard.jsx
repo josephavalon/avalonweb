@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -19,6 +20,8 @@ import { useSeo } from '@/lib/seo';
 import { readLastBooking } from '@/lib/localOs';
 import { setKernelNurseEta } from '@/lib/avalonKernel';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
+import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
+import { readQuickPatients } from '@/lib/clientIntakeStore';
 import { APPOINTMENTS, getClient, getService, formatTime } from '@/fixtures/commandMockData';
 
 const BG = 'hsl(var(--background))';
@@ -121,6 +124,7 @@ export default function NurseDashboard() {
   const navigate = useNavigate();
   const visit = visitModel();
   const nurseName = user?.name || 'Nurse';
+  const [latestPatient, setLatestPatient] = useState(() => readQuickPatients(1)[0] || null);
 
   const handleSignOut = () => {
     signOut();
@@ -160,9 +164,22 @@ export default function NurseDashboard() {
             </p>
             <div className="mt-6 grid gap-2">
               <Action to="/provider/shift" icon={Stethoscope} label="Open Shift" primary />
+              <QuickPatientAdd
+                context="nurse"
+                source="Nurse dashboard"
+                triggerLabel="New Patient"
+                triggerClassName="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground transition-transform active:scale-[0.98]"
+                onCreated={(patient) => setLatestPatient(patient)}
+              />
               <Action onClick={() => setKernelNurseEta(visit.id, '20 min', nurseName)} icon={CalendarClock} label="Set ETA" />
               <Action href={`sms:+14159807708?body=${encodeURIComponent('Avalon nurse online.')}`} icon={MessageCircle} label="Text Ops" />
             </div>
+            {latestPatient && (
+              <div className="mt-3 rounded-2xl border border-foreground/10 bg-foreground/[0.035] px-3 py-2.5">
+                <p className="font-body text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>Just Added</p>
+                <p className="mt-1 truncate text-sm" style={{ color: MUTED }}>{latestPatient.name} · {latestPatient.gfeStatus}</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">

@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { CLIENTS, APPOINTMENTS, INVOICES } from '@/fixtures/adminMockData';
+import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
+import { patientToClientShape, readQuickPatients } from '@/lib/clientIntakeStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const EASE = [0.16, 1, 0.3, 1];
@@ -585,7 +587,16 @@ export default function Clients() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
 
-  const [clients, setClients] = useState(() => (CLIENTS.length ? CLIENTS : PREVIEW_CLIENTS));
+  const [clients, setClients] = useState(() => {
+    const base = CLIENTS.length ? CLIENTS : PREVIEW_CLIENTS;
+    const quick = readQuickPatients(20).map(patientToClientShape);
+    const seen = new Set();
+    return [...quick, ...base].filter((client) => {
+      if (seen.has(client.id)) return false;
+      seen.add(client.id);
+      return true;
+    });
+  });
   const [search, setSearch] = useState('');
   const [tagFilter, setTagFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -721,15 +732,13 @@ export default function Clients() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Add Client */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
-            style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))' }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Client
-          </button>
+          <QuickPatientAdd
+            context="admin"
+            source="Client roster"
+            triggerLabel="Add Client"
+            triggerClassName="flex min-h-[42px] items-center gap-2 rounded-lg bg-accent px-4 py-2.5 font-body text-sm font-semibold text-background transition-opacity hover:opacity-90"
+            onCreated={(patient) => handleAdd(patientToClientShape(patient))}
+          />
         </motion.div>
 
         {/* Table */}

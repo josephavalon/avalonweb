@@ -127,6 +127,7 @@ const AdminKitControl = lazyRoute(() => import('./pages/admin/KitControl'));
 const AdminTrainingControl = lazyRoute(() => import('./pages/admin/TrainingControl'));
 const AdminInventory = lazyRoute(() => import('./pages/admin/Inventory'));
 const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
+const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 
 
 const ScrollToTop = () => {
@@ -273,6 +274,7 @@ function AppRoutes() {
             <Route path="/admin/role-os" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
             <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><AdminInventory /></RequireAuth>} />
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin']}><AdminBookings /></RequireAuth>} />
+            <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/ingredients" element={<Ingredients />} />

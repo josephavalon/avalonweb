@@ -12,6 +12,8 @@ import {
   ChevronDown, ExternalLink,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
+import { patientToAppointmentPreview } from '@/lib/clientIntakeStore';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
@@ -273,6 +275,10 @@ export default function AdminBookings() {
   });
 
   const upcomingCount = appointments.filter((a) => !a.canceled && new Date(a.datetime) >= new Date()).length;
+  const handleQuickPatient = (patient) => {
+    setAppointments((current) => [patientToAppointmentPreview(patient), ...current]);
+    setFilter('all');
+  };
 
   return (
     <AdminLayout>
@@ -296,15 +302,24 @@ export default function AdminBookings() {
                 Updated {lastRefreshed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
               </span>
             )}
-            <button
-              type="button"
-              onClick={load}
-              disabled={loading}
-              className="flex min-h-10 items-center gap-1.5 rounded-full border border-foreground/[0.10] bg-foreground/[0.045] px-3 font-body text-[10px] uppercase tracking-widest text-foreground/56 transition-colors hover:text-foreground disabled:opacity-40"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} />
-              Refresh
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <QuickPatientAdd
+                context="admin"
+                source="Admin visits"
+                triggerLabel="Add Client"
+                triggerClassName="flex min-h-10 items-center gap-1.5 rounded-full bg-foreground px-3 font-body text-[10px] font-bold uppercase tracking-widest text-background transition-transform active:scale-[0.98]"
+                onCreated={handleQuickPatient}
+              />
+              <button
+                type="button"
+                onClick={load}
+                disabled={loading}
+                className="flex min-h-10 items-center gap-1.5 rounded-full border border-foreground/[0.10] bg-foreground/[0.045] px-3 font-body text-[10px] uppercase tracking-widest text-foreground/56 transition-colors hover:text-foreground disabled:opacity-40"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
 

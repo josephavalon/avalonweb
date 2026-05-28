@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate } from 'react-router-dom';
 const MessagingPanel = lazy(() => import('@/components/messaging/MessagingPanel'));
 import { useAuthStore } from '@/lib/useAuthStore';
+import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import {
   Bell, User, Home, Hotel, Building2, Calendar, MapPin,
   FlaskConical, Syringe, Package,
@@ -42,6 +43,7 @@ import {
   buildPresaleSummary,
   generatePresaleCodes,
   readEventPresales,
+  redeemPresaleCode,
   saveEventPresale,
 } from '@/lib/platformOps';
 import { ADMIN_COMMAND_EASE as EASE, TODAY_LABEL, pill } from '@/lib/adminCommandUi.jsx';
@@ -5233,6 +5235,25 @@ function EventsScreen() {
     setNotice('Partner presale imported');
   };
 
+  const addEventGuest = (patient) => {
+    if (!activeEvent) return;
+    const code = `${activeEvent.codePrefix || 'AV'}-${Date.now().toString().slice(-5)}`;
+    const response = redeemPresaleCode({
+      eventId: activeEvent.id,
+      code,
+      selectedTime: activeEvent.slots?.[0] || 'First available',
+      source: 'Event backend quick add',
+      intakeStatus: 'GFE intake queued',
+      client: {
+        name: patient.name,
+        email: patient.email,
+        phone: patient.phone,
+      },
+    });
+    setPresales(response.state);
+    setNotice(response.ok ? `${patient.name} added to ${activeEvent.name}` : response.error);
+  };
+
   const selectEvent = (eventId) => {
     setActiveEventId(eventId);
     const selected = presales.events.find((event) => event.id === eventId) || presales.events[0];
@@ -5337,6 +5358,24 @@ function EventsScreen() {
                   <QuickBtn icon={Calendar} label="Page" onClick={copyEventPageLink} />
                 </div>
                 {notice && <p className="mt-2 font-body text-[10px] text-foreground/48">{notice}</p>}
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-foreground/[0.08] bg-background/[0.24] p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/45">Fast Guest Add</p>
+                    <p className="mt-1 font-body text-xs text-foreground/48">Add a walk-up, VIP, or partner guest without leaving the event backend.</p>
+                  </div>
+                  <QuickPatientAdd
+                    context="event"
+                    source="Event backend"
+                    service={activeEvent.service}
+                    event={activeEvent}
+                    triggerLabel="Add Guest"
+                    triggerClassName="flex min-h-10 items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-background transition-transform active:scale-[0.98]"
+                    onCreated={addEventGuest}
+                  />
+                </div>
               </div>
 
               <div className="mt-4 rounded-2xl border border-foreground/[0.08] bg-background/[0.24] p-3">
