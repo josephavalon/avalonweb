@@ -29,7 +29,7 @@ export default function Hero() {
           style={{ objectPosition: '30% 55%', transformOrigin: '38% 62%' }}
           initial={{ scale: 1.06 }}
           animate={{ scale: 1.0 }}
-          transition={{ duration: 3.2, ease: EASE }}
+          transition={{ duration: 0.8, ease: EASE }}
           loading="eager"
         />
         <div className="absolute inset-0 bg-background/65" />
@@ -47,6 +47,7 @@ export default function Hero() {
         <motion.p
           {...premiumFadeUp(0.18)}
           initial={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.45, delay: 0, ease: EASE }}
           className="font-body text-[15px] tracking-[0.34em] uppercase mb-3 md:mb-5"
           style={{ color: 'hsl(var(--foreground) / 0.44)' }}
         >
@@ -56,7 +57,7 @@ export default function Hero() {
         <motion.h1
           {...premiumFadeUp(0.38)}
           initial={{ opacity: 0, y: 38 }}
-          transition={{ duration: 1.6, delay: 0.38, ease: EASE }}
+          transition={{ duration: 0.5, delay: 0.05, ease: EASE }}
           className="font-heading text-display-xl text-foreground uppercase max-w-3xl"
           style={{ willChange: 'opacity, transform' }}
         >
@@ -66,7 +67,7 @@ export default function Hero() {
         <motion.p
           {...premiumFadeUp(0.72)}
           initial={{ opacity: 0, y: 18 }}
-          transition={{ duration: 1.15, delay: 0.72, ease: EASE }}
+          transition={{ duration: 0.5, delay: 0.12, ease: EASE }}
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
@@ -76,7 +77,7 @@ export default function Hero() {
         <motion.div
           {...premiumFadeUp(0.98)}
           initial={{ opacity: 0, y: 22 }}
-          transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
+          transition={{ duration: 0.5, delay: 0.18, ease: EASE }}
           className="flex w-full max-w-[38rem] flex-col gap-3 mt-5 md:mt-8"
         >
           <MotionLink
@@ -103,7 +104,7 @@ export default function Hero() {
         <motion.div
           {...premiumFadeUp(1.18)}
           initial={{ opacity: 0, y: 14 }}
-          transition={{ duration: 1.0, delay: 1.18, ease: EASE }}
+          transition={{ duration: 0.5, delay: 0.24, ease: EASE }}
           className="mt-5 flex w-full max-w-[38rem] flex-wrap gap-x-4 gap-y-2 md:mt-8 md:max-w-none"
         >
           {['Licensed clinicians', 'Clinical review', 'Mobile'].map((label) => (

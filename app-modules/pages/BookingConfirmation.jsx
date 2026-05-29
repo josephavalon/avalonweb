@@ -142,7 +142,7 @@ const TIMELINE = [
   {
     number: '01',
     title: 'Deposit Paid',
-    body: 'Your $50 deposit holds the appointment while the care team prepares the visit.',
+    body: 'Your deposit holds the appointment while the care team prepares the visit.',
   },
   {
     number: '02',
@@ -170,7 +170,7 @@ const GFE_VALID_TIMELINE = [
   {
     number: '01',
     title: 'Deposit Held',
-    body: 'Your $50 deposit holds the appointment while the care team prepares the visit.',
+    body: 'Your deposit holds the appointment while the care team prepares the visit.',
   },
   {
     number: '02',
@@ -203,7 +203,7 @@ const FAST_HOLD_TIMELINE = [
   {
     number: '02',
     title: 'Deposit',
-    body: 'The $50 hold confirms the appointment.',
+    body: 'The deposit confirms the appointment.',
   },
   {
     number: '03',

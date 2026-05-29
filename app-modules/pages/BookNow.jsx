@@ -150,9 +150,9 @@ const ADDRESS_SUGGESTIONS = [
 ];
 
 const AVAILABILITY_WINDOWS = [
-  { key: 'today-3', label: 'Today', time: '15:00', display: '3:00 PM', nurse: '2 RNs available', eta: '90 min window' },
-  { key: 'today-5', label: 'Today', time: '17:00', display: '5:00 PM', nurse: '1 RN available', eta: '120 min window' },
-  { key: 'tomorrow-11', label: 'Tomorrow', time: '11:00', display: '11:00 AM', nurse: '3 RNs available', eta: 'Priority window' },
+  { key: 'today-3', label: 'Today', time: '15:00', display: '3:00 PM', nurse: 'Same-day', eta: 'Confirmed before dispatch' },
+  { key: 'today-5', label: 'Today', time: '17:00', display: '5:00 PM', nurse: 'Same-day', eta: 'Confirmed before dispatch' },
+  { key: 'tomorrow-11', label: 'Tomorrow', time: '11:00', display: '11:00 AM', nurse: 'Next-day', eta: 'Confirmed before dispatch' },
 ];
 
 function todayDate(offset = 0) {
@@ -575,7 +575,7 @@ function SummaryRail({ state, product, plan, subtotal, onSubmit }) {
             {[
               ['Due now', isSubscription ? (plan.custom ? 'Custom' : `${currency(plan.price)}/mo`) : currency(DEPOSIT_DUE)],
               [isSubscription ? 'Protocol' : 'Estimate', currency(subtotal)],
-              ['Scheduling', 'Queued'],
+              ['Scheduling', 'Pending confirmation'],
               ['Clearance', 'Before visit'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
@@ -624,6 +624,7 @@ const defaultState = {
   notes: '',
   addOns: [],
   addOnDecision: false,
+  paymentMode: 'deposit',
 };
 
 export default function BookNow() {
@@ -1000,7 +1001,7 @@ export default function BookNow() {
 
   const canSubmit = Boolean(state.name.trim() && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
 
-  const submit = () => {
+  const submit = async () => {
     if (!product) {
       setError('Choose your protocol.');
       setStep(2);
@@ -1121,6 +1122,63 @@ export default function BookNow() {
     if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
     appendActivity(`Webstore hold received: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
     clearBookingDraft();
+
+    // Route the completed hold through the real checkout endpoint.
+    // Live mode (AVALON_ENABLE_LIVE_API=true) creates the Acuity appointment
+    // + Stripe deposit session and returns a Stripe URL. Pre-API it returns a
+    // local confirmation URL — identical UX, zero vendor calls — so flipping
+    // the env flag once keys are set turns this live with no front-end change.
+    try {
+      const [firstName, ...rest] = state.name.trim().split(/\s+/);
+      const resp = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'payment',
+          contact: {
+            firstName: firstName || state.name.trim(),
+            lastName: rest.join(' '),
+            name: state.name.trim(),
+            email: state.email.trim(),
+            phone: state.phone.trim(),
+          },
+          appointment: {
+            firstName: firstName || state.name.trim(),
+            lastName: rest.join(' '),
+            email: state.email.trim(),
+            phone: state.phone.trim(),
+            address: state.address.trim(),
+            zip: String(state.zip || '').trim(),
+            guests: String(state.guests || 1),
+            timeLabel: candidate.time || '',
+            acuityDatetime: candidate.datetime || null,
+            appointmentTypeID: candidate.appointmentTypeId,
+            notes: state.notes || '',
+          },
+          items: localBooking.items,
+          membership: null,
+          paymentMode: state.paymentMode || 'deposit',
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (resp.ok && data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'webstore',
+        booking_id: localBooking.id,
+        reason: data?.code || `http_${resp.status}`,
+      });
+    } catch (err) {
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'webstore',
+        booking_id: localBooking.id,
+        reason: 'network_error',
+      });
+    }
+
+    // Fallback: never strand the client — keep the local confirmation.
     navigate('/booking/confirmation');
   };
 
@@ -1381,6 +1439,31 @@ export default function BookNow() {
                   </>
                 )}
             </motion.div>
+
+            {step === LAST_STEP && state.visitType !== 'subscription' && (
+              <div className="mt-7 grid grid-cols-2 gap-3" role="group" aria-label="Payment amount">
+                <button
+                  type="button"
+                  onClick={() => setValue('paymentMode', 'deposit')}
+                  aria-pressed={state.paymentMode !== 'full'}
+                  className={`min-h-[60px] rounded-2xl border px-4 py-2 text-left transition-colors ${state.paymentMode !== 'full' ? 'border-foreground bg-foreground/[0.05]' : 'border-foreground/15 hover:border-foreground/35'}`}
+                >
+                  <span className="block font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55">Pay deposit</span>
+                  <span className="mt-1 block font-heading text-xl leading-none">{currency(DEPOSIT_DUE)} today</span>
+                  <span className="mt-1 block font-body text-[10px] text-foreground/45">Balance after your visit</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('paymentMode', 'full')}
+                  aria-pressed={state.paymentMode === 'full'}
+                  className={`min-h-[60px] rounded-2xl border px-4 py-2 text-left transition-colors ${state.paymentMode === 'full' ? 'border-foreground bg-foreground/[0.05]' : 'border-foreground/15 hover:border-foreground/35'}`}
+                >
+                  <span className="block font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55">Pay in full</span>
+                  <span className="mt-1 block font-heading text-xl leading-none">{currency(subtotal)}</span>
+                  <span className="mt-1 block font-body text-[10px] text-foreground/45">Nothing due later</span>
+                </button>
+              </div>
+            )}
 
             <div className="mt-7 hidden gap-3 lg:flex">
               {step > 0 && (

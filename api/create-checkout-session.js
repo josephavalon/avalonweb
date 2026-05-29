@@ -212,6 +212,7 @@ export default async function handler(req, res) {
     membership: rawMembership = null,
     contact = {},
     appointment = {},
+    paymentMode = 'deposit',
   } = req.body || {};
 
   if (!contact.firstName || !contact.email) {
@@ -273,7 +274,7 @@ export default async function handler(req, res) {
     const hasVisitItems = items.length > 0;
     const depositAmount = getDepositAmountDollars(process.env);
     const line_items = stripeLineItems(items, membership, {
-      depositOnly: hasVisitItems,
+      depositOnly: hasVisitItems && paymentMode !== 'full',
       depositAmount,
     });
 

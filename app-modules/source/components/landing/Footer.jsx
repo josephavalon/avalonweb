@@ -5,6 +5,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import LanguageSelect from '@/components/landing/LanguageSelect';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import LeadCapture from '@/components/LeadCapture';
 
 const SERVICES = [
   { label: 'Book',   to: '/book' },
@@ -122,6 +123,11 @@ export default function Footer() {
           <p className="font-body text-xs text-foreground/55 leading-snug mt-2 max-w-sm">
             Clinician-led recovery across the Bay Area.
           </p>
+        </div>
+
+        {/* Lead capture → Mailchimp */}
+        <div className="mb-6 max-w-md">
+          <LeadCapture source="footer" />
         </div>
 
         {/* Mobile: compact drop menu */}
