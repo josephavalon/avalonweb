@@ -49,6 +49,8 @@ const ROUTES = process.env.STABILITY_QA_ROUTES
   ? process.env.STABILITY_QA_ROUTES.split(',').map((route) => route.trim()).filter(Boolean)
   : DEFAULT_ROUTES;
 
+const SESSION_JSON = process.env.STABILITY_QA_SESSION_JSON || '';
+
 const CHROME_CANDIDATES = [
   process.env.CHROME_PATH,
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -342,11 +344,38 @@ try {
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   await cdp.send('Network.enable');
+  if (SESSION_JSON) {
+    const sessionScript = `
+      try {
+        const session = ${SESSION_JSON};
+        if (location.protocol === 'http:' || location.protocol === 'https:') {
+          sessionStorage.setItem('av.session', JSON.stringify(session));
+        }
+      } catch {}
+    `;
+    await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: sessionScript });
+  }
 
   const results = [];
   for (const viewport of VIEWPORTS) {
     for (const route of ROUTES) {
-      results.push(await auditRoute(cdp, route, viewport));
+      try {
+        results.push(await auditRoute(cdp, route, viewport));
+      } catch (error) {
+        results.push({
+          route,
+          viewport: viewport.width,
+          samples: [],
+          final: null,
+          problems: [`route audit crashed: ${error.message}`],
+          consoleIssues: [],
+          networkIssues: [],
+        });
+        try {
+          await cdp.send('Page.navigate', { url: 'about:blank' });
+          await waitForReady(cdp);
+        } catch {}
+      }
     }
   }
   printFindings(results);

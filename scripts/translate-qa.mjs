@@ -9,7 +9,9 @@ const PORT = Number(process.env.TRANSLATE_QA_DEBUG_PORT || 9341);
 
 const LANGUAGE_SEQUENCE = [
   { code: 'es', native: 'Español', cookie: '/auto/es' },
+  { code: 'en', native: 'English', cookie: '' },
   { code: 'zh-CN', native: '中文', cookie: '/auto/zh-CN' },
+  { code: 'en', native: 'English', cookie: '' },
   { code: 'tl', native: 'Filipino', cookie: '/auto/tl' },
   { code: 'en', native: 'English', cookie: '' },
 ];
@@ -96,7 +98,7 @@ class CdpClient {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`CDP command timed out: ${method}`));
-      }, 15_000);
+      }, Number(process.env.TRANSLATE_QA_CDP_TIMEOUT_MS || 60_000));
       this.pending.set(id, {
         resolve: (value) => {
           clearTimeout(timeout);

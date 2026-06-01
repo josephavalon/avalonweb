@@ -1,16 +1,8 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { REVEAL } from '@/lib/motion';
 
-// Single source of truth for the section title block:
-// eyebrow (gold tracking caps) + canonical h2 + optional tagline.
-// Used across every editorial landing section.
-//
-// Usage:
-//   <SectionTitle eyebrow="Live Protocols" title="Vitality Treatments" />
-//   <SectionTitle eyebrow="From our clients" title="Real Results" tagline="..." />
 export default function SectionTitle({
-  eyebrow,
   title,
   tagline,
   className = '',
@@ -23,11 +15,6 @@ export default function SectionTitle({
       {...REVEAL}
       className={`${alignClass} mb-6 md:mb-10 ${className}`}
     >
-      {eyebrow && (
-        <p className="text-[13px] md:text-sm tracking-[0.3em] text-accent font-body uppercase mb-3 md:mb-4">
-          {eyebrow}
-        </p>
-      )}
       <Heading className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
         {title}
       </Heading>

@@ -37,7 +37,7 @@ export const BOOKING_ADDON_GROUPS = [
   {
     key: 'iv',
     title: 'IV Add-Ons',
-    sub: 'Boost your drip with fluids, antioxidants, and specialty pushes.',
+    sub: 'Add fluids, antioxidants, and specialty pushes when clinically appropriate.',
     items: IV_ADDONS
       .filter((addon) => !addon.group)
       .map((addon) => ({ ...addon, cartKey: `iv-${addon.label}`, type: 'addon' })),

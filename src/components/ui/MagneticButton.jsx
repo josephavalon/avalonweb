@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useReducedMotion, useSpring } from '@/components/ui/PageTransitionMotion';
 
 /**
  * Magnetic hover wrapper: child element drifts toward cursor within `strength` px.

@@ -1,18 +1,6 @@
-import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumHover } from '@/lib/motion';
-
-// Venue / partner text strip — pure text, never breaks on load.
-const CLIENT_LOGOS = [
-  { name: '111 Minna' },
-  { name: 'Secret Party' },
-  { name: 'Hereticon' },
-  { name: 'Maxim Magazine' },
-  { name: 'SF Pride' },
-  { name: 'The Midway' },
-  { name: 'Club Discourse' },
-  { name: 'The Loom' },
-];
 
 // ── Featured (punchy / notable clients) — shown first ──────────────────────
 const FEATURED = [
@@ -41,8 +29,9 @@ function ReviewCard({ review, index }) {
   return (
     <motion.article
       whileHover={premiumHover}
-      className="rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] p-5 flex flex-col gap-3 w-[280px] shrink-0 h-full shadow-[0_18px_70px_hsl(var(--foreground)/0.035)] transition-colors duration-base ease-editorial hover:border-white/[0.16] hover:bg-white/[0.105]"
+      className="av-treatment-card relative flex h-full w-[280px] shrink-0 flex-col gap-3 overflow-hidden rounded-[1.55rem] border p-5 transition-colors duration-base ease-editorial"
     >
+      <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       <StarRow count={review.stars || 5} />
       <p className="font-body text-sm text-foreground/75 leading-relaxed line-clamp-5">
         &ldquo;{review.quote}&rdquo;
@@ -52,37 +41,11 @@ function ReviewCard({ review, index }) {
           <p className="font-body text-xs font-semibold text-foreground">{review.name}</p>
           {review.date && <p className="font-body text-[10px] text-foreground/35 mt-0.5">{review.date}</p>}
         </div>
-        <span className="inline-block px-2.5 py-1 rounded-full bg-white/[0.08] font-body text-[9px] tracking-[0.2em] uppercase text-foreground/50">
+        <span className="inline-block rounded-full border border-foreground/10 bg-background/34 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.2em] text-foreground/50 backdrop-blur-xl">
           {review.tag}
         </span>
       </div>
     </motion.article>
-  );
-}
-
-const Dot = () => (
-  <span aria-hidden="true" className="w-[3px] h-[3px] rounded-full bg-foreground/15 shrink-0 inline-block" />
-);
-
-// Text-only marquee row — never breaks due to image load failures
-function LogoRow({ ariaHidden = false }) {
-  return (
-    <ul
-      aria-hidden={ariaHidden}
-      className="flex items-center gap-6 md:gap-9 shrink-0 list-none m-0 p-0 pr-6 md:pr-9"
-    >
-      {CLIENT_LOGOS.map((logo, i) => (
-        <React.Fragment key={`${ariaHidden ? 'b' : 'a'}-${logo.name}`}>
-          {i > 0 && <li aria-hidden="true" className="shrink-0"><Dot /></li>}
-          <li className="shrink-0">
-            <span className="font-heading text-[11px] md:text-xs tracking-[0.22em] uppercase text-foreground/30 whitespace-nowrap">
-              {logo.name}
-            </span>
-          </li>
-        </React.Fragment>
-      ))}
-      <li aria-hidden="true" className="shrink-0"><Dot /></li>
-    </ul>
   );
 }
 
@@ -99,9 +62,6 @@ export default function Reviews() {
           viewport={{ once: true }}
           transition={{ duration: 0.95, ease: EASE }}
         >
-          <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">
-            Client Trust
-          </p>
           <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
             Trusted
           </h2>
@@ -114,28 +74,13 @@ export default function Reviews() {
               ['90min', 'Arrival window'],
               ['RN', 'Administered'],
             ].map(([value, label]) => (
-              <div key={label} className="rounded-xl border border-foreground/10 bg-white/[0.07] px-3 py-3 backdrop-blur-xl">
+              <div key={label} className="av-treatment-card overflow-hidden rounded-xl border px-3 py-3">
                 <p className="font-heading text-2xl text-foreground leading-none tracking-[0.04em]">{value}</p>
                 <p className="font-body text-[9px] text-foreground/40 tracking-[0.16em] uppercase mt-1">{label}</p>
               </div>
             ))}
           </div>
         </motion.div>
-      </div>
-
-      {/* "Seen At" logo marquee */}
-      <div className="mb-10 -mx-4">
-        <div className="max-w-6xl mx-auto mb-4 px-4">
-          <p className="font-body text-[9px] tracking-[0.3em] uppercase text-foreground/25">
-            Seen At
-          </p>
-        </div>
-        <div className="logo-strip-wrap">
-          <div className="logo-strip-track">
-            <LogoRow />
-            <LogoRow ariaHidden />
-          </div>
-        </div>
       </div>
 
       {/* Combined carousel */}
@@ -179,36 +124,6 @@ export default function Reviews() {
                   mask-image: linear-gradient(to right, black 0%, black 92%, transparent 100%);
         }
         .reviews-fade-wrap ::-webkit-scrollbar { display: none; }
-
-        /* Logo marquee */
-        .logo-strip-wrap {
-          overflow: hidden;
-          -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
-                  mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
-        }
-        .logo-strip-track {
-          display: flex;
-          align-items: center;
-          width: max-content;
-          flex-wrap: nowrap;
-          gap: 0;
-          animation: logo-strip-scroll 24s linear infinite;
-          will-change: transform;
-          padding: 0.25rem 0;
-        }
-        @media (min-width: 768px) {
-          .logo-strip-track { animation-duration: 32s; }
-        }
-        @keyframes logo-strip-scroll {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        @media (hover: hover) {
-          .logo-strip-wrap:hover .logo-strip-track { animation-play-state: paused; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .logo-strip-track { animation: none; }
-        }
       `}</style>
     </section>
   );

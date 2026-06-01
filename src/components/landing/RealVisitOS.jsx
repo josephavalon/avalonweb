@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import ConsumerTruthLayer from '@/components/consumer/ConsumerTruthLayer';
 import { buildConsumerTruthLayer } from '@/lib/consumerTruth';
 import { EASE } from '@/lib/motion';

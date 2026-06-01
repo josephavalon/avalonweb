@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { EASE } from '@/lib/motion';
 
 export default function PremiumButton({ as: Component = 'button', className = '', wrapperClassName = '', children, ...props }) {

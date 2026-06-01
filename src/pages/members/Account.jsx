@@ -15,7 +15,6 @@ import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { readLocal, writeLocal, appendActivity } from '@/lib/localOs';
 import { readClientProfile, readSavedAddresses, saveClientProfile } from '@/lib/platformOps';
-import { useAdminTheme } from '@/lib/adminCommandUi.jsx';
 
 const BG = 'hsl(var(--background))';
 const CARD = 'hsl(var(--foreground) / 0.045)';
@@ -94,7 +93,6 @@ function ChoiceRow({ label, value, values, onChange }) {
 export default function MemberAccount() {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
-  const { cycle: cycleTheme, Icon: ThemeIcon, theme } = useAdminTheme();
   const [prefs, setPrefs] = useState(() => readLocal('clientPrefs', DEFAULT_PREFS));
   const [contact, setContact] = useState(() => readLocal('clientContactPrefs', CONTACT_DEFAULTS));
   const [profile, setProfile] = useState(() => readClientProfile());
@@ -145,9 +143,7 @@ export default function MemberAccount() {
             <p className="font-body text-[9px] uppercase tracking-[0.24em]" style={{ color: DIM }}>Client Portal</p>
             <h1 className="font-heading text-2xl uppercase tracking-[0.08em]">Account</h1>
           </div>
-          <button type="button" onClick={cycleTheme} className="flex h-11 w-11 items-center justify-center rounded-full" style={{ background: CARD, border: `1px solid ${BORDER}` }} aria-label={`Theme: ${theme}`}>
-            <ThemeIcon className="h-4 w-4" strokeWidth={1.6} />
-          </button>
+          <span className="h-11 w-11" aria-hidden="true" />
         </div>
       </header>
 

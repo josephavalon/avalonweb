@@ -13,8 +13,8 @@ export const DURATIONS = {
   quick: 0.22,
   fast: 0.36,
   base: 0.72,
-  slow: 1,
-  dramatic: 1.35,
+  slow: 1.18,
+  dramatic: 1.58,
 };
 
 // Common Framer Motion transition presets.
@@ -53,16 +53,16 @@ export const scaleIn = {
 };
 
 export const premiumFadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
   transition: { ...transitionDramatic, delay },
 });
 
 export const premiumCard = (delay = 0) => ({
-  initial: { opacity: 0, y: 18 },
+  initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-32px' },
-  transition: { duration: 0.95, delay, ease: EASE },
+  transition: { duration: 1.16, delay, ease: EASE },
 });
 
 export const premiumHover = {
@@ -91,7 +91,7 @@ export const premiumSelectionTransition = {
   ease: EASE,
 };
 
-export const premiumListContainer = (stagger = 0.045, delayChildren = 0.08) => ({
+export const premiumListContainer = (stagger = 0.07, delayChildren = 0.12) => ({
   hidden: {
     transition: { staggerChildren: stagger * 0.65, staggerDirection: -1 },
   },
@@ -101,28 +101,28 @@ export const premiumListContainer = (stagger = 0.045, delayChildren = 0.08) => (
 });
 
 export const premiumListItem = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 14 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.44, ease: EASE },
+    transition: { duration: 0.58, ease: EASE },
   },
 };
 
 export const routeTransition = {
-  initial: { opacity: 0.96 },
+  initial: { opacity: 0 },
   animate: { opacity: 1 },
-  exit: { opacity: 0.98 },
-  transition: { duration: 0.18, ease: EASE },
+  exit: { opacity: 0 },
+  transition: { duration: 0.24, ease: EASE },
 };
 
 export const premiumStaggerItem = {
-  hidden: { opacity: 0, y: 12, scale: 0.992 },
+  hidden: { opacity: 0, y: 16, scale: 0.992 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.5, ease: EASE },
+    transition: { duration: 0.64, ease: EASE },
   },
 };
 
@@ -145,8 +145,8 @@ export const staggerContainer = (stagger = 0.08, delayChildren = 0.1) => ({
 // Spread it: <motion.div {...REVEAL} />
 // Override a piece: <motion.div {...REVEAL} transition={{ ...REVEAL.transition, delay: 0.2 }} />
 export const REVEAL = {
-  initial: { opacity: 0, y: 14 },
+  initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-10%' },
-  transition: { duration: 0.7, ease: EASE },
+  transition: { duration: 1.05, ease: EASE },
 };

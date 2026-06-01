@@ -16,7 +16,7 @@
  *   - pointerEvents:'none' in initial state prevents opacity:0 sections from
  *     intercepting scroll gestures before they animate in.
  */
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -25,8 +25,8 @@ export function Reveal({
   children,
   className,
   delay     = 0,
-  duration  = 0.9,
-  y         = 72,
+  duration  = 1.12,
+  y         = 64,
   scale     = 1,       // ← default 1: scaling a section wrapper clips its children's top/bottom edges
   blur      = false,   // ← OFF by default — blur creates compositing layers that break iOS scroll
   margin    = '-40px',
@@ -65,7 +65,7 @@ export function Reveal({
 export function RevealGroup({
   children,
   className,
-  stagger   = 0.09,
+  stagger   = 0.12,
   delay     = 0,
   margin    = '-50px',
   as        = 'div',
@@ -94,10 +94,10 @@ export function RevealGroup({
 export function RevealItem({
   children,
   className,
-  y        = 56,
+  y        = 48,
   scale    = 1,        // ← default 1: scaling clips children near edges
   blur     = false,   // ← OFF by default
-  duration = 0.85,
+  duration = 1.05,
   as       = 'div',
   ...rest
 }) {

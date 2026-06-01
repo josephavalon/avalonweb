@@ -23,7 +23,6 @@ export default function CBD() {
       <Navbar />
       <main className="px-5 pb-16 pt-32 md:px-12 lg:px-20">
         <div className="mx-auto max-w-4xl">
-          <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/42">Clinical Approval Pending</p>
           <h1 className="mt-5 font-heading text-6xl uppercase leading-[0.88] tracking-tight text-foreground md:text-8xl">
             CBD IV Review
           </h1>

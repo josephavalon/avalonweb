@@ -79,6 +79,11 @@ function priceForItem(item = {}) {
   const key = normalizeKey(item.key || item.cartKey || '');
   if (ITEM_PRICE_BY_KEY.has(key)) return ITEM_PRICE_BY_KEY.get(key);
 
+  if (item.type === 'custom-treatment') {
+    const proposed = Number(item.price);
+    if (Number.isFinite(proposed) && proposed >= 150 && proposed <= 5000) return proposed;
+  }
+
   const label = normalize(item.label || item.name || '');
   if (ADDON_PRICE_BY_LABEL.has(label)) return ADDON_PRICE_BY_LABEL.get(label);
 
@@ -111,6 +116,16 @@ export function sanitizeCheckoutMembership(membership = null) {
   if (!membership) return null;
   const key = normalize(membership.name || '');
   const price = MEMBERSHIP_PRICE_BY_NAME.get(key);
+  if (price == null && key === 'custom') {
+    const proposed = Number(membership.price);
+    if (Number.isFinite(proposed) && proposed >= 150 && proposed <= 10000) {
+      return {
+        ...membership,
+        price: proposed,
+        billing: membership.billing === 'annual' ? 'annual' : 'monthly',
+      };
+    }
+  }
   if (price == null) {
     throw Object.assign(new Error(`Unknown membership: ${membership.name || 'membership'}`), { status: 400 });
   }

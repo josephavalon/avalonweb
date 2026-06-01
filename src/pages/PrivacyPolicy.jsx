@@ -5,8 +5,8 @@ const SECTIONS = [
   {
     h: 'Who we are',
     p: [
-      'Avalon Vitality ("Avalon," "we," "us," "our") is a California-licensed mobile health and longevity service operating exclusively in California. We provide in-home and concierge IV therapy, intramuscular and subcutaneous injections, NAD+, peptides (where available), supplements, and software-driven protocol design via the Avalon OS platform.',
-      'This Privacy Policy explains how we collect, use, share, and protect your personal information when you visit avalonvitality.co, use the Avalon OS application, or engage our clinical services.',
+      'Avalon Vitality ("Avalon," "we," "us," "our") is a California-licensed mobile health and longevity service operating exclusively in California. We provide in-home and concierge IV therapy, intramuscular and subcutaneous injections, NAD+, peptides (where available), supplements, and software-supported protocol design.',
+      'This Privacy Policy explains how we collect, use, share, and protect your personal information when you visit avalonvitality.co, use our digital services, or engage our clinical services.',
     ],
   },
   {
@@ -54,6 +54,20 @@ const SECTIONS = [
     p: [
       'Some of the information you share with us is "Protected Health Information" (PHI) under HIPAA. PHI is treated under our separate Notice of Privacy Practices, which is incorporated into this policy by reference.',
       'We disclose PHI only for treatment, payment, healthcare operations, or as authorized by you or required by law. We never sell PHI.',
+    ],
+  },
+  {
+    h: 'Data residency and hosting',
+    p: [
+      'Avalon currently operates for California clients and uses United States-based infrastructure where reasonably available for production systems that may handle health information.',
+      'Operational, billing, and finance exports are designed to avoid PHI unless PHI is legally or clinically required for the specific workflow.',
+    ],
+  },
+  {
+    h: 'Corporate and team bookings',
+    p: [
+      'For corporate, venue, hotel, and event programs, Avalon can support BAA-ready workflows when a customer is a covered entity or business associate and a written agreement is required before PHI is exchanged.',
+      'Team organizers may receive operational status, attendee counts, and scheduling coordination. Individual medical details are not shared with organizers without authorization or a legal basis.',
     ],
   },
   {

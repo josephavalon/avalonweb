@@ -24,7 +24,7 @@ export const events = [
     service: 'Launch Recovery IV',
     eventType: 'Festival',
     gfeTiming: 'Before launch arrival',
-    acuityHandoff: 'Timed presale reservations route to Acuity.',
+    acuityHandoff: 'Timed presale reservations route to scheduling.',
     ticketTiers: [
       { name: 'Hydration Pass', price: '$149', detail: 'Hydration IV reservation and launch credential.' },
       { name: 'Recovery Plus', price: '$225', detail: 'IV reservation with IM boost option.' },

@@ -18,10 +18,15 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    if (import.meta.env?.DEV) {
-      // eslint-disable-next-line no-console
-      console.error('[Avalon] Render error:', error, info);
+    if (typeof window !== 'undefined') {
+      window.__AVALON_LAST_RENDER_ERROR__ = {
+        message: error?.message || String(error),
+        stack: error?.stack || null,
+        componentStack: info?.componentStack || null,
+      };
     }
+    // eslint-disable-next-line no-console
+    console.error('[Avalon] Render error:', error, info);
   }
 
   handleReload = () => {

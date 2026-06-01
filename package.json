@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/build-b2b-html.mjs && node scripts/build-seo-html.mjs",
+    "build": "node scripts/clean-dist.mjs && vite build && node scripts/build-b2b-html.mjs && node scripts/build-seo-html.mjs",
     "lint": "node scripts/lint-qa.mjs",
     "lint:fix": "node scripts/lint-qa.mjs",
     "test:smoke": "node scripts/smoke-tests.mjs",
@@ -13,7 +13,9 @@
     "test:kernel": "node scripts/kernel-check.mjs",
     "test:preapi": "node scripts/pre-api-readiness-qa.mjs",
     "test:day": "node scripts/operating-day-qa.mjs",
+    "test:interaction": "node scripts/interaction-qa.mjs",
     "test:booking": "node scripts/booking-flow-qa.mjs",
+    "test:login": "node scripts/login-qa.mjs",
     "test:mobile": "node scripts/mobile-qa.mjs",
     "test:stability": "node scripts/route-stability-qa.mjs",
     "test:visual": "node scripts/visual-qa.mjs",

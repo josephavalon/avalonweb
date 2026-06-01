@@ -1,37 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
-
 export const ADMIN_COMMAND_EASE = [0.16, 1, 0.3, 1];
 export const TODAY_LABEL = new Date()
   .toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
   .replace(',', ' ·');
-
-const THEMES = ['dark', 'light'];
-const THEME_KEY = 'avalon.theme';
-
-function readTheme() {
-  try {
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored && THEMES.includes(stored)) return stored;
-  } catch (err) {
-    if (import.meta.env?.DEV) console.warn('[admin-command-theme-read]', err);
-  }
-  return 'dark';
-}
-
-export function useAdminTheme() {
-  const [theme, setTheme] = useState(readTheme);
-  useEffect(() => {
-    document.documentElement.classList.remove('dark', 'golden', 'dubs');
-    if (theme !== 'light') document.documentElement.classList.add(theme);
-    try { localStorage.setItem(THEME_KEY, theme); } catch (err) {
-      if (import.meta.env?.DEV) console.warn('[admin-command-theme-write]', err);
-    }
-  }, [theme]);
-  const cycle = () => setTheme((prev) => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length]);
-  const Icon = theme === 'dark' ? Sun : Moon;
-  return { theme, cycle, Icon };
-}
 
 const ACCENT_CLS = 'bg-accent/[0.08] text-accent border-accent/20';
 const ACCENT_DOT = 'bg-accent/70';

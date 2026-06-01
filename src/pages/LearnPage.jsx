@@ -48,7 +48,6 @@ export function LearnHub() {
       <Navbar />
       <main className="px-5 pb-16 pt-32 md:px-12 lg:px-20">
         <div className="mx-auto max-w-6xl">
-          <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/42">Education</p>
           <h1 className="mt-5 max-w-4xl font-heading text-6xl uppercase leading-[0.88] tracking-tight text-foreground md:text-8xl">
             Mobile Recovery Guides
           </h1>
@@ -176,7 +175,6 @@ export default function LearnPage() {
         <article>
           <header className="px-5 pb-14 pt-10 md:px-12 md:pb-20 lg:px-20">
             <div className="mx-auto max-w-4xl">
-              <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/42">{article.cluster}</p>
               <h1 className="mt-5 font-heading text-5xl uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl">
                 {article.h1}
               </h1>
@@ -210,7 +208,7 @@ export default function LearnPage() {
               </div>
               <div className="space-y-6 font-body text-base leading-relaxed text-foreground/62">
                 <p>
-                  Avalon writes education pages to help clients understand the mobile workflow before they book. The practical sequence is request, intake, consent, clinical review, Acuity scheduling, RN arrival, Acuity closeout, and follow-up when needed.
+                  Avalon writes education pages to help clients understand the mobile workflow before they book. The practical sequence is request, intake, consent, clinical review, appointment confirmation, RN arrival, visit closeout, and follow-up when needed.
                 </p>
                 <p>
                   Mobile service does not remove clinical responsibility. IV-related services are subject to eligibility, location, nurse availability, supply readiness, and clinical approval. The care team may adjust the protocol or decline service when a mobile appointment is not appropriate.

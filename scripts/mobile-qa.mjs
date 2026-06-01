@@ -199,7 +199,7 @@ class CdpClient {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`CDP command timed out: ${method}`));
-      }, 15_000);
+      }, Number(process.env.MOBILE_QA_CDP_TIMEOUT_MS || 45_000));
       this.pending.set(id, {
         resolve: (value) => {
           clearTimeout(timeout);

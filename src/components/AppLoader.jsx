@@ -1,84 +1,60 @@
-/**
- * AppLoader — brief desktop-only splash that plays once on cold load.
- * Theme-aware: reads stored theme from localStorage to match colors.
- * AV logotype fades quickly, then the whole loader gets out of the way.
- * Does NOT re-fire on route changes — tracked via sessionStorage.
- */
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
-const SEEN_KEY = 'avalon.loader.seen';
+const MIN_BOOT_MS = 920;
+const EXIT_MS = 560;
+const HARD_REMOVE_MS = 2400;
 
-const THEME_PALETTES = {
-  dark:   { bg: 'hsl(var(--background))', text: 'hsl(var(--foreground))', accent: 'hsl(var(--foreground))', sub: 'hsl(var(--foreground) / 0.45)' },
-  light:  { bg: 'hsl(var(--background))', text: 'hsl(var(--foreground))', accent: 'hsl(var(--foreground))', sub: 'hsl(var(--foreground) / 0.45)' },
-};
+function removeSplash() {
+  const splash = document.getElementById('av-boot-splash');
+  if (splash) splash.remove();
+  window.__AV_BOOT_SPLASH_REMOVED = true;
+}
 
-function getThemePalette() {
-  try {
-    const stored = window.localStorage.getItem('avalon.theme') || 'dark';
-    return THEME_PALETTES[stored] ?? THEME_PALETTES.dark;
-  } catch {
-    return THEME_PALETTES.dark;
+function releaseSplash() {
+  const splash = document.getElementById('av-boot-splash');
+  if (!splash) return removeSplash();
+
+  if (splash.dataset.state !== 'leaving') {
+    splash.dataset.state = 'leaving';
   }
+
+  window.clearTimeout(window.__AV_BOOT_SPLASH_REMOVE_TIMER);
+  window.__AV_BOOT_SPLASH_REMOVE_TIMER = window.setTimeout(removeSplash, EXIT_MS);
+  return undefined;
 }
 
 export default function AppLoader() {
-  const [visible, setVisible] = useState(() => {
-    try {
-      if (window.matchMedia?.('(max-width: 767px)').matches) {
-        sessionStorage.setItem(SEEN_KEY, '1');
-        return false;
-      }
-      return !sessionStorage.getItem(SEEN_KEY);
-    } catch { return false; }
-  });
-
-  // Resolved once — palette never changes during the splash
-  const [palette] = useState(getThemePalette);
-
   useEffect(() => {
-    if (!visible) return;
-    try { sessionStorage.setItem(SEEN_KEY, '1'); } catch (err) {
-      if (import.meta.env?.DEV) console.warn('[app-loader-seen]', err);
+    const splash = document.getElementById('av-boot-splash');
+    if (!splash) return undefined;
+    if (window.__AV_BOOT_SKIP_SPLASH) {
+      removeSplash();
+      document.documentElement.classList.remove('av-skip-boot');
+      return undefined;
+    }
+    if (window.__AV_BOOT_SPLASH_REMOVED) {
+      removeSplash();
+      return undefined;
     }
 
-    const t = setTimeout(() => setVisible(false), 220);
-    return () => clearTimeout(t);
-  }, [visible]);
+    const bootStarted = Number(window.__AV_BOOT_STARTED_AT || 0) || Date.now();
+    const elapsed = Date.now() - bootStarted;
+    const releaseDelay = Math.max(0, MIN_BOOT_MS - elapsed);
 
-  return (
-    <>
-      {visible ? (
-        <div
-          style={{ backgroundColor: palette.bg }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center animate-in fade-in duration-base"
-          role="status"
-          aria-live="polite"
-          aria-label="Loading Avalon Vitality"
-        >
-          <p
-            style={{ color: palette.text, fontFamily: 'inherit' }}
-            className="font-heading text-[18vw] leading-none tracking-[0.32em] pl-[0.32em] select-none animate-in fade-in slide-in-from-bottom-1 duration-reveal sm:text-[12vw] md:text-[8vw]"
-          >
-            AV
-          </p>
+    window.clearTimeout(window.__AV_BOOT_SPLASH_HARD_REMOVE_TIMER);
+    window.__AV_BOOT_SPLASH_HARD_REMOVE_TIMER = window.setTimeout(removeSplash, HARD_REMOVE_MS);
 
-          <p
-            style={{ color: palette.sub }}
-            className="font-body text-[10px] tracking-[0.4em] uppercase mt-2 select-none animate-in fade-in duration-reveal"
-          >
-            Avalon Vitality
-          </p>
+    if (!window.__AV_BOOT_SPLASH_RELEASE_SCHEDULED) {
+      window.__AV_BOOT_SPLASH_RELEASE_SCHEDULED = true;
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          window.__AV_BOOT_SPLASH_RELEASE_TIMER = window.setTimeout(releaseSplash, releaseDelay);
+        });
+      });
+    }
 
-          {/* Accent progress bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/[0.06]">
-            <div
-              style={{ backgroundColor: palette.accent }}
-              className="h-full origin-left animate-[av-loader-progress_320ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
-            />
-          </div>
-        </div>
-      ) : null}
-    </>
-  );
+    return undefined;
+  }, []);
+
+  return null;
 }

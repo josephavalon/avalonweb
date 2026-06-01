@@ -1,0 +1,329 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from '@/components/ui/PageTransitionMotion';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, CalendarPlus,
+  Droplets, Clock, MapPin, Hash, Loader2,
+  CreditCard, Phone,
+} from 'lucide-react';
+import Navbar from '@/components/landing/Navbar';
+import { useSeo } from '@/lib/seo';
+import { readLastBooking, saveLastBooking, appendActivity } from '@/lib/localOs';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
+
+const EASE = [0.16, 1, 0.3, 1];
+const TZ = 'America/Los_Angeles';
+
+/* ─── Helpers ────────────────────────────────────────────────── */
+function formatApptDate(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', timeZone: TZ,
+  });
+}
+
+function formatApptTime(isoString, duration) {
+  if (!isoString) return '';
+  const start = new Date(isoString);
+  const end = duration ? new Date(start.getTime() + duration * 60000) : null;
+  const fmt = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ });
+  return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
+}
+
+function buildIcsContent({ appointment }) {
+  if (!appointment) return '';
+  const start = new Date(appointment.datetime);
+  const end = new Date(start.getTime() + (appointment.duration || 60) * 60000);
+  const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Avalon Vitality//BookingConfirmation//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:Avalon Vitality IV Session`,
+    `DESCRIPTION:Confirmation #${appointment.id} — ${appointment.type || 'Mobile IV Therapy'}`,
+    `LOCATION:${appointment.location || ''}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+function downloadIcs(appointment) {
+  const content = buildIcsContent({ appointment });
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'avalon-session.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ─── Animated check ─────────────────────────────────────────── */
+function AnimatedCheck() {
+  return (
+    <div className="flex items-center justify-center mb-8">
+      <svg viewBox="0 0 80 80" className="w-20 h-20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <motion.circle
+          cx="40" cy="40" r="36"
+          stroke="currentColor" strokeWidth="2"
+          className="text-accent"
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
+        />
+        <motion.path
+          d="M24 40 L35 51 L56 30"
+          stroke="currentColor" strokeWidth="2.5"
+          className="text-accent"
+          strokeLinecap="round" strokeLinejoin="round" fill="none"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: EASE, delay: 0.75 }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* ─── Booking detail pill ────────────────────────────────────── */
+function DetailPill({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-foreground/[0.06] last:border-b-0">
+      <Icon className="w-4 h-4 text-accent/60 mt-0.5 shrink-0" strokeWidth={1.5} />
+      <div className="min-w-0">
+        <p className="font-body text-[9px] tracking-[0.22em] uppercase text-foreground/35 mb-0.5">{label}</p>
+        <p className="font-body text-sm font-semibold text-foreground leading-snug">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main ───────────────────────────────────────────────────── */
+export default function BookingConfirmation() {
+  const [params] = useSearchParams();
+  const appointmentId = params.get('appointment');
+  const [localBooking] = useState(() => readLastBooking());
+
+  const [appt, setAppt] = useState(null);
+  const [apptLoading, setApptLoading] = useState(!!appointmentId);
+  const [apptError, setApptError] = useState(null);
+  const isFastHold = localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold';
+
+  useSeo({
+    title: 'Session Confirmed — Avalon Vitality',
+    description: 'Your IV wellness session has been confirmed. A licensed RN will be in touch shortly.',
+    path: '/booking/confirmation',
+  });
+
+  useEffect(() => {
+    if (!appointmentId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/scheduling-appointment?id=${encodeURIComponent(appointmentId)}`);
+        const data = await res.json();
+        if (!cancelled) {
+          if (res.ok) setAppt(data);
+          else setApptError(data.error || 'Could not load booking details');
+        }
+      } catch {
+        if (!cancelled) setApptError('Could not load booking details');
+      } finally {
+        if (!cancelled) setApptLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [appointmentId]);
+
+  useEffect(() => {
+    if (appt?.id) {
+      const saved = saveLastBooking({
+        ...(localBooking || {}),
+        id: appt.id,
+        service: appt.type || localBooking?.service || 'IV Therapy Session',
+        datetime: appt.datetime,
+        time: appt.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time,
+        address: appt.location || localBooking?.address,
+        contact: localBooking?.contact,
+        addOns: localBooking?.addOns || [],
+        items: localBooking?.items || [],
+        subtotal: appt.price ?? localBooking?.subtotal,
+        status: localBooking?.status || 'Scheduling received',
+        nextStep: localBooking?.manualReview ? 'Clinical review before RN assignment' : 'RN assignment and arrival text',
+        gfe: localBooking?.gfe || 'Pending',
+        nurse: localBooking?.nurse || 'Unassigned',
+        payment: localBooking?.payment || 'Pending',
+        source: localBooking?.source || 'Website',
+        reference: localBooking?.reference || appt.id,
+      });
+      appendActivity(`Booking confirmed: ${saved.service}`, { role: 'client', bookingId: String(appt.id) });
+    }
+  }, [appt, localBooking]);
+
+  useEffect(() => {
+    const bookingId = appt?.id || localBooking?.id || appointmentId;
+    if (!bookingId) return;
+    track(ANALYTICS_EVENTS.BOOKING_CONFIRMED, {
+      funnel: localBooking?.source === 'Fast Hold' ? 'fast_hold' : 'webstore',
+      booking_id: String(bookingId),
+      order_type: localBooking?.orderType || 'recovery',
+      product_family: localBooking?.productFamily || 'protocol',
+      gfe_required: localBooking?.gfeRequired ?? true,
+      has_appointment: Boolean(appt?.datetime || localBooking?.datetime || localBooking?.date),
+    });
+  }, [appt?.id, appt?.datetime, localBooking, appointmentId]);
+
+  // Scheduling self-service reschedule/cancel links
+  const rescheduleUrl = appt?.confirmationPage || null;
+  // The confirmation page URL has cancel/reschedule links built in
+
+  const referenceSource = appt?.id || localBooking?.id;
+  const referenceNum = referenceSource
+    ? `AV-${String(referenceSource).slice(-6).toUpperCase()}`
+    : appointmentId
+      ? `AV-${String(appointmentId).slice(-6).toUpperCase()}`
+      : null;
+
+  const serviceLabel = appt?.type || localBooking?.service || 'IV Therapy Session';
+  const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : localBooking?.date || null;
+  const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time || null;
+  const apptAddress = appt?.location || localBooking?.address || null;
+  const calendarAppointment = appt?.datetime
+    ? appt
+    : localBooking?.datetime
+      ? {
+          id: localBooking.id,
+          datetime: localBooking.datetime,
+          duration: localBooking.duration || 60,
+          type: localBooking.service,
+          location: localBooking.address,
+        }
+      : null;
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      <div className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-24 space-y-5">
+
+        {/* ── 1. Hero ─────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE }}
+          className="text-center pt-4"
+        >
+          <AnimatedCheck />
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}
+          >
+	            <h1 className="font-heading text-5xl md:text-6xl text-foreground uppercase tracking-tight leading-none mb-3">
+	              {isFastHold ? 'Hold Received.' : 'Request Received.'}
+            </h1>
+            <p className="font-body text-base font-semibold text-foreground/68 leading-snug max-w-sm mx-auto mb-5">
+              {isFastHold
+                ? 'Pay the hold. Review comes next.'
+	                : 'Review comes next.'}
+            </p>
+
+            {/* Loading state */}
+            {apptLoading && (
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3.5">
+                <Loader2 className="w-4 h-4 text-foreground/40 animate-spin" strokeWidth={1.5} />
+                <span className="font-body text-xs tracking-widest uppercase text-foreground/40">Loading your booking…</span>
+              </div>
+            )}
+
+            {/* Real booking details */}
+            {!apptLoading && (referenceNum || apptDate) && (
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3 text-left space-y-0 mx-auto backdrop-blur-xl">
+                {serviceLabel && (
+                  <DetailPill icon={Droplets} label="Service" value={serviceLabel} />
+                )}
+                {apptDate && apptTime && (
+                  <DetailPill icon={Clock} label="When" value={`${apptDate} · ${apptTime}`} />
+                )}
+                {apptAddress && (
+                  <DetailPill icon={MapPin} label="Where" value={apptAddress} />
+                )}
+                {localBooking?.depositAmount != null && (
+                  <DetailPill icon={CreditCard} label="Hold" value={`$${Number(localBooking.depositAmount).toLocaleString()} due`} />
+                )}
+                {referenceNum && (
+                  <DetailPill icon={Hash} label="ID" value={referenceNum} />
+                )}
+              </div>
+            )}
+
+            {/* Fallback if no appointment data and no error */}
+            {!apptLoading && !appt && !apptError && !referenceNum && !localBooking && (
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3">
+                <p className="font-body text-sm text-foreground/60">
+                  Your final nurse and timing details will arrive by text shortly.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+
+        {/* ── 3. Actions ───────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.72 }}
+          className="space-y-3 pt-2"
+        >
+          {/* Complete deposit */}
+          {isFastHold && (
+            <Link
+              to="/checkout"
+              className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background shadow-[0_16px_50px_hsl(var(--foreground)/0.14)] transition-opacity hover:opacity-88"
+            >
+              Complete Deposit <CreditCard className="h-4 w-4" strokeWidth={2} />
+            </Link>
+          )}
+
+          {/* Add to Calendar */}
+          {calendarAppointment && (
+            <button
+              type="button"
+              onClick={() => downloadIcs(calendarAppointment)}
+              className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
+            >
+              <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
+              <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
+                Add to Calendar
+              </span>
+            </button>
+          )}
+
+          <a
+            href={rescheduleUrl || 'sms:+14157070818'}
+            target={rescheduleUrl ? '_blank' : undefined}
+            rel={rescheduleUrl ? 'noopener noreferrer' : undefined}
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] px-5 font-body text-xs font-bold uppercase tracking-[0.14em] text-foreground/64 transition-colors hover:border-foreground/30 hover:text-foreground"
+          >
+            <Phone className="h-4 w-4" strokeWidth={1.8} />
+            Change Visit
+          </a>
+
+          {/* Back home */}
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 min-h-[44px] font-body text-xs tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors justify-center pt-2"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
+            Back to Avalon
+          </Link>
+        </motion.div>
+
+      </div>
+    </div>
+  );
+}

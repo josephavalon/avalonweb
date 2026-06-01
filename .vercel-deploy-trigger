@@ -1,3 +1,9 @@
 Deploy trigger timestamps:
 2026-04-24T22:27:08.495Z — revenue-animation batch (HEAD 19b36ee)
 2026-04-24T22:31:22.447Z — rebuild after IntroSection restore
+2026-05-27T03:30:38Z — simplify subscriptions page
+2026-05-27T03:38:09Z — boot splash pulse and flash guard
+2026-05-27T04:00:01Z — desktop nav and compact bottom bars
+2026-05-27T04:14:00Z — booking protocol advance guard
+2026-05-27T05:47:03Z — enterprise pre-api gate and role cleanup
+2026-05-27T06:35:17Z — simplified client nurse admin role surfaces

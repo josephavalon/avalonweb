@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 
 /**
  * Educational anatomy illustration — drop molecules traveling a vein path.

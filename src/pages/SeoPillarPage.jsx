@@ -113,7 +113,6 @@ export default function SeoPillarPage() {
         <section className="px-5 pb-16 pt-10 md:px-12 md:pb-24 lg:px-20">
           <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_360px] lg:items-end">
             <div>
-              <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/42">{page.eyebrow}</p>
               <h1 className="mt-5 max-w-4xl font-heading text-6xl uppercase leading-[0.88] tracking-tight text-foreground md:text-8xl">
                 {page.h1}
               </h1>
@@ -166,7 +165,6 @@ export default function SeoPillarPage() {
         <section className="border-t border-foreground/[0.07] px-5 py-12 md:px-12 md:py-16 lg:px-20">
           <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className="font-body text-[10px] uppercase tracking-[0.34em] text-foreground/38">Hub and Spoke</p>
               <h2 className="mt-4 font-heading text-5xl uppercase leading-none text-foreground md:text-6xl">
                 Connected Pages
               </h2>

@@ -18,9 +18,9 @@ export const BOOKING_STATUSES = [
 export const BOOKING_TRANSITIONS = {
   Draft: ['Scheduling received', 'Cancelled'],
   'Scheduling received': ['Confirmed', 'Intake Pending', 'Clearance Pending', 'Cleared', 'Cancelled'],
-  Confirmed: ['Cleared', 'Nurse Assigned', 'Cancelled'],
+  Confirmed: ['Intake Pending', 'Clearance Pending', 'Cleared', 'Cancelled'],
   'Intake Pending': ['Clearance Pending', 'Cancelled'],
-  'Clearance Pending': ['Cleared', 'Nurse Assigned', 'Cancelled'],
+  'Clearance Pending': ['Cleared', 'Cancelled'],
   Cleared: ['Nurse Assigned', 'Cancelled'],
   'Nurse Assigned': ['Ready for Visit', 'En Route', 'Cancelled'],
   'Ready for Visit': ['En Route', 'Cancelled'],
@@ -205,7 +205,7 @@ export function validateTransition(booking = {}, nextStatus, { override = false 
   if (!override && current !== next && !allowed.includes(next)) {
     errors.push(`Cannot move from ${current} to ${next}.`);
   }
-  if (['Ready for Visit', 'En Route', 'Arrived', 'In Progress', 'Completed'].includes(next) && !clinicallyCleared) {
+  if (['Nurse Assigned', 'Ready for Visit', 'En Route', 'Arrived', 'In Progress', 'Completed'].includes(next) && !clinicallyCleared) {
     errors.push('GFE clearance is required before dispatch.');
   }
   if (['Ready for Visit', 'En Route', 'Arrived', 'In Progress', 'Completed'].includes(next) && (!booking.nurse || booking.nurse === 'Unassigned')) {

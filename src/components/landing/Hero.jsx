@@ -1,68 +1,35 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React from 'react';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Calendar, Droplets } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 export default function Hero() {
-  const ref = useRef(null);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
-  const { scrollYProgress } = useScroll({ target: isMobile ? { current: null } : ref, offset: ['start start', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.6], [0, 0.3]);
+  React.useEffect(() => {
+    const preload = () => import('@/pages/BookNow');
+    const timer = window.setTimeout(preload, 450);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <section
-      ref={isMobile ? null : ref}
       className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
       style={{ position: 'relative' }}
     >
-      <motion.div
-        style={isMobile ? undefined : { y }}
-        className={`absolute inset-0 pointer-events-none${isMobile ? '' : ' will-change-transform'}`}
-      >
-        <motion.img
-          src="/images/avalon-hero.webp"
-          srcSet="/images/avalon-hero-512.webp 512w, /images/avalon-hero-768.webp 768w, /images/avalon-hero.webp 1024w"
-          sizes="100vw"
-          alt="Avalon Vitality mobile recovery"
-          width="1024"
-          height="683"
-          className="w-full h-full object-cover"
-          style={{ objectPosition: '30% 55%', transformOrigin: '38% 62%' }}
-          initial={{ scale: 1.06 }}
-          animate={{ scale: 1.0 }}
-          transition={{ duration: 3.2, ease: EASE }}
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-background/65" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/45 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-[32rem] bg-gradient-to-t from-background from-20% via-background/60 via-60% to-transparent pointer-events-none" />
-      </motion.div>
-
-      {!isMobile && (
-        <motion.div
-          style={{ opacity: overlayOpacity }}
-          className="absolute inset-0 bg-background pointer-events-none"
-        />
-      )}
-
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
 
         {/* Mobile: fixed spacer keeps the CTA inside the first viewport. */}
         <div className="h-[28svh] shrink-0 md:hidden" />
 
-        <motion.p
-          {...premiumFadeUp(0.18)}
-          initial={{ opacity: 0, y: 10 }}
-          className="font-body text-[15px] tracking-[0.34em] uppercase mb-3 md:mb-5"
-          style={{ color: 'hsl(var(--foreground) / 0.44)' }}
-        >
-          Avalon
-        </motion.p>
+	        <motion.div
+	          {...premiumFadeUp(0.1)}
+	          initial={{ opacity: 0, y: 18, scale: 0.985 }}
+	          transition={{ duration: 1.05, delay: 0.1, ease: EASE }}
+	          className="relative w-full max-w-[42rem]"
+	        >
+	          <div className="relative">
 
         <motion.h1
           {...premiumFadeUp(0.38)}
@@ -81,47 +48,77 @@ export default function Hero() {
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          Clinical recovery. Delivered.
+          Your protocol.<br />Delivered by an RN.<br />SF Bay Area.
         </motion.p>
 
         <motion.div
           {...premiumFadeUp(0.98)}
           initial={{ opacity: 0, y: 22 }}
           transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
-          className="flex flex-col gap-2.5 mt-5 md:mt-8 w-full max-w-[19rem]"
+          className="relative mt-5 flex w-full max-w-[19rem] flex-col gap-2.5 md:mt-8 md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
         >
+          <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.17),transparent_38%),radial-gradient(circle_at_88%_88%,hsl(var(--foreground)/0.08),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_50%,hsl(var(--foreground)/0.034))] md:block" />
+          <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/34 to-transparent md:block" />
+          <span className="pointer-events-none absolute inset-x-8 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-background/50 to-transparent md:block" />
           <MotionLink
             to="/book"
+            onPointerEnter={() => import('@/pages/BookNow')}
+            onFocus={() => import('@/pages/BookNow')}
+            initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.95, delay: 1.18, ease: EASE }}
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all duration-base ease-editorial shadow-[0_18px_60px_hsl(var(--foreground)/0.14)]"
+            className="group relative flex min-h-[54px] w-full items-center justify-between gap-4 overflow-hidden rounded-xl border border-foreground bg-foreground px-5 text-background shadow-[0_18px_60px_hsl(var(--foreground)/0.14)] transition-all duration-base ease-editorial hover:bg-foreground/90 md:min-h-[118px] md:rounded-[1.55rem] md:border-foreground/38 md:bg-foreground/[0.13] md:p-5 md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.16),0_28px_105px_hsl(var(--foreground)/0.17)] md:backdrop-blur-2xl md:backdrop-saturate-150 md:hover:border-foreground/48 md:hover:bg-foreground/[0.16]"
           >
-            <span>Choose Protocol</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
+            <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.18),transparent_34%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.07),transparent_32%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_52%,hsl(var(--foreground)/0.032))] opacity-95 md:block" />
+            <motion.span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 -left-1/2 hidden w-1/2 bg-gradient-to-r from-transparent via-foreground/16 to-transparent md:block"
+              animate={{ x: ['0%', '320%'] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: EASE, repeatDelay: 1.1 }}
+            />
+            <span className="relative flex min-w-0 items-center gap-4">
+              <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/30 bg-foreground/[0.11] text-foreground shadow-[0_16px_42px_hsl(var(--foreground)/0.12),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:flex md:h-16 md:w-16">
+                <Droplets className="h-7 w-7" strokeWidth={2.45} />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Choose Protocol</span>
+                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/58 md:block">Fast booking</span>
+              </span>
+            </span>
+            <span className="relative flex shrink-0 items-center justify-center text-background transition-transform group-hover:translate-x-1 md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/24 md:bg-foreground/[0.10] md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+              <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
+            </span>
           </MotionLink>
           <MotionLink
             to="/subscription"
+            initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.95, delay: 1.46, ease: EASE }}
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex min-h-[54px] items-center justify-between px-5 font-body text-[11px] tracking-[0.24em] uppercase font-semibold rounded-xl bg-white/[0.025] border border-foreground/22 text-foreground/76 hover:bg-white/[0.08] hover:border-foreground/45 hover:text-foreground transition-all duration-base ease-editorial backdrop-blur-sm"
+            className="group relative flex min-h-[54px] w-full items-center justify-between gap-4 overflow-hidden rounded-xl border border-foreground/22 bg-white/[0.025] px-5 text-foreground/76 shadow-none backdrop-blur-sm transition-all duration-base ease-editorial hover:border-foreground/45 hover:bg-white/[0.08] hover:text-foreground md:min-h-[118px] md:rounded-[1.55rem] md:border-foreground/14 md:bg-background/28 md:p-5 md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_24px_95px_hsl(var(--foreground)/0.09)] md:backdrop-blur-2xl md:backdrop-saturate-150"
           >
-            <span>Plans</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-base ease-editorial group-hover:translate-x-1" />
+            <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.12),transparent_34%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.055),transparent_32%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_52%,hsl(var(--foreground)/0.026))] opacity-95 md:block" />
+            <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent md:block" />
+            <span className="relative flex min-w-0 items-center gap-4">
+              <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/16 bg-foreground/[0.065] text-foreground/90 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.09)] backdrop-blur-xl md:flex md:h-16 md:w-16">
+                <Calendar className="h-7 w-7" strokeWidth={2.45} />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Subscriptions</span>
+                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/54 md:block">Monthly recovery</span>
+              </span>
+            </span>
+            <span className="relative flex shrink-0 items-center justify-center text-foreground/76 transition-transform group-hover:translate-x-1 group-hover:text-foreground md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/14 md:bg-background/38 md:text-foreground/48 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+              <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
+            </span>
           </MotionLink>
         </motion.div>
 
         {/* Proof rail */}
-        <motion.div
-          {...premiumFadeUp(1.18)}
-          initial={{ opacity: 0, y: 14 }}
-          transition={{ duration: 1.0, delay: 1.18, ease: EASE }}
-          className="mt-5 flex w-full max-w-[19rem] flex-wrap gap-x-4 gap-y-2 md:mt-8 md:max-w-none"
-        >
-          {['Licensed clinicians', 'Clinical review', 'Mobile'].map((label) => (
-            <span key={label} className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/42">
-              {label}
-            </span>
-          ))}
+          </div>
         </motion.div>
 
         <div className="pb-10 md:pb-0 md:flex-1" />

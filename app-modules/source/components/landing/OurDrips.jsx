@@ -1,0 +1,240 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { Link } from 'react-router-dom';
+import {
+  Droplets, Zap, Sparkles, ChevronRight, ArrowRight,
+  X,
+} from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+
+const EASE = [0.16, 1, 0.3, 1];
+
+/* ─── Category data ──────────────────────────────────────────── */
+const CATEGORIES = [
+  {
+    key: 'recover',
+    icon: Droplets,
+    title: 'RECOVER',
+    subtitle: 'Hydration, travel, recovery',
+    price: 'From $150',
+    drips: [
+      { name: 'Hydration', price: '$150' },
+      { name: 'Recovery', price: '$250' },
+      { name: "Myers' Cocktail", price: '$250' },
+      { name: 'Immunity', price: '$250' },
+    ],
+  },
+  {
+    key: 'perform',
+    icon: Zap,
+    title: 'PERFORM',
+    subtitle: 'Energy, wellness, NAD+',
+    price: 'From $250',
+    drips: [
+      { name: 'Energy', price: '$250' },
+      { name: 'NAD+ 250mg', price: '$350' },
+      { name: 'NAD+ 500mg', price: '$500' },
+      { name: 'NAD+ 1000mg', price: '$800' },
+    ],
+  },
+  {
+    key: 'elevate',
+    icon: Sparkles,
+    title: 'ELEVATE',
+    subtitle: 'Advanced options by review',
+    price: 'From $350',
+    drips: [
+      { name: 'IV CBD 33mg', price: '$250' },
+      { name: 'IV CBD 66mg', price: '$300' },
+      { name: 'IV CBD 99mg', price: '$350' },
+      { name: 'IV CBD 132mg', price: '$400' },
+    ],
+  },
+];
+
+/* ─── Checkout Sheet ─────────────────────────────────────────── */
+function CheckoutSheet({ cart, onRemove, onClose }) {
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+  return (
+    <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cart checkout"
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ duration: 0.45, ease: EASE }}
+      className="fixed inset-x-0 bottom-0 z-50 flex flex-col"
+      style={{ maxHeight: '80vh' }}
+    >
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
+        onClick={onClose}
+      />
+      <div className="relative bg-background/95 backdrop-blur-2xl border-t border-foreground/10 rounded-t-3xl overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/8">
+          <div>
+            <p className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-0.5">Your Order</p>
+            <p className="font-heading text-2xl text-foreground tracking-wide">{cart.length} Item{cart.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors focus:outline-none" aria-label="Close cart">
+            <X className="w-4 h-4" strokeWidth={1.8} />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
+          {cart.map((item) => (
+            <div key={item.cartKey} className="flex items-center gap-3 py-2.5 border-b border-white/[0.06]">
+              <div className="flex-1 min-w-0">
+                <p className="font-body text-xs tracking-widest uppercase text-foreground leading-tight truncate">{item.label}</p>
+              </div>
+              <span className="font-heading text-lg text-foreground tracking-wide shrink-0">${item.price.toLocaleString()}</span>
+              <button type="button" onClick={() => onRemove(item.cartKey)} className="p-1 text-foreground/30 hover:text-foreground transition-colors focus:outline-none shrink-0" aria-label={`Remove ${item.label}`}>
+                <X className="w-3.5 h-3.5" strokeWidth={2} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="px-6 pt-4 pb-6 border-t border-white/8 space-y-4">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 mb-0.5">Visit Total</p>
+              <p className="font-heading text-4xl text-foreground tracking-wide leading-none">${total.toLocaleString()}</p>
+            </div>
+            <p className="font-body text-[10px] text-foreground/30 text-right max-w-[160px] leading-relaxed">
+              No charge until your appointment is confirmed.
+            </p>
+          </div>
+          <Link to="/book" className="flex items-center justify-center gap-2.5 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors">
+            Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
+          </Link>
+          <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">A licensed RN will confirm availability and arrive at your location.</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Main Section ───────────────────────────────────────────── */
+export default function OurDrips() {
+  const { items: cart, removeItem: removeFromCart } = useCart();
+  const [openKey, setOpenKey] = useState(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const toggle = (key) => setOpenKey(openKey === key ? null : key);
+
+  return (
+    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 pt-8 pb-16 md:py-20 px-4">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header row */}
+        <div className="flex items-end justify-between mb-6 md:mb-8">
+          <div>
+            <p className="text-[11px] md:text-xs tracking-[0.3em] text-foreground font-body uppercase mb-2">Therapies</p>
+            <h2 className="font-heading text-[9vw] md:text-7xl text-foreground tracking-tight leading-[0.92] uppercase">
+              Choose Your Session
+            </h2>
+            <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-foreground/50">
+              All sessions require intake, consent, and clinical approval.
+            </p>
+            <div className="w-10 h-[2px] bg-foreground mt-3" />
+          </div>
+          <Link to="/book" className="hidden md:flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors">
+            View All Sessions <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+          </Link>
+        </div>
+
+        {/* Category accordion cards */}
+        <div className="space-y-2">
+          {CATEGORIES.map((cat, i) => {
+            const isOpen = openKey === cat.key;
+            const CatIcon = cat.icon;
+            return (
+              <motion.div
+                key={cat.key}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07, duration: 0.5, ease: EASE }}
+                className="bg-white/[0.03] backdrop-blur-sm border border-foreground/10 rounded-2xl overflow-hidden"
+              >
+                {/* Card header — always visible */}
+                <button
+                  type="button"
+                  onClick={() => toggle(cat.key)}
+                  className="w-full flex items-center justify-between px-6 py-5 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  aria-expanded={isOpen}
+                >
+                  {/* Left: icon + text */}
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                      <CatIcon className="w-5 h-5 text-accent" strokeWidth={1.5} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-bold text-base leading-none">{cat.title}</p>
+                      <p className="text-white/50 text-sm mt-0.5">{cat.subtitle}</p>
+                    </div>
+                  </div>
+                  {/* Right: price + chevron */}
+                  <div className="flex items-center gap-3 shrink-0 ml-4">
+                    <span className="text-accent font-bold text-sm">{cat.price}</span>
+                    <ChevronRight
+                      className="w-4 h-4 text-white/30 transition-transform duration-300"
+                      style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                      strokeWidth={2}
+                    />
+                  </div>
+                </button>
+
+                {/* Expanded drip list */}
+                <SmoothDisclosure open={isOpen}>
+                  <div className="border-t border-white/[0.06] px-6 pb-5 pt-4 space-y-2">
+                        {cat.drips.map((drip) => (
+                          <div
+                            key={drip.name}
+                            className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0"
+                          >
+                            <span className="text-white/70 text-sm font-body">{drip.name}</span>
+                            <span className="text-accent text-sm font-bold ml-4 shrink-0">{drip.price}</span>
+                          </div>
+                        ))}
+                        <Link
+                          to="/book"
+                          className="mt-3 flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-white/40 hover:text-white transition-colors font-body"
+                        >
+                          View & Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
+                        </Link>
+                  </div>
+                </SmoothDisclosure>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* CTA */}
+        <div className="mt-6">
+          <Link
+            to="/book"
+            className="w-full flex items-center justify-center gap-2.5 py-4 font-body text-xs tracking-[0.2em] uppercase font-semibold rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-foreground/20 text-foreground hover:bg-white/[0.08] hover:border-foreground/40 transition-colors"
+          >
+            VIEW FULL MENU &amp; BOOK <ArrowRight className="w-4 h-4" strokeWidth={2} />
+          </Link>
+        </div>
+
+      </div>
+
+      {/* ── Checkout Sheet ── */}
+      <AnimatePresence>
+        {checkoutOpen && (
+          <CheckoutSheet
+            cart={cart}
+            onRemove={removeFromCart}
+            onClose={() => setCheckoutOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}

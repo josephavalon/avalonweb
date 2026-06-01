@@ -64,9 +64,7 @@ assert.equal(returningRecord.gfeRequired, false);
 assert.equal(returningRecord.gfe, 'Cleared');
 
 const acceptedPendingGfe = transitionBooking(record, 'Nurse Assigned', { patch: { nurse: 'Stephanie R.' } });
-assert.equal(acceptedPendingGfe.ok, true);
-const blockedDispatch = transitionBooking(acceptedPendingGfe.booking, 'En Route');
-assert.equal(blockedDispatch.ok, false);
+assert.equal(acceptedPendingGfe.ok, false);
 
 const cleared = transitionBooking(record, 'Cleared', {
   patch: {

@@ -69,6 +69,7 @@ export const appRoutes = [
   '/admin',
   '/admin/inventory',
   '/admin/bookings',
+  '/admin/client-heat-map',
   '/admin/*',
 ];
 

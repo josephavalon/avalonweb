@@ -6,6 +6,7 @@ const PRIVATE_HOST_PATTERNS = [
   /^10\./,
   /^192\.168\./,
   /^172\.(1[6-9]|2\d|3[0-1])\./,
+  /^.+\.local$/i,
 ];
 
 const BETA_HOST_PATTERNS = [
@@ -68,11 +69,34 @@ export const PHI_STORAGE_KEYS = [
   'visitnote',
   'gfepayload',
   'intakeanswers',
+  'adverseevent',
+  'reaction',
+  'dischargecondition',
+  'patientsignature',
+  'providersignature',
+  'signaturedata',
+  'temperature',
+  'respiratoryrate',
+  'oxygen',
+  'spo2',
+  'prebp',
+  'prehr',
+  'prespo2',
+  'postbp',
+  'posthr',
+  'postspo2',
+  'painlevel',
+  'symptoms',
+  'contraindications',
+  'nursesignature',
+  'acuitynote',
 ];
+
+const PHI_EXACT_KEYS = new Set(['bp', 'hr', 'spo2']);
 
 function sensitiveKey(key = '') {
   const normalized = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
-  return PHI_STORAGE_KEYS.some((blocked) => normalized.includes(blocked));
+  return PHI_EXACT_KEYS.has(normalized) || PHI_STORAGE_KEYS.some((blocked) => normalized.includes(blocked));
 }
 
 export function redactLocalPhi(value) {

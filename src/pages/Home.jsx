@@ -26,26 +26,28 @@ const Footer = lazy(() => import('../components/landing/Footer'));
 // produces opacity multiplication (t²) which creates the visible flash highlight.
 export default function Home() {
   useSeo({
-    title: 'Avalon Vitality — Premium Recovery, Delivered',
+    title: 'Avalon Vitality — Mobile Recovery Therapy',
     description: 'Avalon Vitality is a premium recovery platform for clinician-reviewed protocols across hydration, recovery, performance, longevity, launches, and mobile appointments.',
     path: '/',
   });
 
   return (
-    <div className="app-shell bg-background min-h-screen w-full">
+    <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent">
       <Navbar />
 
       {/* ── ATF — fills viewport ── */}
       <Hero />
 
       {/* ── Below fold — per-card whileInView animations handle entrance ── */}
-      <Suspense fallback={null}>
-        <HowItWorks />
-        <TreatmentsTeaser />
-        <MembershipSection />
-        <Reviews />
-        <ChannelCards />
-      </Suspense>
+      <div className="relative z-10">
+        <Suspense fallback={null}>
+          <HowItWorks />
+          <TreatmentsTeaser />
+          <MembershipSection />
+          <Reviews />
+          <ChannelCards />
+        </Suspense>
+      </div>
       <StickyBookBar />
 
       <div className="pb-24 md:pb-0">

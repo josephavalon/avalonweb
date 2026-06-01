@@ -34,10 +34,12 @@ const replacements = [
   { from: /<meta property="og:url" content="[^"]*"/, to: '<meta property="og:url" content="https://www.avalonvitality.co/b2b"' },
   { from: /<meta property="og:image" content="[^"]*"/, to: '<meta property="og:image" content="https://www.avalonvitality.co/og-b2b.png"' },
   { from: /<meta property="og:image:alt" content="[^"]*"/, to: '<meta property="og:image:alt" content="Avalon Vitality x Bay to Breakers presale"' },
+  { from: /"image": "https:\/\/www\.avalonvitality\.co\/[^"]+"/, to: '"image": "https://www.avalonvitality.co/og-b2b.png"' },
   { from: /<link rel="canonical" href="[^"]*"/, to: '<link rel="canonical" href="https://www.avalonvitality.co/b2b"' },
   { from: /<meta name="twitter:title" content="[^"]*"/, to: '<meta name="twitter:title" content="Bay to Breakers Recovery Presale | Avalon Vitality"' },
   { from: /<meta name="twitter:description" content="[^"]*"/, to: '<meta name="twitter:description" content="Pre-buy race-day recovery with Avalon. Clinician-reviewed intake and licensed RN staffing."' },
   { from: /<meta name="twitter:image" content="[^"]*"/, to: '<meta name="twitter:image" content="https://www.avalonvitality.co/og-b2b.png"' },
+  { from: /<meta name="twitter:image:alt" content="[^"]*"/, to: '<meta name="twitter:image:alt" content="Avalon Vitality x Bay to Breakers presale"' },
 ];
 
 let applied = 0;

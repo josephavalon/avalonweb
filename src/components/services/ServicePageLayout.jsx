@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '../landing/Navbar';
 import Footer from '../landing/Footer';
 import { slugify } from '@/data/products';

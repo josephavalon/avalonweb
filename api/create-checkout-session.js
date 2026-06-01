@@ -201,6 +201,14 @@ function stripeLineItems(items = [], membership = null, { depositOnly = false, d
   return lineItems;
 }
 
+function checkoutExpiresAt() {
+  const rawMinutes = Number.parseInt(process.env.STRIPE_CHECKOUT_EXPIRES_MINUTES || '30', 10);
+  const minutes = Number.isFinite(rawMinutes)
+    ? Math.min(24 * 60, Math.max(30, rawMinutes))
+    : 30;
+  return Math.floor(Date.now() / 1000) + minutes * 60;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -212,6 +220,7 @@ export default async function handler(req, res) {
     membership: rawMembership = null,
     contact = {},
     appointment = {},
+    paymentMethod = 'card',
   } = req.body || {};
 
   if (!contact.firstName || !contact.email) {
@@ -285,12 +294,14 @@ export default async function handler(req, res) {
       mode: mode === 'subscription' || membership ? 'subscription' : 'payment',
       customer_email: contact.email,
       line_items,
+      expires_at: checkoutExpiresAt(),
       success_url: `${successUrl}${successJoiner}session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
       metadata: {
         acuityAppointmentId: acuityAppointment?.id ? String(acuityAppointment.id) : '',
         customerName: contact.name || `${contact.firstName} ${contact.lastName || ''}`.trim(),
         phone: contact.phone || '',
+        paymentMethod: paymentMethod || 'card',
         visitSubtotal: visitSubtotal ? String(visitSubtotal) : '',
         depositAmount: hasVisitItems ? String(depositAmount) : '',
       },

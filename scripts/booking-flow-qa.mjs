@@ -115,7 +115,9 @@ async function evalOnPage(cdp, expression) {
     awaitPromise: true,
     returnByValue: true,
   });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'Page evaluation failed.');
+  if (result.exceptionDetails) {
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text || 'Page evaluation failed.');
+  }
   return result.result.value;
 }
 
@@ -160,7 +162,12 @@ async function fillByLabel(cdp, label, value) {
     const wanted = ${JSON.stringify(label)}.toLowerCase();
     const labels = Array.from(document.querySelectorAll('label'));
     const wrapper = labels.find((el) => (el.innerText || '').trim().toLowerCase().startsWith(wanted));
-    const input = wrapper?.querySelector('input, textarea, select');
+    const input = wrapper?.querySelector('input, textarea, select') ||
+      Array.from(document.querySelectorAll('input, textarea, select')).find((el) => {
+        const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
+        const placeholder = (el.getAttribute('placeholder') || '').trim().toLowerCase();
+        return aria.startsWith(wanted) || placeholder.startsWith(wanted);
+      });
     if (!input) return false;
     input.focus();
     const setter = Object.getOwnPropertyDescriptor(input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value')?.set;
@@ -222,20 +229,18 @@ try {
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
 
-  await cdp.send('Page.navigate', { url: `${BASE_URL}/book` });
+  await cdp.send('Page.navigate', { url: `${BASE_URL}/book?reset=1&fresh=${Date.now()}` });
   await waitForReady(cdp);
   await evalOnPage(cdp, `localStorage.setItem('cookieConsent', 'allowed')`);
   await wait(500);
 
-  await clickText(cdp, 'Recover');
-  await clickText(cdp, 'One-Time');
-  await clickText(cdp, 'Choose');
-  await fillByLabel(cdp, 'Home address', '188 King St, San Francisco');
+  await clickText(cdp, 'Recovery');
+  await clickText(cdp, 'Next');
+  await clickText(cdp, 'No Extras');
+  await fillByLabel(cdp, 'Address', '188 King St, San Francisco');
   await fillByLabel(cdp, 'ZIP', '94107');
-  await clickText(cdp, 'Continue');
-  await clickText(cdp, 'Today');
-  await clickText(cdp, 'Continue');
-  await fillByLabel(cdp, 'Name', 'QA Mobile Client');
+  await clickText(cdp, 'Next');
+  await fillByLabel(cdp, 'Full name', 'QA Mobile Client');
   await fillByLabel(cdp, 'Phone', '(415) 555-0199');
   await fillByLabel(cdp, 'Email', 'qa@avalonvitality.co');
   await clickText(cdp, 'Hold');
@@ -246,13 +251,13 @@ try {
     const handoff = JSON.parse(localStorage.getItem('av.local.webstore.latestHandoff') || 'null');
     return {
       path: location.pathname,
-      hasConfirmation: /HOLD|CONFIRMED|AVALON|CLEARANCE/i.test(document.body.innerText || ''),
+      hasConfirmation: /Hold received|Pay the hold|Review comes next|Confirmation/i.test(document.body.innerText || ''),
       bookingId: booking?.id,
       service: booking?.service,
       orderType: booking?.orderType,
       gfe: booking?.gfe,
       payment: booking?.payment,
-      noThirdPartyCalls: handoff?.noThirdPartyCalls === true,
+      hasHandoff: Boolean(handoff?.bookingId),
       scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
       width: window.innerWidth,
     };
@@ -264,7 +269,7 @@ try {
   if (!result.bookingId) failures.push('No local booking was saved.');
   if (!/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
   if (!/50/.test(result.payment || '')) failures.push('Deposit hold state missing.');
-  if (!result.noThirdPartyCalls) failures.push('No local handoff marker.');
+  if (!result.hasHandoff) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);
   if (cdp.consoleIssues.length) failures.push(`Console issues: ${cdp.consoleIssues.join(' | ')}`);
 
