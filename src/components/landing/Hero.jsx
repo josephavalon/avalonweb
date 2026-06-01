@@ -49,7 +49,7 @@ export default function Hero() {
 
   return (
     <section
-      className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
+      className="hero-root relative min-h-[100svh] min-h-[100dvh] flex flex-col overflow-hidden"
       style={{ position: 'relative' }}
     >
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">

@@ -674,6 +674,11 @@ body,
   [role='button'] {
     touch-action: manipulation;
   }
+
+  /* Hide the animated nav scan-line on mobile — reads as a stray glitch line */
+  .av-motion-rail::after {
+    display: none;
+  }
 }
 
 .av-motion-rail::after {
