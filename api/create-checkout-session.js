@@ -4,6 +4,7 @@ import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalo
 import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
 import { buildCheckoutReconciliationHint } from './_reconciliation.js';
 import { getDepositAmountDollars } from '../src/lib/checkoutConfig.js';
+import { upsertAttioPerson } from './_attio.js';
 
 const TZ = 'America/Los_Angeles';
 
@@ -290,8 +291,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No items to checkout' });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: mode === 'subscription' || membership ? 'subscription' : 'payment',
+    const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';
+    const visitSubtotalCents = dollarsToCents(visitSubtotal);
+    const depositCents = dollarsToCents(depositAmount);
+    const balanceDueCents = hasVisitItems ? Math.max(0, visitSubtotalCents - depositCents) : 0;
+    const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
+
+    const sessionParams = {
+      mode: sessionMode,
       customer_email: contact.email,
       line_items,
       expires_at: checkoutExpiresAt(),
@@ -302,15 +309,38 @@ export default async function handler(req, res) {
         customerName: contact.name || `${contact.firstName} ${contact.lastName || ''}`.trim(),
         phone: contact.phone || '',
         paymentMethod: paymentMethod || 'card',
-        visitSubtotal: visitSubtotal ? String(visitSubtotal) : '',
-        depositAmount: hasVisitItems ? String(depositAmount) : '',
+        service: primaryService,
+        visitSubtotalCents: String(visitSubtotalCents),
+        depositAmountCents: String(depositCents),
+        balanceDueCents: String(balanceDueCents),
       },
-    });
+    };
+
+    // Deposit (one-time payment): save the card on file so the nurse can charge
+    // the remaining balance off-session at the end of the appointment.
+    if (sessionMode === 'payment') {
+      sessionParams.payment_intent_data = { setup_future_usage: 'off_session' };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    // Sync the client into Attio CRM — non-blocking, never fails the booking.
+    // CRM-safe: contact + lifecycle only, no clinical/intake details.
+    upsertAttioPerson({
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      email: contact.email,
+      phone: contact.phone,
+      source: 'Avalon Booking',
+      lifecycleStage: 'Deposit Pending',
+      service: primaryService,
+    }).catch((e) => console.warn('[create-checkout-session] Attio sync failed:', e.message));
 
     return res.status(200).json({
       ok: true,
       provider: 'stripe',
       appointment: acuityAppointment,
+      balanceDueCents,
       url: session.url,
     });
   } catch (err) {
