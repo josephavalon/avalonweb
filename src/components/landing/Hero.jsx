@@ -61,9 +61,10 @@ export default function Hero() {
 	          {...premiumFadeUp(0.1)}
 	          initial={{ opacity: 0, y: 18, scale: 0.985 }}
 	          transition={{ duration: 1.05, delay: 0.1, ease: EASE }}
-	          className="relative w-full max-w-[42rem]"
+	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
-	          <div className="relative">
+	          <div className="relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-12 lg:gap-16">
+        <div className="md:max-w-xl">
 
         <motion.p
           {...premiumFadeUp(0.28)}
@@ -91,12 +92,13 @@ export default function Hero() {
         >
           Your protocol.<br />Delivered by an RN.<br />SF Bay Area.
         </motion.p>
+        </div>
 
         <motion.div
           {...premiumFadeUp(0.98)}
           initial={{ opacity: 0, y: 22 }}
           transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
-          className="relative mt-5 flex w-full max-w-[19rem] flex-col gap-2.5 md:mt-8 md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
+          className="relative mt-5 flex w-full max-w-[19rem] flex-col gap-2.5 md:mt-0 md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
         >
           <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.17),transparent_38%),radial-gradient(circle_at_88%_88%,hsl(var(--foreground)/0.08),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_50%,hsl(var(--foreground)/0.034))] md:block" />
           <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/34 to-transparent md:block" />

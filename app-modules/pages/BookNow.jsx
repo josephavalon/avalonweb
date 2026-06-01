@@ -230,13 +230,8 @@ const CLIENT_TYPES = [
 
 const PUBLIC_BOOKING_PROTOCOL_KEYS = new Set(OUTCOMES.flatMap((item) => item.productKeys));
 
-const ADDRESS_SUGGESTIONS = [
-  { label: 'Home · Pacific Heights', address: '2100 Webster St, San Francisco, CA', zip: '94115', locationType: 'home' },
-  { label: 'Hotel · Union Square', address: '335 Powell St, San Francisco, CA', zip: '94102', locationType: 'hotel' },
-  { label: 'Office · SoMa', address: '535 Mission St, San Francisco, CA', zip: '94105', locationType: 'office' },
-  { label: 'Venue · Oakland', address: '517 8th St, Oakland, CA', zip: '94607', locationType: 'event' },
-  { label: 'Hotel · Napa', address: '1300 1st St, Napa, CA', zip: '94559', locationType: 'hotel' },
-];
+// Canned demo address suggestions removed — clients enter their own address.
+const ADDRESS_SUGGESTIONS = [];
 
 function scoreAddressSuggestion(item, rawQuery) {
   const query = String(rawQuery || '').trim().toLowerCase();
