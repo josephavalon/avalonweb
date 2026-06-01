@@ -479,7 +479,6 @@ html:not(.dark):not(.golden):not(.dubs) .bg-card {
   -webkit-backdrop-filter: blur(24px) saturate(1.45);
 }
 
-.av-treatment-card:hover,
 .av-treatment-card.is-open {
   background:
     radial-gradient(circle at 18% 12%, hsl(var(--foreground) / 0.17), transparent 34%),
@@ -530,7 +529,6 @@ html:not(.dark):not(.golden):not(.dubs) .bg-card {
     0 24px 95px hsl(0 0% 0% / 0.32);
 }
 
-.dark .av-treatment-card:hover,
 .dark .av-treatment-card.is-open {
   background:
     radial-gradient(circle at 18% 12%, hsl(var(--foreground) / 0.16), transparent 34%),
