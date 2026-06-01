@@ -1,17 +1,51 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Calendar, Droplets } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
 
 export default function Hero() {
+  const navigate = useNavigate();
+  const bookTouchStart = React.useRef(null);
+  const subscriptionTouchStart = React.useRef(null);
+
   React.useEffect(() => {
     const preload = () => import('@/pages/BookNow');
     const timer = window.setTimeout(preload, 450);
     return () => window.clearTimeout(timer);
   }, []);
+
+  const handleBookPointerDown = (event) => {
+    if (event.pointerType === 'touch') {
+      bookTouchStart.current = { x: event.clientX, y: event.clientY };
+    }
+  };
+
+  const handleBookPointerUp = (event) => {
+    handleTouchNavigation(event, bookTouchStart, '/book');
+  };
+
+  const handleSubscriptionPointerDown = (event) => {
+    if (event.pointerType === 'touch') {
+      subscriptionTouchStart.current = { x: event.clientX, y: event.clientY };
+    }
+  };
+
+  const handleSubscriptionPointerUp = (event) => {
+    handleTouchNavigation(event, subscriptionTouchStart, '/subscription');
+  };
+
+  const handleTouchNavigation = (event, startRef, path) => {
+    if (event.pointerType !== 'touch' || !startRef.current) return;
+    const deltaX = Math.abs(event.clientX - startRef.current.x);
+    const deltaY = Math.abs(event.clientY - startRef.current.y);
+    startRef.current = null;
+    if (deltaX > 12 || deltaY > 12) return;
+    event.preventDefault();
+    navigate(path);
+  };
 
   return (
     <section
@@ -62,6 +96,8 @@ export default function Hero() {
           <span className="pointer-events-none absolute inset-x-8 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-background/50 to-transparent md:block" />
           <MotionLink
             to="/book"
+            onPointerDown={handleBookPointerDown}
+            onPointerUp={handleBookPointerUp}
             onPointerEnter={() => import('@/pages/BookNow')}
             onFocus={() => import('@/pages/BookNow')}
             initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
@@ -93,6 +129,8 @@ export default function Hero() {
           </MotionLink>
           <MotionLink
             to="/subscription"
+            onPointerDown={handleSubscriptionPointerDown}
+            onPointerUp={handleSubscriptionPointerUp}
             initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.95, delay: 1.46, ease: EASE }}
@@ -116,6 +154,10 @@ export default function Hero() {
             </span>
           </MotionLink>
         </motion.div>
+
+        <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
+          Every visit begins with clinical review.
+        </p>
 
         {/* Proof rail */}
           </div>

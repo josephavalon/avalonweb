@@ -44,7 +44,7 @@ function FooterLink({ to, children }) {
   return (
     <motion.div whileHover={{ y: -2 }} whileTap={premiumTap} transition={{ duration: 0.22, ease: EASE }}>
       <Link to={to} className={DESKTOP_LINK}>
-        <span>{children}</span>
+        <span className="whitespace-nowrap">{children}</span>
         <ArrowRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover/link:opacity-70" strokeWidth={1.9} />
       </Link>
     </motion.div>

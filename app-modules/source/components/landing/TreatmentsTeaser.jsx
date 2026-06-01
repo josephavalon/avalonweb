@@ -153,11 +153,11 @@ function CategoryRow({ cat, index, open, onToggle }) {
           whileTap={premiumTap}
           className="group flex min-h-[88px] w-full items-center justify-between px-5 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-foreground/[0.025] md:min-h-[96px]"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="av-treatment-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border md:h-14 md:w-14">
               <Icon className="h-5 w-5 text-accent" strokeWidth={1.8} />
             </div>
-            <p className="font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground md:text-2xl">{cat.label}</p>
+            <p className="truncate font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground md:text-2xl">{cat.label}</p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-foreground/30 transition-all duration-base ease-editorial group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
         </MotionLink>

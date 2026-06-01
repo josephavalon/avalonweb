@@ -690,7 +690,7 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
         <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.45} />
       </span>
       <span className="relative w-full min-w-0 pr-10 md:flex-1 md:pr-0">
-        <span className="block break-words font-heading text-[1.52rem] uppercase leading-[0.86] tracking-normal min-[420px]:text-[1.68rem] md:text-[2.35rem]">
+        <span className="block break-normal font-heading text-[1.52rem] uppercase leading-[0.86] tracking-normal min-[420px]:text-[1.68rem] md:text-[2.35rem]">
           {item.label}
         </span>
       </span>
