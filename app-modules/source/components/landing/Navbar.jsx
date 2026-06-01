@@ -212,7 +212,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
       {/* Mobile dropdown */}
       {!focusMode && <div className="md:hidden overflow-hidden rounded-b-3xl">
-        <SmoothDisclosure open={mobileOpen} className="px-2" innerClassName="pb-2">
+        <SmoothDisclosure open={mobileOpen} snapClosed className="px-2" innerClassName="pb-2">
               <motion.div
                 initial={false}
                 animate={mobileOpen ? 'visible' : 'hidden'}
@@ -220,10 +220,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="relative overflow-hidden rounded-[24px] border border-foreground/[0.10] bg-background/82 p-1.5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl"
+                className="relative overflow-hidden rounded-[24px] bg-background/82 p-1.5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl"
               >
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(140deg,hsl(var(--foreground)/0.10),transparent_34%,hsl(var(--accent)/0.08))]" />
-                <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-foreground/20" />
 
                 {showBack && !compact && (
                   <motion.div
