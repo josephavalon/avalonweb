@@ -49,7 +49,7 @@ export default function Hero() {
 
   return (
     <section
-      className="hero-root relative min-h-[100svh] min-h-[100dvh] flex flex-col overflow-hidden"
+      className="hero-root relative flex flex-col overflow-hidden"
       style={{ position: 'relative' }}
     >
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
@@ -64,6 +64,13 @@ export default function Hero() {
 	          className="relative w-full max-w-[42rem]"
 	        >
 	          <div className="relative">
+
+        <motion.p
+          {...premiumFadeUp(0.28)}
+          className="mb-3 font-body text-[11px] uppercase tracking-[0.34em] text-foreground/55 md:mb-4 md:text-xs"
+        >
+          Avalon Vitality
+        </motion.p>
 
         <motion.h1
           {...premiumFadeUp(0.38)}

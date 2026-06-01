@@ -318,6 +318,13 @@ body {
 }
 
 
+/* Hero fills the dynamic viewport so the next section never peeks on load.
+   svh first as a fallback, dvh wins where supported (deterministic source order). */
+.hero-root {
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
 /* Dubs hero title: no sports-blue/gold treatment. */
 .dubs .hero-root h1 {
   color: hsl(var(--foreground));
