@@ -149,6 +149,8 @@
 html {
   /* scroll-behavior: smooth removed — causes ~300ms iOS touch delay */
   -webkit-overflow-scrolling: touch;
+  /* Dark root so iOS overscroll / safe-area never reveals a white line at the top. */
+  background-color: hsl(var(--background));
 }
 
 html, body {

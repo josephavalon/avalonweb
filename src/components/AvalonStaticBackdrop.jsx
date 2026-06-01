@@ -14,7 +14,7 @@ export default function AvalonStaticBackdrop() {
   if (!shouldShowBackdrop(pathname)) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-x-0 top-0 h-screen z-0 overflow-hidden bg-black" aria-hidden="true">
       <img
         src="/images/avalon-hero.webp"
         srcSet="/images/avalon-hero-512.webp 512w, /images/avalon-hero-768.webp 768w, /images/avalon-hero.webp 1024w"

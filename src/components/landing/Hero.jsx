@@ -103,8 +103,6 @@ export default function Hero() {
           <span className="pointer-events-none absolute inset-x-8 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-background/50 to-transparent md:block" />
           <MotionLink
             to="/book"
-            onPointerDown={handleBookPointerDown}
-            onPointerUp={handleBookPointerUp}
             onPointerEnter={() => import('@/pages/BookNow')}
             onFocus={() => import('@/pages/BookNow')}
             initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
@@ -136,8 +134,6 @@ export default function Hero() {
           </MotionLink>
           <MotionLink
             to="/subscription"
-            onPointerDown={handleSubscriptionPointerDown}
-            onPointerUp={handleSubscriptionPointerUp}
             initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.95, delay: 1.46, ease: EASE }}
