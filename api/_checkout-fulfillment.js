@@ -296,6 +296,7 @@ export function buildStripeCheckoutMetadata({
     firstName: metadataValue(contact.firstName),
     lastName: metadataValue(contact.lastName),
     phone: metadataValue(contact.phone),
+    dob: metadataValue(appointment.dob || contact.dob),
     paymentMethod: metadataValue(paymentMethod || 'card'),
     service: metadataValue(primaryService),
     localBookingId: metadataValue(appointment.localBookingId),
@@ -348,6 +349,7 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       lastName: metadata.lastName || String(metadata.customerName || '').trim().split(/\s+/).slice(1).join(' '),
       email: metadata.customerEmail || '',
       phone: metadata.phone || '',
+      dob: metadata.dob || '',
     },
     appointment: {
       localBookingId: metadata.localBookingId || '',
@@ -364,6 +366,7 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       clientType: metadata.clientType || '',
       clinicalReviewOnFile: metadata.clinicalReviewOnFile || '',
       gfeRequired: metadata.gfeRequired || '',
+      dob: metadata.dob || '',
     },
     items,
     membership: metadata.membershipName ? {
@@ -396,6 +399,7 @@ export async function syncCheckoutAttioPerson({
     lastName: contact.lastName,
     email: contact.email,
     phone: contact.phone,
+    dob: appointment.dob || contact.dob,
     source: 'Avalon Booking',
     lifecycleStage: 'Booked',
     service: primaryService,

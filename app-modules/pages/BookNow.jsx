@@ -1267,6 +1267,12 @@ function hasFullName(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
+function hasDob(value) {
+  if (!value) return false;
+  const date = new Date(`${value}T12:00:00`);
+  return !Number.isNaN(date.getTime()) && date < new Date();
+}
+
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, actionLabel, onAction }) {
   return (
     <div className="block">
@@ -1658,7 +1664,7 @@ function ClinicalReviewCard({ bookingGfeRequirement }) {
 }
 
 function ContactConfirmCard({ state, onChange, savedContact }) {
-  const hasContact = Boolean(hasFullName(state.name) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
+  const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
   const [editing, setEditing] = useState(!hasContact);
 
   useEffect(() => {
@@ -1674,6 +1680,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
             <p className="font-heading text-3xl uppercase leading-none text-foreground">You</p>
             <div className="mt-3 grid gap-2 font-body text-base font-semibold text-foreground/76">
               <span className="flex min-w-0 items-center gap-2"><User className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.name}</span></span>
+              <span className="flex min-w-0 items-center gap-2"><Calendar className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.dob}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Phone className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.phone}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Mail className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.email}</span></span>
             </div>
@@ -1694,8 +1701,9 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
   return (
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-      <div className="relative grid gap-3 sm:grid-cols-3">
+      <div className="relative grid gap-3 sm:grid-cols-2">
         <TextInput label="Full name" value={state.name} onChange={(value) => onChange('name', value)} placeholder="Alex Morgan" autoComplete="name" actionLabel={savedContact?.name ? 'Saved' : ''} onAction={() => onChange('name', savedContact?.name || '')} required />
+        <TextInput label="Date of birth" type="date" value={state.dob} onChange={(value) => onChange('dob', value)} autoComplete="bday" required />
         <TextInput label="Phone" type="tel" inputMode="tel" value={state.phone} onChange={(value) => onChange('phone', formatPhoneNumber(value))} placeholder="(415) 555-0123" autoComplete="tel" actionLabel={savedContact?.phone ? 'Saved' : ''} onAction={() => onChange('phone', formatPhoneNumber(savedContact?.phone || ''))} required />
         <TextInput label="Email" type="email" inputMode="email" value={state.email} onChange={(value) => onChange('email', value)} placeholder="you@example.com" autoComplete="email" actionLabel={savedContact?.email ? 'Saved' : ''} onAction={() => onChange('email', savedContact?.email || '')} required />
       </div>
@@ -1961,6 +1969,7 @@ const defaultState = {
   name: '',
   email: '',
   phone: '',
+  dob: '',
   notes: '',
   addOns: [],
   addOnDecision: true,
@@ -1999,6 +2008,7 @@ export default function BookNow() {
       name: realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || fallback.name || '',
       email: realValue(savedContact.email) || realValue(clientProfile.email) || fallback.email || '',
       phone: realValue(savedContact.phone) || realValue(clientProfile.phone) || fallback.phone || '',
+      dob: realValue(savedContact.dob) || realValue(clientProfile.dob) || '',
     };
   }, [clientProfile, lastBooking, signedInClient]);
   const savedVisitAddress = useMemo(() => {
@@ -2043,6 +2053,7 @@ export default function BookNow() {
       name: realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || fallback.name || defaultState.name,
       email: realValue(savedContact.email) || realValue(clientProfile.email) || fallback.email || defaultState.email,
       phone: realValue(savedContact.phone) || realValue(clientProfile.phone) || fallback.phone || defaultState.phone,
+      dob: realValue(savedContact.dob) || realValue(clientProfile.dob) || defaultState.dob,
       ...savedWebstore,
       productKey: savedProductKey || defaultState.productKey,
       addOns: savedProductKey ? (savedWebstore.addOns || []) : [],
@@ -2623,9 +2634,11 @@ export default function BookNow() {
         lastName,
         email: state.email.trim(),
         phone: state.phone.trim(),
+        dob: state.dob,
         clientType: state.clientType,
         visitCount: returningClient || clinicalReviewClaimedOnFile ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
       },
+      dob: state.dob,
 		      addOns: selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
 		      items: [
 	        { cartKey: isCustomTreatment ? `custom-${customBase.key}` : product.key, label: serviceLabel, price: protocolPrice(product), type: isCustomTreatment ? 'custom-treatment' : 'iv' },
@@ -2685,7 +2698,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasFullName(state.name) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
+  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     clearItems();
@@ -2733,6 +2746,7 @@ export default function BookNow() {
         lastName: localBooking.contact?.lastName || rest.join(' '),
         email: localBooking.contact?.email || state.email.trim(),
         phone: localBooking.contact?.phone || state.phone.trim(),
+        dob: localBooking.contact?.dob || localBooking.dob || state.dob,
       },
       appointment: {
         localBookingId: localBooking.id,
@@ -2749,6 +2763,7 @@ export default function BookNow() {
         clinicalReviewOnFile: localBooking.clinicalReviewOnFile,
         gfeRequired: localBooking.gfeRequired,
         clientType: localBooking.clientType,
+        dob: localBooking.dob || localBooking.contact?.dob || state.dob,
       },
     };
   };
@@ -2817,7 +2832,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError('Add name, phone, email, place, and ZIP.');
+      setError('Add name, date of birth, phone, email, place, and ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -2864,6 +2879,7 @@ export default function BookNow() {
           name: state.name.trim(),
           email: state.email.trim(),
           phone: state.phone.trim(),
+          dob: state.dob,
           address: state.address.trim(),
           zip: String(state.zip || '').trim(),
           locationType: state.locationType,

@@ -86,35 +86,70 @@ function buildIcsContent({ appointment }) {
   ].join('\r\n');
 }
 
-function downloadIcs(appointment, onError) {
+function calendarDateRange(appointment) {
+  const start = new Date(appointment.datetime);
+  if (Number.isNaN(start.getTime())) return null;
+  const end = new Date(start.getTime() + (appointment.duration || 60) * 60000);
+  if (appointment.allDay) {
+    return {
+      google: `${formatIcsDate(start)}/${formatIcsDate(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1))}`,
+    };
+  }
+  return {
+    google: `${formatIcsDateTime(start)}/${formatIcsDateTime(end)}`,
+  };
+}
+
+function calendarDescription(appointment) {
+  return [
+    `Confirmation #${appointment.id}`,
+    appointment.type || 'Mobile IV Therapy',
+    appointment.timePending ? 'Exact visit time is still being confirmed by Avalon.' : null,
+  ].filter(Boolean).join(' - ');
+}
+
+function googleCalendarUrl(appointment) {
+  const range = calendarDateRange(appointment);
+  if (!range) return '';
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: appointment.summary || 'Avalon Vitality IV Session',
+    dates: range.google,
+    details: calendarDescription(appointment),
+    location: appointment.location || '',
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+async function openCalendar(appointment, onError) {
   const content = buildIcsContent({ appointment });
   if (!content) {
     onError?.('Calendar details are still being prepared.');
     return;
   }
-  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const isAppleTouch = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  a.href = url;
-  a.download = `avalon-${String(appointment.id || 'session').replace(/[^a-z0-9-]+/gi, '-')}.ics`;
-  a.rel = 'noopener';
+  const fileName = `avalon-${String(appointment.id || 'session').replace(/[^a-z0-9-]+/gi, '-')}.ics`;
+  const file = new File([content], fileName, { type: 'text/calendar' });
+  if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+    try {
+      await navigator.share({
+        title: appointment.summary || 'Avalon Vitality IV Session',
+        text: calendarDescription(appointment),
+        files: [file],
+      });
+      return;
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+    }
+  }
 
-  if (isAppleTouch) {
-    window.location.href = url;
-    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  const target = googleCalendarUrl(appointment);
+  if (target) {
+    window.open(target, '_blank', 'noopener,noreferrer');
     return;
   }
 
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  window.setTimeout(() => {
-    a.remove();
-    URL.revokeObjectURL(url);
-  }, 1000);
+  onError?.('Calendar could not be opened.');
 }
 
 /* ─── Animated check ─────────────────────────────────────────── */
@@ -326,7 +361,7 @@ export default function BookingConfirmation() {
           datetime: localBooking.datetime,
           duration: localBooking.duration || 60,
           type: localBooking.service,
-          location: localBooking.address,
+          location: apptAddress || localBooking.address,
           allDay: localTimeIsPending,
           timePending: localTimeIsPending,
           summary: localTimeIsPending ? 'Avalon Vitality Session - time pending' : 'Avalon Vitality IV Session',
@@ -431,7 +466,7 @@ export default function BookingConfirmation() {
                 type="button"
                 onClick={() => {
                   setCalendarError('');
-                  downloadIcs(calendarAppointment, setCalendarError);
+                  openCalendar(calendarAppointment, setCalendarError);
                 }}
                 className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
               >

@@ -101,6 +101,7 @@ export function buildPersonValues(client = {}) {
     client.visitCount != null ? `Visit count: ${client.visitCount}` : null,
     client.bookingId ? `Booking ID: ${client.bookingId}` : null,
     client.bookingReference ? `Booking reference: ${client.bookingReference}` : null,
+    client.dob ? `DOB: ${client.dob}` : null,
     client.appointmentTime ? `Requested time: ${client.appointmentTime}` : null,
     client.locationType ? `Location type: ${client.locationType}` : null,
     client.address ? `Address: ${client.address}` : null,
