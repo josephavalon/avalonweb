@@ -6,7 +6,7 @@ import { getSupabaseServiceClient } from '../../_supabase-server.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
-  createSchedulingAppointment,
+  createSchedulingAppointmentWithFallback,
   syncCheckoutAttioPerson,
 } from '../../_checkout-fulfillment.js';
 
@@ -66,15 +66,20 @@ function buildExternalPayload(existingPayload = {}, patch = {}) {
 }
 
 async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
+  const paymentIntentId = typeof session.payment_intent === 'object'
+    ? session.payment_intent?.id
+    : session.payment_intent || null;
+  if (!paymentIntentId) return;
+
   try {
-    await stripe.checkout.sessions.update(session.id, {
+    await stripe.paymentIntents.update(paymentIntentId, {
       metadata: {
-        ...(session.metadata || {}),
+        ...(typeof session.payment_intent === 'object' ? session.payment_intent?.metadata || {} : {}),
         ...patch,
       },
     });
   } catch (err) {
-    console.warn('[stripe/webhook] checkout session metadata update failed:', err.message);
+    console.warn('[stripe/webhook] payment intent metadata update failed:', err.message);
   }
 }
 
@@ -96,7 +101,9 @@ async function handleCheckoutCompleted(stripe, db, session) {
   // Pull the saved card off the deposit PaymentIntent so the nurse can charge
   // the balance off-session later.
   let paymentMethodId = null;
-  const paymentIntentId = session.payment_intent || null;
+  const paymentIntentId = typeof session.payment_intent === 'object'
+    ? session.payment_intent?.id
+    : session.payment_intent || null;
   if (paymentIntentId) {
     try {
       const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -117,11 +124,12 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
   if (!acuityAppointment?.id) {
     try {
-      acuityAppointment = await createSchedulingAppointment({
+      acuityAppointment = await createSchedulingAppointmentWithFallback({
         appointment: checkout.appointment || {},
         contact: checkout.contact || {},
         items: checkout.items || [],
         membership: checkout.membership || null,
+        amounts: checkout.amounts || {},
         req: null,
       });
     } catch (err) {
@@ -134,6 +142,10 @@ async function handleCheckoutCompleted(stripe, db, session) {
         attioPersonId = await syncCheckoutAttioPerson({
           contact: checkout.contact,
           primaryService: checkout.primaryService || md.service || 'Avalon Visit',
+          appointment: checkout.appointment || {},
+          items: checkout.items || [],
+          membership: checkout.membership || null,
+          amounts: checkout.amounts || {},
         });
         attioSynced = true;
       } catch (err) {

@@ -30,35 +30,85 @@ function formatApptTime(isoString, duration) {
   return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
 }
 
+function escapeIcsText(value = '') {
+  return String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/\r?\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+}
+
+function formatIcsDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+function formatIcsDateTime(date) {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
 function buildIcsContent({ appointment }) {
   if (!appointment) return '';
   const start = new Date(appointment.datetime);
+  if (Number.isNaN(start.getTime())) return '';
   const end = new Date(start.getTime() + (appointment.duration || 60) * 60000);
-  const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const allDay = Boolean(appointment.allDay);
+  const summary = appointment.summary || 'Avalon Vitality IV Session';
+  const description = [
+    `Confirmation #${appointment.id}`,
+    appointment.type || 'Mobile IV Therapy',
+    appointment.timePending ? 'Exact visit time is still being confirmed by Avalon.' : null,
+  ].filter(Boolean).join(' — ');
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
     'PRODID:-//Avalon Vitality//BookingConfirmation//EN',
     'BEGIN:VEVENT',
-    `DTSTART:${fmt(start)}`,
-    `DTEND:${fmt(end)}`,
-    `SUMMARY:Avalon Vitality IV Session`,
-    `DESCRIPTION:Confirmation #${appointment.id} — ${appointment.type || 'Mobile IV Therapy'}`,
-    `LOCATION:${appointment.location || ''}`,
+    `UID:avalon-${escapeIcsText(appointment.id || Date.now())}@avalonvitality.co`,
+    `DTSTAMP:${formatIcsDateTime(new Date())}`,
+    allDay ? `DTSTART;VALUE=DATE:${formatIcsDate(start)}` : `DTSTART:${formatIcsDateTime(start)}`,
+    allDay ? `DTEND;VALUE=DATE:${formatIcsDate(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1))}` : `DTEND:${formatIcsDateTime(end)}`,
+    `SUMMARY:${escapeIcsText(summary)}`,
+    `DESCRIPTION:${escapeIcsText(description)}`,
+    `LOCATION:${escapeIcsText(appointment.location || '')}`,
     'END:VEVENT',
     'END:VCALENDAR',
   ].join('\r\n');
 }
 
-function downloadIcs(appointment) {
+function downloadIcs(appointment, onError) {
   const content = buildIcsContent({ appointment });
+  if (!content) {
+    onError?.('Calendar details are still being prepared.');
+    return;
+  }
   const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
+  const isAppleTouch = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
   a.href = url;
-  a.download = 'avalon-session.ics';
+  a.download = `avalon-${String(appointment.id || 'session').replace(/[^a-z0-9-]+/gi, '-')}.ics`;
+  a.rel = 'noopener';
+
+  if (isAppleTouch) {
+    window.location.href = url;
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return;
+  }
+
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 /* ─── Animated check ─────────────────────────────────────────── */
@@ -116,6 +166,7 @@ export default function BookingConfirmation() {
   const [appointmentLoading, setAppointmentLoading] = useState(Boolean(initialAppointmentId));
   const [apptError, setApptError] = useState(null);
   const [fulfillmentPending, setFulfillmentPending] = useState(Boolean(sessionId && !initialAppointmentId));
+  const [calendarError, setCalendarError] = useState('');
   const apptLoading = verifyLoading || appointmentLoading;
   const isFastHold = !paymentSuccess && (localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold');
 
@@ -237,8 +288,12 @@ export default function BookingConfirmation() {
   const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : localBooking?.date || null;
   const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time || null;
   const apptAddress = appt?.location || localBooking?.address || null;
+  const localTimeIsPending = /asap|soonest|today/i.test(String(localBooking?.time || localBooking?.timeIntent || ''));
   const calendarAppointment = appt?.datetime
-    ? appt
+    ? {
+        ...appt,
+        summary: 'Avalon Vitality IV Session',
+      }
     : localBooking?.datetime
       ? {
           id: localBooking.id,
@@ -246,6 +301,9 @@ export default function BookingConfirmation() {
           duration: localBooking.duration || 60,
           type: localBooking.service,
           location: localBooking.address,
+          allDay: localTimeIsPending,
+          timePending: localTimeIsPending,
+          summary: localTimeIsPending ? 'Avalon Vitality Session - time pending' : 'Avalon Vitality IV Session',
         }
       : null;
   const titleText = paymentSuccess
@@ -350,16 +408,26 @@ export default function BookingConfirmation() {
 
           {/* Add to Calendar */}
           {calendarAppointment && (
-            <button
-              type="button"
-              onClick={() => downloadIcs(calendarAppointment)}
-              className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
-            >
-              <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
-              <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
-                Add to Calendar
-              </span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setCalendarError('');
+                  downloadIcs(calendarAppointment, setCalendarError);
+                }}
+                className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors px-5 py-3.5 group"
+              >
+                <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
+                <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
+                  Add to Calendar
+                </span>
+              </button>
+              {calendarError && (
+                <p className="text-center font-body text-xs text-foreground/45">
+                  {calendarError}
+                </p>
+              )}
+            </>
           )}
 
           <a

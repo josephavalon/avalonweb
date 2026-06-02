@@ -19,6 +19,27 @@ function metadataValue(value, max = 480) {
   return stringValue.length > max ? stringValue.slice(0, max) : stringValue;
 }
 
+function dollarsFromCents(cents = 0) {
+  return (Number(cents || 0) / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  });
+}
+
+function balanceStatus(amounts = {}) {
+  const deposit = Number(amounts.depositAmountCents || 0);
+  const balance = Number(amounts.balanceDueCents || 0);
+  if (!deposit && !balance) return null;
+  return [
+    'PAYMENT',
+    `  Deposit paid: ${dollarsFromCents(deposit)} non-refundable deductible`,
+    balance > 0
+      ? `  Balance due at visit: ${dollarsFromCents(balance)}`
+      : '  Balance due at visit: $0.00',
+    balance > 0 ? '  Status: NOT PAID IN FULL' : '  Status: Paid in full',
+  ].join('\n');
+}
+
 function formatAddons(items = []) {
   const addons = items.filter((i) => i.type === 'addon' || i.type === 'im');
   if (!addons.length) return null;
@@ -28,17 +49,25 @@ function formatAddons(items = []) {
   }).join('\n');
 }
 
-export function appointmentNotes({ appointment = {}, items = [], membership = null, req = null }) {
+export function appointmentNotes({ appointment = {}, items = [], membership = null, amounts = {}, req = null }) {
   const ivItems = items.filter((i) => i.type === 'iv');
   const addonBlock = formatAddons(items);
   const isTest = isDevRequest(req);
 
   const sections = [
     isTest ? '[TEST BOOKING - NOT A REAL APPOINTMENT]' : null,
+    balanceStatus(amounts),
     'BOOKING DETAILS',
+    appointment.localBookingId ? `Booking ID: ${appointment.localBookingId}` : null,
+    appointment.reference ? `Reference: ${appointment.reference}` : null,
+    appointment.clientType ? `Client type: ${appointment.clientType}` : null,
+    appointment.locationType ? `Location type: ${appointment.locationType}` : null,
     appointment.address ? `Address: ${appointment.address}` : null,
+    appointment.zip ? `ZIP: ${appointment.zip}` : null,
     appointment.timeLabel ? `Time: ${appointment.timeLabel}` : null,
     appointment.guests && appointment.guests !== '1' ? `Guests: ${appointment.guests}` : null,
+    appointment.gfeRequired != null ? `GFE required: ${yesNo(appointment.gfeRequired)}` : null,
+    appointment.clinicalReviewOnFile != null ? `Clinical review on file: ${yesNo(appointment.clinicalReviewOnFile)}` : null,
 
     ivItems.length
       ? `\nPROTOCOL\n${ivItems.map((i) => `  - ${i.label} ($${i.price})`).join('\n')}`
@@ -98,7 +127,45 @@ export function requiredSchedulingFields(appointment = {}, items = [], appointme
   return fields;
 }
 
-export async function createSchedulingAppointment({ appointment, contact, items, membership, req }) {
+function dateOnly(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(dateString, days) {
+  const date = new Date(`${dateString}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+async function firstAvailableDatetime({ appointment = {}, appointmentTypeID }) {
+  const startDate = dateOnly(appointment.acuityDatetime || new Date());
+  const now = Date.now();
+
+  for (let offset = 0; offset < 21; offset += 1) {
+    const date = addDays(startDate, offset);
+    const qs = new URLSearchParams({
+      date,
+      appointmentTypeID: String(appointmentTypeID),
+      timezone: appointment.acuityTimezone || TZ,
+    }).toString();
+
+    const slots = await acuityFetch(`/availability/times?${qs}`);
+    const candidates = Array.isArray(slots) ? slots : [];
+    for (const slot of candidates) {
+      const datetime = typeof slot === 'string' ? slot : slot?.datetime || slot?.time;
+      if (!datetime) continue;
+      const parsed = new Date(datetime);
+      if (Number.isNaN(parsed.getTime()) || parsed.getTime() <= now + 5 * 60000) continue;
+      return datetime;
+    }
+  }
+
+  return null;
+}
+
+export async function createSchedulingAppointment({ appointment, contact, items, membership, amounts, req }) {
   if (!appointment?.acuityDatetime) return null;
 
   const appointmentTypeID = Number(appointment.acuityTypeId)
@@ -118,10 +185,38 @@ export async function createSchedulingAppointment({ appointment, contact, items,
       email: contact.email,
       phone: contact.phone || '',
       timezone: appointment.acuityTimezone || TZ,
-      notes: appointmentNotes({ appointment, items, membership, req }),
+      notes: appointmentNotes({ appointment, items, membership, amounts, req }),
       fields: requiredSchedulingFields(appointment, items, appointmentTypeID),
     }),
   });
+}
+
+export async function createSchedulingAppointmentWithFallback({ appointment, contact, items, membership, amounts, req }) {
+  try {
+    return await createSchedulingAppointment({ appointment, contact, items, membership, amounts, req });
+  } catch (err) {
+    const noCalendar = err?.body?.error === 'no_available_calendar'
+      || /available calendar/i.test(err?.message || '');
+    if (!noCalendar) throw err;
+
+    const appointmentTypeID = Number(appointment.acuityTypeId)
+      || resolveAppointmentTypeId(items, membership);
+    const fallbackDatetime = await firstAvailableDatetime({ appointment, appointmentTypeID });
+    if (!fallbackDatetime) throw err;
+
+    return createSchedulingAppointment({
+      appointment: {
+        ...appointment,
+        acuityDatetime: fallbackDatetime,
+        timeLabel: 'Next available',
+      },
+      contact,
+      items,
+      membership,
+      amounts,
+      req,
+    });
+  }
 }
 
 export function buildCheckoutPayload({
@@ -203,6 +298,8 @@ export function buildStripeCheckoutMetadata({
     phone: metadataValue(contact.phone),
     paymentMethod: metadataValue(paymentMethod || 'card'),
     service: metadataValue(primaryService),
+    localBookingId: metadataValue(appointment.localBookingId),
+    reference: metadataValue(appointment.reference),
     acuityDatetime: metadataValue(appointment.acuityDatetime),
     acuityTimezone: metadataValue(appointment.acuityTimezone || TZ),
     acuityTypeId: metadataValue(appointment.acuityTypeId),
@@ -210,6 +307,11 @@ export function buildStripeCheckoutMetadata({
     address: metadataValue(appointment.address),
     zip: metadataValue(appointment.zip),
     guests: metadataValue(appointment.guests || '1'),
+    locationType: metadataValue(appointment.locationType),
+    notes: metadataValue(appointment.notes),
+    clientType: metadataValue(appointment.clientType),
+    clinicalReviewOnFile: metadataValue(appointment.clinicalReviewOnFile),
+    gfeRequired: metadataValue(appointment.gfeRequired),
     itemLabels: metadataValue(items.map((item) => item.label || item.key || 'Avalon Visit').join(' | ')),
     itemKeys: metadataValue(items.map((item) => item.cartKey || item.key || '').filter(Boolean).join(' | ')),
     itemTypes: metadataValue(items.map((item) => item.type || 'service').join(' | ')),
@@ -248,6 +350,8 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       phone: metadata.phone || '',
     },
     appointment: {
+      localBookingId: metadata.localBookingId || '',
+      reference: metadata.reference || '',
       acuityDatetime: metadata.acuityDatetime || '',
       acuityTimezone: metadata.acuityTimezone || TZ,
       acuityTypeId: metadata.acuityTypeId || '',
@@ -255,6 +359,11 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       address: metadata.address || '',
       zip: metadata.zip || '',
       guests: metadata.guests || '1',
+      locationType: metadata.locationType || '',
+      notes: metadata.notes || '',
+      clientType: metadata.clientType || '',
+      clinicalReviewOnFile: metadata.clinicalReviewOnFile || '',
+      gfeRequired: metadata.gfeRequired || '',
     },
     items,
     membership: metadata.membershipName ? {
@@ -274,7 +383,14 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
   };
 }
 
-export async function syncCheckoutAttioPerson({ contact = {}, primaryService = 'Avalon Visit' } = {}) {
+export async function syncCheckoutAttioPerson({
+  contact = {},
+  primaryService = 'Avalon Visit',
+  appointment = {},
+  items = [],
+  membership = null,
+  amounts = {},
+} = {}) {
   const response = await upsertAttioPerson({
     firstName: contact.firstName,
     lastName: contact.lastName,
@@ -283,6 +399,20 @@ export async function syncCheckoutAttioPerson({ contact = {}, primaryService = '
     source: 'Avalon Booking',
     lifecycleStage: 'Booked',
     service: primaryService,
+    bookingId: appointment.localBookingId,
+    bookingReference: appointment.reference,
+    address: appointment.address,
+    zip: appointment.zip,
+    locationType: appointment.locationType,
+    appointmentTime: appointment.timeLabel || appointment.acuityDatetime,
+    clientType: appointment.clientType || contact.clientType,
+    clinicalReviewOnFile: appointment.clinicalReviewOnFile,
+    gfeRequired: appointment.gfeRequired,
+    itemLabels: items.map((item) => item.label || item.key).filter(Boolean).join(', '),
+    membership: membership?.name || '',
+    depositPaid: dollarsFromCents(amounts.depositAmountCents || 0),
+    balanceDue: dollarsFromCents(amounts.balanceDueCents || 0),
+    paymentStatus: Number(amounts.balanceDueCents || 0) > 0 ? 'Deposit paid; balance due at visit' : 'Paid in full',
   });
 
   return response?.data?.id || response?.id || null;

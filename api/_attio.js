@@ -99,6 +99,20 @@ export function buildPersonValues(client = {}) {
     client.service ? `Requested: ${client.service}` : null,
     client.planInterest ? `Plan interest: ${client.planInterest}` : null,
     client.visitCount != null ? `Visit count: ${client.visitCount}` : null,
+    client.bookingId ? `Booking ID: ${client.bookingId}` : null,
+    client.bookingReference ? `Booking reference: ${client.bookingReference}` : null,
+    client.appointmentTime ? `Requested time: ${client.appointmentTime}` : null,
+    client.locationType ? `Location type: ${client.locationType}` : null,
+    client.address ? `Address: ${client.address}` : null,
+    client.zip ? `ZIP: ${client.zip}` : null,
+    client.clientType ? `Client type: ${client.clientType}` : null,
+    client.itemLabels ? `Items: ${client.itemLabels}` : null,
+    client.membership ? `Membership: ${client.membership}` : null,
+    client.depositPaid ? `Deposit paid: ${client.depositPaid}` : null,
+    client.balanceDue ? `Balance due: ${client.balanceDue}` : null,
+    client.paymentStatus ? `Payment status: ${client.paymentStatus}` : null,
+    client.gfeRequired != null && client.gfeRequired !== '' ? `GFE required: ${client.gfeRequired}` : null,
+    client.clinicalReviewOnFile != null && client.clinicalReviewOnFile !== '' ? `Clinical review on file: ${client.clinicalReviewOnFile}` : null,
   ].filter(Boolean).join('\n');
 
   if (description) values.description = description;

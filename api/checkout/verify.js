@@ -47,10 +47,18 @@ export default async function handler(req, res) {
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent'],
+    });
     const paid = session.payment_status === 'paid' || session.status === 'complete';
     const appointment = paid ? await findAppointmentForSession(session) : null;
-    const appointmentId = appointment?.acuity_appointment_id || session.metadata?.acuityAppointmentId || null;
+    const paymentIntentMetadata = typeof session.payment_intent === 'object'
+      ? session.payment_intent?.metadata || {}
+      : {};
+    const appointmentId = appointment?.acuity_appointment_id
+      || session.metadata?.acuityAppointmentId
+      || paymentIntentMetadata.acuityAppointmentId
+      || null;
 
     return res.status(paid ? 200 : 402).json({
       paid,
@@ -60,8 +68,9 @@ export default async function handler(req, res) {
       customerEmail: session.customer_details?.email || session.customer_email || '',
       appointmentId,
       appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || null,
-      fulfillmentStatus: appointment?.status || null,
-      pendingFulfillment: paid && !appointmentId,
+      fulfillmentStatus: appointment?.status || paymentIntentMetadata.fulfillmentStatus || null,
+      pendingFulfillment: paid && !appointmentId && paymentIntentMetadata.fulfillmentStatus !== 'acuity_failed',
+      fulfillmentError: paymentIntentMetadata.fulfillmentError || null,
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
