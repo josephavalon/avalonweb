@@ -499,7 +499,7 @@ function StepProgress({ step, onStepSelect }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-2 overflow-hidden rounded-[1.35rem] border-0 bg-transparent p-2 shadow-none backdrop-blur-none md:mb-5 md:rounded-[1.6rem] md:border md:border-foreground/10 md:bg-background/38 md:p-2.5 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] md:backdrop-blur-2xl">
+    <div className={`${step === 0 ? 'sr-only md:not-sr-only' : ''} relative mb-2 overflow-hidden rounded-[1.35rem] border-0 bg-transparent p-2 shadow-none backdrop-blur-none md:mb-5 md:rounded-[1.6rem] md:border md:border-foreground/10 md:bg-background/38 md:p-2.5 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] md:backdrop-blur-2xl`}>
       <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))] md:block" />
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
@@ -702,7 +702,7 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
 }
 
 function MoreGoalsAccordion({ items, activeKey, onChoose }) {
-  const [open, setOpen] = useState(items.some((item) => item.key === activeKey));
+  const [open, setOpen] = useState(false);
   if (!items.length) return null;
 
   return (
@@ -723,19 +723,21 @@ function MoreGoalsAccordion({ items, activeKey, onChoose }) {
           <ChevronDown className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.4} />
         </span>
       </button>
-      <SmoothDisclosure open={open}>
-        <div className="grid gap-2 border-t border-foreground/8 p-2.5 sm:grid-cols-2">
-          {items.map((item, index) => (
-            <OutcomeCard
-              key={item.key}
-              item={item}
-              index={index}
-              active={activeKey === item.key}
-              onClick={() => onChoose(item.key)}
-            />
-          ))}
-        </div>
-      </SmoothDisclosure>
+      {open && (
+        <SmoothDisclosure open>
+          <div className="grid gap-2 border-t border-foreground/8 p-2.5 sm:grid-cols-2">
+            {items.map((item, index) => (
+              <OutcomeCard
+                key={item.key}
+                item={item}
+                index={index}
+                active={activeKey === item.key}
+                onClick={() => onChoose(item.key)}
+              />
+            ))}
+          </div>
+        </SmoothDisclosure>
+      )}
     </div>
   );
 }
@@ -2507,6 +2509,7 @@ export default function BookNow() {
 
   const scrollStepIntoView = (behavior = 'smooth') => {
     if (typeof window === 'undefined') return;
+    if (window.matchMedia?.('(max-width: 767px)')?.matches) return;
     window.setTimeout(() => {
       const target = stepShellRef.current;
       if (!target) return;

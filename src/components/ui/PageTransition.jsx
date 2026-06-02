@@ -130,7 +130,7 @@ export default function PageTransition({ children }) {
           onComplete={() => setRedCarpet(null)}
         />
       )}
-      <AnimatePresence initial={false} mode="sync" custom={kind}>
+      <AnimatePresence initial={false} mode="wait" custom={kind}>
         <motion.div
           key={location.pathname}
           custom={kind}
