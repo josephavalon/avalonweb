@@ -122,6 +122,12 @@ function googleCalendarUrl(appointment) {
 }
 
 async function openCalendar(appointment, onError) {
+  const target = googleCalendarUrl(appointment);
+  if (target) {
+    window.open(target, '_blank', 'noopener,noreferrer');
+    return;
+  }
+
   const content = buildIcsContent({ appointment });
   if (!content) {
     onError?.('Calendar details are still being prepared.');
@@ -141,12 +147,6 @@ async function openCalendar(appointment, onError) {
     } catch (err) {
       if (err?.name === 'AbortError') return;
     }
-  }
-
-  const target = googleCalendarUrl(appointment);
-  if (target) {
-    window.open(target, '_blank', 'noopener,noreferrer');
-    return;
   }
 
   onError?.('Calendar could not be opened.');
@@ -423,7 +423,7 @@ export default function BookingConfirmation() {
                   <DetailPill icon={MapPin} label="Where" value={apptAddress} />
                 )}
                 {localBooking?.depositAmount != null && (
-                  <DetailPill icon={CreditCard} label="Deductible" value={`$${Number(localBooking.depositAmount).toLocaleString()} due`} />
+                  <DetailPill icon={CreditCard} label="Deductible" value={`$${Number(localBooking.depositAmount).toLocaleString()} ${paymentSuccess ? 'paid' : 'due'}`} />
                 )}
                 {referenceNum && (
                   <DetailPill icon={Hash} label="ID" value={referenceNum} />
@@ -459,7 +459,7 @@ export default function BookingConfirmation() {
             </Link>
           )}
 
-          {/* Add to Calendar */}
+          {/* Open Calendar */}
           {calendarAppointment && (
             <>
               <button
@@ -472,7 +472,7 @@ export default function BookingConfirmation() {
               >
                 <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
                 <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
-                  Add to Calendar
+                  Open Calendar
                 </span>
               </button>
               {calendarError && (

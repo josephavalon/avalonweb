@@ -76,7 +76,7 @@ const CARD_REVEAL = {
 const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Goal', 'Therapy', 'Extras', 'Visit', 'Done'];
+const STEPS = ['Goal', 'Therapy', 'Extras', 'Visit', 'Confirm'];
 const STEP_ICONS = [Sparkles, Droplets, Plus, Home, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
@@ -813,7 +813,7 @@ function ProductCard({ product, active, onSelect, onPrimary, onPlan, recommendat
             active ? 'border border-foreground/24 bg-foreground text-background' : 'border border-foreground/24 bg-foreground/[0.13] text-foreground backdrop-blur-2xl'
           }`}
         >
-          Book now
+          Select visit
         </button>
         <button
           type="button"
@@ -822,7 +822,7 @@ function ProductCard({ product, active, onSelect, onPrimary, onPlan, recommendat
             active ? 'border-foreground/24 bg-background/34 text-foreground backdrop-blur-2xl' : 'border-foreground/14 bg-background/26 text-foreground/74 backdrop-blur-xl'
           }`}
         >
-          Subscribe monthly
+          Select monthly
         </button>
       </div>
     </motion.div>
@@ -1324,7 +1324,7 @@ function AddressPrediction({ suggestion, onUse, compact = false }) {
         </span>
         <span className="min-w-0">
           <span className="block font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/64">
-            Tap to auto-fill
+            Use this address
           </span>
           <span className="mt-1 block truncate font-body text-lg font-black leading-tight">{suggestion.address}</span>
         </span>
@@ -1726,7 +1726,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
   );
 }
 
-function ClinicalReviewChoice({ value, onChange }) {
+function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
   const options = [
     { key: false, label: 'Need review', icon: ShieldCheck },
     { key: true, label: 'On file', icon: Check },
@@ -1741,14 +1741,16 @@ function ClinicalReviewChoice({ value, onChange }) {
       <div className="relative mt-3 grid grid-cols-2 gap-2">
         {options.map((item) => {
           const active = Boolean(value) === item.key;
+          const disabled = item.key === true && !allowOnFile;
           const Icon = item.icon;
           return (
             <button
               key={item.label}
               type="button"
-              onClick={() => onChange(item.key)}
+              onClick={() => onChange(disabled ? false : item.key)}
+              disabled={disabled}
               aria-pressed={active}
-              className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body text-base font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+              className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body text-base font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
                 active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
               }`}
             >
@@ -1756,7 +1758,7 @@ function ClinicalReviewChoice({ value, onChange }) {
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${active ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/12 bg-foreground/[0.05]'}`}>
                   <Icon className="h-5 w-5" strokeWidth={2.45} />
                 </span>
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{disabled ? 'Sign in required' : item.label}</span>
               </span>
               {active && <Check className="h-4.5 w-4.5 shrink-0" strokeWidth={2.8} />}
             </button>
@@ -1891,9 +1893,24 @@ function GroupPricingPanel({ baseTotal, guestCount, contactRequired, eventType, 
   );
 }
 
-function SummaryRail({ state, product, plan, subtotal, totalLabel, groupContactRequired, guestCount, serviceLabel, onSubmit }) {
+function SummaryRail({
+  state,
+  product,
+  plan,
+  subtotal,
+  totalLabel,
+  groupContactRequired,
+  guestCount,
+  serviceLabel,
+  actionLabel,
+  actionDetail,
+  actionDisabled = false,
+  showAction = false,
+  onAction,
+}) {
   const isSubscription = state.visitType === 'subscription';
   const subscriptionPrice = Number(plan.price || 0);
+  const balanceDue = Math.max(0, Number(subtotal || 0) - DEPOSIT_DUE);
   const [open, setOpen] = useState(false);
   return (
     <aside className="hidden lg:block">
@@ -1922,9 +1939,9 @@ function SummaryRail({ state, product, plan, subtotal, totalLabel, groupContactR
           <div className="grid grid-cols-2 gap-2">
             {[
               ['Due now', isSubscription ? `${currency(subscriptionPrice)}/mo` : currency(DEPOSIT_DUE)],
-	              [groupContactRequired ? 'Group' : isSubscription ? 'Therapy' : 'Estimate', groupContactRequired ? 'Contact' : totalLabel || currency(subtotal)],
+              [groupContactRequired ? 'Group' : isSubscription ? 'Therapy' : 'Estimate', groupContactRequired ? 'Contact' : totalLabel || currency(subtotal)],
+              isSubscription ? ['Plan', plan.label] : ['Balance', currency(balanceDue)],
               ['Time', bookingTimeSummary(state)],
-              ['Review', 'Before visit'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
                 <p className="font-body text-[11px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
@@ -1939,16 +1956,26 @@ function SummaryRail({ state, product, plan, subtotal, totalLabel, groupContactR
             )}
             {state.addOns.length > 0 && <p>{state.addOns.length} add-on{state.addOns.length > 1 ? 's' : ''} selected</p>}
           </div>
-          <button
-            type="button"
-            onClick={onSubmit}
-            className="relative flex min-h-[56px] w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-xs font-bold uppercase tracking-[0.12em] text-foreground shadow-[0_18px_62px_hsl(var(--foreground)/0.17),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
-          >
-            <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.13] to-foreground/[0.04]" />
-            <span className="relative flex items-center gap-2">
-              {groupContactRequired ? 'Contact Us' : isSubscription ? `Start ${plan.label}` : 'Hold Visit'} <ArrowRight className="h-4 w-4" />
-            </span>
-          </button>
+          {showAction ? (
+            <button
+              type="button"
+              onClick={onAction}
+              disabled={actionDisabled}
+              className="relative flex min-h-[56px] w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-xs font-bold uppercase tracking-[0.12em] text-foreground shadow-[0_18px_62px_hsl(var(--foreground)/0.17),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.13] to-foreground/[0.04]" />
+              <span className="relative flex items-center gap-2">
+                {actionLabel} <ArrowRight className="h-4 w-4" />
+              </span>
+            </button>
+          ) : (
+            <p className="rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/58">
+              Finish the steps to unlock payment.
+            </p>
+          )}
+          {actionDetail && (
+            <p className="text-center font-body text-[11px] font-semibold text-foreground/52">{actionDetail}</p>
+          )}
         </div>
         </SmoothDisclosure>
       </div>
@@ -2036,6 +2063,7 @@ export default function BookNow() {
     gfe: clientProfile.gfe,
     gfeExpiresAt: clientProfile.gfe?.validUntil,
   }), [clientProfile]);
+  const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
   const [step, setStep] = useState(0);
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
@@ -2102,7 +2130,8 @@ export default function BookNow() {
     const outcomeParam = searchParams.get('outcome');
     const protocolParam = searchParams.get('protocol');
     const subscriptionParam = searchParams.get('subscription');
-    const wantsCustomSubscription = subscriptionParam === 'custom';
+    const selectedSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === subscriptionParam);
+    const wantsSubscription = Boolean(selectedSubscriptionPlan);
     const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
     if (protocolParam && PUBLIC_BOOKING_PROTOCOL_KEYS.has(protocolParam)) {
       const inferredOutcome = nextOutcome || outcomeForProtocol(protocolParam);
@@ -2110,30 +2139,30 @@ export default function BookNow() {
         ...current,
         outcome: inferredOutcome.key,
         productKey: protocolParam,
-        visitType: wantsCustomSubscription ? 'subscription' : current.visitType,
-        planKey: wantsCustomSubscription ? 'custom' : current.planKey,
+        visitType: wantsSubscription ? 'subscription' : current.visitType,
+        planKey: selectedSubscriptionPlan?.key || current.planKey,
         addOns: [],
         addOnDecision: true,
       }));
       setStep(1);
-	    } else if (nextOutcome) {
-	      const isCustom = nextOutcome.key === 'longevity';
-	      const base = CUSTOM_BASE_OPTIONS.find((item) => item.key === 'advanced') || CUSTOM_BASE_OPTIONS[1];
-	      setState((current) => {
-	        const selectedBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === current.customBase) || base;
-	        return {
-	          ...current,
-	          outcome: nextOutcome.key,
-	          productKey: isCustom ? selectedBase.productKey : nextOutcome.productKeys[0] || 'recovery',
-	          visitType: wantsCustomSubscription ? 'subscription' : current.visitType,
-	          planKey: wantsCustomSubscription ? 'custom' : current.planKey,
-	          addOns: [],
-	          addOnDecision: true,
-	          customBase: isCustom ? selectedBase.key : current.customBase,
-	        };
-	      });
-	      setStep(1);
-	    }
+    } else if (nextOutcome) {
+      const isCustom = nextOutcome.key === 'longevity';
+      const base = CUSTOM_BASE_OPTIONS.find((item) => item.key === 'advanced') || CUSTOM_BASE_OPTIONS[1];
+      setState((current) => {
+        const selectedBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === current.customBase) || base;
+        return {
+          ...current,
+          outcome: nextOutcome.key,
+          productKey: isCustom ? selectedBase.productKey : nextOutcome.productKeys[0] || 'recovery',
+          visitType: wantsSubscription ? 'subscription' : current.visitType,
+          planKey: selectedSubscriptionPlan?.key || current.planKey,
+          addOns: [],
+          addOnDecision: true,
+          customBase: isCustom ? selectedBase.key : current.customBase,
+        };
+      });
+      setStep(1);
+    }
   }, [searchParams]);
 
   const outcome = OUTCOMES.find((item) => item.key === state.outcome) || OUTCOMES[0];
@@ -2179,6 +2208,7 @@ export default function BookNow() {
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
   const totalLabel = groupContactRequired ? 'Contact' : currency(subtotal);
+  const balanceDue = Math.max(0, subtotal - DEPOSIT_DUE);
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
   const typedAddressSuggestion = useMemo(
@@ -2223,6 +2253,12 @@ export default function BookNow() {
     setError('');
     setState((current) => ({ ...current, [key]: value }));
   };
+
+  useEffect(() => {
+    if (!canUseClinicalReviewOnFile && state.clinicalReviewOnFile) {
+      setState((current) => ({ ...current, clinicalReviewOnFile: false }));
+    }
+  }, [canUseClinicalReviewOnFile, state.clinicalReviewOnFile]);
 
   const chooseWho = (key) => {
     setError('');
@@ -2582,16 +2618,16 @@ export default function BookNow() {
     setError('Finish this step first.');
   };
 
-  const primaryActionLabel = () => {
-    if (checkoutLoading) return 'Opening checkout';
-    if (embeddedCheckoutSession) return 'Payment ready';
-    if (step === 2) return selectedAddons.length ? `Next · ${selectedAddons.length}` : 'Next';
-    if (step === 3 && groupContactRequired) return 'Contact us';
-    if (step === 3 && !canAdvance()) return 'Add place';
-    if (step === LAST_STEP && groupContactRequired) return 'Contact us';
-    if (step === LAST_STEP && state.visitType === 'subscription') return `Start ${plan.label}`;
-    return step < LAST_STEP ? 'Next' : `Pay ${currency(DEPOSIT_DUE)}`;
-  };
+	  const primaryActionLabel = () => {
+	    if (checkoutLoading) return 'Opening checkout';
+	    if (embeddedCheckoutSession) return 'Payment ready';
+	    if (step === 2) return selectedAddons.length ? `Next · ${selectedAddons.length}` : 'Next';
+	    if (step === 3 && groupContactRequired) return 'Contact us';
+	    if (step === 3 && !canAdvance()) return 'Add place';
+	    if (step === LAST_STEP && groupContactRequired) return 'Contact us';
+	    if (step === LAST_STEP && state.visitType === 'subscription') return `Start ${plan.label}`;
+	    return step < LAST_STEP ? 'Next' : `Pay ${currency(DEPOSIT_DUE)} due now`;
+	  };
 
 	  const buildBooking = () => {
 	    if (!product) return null;
@@ -3298,10 +3334,11 @@ export default function BookNow() {
                       product={product}
                       bookingGfeRequirement={bookingGfeRequirement}
                     />
-                    <ClinicalReviewChoice
-                      value={state.clinicalReviewOnFile}
-                      onChange={(value) => setValue('clinicalReviewOnFile', value)}
-                    />
+	                    <ClinicalReviewChoice
+	                      value={state.clinicalReviewOnFile}
+	                      onChange={(value) => setValue('clinicalReviewOnFile', value)}
+	                      allowOnFile={canUseClinicalReviewOnFile}
+	                    />
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
                   </>
                 )}
@@ -3315,12 +3352,20 @@ export default function BookNow() {
 	            product={product}
 	            plan={{ ...plan, price: activePlanPrice }}
 	            subtotal={subtotal}
-	            totalLabel={totalLabel}
-	            groupContactRequired={groupContactRequired}
-	            guestCount={guestCount}
-	            serviceLabel={serviceLabel}
-	            onSubmit={submit}
-	          />
+		            totalLabel={totalLabel}
+		            groupContactRequired={groupContactRequired}
+		            guestCount={guestCount}
+		            serviceLabel={serviceLabel}
+		            actionLabel={primaryActionLabel()}
+		            actionDetail={
+		              step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
+		                ? `${currency(balanceDue)} balance due at visit`
+		                : ''
+		            }
+		            actionDisabled={checkoutLoading}
+		            showAction={step === LAST_STEP}
+		            onAction={submit}
+		          />
         </div>
       </main>
 
@@ -3334,7 +3379,7 @@ export default function BookNow() {
           <button
             type="button"
             onClick={step < LAST_STEP ? next : submit}
-            aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : 'Hold visit and continue to checkout'}
+            aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : `${primaryActionLabel()} and continue to checkout`}
 	            className="relative flex min-h-[54px] flex-1 items-center justify-between overflow-hidden rounded-full border border-foreground/34 bg-foreground/[0.18] px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985]"
           >
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.14] to-foreground/[0.04]" />
@@ -3345,8 +3390,10 @@ export default function BookNow() {
               transition={{ duration: 3.6, repeat: Infinity, ease: EASE, repeatDelay: 1.4 }}
             />
             <span>{primaryActionLabel()}</span>
-            <span>{totalLabel}</span>
-          </button>
+            {step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
+              ? <span>Balance {currency(balanceDue)}</span>
+              : <span>{totalLabel}</span>}
+	          </button>
         </div>
       </div>}
 

@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, useState } from 'react';
-import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import React, { useState } from 'react';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
@@ -8,8 +8,6 @@ import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 import SubscriptionFaq from '@/components/subscription/SubscriptionFaq';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
-
-const SubscriptionCheckoutDrawer = lazy(() => import('@/components/subscription/SubscriptionCheckoutDrawer'));
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -145,17 +143,13 @@ export default function Subscription() {
     },
   });
   const navigate = useNavigate();
-  const [selectedTier, setSelectedTier] = useState(null);
   const [activeTierKey, setActiveTierKey] = useState(FEATURED_SUBSCRIPTION_TIER_KEY);
   const activeTier = tiers.find((tier) => tier.key === activeTierKey) || tiers[1];
   const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
   const switchTier = (tier) => setActiveTierKey(tier.key);
   const selectTier = (tier) => {
-    if (tier.custom) {
-      navigate('/book?reset=1&outcome=longevity&subscription=custom');
-      return;
-    }
-    setSelectedTier(tier);
+    const outcome = tier.custom ? 'longevity' : 'recover';
+    navigate(`/book?reset=1&outcome=${outcome}&subscription=${tier.key}`);
   };
 
   return (
@@ -233,14 +227,6 @@ export default function Subscription() {
         </div>
       </motion.div>
 
-      {/* Checkout Drawer */}
-      <AnimatePresence>
-        {selectedTier && (
-          <Suspense fallback={null}>
-            <SubscriptionCheckoutDrawer tier={selectedTier} onClose={() => setSelectedTier(null)} />
-          </Suspense>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

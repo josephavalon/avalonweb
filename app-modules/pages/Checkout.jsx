@@ -6,7 +6,7 @@ import {
   Droplets, Syringe, ArrowRight, ArrowLeft,
   Check, X, CreditCard,
   Sparkles, Loader2, RefreshCw, Calendar,
-  ShieldCheck, Smartphone, WalletCards, Coins,
+  ShieldCheck,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
@@ -725,7 +725,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const safeContact = contact || {};
-  const [paymentMethod, setPaymentMethod] = useState('apple_pay');
+  const paymentMethod = 'card';
   const [fullName, setFullName] = useState(`${safeContact.firstName || ''} ${safeContact.lastName || ''}`.trim());
   const [email, setEmail] = useState(safeContact.email || '');
   const [phone, setPhone] = useState(formatCheckoutPhone(safeContact.phone || ''));
@@ -753,14 +753,6 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     : hasItems
       ? `Pay $${DEPOSIT_DUE} non-refundable`
       : 'Pay now';
-  const paymentMethods = [
-    { id: 'apple_pay', label: 'Apple Pay', helper: 'Wallet', icon: Smartphone },
-    { id: 'google_pay', label: 'Google Pay', helper: 'Wallet', icon: WalletCards },
-    { id: 'card', label: 'Card', helper: 'Debit / credit', icon: CreditCard },
-    { id: 'crypto', label: 'Crypto', helper: 'Pay link', icon: Coins },
-  ];
-  const selectedMethod = paymentMethods.find((method) => method.id === paymentMethod) || paymentMethods[0];
-  const SelectedPaymentIcon = selectedMethod.icon || CreditCard;
 
   const handleCheckout = async () => {
     if (!contactReady) {
@@ -971,42 +963,17 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         </div>
       )}
 
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl space-y-3">
+      <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
         <p className={`${labelClass} relative`}>Pay with</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {paymentMethods.map((method) => {
-            const Icon = method.icon;
-            const selected = paymentMethod === method.id;
-            return (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => setPaymentMethod(method.id)}
-                className={`relative min-h-[72px] rounded-2xl border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-all disabled:cursor-not-allowed disabled:opacity-55 ${
-                  selected ? 'border-foreground/24 bg-foreground/[0.06]' : 'border-foreground/[0.10] bg-background/[0.18] hover:border-foreground/25'
-                }`}
-              >
-                <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
-                <div className="flex items-center gap-3">
-                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${
-                    selected ? 'border-foreground/20 bg-foreground/[0.08] text-foreground' : 'border-foreground/[0.10] text-foreground/55'
-                  }`}>
-                    <Icon className="h-4 w-4" strokeWidth={1.7} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
-                      {method.label}
-                    </span>
-                    <span className="mt-1 block truncate font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/44">
-                      {method.helper}
-                    </span>
-                  </span>
-                  {selected && <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} />}
-                </div>
-              </button>
-            );
-          })}
+        <div className="relative mt-3 flex min-h-[72px] items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-background/[0.18] p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-foreground/[0.08] text-foreground">
+            <CreditCard className="h-4 w-4" strokeWidth={1.7} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Secure Stripe checkout</span>
+            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card, Apple Pay, or Google Pay when available</span>
+          </span>
         </div>
       </div>
 
@@ -1029,11 +996,11 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           {loading ? (
             <span className="flex items-center gap-2">
               <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="inline-block w-4 h-4 border-2 border-background/30 border-t-background rounded-full" />
-              Redirecting…
+              Opening checkout…
             </span>
           ) : (
             <>
-              {payCta} · {selectedMethod.label} <SelectedPaymentIcon className="w-4 h-4" strokeWidth={2} />
+              {payCta} <CreditCard className="w-4 h-4" strokeWidth={2} />
             </>
           )}
         </button>
