@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { motion, LayoutGroup, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import {
   ArrowLeft,
@@ -55,6 +57,8 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { useAuthStore } from '@/lib/useAuthStore';
 
 const EASE = [0.16, 1, 0.3, 1];
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 const CARD_REVEAL = {
   hidden: { opacity: 0, y: 22, scale: 0.975, filter: 'blur(6px)' },
   show: (index = 0) => ({
@@ -2040,6 +2044,7 @@ export default function BookNow() {
   });
   const [error, setError] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
 
   useEffect(() => {
     if (shouldResetDraft) clearBookingDraft();
@@ -2537,6 +2542,7 @@ export default function BookNow() {
 
   const primaryActionLabel = () => {
     if (checkoutLoading) return 'Opening checkout';
+    if (embeddedCheckoutSession) return 'Payment ready';
     if (step === 2) return selectedAddons.length ? `Next · ${selectedAddons.length}` : 'Next';
     if (step === 3 && groupContactRequired) return 'Contact us';
     if (step === 3 && !canAdvance()) return 'Add place';
@@ -2685,6 +2691,7 @@ export default function BookNow() {
     const appointmentTypeId = safeAcuityTypeId(localBooking.appointmentTypeId || localBooking.acuitySlot?.appointmentTypeID);
     return {
       mode: localBooking.subscription || membershipOverride ? 'subscription' : 'payment',
+      checkoutUiMode: 'embedded',
       items: (localBooking.items || []).map((item) => ({
         key: item.cartKey,
         cartKey: item.cartKey,
@@ -2726,7 +2733,11 @@ export default function BookNow() {
 
   const openCheckout = async (localBooking, membershipOverride = null) => {
     setCheckoutLoading(true);
+    setEmbeddedCheckoutSession(null);
     try {
+      if (!stripePromise) {
+        throw Object.assign(new Error('Embedded checkout is not configured.'), { code: 'stripe_publishable_key_missing' });
+      }
       const session = await createCheckoutSession(checkoutPayloadFor(localBooking, membershipOverride));
       track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
         funnel: 'webstore',
@@ -2734,8 +2745,28 @@ export default function BookNow() {
         booking_id: localBooking.id,
         preview_only: Boolean(session.previewOnly),
       });
+
+      if (session.previewOnly) {
+        clearBookingDraft();
+        navigate(session.url || `/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}&preapi=1`);
+        return;
+      }
+
+      if (!session.clientSecret || session.checkoutUiMode !== 'embedded') {
+        throw Object.assign(new Error('Embedded checkout is unavailable.'), { code: 'embedded_checkout_unavailable' });
+      }
+
       clearBookingDraft();
-      window.location.assign(session.url || `/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}`);
+      setEmbeddedCheckoutSession({
+        clientSecret: session.clientSecret,
+        sessionId: session.sessionId,
+        bookingId: localBooking.id,
+        service: localBooking.service,
+        totalLabel: currency(DEPOSIT_DUE),
+      });
+      setCheckoutLoading(false);
+      setError('');
+      window.setTimeout(() => scrollStepIntoView(), 50);
     } catch (err) {
       if (err.code === 'checkout_api_unavailable' && canUseStaticPreviewFallback()) {
         clearBookingDraft();
@@ -2870,11 +2901,58 @@ export default function BookNow() {
     await openCheckout(localBooking);
   };
 
+  const embeddedCheckoutOptions = useMemo(() => {
+    if (!embeddedCheckoutSession?.clientSecret) return null;
+    return {
+      clientSecret: embeddedCheckoutSession.clientSecret,
+      onComplete: () => {
+        navigate(`/booking/confirmation?session_id=${encodeURIComponent(embeddedCheckoutSession.sessionId)}&payment=success`);
+      },
+    };
+  }, [embeddedCheckoutSession?.clientSecret, embeddedCheckoutSession?.sessionId, navigate]);
+
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 pb-32 pt-20 md:px-8 md:pt-24 lg:pb-16">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+        {embeddedCheckoutSession && embeddedCheckoutOptions && (
+          <motion.section
+            className="mx-auto max-w-3xl"
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, filter: 'blur(8px)' }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: reduceMotion ? 0 : 0.42, ease: EASE }}
+          >
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5">
+              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
+              <div className="relative">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${embeddedCheckoutSession.totalLabel} deductible`} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmbeddedCheckoutSession(null);
+                      setCheckoutLoading(false);
+                      setStep(LAST_STEP);
+                    }}
+                    className="min-h-[44px] shrink-0 rounded-full border border-foreground/14 px-4 font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/76 transition-colors hover:border-foreground/28 hover:text-foreground"
+                  >
+                    Edit Booking
+                  </button>
+                </div>
+                <div className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
+                  <EmbeddedCheckoutProvider
+                    key={embeddedCheckoutSession.clientSecret}
+                    stripe={stripePromise}
+                    options={embeddedCheckoutOptions}
+                  >
+                    <EmbeddedCheckout className="min-h-[620px]" />
+                  </EmbeddedCheckoutProvider>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10`}>
           <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
             <StepProgress step={step} onStepSelect={goToStep} />
             <StepControls

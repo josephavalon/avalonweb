@@ -107,6 +107,7 @@ export default async function handler(req, res) {
     contact = {},
     appointment = {},
     paymentMethod = 'card',
+    checkoutUiMode = 'hosted',
   } = req.body || {};
 
   if (!contact.firstName || !contact.email) {
@@ -203,8 +204,10 @@ export default async function handler(req, res) {
       console.warn('[create-checkout-session] Supabase is not configured; using Stripe metadata fulfillment fallback.');
     }
 
+    const embeddedCheckout = checkoutUiMode === 'embedded';
     const successUrl = `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}&payment=success`;
     const cancelUrl = `${baseUrl}/checkout?payment=cancelled`;
+    const returnUrl = `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}&payment=success`;
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const sessionParams = {
@@ -212,8 +215,6 @@ export default async function handler(req, res) {
       customer_email: contact.email,
       line_items,
       expires_at: checkoutExpiresAt(),
-      success_url: successUrl,
-      cancel_url: cancelUrl,
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,
         contact,
@@ -227,6 +228,15 @@ export default async function handler(req, res) {
         balanceDueCents,
       }),
     };
+
+    if (embeddedCheckout) {
+      sessionParams.ui_mode = 'embedded';
+      sessionParams.return_url = returnUrl;
+      sessionParams.redirect_on_completion = 'if_required';
+    } else {
+      sessionParams.success_url = successUrl;
+      sessionParams.cancel_url = cancelUrl;
+    }
 
     // Deposit (one-time payment): save the card on file so the nurse can charge
     // the remaining balance off-session at the end of the appointment.
@@ -254,6 +264,9 @@ export default async function handler(req, res) {
       provider: 'stripe',
       appointment: { id: pendingRecordId || session.id, provider: pendingRecordId ? 'avalon_checkout' : 'stripe_metadata', status: 'payment_pending' },
       balanceDueCents,
+      checkoutUiMode: embeddedCheckout ? 'embedded' : 'hosted',
+      sessionId: session.id,
+      clientSecret: embeddedCheckout ? session.client_secret : null,
       url: session.url,
     });
   } catch (err) {
