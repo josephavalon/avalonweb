@@ -103,6 +103,7 @@ export function reconciliationTypeForStripeEvent(event = {}) {
   const metadata = object.metadata || {};
 
   if (type === 'checkout.session.completed') {
+    if (metadata.fulfillment === 'stripe_paid_then_acuity_attio_v1') return null;
     return metadata.acuityAppointmentId ? null : 'stripe_succeeded_acuity_failed';
   }
   if (type === 'checkout.session.expired') return 'acuity_succeeded_stripe_failed';

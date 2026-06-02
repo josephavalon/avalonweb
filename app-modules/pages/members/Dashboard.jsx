@@ -194,7 +194,7 @@ export default function MemberDashboard() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { icon: ShieldCheck, label: 'Review', value: /clear/i.test(status) ? 'Clear' : 'Needed' },
-                { icon: CreditCard, label: 'Deposit', value: booking?.payment || '$50' },
+                { icon: CreditCard, label: 'Deductible', value: booking?.payment || '$1' },
                 { icon: MessageCircle, label: 'Text', value: 'On' },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="rounded-2xl p-3 text-center" style={{ background: CARD, border: `1px solid ${BORDER}` }}>

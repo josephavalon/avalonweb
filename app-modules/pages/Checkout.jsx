@@ -45,7 +45,8 @@ function formatCheckoutPhone(value) {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-function hasAppointmentDetails(appointment = {}) {
+function hasAppointmentDetails(appointment = {}, { requireSlot = false } = {}) {
+  if (requireSlot) return Boolean(appointment?.acuitySlot?.datetime);
   return Boolean(appointment?.address || appointment?.acuitySlot || appointment?.date);
 }
 
@@ -112,7 +113,7 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
   const rail = [
     {
       icon: CreditCard,
-      label: hasVisit ? 'Deposit' : 'Billing',
+      label: hasVisit ? 'Deductible' : 'Billing',
       value: hasVisit ? `$${DEPOSIT_DUE}` : (membership ? `$${membership.price}` : 'Ready'),
       active: current >= 0,
     },
@@ -804,7 +805,24 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           appointment: appointment
             ? {
                 address: appointment.address,
+                zip: appointment.zip,
+                date: appointment.date,
                 notes: appointment.notes,
+                dob: appointment.dob,
+                guests: appointment.guests,
+                covidPositive: appointment.covidPositive,
+                infectiousDisease: appointment.infectiousDisease,
+                ivBefore: appointment.ivBefore,
+                medicalConditions: appointment.medicalConditions,
+                allergies: appointment.allergies,
+                medications: appointment.medications,
+                emergencyContact: appointment.emergencyContact,
+                additionalComments: appointment.additionalComments,
+                privacyAck: appointment.privacyAck,
+                treatmentConsent: appointment.treatmentConsent,
+                generalConsent: appointment.generalConsent,
+                cbdConsent: appointment.cbdConsent,
+                nadConsent: appointment.nadConsent,
                 acuityTypeId: appointment.acuitySlot?.appointmentTypeID || '',
                 acuityDatetime: appointment.acuitySlot?.datetime || '',
                 acuityTimezone: appointment.acuitySlot?.timezone || 'America/Los_Angeles',
@@ -888,7 +906,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </div>
         )}
         <div className="relative border-t border-foreground/10 pt-3 flex justify-between items-center">
-          <span className={labelClass}>{hasItems && !hasMembership ? 'Deposit due' : 'Due now'}</span>
+          <span className={labelClass}>{hasItems && !hasMembership ? 'Deductible due' : 'Due now'}</span>
           <span className="font-heading text-4xl text-foreground tracking-wide">
             ${dueToday.toLocaleString()}
           </span>
@@ -899,7 +917,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-100" strokeWidth={2} />
               <div>
                 <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-amber-100">
-                  $50 non-refundable down payment
+                  ${DEPOSIT_DUE} non-refundable deductible
                 </p>
                 <p className="mt-1 font-body text-xs font-semibold leading-relaxed text-foreground/68">
                   Applied to your visit. Balance is due after service.
@@ -1022,7 +1040,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
-        $50 down payment is non-refundable. Clinical review before RN.
+        ${DEPOSIT_DUE} deductible is non-refundable. Clinical review before RN.
       </p>
     </div>
   );
@@ -1032,7 +1050,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 export default function Checkout() {
   useSeo({
     title: 'Secure Checkout — Avalon Vitality',
-    description: 'Complete your mobile IV therapy booking. Review your order, set your appointment time, and confirm with a $50 deposit.',
+    description: `Complete your mobile IV therapy booking. Review your order, set your appointment time, and confirm with a $${DEPOSIT_DUE} non-refundable deductible.`,
     path: '/checkout',
   });
   const { items, membership, removeItem, clearMembership } = useCart();
@@ -1050,6 +1068,22 @@ export default function Checkout() {
         zip: sourceAppointment.zip || subscriptionIntake?.intake?.zip || '',
         date: sourceAppointment.date || subscriptionIntake?.intake?.customDate || '',
         notes: sourceAppointment.notes || subscriptionIntake?.intake?.notes || '',
+        acuitySlot: sourceAppointment.acuitySlot || null,
+        dob: sourceAppointment.dob || '',
+        guests: sourceAppointment.guests || '1',
+        covidPositive: sourceAppointment.covidPositive || 'No',
+        infectiousDisease: sourceAppointment.infectiousDisease || 'No',
+        ivBefore: sourceAppointment.ivBefore || 'Yes',
+        medicalConditions: sourceAppointment.medicalConditions || 'None of the above',
+        allergies: sourceAppointment.allergies || '',
+        medications: sourceAppointment.medications || '',
+        emergencyContact: sourceAppointment.emergencyContact || '',
+        additionalComments: sourceAppointment.additionalComments || '',
+        privacyAck: sourceAppointment.privacyAck || false,
+        treatmentConsent: sourceAppointment.treatmentConsent || false,
+        generalConsent: sourceAppointment.generalConsent || false,
+        cbdConsent: sourceAppointment.cbdConsent || false,
+        nadConsent: sourceAppointment.nadConsent || false,
       } : null,
       contact: sourceContact.email || sourceContact.phone || sourceContact.name ? {
         firstName: sourceContact.firstName || String(sourceContact.name || '').trim().split(/\s+/)[0] || '',
@@ -1062,9 +1096,8 @@ export default function Checkout() {
   const [appointment, setAppointment] = useState(prefill.appointment);
   const [contact, setContact] = useState(prefill.contact || {});
   const [step, setStep] = useState(() => {
-    if (items.length > 0 || membership) return 3;
     const contactReady = hasCompleteContact(prefill.contact || {});
-    const appointmentReady = hasOnlyMembership || hasAppointmentDetails(prefill.appointment);
+    const appointmentReady = hasOnlyMembership || hasAppointmentDetails(prefill.appointment, { requireSlot: items.length > 0 });
     return contactReady && appointmentReady && (items.length > 0 || membership) ? 3 : 0;
   });
 
@@ -1097,7 +1130,7 @@ export default function Checkout() {
   }, [step, membership, items.length]);
 
   const contactReady = hasCompleteContact(contact);
-  const appointmentReady = hasOnlyMembership || hasAppointmentDetails(appointment);
+  const appointmentReady = hasOnlyMembership || hasAppointmentDetails(appointment, { requireSlot: items.length > 0 });
   const nextAfterReview = () => {
     if (!appointmentReady) return 1;
     if (!contactReady) return 2;

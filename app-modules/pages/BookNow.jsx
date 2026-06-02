@@ -1537,7 +1537,7 @@ function LocationTypeDropdown({ value, onChange }) {
 function RetentionChoice({ state, plan, customSessions, customEstimate, serviceLabel, onType, onPlan, onCustomSessions }) {
   const [openPlans, setOpenPlans] = useState(false);
   const choices = [
-    { key: 'one-time', label: 'One visit', value: '$50 hold', icon: Calendar },
+    { key: 'one-time', label: 'One visit', value: `${currency(DEPOSIT_DUE)} deductible`, icon: Calendar },
     { key: 'subscription', label: 'Monthly', value: plan.custom ? `${currency(customEstimate)}/mo` : `${currency(plan.price)}/mo`, icon: Sparkles },
   ];
 
@@ -1773,7 +1773,7 @@ function ConfirmSummary({ state, product, bookingGfeRequirement }) {
   const items = [
     { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
     { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Valid', icon: ShieldCheck },
-    { label: 'Hold', value: currency(DEPOSIT_DUE), icon: Check },
+    { label: 'Deductible', value: currency(DEPOSIT_DUE), icon: Check },
   ];
 
   return (
@@ -2542,7 +2542,7 @@ export default function BookNow() {
     if (step === 3 && !canAdvance()) return 'Add place';
     if (step === LAST_STEP && groupContactRequired) return 'Contact us';
     if (step === LAST_STEP && state.visitType === 'subscription') return `Start ${plan.label}`;
-    return step < LAST_STEP ? 'Next' : `Hold ${currency(DEPOSIT_DUE)}`;
+    return step < LAST_STEP ? 'Next' : `Pay ${currency(DEPOSIT_DUE)}`;
   };
 
 	  const buildBooking = () => {
@@ -2610,12 +2610,12 @@ export default function BookNow() {
       ],
       subtotal,
       depositAmount: DEPOSIT_DUE,
-      payment: `$${DEPOSIT_DUE} hold pending`,
+      payment: `${currency(DEPOSIT_DUE)} non-refundable deductible pending`,
       status: 'Scheduling received',
       holdType: 'fast',
       nextStep: gfeRequirement.required
-        ? 'Clinical review, annual GFE, deposit hold, and scheduling handoff'
-        : 'Annual GFE valid. Clinical review, deposit hold, and scheduling handoff',
+        ? 'Clinical review, annual GFE, non-refundable deductible, and scheduling handoff'
+        : 'Annual GFE valid. Clinical review, non-refundable deductible, and scheduling handoff',
       intake: 'Needed',
       consent: 'Needed',
       gfe: clinicalReviewClaimedOnFile ? 'On file' : gfeRequirement.required ? 'Pending' : 'Cleared',

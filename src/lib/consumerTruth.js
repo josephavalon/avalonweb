@@ -151,7 +151,7 @@ export function buildConsumerTruthLayer({
     module({
       key: 'deposit-ledger',
       group: 'Money',
-      label: '$50 deposit',
+      label: '$1 deductible',
       value: depositPaid ? 'Paid' : 'Pending',
       status: depositPaid ? 'Paid' : 'Action',
       owner: 'Checkout',

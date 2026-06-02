@@ -8,7 +8,7 @@ export const NO_API_COMPLETION_DOMAINS = [
       'Under-60-second booking path',
       'Location type and address guard',
       'Time intent model',
-      '$50 hold placeholder gate',
+      '$1 deductible placeholder gate',
       'Annual GFE prompt',
       'Returning-client GFE resolver',
       'Add-on compatibility summary',

@@ -1,12 +1,13 @@
 import Stripe from 'stripe';
-import { acuityFetch, cancelAppointment, resolveAppointmentTypeId } from './_acuity.js';
 import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
 import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
-import { buildCheckoutReconciliationHint } from './_reconciliation.js';
 import { getDepositAmountDollars } from '../src/lib/checkoutConfig.js';
-import { upsertAttioPerson } from './_attio.js';
-
-const TZ = 'America/Los_Angeles';
+import { getSupabaseServiceClient } from './_supabase-server.js';
+import {
+  buildCheckoutPayload,
+  buildPendingAppointmentRecord,
+  buildStripeCheckoutMetadata,
+} from './_checkout-fulfillment.js';
 
 function dollarsToCents(value) {
   return Math.max(0, Math.round(Number(value || 0) * 100));
@@ -43,122 +44,6 @@ function publicBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
-function isDevRequest(req) {
-  const host = req?.headers?.host || '';
-  return host.startsWith('localhost') || host.startsWith('127.0.0.1');
-}
-
-function yesNo(value) {
-  return value === true || value === 'true' || value === 'Yes' ? 'Yes' : 'No';
-}
-
-function formatAddons(items = []) {
-  const addons = items.filter((i) => i.type === 'addon' || i.type === 'im');
-  if (!addons.length) return null;
-  return addons.map((a) => {
-    const label = a.label || a.key || 'Add-on';
-    // Capture tiered dosage hints embedded in label (e.g. "Vitamin C — High Dose 25g")
-    return `  • ${label}${a.price ? ` ($${a.price})` : ''}`;
-  }).join('\n');
-}
-
-function appointmentNotes({ appointment = {}, items = [], membership = null, req = null }) {
-  const ivItems = items.filter((i) => i.type === 'iv');
-  const addonBlock = formatAddons(items);
-  const isTest = isDevRequest(req);
-
-  const sections = [
-    isTest ? '⚠️  [TEST BOOKING — NOT A REAL APPOINTMENT]' : null,
-    '━━━ BOOKING DETAILS ━━━',
-    appointment.address        ? `📍 Address: ${appointment.address}` : null,
-    appointment.timeLabel      ? `🕐 Time: ${appointment.timeLabel}` : null,
-    appointment.guests && appointment.guests !== '1'
-                               ? `👥 Guests: ${appointment.guests}` : null,
-
-    ivItems.length             ? `\n💉 PROTOCOL\n${ivItems.map((i) => `  • ${i.label} ($${i.price})`).join('\n')}` : null,
-    addonBlock                 ? `\n➕ ADD-ONS\n${addonBlock}` : null,
-    membership                 ? `\n📋 MEMBERSHIP\n  • ${membership.name} – ${membership.billing} ($${membership.price})` : null,
-
-    appointment.dob            ? `\n🏥 MEDICAL\n  DOB: ${appointment.dob}` : null,
-    appointment.medicalConditions && appointment.medicalConditions !== 'None of the above'
-                               ? `  Conditions: ${appointment.medicalConditions}` : null,
-    appointment.covidPositive === 'Yes'
-                               ? '  ⚠️  COVID positive in last 14 days' : null,
-    appointment.infectiousDisease === 'Yes'
-                               ? '  ⚠️  Active infectious disease' : null,
-    appointment.ivBefore       ? `  IV before: ${appointment.ivBefore}` : null,
-    appointment.allergies      ? `  Allergies: ${appointment.allergies}` : null,
-    appointment.medications    ? `  Medications: ${appointment.medications}` : null,
-    appointment.emergencyContact
-                               ? `  Emergency contact: ${appointment.emergencyContact}` : null,
-
-    appointment.notes          ? `\n📝 CLIENT NOTES\n  ${appointment.notes}` : null,
-    isTest ? '\n⚠️  [TEST — DO NOT DISPATCH]' : null,
-  ].filter(Boolean);
-
-  return sections.join('\n');
-}
-
-function requiresSpecialConsent(items = [], appointmentTypeID, needle) {
-  const haystack = `${appointmentTypeID} ${items.map((item) => `${item.cartKey || item.key || ''} ${item.label || ''}`).join(' ')}`.toLowerCase();
-  return haystack.includes(needle);
-}
-
-function requiredSchedulingFields(appointment = {}, items = [], appointmentTypeID = '') {
-  const medicalConditions = appointment.medicalConditions || 'None of the above';
-  const fields = [
-    { id: 16968986, value: appointment.dob || '' },
-    { id: 16968987, value: appointment.address || '' },
-    { id: 16978048, value: appointment.guests || '1' },
-    { id: 16968998, value: appointment.covidPositive || 'No' },
-    { id: 16978067, value: appointment.infectiousDisease || 'No' },
-    { id: 16968997, value: appointment.ivBefore || 'Yes' },
-    { id: 16969005, value: medicalConditions },
-    { id: 16969010, value: appointment.allergies || '' },
-    { id: 16969009, value: appointment.medications || '' },
-    { id: 16968994, value: appointment.emergencyContact || '' },
-    { id: 16969698, value: appointment.additionalComments || '' },
-    { id: 16969017, value: yesNo(appointment.privacyAck) },
-    { id: 16969015, value: yesNo(appointment.treatmentConsent) },
-    { id: 16969719, value: yesNo(appointment.generalConsent) },
-  ];
-
-  if (requiresSpecialConsent(items, appointmentTypeID, 'cbd')) {
-    fields.push({ id: 16969724, value: yesNo(appointment.cbdConsent) });
-  }
-  if (requiresSpecialConsent(items, appointmentTypeID, 'nad')) {
-    fields.push({ id: 16969727, value: yesNo(appointment.nadConsent) });
-  }
-
-  return fields;
-}
-
-async function createSchedulingAppointment({ appointment, contact, items, membership, req }) {
-  if (!appointment?.acuityDatetime) return null;
-
-  const appointmentTypeID = Number(appointment.acuityTypeId)
-    || resolveAppointmentTypeId(items, membership);
-
-  if (!appointmentTypeID) {
-    throw Object.assign(new Error('Appointment type is not configured'), { status: 400 });
-  }
-
-  return acuityFetch('/appointments', {
-    method: 'POST',
-    body: JSON.stringify({
-      appointmentTypeID,
-      datetime: appointment.acuityDatetime,
-      firstName: contact.firstName,
-      lastName: contact.lastName || '',
-      email: contact.email,
-      phone: contact.phone || '',
-      timezone: appointment.acuityTimezone || TZ,
-      notes: appointmentNotes({ appointment, items, membership, req }),
-      fields: requiredSchedulingFields(appointment, items, appointmentTypeID),
-    }),
-  });
-}
-
 function stripeLineItems(items = [], membership = null, { depositOnly = false, depositAmount = getDepositAmountDollars(process.env) } = {}) {
   const lineItems = depositOnly && items.length
     ? [{
@@ -167,8 +52,8 @@ function stripeLineItems(items = [], membership = null, { depositOnly = false, d
           currency: 'usd',
           unit_amount: dollarsToCents(depositAmount),
           product_data: {
-            name: 'Avalon appointment deposit',
-            metadata: { type: 'deposit' },
+            name: 'Avalon non-refundable deductible',
+            metadata: { type: 'deductible' },
           },
         },
       }]
@@ -228,7 +113,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'First name and email are required' });
   }
 
-  let acuityAppointment = null;
+  let pendingRecordId = null;
   try {
     const items = sanitizeCheckoutItems(rawItems);
     const membership = sanitizeCheckoutMembership(rawMembership);
@@ -266,21 +151,15 @@ export default async function handler(req, res) {
       });
     }
 
-    acuityAppointment = await createSchedulingAppointment({
-      appointment,
-      contact,
-      items,
-      membership,
-      req,
-    });
-
-    const successUrl = `${baseUrl}/booking/confirmation${acuityAppointment?.id ? `?appointment=${encodeURIComponent(acuityAppointment.id)}` : ''}`;
-    const successJoiner = successUrl.includes('?') ? '&' : '?';
-    const cancelUrl = `${baseUrl}/checkout`;
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const visitSubtotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
     const hasVisitItems = items.length > 0;
+    if (hasVisitItems && !appointment.acuityDatetime) {
+      return res.status(400).json({
+        error: 'Appointment time is required before checkout',
+        code: 'appointment_time_missing',
+      });
+    }
+
     const depositAmount = getDepositAmountDollars(process.env);
     const line_items = stripeLineItems(items, membership, {
       depositOnly: hasVisitItems,
@@ -296,24 +175,57 @@ export default async function handler(req, res) {
     const depositCents = dollarsToCents(depositAmount);
     const balanceDueCents = hasVisitItems ? Math.max(0, visitSubtotalCents - depositCents) : 0;
     const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
+    const checkoutPayload = buildCheckoutPayload({
+      contact,
+      appointment,
+      items,
+      membership,
+      paymentMethod,
+      primaryService,
+      visitSubtotalCents,
+      depositCents,
+      balanceDueCents,
+    });
+
+    const db = await getSupabaseServiceClient();
+    if (!db) {
+      return res.status(503).json({
+        error: 'Booking persistence is not configured',
+        code: 'booking_persistence_missing',
+      });
+    }
+
+    const { data: pendingRecord, error: pendingError } = await db.from('appointments')
+      .insert(buildPendingAppointmentRecord(checkoutPayload))
+      .select('id')
+      .single();
+
+    if (pendingError || !pendingRecord?.id) {
+      throw httpError(pendingError?.message || 'Could not prepare booking for checkout', 500, 'booking_prepare_failed');
+    }
+
+    pendingRecordId = pendingRecord.id;
+
+    const successUrl = `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}&payment=success`;
+    const cancelUrl = `${baseUrl}/checkout?payment=cancelled`;
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const sessionParams = {
       mode: sessionMode,
       customer_email: contact.email,
       line_items,
       expires_at: checkoutExpiresAt(),
-      success_url: `${successUrl}${successJoiner}session_id={CHECKOUT_SESSION_ID}`,
+      success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
-        acuityAppointmentId: acuityAppointment?.id ? String(acuityAppointment.id) : '',
-        customerName: contact.name || `${contact.firstName} ${contact.lastName || ''}`.trim(),
-        phone: contact.phone || '',
-        paymentMethod: paymentMethod || 'card',
-        service: primaryService,
-        visitSubtotalCents: String(visitSubtotalCents),
-        depositAmountCents: String(depositCents),
-        balanceDueCents: String(balanceDueCents),
-      },
+      metadata: buildStripeCheckoutMetadata({
+        appointmentRecordId: pendingRecordId,
+        contact,
+        paymentMethod,
+        primaryService,
+        visitSubtotalCents,
+        depositCents,
+        balanceDueCents,
+      }),
     };
 
     // Deposit (one-time payment): save the card on file so the nurse can charge
@@ -324,45 +236,41 @@ export default async function handler(req, res) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    // Sync the client into Attio CRM — non-blocking, never fails the booking.
-    // CRM-safe: contact + lifecycle only, no clinical/intake details.
-    upsertAttioPerson({
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      email: contact.email,
-      phone: contact.phone,
-      source: 'Avalon Booking',
-      lifecycleStage: 'Deposit Pending',
-      service: primaryService,
-    }).catch((e) => console.warn('[create-checkout-session] Attio sync failed:', e.message));
+    const { error: sessionLinkError } = await db.from('appointments')
+      .update({
+        stripe_checkout_session_id: session.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', pendingRecordId);
+
+    if (sessionLinkError) {
+      console.warn('[create-checkout-session] could not link Stripe session:', sessionLinkError.message);
+    }
 
     return res.status(200).json({
       ok: true,
       provider: 'stripe',
-      appointment: acuityAppointment,
+      appointment: { id: pendingRecordId, provider: 'avalon_checkout', status: 'payment_pending' },
       balanceDueCents,
       url: session.url,
     });
   } catch (err) {
-    if (acuityAppointment?.id) {
+    if (pendingRecordId) {
       try {
-        await cancelAppointment(acuityAppointment.id, 'Stripe checkout failed before payment confirmation.');
+        const db = await getSupabaseServiceClient();
+        await db?.from('appointments').update({
+          status: 'checkout_failed',
+          payment_status: 'checkout_failed',
+          reconciliation_status: 'action_required',
+          updated_at: new Date().toISOString(),
+        }).eq('id', pendingRecordId);
       } catch (rollbackErr) {
-        console.error('[create-checkout-session:rollback]', rollbackErr.message, rollbackErr.body || '');
+        console.error('[create-checkout-session:rollback]', rollbackErr.message || rollbackErr);
       }
     }
-    const reconciliation = buildCheckoutReconciliationHint({ acuityAppointment, error: err });
-    console.error('[create-checkout-session]', err.message, err.body || '', reconciliation || '');
+    console.error('[create-checkout-session]', err.message, err.body || '');
     return res.status(err.status || 500).json({
       error: err.message || 'Checkout failed',
-      reconciliation: reconciliation
-        ? {
-            caseType: reconciliation.case_type,
-            ownerRole: reconciliation.owner_role,
-            externalReference: reconciliation.external_reference,
-            requiredAction: reconciliation.payload.required_action,
-          }
-        : null,
     });
   }
 }

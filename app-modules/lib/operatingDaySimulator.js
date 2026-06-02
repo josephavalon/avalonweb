@@ -617,7 +617,7 @@ export function buildOperatingDaySnapshot({
     },
     handoffs: [
       { id: 'acuity', label: 'Acuity', status: 'Placeholder', proof: 'Appointments and closeout packets are mirrored locally; Acuity remains live source later.' },
-      { id: 'stripe', label: 'Stripe', status: 'Placeholder', proof: '$50 deposit and refund states are represented without charging.' },
+      { id: 'stripe', label: 'Stripe', status: 'Placeholder', proof: '$1 deductible and refund states are represented without charging.' },
       { id: 'supabase', label: 'Supabase', status: 'Contract', proof: 'RLS, source-of-truth, and event tables are modeled; runtime auth waits for API.' },
       { id: 'resend-sms', label: 'Resend/SMS', status: 'Placeholder', proof: 'Sent/delivered/failed/read/ack states are represented locally.' },
       { id: 'attio', label: 'Attio', status: 'Placeholder', proof: 'CRM-safe follow-up only; no PHI/GFE payload.' },

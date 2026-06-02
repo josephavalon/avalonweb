@@ -24,7 +24,7 @@ export const WIRE_TOMORROW_INTEGRATIONS = [
     id: 'stripe',
     label: 'Stripe',
     role: 'Deposit and checkout authorization',
-    owns: ['$50 deposit payment intent', 'refund status', 'checkout session truth'],
+    owns: ['$1 deductible payment intent', 'refund status', 'checkout session truth'],
     neverOwns: ['clinical eligibility', 'appointment source of record', 'payroll', 'banking ledger'],
     inboundEvents: ['checkout.session.completed', 'checkout.session.expired', 'payment_intent.payment_failed', 'charge.refunded'],
     outboundCommands: ['create checkout session', 'create refund'],

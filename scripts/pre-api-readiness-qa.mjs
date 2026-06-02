@@ -78,6 +78,10 @@ assert.equal(reconciliationTypeForStripeEvent({
   type: 'checkout.session.completed',
   data: { object: { metadata: {} } },
 }), 'stripe_succeeded_acuity_failed');
+assert.equal(reconciliationTypeForStripeEvent({
+  type: 'checkout.session.completed',
+  data: { object: { metadata: { fulfillment: 'stripe_paid_then_acuity_attio_v1' } } },
+}), null);
 assert.equal(reconciliationTypeForStripeEvent({ type: 'checkout.session.expired' }), 'acuity_succeeded_stripe_failed');
 assert.equal(reconciliationTypeForStripeEvent({ type: 'payment_intent.payment_failed' }), 'acuity_succeeded_stripe_failed');
 assert.equal(reconciliationTypeForStripeEvent({ type: 'charge.refunded' }), 'refund_accounting_mismatch');
@@ -131,7 +135,7 @@ const files = [
 ].map((file) => [file, fs.readFileSync(path.join(root, file), 'utf8')]);
 
 const source = Object.fromEntries(files);
-assert.match(source['api/create-checkout-session.js'], /buildCheckoutReconciliationHint/, 'Checkout must expose Acuity-created/payment-failed reconciliation.');
+assert.match(source['api/create-checkout-session.js'], /buildPendingAppointmentRecord/, 'Checkout must persist pending bookings before Stripe payment.');
 assert.match(source['api/integrations/stripe/webhook.js'], /reconciliationTypeForStripeEvent/, 'Stripe webhook must use shared reconciliation mapping.');
 assert.match(source['api/integrations/acuity/webhook.js'], /appointment_drift/, 'Acuity webhook must expose appointment drift reconciliation.');
 assert.match(source['src/pages/admin/Command.jsx'], /PreApiWireReadinessPanel/, 'Admin must surface wire readiness proof.');

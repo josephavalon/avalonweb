@@ -134,8 +134,8 @@ export function evaluateClinicalClearance(booking = {}, { profile = {}, now = ne
       label: 'Deposit',
       complete: depositPaid,
       owner: 'Stripe/Acuity placeholder',
-      detail: depositPaid ? '$50 deposit is represented locally.' : '$50 deposit is not marked paid.',
-      action: 'Collect deposit before active dispatch.',
+      detail: depositPaid ? '$1 deductible is represented locally.' : '$1 deductible is not marked paid.',
+      action: 'Collect deductible before active dispatch.',
     }),
   ];
 

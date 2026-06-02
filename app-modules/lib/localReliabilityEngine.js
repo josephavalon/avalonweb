@@ -36,7 +36,7 @@ export const RELIABILITY_API_BOUNDARIES = [
   { id: 'acuity', label: 'Acuity', owns: 'Scheduling, EMR, intake destination, appointment record', mode: 'Placeholder handoff' },
   { id: 'qualiphy', label: 'Qualiphy', owns: 'GFE only when no Avalon remote NP is on call', mode: 'Fallback only' },
   { id: 'nursys', label: 'Nursys', owns: 'License verification', mode: 'Credential placeholder' },
-  { id: 'stripe', label: 'Stripe or Acuity Pay', owns: '$50 deposit and checkout confirmation', mode: 'Payment placeholder' },
+  { id: 'stripe', label: 'Stripe or Acuity Pay', owns: '$1 deductible and checkout confirmation', mode: 'Payment placeholder' },
   { id: 'attio', label: 'Attio', owns: 'CRM routing and follow-up ownership', mode: 'CRM placeholder' },
   { id: 'mercury', label: 'Mercury', owns: 'Banking reconciliation', mode: 'Finance placeholder' },
   { id: 'gusto', label: 'Gusto', owns: 'Payroll execution', mode: 'Payroll placeholder' },

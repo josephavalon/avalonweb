@@ -19,6 +19,8 @@ import {
   QUICKBOOKS_ACCOUNTING_PLACEHOLDER,
 } from '../../src/lib/financeIntegrations';
 
+const PLACEHOLDER_DEDUCTIBLE_AMOUNT = 1;
+
 export const DEFAULT_PREP_CHECKLIST = [
   { key: 'hydrate', label: 'Drink 16 oz of water', done: false },
   { key: 'id', label: 'Have ID ready', done: false },
@@ -37,7 +39,7 @@ export const ORDER_PRODUCT_FAMILIES = [
 
 export const ORDER_FLOW_STEPS = [
   { key: 'order', label: 'Order', owner: 'Client' },
-  { key: 'deposit', label: '$50 deposit', owner: 'Stripe' },
+  { key: 'deposit', label: '$1 deductible', owner: 'Stripe' },
   { key: 'schedule', label: 'Acuity booking', owner: 'Acuity EMR + Scheduling' },
   { key: 'crm', label: 'CRM route', owner: 'Attio' },
   { key: 'gfe', label: 'GFE route', owner: 'Clinical' },
@@ -1403,7 +1405,7 @@ export function buildOrderFlowPlan(booking = {}, options = {}) {
   const steps = ORDER_FLOW_STEPS.map((step) => {
     const status = {
       order: booking.service || booking.plan || 'Protocol selected',
-      deposit: `$${Number(options.depositAmount || booking.depositAmount || 50)} deposit`,
+      deposit: `$${Number(options.depositAmount || booking.depositAmount || PLACEHOLDER_DEDUCTIBLE_AMOUNT)} deductible`,
       schedule: hasSlot ? 'Slot held' : 'Schedule pending',
       crm: 'Attio outreach queued',
       gfe: gfe.required ? 'GFE required' : 'GFE valid',
@@ -1418,7 +1420,7 @@ export function buildOrderFlowPlan(booking = {}, options = {}) {
     productFamilies: ORDER_PRODUCT_FAMILIES,
     city,
     shiftValue,
-    depositAmount: Number(options.depositAmount || booking.depositAmount || 50),
+    depositAmount: Number(options.depositAmount || booking.depositAmount || PLACEHOLDER_DEDUCTIBLE_AMOUNT),
     gfe,
     steps,
   };
@@ -1887,7 +1889,7 @@ export function buildLocalLaunchReadiness({
     { key: 'intake', label: 'Intake', status: intakeDone ? 'Ready' : 'Needed', detail: intakeDone ? 'Medical intake available.' : 'Collect intake before clearance.' },
     { key: 'consent', label: 'Consent', status: consentDone ? 'Ready' : 'Needed', detail: consentDone ? 'Consent signed.' : 'Consent must be signed before treatment.' },
     { key: 'gfe', label: 'GFE', status: gfeRequirement.required ? 'Action' : 'Ready', detail: gfeRequirement.reason },
-    { key: 'payment', label: 'Deposit', status: depositDone ? 'Ready' : 'Action', detail: depositDone ? '$50 deposit/payment is recorded.' : 'Payment link or deposit still pending.' },
+    { key: 'payment', label: 'Deductible', status: depositDone ? 'Ready' : 'Action', detail: depositDone ? '$1 deductible/payment is recorded.' : 'Payment link or deductible still pending.' },
   ];
 
   const nurse = [
@@ -1954,7 +1956,7 @@ export function buildOperatingSpine(requests = [], latestBooking = readLastBooki
     status: latestBooking.status || 'New Request',
     gfe: latestBooking.gfe || (latestBooking.gfeRequired ? 'Pending' : 'Valid'),
     nurse: latestBooking.nurse || 'Unassigned',
-    payment: latestBooking.payment || '$50 deposit pending',
+    payment: latestBooking.payment || '$1 deductible pending',
     source: latestBooking.source || 'Website',
     time: [latestBooking.date, latestBooking.time].filter(Boolean).join(' · '),
   }] : [];
@@ -1972,7 +1974,7 @@ export function buildOperatingSpine(requests = [], latestBooking = readLastBooki
       label: 'Deposit',
       owner: 'Stripe / Acuity',
       count: items.filter((item) => /pending|invoice|link/i.test(item.payment || '')).length,
-      action: '$50 deposit or payment link.',
+      action: '$1 deductible or payment link.',
     },
     {
       key: 'acuity',
@@ -3214,7 +3216,7 @@ export function buildFinanceControlTower({
     ...(latestBooking ? [normalizeFinancePayment({
       id: latestBooking.id || latestBooking.reference,
       client: latestBooking.contact?.name || 'Latest booking',
-      amount: latestBooking.depositAmount || latestBooking.total || 50,
+      amount: latestBooking.depositAmount || latestBooking.total || PLACEHOLDER_DEDUCTIBLE_AMOUNT,
       status: latestBooking.payment || 'Pending',
       method: latestBooking.paymentMethod || 'Stripe/Acuity',
       date: latestBooking.date,

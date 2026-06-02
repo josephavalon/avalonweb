@@ -268,7 +268,7 @@ try {
   if (!result.hasConfirmation) failures.push('Confirmation copy did not render.');
   if (!result.bookingId) failures.push('No local booking was saved.');
   if (!/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
-  if (!/50/.test(result.payment || '')) failures.push('Deposit hold state missing.');
+  if (!/1/.test(result.payment || '')) failures.push('Deductible payment state missing.');
   if (!result.hasHandoff) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);
   if (cdp.consoleIssues.length) failures.push(`Console issues: ${cdp.consoleIssues.join(' | ')}`);

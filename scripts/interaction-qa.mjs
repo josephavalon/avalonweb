@@ -329,7 +329,7 @@ async function testBookingAddOnFlow(cdp) {
   await fillByLabel(cdp, 'Name', 'Demo Client');
   await fillByLabel(cdp, 'Phone', '(415) 555-0144');
   await fillByLabel(cdp, 'Email', 'demo.client@avalon.local');
-  await clickText(cdp, 'Hold $50');
+  await clickText(cdp, 'Pay $1');
   await waitForText(cdp, /Hold received|Confirmation|Myers/i);
   const booking = await evalOnPage(cdp, `JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null')`);
   if (booking?.protocolKey !== 'myers') throw new Error(`Booking protocol mismatch: ${booking?.protocolKey}`);

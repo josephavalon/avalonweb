@@ -105,13 +105,19 @@ function DetailPill({ icon: Icon, label, value }) {
 /* ─── Main ───────────────────────────────────────────────────── */
 export default function BookingConfirmation() {
   const [params] = useSearchParams();
-  const appointmentId = params.get('appointment');
+  const initialAppointmentId = params.get('appointment');
+  const sessionId = params.get('session_id');
+  const paymentSuccess = params.get('payment') === 'success' || Boolean(sessionId);
   const [localBooking] = useState(() => readLastBooking());
+  const [appointmentId, setAppointmentId] = useState(initialAppointmentId);
 
   const [appt, setAppt] = useState(null);
-  const [apptLoading, setApptLoading] = useState(!!appointmentId);
+  const [verifyLoading, setVerifyLoading] = useState(Boolean(sessionId && !initialAppointmentId));
+  const [appointmentLoading, setAppointmentLoading] = useState(Boolean(initialAppointmentId));
   const [apptError, setApptError] = useState(null);
-  const isFastHold = localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold';
+  const [fulfillmentPending, setFulfillmentPending] = useState(Boolean(sessionId && !initialAppointmentId));
+  const apptLoading = verifyLoading || appointmentLoading;
+  const isFastHold = !paymentSuccess && (localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold');
 
   useSeo({
     title: 'Session Confirmed — Avalon Vitality',
@@ -120,9 +126,48 @@ export default function BookingConfirmation() {
   });
 
   useEffect(() => {
+    if (!sessionId || initialAppointmentId) return;
+    let cancelled = false;
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    (async () => {
+      setVerifyLoading(true);
+      setFulfillmentPending(true);
+      for (let attempt = 0; attempt < 10 && !cancelled; attempt += 1) {
+        try {
+          const res = await fetch('/api/checkout/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId }),
+          });
+          const data = await res.json();
+          if (!cancelled && res.ok && data.paid) {
+            if (data.appointmentId) {
+              setAppointmentId(String(data.appointmentId));
+              setFulfillmentPending(false);
+              return;
+            }
+            setFulfillmentPending(Boolean(data.pendingFulfillment));
+          } else if (!cancelled && !res.ok && attempt === 9) {
+            setApptError(data.error || 'Could not verify payment');
+          }
+        } catch {
+          if (!cancelled && attempt === 9) setApptError('Could not verify payment');
+        }
+        await wait(1200);
+      }
+    })().finally(() => {
+      if (!cancelled) setVerifyLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [sessionId, initialAppointmentId]);
+
+  useEffect(() => {
     if (!appointmentId) return;
     let cancelled = false;
     (async () => {
+      setAppointmentLoading(true);
       try {
         const res = await fetch(`/api/scheduling-appointment?id=${encodeURIComponent(appointmentId)}`);
         const data = await res.json();
@@ -133,7 +178,7 @@ export default function BookingConfirmation() {
       } catch {
         if (!cancelled) setApptError('Could not load booking details');
       } finally {
-        if (!cancelled) setApptLoading(false);
+        if (!cancelled) setAppointmentLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -156,13 +201,13 @@ export default function BookingConfirmation() {
         nextStep: localBooking?.manualReview ? 'Clinical review before RN assignment' : 'RN assignment and arrival text',
         gfe: localBooking?.gfe || 'Pending',
         nurse: localBooking?.nurse || 'Unassigned',
-        payment: localBooking?.payment || 'Pending',
+        payment: paymentSuccess ? 'Deductible paid' : localBooking?.payment || 'Pending',
         source: localBooking?.source || 'Website',
         reference: localBooking?.reference || appt.id,
       });
       appendActivity(`Booking confirmed: ${saved.service}`, { role: 'client', bookingId: String(appt.id) });
     }
-  }, [appt, localBooking]);
+  }, [appt, localBooking, paymentSuccess]);
 
   useEffect(() => {
     const bookingId = appt?.id || localBooking?.id || appointmentId;
@@ -203,6 +248,12 @@ export default function BookingConfirmation() {
           location: localBooking.address,
         }
       : null;
+  const titleText = paymentSuccess
+    ? (appt?.id ? 'Session Confirmed.' : 'Payment Received.')
+    : (isFastHold ? 'Hold Received.' : 'Request Received.');
+  const statusText = paymentSuccess
+    ? (appt?.id ? 'Your appointment is confirmed.' : 'We are confirming your appointment now.')
+    : (isFastHold ? 'Pay the hold. Review comes next.' : 'Review comes next.');
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -223,20 +274,28 @@ export default function BookingConfirmation() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}
           >
-	            <h1 className="font-heading text-5xl md:text-6xl text-foreground uppercase tracking-tight leading-none mb-3">
-	              {isFastHold ? 'Hold Received.' : 'Request Received.'}
+            <h1 className="font-heading text-5xl md:text-6xl text-foreground uppercase tracking-tight leading-none mb-3">
+              {titleText}
             </h1>
             <p className="font-body text-base font-semibold text-foreground/68 leading-snug max-w-sm mx-auto mb-5">
-              {isFastHold
-                ? 'Pay the hold. Review comes next.'
-	                : 'Review comes next.'}
+              {statusText}
             </p>
 
             {/* Loading state */}
             {apptLoading && (
               <div className="inline-flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3.5">
                 <Loader2 className="w-4 h-4 text-foreground/40 animate-spin" strokeWidth={1.5} />
-                <span className="font-body text-xs tracking-widest uppercase text-foreground/40">Loading your booking…</span>
+                <span className="font-body text-xs tracking-widest uppercase text-foreground/40">
+                  {paymentSuccess ? 'Confirming your appointment...' : 'Loading your booking...'}
+                </span>
+              </div>
+            )}
+
+            {!apptLoading && fulfillmentPending && !appt && !apptError && (
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3">
+                <p className="font-body text-sm text-foreground/60">
+                  Payment is complete. Appointment confirmation is still processing.
+                </p>
               </div>
             )}
 
@@ -253,7 +312,7 @@ export default function BookingConfirmation() {
                   <DetailPill icon={MapPin} label="Where" value={apptAddress} />
                 )}
                 {localBooking?.depositAmount != null && (
-                  <DetailPill icon={CreditCard} label="Hold" value={`$${Number(localBooking.depositAmount).toLocaleString()} due`} />
+                  <DetailPill icon={CreditCard} label="Deductible" value={`$${Number(localBooking.depositAmount).toLocaleString()} due`} />
                 )}
                 {referenceNum && (
                   <DetailPill icon={Hash} label="ID" value={referenceNum} />
@@ -279,13 +338,13 @@ export default function BookingConfirmation() {
           transition={{ duration: 0.6, ease: EASE, delay: 0.72 }}
           className="space-y-3 pt-2"
         >
-          {/* Complete deposit */}
+          {/* Complete deductible */}
           {isFastHold && (
             <Link
               to="/checkout"
               className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background shadow-[0_16px_50px_hsl(var(--foreground)/0.14)] transition-opacity hover:opacity-88"
             >
-              Complete Deposit <CreditCard className="h-4 w-4" strokeWidth={2} />
+              Complete Deductible <CreditCard className="h-4 w-4" strokeWidth={2} />
             </Link>
           )}
 
