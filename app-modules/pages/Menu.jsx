@@ -20,7 +20,7 @@ import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const FILTERS = [
-  { key: 'all', label: 'All protocols', icon: FlaskConical },
+  { key: 'all', label: 'All protocols', selectLabel: 'All', icon: FlaskConical },
   { key: 'recovery', label: 'Hydration', icon: Droplets },
   { key: 'energy', label: 'Energy', icon: Zap },
   { key: 'advanced', label: 'Longevity', icon: BatteryCharging },
@@ -302,20 +302,22 @@ export default function Menu() {
                   <select
                     value={filter}
                     onChange={(event) => setFilter(event.target.value)}
-                    className="min-h-[54px] w-full rounded-full border border-foreground/12 bg-background/46 px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground outline-none backdrop-blur-xl"
+                    className="min-h-[54px] w-full appearance-none rounded-full border border-foreground/12 bg-background/70 px-4 pr-10 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground outline-none backdrop-blur-xl"
                   >
-                    {FILTERS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                    {FILTERS.map((item) => <option key={item.key} value={item.key}>{item.selectLabel || item.label}</option>)}
                   </select>
+                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/58" strokeWidth={2.35} />
                 </label>
                 <label className="relative block">
                   <span className="sr-only">Sort protocols</span>
                   <select
                     value={sort}
                     onChange={(event) => setSort(event.target.value)}
-                    className="min-h-[54px] w-full rounded-full border border-foreground/12 bg-background/46 px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground outline-none backdrop-blur-xl"
+                    className="min-h-[54px] w-full appearance-none rounded-full border border-foreground/12 bg-background/70 px-4 pr-10 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground outline-none backdrop-blur-xl"
                   >
                     {SORTS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
                   </select>
+                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/58" strokeWidth={2.35} />
                 </label>
               </div>
             </div>
