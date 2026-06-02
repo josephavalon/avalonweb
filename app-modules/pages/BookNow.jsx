@@ -37,7 +37,7 @@ import {
 import Navbar from '@/components/landing/Navbar';
 import { useCart } from '@/context/CartContext';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
-import { COVERED_ZIPS } from '@/lib/serviceArea';
+import { COVERED_ZIPS, extractZip } from '@/lib/serviceArea';
 import { useSeo } from '@/lib/seo';
 import {
   appendActivity,
@@ -265,13 +265,15 @@ function buildTypedAddressSuggestion(address, zip, locationType = 'home') {
   const typed = normalizeTypedStreet(address);
   if (typed.length < 3) return null;
   if (!/\d/.test(typed)) return null;
-  const completedAddress = /,\s*[A-Za-z]/.test(typed)
-    ? typed
-    : `${typed}, San Francisco, CA`;
+  const inferredZip = extractZip(typed);
+  const typedAddress = normalizeTypedStreet(typed.replace(/\b\d{5}(?:-\d{4})?\b/g, ''));
+  const completedAddress = /,\s*[A-Za-z]/.test(typedAddress)
+    ? typedAddress
+    : `${typedAddress}, San Francisco, CA`;
   return {
     label: `${locationLabelForKey(locationType)} · Suggested`,
     address: completedAddress,
-    zip: String(zip || '').replace(/\D/g, '').slice(0, 5) || '94107',
+    zip: inferredZip || String(zip || '').replace(/\D/g, '').slice(0, 5),
     locationType,
     generated: true,
   };
@@ -1252,14 +1254,60 @@ function formatPhoneNumber(value) {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
+function parseContactLine(value = '') {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
+  const phoneMatch = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/);
+  const phone = phoneMatch ? formatPhoneNumber(phoneMatch[0]) : '';
+  const name = text
+    .replace(email, ' ')
+    .replace(phoneMatch?.[0] || '', ' ')
+    .replace(/[|,;]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return { name, email, phone };
+}
+
+function formatContactLine({ name = '', phone = '', email = '' } = {}) {
+  return [name, phone, email].filter(Boolean).join(', ');
+}
+
+function formatDobInput(value = '') {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function parseDob(value = '') {
+  const text = String(value || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const date = new Date(`${text}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  const match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(year, month - 1, day, 12);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
+}
+
 function hasFullName(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
 function hasDob(value) {
-  if (!value) return false;
-  const date = new Date(`${value}T12:00:00`);
-  return !Number.isNaN(date.getTime()) && date < new Date();
+  const date = parseDob(value);
+  return Boolean(date) && !Number.isNaN(date.getTime()) && date < new Date();
 }
 
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, actionLabel, onAction }) {
@@ -1318,9 +1366,11 @@ function AddressPrediction({ suggestion, onUse, compact = false }) {
           <span className="mt-1 block truncate font-body text-lg font-black leading-tight">{suggestion.address}</span>
         </span>
       </span>
-      <span className="relative shrink-0 rounded-full border border-foreground/18 bg-background/24 px-3 py-1.5 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground/84">
-        {suggestion.zip}
-      </span>
+      {suggestion.zip && (
+        <span className="relative shrink-0 rounded-full border border-foreground/18 bg-background/24 px-3 py-1.5 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground/84">
+          {suggestion.zip}
+        </span>
+      )}
     </button>
   );
 }
@@ -1655,10 +1705,19 @@ function ClinicalReviewCard({ bookingGfeRequirement }) {
 function ContactConfirmCard({ state, onChange, savedContact }) {
   const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
   const [editing, setEditing] = useState(!hasContact);
+  const contactLine = state.contactLine || formatContactLine(state);
 
   useEffect(() => {
     if (!hasContact) setEditing(true);
   }, [hasContact]);
+
+  const updateContactLine = (value) => {
+    const parsed = parseContactLine(value);
+    onChange('contactLine', value);
+    onChange('name', parsed.name);
+    onChange('email', parsed.email);
+    onChange('phone', parsed.phone);
+  };
 
   if (!editing) {
     return (
@@ -1697,10 +1756,34 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
         Used for receipt and nurse follow-up.
       </p>
       <div className="relative grid gap-3 sm:grid-cols-2">
-        <TextInput label="Full name" value={state.name} onChange={(value) => onChange('name', value)} placeholder="Alex Morgan" autoComplete="name" actionLabel={savedContact?.name ? 'Saved' : ''} onAction={() => onChange('name', savedContact?.name || '')} required />
-        <TextInput label="Date of birth" type="date" value={state.dob} onChange={(value) => onChange('dob', value)} autoComplete="bday" required />
-        <TextInput label="Phone" type="tel" inputMode="tel" value={state.phone} onChange={(value) => onChange('phone', formatPhoneNumber(value))} placeholder="(415) 555-0123" autoComplete="tel" actionLabel={savedContact?.phone ? 'Saved' : ''} onAction={() => onChange('phone', formatPhoneNumber(savedContact?.phone || ''))} required />
-        <TextInput label="Email" type="email" inputMode="email" value={state.email} onChange={(value) => onChange('email', value)} placeholder="you@example.com" autoComplete="email" actionLabel={savedContact?.email ? 'Saved' : ''} onAction={() => onChange('email', savedContact?.email || '')} required />
+        <div className="sm:col-span-2">
+          <TextInput
+            label="Name, phone, email"
+            value={contactLine}
+            onChange={updateContactLine}
+            placeholder="Alex Morgan, (415) 555-0123, you@example.com"
+            autoComplete="name"
+            actionLabel={savedContact?.name || savedContact?.email || savedContact?.phone ? 'Saved' : ''}
+            onAction={() => {
+              const nextLine = formatContactLine({
+                name: savedContact?.name || '',
+                phone: formatPhoneNumber(savedContact?.phone || ''),
+                email: savedContact?.email || '',
+              });
+              updateContactLine(nextLine);
+            }}
+            required
+          />
+        </div>
+        <TextInput
+          label="Date of birth"
+          value={state.dob}
+          onChange={(value) => onChange('dob', formatDobInput(value))}
+          placeholder="MM/DD/YYYY"
+          autoComplete="bday"
+          inputMode="numeric"
+          required
+        />
       </div>
       {hasContact && (
         <button
@@ -1989,6 +2072,7 @@ const defaultState = {
   customDate: todayDate(),
   customTime: '',
   name: '',
+  contactLine: '',
   email: '',
   phone: '',
   dob: '',
@@ -2200,9 +2284,13 @@ export default function BookNow() {
   const balanceDue = Math.max(0, subtotal - DEPOSIT_DUE);
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
+  const resolvedZip = useMemo(
+    () => String(state.zip || extractZip(state.address) || '').replace(/\D/g, '').slice(0, 5),
+    [state.address, state.zip]
+  );
   const typedAddressSuggestion = useMemo(
-    () => buildTypedAddressSuggestion(state.address, state.zip, state.locationType),
-    [state.address, state.zip, state.locationType]
+    () => buildTypedAddressSuggestion(state.address, resolvedZip, state.locationType),
+    [state.address, resolvedZip, state.locationType]
   );
   const addressSuggestions = useMemo(() => {
     const query = `${state.address} ${state.zip}`.trim();
@@ -2241,6 +2329,24 @@ export default function BookNow() {
   const setValue = (key, value) => {
     setError('');
     setState((current) => ({ ...current, [key]: value }));
+  };
+
+  const setAddressValue = (value) => {
+    setError('');
+    const nextZip = extractZip(value);
+    setState((current) => ({
+      ...current,
+      address: value,
+      zip: nextZip || current.zip,
+    }));
+    if (
+      step === 3 &&
+      !groupContactRequired &&
+      nextZip &&
+      (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
+    ) {
+      window.setTimeout(() => setStep(LAST_STEP), 250);
+    }
   };
 
   useEffect(() => {
@@ -2447,13 +2553,22 @@ export default function BookNow() {
   };
 
   const chooseAddressSuggestion = (item) => {
+    const nextZip = item.zip || extractZip(item.address) || state.zip;
     setError('');
     setState((current) => ({
       ...current,
       address: item.address,
-      zip: item.zip,
+      zip: nextZip || current.zip,
       locationType: item.locationType,
     }));
+    if (
+      step === 3 &&
+      !groupContactRequired &&
+      String(nextZip || '').replace(/\D/g, '').length === 5 &&
+      (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
+    ) {
+      setStep(LAST_STEP);
+    }
   };
 
   const useCurrentLocation = () => {
@@ -2476,6 +2591,14 @@ export default function BookNow() {
             address: result.address,
             zip: result.zip || current.zip,
           }));
+          if (
+            step === 3 &&
+            !groupContactRequired &&
+            String(result.zip || '').replace(/\D/g, '').length === 5 &&
+            (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
+          ) {
+            setStep(LAST_STEP);
+          }
         } catch (err) {
           setError(err.message || 'Address lookup failed. Add street address.');
         } finally {
@@ -2557,7 +2680,7 @@ export default function BookNow() {
     if (step === 1) return Boolean(state.productKey);
     if (step === 2) return Boolean(state.productKey);
     if (step === 3 && groupContactRequired) return true;
-    if (step === 3) return Boolean(state.address.trim() && String(state.zip).trim().length === 5 && (state.timeIntent !== 'choose' || (state.customDate && state.customTime)));
+    if (step === 3) return Boolean(state.address.trim() && resolvedZip.length === 5 && (state.timeIntent !== 'choose' || (state.customDate && state.customTime)));
     return true;
   };
 
@@ -2658,7 +2781,7 @@ export default function BookNow() {
       datetime: slot.datetime,
       timezone: TZ,
       address: state.address,
-      zip: String(state.zip || '').trim(),
+      zip: resolvedZip,
       locationType: state.locationType,
       guests,
 	      notes: state.notes,
@@ -2721,7 +2844,7 @@ export default function BookNow() {
           : `Nurse review ready${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
         'Final eligibility verified before RN dispatch.',
         'Scheduling handoff is represented locally until connected.',
-        !COVERED_ZIPS.has(String(state.zip || '').trim()) && 'Service-area review required.',
+        !COVERED_ZIPS.has(resolvedZip) && 'Service-area review required.',
         isGroupVisit && 'Pre-launch nurse coordination required.',
       ].filter(Boolean),
       notificationPreview: {
@@ -2732,7 +2855,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
+  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5);
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     clearItems();
@@ -2868,7 +2991,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError('Add name, date of birth, phone, email, place, and ZIP.');
+      setError('Add contact, date of birth, and service address with ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -3102,7 +3225,7 @@ export default function BookNow() {
 	                      <TherapyChoicePanel
 	                        productOptions={productOptions}
 	                        activeKey={state.productKey}
-	                        onSelect={chooseProduct}
+	                        onSelect={chooseProductAndContinue}
 	                        onPrimary={chooseProductAndContinue}
 	                      />
 	                    )}
@@ -3158,33 +3281,35 @@ export default function BookNow() {
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_120px]">
+                    <div className="mt-5 grid gap-3">
                       <div className="grid gap-2">
                         <TextInput
                           label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'}
                           value={state.address}
-                          onChange={(value) => setValue('address', value)}
+                          onChange={setAddressValue}
                           onKeyDown={handleAddressKeyDown}
-                          placeholder="Start with street number"
+                          placeholder="Street address, city, ZIP"
                           autoComplete="street-address"
                           actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
                           onAction={() => chooseAddressSuggestion(savedVisitAddress)}
                           required
                         />
                         <AddressPrediction suggestion={topAddressSuggestion} onUse={chooseAddressSuggestion} compact />
+                        {state.address.trim() && !resolvedZip && (
+                          <TextInput
+                            label="ZIP"
+                            value={state.zip}
+                            onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))}
+                            onKeyDown={handleAddressKeyDown}
+                            placeholder="94107"
+                            autoComplete="postal-code"
+                            inputMode="numeric"
+                            actionLabel={savedVisitAddress?.zip ? 'Saved' : ''}
+                            onAction={() => setValue('zip', savedVisitAddress?.zip || '')}
+                            required
+                          />
+                        )}
                       </div>
-                      <TextInput
-                        label="ZIP"
-                        value={state.zip}
-                        onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))}
-                        onKeyDown={handleAddressKeyDown}
-                        placeholder="94107"
-                        autoComplete="postal-code"
-                        inputMode="numeric"
-                        actionLabel={savedVisitAddress?.zip ? 'Saved' : ''}
-                        onAction={() => setValue('zip', savedVisitAddress?.zip || '')}
-                        required
-                      />
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     {addressSuggestions.filter((item) => item.address !== topAddressSuggestion?.address).map((item) => (

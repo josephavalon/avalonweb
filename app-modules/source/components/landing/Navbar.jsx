@@ -76,15 +76,13 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
-      className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
-      compact ? 'left-3 right-3 rounded-2xl' : 'left-4 right-4 rounded-3xl'
+      className={`av-motion-rail fixed z-40 border-0 bg-background shadow-none transition-all duration-700 ease-editorial md:bg-background/60 md:backdrop-blur-2xl ${
+      mobileOpen && !focusMode ? 'bottom-0 left-0 right-0 top-0 overflow-y-auto rounded-none' : compact ? 'left-3 right-3 top-2 rounded-2xl' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
     } ${
       scrolled
-        ? 'top-2 border-0 bg-background shadow-none md:border md:border-foreground/10 md:bg-background/60 md:shadow-lg md:shadow-black/25 md:backdrop-blur-2xl'
-        : `${compact ? 'top-2' : 'top-2 md:top-4'} border-0 bg-background shadow-none md:border md:border-foreground/10 md:bg-background/60 md:backdrop-blur-2xl`
+        ? 'md:border md:border-foreground/10 md:shadow-lg md:shadow-black/25'
+        : 'md:border md:border-foreground/10'
     }`}>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-3 h-5 bg-background md:hidden" />
-
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
       <div
         className={`hidden md:grid items-center px-8 transition-all duration-500 ease-editorial ${
@@ -212,8 +210,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       </div>
 
       {/* Mobile dropdown */}
-      {!focusMode && <div className="md:hidden overflow-hidden rounded-b-3xl">
-        <SmoothDisclosure open={mobileOpen} snapClosed className="px-2" innerClassName="pb-2">
+      {!focusMode && <div className="md:hidden overflow-hidden">
+        <SmoothDisclosure open={mobileOpen} snapClosed className="px-2 bg-background" innerClassName="pb-0 bg-background">
               <motion.div
                 initial={false}
                 animate={mobileOpen ? 'visible' : 'hidden'}
@@ -221,9 +219,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="relative overflow-hidden rounded-[24px] bg-background/82 p-1.5 shadow-[0_28px_100px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl"
+                className="relative overflow-hidden rounded-none bg-background p-1.5 shadow-none"
               >
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(140deg,hsl(var(--foreground)/0.10),transparent_34%,hsl(var(--accent)/0.08))]" />
 
                 {showBack && !compact && (
                   <motion.div
@@ -255,18 +252,18 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                       <Link
                         to={item.to}
                         onClick={close}
-                        className={`group flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] transition-all duration-300 ${
+                        className={`group flex min-h-[58px] items-center justify-between rounded-none border border-transparent bg-background px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground transition-all duration-300 ${
                           item.primary
-                            ? 'border-foreground/80 bg-foreground text-background hover:opacity-90'
+                            ? 'text-foreground hover:text-foreground'
                             : active
-                              ? 'border-foreground/[0.18] bg-foreground/[0.075] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]'
-                              : 'border-transparent bg-transparent text-foreground/66 hover:border-foreground/[0.10] hover:bg-foreground/[0.055] hover:text-foreground'
+                              ? 'text-foreground'
+                              : 'text-foreground/66 hover:text-foreground'
                         }`}
                       >
                         <span>{item.label}</span>
                         <span className={`h-1.5 w-1.5 rounded-full transition-colors ${
                           item.primary
-                            ? 'bg-background/60'
+                            ? 'bg-foreground/60'
                             : active
                               ? 'bg-accent'
                               : 'bg-foreground/18 group-hover:bg-foreground/42'
