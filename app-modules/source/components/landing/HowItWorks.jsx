@@ -37,14 +37,6 @@ function StepCard({ step, index, open, onToggle }) {
       className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
       <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
-      <motion.span
-        initial={false}
-        animate={{ scale: open ? 1.08 : 1, opacity: open ? 1 : 0.55 }}
-        transition={{ duration: 0.45, ease: EASE }}
-        className={`absolute -left-[1.85rem] top-7 hidden h-3 w-3 rounded-full border md:block ${
-          open ? 'border-accent bg-accent shadow-[0_0_24px_hsl(var(--accent)/0.35)]' : 'border-border/90 bg-background'
-        }`}
-      />
       <motion.button
         type="button"
         onClick={onToggle}
@@ -102,13 +94,6 @@ export default function HowItWorks() {
         </motion.div>
 
         <div className="relative space-y-2">
-          <motion.div
-            initial={{ scaleY: 0, opacity: 0 }}
-            whileInView={{ scaleY: 1, opacity: 1 }}
-            viewport={{ once: true, margin: '-12%' }}
-            transition={{ duration: 1.05, ease: EASE }}
-            className="absolute -left-[1.48rem] bottom-7 top-7 hidden w-px origin-top bg-gradient-to-b from-accent/60 via-foreground/[0.12] to-transparent md:block"
-          />
           {STEPS.map((step, i) => (
             <StepCard
               key={step.n}
