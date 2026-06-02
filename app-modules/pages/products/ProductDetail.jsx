@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { motion } from '@/components/ui/PageTransitionMotion';
+import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, ChevronDown,
@@ -27,6 +27,7 @@ function productPrice(product) {
 }
 
 function ProductMedia({ product, compact = false }) {
+  const reduceMotion = useReducedMotion();
   const { image, motionVideo, name } = product;
   const transparentMedia = product.transparentMedia || image?.includes('-cutout.');
   const mediaPadding = compact ? (transparentMedia ? 'p-0' : 'p-2') : (transparentMedia ? 'p-2' : 'p-5');
@@ -51,9 +52,10 @@ function ProductMedia({ product, compact = false }) {
       src={image}
       alt={name}
       className={`h-full w-full object-contain drop-shadow-[0_22px_42px_rgba(41,31,21,0.20)] ${mediaPadding}`}
-      initial={{ y: 8, scale: 0.985 }}
-      animate={{ y: [8, -3, 8], scale: [0.985, 1, 0.985] }}
-      transition={{ duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
+      initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8, scale: 0.992 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+      whileHover={reduceMotion ? undefined : { y: -2, scale: 1.006 }}
+      transition={{ duration: 0.72, ease: EASE }}
     />
   ) : (
     <div className="flex h-full items-center justify-center px-10 text-center">
@@ -201,18 +203,18 @@ export default function ProductDetail() {
 
           <section className="grid gap-6 md:grid-cols-[0.84fr_1fr] md:gap-12 lg:gap-16">
             <motion.div
-              initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 0.75, ease: EASE }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.58, ease: EASE }}
               className="hidden md:block"
             >
               <ProductBag product={treatment} />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.58, ease: EASE, delay: 0.06 }}
               className="md:pt-3"
             >
               <div className="relative min-h-[22rem] overflow-hidden rounded-[1.75rem] border border-foreground/12 bg-card/88 p-5 shadow-[0_22px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl md:hidden">

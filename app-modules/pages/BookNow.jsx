@@ -56,18 +56,18 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { useAuthStore } from '@/lib/useAuthStore';
 
 const EASE = [0.16, 1, 0.3, 1];
+const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 const CARD_REVEAL = {
-  hidden: { opacity: 0, y: 22, scale: 0.975, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: 12, scale: 0.992 },
   show: (index = 0) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.72,
-      delay: Math.min(index, 8) * 0.055,
+      duration: 0.42,
+      delay: Math.min(index, 8) * 0.035,
       ease: EASE,
     },
   }),
@@ -474,8 +474,9 @@ function SectionTitle({ title, sub, icon: Icon }) {
         {Icon && (
           <motion.span
             className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-foreground/14 bg-background/42 text-foreground/88 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_16px_52px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl"
-            animate={reduceMotion ? { scale: 1 } : { scale: [1, 1.05, 1] }}
-            transition={reduceMotion ? { duration: 0 } : { duration: 2.2, repeat: Infinity, ease: EASE }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={reduceMotion ? { duration: 0 } : CHECKOUT_MOTION}
           >
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--foreground)/0.18),transparent_55%)]" />
             <Icon className="h-4 w-4" strokeWidth={2.35} />
@@ -505,8 +506,10 @@ function StepProgress({ step, onStepSelect }) {
           <div className="flex min-w-0 items-center gap-2.5">
             <motion.span
               className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/22 bg-foreground/[0.105] text-foreground shadow-[0_12px_34px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
-              animate={!reduceMotion ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-              transition={!reduceMotion ? { duration: 1.4, repeat: Infinity, ease: EASE } : { duration: 0.2 }}
+              key={step}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0.72, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={reduceMotion ? { duration: 0 } : CHECKOUT_MOTION}
             >
               <CurrentIcon className="h-4 w-4" strokeWidth={2.7} />
             </motion.span>
@@ -554,12 +557,6 @@ function StepProgress({ step, onStepSelect }) {
           animate={{ width: `${(step / LAST_STEP) * 100}%` }}
           transition={{ duration: 0.56, ease: EASE }}
         >
-          <motion.span
-            aria-hidden="true"
-            className="absolute inset-y-0 right-0 w-24 bg-gradient-to-r from-transparent via-background/55 to-transparent"
-            animate={reduceMotion ? { x: 0 } : { x: ['-120%', '120%'] }}
-            transition={reduceMotion ? { duration: 0 } : { duration: 1.8, repeat: Infinity, ease: EASE, repeatDelay: 1.6 }}
-          />
         </motion.div>
       </div>
     </div>
@@ -589,12 +586,6 @@ function StepControls({ step, canGoNext, nextLabel, total, onBack, onNext }) {
         className="relative flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-3 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] md:min-h-[56px] md:gap-4 md:px-6 md:text-sm"
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.14] to-foreground/[0.04] opacity-80" />
-        <motion.span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-foreground/16 to-transparent"
-          animate={{ x: ['0%', '420%'] }}
-          transition={{ duration: 3.6, repeat: Infinity, ease: EASE, repeatDelay: 1.4 }}
-        />
         <span className="truncate">{canGoNext ? compactNextLabel : 'Finish step'}</span>
         <span className="flex shrink-0 items-center gap-2">
           {total}
@@ -637,7 +628,11 @@ function SelectCard({ item, active, onClick, children, className = '', index = 0
         >
           {Icon && <Icon className="h-6 w-6" strokeWidth={2.45} />}
         </div>
-        {active && <Check className="h-5 w-5" strokeWidth={2.55} />}
+        {active && (
+          <motion.span initial={{ opacity: 0, scale: 0.86 }} animate={{ opacity: 1, scale: 1 }} transition={CHECKOUT_MOTION}>
+            <Check className="h-5 w-5" strokeWidth={2.55} />
+          </motion.span>
+        )}
       </div>
       <p className="flex h-11 items-end font-heading text-[2.05rem] uppercase leading-none tracking-normal md:text-[2.35rem]">{item.label}</p>
       <p className={`font-body text-lg font-bold leading-snug ${active ? 'text-foreground/78' : 'text-foreground/72'}`}>{item.sub}</p>
@@ -657,11 +652,10 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
         scale: active ? 1.012 : 1,
         opacity: active ? 1 : 0.92,
         y: 0,
-        filter: 'blur(0px)',
       }}
       whileTap={{ scale: 0.985 }}
-      whileHover={{ y: -2, scale: active ? 1.014 : 1.006 }}
-      transition={{ duration: 0.72, delay: Math.min(index, 8) * 0.055, ease: EASE }}
+      whileHover={{ y: -2, scale: active ? 1.008 : 1.003 }}
+      transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
       onClick={onClick}
       className={`group relative flex min-h-[118px] flex-col items-start justify-between gap-3 overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
         active
@@ -674,27 +668,12 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
       <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       {active && (
         <motion.span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-foreground/22 to-transparent"
-          animate={{ x: ['0%', '320%'] }}
-          transition={{ duration: 3.1, repeat: Infinity, ease: EASE, repeatDelay: 0.8 }}
-        />
-      )}
-      {active && (
-        <motion.span
           layoutId="active-outcome-card"
           className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_50%,hsl(var(--foreground)/0.18),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.11),transparent_60%)]"
           transition={{ duration: 0.42, ease: EASE }}
         />
       )}
-      {active && (
-        <motion.span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-foreground/26"
-          animate={{ opacity: [0.55, 1, 0.55] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: EASE }}
-        />
-      )}
+      {active && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-foreground/26" />}
       <span
         className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16 ${
           active ? 'border-foreground/34 bg-foreground/[0.13] text-foreground shadow-[0_0_38px_hsl(var(--foreground)/0.20)]' : 'border-foreground/14 bg-foreground/[0.055] text-foreground/90'
@@ -712,7 +691,11 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
           active ? 'border-foreground/28 bg-foreground/[0.14] text-foreground shadow-[0_0_32px_hsl(var(--foreground)/0.20)]' : 'border-foreground/14 bg-background/38 text-foreground/48 group-hover:text-foreground'
         }`}
       >
-        {active ? <Check className="h-5 w-5" strokeWidth={2.8} /> : <ArrowRight className="h-5 w-5" strokeWidth={2.4} />}
+        {active ? (
+          <motion.span initial={{ opacity: 0, scale: 0.86 }} animate={{ opacity: 1, scale: 1 }} transition={CHECKOUT_MOTION}>
+            <Check className="h-5 w-5" strokeWidth={2.8} />
+          </motion.span>
+        ) : <ArrowRight className="h-5 w-5" strokeWidth={2.4} />}
       </span>
     </motion.button>
   );
@@ -769,24 +752,15 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
         scale: active ? 1.008 : 1,
         opacity: active ? 1 : 0.92,
         y: 0,
-        filter: 'blur(0px)',
       }}
       whileHover={{ y: -2 }}
-      transition={{ duration: 0.72, delay: Math.min(index, 8) * 0.055, ease: EASE }}
+      transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
       className={`relative overflow-hidden rounded-[1.75rem] border p-3.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:p-4 ${
         active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : featured ? 'border-foreground/16 bg-background/42 text-foreground' : 'border-foreground/9 bg-background/30 text-foreground'
       }`}
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.16),transparent_38%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.06),transparent_35%),linear-gradient(145deg,hsl(var(--foreground)/0.065),transparent_55%,hsl(var(--foreground)/0.026))]" />
       <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
-      {active && (
-        <motion.span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-foreground/14 to-transparent"
-          animate={{ x: ['0%', '320%'] }}
-          transition={{ duration: 3.4, repeat: Infinity, ease: EASE, repeatDelay: 0.9 }}
-        />
-      )}
       <button type="button" onClick={onSelect} aria-label={`Select ${product.label}`} className="block min-h-[72px] w-full text-left">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
@@ -2122,6 +2096,14 @@ function FastReviewSurface({
               canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/42 text-foreground/58'
             }`}
           >
+            {checkoutLoading && (
+              <motion.span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-foreground/16 to-transparent"
+                animate={{ x: ['0%', '420%'] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
+              />
+            )}
             <span>{checkoutLoading ? 'Opening' : 'Pay online'}</span>
             <span>Full amount</span>
           </button>
@@ -2369,6 +2351,14 @@ function SummaryRail({
               className="relative flex min-h-[56px] w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-xs font-bold uppercase tracking-[0.12em] text-foreground shadow-[0_18px_62px_hsl(var(--foreground)/0.17),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-45"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.13] to-foreground/[0.04]" />
+              {actionDisabled && (
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-foreground/16 to-transparent"
+                  animate={{ x: ['0%', '420%'] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
+                />
+              )}
               <span className="relative flex items-center gap-2">
                 {actionLabel} <ArrowRight className="h-4 w-4" />
               </span>
@@ -3460,9 +3450,9 @@ export default function BookNow() {
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
-            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, filter: 'blur(8px)' }}
-            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: reduceMotion ? 0 : 0.42, ease: EASE }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
           >
             <div className="relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5">
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
@@ -3482,6 +3472,18 @@ export default function BookNow() {
                   </button>
                 </div>
                 <div className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
+                  <div className="border-b border-foreground/8 px-4 py-3">
+                    <p className="font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/60">Secure checkout ready</p>
+                    <div className="mt-2 h-px overflow-hidden bg-foreground/10">
+                      <motion.div
+                        className="h-full bg-foreground"
+                        initial={reduceMotion ? { scaleX: 1 } : { scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ duration: reduceMotion ? 0 : 0.5, ease: EASE }}
+                        style={{ originX: 0 }}
+                      />
+                    </div>
+                  </div>
                   <EmbeddedCheckoutProvider
                     key={embeddedCheckoutSession.clientSecret}
                     stripe={stripePromise}
@@ -3559,10 +3561,10 @@ export default function BookNow() {
             <motion.div
               key={step}
               className="relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-5"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.985, filter: 'blur(10px)' }}
-              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.995 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 1 }}
-              transition={{ duration: reduceMotion ? 0 : 0.42, ease: EASE }}
+              transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
             >
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
@@ -3769,11 +3771,9 @@ export default function BookNow() {
 	                            >
 	                              <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
                                 {item.key === 'asap' && (
-                                  <motion.span
+                                  <span
                                     aria-hidden="true"
                                     className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-foreground shadow-[0_0_24px_hsl(var(--foreground)/0.42)]"
-                                    animate={reduceMotion ? { opacity: 0.7 } : { opacity: [0.35, 1, 0.35], scale: [0.9, 1.18, 0.9] }}
-                                    transition={reduceMotion ? { duration: 0 } : { duration: 1.45, repeat: Infinity, ease: EASE }}
                                   />
                                 )}
 	                              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.05]">
@@ -3911,12 +3911,14 @@ export default function BookNow() {
 	            className="relative flex min-h-[54px] flex-1 items-center justify-between overflow-hidden rounded-full border border-foreground/34 bg-foreground/[0.18] px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985]"
           >
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.14] to-foreground/[0.04]" />
-            <motion.span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-foreground/16 to-transparent"
-              animate={{ x: ['0%', '420%'] }}
-              transition={{ duration: 3.6, repeat: Infinity, ease: EASE, repeatDelay: 1.4 }}
-            />
+            {checkoutLoading && (
+              <motion.span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-foreground/16 to-transparent"
+                animate={{ x: ['0%', '420%'] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
+              />
+            )}
             <span>{primaryActionLabel()}</span>
             {step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
               ? <span>Paid online</span>

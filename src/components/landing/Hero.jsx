@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Droplets } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
@@ -8,45 +8,11 @@ const MotionLink = motion.create(Link);
 const BOOK_URL = '/book?protocol=recovery&time=asap';
 
 export default function Hero() {
-  const navigate = useNavigate();
-  const bookTouchStart = React.useRef(null);
-  const subscriptionTouchStart = React.useRef(null);
-
   React.useEffect(() => {
     const preload = () => import('@/pages/BookNow');
     const timer = window.setTimeout(preload, 450);
     return () => window.clearTimeout(timer);
   }, []);
-
-  const handleBookPointerDown = (event) => {
-    if (event.pointerType === 'touch') {
-      bookTouchStart.current = { x: event.clientX, y: event.clientY };
-    }
-  };
-
-  const handleBookPointerUp = (event) => {
-    handleTouchNavigation(event, bookTouchStart, BOOK_URL);
-  };
-
-  const handleSubscriptionPointerDown = (event) => {
-    if (event.pointerType === 'touch') {
-      subscriptionTouchStart.current = { x: event.clientX, y: event.clientY };
-    }
-  };
-
-  const handleSubscriptionPointerUp = (event) => {
-    handleTouchNavigation(event, subscriptionTouchStart, '/subscription');
-  };
-
-  const handleTouchNavigation = (event, startRef, path) => {
-    if (event.pointerType !== 'touch' || !startRef.current) return;
-    const deltaX = Math.abs(event.clientX - startRef.current.x);
-    const deltaY = Math.abs(event.clientY - startRef.current.y);
-    startRef.current = null;
-    if (deltaX > 12 || deltaY > 12) return;
-    event.preventDefault();
-    navigate(path);
-  };
 
   return (
     <section
@@ -108,9 +74,9 @@ export default function Hero() {
             to={BOOK_URL}
             onPointerEnter={() => import('@/pages/BookNow')}
             onFocus={() => import('@/pages/BookNow')}
-            initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.95, delay: 1.18, ease: EASE }}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.72, delay: 1.08, ease: EASE }}
             whileHover={premiumHover}
             whileTap={premiumTap}
             className="group relative flex min-h-[54px] w-full items-center justify-between gap-4 overflow-hidden rounded-xl border border-foreground bg-foreground px-5 text-background shadow-[0_18px_60px_hsl(var(--foreground)/0.14)] transition-all duration-base ease-editorial hover:bg-foreground/90 md:min-h-[118px] md:rounded-[1.55rem] md:border-foreground/38 md:bg-foreground/[0.13] md:p-5 md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.16),0_28px_105px_hsl(var(--foreground)/0.17)] md:backdrop-blur-2xl md:backdrop-saturate-150 md:hover:border-foreground/48 md:hover:bg-foreground/[0.16]"
@@ -120,7 +86,7 @@ export default function Hero() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-y-0 -left-1/2 hidden w-1/2 bg-gradient-to-r from-transparent via-foreground/16 to-transparent md:block"
               animate={{ x: ['0%', '320%'] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: EASE, repeatDelay: 1.1 }}
+              transition={{ duration: 1.2, delay: 1.65, ease: EASE }}
             />
             <span className="relative flex min-w-0 items-center gap-4">
               <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/30 bg-foreground/[0.11] text-foreground shadow-[0_16px_42px_hsl(var(--foreground)/0.12),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:flex md:h-16 md:w-16">

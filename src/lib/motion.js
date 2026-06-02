@@ -11,6 +11,7 @@ export const EASE_OUT_EXPO = EASE;
 // Standard durations — keep a small set.
 export const DURATIONS = {
   quick: 0.22,
+  crisp: 0.28,
   fast: 0.36,
   base: 0.72,
   slow: 1.18,
@@ -66,9 +67,9 @@ export const premiumCard = (delay = 0) => ({
 });
 
 export const premiumHover = {
-  y: -3,
-  scale: 1.006,
-  transition: { duration: DURATIONS.fast, ease: EASE },
+  y: -2,
+  scale: 1.003,
+  transition: { duration: DURATIONS.crisp, ease: EASE },
 };
 
 export const premiumTap = {
@@ -129,6 +130,24 @@ export const premiumStaggerItem = {
 export const premiumSheetTransition = {
   duration: 0.68,
   ease: EASE,
+};
+
+export const checkoutStageTransition = {
+  duration: DURATIONS.crisp,
+  ease: EASE,
+};
+
+export const checkoutStage = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: checkoutStageTransition,
+};
+
+export const selectionCheck = {
+  initial: { opacity: 0, scale: 0.86 },
+  animate: { opacity: 1, scale: 1 },
+  transition: { duration: DURATIONS.crisp, ease: EASE },
 };
 
 // Stagger helpers for list children.
