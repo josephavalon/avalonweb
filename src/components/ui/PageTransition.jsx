@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
+import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { EASE } from '@/lib/motion';
 
 const RED_CARPET_MS = 1480;
@@ -83,12 +83,8 @@ export default function PageTransition({ children }) {
   const reduceMotion = useReducedMotion();
   const previousPathRef = useRef(location.pathname);
   const calculatedKind = transitionKind(previousPathRef.current, location.pathname);
-  const [activeStageKind, setActiveStageKind] = useState('standard');
-  const kind = calculatedKind === 'red-carpet'
-    ? 'red-carpet'
-    : activeStageKind === 'red-carpet' && location.pathname === '/book'
-      ? 'red-carpet'
-      : calculatedKind;
+  const isRedCarpetRoute = calculatedKind === 'red-carpet';
+  const kind = isRedCarpetRoute ? 'booking-entry' : calculatedKind;
   const [redCarpet, setRedCarpet] = useState(null);
 
   useEffect(() => {
@@ -97,19 +93,15 @@ export default function PageTransition({ children }) {
     previousPathRef.current = location.pathname;
 
     if (nextKind !== 'red-carpet' || reduceMotion) {
-      setActiveStageKind(nextKind);
       setRedCarpet(null);
       return undefined;
     }
 
     const id = `${Date.now()}-${location.pathname}`;
-    setActiveStageKind('red-carpet');
     setRedCarpet({ id });
     const overlayTimer = window.setTimeout(() => setRedCarpet(null), RED_CARPET_MS);
-    const stageTimer = window.setTimeout(() => setActiveStageKind('booking-entry'), RED_CARPET_MS);
     return () => {
       window.clearTimeout(overlayTimer);
-      window.clearTimeout(stageTimer);
     };
   }, [location.pathname, reduceMotion]);
 
@@ -130,19 +122,16 @@ export default function PageTransition({ children }) {
           onComplete={() => setRedCarpet(null)}
         />
       )}
-      <AnimatePresence initial={false} mode="wait" custom={kind}>
-        <motion.div
-          key={location.pathname}
-          custom={kind}
-          variants={stageMotion}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          className={`av-page-stage min-h-screen ${kind === 'red-carpet' ? 'av-page-stage-concierge' : ''}`}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <motion.div
+        key={location.pathname}
+        custom={kind}
+        variants={stageMotion}
+        initial={false}
+        animate="animate"
+        className="av-page-stage min-h-screen"
+      >
+        {children}
+      </motion.div>
     </>
   );
 }
