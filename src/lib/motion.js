@@ -10,12 +10,12 @@ export const EASE_OUT_EXPO = EASE;
 
 // Standard durations — keep a small set.
 export const DURATIONS = {
-  quick: 0.22,
-  crisp: 0.28,
-  fast: 0.36,
-  base: 0.72,
-  slow: 1.18,
-  dramatic: 1.58,
+  quick: 0.25,
+  crisp: 0.32,
+  fast: 0.41,
+  base: 0.83,
+  slow: 1.36,
+  dramatic: 1.82,
 };
 
 // Common Framer Motion transition presets.
