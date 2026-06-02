@@ -146,18 +146,19 @@ function CategoryRow({ cat, index, open, onToggle }) {
         viewport={{ once: true, margin: '-12%' }}
         transition={{ duration: 0.84, delay: index * 0.18, ease: EASE }}
         whileHover={premiumHover}
-        className="av-treatment-card rounded-2xl border transition-colors duration-base ease-editorial"
+        className="av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial"
       >
+        <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
         <MotionLink
           to={cat.href}
           whileTap={premiumTap}
-          className="group flex min-h-[88px] w-full items-center justify-between px-5 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-foreground/[0.025] md:min-h-[96px]"
+          className="group flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-muted/45"
         >
           <div className="flex min-w-0 items-center gap-3">
-            <div className="av-treatment-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border md:h-14 md:w-14">
-              <Icon className="h-5 w-5 text-accent" strokeWidth={1.8} />
+            <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
+              <Icon className="h-4 w-4 text-accent/80" strokeWidth={1.8} />
             </div>
-            <p className="truncate font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground md:text-2xl">{cat.label}</p>
+            <p className="truncate font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground">{cat.label}</p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-foreground/30 transition-all duration-base ease-editorial group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
         </MotionLink>
@@ -172,22 +173,23 @@ function CategoryRow({ cat, index, open, onToggle }) {
       viewport={{ once: true, margin: '-12%' }}
       transition={{ duration: 0.84, delay: index * 0.18, ease: EASE }}
       whileHover={premiumHover}
-      className={`av-treatment-card rounded-2xl border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
+      className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
+      <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       {/* Header */}
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="flex min-h-[88px] w-full items-center justify-between px-5 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-foreground/[0.025] md:min-h-[96px]"
+        className="flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-muted/45"
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className="av-treatment-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border md:h-14 md:w-14">
-            <Icon className="h-5 w-5 text-accent" strokeWidth={1.8} />
+          <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
+            <Icon className="h-4 w-4 text-accent/80" strokeWidth={1.8} />
           </div>
           <div className="text-left">
-            <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none md:text-2xl">{cat.label}</p>
+            <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">{cat.label}</p>
             {cat.sub ? (
               <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
             ) : null}
@@ -243,7 +245,7 @@ export default function TreatmentsTeaser() {
   const [openCategory, setOpenCategory] = useState(null);
 
   return (
-    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 pt-10 pb-10 md:pt-16 md:pb-16 px-4">
+    <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 pt-10 pb-10 md:pt-16 md:pb-16 px-5 md:px-12">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
