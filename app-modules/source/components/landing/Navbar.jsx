@@ -83,6 +83,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         ? 'top-2 border-0 bg-background shadow-none md:border md:border-foreground/10 md:bg-background/60 md:shadow-lg md:shadow-black/25 md:backdrop-blur-2xl'
         : `${compact ? 'top-2' : 'top-2 md:top-4'} border-0 bg-background shadow-none md:border md:border-foreground/10 md:bg-background/60 md:backdrop-blur-2xl`
     }`}>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-3 h-5 bg-background md:hidden" />
 
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
       <div
