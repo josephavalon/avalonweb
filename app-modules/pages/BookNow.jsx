@@ -81,6 +81,13 @@ const STEP_ICONS = [Sparkles, Droplets, Plus, Home, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
 const PRIMARY_OUTCOME_KEYS = ['recover', 'perform', 'performance', 'longevity'];
+const SAFETY_FLAGS = [
+  'Pregnant',
+  'Heart or kidney disease',
+  'Allergy to IV ingredients',
+  'Chest pain or shortness of breath',
+  'Currently intoxicated or unable to consent',
+];
 
 const OUTCOMES = [
 		  {
@@ -1702,6 +1709,55 @@ function ClinicalReviewCard({ bookingGfeRequirement }) {
   );
 }
 
+function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue, onChange }) {
+  const Icon = product?.icon || Droplets;
+  return (
+    <div className="grid gap-3">
+      <button
+        type="button"
+        onClick={onContinue}
+        className="group relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-colors hover:border-foreground/34"
+      >
+        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.16),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.025))]" />
+        <div className="relative flex items-start justify-between gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/18 bg-foreground/[0.07] text-foreground">
+            <Icon className="h-6 w-6" strokeWidth={2.45} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Fast hold</span>
+            <span className="mt-2 block font-heading text-[2.6rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
+            <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP nurse window</span>
+          </span>
+          <span className="shrink-0 text-right">
+            <span className="block font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/58">$1 today</span>
+            <span className="mt-1 block font-heading text-4xl leading-none text-foreground">{currency(subtotal)}</span>
+          </span>
+        </div>
+        <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/34 p-3 font-body text-sm font-bold text-foreground/68">
+          <div className="flex items-center justify-between gap-3">
+            <span>Non-refundable deductible</span>
+            <span>{currency(DEPOSIT_DUE)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span>Due at visit</span>
+            <span>{currency(balanceDue)}</span>
+          </div>
+        </div>
+        <p className="relative mt-3 font-body text-xs font-semibold leading-snug text-foreground/56">
+          Request held after payment. Nurse review required before treatment.
+        </p>
+      </button>
+      <button
+        type="button"
+        onClick={onChange}
+        className="min-h-[48px] rounded-full border border-foreground/12 px-4 font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/68"
+      >
+        Change therapy
+      </button>
+    </div>
+  );
+}
+
 function ContactConfirmCard({ state, onChange, savedContact }) {
   const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
   const [editing, setEditing] = useState(!hasContact);
@@ -1794,6 +1850,53 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
           Done
         </button>
       )}
+    </div>
+  );
+}
+
+function SafetyFlagChoice({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+      <div className="relative flex items-center justify-between gap-3">
+        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Any safety flags?</p>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          className="min-h-[38px] rounded-full border border-foreground/12 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62"
+        >
+          {open ? 'Hide' : 'View'}
+        </button>
+      </div>
+      <div className="relative mt-3 grid grid-cols-2 gap-2">
+        {[
+          { key: 'none', label: 'No' },
+          { key: 'call', label: 'Yes, nurse call me' },
+        ].map((item) => {
+          const active = value === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onChange(item.key)}
+              aria-pressed={active}
+              className={`min-h-[58px] rounded-2xl border px-3 text-left font-body text-sm font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+      <SmoothDisclosure open={open}>
+        <div className="relative mt-3 rounded-2xl border border-foreground/10 bg-background/38 p-3">
+          <ul className="grid gap-1.5 font-body text-sm font-semibold leading-snug text-foreground/64">
+            {SAFETY_FLAGS.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      </SmoothDisclosure>
     </div>
   );
 }
@@ -2077,6 +2180,7 @@ const defaultState = {
   phone: '',
   dob: '',
   emergencyContact: '',
+  safetyFlag: '',
   notes: '',
   addOns: [],
   addOnDecision: true,
@@ -2103,6 +2207,7 @@ export default function BookNow() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const fastMode = searchParams.get('fast') === '1';
   const { clearItems, addItem, setMembershipTier, clearMembership } = useCart();
   const { user } = useAuthStore();
   const signedInClient = user?.role === 'client';
@@ -2137,7 +2242,7 @@ export default function BookNow() {
     gfeExpiresAt: clientProfile.gfe?.validUntil,
   }), [clientProfile]);
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(() => (fastMode ? 1 : 1));
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const reduceMotion = useReducedMotion();
@@ -2203,6 +2308,7 @@ export default function BookNow() {
     const outcomeParam = searchParams.get('outcome');
     const protocolParam = searchParams.get('protocol');
     const subscriptionParam = searchParams.get('subscription');
+    const timeParam = searchParams.get('time');
     const selectedSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === subscriptionParam);
     const wantsSubscription = Boolean(selectedSubscriptionPlan);
     const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
@@ -2214,6 +2320,7 @@ export default function BookNow() {
         productKey: protocolParam,
         visitType: wantsSubscription ? 'subscription' : current.visitType,
         planKey: selectedSubscriptionPlan?.key || current.planKey,
+        timeIntent: timeParam === 'asap' ? 'asap' : current.timeIntent,
         addOns: [],
         addOnDecision: true,
       }));
@@ -2229,6 +2336,7 @@ export default function BookNow() {
           productKey: isCustom ? selectedBase.productKey : nextOutcome.productKeys[0] || 'recovery',
           visitType: wantsSubscription ? 'subscription' : current.visitType,
           planKey: selectedSubscriptionPlan?.key || current.planKey,
+          timeIntent: timeParam === 'asap' ? 'asap' : current.timeIntent,
           addOns: [],
           addOnDecision: true,
           customBase: isCustom ? selectedBase.key : current.customBase,
@@ -2733,6 +2841,9 @@ export default function BookNow() {
 	  const primaryActionLabel = () => {
 	    if (checkoutLoading) return 'Opening checkout';
 	    if (embeddedCheckoutSession) return 'Payment ready';
+	    if (fastMode && step === 1) return 'Continue';
+	    if (fastMode && step === 3) return 'Continue';
+	    if (fastMode && step === LAST_STEP) return `Pay ${currency(DEPOSIT_DUE)} hold`;
 	    if (step === 2) return selectedAddons.length ? `Next · ${selectedAddons.length}` : 'Next';
 	    if (step === 3 && groupContactRequired) return 'Contact us';
 	    if (step === 3 && !canAdvance()) return 'Add place';
@@ -2784,7 +2895,10 @@ export default function BookNow() {
       zip: resolvedZip,
       locationType: state.locationType,
       guests,
-	      notes: state.notes,
+	      notes: [
+	        state.notes,
+	        fastMode && `Fast hold. Safety flags: ${state.safetyFlag === 'none' ? 'No' : state.safetyFlag === 'call' ? 'Yes - nurse call requested' : 'Not answered'}. Balance due at visit: ${currency(balanceDue)}.`,
+	      ].filter(Boolean).join('\n'),
       contact: {
         name: state.name.trim(),
         firstName,
@@ -2855,7 +2969,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5);
+  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5 && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     clearItems();
@@ -2991,7 +3105,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError('Add contact, date of birth, and service address with ZIP.');
+      setError(fastMode ? 'Add contact, date of birth, address, and safety response.' : 'Add contact, date of birth, and service address with ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -3150,17 +3264,33 @@ export default function BookNow() {
             </div>
           </motion.section>
         )}
-        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10`}>
+        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} ${fastMode ? 'mx-auto max-w-3xl gap-4' : 'gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10'}`}>
           <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
-            <StepProgress step={step} onStepSelect={goToStep} />
-            <StepControls
-              step={step}
-              canGoNext={canAdvance()}
-              nextLabel={primaryActionLabel()}
-              total={totalLabel}
-              onBack={back}
-              onNext={step < LAST_STEP ? next : submit}
-            />
+            {fastMode ? (
+              <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
+                <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">
+                  {step === 1 ? '1 of 3 · Hold' : step === 3 ? '2 of 3 · Address' : '3 of 3 · Patient'}
+                </p>
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/8">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all duration-500"
+                    style={{ width: step === 1 ? '33%' : step === 3 ? '66%' : '100%' }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <StepProgress step={step} onStepSelect={goToStep} />
+                <StepControls
+                  step={step}
+                  canGoNext={canAdvance()}
+                  nextLabel={primaryActionLabel()}
+                  total={totalLabel}
+                  onBack={back}
+                  onNext={step < LAST_STEP ? next : submit}
+                />
+              </>
+            )}
             {error && (
               <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
                 <p className="font-body text-sm font-black">{error}</p>
@@ -3215,7 +3345,25 @@ export default function BookNow() {
 
 	                {step === 1 && (
 	                  <>
-                    <SectionTitle icon={isCustomTreatment ? BatteryCharging : Droplets} title={isCustomTreatment ? 'Custom' : 'Therapy'} />
+                    {fastMode ? (
+                      <>
+                        <SectionTitle icon={Droplets} title="Hold IV" sub="Pay $1 now. Nurse review before treatment." />
+                        <FastHoldPanel
+                          product={product}
+                          serviceLabel={serviceLabel}
+                          subtotal={subtotal}
+                          balanceDue={balanceDue}
+                          onContinue={() => setStep(3)}
+                          onChange={() => {
+                            const next = new URLSearchParams(searchParams);
+                            next.delete('fast');
+                            navigate(`/book?${next.toString()}`);
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <SectionTitle icon={isCustomTreatment ? BatteryCharging : Droplets} title={isCustomTreatment ? 'Custom' : 'Therapy'} />
 		                    {isCustomTreatment ? (
 		                      <CustomTreatmentBuilder
 		                        baseKey={state.customBase}
@@ -3229,6 +3377,8 @@ export default function BookNow() {
 	                        onPrimary={chooseProductAndContinue}
 	                      />
 	                    )}
+                      </>
+                    )}
 	                  </>
 	                )}
 
@@ -3248,9 +3398,9 @@ export default function BookNow() {
 
                 {step === 3 && (
                   <>
-                    <SectionTitle icon={Home} title="Visit" />
-                    <VisitForSelector value={state.who} onChoose={chooseWho} />
-                    {(state.who === 'group' || state.visitType === 'event') && (
+                    <SectionTitle icon={Home} title={fastMode ? 'Address' : 'Visit'} sub={fastMode ? 'Street address with ZIP.' : ''} />
+                    {!fastMode && <VisitForSelector value={state.who} onChoose={chooseWho} />}
+                    {!fastMode && (state.who === 'group' || state.visitType === 'event') && (
                       <GroupPricingPanel
                         baseTotal={baseSubtotal}
                         guestCount={guestCount}
@@ -3260,7 +3410,7 @@ export default function BookNow() {
                         onEventType={(value) => setValue('eventType', value)}
                       />
                     )}
-                    <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
+                    {!fastMode && <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />}
                     <div className="mt-5">
                       <SavedAddressShortcut
                         signedIn={signedInClient}
@@ -3336,9 +3486,9 @@ export default function BookNow() {
                       ))}
                     </div>
                     <div className="mt-3">
-                      <OptionalNotes value={state.notes} onChange={(value) => setValue('notes', value)} />
+                      {!fastMode && <OptionalNotes value={state.notes} onChange={(value) => setValue('notes', value)} />}
                     </div>
-	                    <div className="relative mt-5 overflow-hidden rounded-[1.45rem] border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl">
+	                    {!fastMode && <div className="relative mt-5 overflow-hidden rounded-[1.45rem] border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl">
 	                      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),radial-gradient(circle_at_92%_95%,hsl(var(--foreground)/0.055),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.025))]" />
 	                      <div className="mb-3 flex items-center justify-between gap-3">
 	                        <span className="relative flex items-center gap-2 font-body text-xl font-black text-foreground">
@@ -3433,13 +3583,13 @@ export default function BookNow() {
                             </div>
 	                        </motion.div>
 	                      )}
-	                    </div>
+	                    </div>}
                   </>
                 )}
 
                 {step === 4 && (
                   <>
-                    <SectionTitle icon={Check} title="Confirm" />
+                    <SectionTitle icon={Check} title={fastMode ? 'Patient' : 'Confirm'} sub={fastMode ? 'Required before the $1 hold.' : ''} />
                     <ConfirmSummary
                       state={state}
                       product={product}
@@ -3453,6 +3603,12 @@ export default function BookNow() {
 	                    />
                     )}
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
+                    {fastMode && <SafetyFlagChoice value={state.safetyFlag} onChange={(value) => setValue('safetyFlag', value)} />}
+                    {fastMode && (
+                      <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
+                        By paying, I consent to telehealth review, medical intake, privacy terms, and a non-refundable deductible. Treatment is subject to clinical approval.
+                      </p>
+                    )}
                   </>
                 )}
               </div>
@@ -3460,7 +3616,7 @@ export default function BookNow() {
 
           </section>
 
-	          <SummaryRail
+	          {!fastMode && <SummaryRail
 	            state={state}
 	            product={product}
 	            plan={{ ...plan, price: activePlanPrice }}
@@ -3478,7 +3634,7 @@ export default function BookNow() {
 		            actionDisabled={checkoutLoading}
 		            showAction={step === LAST_STEP}
 		            onAction={submit}
-		          />
+		          />}
         </div>
       </main>
 

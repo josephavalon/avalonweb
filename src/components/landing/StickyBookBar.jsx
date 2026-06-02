@@ -5,6 +5,8 @@ import { ArrowRight } from 'lucide-react';
 
 import { EASE, premiumTap } from '@/lib/motion';
 
+const FAST_BOOK_URL = '/book?fast=1&protocol=recovery&time=asap';
+
 export default function StickyBookBar() {
   const [visible, setVisible] = useState(false);
 
@@ -38,14 +40,14 @@ export default function StickyBookBar() {
                 Book now
               </p>
               <p className="font-body text-[9px] tracking-[0.12em] uppercase text-foreground font-semibold truncate">
-                Recovery delivered
+                $1 hold
               </p>
             </div>
 
             {/* Primary CTA */}
             <motion.div whileTap={premiumTap} className="shrink-0">
               <Link
-                to="/book"
+                to={FAST_BOOK_URL}
                 className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-background font-body text-[9px] font-semibold uppercase tracking-[0.15em] transition-colors duration-base ease-editorial hover:bg-foreground/85"
               >
                 Book

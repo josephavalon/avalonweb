@@ -12,6 +12,7 @@ const mainLinks = [
   { to: '/subscription', label: 'Plans' },
   { to: '/launches', label: 'Launches' },
 ];
+const FAST_BOOK_URL = '/book?fast=1&protocol=recovery&time=asap';
 
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
@@ -67,7 +68,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const mobileLinks = [
     ...mainLinks,
-    { to: '/book', label: 'Book', primary: true },
+    { to: FAST_BOOK_URL, label: 'Book', primary: true },
     { to: dashboardPathFor(user), label: user ? 'Dashboard' : 'Login' },
   ];
 
@@ -152,10 +153,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && <Link to={dashboardPathFor(user)} className={linkClass}>{user ? 'Dashboard' : 'Login'}</Link>}
           {!compact && !focusMode && <PremiumButton
             as={Link}
-            to="/book"
+            to={FAST_BOOK_URL}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-center font-body text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-background transition-opacity hover:opacity-85"
           >
-            Book
+            Book $1
             <ArrowLeft className="h-3.5 w-3.5 rotate-180" strokeWidth={2.2} />
           </PremiumButton>}
         </div>
