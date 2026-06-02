@@ -1,4 +1,4 @@
-import { acuityFetch, resolveAppointmentTypeId } from './_acuity.js';
+import { acuityFetch, resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { upsertAttioPerson } from './_attio.js';
 
 export const STRIPE_PAID_FULFILLMENT_VERSION = 'stripe_paid_then_acuity_attio_v1';
@@ -137,6 +137,19 @@ function dateOnly(value) {
   return date.toISOString().slice(0, 10);
 }
 
+function parseDate(value) {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
+}
+
+function shouldUseNextAvailable(appointment = {}) {
+  const label = `${appointment.timeLabel || ''} ${appointment.availabilityWindow || ''}`.toLowerCase();
+  const requested = parseDate(appointment.acuityDatetime);
+  if (!requested) return true;
+  if (label.includes('asap') || label.includes('soonest')) return true;
+  return requested.getTime() <= Date.now() + 5 * 60000;
+}
+
 function addDays(dateString, days) {
   const date = new Date(`${dateString}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
@@ -169,28 +182,53 @@ async function firstAvailableDatetime({ appointment = {}, appointmentTypeID }) {
   return null;
 }
 
+async function resolveSchedulingTypeId({ appointment = {}, items = [], membership = null } = {}) {
+  const explicitId = Number(appointment.acuityTypeId);
+  if (explicitId) return explicitId;
+
+  const envId = resolveAppointmentTypeId(items, membership);
+  if (envId) return envId;
+
+  const liveId = await resolveAppointmentTypeIdFromLive(items, membership);
+  if (liveId) return liveId;
+
+  throw Object.assign(new Error('Appointment type is not configured'), { status: 400 });
+}
+
+function shouldRetryWithAvailability(err = {}) {
+  const text = `${err?.message || ''} ${err?.body?.message || ''} ${err?.body?.error || ''}`.toLowerCase();
+  return /available|availability|calendar|datetime|time|past|invalid/.test(text);
+}
+
 export async function createSchedulingAppointment({ appointment, contact, items, membership, amounts, req }) {
   if (!appointment?.acuityDatetime) return null;
 
-  const appointmentTypeID = Number(appointment.acuityTypeId)
-    || resolveAppointmentTypeId(items, membership);
+  const appointmentTypeID = await resolveSchedulingTypeId({ appointment, items, membership });
+  let appointmentForAcuity = appointment;
 
-  if (!appointmentTypeID) {
-    throw Object.assign(new Error('Appointment type is not configured'), { status: 400 });
+  if (shouldUseNextAvailable(appointment)) {
+    const fallbackDatetime = await firstAvailableDatetime({ appointment, appointmentTypeID });
+    if (fallbackDatetime) {
+      appointmentForAcuity = {
+        ...appointment,
+        acuityDatetime: fallbackDatetime,
+        timeLabel: appointment.timeLabel || 'Next available',
+      };
+    }
   }
 
   return acuityFetch('/appointments', {
     method: 'POST',
     body: JSON.stringify({
       appointmentTypeID,
-      datetime: appointment.acuityDatetime,
+      datetime: appointmentForAcuity.acuityDatetime,
       firstName: contact.firstName,
       lastName: contact.lastName || '',
       email: contact.email,
       phone: contact.phone || '',
-      timezone: appointment.acuityTimezone || TZ,
-      notes: appointmentNotes({ appointment, items, membership, amounts, req }),
-      fields: requiredSchedulingFields(appointment, items, appointmentTypeID),
+      timezone: appointmentForAcuity.acuityTimezone || TZ,
+      notes: appointmentNotes({ appointment: appointmentForAcuity, items, membership, amounts, req }),
+      fields: requiredSchedulingFields(appointmentForAcuity, items, appointmentTypeID),
     }),
   });
 }
@@ -199,12 +237,9 @@ export async function createSchedulingAppointmentWithFallback({ appointment, con
   try {
     return await createSchedulingAppointment({ appointment, contact, items, membership, amounts, req });
   } catch (err) {
-    const noCalendar = err?.body?.error === 'no_available_calendar'
-      || /available calendar/i.test(err?.message || '');
-    if (!noCalendar) throw err;
+    if (!shouldRetryWithAvailability(err)) throw err;
 
-    const appointmentTypeID = Number(appointment.acuityTypeId)
-      || resolveAppointmentTypeId(items, membership);
+    const appointmentTypeID = await resolveSchedulingTypeId({ appointment, items, membership });
     const fallbackDatetime = await firstAvailableDatetime({ appointment, appointmentTypeID });
     if (!fallbackDatetime) throw err;
 

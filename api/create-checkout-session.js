@@ -196,10 +196,13 @@ export default async function handler(req, res) {
         .single();
 
       if (pendingError || !pendingRecord?.id) {
-        throw httpError(pendingError?.message || 'Could not prepare booking for checkout', 500, 'booking_prepare_failed');
+        console.warn(
+          '[create-checkout-session] Supabase appointment record unavailable; continuing with Stripe metadata fulfillment:',
+          pendingError?.message || 'missing appointment id'
+        );
+      } else {
+        pendingRecordId = pendingRecord.id;
       }
-
-      pendingRecordId = pendingRecord.id;
     } else {
       console.warn('[create-checkout-session] Supabase is not configured; using Stripe metadata fulfillment fallback.');
     }

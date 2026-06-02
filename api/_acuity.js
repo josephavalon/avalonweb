@@ -10,6 +10,7 @@
  */
 
 const BASE = 'https://acuityscheduling.com/api/v1';
+let appointmentTypesCache = null;
 
 function authHeader() {
   const userId = process.env.ACUITY_USER_ID;
@@ -74,6 +75,68 @@ export async function getAppointment(appointmentId) {
  */
 export async function getAppointmentTypes() {
   return acuityFetch('/appointment-types');
+}
+
+function normalizeTypeToken(value = '') {
+  return String(value)
+    .toLowerCase()
+    .replace(/\+/g, ' plus ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function appointmentTypeText(type = {}) {
+  return normalizeTypeToken([
+    type.name,
+    type.category,
+    type.description,
+    type.calendarIDs ? 'calendar' : '',
+  ].filter(Boolean).join(' '));
+}
+
+function candidateTokens(cartItems = [], membership = null) {
+  if (membership) return ['membership', 'subscription'];
+  const tokens = [];
+  for (const item of cartItems || []) {
+    const key = normalizeTypeToken(item.cartKey || item.key || '');
+    const label = normalizeTypeToken(item.label || '');
+    if (key) tokens.push(key);
+    if (label) tokens.push(label);
+    if (item.type === 'iv') tokens.push('iv');
+    if (item.type === 'im') tokens.push('im shot', 'injection');
+    if (`${key} ${label}`.includes('nad')) tokens.push('nad');
+    if (`${key} ${label}`.includes('cbd')) tokens.push('cbd');
+  }
+  return [...new Set(tokens.filter(Boolean))];
+}
+
+async function cachedAppointmentTypes() {
+  if (appointmentTypesCache) return appointmentTypesCache;
+  const types = await getAppointmentTypes();
+  appointmentTypesCache = Array.isArray(types) ? types : [];
+  return appointmentTypesCache;
+}
+
+/**
+ * Last-resort resolver for deployments where ACUITY_TYPE_* env vars are not
+ * present. Prefer explicit env IDs, but do not let a missing mapping block paid
+ * checkout fulfillment when Acuity exposes a clear matching service.
+ */
+export async function resolveAppointmentTypeIdFromLive(cartItems = [], membership = null) {
+  const types = (await cachedAppointmentTypes()).filter((type) => type && type.active !== false);
+  if (!types.length) return 0;
+
+  const tokens = candidateTokens(cartItems, membership);
+  for (const token of tokens) {
+    const match = types.find((type) => appointmentTypeText(type).includes(token));
+    if (match?.id) return Number(match.id);
+  }
+
+  const ivFallback = types.find((type) => /\biv\b|hydration|vitamin|drip/.test(appointmentTypeText(type)));
+  if (ivFallback?.id) return Number(ivFallback.id);
+
+  console.warn('[acuity] no explicit appointment type match; using first active Acuity type');
+  return Number(types[0]?.id || 0);
 }
 
 /**

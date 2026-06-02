@@ -56,7 +56,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
   let fulfillmentError = metadata.fulfillmentError || null;
   const checkout = appointment ? checkoutPayloadFromRecord(appointment) : checkoutPayloadFromStripeMetadata(session.metadata || {});
 
-  if (!acuityAppointmentId && metadata.fulfillmentStatus !== 'acuity_failed') {
+  if (!acuityAppointmentId) {
     metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
       fulfillmentStatus: 'acuity_creating',
     });
