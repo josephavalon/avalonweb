@@ -113,7 +113,7 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
   const rail = [
     {
       icon: CreditCard,
-      label: hasVisit ? 'Deductible' : 'Billing',
+      label: hasVisit ? 'Today' : 'Billing',
       value: hasVisit ? `$${DEPOSIT_DUE}` : (membership ? `$${membership.price}` : 'Ready'),
       active: current >= 0,
     },
@@ -125,8 +125,8 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
     },
     {
       icon: ShieldCheck,
-      label: 'Clearance',
-      value: 'Queued',
+      label: 'Review',
+      value: 'Ready',
       active: current >= 2,
     },
     {
@@ -751,7 +751,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const payCta = hasItems && hasMembership
     ? `Pay $${dueToday.toLocaleString()} now`
     : hasItems
-      ? `Pay $${DEPOSIT_DUE} non-refundable`
+      ? `Pay $${DEPOSIT_DUE} today`
       : 'Pay now';
 
   const handleCheckout = async () => {
@@ -898,7 +898,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </div>
         )}
         <div className="relative border-t border-foreground/10 pt-3 flex justify-between items-center">
-          <span className={labelClass}>{hasItems && !hasMembership ? 'Deductible due' : 'Due now'}</span>
+          <span className={labelClass}>{hasItems && !hasMembership ? 'Today' : 'Due now'}</span>
           <span className="font-heading text-4xl text-foreground tracking-wide">
             ${dueToday.toLocaleString()}
           </span>
@@ -909,10 +909,10 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-100" strokeWidth={2} />
               <div>
                 <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-amber-100">
-                  ${DEPOSIT_DUE} non-refundable deductible
+                  ${DEPOSIT_DUE} today
                 </p>
                 <p className="mt-1 font-body text-xs font-semibold leading-relaxed text-foreground/68">
-                  Applied to your visit. Balance is due after service.
+                  Balance is due at visit.
                 </p>
               </div>
             </div>
@@ -1007,7 +1007,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
-        ${DEPOSIT_DUE} deductible is non-refundable. Clinical review before RN.
+        ${DEPOSIT_DUE} today. Balance due at visit. Nurse reviews before service.
       </p>
     </div>
   );
@@ -1017,7 +1017,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 export default function Checkout() {
   useSeo({
     title: 'Secure Checkout — Avalon Vitality',
-    description: `Complete your mobile IV therapy booking. Review your order, set your appointment time, and confirm with a $${DEPOSIT_DUE} non-refundable deductible.`,
+    description: `Complete your mobile IV therapy booking. Review your order, set your appointment time, and pay $${DEPOSIT_DUE} today.`,
     path: '/checkout',
   });
   const { items, membership, removeItem, clearMembership } = useCart();

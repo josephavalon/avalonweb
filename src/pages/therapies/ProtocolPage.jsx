@@ -93,7 +93,7 @@ export default function ProtocolPage() {
           {/* Meta strip */}
           <motion.div
             {...fadeUp(0.36)}
-            className="flex flex-wrap gap-6 mb-14 pb-14 border-b border-foreground/[0.08]"
+            className="flex flex-wrap gap-6 mb-6 pb-8 border-b border-foreground/[0.08]"
           >
             <div>
               <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Price</p>
@@ -112,6 +112,22 @@ export default function ProtocolPage() {
               <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Category</p>
               <p className="font-body text-sm font-semibold text-foreground capitalize">{protocol.category || 'protocol'}</p>
             </div>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.4)} className="mb-14 max-w-md">
+            <Link
+              to={`/book?protocol=${protocol.key}`}
+              className="flex min-h-[58px] w-full items-center justify-between rounded-2xl bg-foreground px-6 font-body text-xs font-semibold tracking-[0.2em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)] transition-opacity hover:opacity-90"
+            >
+              Book This IV
+              <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            </Link>
+            <Link
+              to="/subscription"
+              className="mt-3 inline-flex min-h-[44px] items-center font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/45 transition-colors hover:text-foreground/72"
+            >
+              Monthly plans
+            </Link>
           </motion.div>
 
           {/* Composition */}
@@ -190,24 +206,6 @@ export default function ProtocolPage() {
             </div>
           </motion.div>
 
-          {/* CTAs */}
-          <motion.div {...fadeUp(0.6)} className="flex flex-col sm:flex-row gap-3 max-w-md">
-            <Link
-              to={`/book?protocol=${protocol.key}`}
-              className="flex flex-1 items-center justify-between rounded-2xl bg-foreground px-6 py-4 font-body text-xs font-semibold tracking-[0.2em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)] hover:opacity-90 transition-opacity"
-            >
-              Book This Protocol
-              <ArrowRight className="h-4 w-4" strokeWidth={2} />
-            </Link>
-            <Link
-              to="/subscription"
-              className="flex flex-1 items-center justify-between rounded-2xl border border-foreground/[0.14] bg-foreground/[0.04] px-6 py-4 font-body text-xs font-semibold tracking-[0.2em] uppercase text-foreground hover:bg-foreground/[0.08] transition-colors"
-            >
-              View Plans
-              <ArrowRight className="h-4 w-4" strokeWidth={2} />
-            </Link>
-          </motion.div>
-
           {/* Disclaimer */}
           <motion.p
             {...fadeUp(0.7)}
@@ -253,7 +251,7 @@ function getMechanism(protocol) {
     },
     {
       title: 'Review',
-      body: 'The clinical team may adjust, hold, or decline a protocol based on intake, annual GFE status, contraindications, and vitals.',
+      body: 'The clinical team may adjust, hold, or decline a protocol based on intake, contraindications, and vitals.',
     },
   ];
   const map = {

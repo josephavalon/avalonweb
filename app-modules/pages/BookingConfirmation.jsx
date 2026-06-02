@@ -308,10 +308,10 @@ export default function BookingConfirmation() {
         items: localBooking?.items || [],
         subtotal: appt.price ?? localBooking?.subtotal,
         status: localBooking?.status || 'Scheduling received',
-        nextStep: localBooking?.manualReview ? 'Clinical review before RN assignment' : 'RN assignment and arrival text',
+        nextStep: localBooking?.manualReview ? 'Nurse review before RN assignment' : 'RN assignment and arrival text',
         gfe: localBooking?.gfe || 'Pending',
         nurse: localBooking?.nurse || 'Unassigned',
-        payment: paymentSuccess ? 'Deductible paid' : localBooking?.payment || 'Pending',
+        payment: paymentSuccess ? 'Payment received' : localBooking?.payment || 'Pending',
         source: localBooking?.source || 'Website',
         reference: localBooking?.reference || appt.id,
       });
@@ -423,7 +423,7 @@ export default function BookingConfirmation() {
                   <DetailPill icon={MapPin} label="Where" value={apptAddress} />
                 )}
                 {localBooking?.depositAmount != null && (
-                  <DetailPill icon={CreditCard} label="Deductible" value={`$${Number(localBooking.depositAmount).toLocaleString()} ${paymentSuccess ? 'paid' : 'due'}`} />
+                  <DetailPill icon={CreditCard} label="Today" value={`$${Number(localBooking.depositAmount).toLocaleString()} ${paymentSuccess ? 'paid' : 'due'}`} />
                 )}
                 {referenceNum && (
                   <DetailPill icon={Hash} label="ID" value={referenceNum} />
@@ -449,13 +449,13 @@ export default function BookingConfirmation() {
           transition={{ duration: 0.6, ease: EASE, delay: 0.72 }}
           className="space-y-3 pt-2"
         >
-          {/* Complete deductible */}
+          {/* Complete payment */}
           {isFastHold && (
             <Link
               to="/checkout"
               className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background shadow-[0_16px_50px_hsl(var(--foreground)/0.14)] transition-opacity hover:opacity-88"
             >
-              Complete Deductible <CreditCard className="h-4 w-4" strokeWidth={2} />
+              Pay $1 today <CreditCard className="h-4 w-4" strokeWidth={2} />
             </Link>
           )}
 

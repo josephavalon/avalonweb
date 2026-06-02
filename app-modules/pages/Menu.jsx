@@ -26,12 +26,6 @@ const FILTERS = [
   { key: 'advanced', label: 'Longevity', icon: BatteryCharging },
 ];
 
-const SORTS = [
-  { key: 'featured', label: 'Featured' },
-  { key: 'price', label: 'Price' },
-  { key: 'az', label: 'A-Z' },
-];
-
 const HERO_GOALS = [
   { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book?outcome=recover&protocol=hydration' },
   { key: 'energy', label: 'Energy', icon: Zap, href: '/book?outcome=perform&protocol=energy' },
@@ -73,19 +67,12 @@ function categoryFor(session) {
   return session.category || 'all';
 }
 
-function sortSessions(sessions, sort) {
-  const list = [...sessions];
-  if (sort === 'price') return list.sort((a, b) => priceFor(a) - priceFor(b));
-  if (sort === 'az') return list.sort((a, b) => a.label.localeCompare(b.label));
-  return list.sort((a, b) => {
+function sortSessions(sessions) {
+  return [...sessions].sort((a, b) => {
     const aFeatured = FEATURED_ORDER.has(a.key) ? FEATURED_ORDER.get(a.key) : 100 + (DEFAULT_ORDER.get(a.key) || 0);
     const bFeatured = FEATURED_ORDER.has(b.key) ? FEATURED_ORDER.get(b.key) : 100 + (DEFAULT_ORDER.get(b.key) || 0);
     return aFeatured - bFeatured;
   });
-}
-
-function scrollChipIntoView(event) {
-  event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
 }
 
 function GoalTile({ item, index }) {
@@ -233,7 +220,6 @@ function Foldout({ title, icon: Icon, children }) {
 
 export default function Menu() {
   const [filter, setFilter] = useState('all');
-  const [sort, setSort] = useState('featured');
   const [showAllProtocols, setShowAllProtocols] = useState(false);
 
   useSeo({
@@ -261,8 +247,8 @@ export default function Menu() {
 
   const filtered = useMemo(() => {
     const sessions = filter === 'all' ? PUBLIC_SESSIONS : PUBLIC_SESSIONS.filter((session) => categoryFor(session) === filter);
-    return sortSessions(sessions, sort);
-  }, [filter, sort]);
+    return sortSessions(sessions);
+  }, [filter]);
   const visibleSessions = showAllProtocols ? filtered : filtered.slice(0, 6);
   const standardAddons = IV_ADDONS.filter((item) => !item.group).slice(0, 8);
   const shotPreview = IM_SHOTS.slice(0, 8);
@@ -296,7 +282,7 @@ export default function Menu() {
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))]" />
             <div className="relative mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <h2 className="font-heading text-[3rem] uppercase leading-none tracking-normal text-foreground md:text-[4.75rem]">Protocols</h2>
-              <div className="grid grid-cols-2 gap-2 md:w-[23rem]">
+              <div className="md:w-56">
                 <label className="relative block">
                   <span className="sr-only">Filter protocols</span>
                   <select
@@ -308,48 +294,12 @@ export default function Menu() {
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/58" strokeWidth={2.35} />
                 </label>
-                <label className="relative block">
-                  <span className="sr-only">Sort protocols</span>
-                  <select
-                    value={sort}
-                    onChange={(event) => setSort(event.target.value)}
-                    className="min-h-[54px] w-full appearance-none rounded-full border border-foreground/12 bg-background/70 px-4 pr-10 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground outline-none backdrop-blur-xl"
-                  >
-                    {SORTS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/58" strokeWidth={2.35} />
-                </label>
               </div>
             </div>
 
-            <LayoutGroup id="menu-filter-rails">
-              <div className="relative mb-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                {FILTERS.map((item) => {
-                  const active = filter === item.key;
-                  const Icon = item.icon;
-                  return (
-                    <motion.button
-                      key={item.key}
-                      type="button"
-                      layout
-                      whileTap={premiumTap}
-                      onClick={(event) => {
-                        setFilter(item.key);
-                        scrollChipIntoView(event);
-                      }}
-                      className={`relative isolate flex min-h-[52px] shrink-0 items-center gap-2 overflow-hidden rounded-full border px-4 font-body text-xs font-black uppercase tracking-[0.1em] transition-colors ${active ? 'border-foreground bg-foreground text-background' : 'border-foreground/12 bg-background/38 text-foreground/72 hover:border-foreground/24 hover:text-foreground'}`}
-                    >
-                      <Icon className="relative z-10 h-4 w-4" strokeWidth={2.35} />
-                      <span className="relative z-10">{item.label}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </LayoutGroup>
-
             <LayoutGroup id="menu-protocols">
               <motion.div
-                key={`${filter}-${sort}-${showAllProtocols}`}
+                key={`${filter}-${showAllProtocols}`}
                 layout
                 initial="hidden"
                 animate="show"

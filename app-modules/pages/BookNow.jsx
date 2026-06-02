@@ -750,7 +750,7 @@ function MoreGoalsAccordion({ items, activeKey, onChoose }) {
   );
 }
 
-function ProductCard({ product, active, onSelect, onPrimary, onPlan, recommendation = '', index = 0 }) {
+function ProductCard({ product, active, onSelect, onPrimary, recommendation = '', index = 0 }) {
   const Icon = product.icon || Droplets;
   const price = protocolPrice(product);
   const featured = recommendation === 'Recommended';
@@ -805,7 +805,7 @@ function ProductCard({ product, active, onSelect, onPrimary, onPlan, recommendat
           </div>
         </div>
       </button>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-3">
         <button
           type="button"
           onClick={onPrimary}
@@ -813,23 +813,14 @@ function ProductCard({ product, active, onSelect, onPrimary, onPlan, recommendat
             active ? 'border border-foreground/24 bg-foreground text-background' : 'border border-foreground/24 bg-foreground/[0.13] text-foreground backdrop-blur-2xl'
           }`}
         >
-          Select visit
-        </button>
-        <button
-          type="button"
-          onClick={onPlan}
-          className={`min-h-[54px] rounded-full border font-body text-sm font-black uppercase tracking-[0.08em] ${
-            active ? 'border-foreground/24 bg-background/34 text-foreground backdrop-blur-2xl' : 'border-foreground/14 bg-background/26 text-foreground/74 backdrop-blur-xl'
-          }`}
-        >
-          Select monthly
+          Select
         </button>
       </div>
     </motion.div>
   );
 }
 
-function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary, onPlan }) {
+function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) {
   const [openOther, setOpenOther] = useState(false);
   const featuredOptions = productOptions.slice(0, 3);
   const otherOptions = productOptions.slice(3);
@@ -850,7 +841,6 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary, on
           active={activeKey === item.key}
           onSelect={() => onSelect(item.key)}
           onPrimary={() => onPrimary(item.key)}
-          onPlan={() => onPlan(item.key, { visitType: 'subscription' })}
           recommendation={index === 0 ? 'Recommended' : index === 1 ? 'Option 2' : 'Option 3'}
         />
       ))}
@@ -885,7 +875,6 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary, on
                   active={activeKey === item.key}
                   onSelect={() => onSelect(item.key)}
                   onPrimary={() => onPrimary(item.key)}
-                  onPlan={() => onPlan(item.key, { visitType: 'subscription' })}
                   recommendation="Alternate"
                 />
               ))}
@@ -1554,7 +1543,7 @@ function LocationTypeDropdown({ value, onChange }) {
 function RetentionChoice({ state, plan, customSessions, customEstimate, serviceLabel, onType, onPlan, onCustomSessions }) {
   const [openPlans, setOpenPlans] = useState(false);
   const choices = [
-    { key: 'one-time', label: 'One visit', value: `${currency(DEPOSIT_DUE)} deductible`, icon: Calendar },
+    { key: 'one-time', label: 'One visit', value: `${currency(DEPOSIT_DUE)} today`, icon: Calendar },
     { key: 'subscription', label: 'Monthly', value: plan.custom ? `${currency(customEstimate)}/mo` : `${currency(plan.price)}/mo`, icon: Sparkles },
   ];
 
@@ -1647,7 +1636,7 @@ function ClinicalReviewCard({ bookingGfeRequirement }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-heading text-3xl uppercase leading-none text-foreground">Review</p>
+            <p className="font-heading text-3xl uppercase leading-none text-foreground">Nurse Review</p>
             <span className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-xs font-bold uppercase tracking-[0.08em] ${valid ? 'border-emerald-300/20 text-emerald-100' : 'border-amber-300/24 text-amber-200'}`}>
               {valid ? 'Valid' : 'Needed'}
             </span>
@@ -1664,8 +1653,7 @@ function ClinicalReviewCard({ bookingGfeRequirement }) {
 }
 
 function ContactConfirmCard({ state, onChange, savedContact }) {
-  const hasEmergencyContact = state.emergencyContact.trim().length >= 5;
-  const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && hasEmergencyContact);
+  const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
   const [editing, setEditing] = useState(!hasContact);
 
   useEffect(() => {
@@ -1684,7 +1672,9 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
               <span className="flex min-w-0 items-center gap-2"><Calendar className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.dob}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Phone className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.phone}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Mail className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.email}</span></span>
-              <span className="flex min-w-0 items-center gap-2"><UserPlus className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.emergencyContact}</span></span>
+              {state.emergencyContact && (
+                <span className="flex min-w-0 items-center gap-2"><UserPlus className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.emergencyContact}</span></span>
+              )}
             </div>
           </div>
           <button
@@ -1704,14 +1694,13 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <p className="relative mb-3 font-body text-sm font-semibold leading-snug text-foreground/68">
-        Required for nurse dispatch and Acuity intake. Avalon verifies eligibility before treatment.
+        Used for receipt and nurse follow-up.
       </p>
       <div className="relative grid gap-3 sm:grid-cols-2">
         <TextInput label="Full name" value={state.name} onChange={(value) => onChange('name', value)} placeholder="Alex Morgan" autoComplete="name" actionLabel={savedContact?.name ? 'Saved' : ''} onAction={() => onChange('name', savedContact?.name || '')} required />
         <TextInput label="Date of birth" type="date" value={state.dob} onChange={(value) => onChange('dob', value)} autoComplete="bday" required />
         <TextInput label="Phone" type="tel" inputMode="tel" value={state.phone} onChange={(value) => onChange('phone', formatPhoneNumber(value))} placeholder="(415) 555-0123" autoComplete="tel" actionLabel={savedContact?.phone ? 'Saved' : ''} onAction={() => onChange('phone', formatPhoneNumber(savedContact?.phone || ''))} required />
         <TextInput label="Email" type="email" inputMode="email" value={state.email} onChange={(value) => onChange('email', value)} placeholder="you@example.com" autoComplete="email" actionLabel={savedContact?.email ? 'Saved' : ''} onAction={() => onChange('email', savedContact?.email || '')} required />
-        <TextInput label="Emergency contact" value={state.emergencyContact} onChange={(value) => onChange('emergencyContact', value)} placeholder="Name + phone" autoComplete="off" required />
       </div>
       {hasContact && (
         <button
@@ -1736,7 +1725,7 @@ function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
-        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Clinical review</p>
+        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Nurse review</p>
       </div>
       <div className="relative mt-3 grid grid-cols-2 gap-2">
         {options.map((item) => {
@@ -1799,8 +1788,8 @@ function ConfirmSummary({ state, product, bookingGfeRequirement }) {
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
   const items = [
     { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
-    { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Valid', icon: ShieldCheck },
-    { label: 'Deductible', value: currency(DEPOSIT_DUE), icon: Check },
+    { label: 'Nurse review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
+    { label: 'Today', value: currency(DEPOSIT_DUE), icon: Check },
   ];
 
   return (
@@ -2626,7 +2615,7 @@ export default function BookNow() {
 	    if (step === 3 && !canAdvance()) return 'Add place';
 	    if (step === LAST_STEP && groupContactRequired) return 'Contact us';
 	    if (step === LAST_STEP && state.visitType === 'subscription') return `Start ${plan.label}`;
-	    return step < LAST_STEP ? 'Next' : `Pay ${currency(DEPOSIT_DUE)} due now`;
+	    return step < LAST_STEP ? 'Next' : `Pay ${currency(DEPOSIT_DUE)} today`;
 	  };
 
 	  const buildBooking = () => {
@@ -2698,12 +2687,10 @@ export default function BookNow() {
       ],
       subtotal,
       depositAmount: DEPOSIT_DUE,
-      payment: `${currency(DEPOSIT_DUE)} non-refundable deductible pending`,
+      payment: `${currency(DEPOSIT_DUE)} today, balance due at visit`,
       status: 'Scheduling received',
       holdType: 'fast',
-      nextStep: gfeRequirement.required
-        ? 'Clinical review, annual GFE, non-refundable deductible, and scheduling handoff'
-        : 'Annual GFE valid. Clinical review, non-refundable deductible, and scheduling handoff',
+      nextStep: 'Nurse review and scheduling handoff',
       intake: 'Needed',
       consent: 'Needed',
       gfe: clinicalReviewClaimedOnFile ? 'On file' : gfeRequirement.required ? 'Pending' : 'Cleared',
@@ -2728,14 +2715,14 @@ export default function BookNow() {
       event: isGroupVisit ? { type: state.eventType, guestCount: guests, gfeTiming: 'Before launch' } : null,
       lifecycleWarnings: [
         clinicalReviewClaimedOnFile
-          ? 'Clinical review on file selected. Avalon verifies before dispatch.'
+          ? 'Nurse review on file selected. Avalon verifies before dispatch.'
           : gfeRequirement.required
-          ? 'Annual GFE required before dispatch.'
-          : `Annual GFE valid${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
+          ? 'Nurse review required before dispatch.'
+          : `Nurse review ready${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
         'Final eligibility verified before RN dispatch.',
         'Scheduling handoff is represented locally until connected.',
         !COVERED_ZIPS.has(String(state.zip || '').trim()) && 'Service-area review required.',
-        isGroupVisit && 'Pre-launch GFE coordination required.',
+        isGroupVisit && 'Pre-launch nurse coordination required.',
       ].filter(Boolean),
       notificationPreview: {
         sms: state.phone.trim() ? `Confirmation text queued to ${state.phone.trim()}` : 'Phone required before SMS confirmation.',
@@ -2745,7 +2732,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.emergencyContact.trim().length >= 5 && state.address.trim() && String(state.zip).trim().length === 5);
+  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && String(state.zip).trim().length === 5);
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     clearItems();
@@ -2759,7 +2746,7 @@ export default function BookNow() {
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
-      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Clinical review', 'RN dispatch', 'Inventory deduction'],
+      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Nurse review', 'RN dispatch', 'Inventory deduction'],
       noThirdPartyCalls: false,
       updatedAt: new Date().toISOString(),
     });
@@ -2881,7 +2868,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError('Add name, date of birth, phone, email, emergency contact, place, and ZIP.');
+      setError('Add name, date of birth, phone, email, place, and ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -3014,7 +3001,7 @@ export default function BookNow() {
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${embeddedCheckoutSession.totalLabel} deductible`} />
+                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${currency(DEPOSIT_DUE)} today`} />
                   <button
                     type="button"
                     onClick={() => {
@@ -3117,7 +3104,6 @@ export default function BookNow() {
 	                        activeKey={state.productKey}
 	                        onSelect={chooseProduct}
 	                        onPrimary={chooseProductAndContinue}
-	                        onPlan={chooseProductAndContinue}
 	                      />
 	                    )}
 	                  </>
@@ -3334,11 +3320,13 @@ export default function BookNow() {
                       product={product}
                       bookingGfeRequirement={bookingGfeRequirement}
                     />
+                    {canUseClinicalReviewOnFile && (
 	                    <ClinicalReviewChoice
 	                      value={state.clinicalReviewOnFile}
 	                      onChange={(value) => setValue('clinicalReviewOnFile', value)}
 	                      allowOnFile={canUseClinicalReviewOnFile}
 	                    />
+                    )}
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
                   </>
                 )}
@@ -3359,7 +3347,7 @@ export default function BookNow() {
 		            actionLabel={primaryActionLabel()}
 		            actionDetail={
 		              step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
-		                ? `${currency(balanceDue)} balance due at visit`
+		                ? `${currency(balanceDue)} due at visit`
 		                : ''
 		            }
 		            actionDisabled={checkoutLoading}
@@ -3391,7 +3379,7 @@ export default function BookNow() {
             />
             <span>{primaryActionLabel()}</span>
             {step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
-              ? <span>Balance {currency(balanceDue)}</span>
+              ? <span>{currency(balanceDue)} later</span>
               : <span>{totalLabel}</span>}
 	          </button>
         </div>

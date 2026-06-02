@@ -296,7 +296,6 @@ try {
   await fillByLabel(cdp, 'Date of birth', '1980-01-02');
   await fillByLabel(cdp, 'Phone', '(415) 555-0199');
   await fillByLabel(cdp, 'Email', 'qa@avalonvitality.co');
-  await fillByLabel(cdp, 'Emergency contact', 'QA Emergency (415) 555-0100');
   await clickText(cdp, 'Pay $1');
   const result = await waitForBookingOutcome(cdp);
 
@@ -311,7 +310,6 @@ try {
   if (!/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
   if (!/1/.test(result.payment || '')) failures.push('Deductible payment state missing.');
   if (!result.contact?.dob) failures.push('DOB missing from saved booking.');
-  if (!result.contact?.emergencyContact) failures.push('Emergency contact missing from saved booking.');
   if (!result.hasHandoff && staticFallback) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);
   if (cdp.consoleIssues.length) failures.push(`Console issues: ${cdp.consoleIssues.join(' | ')}`);
