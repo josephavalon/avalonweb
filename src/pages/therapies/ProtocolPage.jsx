@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowLeft, ArrowRight, Check, Clock, FlaskConical, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Clock, DollarSign, FlaskConical, ShieldCheck, Sparkles } from 'lucide-react';
 import { EASE } from '@/lib/motion';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -90,27 +90,32 @@ export default function ProtocolPage() {
             {protocol.tagline}
           </motion.p>
 
-          {/* Meta strip */}
+          {/* Meta widgets */}
           <motion.div
             {...fadeUp(0.36)}
-            className="flex flex-wrap gap-6 mb-6 pb-8 border-b border-foreground/[0.08]"
+            className="mb-8 grid grid-cols-2 gap-2 border-b border-foreground/[0.08] pb-8 md:grid-cols-4"
           >
-            <div>
-              <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Price</p>
-              <p className="font-heading text-3xl text-foreground">${price}</p>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+              <DollarSign className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
+              <p className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">${price}</p>
+              <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Price</p>
             </div>
             {protocol.duration && (
-              <div>
-                <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Duration</p>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-foreground/45" strokeWidth={1.6} />
-                  <p className="font-body text-sm font-semibold text-foreground">{protocol.duration}</p>
-                </div>
+              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+                <Clock className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
+                <p className="mt-3 truncate font-heading text-3xl uppercase leading-none text-foreground">{protocol.duration}</p>
+                <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Time</p>
               </div>
             )}
-            <div>
-              <p className="font-body text-[10px] tracking-[0.28em] uppercase text-foreground/35 mb-1">Category</p>
-              <p className="font-body text-sm font-semibold text-foreground capitalize">{protocol.category || 'protocol'}</p>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+              <ShieldCheck className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
+              <p className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">RN</p>
+              <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Mobile</p>
+            </div>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+              <Sparkles className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
+              <p className="mt-3 truncate font-heading text-3xl uppercase leading-none text-foreground capitalize">{protocol.category || 'IV'}</p>
+              <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Type</p>
             </div>
           </motion.div>
 
@@ -187,9 +192,10 @@ export default function ProtocolPage() {
               <Sparkles className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
               <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Best For</p>
             </div>
-            <p className="font-body text-base leading-relaxed text-foreground/60 max-w-lg">
-              {getBestFor(protocol)}
-            </p>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-4">
+              <p className="font-heading text-3xl uppercase leading-none text-foreground">Fit</p>
+              <p className="mt-2 font-body text-sm font-semibold leading-snug text-foreground/62">{getBestFor(protocol)}</p>
+            </div>
             <div className="mt-6 grid gap-2 sm:grid-cols-3">
               {['Clinical review', 'Licensed RN', 'Protocol may adjust'].map((item) => (
                 <div key={item} className="flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-3 py-3">

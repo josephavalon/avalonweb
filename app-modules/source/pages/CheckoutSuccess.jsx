@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useSeo } from '@/lib/seo';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, CreditCard, MessageCircle, ShieldCheck } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -63,16 +63,18 @@ export default function CheckoutSuccess() {
           <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide uppercase leading-[0.95] mb-6">
             {isChecking ? 'Hold Tight.' : verified ? (isSubscription ? "You're In." : "We'll Be In Touch.") : 'Payment Check Needed.'}
           </h1>
-          <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-sm mx-auto mb-10">
-            {isChecking
-              ? 'We are verifying the checkout session before confirming this request.'
-              : !verified
-                ? 'This page needs a verified checkout session before it can show confirmation. Return to checkout or contact support if you already paid.'
-                : isSubscription
-              ? 'Your subscription is active. Your care team will reach out within 24 hours to book your first session.'
-              : 'Your card has been authorized. A licensed RN will confirm your appointment details and arrival window shortly.'
-            }
-          </p>
+          <div className="mb-10 grid grid-cols-3 gap-2">
+            {[
+              [CreditCard, verified ? 'Paid' : isChecking ? 'Check' : 'Issue'],
+              [ShieldCheck, verified ? 'Review' : 'Verify'],
+              [MessageCircle, verified ? 'Text' : 'Support'],
+            ].map(([Icon, label]) => (
+              <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+                <Icon className="mx-auto h-4 w-4 text-accent/75" strokeWidth={1.8} />
+                <p className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{label}</p>
+              </div>
+            ))}
+          </div>
 
           <div className="space-y-3">
             <Link

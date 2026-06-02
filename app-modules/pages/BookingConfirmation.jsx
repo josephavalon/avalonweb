@@ -183,12 +183,10 @@ function AnimatedCheck() {
 /* ─── Booking detail pill ────────────────────────────────────── */
 function DetailPill({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-foreground/[0.06] last:border-b-0">
-      <Icon className="w-4 h-4 text-accent/60 mt-0.5 shrink-0" strokeWidth={1.5} />
-      <div className="min-w-0">
-        <p className="font-body text-[9px] tracking-[0.22em] uppercase text-foreground/35 mb-0.5">{label}</p>
-        <p className="font-body text-sm font-semibold text-foreground leading-snug">{value}</p>
-      </div>
+    <div className="relative overflow-hidden rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3 text-left">
+      <Icon className="h-4 w-4 text-accent/70" strokeWidth={1.7} />
+      <p className="mt-3 break-words font-body text-sm font-black leading-tight text-foreground">{value}</p>
+      <p className="mt-1 font-body text-[9px] font-bold uppercase tracking-[0.16em] text-foreground/38">{label}</p>
     </div>
   );
 }
@@ -411,7 +409,7 @@ export default function BookingConfirmation() {
 
             {/* Real booking details */}
             {(referenceNum || apptDate) && (
-              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3 text-left space-y-0 mx-auto backdrop-blur-xl">
+              <div className="mx-auto grid grid-cols-2 gap-2 rounded-[1.5rem] border border-foreground/[0.08] bg-foreground/[0.03] p-2 backdrop-blur-xl">
                 {serviceLabel && (
                   <DetailPill icon={Droplets} label="Service" value={serviceLabel} />
                 )}
@@ -432,10 +430,9 @@ export default function BookingConfirmation() {
 
             {/* Fallback if no appointment data and no error */}
             {!apptLoading && !appt && !apptError && !referenceNum && !localBooking && (
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3">
-                <p className="font-body text-sm text-foreground/60">
-                  Your final nurse and timing details will arrive by text shortly.
-                </p>
+              <div className="inline-grid grid-cols-2 gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-2">
+                <DetailPill icon={Phone} label="Nurse" value="Text" />
+                <DetailPill icon={Clock} label="Timing" value="Soon" />
               </div>
             )}
           </motion.div>

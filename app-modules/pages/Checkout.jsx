@@ -1120,6 +1120,7 @@ export default function Checkout() {
           className="relative overflow-hidden rounded-[2rem] border border-foreground/[0.13] bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_32px_120px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl sm:p-5"
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+          <CheckoutTrustConsole current={step} items={items} membership={membership} appointment={appointment} />
           {step !== 3 && <StepBar current={step} />}
           <div className="relative px-1 sm:px-2">
             <AnimatePresence mode="wait" custom={dir}>

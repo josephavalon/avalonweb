@@ -2,9 +2,11 @@
 // @rev 1777073683808 — credits model
 import React, { lazy, Suspense } from 'react';
 import { useSeo } from '@/lib/seo';
+import { CalendarCheck, Droplets, ShieldCheck, Sparkles } from 'lucide-react';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import StickyBookBar from '../components/landing/StickyBookBar';
+import CustomerWidget from '../components/consumer/CustomerWidget';
 
 const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
 const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
@@ -27,6 +29,15 @@ export default function Home() {
 
       {/* ── ATF — fills viewport ── */}
       <Hero />
+
+      <section className="relative z-10 px-5 pb-2 pt-3 md:px-12 md:pt-6">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-3">
+          <CustomerWidget to="/book" icon={CalendarCheck} label="Book" value="Now" state="action" />
+          <CustomerWidget to="/protocols" icon={Droplets} label="IV" value="Protocols" />
+          <CustomerWidget to="/subscription" icon={Sparkles} label="Plans" value="Monthly" />
+          <CustomerWidget icon={ShieldCheck} label="Review" value="RN" state="ready" />
+        </div>
+      </section>
 
       {/* ── Below fold — per-card whileInView animations handle entrance ── */}
       <div className="relative z-10">
