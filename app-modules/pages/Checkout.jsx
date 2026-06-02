@@ -16,11 +16,8 @@ import { acuityTypeForCart } from '@/lib/acuityAppointmentTypes';
 import { avalonErrorClass, avalonLabelClass, avalonLightFieldClass } from '@/components/ui/formStyles';
 import { orchestrateOrderHandoff } from '@/lib/platformOps';
 import { readBookingDraft, readLastBooking, readLocal } from '@/lib/localOs';
-import { getDepositAmountDollars } from '@/lib/checkoutConfig';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
-
-const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 
 function hasCompleteContact(contact = {}) {
   return Boolean(
@@ -110,11 +107,12 @@ function StepBar({ current }) {
 
 function CheckoutTrustConsole({ current, items, membership, appointment }) {
   const hasVisit = items.length > 0;
+  const visitTotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
   const rail = [
     {
       icon: CreditCard,
       label: hasVisit ? 'Today' : 'Billing',
-      value: hasVisit ? `$${DEPOSIT_DUE}` : (membership ? `$${membership.price}` : 'Ready'),
+      value: hasVisit ? `$${visitTotal.toLocaleString()}` : (membership ? `$${membership.price}` : 'Ready'),
       active: current >= 0,
     },
     {
@@ -208,7 +206,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
             <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
             <span className="font-heading text-2xl text-foreground tracking-wide">${itemsTotal.toLocaleString()}</span>
           </div>
-          <p className="font-body text-[10px] text-foreground/45 px-1">${DEPOSIT_DUE} today. Balance at visit.</p>
+          <p className="font-body text-[10px] text-foreground/45 px-1">Paid in full online.</p>
         </div>
       )}
 
@@ -742,12 +740,12 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     ? membership.name
     : `${membership?.name || 'Membership'} Subscription`;
   const subscriptionDue = membership?.price || 0;
-  const dueToday = (hasItems ? DEPOSIT_DUE : 0) + subscriptionDue || DEPOSIT_DUE;
-  const futureBalance = Math.max(0, itemsTotal - (hasItems ? DEPOSIT_DUE : 0));
+  const dueToday = (hasItems ? itemsTotal : 0) + subscriptionDue;
+  const futureBalance = 0;
   const payCta = hasItems && hasMembership
     ? `Pay $${dueToday.toLocaleString()} now`
     : hasItems
-      ? `Pay $${DEPOSIT_DUE} today`
+      ? `Pay $${itemsTotal.toLocaleString()} now`
       : 'Pay now';
 
   const handleCheckout = async () => {
@@ -768,7 +766,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       mode: hasMembership ? 'subscription' : 'payment',
       has_membership: hasMembership,
       item_count: items.length,
-      deposit_due: DEPOSIT_DUE,
+      amount_due: dueToday,
     });
     try {
       // Determine mode — if there's a subscription, that goes first
@@ -841,7 +839,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         nurse: 'Unassigned',
         gfe: 'Pending',
         gfeRequired: true,
-        depositAmount: DEPOSIT_DUE,
+        depositAmount: dueToday,
         status: membership ? 'Subscription intake' : 'Scheduling received',
         source: membership ? 'Subscription request' : 'Checkout',
         subscription: Boolean(membership),
@@ -854,7 +852,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         source: membership ? 'subscription' : 'checkout',
         type: membership ? 'Subscription' : 'One-time visit',
         scope: membership ? 'All subscription dates' : 'Single appointment',
-        depositAmount: DEPOSIT_DUE,
+        depositAmount: dueToday,
       });
       if (data.url) window.location.href = data.url;
     } catch (err) {
@@ -905,7 +903,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-100" strokeWidth={2} />
               <div>
                 <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-amber-100">
-                  ${DEPOSIT_DUE} today
+                  Paid in full
                 </p>
               </div>
             </div>
@@ -1010,7 +1008,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 export default function Checkout() {
   useSeo({
     title: 'Secure Checkout — Avalon Vitality',
-    description: `Complete your mobile IV therapy booking. Review your order, set your appointment time, and pay $${DEPOSIT_DUE} today.`,
+    description: 'Complete your mobile IV therapy booking. Review your order, set your appointment time, and pay online.',
     path: '/checkout',
   });
   const { items, membership, removeItem, clearMembership } = useCart();

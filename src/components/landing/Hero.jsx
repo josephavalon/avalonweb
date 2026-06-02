@@ -5,7 +5,7 @@ import { ArrowRight, Droplets } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
-const FAST_BOOK_URL = '/book?fast=1&protocol=recovery&time=asap';
+const BOOK_URL = '/book?protocol=recovery&time=asap';
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function Hero() {
   };
 
   const handleBookPointerUp = (event) => {
-    handleTouchNavigation(event, bookTouchStart, FAST_BOOK_URL);
+    handleTouchNavigation(event, bookTouchStart, BOOK_URL);
   };
 
   const handleSubscriptionPointerDown = (event) => {
@@ -105,7 +105,7 @@ export default function Hero() {
           <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/34 to-transparent md:block" />
           <span className="pointer-events-none absolute inset-x-8 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-background/50 to-transparent md:block" />
           <MotionLink
-            to={FAST_BOOK_URL}
+            to={BOOK_URL}
             onPointerEnter={() => import('@/pages/BookNow')}
             onFocus={() => import('@/pages/BookNow')}
             initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
@@ -128,7 +128,7 @@ export default function Hero() {
               </span>
               <span className="min-w-0">
                 <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Book</span>
-                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/58 md:block">$1 hold</span>
+                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/58 md:block">Full checkout</span>
               </span>
             </span>
             <span className="relative flex shrink-0 items-center justify-center text-background transition-transform group-hover:translate-x-1 md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/24 md:bg-foreground/[0.10] md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
@@ -138,7 +138,7 @@ export default function Hero() {
         </motion.div>
 
         <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
-          Clinical review required.
+          Pay online. Clinical review required.
         </p>
 
         {/* Proof rail */}

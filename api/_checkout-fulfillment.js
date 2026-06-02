@@ -31,17 +31,17 @@ function dollarsFromCents(cents = 0) {
 }
 
 function balanceStatus(amounts = {}) {
-  const deposit = Number(amounts.depositAmountCents || 0);
+  const paid = Number(amounts.depositAmountCents || 0);
   const balance = Number(amounts.balanceDueCents || 0);
-  if (!deposit && !balance) return null;
+  if (!paid && !balance) return null;
   return [
     'PAYMENT',
-    `  Deposit paid: ${dollarsFromCents(deposit)} non-refundable deductible`,
+    `  Paid online: ${dollarsFromCents(paid)}`,
     balance > 0
       ? `  Balance due at visit: ${dollarsFromCents(balance)}`
-      : '  Balance due at visit: $0.00',
+      : null,
     balance > 0 ? '  Status: NOT PAID IN FULL' : '  Status: Paid in full',
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 function formatAddons(items = []) {
@@ -282,7 +282,7 @@ export function buildCheckoutPayload({
       visitSubtotalCents,
       depositAmountCents: depositCents,
       balanceDueCents,
-      depositType: 'non_refundable_deductible',
+      depositType: balanceDueCents > 0 ? 'non_refundable_deductible' : 'full_payment',
     },
     createdAt: new Date().toISOString(),
   };
@@ -360,7 +360,7 @@ export function buildStripeCheckoutMetadata({
     membershipName: metadataValue(membership?.name),
     membershipBilling: metadataValue(membership?.billing),
     membershipPrice: metadataValue(membership?.price),
-    depositType: 'non_refundable_deductible',
+    depositType: balanceDueCents > 0 ? 'non_refundable_deductible' : 'full_payment',
     visitSubtotalCents: String(visitSubtotalCents),
     depositAmountCents: String(depositCents),
     balanceDueCents: String(balanceDueCents),
@@ -423,7 +423,7 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       visitSubtotalCents: Number(metadata.visitSubtotalCents || 0),
       depositAmountCents: Number(metadata.depositAmountCents || 0),
       balanceDueCents: Number(metadata.balanceDueCents || 0),
-      depositType: metadata.depositType || 'non_refundable_deductible',
+      depositType: metadata.depositType || (Number(metadata.balanceDueCents || 0) > 0 ? 'non_refundable_deductible' : 'full_payment'),
     },
   };
 }
@@ -459,7 +459,7 @@ export async function syncCheckoutAttioPerson({
     membership: membership?.name || '',
     depositPaid: dollarsFromCents(amounts.depositAmountCents || 0),
     balanceDue: dollarsFromCents(amounts.balanceDueCents || 0),
-    paymentStatus: Number(amounts.balanceDueCents || 0) > 0 ? 'Deposit paid; balance due at visit' : 'Paid in full',
+    paymentStatus: Number(amounts.balanceDueCents || 0) > 0 ? 'Partial payment; balance due at visit' : 'Paid in full',
   });
 
   return response?.data?.id || response?.id || null;

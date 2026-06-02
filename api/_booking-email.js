@@ -46,7 +46,7 @@ export async function sendPaymentReceivedEmail({
       <p><strong>Service:</strong> ${escapeHtml(service)}</p>
       <p><strong>When:</strong> ${escapeHtml(appointment.timeLabel || appointment.acuityDatetime || '')}</p>
       <p><strong>Where:</strong> ${escapeHtml([appointment.address, appointment.zip].filter(Boolean).join(' · '))}</p>
-      <p><strong>Deposit paid:</strong> ${escapeHtml(dollarsFromCents(amounts.depositAmountCents))}</p>
+      <p><strong>Paid online:</strong> ${escapeHtml(dollarsFromCents(amounts.depositAmountCents))}</p>
       <p><strong>Balance due:</strong> ${escapeHtml(dollarsFromCents(amounts.balanceDueCents))}</p>
       <p><strong>Acuity:</strong> ${escapeHtml(acuityAppointmentId || fulfillmentStatus || 'Pending')}</p>
       <hr style="border:none;border-top:1px solid #eee;margin:24px 0;" />

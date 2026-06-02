@@ -1,7 +1,6 @@
 import Stripe from 'stripe';
 import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
 import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
-import { getDepositAmountDollars } from '../src/lib/checkoutConfig.js';
 import { getSupabaseServiceClient } from './_supabase-server.js';
 import {
   buildCheckoutPayload,
@@ -44,30 +43,18 @@ function publicBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
-function stripeLineItems(items = [], membership = null, { depositOnly = false, depositAmount = getDepositAmountDollars(process.env) } = {}) {
-  const lineItems = depositOnly && items.length
-    ? [{
-        quantity: 1,
-        price_data: {
-          currency: 'usd',
-          unit_amount: dollarsToCents(depositAmount),
-          product_data: {
-            name: 'Avalon non-refundable deductible',
-            metadata: { type: 'deductible' },
-          },
-        },
-      }]
-    : items.map((item) => ({
-        quantity: 1,
-        price_data: {
-          currency: 'usd',
-          unit_amount: dollarsToCents(item.price),
-          product_data: {
-            name: item.label || 'Avalon Visit',
-            metadata: { type: item.type || 'service', key: item.key || item.cartKey || '' },
-          },
-        },
-      }));
+function stripeLineItems(items = [], membership = null) {
+  const lineItems = items.map((item) => ({
+    quantity: 1,
+    price_data: {
+      currency: 'usd',
+      unit_amount: dollarsToCents(item.price),
+      product_data: {
+        name: item.label || 'Avalon Visit',
+        metadata: { type: item.type || 'service', key: item.key || item.cartKey || '' },
+      },
+    },
+  }));
 
   if (membership) {
     lineItems.push({
@@ -161,11 +148,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const depositAmount = getDepositAmountDollars(process.env);
-    const line_items = stripeLineItems(items, membership, {
-      depositOnly: hasVisitItems,
-      depositAmount,
-    });
+    const line_items = stripeLineItems(items, membership);
 
     if (!line_items.length) {
       return res.status(400).json({ error: 'No items to checkout' });
@@ -173,8 +156,8 @@ export default async function handler(req, res) {
 
     const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';
     const visitSubtotalCents = dollarsToCents(visitSubtotal);
-    const depositCents = dollarsToCents(depositAmount);
-    const balanceDueCents = hasVisitItems ? Math.max(0, visitSubtotalCents - depositCents) : 0;
+    const depositCents = hasVisitItems ? visitSubtotalCents : 0;
+    const balanceDueCents = 0;
     const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
     const checkoutPayload = buildCheckoutPayload({
       contact,
@@ -241,11 +224,8 @@ export default async function handler(req, res) {
       sessionParams.cancel_url = cancelUrl;
     }
 
-    // Deposit (one-time payment): save the card on file so the nurse can charge
-    // the remaining balance off-session at the end of the appointment.
     if (sessionMode === 'payment') {
       sessionParams.payment_intent_data = {
-        setup_future_usage: 'off_session',
         receipt_email: contact.email,
       };
     }

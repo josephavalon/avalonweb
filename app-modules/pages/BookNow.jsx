@@ -50,7 +50,6 @@ import {
 } from '@/lib/localOs';
 import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout } from '@/lib/bookingLifecycle';
 import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
-import { getDepositAmountDollars } from '@/lib/checkoutConfig';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -73,7 +72,6 @@ const CARD_REVEAL = {
     },
   }),
 };
-const DEPOSIT_DUE = getDepositAmountDollars(import.meta.env);
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
 const STEPS = ['Goal', 'Therapy', 'Extras', 'Visit', 'Confirm'];
@@ -1601,7 +1599,7 @@ function LocationTypeDropdown({ value, onChange }) {
 function RetentionChoice({ state, plan, customSessions, customEstimate, serviceLabel, onType, onPlan, onCustomSessions }) {
   const [openPlans, setOpenPlans] = useState(false);
   const choices = [
-    { key: 'one-time', label: 'One visit', value: `${currency(DEPOSIT_DUE)} today`, icon: Calendar },
+    { key: 'one-time', label: 'One visit', value: 'Full checkout', icon: Calendar },
     { key: 'subscription', label: 'Monthly', value: plan.custom ? `${currency(customEstimate)}/mo` : `${currency(plan.price)}/mo`, icon: Sparkles },
   ];
 
@@ -1725,23 +1723,23 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
             <Icon className="h-6 w-6" strokeWidth={2.45} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Hold</span>
+            <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Checkout</span>
             <span className="mt-2 block font-heading text-[2.6rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
             <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP</span>
           </span>
           <span className="shrink-0 text-right">
-            <span className="block font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/58">$1 today</span>
+            <span className="block font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/58">Due today</span>
             <span className="mt-1 block font-heading text-4xl leading-none text-foreground">{currency(subtotal)}</span>
           </span>
         </div>
         <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/34 p-3 font-body text-sm font-bold text-foreground/68">
           <div className="flex items-center justify-between gap-3">
-            <span>Non-refundable deductible</span>
-            <span>{currency(DEPOSIT_DUE)}</span>
+            <span>Paid online</span>
+            <span>{currency(subtotal)}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
             <span>Due at visit</span>
-            <span>{currency(balanceDue)}</span>
+            <span>{currency(0)}</span>
           </div>
         </div>
         <p className="relative mt-3 font-body text-xs font-semibold leading-snug text-foreground/56">
@@ -2038,9 +2036,9 @@ function FastReviewSurface({
               <Icon className="h-6 w-6" strokeWidth={2.45} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Hold</span>
+              <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Checkout</span>
               <span className="mt-2 block font-heading text-[2.55rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
-              <span className="mt-2 block font-body text-base font-bold text-foreground/70">{currency(DEPOSIT_DUE)} today · {currency(balanceDue)} at visit</span>
+              <span className="mt-2 block font-body text-base font-bold text-foreground/70">Pay online · clinical review required</span>
             </span>
             <button
               type="button"
@@ -2104,7 +2102,7 @@ function FastReviewSurface({
         <FastContactSafetyCard state={state} onChange={onValue} savedContact={savedContactProfile} />
 
         <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
-          By paying, you consent to intake, privacy terms, and a non-refundable {currency(DEPOSIT_DUE)} deductible. Treatment requires clinical approval.
+          By paying, you consent to intake and privacy terms. Treatment requires clinical approval.
         </p>
 
       </div>
@@ -2112,20 +2110,20 @@ function FastReviewSurface({
       <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0 md:pb-0">
         <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
           <div className="hidden min-w-0 flex-1 px-4 md:block">
-            <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">$1 today</p>
-            <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">Apple Pay, Google Pay, Link, or card · {currency(balanceDue)} due at visit</p>
+            <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Pay online</p>
+            <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">Apple Pay, Google Pay, Link, or card</p>
           </div>
           <button
             type="button"
             onClick={onSubmit}
             disabled={checkoutLoading}
-            aria-label="Pay $1 and continue to secure payment"
+            aria-label="Continue to secure payment"
             className={`relative flex min-h-[56px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 ${
               canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/42 text-foreground/58'
             }`}
           >
-            <span>{checkoutLoading ? 'Opening' : 'Pay $1'}</span>
-            <span>{currency(balanceDue)} due</span>
+            <span>{checkoutLoading ? 'Opening' : 'Pay online'}</span>
+            <span>Full amount</span>
           </button>
         </div>
       </div>
@@ -2200,14 +2198,14 @@ function OptionalNotes({ value, onChange }) {
   );
 }
 
-function ConfirmSummary({ state, product, bookingGfeRequirement }) {
+function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0 }) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
   const items = [
     { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
     { label: 'Nurse review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
-    { label: 'Today', value: currency(DEPOSIT_DUE), icon: Check },
+    { label: 'Today', value: currency(subtotal), icon: Check },
   ];
 
   return (
@@ -2317,7 +2315,7 @@ function SummaryRail({
 }) {
   const isSubscription = state.visitType === 'subscription';
   const subscriptionPrice = Number(plan.price || 0);
-  const balanceDue = Math.max(0, Number(subtotal || 0) - DEPOSIT_DUE);
+  const balanceDue = 0;
   const [open, setOpen] = useState(false);
   return (
     <aside className="hidden lg:block">
@@ -2345,7 +2343,7 @@ function SummaryRail({
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
-              ['Due now', isSubscription ? `${currency(subscriptionPrice)}/mo` : currency(DEPOSIT_DUE)],
+              ['Due now', isSubscription ? `${currency(subscriptionPrice)}/mo` : currency(subtotal)],
               [groupContactRequired ? 'Group' : isSubscription ? 'Therapy' : 'Estimate', groupContactRequired ? 'Contact' : totalLabel || currency(subtotal)],
               isSubscription ? ['Plan', plan.label] : ['Balance', currency(balanceDue)],
               ['Time', bookingTimeSummary(state)],
@@ -2439,7 +2437,7 @@ export default function BookNow() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const fastMode = searchParams.get('fast') === '1';
+  const fastMode = false;
   const { clearItems, addItem, setMembershipTier, clearMembership } = useCart();
   const { user } = useAuthStore();
   const signedInClient = user?.role === 'client';
@@ -2621,7 +2619,7 @@ export default function BookNow() {
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
   const totalLabel = groupContactRequired ? 'Contact' : currency(subtotal);
-  const balanceDue = Math.max(0, subtotal - DEPOSIT_DUE);
+  const balanceDue = 0;
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
   const resolvedZip = useMemo(
@@ -3075,13 +3073,13 @@ export default function BookNow() {
 	    if (embeddedCheckoutSession) return 'Payment ready';
 	    if (fastMode && step === 1) return 'Continue';
 	    if (fastMode && step === 3) return 'Continue';
-	    if (fastMode && step === LAST_STEP) return `Pay ${currency(DEPOSIT_DUE)} hold`;
+	    if (fastMode && step === LAST_STEP) return `Pay ${currency(subtotal)}`;
 	    if (step === 2) return selectedAddons.length ? `Next · ${selectedAddons.length}` : 'Next';
 	    if (step === 3 && groupContactRequired) return 'Contact us';
 	    if (step === 3 && !canAdvance()) return 'Add place';
 	    if (step === LAST_STEP && groupContactRequired) return 'Contact us';
 	    if (step === LAST_STEP && state.visitType === 'subscription') return `Start ${plan.label}`;
-	    return step < LAST_STEP ? 'Next' : `Pay ${currency(DEPOSIT_DUE)} today`;
+	    return step < LAST_STEP ? 'Next' : `Pay ${currency(subtotal)} today`;
 	  };
 
 	  const buildBooking = () => {
@@ -3155,10 +3153,10 @@ export default function BookNow() {
         })),
       ],
       subtotal,
-      depositAmount: DEPOSIT_DUE,
-      payment: `${currency(DEPOSIT_DUE)} today, balance due at visit`,
-      status: 'Scheduling received',
-      holdType: 'fast',
+      depositAmount: subtotal,
+      payment: `${currency(subtotal)} paid online`,
+      status: 'Payment received',
+      holdType: 'paid',
       nextStep: 'Nurse review and scheduling handoff',
       intake: 'Needed',
       consent: 'Needed',
@@ -3211,7 +3209,7 @@ export default function BookNow() {
       source: 'avalon-webstore',
       type: visitType.label,
       scope: scopeLabel,
-      depositAmount: DEPOSIT_DUE,
+      depositAmount: subtotal,
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
@@ -3221,7 +3219,7 @@ export default function BookNow() {
     });
     if (localBooking.subscription) writeLocal('webstore.subscriptionPlan', localBooking.subscription);
     if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
-    appendActivity(`Webstore hold received: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
+    appendActivity(`Webstore payment started: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
   };
 
   const checkoutPayloadFor = (localBooking, membershipOverride = null) => {
@@ -3304,7 +3302,7 @@ export default function BookNow() {
         sessionId: session.sessionId,
         bookingId: localBooking.id,
         service: localBooking.service,
-        totalLabel: currency(DEPOSIT_DUE),
+        totalLabel: currency(subtotal),
       });
       setCheckoutLoading(false);
       setError('');
@@ -3437,7 +3435,7 @@ export default function BookNow() {
       protocol_key: localBooking.protocolKey,
       addon_count: localBooking.addOns?.length || 0,
       subtotal,
-      deposit_due: DEPOSIT_DUE,
+      amount_due: subtotal,
       gfe_required: localBooking.gfeRequired,
     });
 
@@ -3470,7 +3468,7 @@ export default function BookNow() {
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${currency(DEPOSIT_DUE)} today`} />
+                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${currency(subtotal)} today`} />
                   <button
                     type="button"
                     onClick={() => {
@@ -3528,7 +3526,7 @@ export default function BookNow() {
             {fastMode ? (
               <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
                 <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">
-                  {step === 1 ? '1 of 3 · Hold' : step === 3 ? '2 of 3 · Address' : '3 of 3 · Patient'}
+                  {step === 1 ? '1 of 3 · Therapy' : step === 3 ? '2 of 3 · Address' : '3 of 3 · Patient'}
                 </p>
                 <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/8">
                   <div
@@ -3606,7 +3604,7 @@ export default function BookNow() {
 	                  <>
                     {fastMode ? (
                       <>
-                        <SectionTitle icon={Droplets} title="Hold IV" sub="Pay $1 now. Nurse review before treatment." />
+                        <SectionTitle icon={Droplets} title="Checkout" sub="Pay online. Nurse review before treatment." />
                         <FastHoldPanel
                           product={product}
                           serviceLabel={serviceLabel}
@@ -3848,11 +3846,12 @@ export default function BookNow() {
 
                 {step === 4 && (
                   <>
-                    <SectionTitle icon={Check} title={fastMode ? 'Patient' : 'Confirm'} sub={fastMode ? 'Required before the $1 hold.' : ''} />
+                    <SectionTitle icon={Check} title={fastMode ? 'Patient' : 'Confirm'} sub={fastMode ? 'Required before payment.' : ''} />
                     <ConfirmSummary
                       state={state}
                       product={product}
                       bookingGfeRequirement={bookingGfeRequirement}
+                      subtotal={subtotal}
                     />
                     {canUseClinicalReviewOnFile && (
 	                    <ClinicalReviewChoice
@@ -3865,7 +3864,7 @@ export default function BookNow() {
                     {fastMode && <SafetyFlagChoice value={state.safetyFlag} onChange={(value) => setValue('safetyFlag', value)} />}
                     {fastMode && (
                       <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
-                        By paying, I consent to telehealth review, medical intake, privacy terms, and a non-refundable deductible. Treatment is subject to clinical approval.
+                        By paying, I consent to telehealth review, medical intake, and privacy terms. Treatment is subject to clinical approval.
                       </p>
                     )}
                   </>
@@ -3887,7 +3886,7 @@ export default function BookNow() {
 		            actionLabel={primaryActionLabel()}
 		            actionDetail={
 		              step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
-		                ? `${currency(balanceDue)} due at visit`
+		                ? ''
 		                : ''
 		            }
 		            actionDisabled={checkoutLoading}
@@ -3920,7 +3919,7 @@ export default function BookNow() {
             />
             <span>{primaryActionLabel()}</span>
             {step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
-              ? <span>{currency(balanceDue)} later</span>
+              ? <span>Paid online</span>
               : <span>{totalLabel}</span>}
 	          </button>
         </div>

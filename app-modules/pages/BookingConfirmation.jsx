@@ -210,7 +210,6 @@ export default function BookingConfirmation() {
   const [calendarError, setCalendarError] = useState('');
   const [resolvedAddress, setResolvedAddress] = useState('');
   const apptLoading = !paymentSuccess && (verifyLoading || appointmentLoading);
-  const isFastHold = !paymentSuccess && (localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold');
 
   useSeo({
     title: 'Session Confirmed — Avalon Vitality',
@@ -369,10 +368,10 @@ export default function BookingConfirmation() {
       : null;
   const titleText = paymentSuccess
     ? 'Thank you'
-    : (isFastHold ? 'Hold Received.' : 'Request Received.');
+    : 'Request Received.';
   const statusText = paymentSuccess
     ? 'A nurse will text shortly.'
-    : (isFastHold ? 'Pay the hold. Review comes next.' : 'Review comes next.');
+    : 'Review comes next.';
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -449,16 +448,6 @@ export default function BookingConfirmation() {
           transition={{ duration: 0.6, ease: EASE, delay: 0.72 }}
           className="space-y-3 pt-2"
         >
-          {/* Complete payment */}
-          {isFastHold && (
-            <Link
-              to="/checkout"
-              className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background shadow-[0_16px_50px_hsl(var(--foreground)/0.14)] transition-opacity hover:opacity-88"
-            >
-              Pay $1 today <CreditCard className="h-4 w-4" strokeWidth={2} />
-            </Link>
-          )}
-
           {/* Open Calendar */}
           {calendarAppointment && (
             <>

@@ -1,7 +1,6 @@
 import Stripe from 'stripe';
 import { reconciliationTypeForStripeEvent } from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
-import { getDepositAmountCents } from '../../../src/lib/checkoutConfig.js';
 import { getSupabaseServiceClient } from '../../_supabase-server.js';
 import { sendPaymentReceivedEmail } from '../../_booking-email.js';
 import {
@@ -205,7 +204,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
     stripe_deposit_payment_intent: paymentIntentId,
     stripe_payment_method_id:     paymentMethodId,
     deposit_paid_at:              now,
-    payment_status:               'deposit_paid',
+    payment_status:               Number(md.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
     status:                       acuityAppointment?.id ? 'scheduled' : 'payment_received',
     acuity_appointment_id:         acuityAppointment?.id ? String(acuityAppointment.id) : null,
     reconciliation_status:         fulfillmentError ? 'action_required' : 'ok',
@@ -213,7 +212,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
     attio_synced_at:               attioSynced ? now : undefined,
     balance_due_cents:            md.balanceDueCents != null ? Number(md.balanceDueCents) : null,
     visit_subtotal_cents:         md.visitSubtotalCents != null ? Number(md.visitSubtotalCents) : null,
-    deposit_amount_cents:         md.depositAmountCents != null ? Number(md.depositAmountCents) : getDepositAmountCents(process.env),
+    deposit_amount_cents:         md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0),
     external_payload:              buildExternalPayload(record?.external_payload || {}, {
       stripeSessionId: session.id,
       stripePaymentIntentId: paymentIntentId,

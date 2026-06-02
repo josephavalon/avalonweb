@@ -77,8 +77,8 @@ const INITIAL_TOGGLES = [
   },
   {
     id: 't8',
-    label: 'Deposit Before Dispatch',
-    description: 'Collect the $1 non-refundable deductible before dispatch. Balance can stay manual during launch.',
+    label: 'Payment Before Dispatch',
+    description: 'Collect full online payment before dispatch.',
     defaultOn: false,
     disabled: false,
   },
@@ -91,7 +91,7 @@ const INTEGRATIONS = [
     id: 'int1',
     service: 'Payments (Stripe/Acuity)',
     badgeStatus: 'Manual',
-    description: '$1 non-refundable deductible, then manual balance review.',
+    description: 'Full online payment before appointment confirmation.',
   },
   {
     id: 'int2',

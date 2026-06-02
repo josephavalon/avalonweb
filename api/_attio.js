@@ -110,7 +110,7 @@ export function buildPersonValues(client = {}) {
     client.clientType ? `Client type: ${client.clientType}` : null,
     client.itemLabels ? `Items: ${client.itemLabels}` : null,
     client.membership ? `Membership: ${client.membership}` : null,
-    client.depositPaid ? `Deposit paid: ${client.depositPaid}` : null,
+    client.depositPaid ? `Paid online: ${client.depositPaid}` : null,
     client.balanceDue ? `Balance due: ${client.balanceDue}` : null,
     client.paymentStatus ? `Payment status: ${client.paymentStatus}` : null,
     client.gfeRequired != null && client.gfeRequired !== '' ? `GFE required: ${client.gfeRequired}` : null,

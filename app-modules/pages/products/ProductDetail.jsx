@@ -279,7 +279,7 @@ export default function ProductDetail() {
                 </AccordionRow>
                 <AccordionRow title="How It Works">
                   <p>
-                    Book. Pay the hold. A California-licensed RN arrives after clinical approval.
+                    Book. Pay online. A California-licensed RN arrives after clinical approval.
                   </p>
                 </AccordionRow>
                 <AccordionRow title="Clinical Oversight">
