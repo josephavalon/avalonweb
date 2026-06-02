@@ -1901,10 +1901,102 @@ function SafetyFlagChoice({ value, onChange }) {
   );
 }
 
+function FastContactSafetyCard({ state, onChange, savedContact }) {
+  const [open, setOpen] = useState(false);
+  const contactLine = state.contactLine || formatContactLine(state);
+  const hasSavedContact = Boolean(savedContact?.name || savedContact?.email || savedContact?.phone);
+
+  const updateContactLine = (value) => {
+    const parsed = parseContactLine(value);
+    onChange('contactLine', value);
+    onChange('name', parsed.name);
+    onChange('email', parsed.email);
+    onChange('phone', parsed.phone);
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+      <div className="relative grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <TextInput
+              label="Name, phone, email"
+              value={contactLine}
+              onChange={updateContactLine}
+              placeholder="Alex Morgan, (415) 555-0123, you@example.com"
+              autoComplete="name"
+              actionLabel={hasSavedContact ? 'Saved' : ''}
+              onAction={() => {
+                const nextLine = formatContactLine({
+                  name: savedContact?.name || '',
+                  phone: formatPhoneNumber(savedContact?.phone || ''),
+                  email: savedContact?.email || '',
+                });
+                updateContactLine(nextLine);
+              }}
+              required
+            />
+          </div>
+          <TextInput
+            label="Date of birth"
+            value={state.dob}
+            onChange={(value) => onChange('dob', formatDobInput(value))}
+            placeholder="MM/DD/YYYY"
+            autoComplete="bday"
+            inputMode="numeric"
+            required
+          />
+        </div>
+
+        <div className="border-t border-foreground/10 pt-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Safety flags?</p>
+            <button
+              type="button"
+              onClick={() => setOpen((current) => !current)}
+              className="min-h-[34px] rounded-full border border-foreground/12 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62"
+            >
+              {open ? 'Hide' : 'View'}
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { key: 'none', label: 'No' },
+              { key: 'call', label: 'Yes, nurse call me' },
+            ].map((item) => {
+              const active = state.safetyFlag === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => onChange('safetyFlag', item.key)}
+                  aria-pressed={active}
+                  className={`min-h-[52px] rounded-2xl border px-3 text-left font-body text-sm font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
+                    active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+          <SmoothDisclosure open={open}>
+            <div className="relative mt-3 rounded-2xl border border-foreground/10 bg-background/38 p-3">
+              <ul className="grid gap-1.5 font-body text-sm font-semibold leading-snug text-foreground/64">
+                {SAFETY_FLAGS.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          </SmoothDisclosure>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FastReviewSurface({
   product,
   serviceLabel,
-  subtotal,
   balanceDue,
   state,
   resolvedZip,
@@ -1927,10 +2019,6 @@ function FastReviewSurface({
 
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-28 md:pb-6">
-      <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
-        <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">Review & pay</p>
-        <p className="mt-1 font-body text-sm font-semibold leading-snug text-foreground/66">Defaulted to fastest legal hold. Change only what needs changing.</p>
-      </div>
       {error && (
         <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
           <p className="font-body text-sm font-black">{error}</p>
@@ -1943,6 +2031,7 @@ function FastReviewSurface({
       <div className="grid gap-3">
         <div className="relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.16),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.025))]" />
+          <p className="relative mb-3 font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">Review & pay</p>
           <div className="relative flex items-start justify-between gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/18 bg-foreground/[0.07] text-foreground">
               <Icon className="h-6 w-6" strokeWidth={2.45} />
@@ -1950,7 +2039,7 @@ function FastReviewSurface({
             <span className="min-w-0 flex-1">
               <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Fast hold</span>
               <span className="mt-2 block font-heading text-[2.55rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
-              <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP nurse window</span>
+              <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP nurse window · {currency(DEPOSIT_DUE)} today · {currency(balanceDue)} due at visit</span>
             </span>
             <button
               type="button"
@@ -1959,16 +2048,6 @@ function FastReviewSurface({
             >
               Change
             </button>
-          </div>
-          <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/34 p-3 font-body text-sm font-bold text-foreground/68">
-            <div className="flex items-center justify-between gap-3">
-              <span>Pay now</span>
-              <span>{currency(DEPOSIT_DUE)}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span>Due at visit</span>
-              <span>{currency(balanceDue)}</span>
-            </div>
           </div>
         </div>
 
@@ -2020,23 +2099,19 @@ function FastReviewSurface({
           </div>
         </div>
 
-        <ContactConfirmCard state={state} onChange={onValue} savedContact={savedContactProfile} />
-        <SafetyFlagChoice value={state.safetyFlag} onChange={(value) => onValue('safetyFlag', value)} />
+        <FastContactSafetyCard state={state} onChange={onValue} savedContact={savedContactProfile} />
 
         <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
           By paying, I consent to telehealth review, medical intake, privacy terms, and a non-refundable deductible. Treatment is subject to clinical approval.
         </p>
 
-        <div className="rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/58">
-          Apple Pay, Google Pay, Link, or card appear in secure payment when available.
-        </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0 md:pb-0">
         <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
           <div className="hidden min-w-0 flex-1 px-4 md:block">
             <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">$1 today</p>
-            <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">{currency(balanceDue)} due at visit</p>
+            <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">Apple Pay, Google Pay, Link, or card · {currency(balanceDue)} due at visit</p>
           </div>
           <button
             type="button"
@@ -3423,7 +3498,6 @@ export default function BookNow() {
           <FastReviewSurface
             product={product}
             serviceLabel={serviceLabel}
-            subtotal={subtotal}
             balanceDue={balanceDue}
             state={state}
             resolvedZip={resolvedZip}
