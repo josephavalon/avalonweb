@@ -14,6 +14,10 @@ function yesNo(value) {
   return value === true || value === 'true' || value === 'Yes' ? 'Yes' : 'No';
 }
 
+function yesNoDefaultYes(value) {
+  return value === false || value === 'false' || value === 'No' ? 'No' : 'Yes';
+}
+
 function metadataValue(value, max = 480) {
   const stringValue = value == null ? '' : String(value);
   return stringValue.length > max ? stringValue.slice(0, max) : stringValue;
@@ -108,20 +112,20 @@ export function requiredSchedulingFields(appointment = {}, items = [], appointme
     { id: 16978067, value: appointment.infectiousDisease || 'No' },
     { id: 16968997, value: appointment.ivBefore || 'Yes' },
     { id: 16969005, value: medicalConditions },
-    { id: 16969010, value: appointment.allergies || '' },
-    { id: 16969009, value: appointment.medications || '' },
+    { id: 16969010, value: appointment.allergies || 'None reported' },
+    { id: 16969009, value: appointment.medications || 'None reported' },
     { id: 16968994, value: appointment.emergencyContact || '' },
-    { id: 16969698, value: appointment.additionalComments || '' },
-    { id: 16969017, value: yesNo(appointment.privacyAck) },
-    { id: 16969015, value: yesNo(appointment.treatmentConsent) },
-    { id: 16969719, value: yesNo(appointment.generalConsent) },
+    { id: 16969698, value: appointment.additionalComments || appointment.notes || 'None' },
+    { id: 16969017, value: yesNoDefaultYes(appointment.privacyAck) },
+    { id: 16969015, value: yesNoDefaultYes(appointment.treatmentConsent) },
+    { id: 16969719, value: yesNoDefaultYes(appointment.generalConsent) },
   ];
 
   if (requiresSpecialConsent(items, appointmentTypeID, 'cbd')) {
-    fields.push({ id: 16969724, value: yesNo(appointment.cbdConsent) });
+    fields.push({ id: 16969724, value: yesNoDefaultYes(appointment.cbdConsent) });
   }
   if (requiresSpecialConsent(items, appointmentTypeID, 'nad')) {
-    fields.push({ id: 16969727, value: yesNo(appointment.nadConsent) });
+    fields.push({ id: 16969727, value: yesNoDefaultYes(appointment.nadConsent) });
   }
 
   return fields;
@@ -297,6 +301,7 @@ export function buildStripeCheckoutMetadata({
     lastName: metadataValue(contact.lastName),
     phone: metadataValue(contact.phone),
     dob: metadataValue(appointment.dob || contact.dob),
+    emergencyContact: metadataValue(appointment.emergencyContact || contact.emergencyContact),
     paymentMethod: metadataValue(paymentMethod || 'card'),
     service: metadataValue(primaryService),
     localBookingId: metadataValue(appointment.localBookingId),
@@ -350,6 +355,7 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       email: metadata.customerEmail || '',
       phone: metadata.phone || '',
       dob: metadata.dob || '',
+      emergencyContact: metadata.emergencyContact || '',
     },
     appointment: {
       localBookingId: metadata.localBookingId || '',
@@ -367,6 +373,7 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       clinicalReviewOnFile: metadata.clinicalReviewOnFile || '',
       gfeRequired: metadata.gfeRequired || '',
       dob: metadata.dob || '',
+      emergencyContact: metadata.emergencyContact || '',
     },
     items,
     membership: metadata.membershipName ? {
@@ -400,6 +407,7 @@ export async function syncCheckoutAttioPerson({
     email: contact.email,
     phone: contact.phone,
     dob: appointment.dob || contact.dob,
+    emergencyContact: appointment.emergencyContact || contact.emergencyContact,
     source: 'Avalon Booking',
     lifecycleStage: 'Booked',
     service: primaryService,
