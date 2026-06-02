@@ -199,12 +199,12 @@ function ZipChecker() {
             <CheckCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
               <p className="font-body text-sm text-foreground font-medium">We cover {result.label}.</p>
-              <p className="font-body text-xs text-foreground/50 mt-0.5">{result.zone} · {result.window}. Request your visit to confirm timing.</p>
+              <p className="font-body text-xs text-foreground/50 mt-0.5">{result.zone} · {result.window}. Book to confirm.</p>
               <Link
                 to="/store"
                 className="inline-flex items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-accent hover:text-foreground transition-colors"
               >
-                Request a Visit <ArrowRight className="w-3 h-3" strokeWidth={2} />
+                Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
               </Link>
             </div>
           </motion.div>
@@ -221,12 +221,12 @@ function ZipChecker() {
             <XCircle className="w-5 h-5 text-foreground/30 shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
               <p className="font-body text-sm text-foreground/70">{zip} is outside our current coverage area.</p>
-              <p className="font-body text-xs text-foreground/40 mt-0.5">We're expanding — reach out and we'll do our best to accommodate.</p>
+              <p className="font-body text-xs text-foreground/40 mt-0.5">Outside current coverage.</p>
               <a
                 href="mailto:hello@avalonvitality.co"
                 className="inline-flex items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-foreground/40 hover:text-foreground transition-colors"
               >
-                Contact Us <ArrowRight className="w-3 h-3" strokeWidth={2} />
+                Contact <ArrowRight className="w-3 h-3" strokeWidth={2} />
               </a>
             </div>
           </motion.div>
@@ -375,7 +375,6 @@ export default function ServiceArea() {
               <h2 className="font-heading text-4xl md:text-6xl text-foreground uppercase leading-[0.9]">
                 Where We Serve
               </h2>
-              <p className="font-body text-sm text-foreground/40 mt-3">Expand any region to see covered cities and neighborhoods.</p>
             </motion.div>
 
             <div className="space-y-3">
@@ -405,9 +404,9 @@ export default function ServiceArea() {
         <section className="py-12 md:py-16 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
             {[
-              { label: 'Same-Day', desc: 'Available in most Bay Area zip codes for requests before 2pm.' },
-              { label: 'No Travel Fee', desc: 'Within our standard service zone. Extended zones may apply small surcharge.' },
-              { label: 'Hotel Friendly', desc: 'Your RN arrives directly to your room — no lobby pickup, no waiting.' },
+              { label: 'Same-day', desc: 'Most ZIPs before 2pm.' },
+              { label: 'Travel included', desc: 'Standard zone.' },
+              { label: 'Hotel-ready', desc: 'RN to room.' },
             ].map((f, i) => (
               <motion.div
                 key={f.label}
@@ -438,7 +437,7 @@ export default function ServiceArea() {
                 to="/store"
                 className="inline-block px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
               >
-                Request a Visit
+                Book
               </Link>
             </motion.div>
           </div>

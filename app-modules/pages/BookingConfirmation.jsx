@@ -368,10 +368,10 @@ export default function BookingConfirmation() {
         }
       : null;
   const titleText = paymentSuccess
-    ? 'Thank You.'
+    ? 'Thank you'
     : (isFastHold ? 'Hold Received.' : 'Request Received.');
   const statusText = paymentSuccess
-    ? 'A nurse will be in touch shortly.'
+    ? 'A nurse will text shortly.'
     : (isFastHold ? 'Pay the hold. Review comes next.' : 'Review comes next.');
   return (
     <div className="min-h-screen bg-background">
@@ -472,7 +472,7 @@ export default function BookingConfirmation() {
               >
                 <CalendarPlus className="w-4 h-4 text-foreground/50 group-hover:text-accent transition-colors" strokeWidth={1.5} />
                 <span className="font-body text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide">
-                  Open Calendar
+                  Calendar
                 </span>
               </button>
               {calendarError && (
@@ -490,7 +490,7 @@ export default function BookingConfirmation() {
             className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] px-5 font-body text-xs font-bold uppercase tracking-[0.14em] text-foreground/64 transition-colors hover:border-foreground/30 hover:text-foreground"
           >
             <Phone className="h-4 w-4" strokeWidth={1.8} />
-            Change Visit
+            Change
           </a>
 
           {/* Back home */}
@@ -499,7 +499,7 @@ export default function BookingConfirmation() {
             className="flex items-center gap-1.5 min-h-[44px] font-body text-xs tracking-[0.18em] uppercase text-foreground/40 hover:text-foreground transition-colors justify-center pt-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
-            Back to Avalon
+            Home
           </Link>
         </motion.div>
 

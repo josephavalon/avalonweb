@@ -1725,9 +1725,9 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
             <Icon className="h-6 w-6" strokeWidth={2.45} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Fast hold</span>
+            <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Hold</span>
             <span className="mt-2 block font-heading text-[2.6rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
-            <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP nurse window</span>
+            <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP</span>
           </span>
           <span className="shrink-0 text-right">
             <span className="block font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/58">$1 today</span>
@@ -1745,7 +1745,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
           </div>
         </div>
         <p className="relative mt-3 font-body text-xs font-semibold leading-snug text-foreground/56">
-          Request held after payment. Nurse review required before treatment.
+          Nurse review required.
         </p>
       </button>
       <button
@@ -1815,7 +1815,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
       <div className="relative grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <TextInput
-            label="Name, phone, email"
+            label="Contact"
             value={contactLine}
             onChange={updateContactLine}
             placeholder="Alex Morgan, (415) 555-0123, you@example.com"
@@ -1833,7 +1833,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
           />
         </div>
         <TextInput
-          label="Date of birth"
+          label="DOB"
           value={state.dob}
           onChange={(value) => onChange('dob', formatDobInput(value))}
           placeholder="MM/DD/YYYY"
@@ -1861,7 +1861,7 @@ function SafetyFlagChoice({ value, onChange }) {
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
-        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Any safety flags?</p>
+        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Safety</p>
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
@@ -1873,7 +1873,7 @@ function SafetyFlagChoice({ value, onChange }) {
       <div className="relative mt-3 grid grid-cols-2 gap-2">
         {[
           { key: 'none', label: 'No' },
-          { key: 'call', label: 'Yes, nurse call me' },
+          { key: 'call', label: 'Yes' },
         ].map((item) => {
           const active = value === item.key;
           return (
@@ -1922,7 +1922,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <TextInput
-              label="Name, phone, email"
+              label="Contact"
               value={contactLine}
               onChange={updateContactLine}
               placeholder="Alex Morgan, (415) 555-0123, you@example.com"
@@ -1940,7 +1940,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
             />
           </div>
           <TextInput
-            label="Date of birth"
+            label="DOB"
             value={state.dob}
             onChange={(value) => onChange('dob', formatDobInput(value))}
             placeholder="MM/DD/YYYY"
@@ -1952,7 +1952,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
 
         <div className="border-t border-foreground/10 pt-3">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Safety flags?</p>
+            <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Safety</p>
             <button
               type="button"
               onClick={() => setOpen((current) => !current)}
@@ -1964,7 +1964,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
           <div className="grid grid-cols-2 gap-2">
             {[
               { key: 'none', label: 'No' },
-              { key: 'call', label: 'Yes, nurse call me' },
+              { key: 'call', label: 'Yes' },
             ].map((item) => {
               const active = state.safetyFlag === item.key;
               return (
@@ -2032,15 +2032,15 @@ function FastReviewSurface({
       <div className="grid gap-3">
         <div className="relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.16),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.025))]" />
-          <p className="relative mb-3 font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">Review & pay</p>
+          <p className="relative mb-3 font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">Pay</p>
           <div className="relative flex items-start justify-between gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/18 bg-foreground/[0.07] text-foreground">
               <Icon className="h-6 w-6" strokeWidth={2.45} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Fast hold</span>
+              <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Hold</span>
               <span className="mt-2 block font-heading text-[2.55rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
-              <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP nurse window · {currency(DEPOSIT_DUE)} today · {currency(balanceDue)} due at visit</span>
+              <span className="mt-2 block font-body text-base font-bold text-foreground/70">{currency(DEPOSIT_DUE)} today · {currency(balanceDue)} at visit</span>
             </span>
             <button
               type="button"
@@ -2067,7 +2067,7 @@ function FastReviewSurface({
             >
               <span className="flex items-center gap-2">
                 <Navigation className="h-4.5 w-4.5" strokeWidth={2.4} />
-                {locationLoading ? 'Finding address' : 'Use current location'}
+                {locationLoading ? 'Finding address' : 'Use location'}
               </span>
               <ArrowRight className="h-4 w-4" />
             </button>
@@ -2076,7 +2076,7 @@ function FastReviewSurface({
               value={state.address}
               onChange={onAddress}
               onKeyDown={onAddressKeyDown}
-              placeholder="Street address, city, ZIP"
+              placeholder="Address"
               autoComplete="street-address"
               autoFocus={!state.address}
               actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
@@ -2104,7 +2104,7 @@ function FastReviewSurface({
         <FastContactSafetyCard state={state} onChange={onValue} savedContact={savedContactProfile} />
 
         <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
-          By paying, I consent to telehealth review, medical intake, privacy terms, and a non-refundable deductible. Treatment is subject to clinical approval.
+          By paying, you consent to intake, privacy terms, and a non-refundable {currency(DEPOSIT_DUE)} deductible. Treatment requires clinical approval.
         </p>
 
       </div>
@@ -2119,13 +2119,13 @@ function FastReviewSurface({
             type="button"
             onClick={onSubmit}
             disabled={checkoutLoading}
-            aria-label="Pay $1 hold and continue to secure payment"
+            aria-label="Pay $1 and continue to secure payment"
             className={`relative flex min-h-[56px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 ${
               canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/42 text-foreground/58'
             }`}
           >
-            <span>{checkoutLoading ? 'Preparing payment' : 'Pay $1 hold'}</span>
-            <span>{currency(balanceDue)} later</span>
+            <span>{checkoutLoading ? 'Opening' : 'Pay $1'}</span>
+            <span>{currency(balanceDue)} due</span>
           </button>
         </div>
       </div>
@@ -3129,7 +3129,7 @@ export default function BookNow() {
       guests,
 	      notes: [
 	        state.notes,
-	        fastMode && `Fast hold. Safety flags: ${state.safetyFlag === 'none' ? 'No' : state.safetyFlag === 'call' ? 'Yes - nurse call requested' : 'Not answered'}. Balance due at visit: ${currency(balanceDue)}.`,
+	        fastMode && `Hold. Safety: ${state.safetyFlag === 'none' ? 'No' : state.safetyFlag === 'call' ? 'Yes - nurse call requested' : 'Not answered'}. Balance due: ${currency(balanceDue)}.`,
 	      ].filter(Boolean).join('\n'),
       contact: {
         name: state.name.trim(),
@@ -3685,7 +3685,7 @@ export default function BookNow() {
                       >
                         <span className="flex items-center gap-2">
                           <Navigation className="h-4.5 w-4.5" strokeWidth={2.4} />
-                          {locationLoading ? 'Finding address' : 'Use current location'}
+                          {locationLoading ? 'Finding address' : 'Use location'}
                         </span>
                         <ArrowRight className="h-4 w-4" />
                       </button>
@@ -3697,7 +3697,7 @@ export default function BookNow() {
                           value={state.address}
                           onChange={setAddressValue}
                           onKeyDown={handleAddressKeyDown}
-                          placeholder="Street address, city, ZIP"
+                          placeholder="Address"
                           autoComplete="street-address"
                           actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
                           onAction={() => chooseAddressSuggestion(savedVisitAddress)}

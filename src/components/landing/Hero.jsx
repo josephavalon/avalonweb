@@ -91,7 +91,7 @@ export default function Hero() {
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          Your protocol.<br />Delivered by an RN.<br />SF Bay Area.
+          RN care.<br />At home.
         </motion.p>
         </div>
 
@@ -127,8 +127,8 @@ export default function Hero() {
                 <Droplets className="h-7 w-7" strokeWidth={2.45} />
               </span>
               <span className="min-w-0">
-                <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Book IV now</span>
-                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/58 md:block">$1 hold · nurse review</span>
+                <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Book</span>
+                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/58 md:block">$1 hold</span>
               </span>
             </span>
             <span className="relative flex shrink-0 items-center justify-center text-background transition-transform group-hover:translate-x-1 md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/24 md:bg-foreground/[0.10] md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
@@ -138,7 +138,7 @@ export default function Hero() {
         </motion.div>
 
         <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
-          Pay $1 to hold. Treatment follows clinical review.
+          Clinical review required.
         </p>
 
         {/* Proof rail */}
