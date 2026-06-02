@@ -167,7 +167,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
 
   if (!hasItems) {
     return (
-      <div className="mx-auto max-w-sm py-16 text-center">
+      <div className="mx-auto flex min-h-[calc(100svh-18rem)] max-w-sm flex-col justify-end pb-8 pt-10 text-center md:block md:min-h-0 md:py-16">
         <h1 className="font-heading text-h1 uppercase text-foreground">Choose protocol</h1>
         <Link
           to="/book"
@@ -175,7 +175,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
         >
           Start <ArrowRight className="h-4 w-4" strokeWidth={2} />
         </Link>
-        <Link to="/subscription" className="mt-4 inline-flex min-h-10 items-center font-body text-xs uppercase tracking-[0.16em] text-foreground/45 transition-colors hover:text-foreground/70">
+        <Link to="/subscription" className="mt-3 inline-flex min-h-12 items-center justify-center px-4 font-body text-xs uppercase tracking-[0.16em] text-foreground/45 transition-colors hover:text-foreground/70">
           Subscribe
         </Link>
       </div>
