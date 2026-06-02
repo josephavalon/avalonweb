@@ -3,6 +3,7 @@ import { reconciliationTypeForStripeEvent } from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { getDepositAmountCents } from '../../../src/lib/checkoutConfig.js';
 import { getSupabaseServiceClient } from '../../_supabase-server.js';
+import { sendPaymentReceivedEmail } from '../../_booking-email.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
@@ -100,14 +101,15 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
   // Pull the saved card off the deposit PaymentIntent so the nurse can charge
   // the balance off-session later.
+  let paymentIntent = typeof session.payment_intent === 'object' ? session.payment_intent : null;
   let paymentMethodId = null;
   const paymentIntentId = typeof session.payment_intent === 'object'
     ? session.payment_intent?.id
     : session.payment_intent || null;
   if (paymentIntentId) {
     try {
-      const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
-      paymentMethodId = pi.payment_method || null;
+      paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      paymentMethodId = paymentIntent.payment_method || null;
     } catch (e) {
       console.warn('[stripe/webhook] payment_intent retrieve failed:', e.message);
     }
@@ -168,6 +170,33 @@ async function handleCheckoutCompleted(stripe, db, session) {
       fulfillmentStatus: 'acuity_failed',
       fulfillmentError: fulfillmentError.message.slice(0, 480),
     });
+  }
+
+  if (paymentIntentId && paymentIntent?.metadata?.opsPaymentEmailSent !== 'true') {
+    try {
+      await sendPaymentReceivedEmail({
+        checkout,
+        sessionId: session.id,
+        paymentIntentId,
+        acuityAppointmentId: acuityAppointment?.id ? String(acuityAppointment.id) : '',
+        fulfillmentStatus: fulfillmentError ? 'acuity_failed' : acuityAppointment?.id ? 'acuity_created' : 'payment_received',
+      });
+      await stripe.paymentIntents.update(paymentIntentId, {
+        metadata: {
+          ...(paymentIntent?.metadata || {}),
+          ...(acuityAppointment?.id ? {
+            acuityAppointmentId: String(acuityAppointment.id),
+            fulfillmentStatus: 'acuity_created',
+          } : fulfillmentError ? {
+            fulfillmentStatus: 'acuity_failed',
+            fulfillmentError: fulfillmentError.message.slice(0, 480),
+          } : {}),
+          opsPaymentEmailSent: 'true',
+        },
+      });
+    } catch (err) {
+      console.warn('[stripe/webhook] payment email failed:', err.message);
+    }
   }
 
   const patch = {

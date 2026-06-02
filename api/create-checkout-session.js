@@ -241,7 +241,10 @@ export default async function handler(req, res) {
     // Deposit (one-time payment): save the card on file so the nurse can charge
     // the remaining balance off-session at the end of the appointment.
     if (sessionMode === 'payment') {
-      sessionParams.payment_intent_data = { setup_future_usage: 'off_session' };
+      sessionParams.payment_intent_data = {
+        setup_future_usage: 'off_session',
+        receipt_email: contact.email,
+      };
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
