@@ -122,12 +122,6 @@ export default function ProtocolPage() {
               Book This IV
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </Link>
-            <Link
-              to="/subscription"
-              className="mt-3 inline-flex min-h-[44px] items-center font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/45 transition-colors hover:text-foreground/72"
-            >
-              Monthly plans
-            </Link>
           </motion.div>
 
           {/* Composition */}

@@ -52,10 +52,6 @@ function money(value) {
   return `$${Number(value || 0).toLocaleString()}`;
 }
 
-function productHrefForSession(session) {
-  return `/therapies/${session.key}`;
-}
-
 function includesText(session) {
   if (session.inside) return session.inside;
   if (session.doses?.length) return `${session.doses.length} dose options`;
@@ -151,20 +147,12 @@ function ProtocolCard({ session, index = 0 }) {
               </span>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-[0.82fr_1fr] gap-2">
-            <Link
-              to={productHrefForSession(session)}
-              className="flex min-h-[52px] items-center justify-center rounded-full border border-foreground/14 px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/76 transition-colors hover:border-foreground/28 hover:text-foreground"
-            >
-              Details
-            </Link>
-            <Link
-              to={`/book?protocol=${session.key}`}
-              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
-            >
-              Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-            </Link>
-          </div>
+          <Link
+            to={`/book?protocol=${session.key}`}
+            className="mt-4 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
+          >
+            Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
+          </Link>
         </div>
       </div>
     </motion.article>

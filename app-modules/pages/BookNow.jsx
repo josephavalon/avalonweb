@@ -809,7 +809,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
         <button
           type="button"
           onClick={onPrimary}
-          className={`min-h-[56px] rounded-full font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] ${
+          className={`min-h-[56px] w-full rounded-full font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] ${
             active ? 'border border-foreground/24 bg-foreground text-background' : 'border border-foreground/24 bg-foreground/[0.13] text-foreground backdrop-blur-2xl'
           }`}
         >
@@ -2053,7 +2053,7 @@ export default function BookNow() {
     gfeExpiresAt: clientProfile.gfe?.validUntil,
   }), [clientProfile]);
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const reduceMotion = useReducedMotion();
@@ -2414,7 +2414,7 @@ export default function BookNow() {
 
   const chooseProductAndContinue = (key, overrides = {}) => {
     chooseProduct(key, overrides);
-    setStep(2);
+    setStep(3);
   };
 
   const chooseCustomBase = (key) => {
@@ -2587,21 +2587,21 @@ export default function BookNow() {
       visit_type: state.visitType,
       protocol_key: state.productKey,
     });
-    setStep((current) => Math.min(current + 1, LAST_STEP));
+    setStep((current) => Math.min(current === 1 ? 3 : current + 1, LAST_STEP));
   };
 
-  const back = () => setStep((current) => Math.max(current - 1, 0));
+  const back = () => setStep((current) => Math.max(current === 3 ? 1 : current - 1, 0));
 
   const goToStep = (targetStep) => {
     if (targetStep === step) return;
     if (targetStep < step) {
       setError('');
-      setStep(targetStep);
+      setStep(targetStep === 2 ? 1 : targetStep);
       return;
     }
     if (targetStep === step + 1 && canAdvance()) {
       setError('');
-      setStep(targetStep);
+      setStep(targetStep === 2 ? 3 : targetStep);
       return;
     }
     setError('Finish this step first.');

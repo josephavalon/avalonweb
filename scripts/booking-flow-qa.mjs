@@ -287,7 +287,6 @@ try {
 
   await clickText(cdp, 'Recovery');
   await clickText(cdp, 'Next');
-  await clickText(cdp, 'No Extras');
   await fillByLabel(cdp, 'Address', '188 King St, San Francisco');
   await fillByLabel(cdp, 'ZIP', '94107');
   await clickText(cdp, 'Next');

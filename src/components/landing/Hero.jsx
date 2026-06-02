@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Calendar, Droplets } from 'lucide-react';
+import { ArrowRight, Droplets } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
@@ -131,30 +131,6 @@ export default function Hero() {
               </span>
             </span>
             <span className="relative flex shrink-0 items-center justify-center text-background transition-transform group-hover:translate-x-1 md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/24 md:bg-foreground/[0.10] md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
-              <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
-            </span>
-          </MotionLink>
-          <MotionLink
-            to="/subscription"
-            initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.95, delay: 1.46, ease: EASE }}
-            whileHover={premiumHover}
-            whileTap={premiumTap}
-            className="group relative flex min-h-[54px] w-full items-center justify-between gap-4 overflow-hidden rounded-xl border border-foreground/22 bg-white/[0.025] px-5 text-foreground/76 shadow-none backdrop-blur-sm transition-all duration-base ease-editorial hover:border-foreground/45 hover:bg-white/[0.08] hover:text-foreground md:min-h-[118px] md:rounded-[1.55rem] md:border-foreground/14 md:bg-background/28 md:p-5 md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_24px_95px_hsl(var(--foreground)/0.09)] md:backdrop-blur-2xl md:backdrop-saturate-150"
-          >
-            <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.12),transparent_34%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.055),transparent_32%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_52%,hsl(var(--foreground)/0.026))] opacity-95 md:block" />
-            <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent md:block" />
-            <span className="relative flex min-w-0 items-center gap-4">
-              <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/16 bg-foreground/[0.065] text-foreground/90 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.09)] backdrop-blur-xl md:flex md:h-16 md:w-16">
-                <Calendar className="h-7 w-7" strokeWidth={2.45} />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Subscriptions</span>
-                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/54 md:block">Monthly recovery</span>
-              </span>
-            </span>
-            <span className="relative flex shrink-0 items-center justify-center text-foreground/76 transition-transform group-hover:translate-x-1 group-hover:text-foreground md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/14 md:bg-background/38 md:text-foreground/48 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
               <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
             </span>
           </MotionLink>

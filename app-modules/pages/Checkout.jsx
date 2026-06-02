@@ -175,9 +175,6 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
         >
           Start <ArrowRight className="h-4 w-4" strokeWidth={2} />
         </Link>
-        <Link to="/subscription" className="mt-3 inline-flex min-h-12 items-center justify-center px-4 font-body text-xs uppercase tracking-[0.16em] text-foreground/45 transition-colors hover:text-foreground/70">
-          Subscribe
-        </Link>
       </div>
     );
   }
