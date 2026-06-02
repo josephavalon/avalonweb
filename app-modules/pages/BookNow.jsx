@@ -1703,6 +1703,9 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
   return (
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+      <p className="relative mb-3 font-body text-sm font-semibold leading-snug text-foreground/68">
+        Required for nurse dispatch and Acuity intake. Avalon verifies eligibility before treatment.
+      </p>
       <div className="relative grid gap-3 sm:grid-cols-2">
         <TextInput label="Full name" value={state.name} onChange={(value) => onChange('name', value)} placeholder="Alex Morgan" autoComplete="name" actionLabel={savedContact?.name ? 'Saved' : ''} onAction={() => onChange('name', savedContact?.name || '')} required />
         <TextInput label="Date of birth" type="date" value={state.dob} onChange={(value) => onChange('dob', value)} autoComplete="bday" required />

@@ -131,6 +131,15 @@ async function waitForReady(cdp) {
   throw new Error('Page did not finish loading.');
 }
 
+async function clearAvalonStorage(cdp) {
+  await evalOnPage(cdp, `(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('av.') || key === 'cookieConsent') localStorage.removeItem(key);
+    }
+    localStorage.setItem('cookieConsent', 'allowed');
+  })()`);
+}
+
 async function clickText(cdp, text) {
   const found = await evalOnPage(cdp, `(() => {
     const wanted = ${JSON.stringify(text)}.toLowerCase();
@@ -176,8 +185,50 @@ async function fillByLabel(cdp, label, value) {
     input.dispatchEvent(new Event('change', { bubbles: true }));
     return true;
   })()`);
-  if (!filled) throw new Error(`Could not fill "${label}".`);
+  if (!filled) {
+    const fields = await evalOnPage(cdp, `Array.from(document.querySelectorAll('input, textarea, select')).map((el) => ({
+      aria: el.getAttribute('aria-label') || '',
+      placeholder: el.getAttribute('placeholder') || '',
+      type: el.getAttribute('type') || el.tagName.toLowerCase(),
+      value: el.value || '',
+    })).slice(0, 24)`);
+    const body = await evalOnPage(cdp, `(document.body.innerText || '').replace(/\\s+/g, ' ').slice(0, 600)`);
+    throw new Error(`Could not fill "${label}". Visible fields: ${JSON.stringify(fields)}. Body: ${body}`);
+  }
   await wait(120);
+}
+
+async function waitForBookingOutcome(cdp) {
+  const deadline = Date.now() + 10_000;
+  let result = null;
+
+  while (Date.now() < deadline) {
+    result = await evalOnPage(cdp, `(() => {
+      const booking = JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null');
+      const handoff = JSON.parse(localStorage.getItem('av.local.webstore.latestHandoff') || 'null');
+      const stripeFrame = Array.from(document.querySelectorAll('iframe')).find((frame) => /stripe|checkout/i.test(frame.src || ''));
+      return {
+        path: location.pathname,
+        body: document.body.innerText || '',
+        hasEmbeddedCheckout: Boolean(stripeFrame),
+        stripeFrameSrc: stripeFrame?.src || '',
+        bookingId: booking?.id || '',
+        service: booking?.service || '',
+        orderType: booking?.orderType || '',
+        gfe: booking?.gfe || '',
+        payment: booking?.payment || '',
+        contact: booking?.contact || null,
+        hasHandoff: Boolean(handoff?.bookingId),
+        scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+        width: window.innerWidth,
+      };
+    })()`);
+
+    if (result.hasEmbeddedCheckout || result.path === '/booking/confirmation') return result;
+    await wait(250);
+  }
+
+  return result;
 }
 
 async function stopChrome(processRef) {
@@ -231,7 +282,7 @@ try {
 
   await cdp.send('Page.navigate', { url: `${BASE_URL}/book?reset=1&fresh=${Date.now()}` });
   await waitForReady(cdp);
-  await evalOnPage(cdp, `localStorage.setItem('cookieConsent', 'allowed')`);
+  await clearAvalonStorage(cdp);
   await wait(500);
 
   await clickText(cdp, 'Recovery');
@@ -240,36 +291,28 @@ try {
   await fillByLabel(cdp, 'Address', '188 King St, San Francisco');
   await fillByLabel(cdp, 'ZIP', '94107');
   await clickText(cdp, 'Next');
+  await wait(400);
   await fillByLabel(cdp, 'Full name', 'QA Mobile Client');
+  await fillByLabel(cdp, 'Date of birth', '1980-01-02');
   await fillByLabel(cdp, 'Phone', '(415) 555-0199');
   await fillByLabel(cdp, 'Email', 'qa@avalonvitality.co');
-  await clickText(cdp, 'Hold');
-  await wait(900);
-
-  const result = await evalOnPage(cdp, `(() => {
-    const booking = JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null');
-    const handoff = JSON.parse(localStorage.getItem('av.local.webstore.latestHandoff') || 'null');
-    return {
-      path: location.pathname,
-      hasConfirmation: /Hold received|Pay the hold|Review comes next|Confirmation/i.test(document.body.innerText || ''),
-      bookingId: booking?.id,
-      service: booking?.service,
-      orderType: booking?.orderType,
-      gfe: booking?.gfe,
-      payment: booking?.payment,
-      hasHandoff: Boolean(handoff?.bookingId),
-      scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
-      width: window.innerWidth,
-    };
-  })()`);
+  await fillByLabel(cdp, 'Emergency contact', 'QA Emergency (415) 555-0100');
+  await clickText(cdp, 'Pay $1');
+  const result = await waitForBookingOutcome(cdp);
 
   const failures = [];
-  if (result.path !== '/booking/confirmation') failures.push(`Expected confirmation route, got ${result.path}.`);
-  if (!result.hasConfirmation) failures.push('Confirmation copy did not render.');
-  if (!result.bookingId) failures.push('No local booking was saved.');
+  const staticFallback = result.path === '/booking/confirmation';
+  const paymentReady = result.hasEmbeddedCheckout || staticFallback;
+  if (!paymentReady) failures.push(`Expected embedded Stripe or static confirmation fallback, got ${result.path}.`);
+  if (staticFallback && !/Hold received|Pay the hold|Review comes next|Confirmation/i.test(result.body || '')) failures.push('Confirmation copy did not render.');
+  if (result.hasEmbeddedCheckout && !/stripe|checkout/i.test(result.stripeFrameSrc || '')) failures.push('Embedded Stripe iframe source missing.');
+  if (!result.hasEmbeddedCheckout && !staticFallback) failures.push('Embedded checkout did not open.');
+  if (!result.bookingId && staticFallback) failures.push('No local booking was saved.');
   if (!/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
   if (!/1/.test(result.payment || '')) failures.push('Deductible payment state missing.');
-  if (!result.hasHandoff) failures.push('No local handoff marker.');
+  if (!result.contact?.dob) failures.push('DOB missing from saved booking.');
+  if (!result.contact?.emergencyContact) failures.push('Emergency contact missing from saved booking.');
+  if (!result.hasHandoff && staticFallback) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);
   if (cdp.consoleIssues.length) failures.push(`Console issues: ${cdp.consoleIssues.join(' | ')}`);
 
@@ -277,7 +320,7 @@ try {
     throw new Error(`Booking QA failed:\n- ${failures.join('\n- ')}`);
   }
 
-  console.log(`Booking QA passed: ${result.bookingId} · ${result.service} · ${result.orderType}.`);
+  console.log(`Booking QA passed: ${result.hasEmbeddedCheckout ? 'embedded checkout ready' : result.bookingId} · ${result.service || 'Avalon checkout'} · ${result.orderType || 'payment'}.`);
 } finally {
   cdp?.close();
   await stopChrome(chrome);
