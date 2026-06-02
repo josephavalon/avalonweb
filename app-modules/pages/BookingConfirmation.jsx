@@ -30,6 +30,12 @@ function formatApptTime(isoString, duration) {
   return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
 }
 
+function currentLocationCoordinates(value = '') {
+  const match = String(value).match(/current location\s*[·-]\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  return { lat: match[1], lng: match[2] };
+}
+
 function escapeIcsText(value = '') {
   return String(value)
     .replace(/\\/g, '\\\\')
@@ -167,7 +173,8 @@ export default function BookingConfirmation() {
   const [apptError, setApptError] = useState(null);
   const [fulfillmentPending, setFulfillmentPending] = useState(Boolean(sessionId && !initialAppointmentId));
   const [calendarError, setCalendarError] = useState('');
-  const apptLoading = verifyLoading || appointmentLoading;
+  const [resolvedAddress, setResolvedAddress] = useState('');
+  const apptLoading = !paymentSuccess && (verifyLoading || appointmentLoading);
   const isFastHold = !paymentSuccess && (localBooking?.holdType === 'fast' || localBooking?.source === 'Fast Hold');
 
   useSeo({
@@ -236,6 +243,23 @@ export default function BookingConfirmation() {
   }, [appointmentId]);
 
   useEffect(() => {
+    const coords = currentLocationCoordinates(localBooking?.address);
+    if (!coords) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const params = new URLSearchParams(coords);
+        const res = await fetch(`/api/reverse-geocode?${params}`);
+        const data = await res.json();
+        if (!cancelled && res.ok && data?.address) setResolvedAddress(data.address);
+      } catch {
+        // Keep the confirmation clean; do not show raw coordinates.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [localBooking?.address]);
+
+  useEffect(() => {
     if (appt?.id) {
       const saved = saveLastBooking({
         ...(localBooking || {}),
@@ -287,7 +311,9 @@ export default function BookingConfirmation() {
   const serviceLabel = appt?.type || localBooking?.service || 'IV Therapy Session';
   const apptDate = appt?.datetime ? formatApptDate(appt.datetime) : localBooking?.date || null;
   const apptTime = appt?.datetime ? formatApptTime(appt.datetime, appt.duration) : localBooking?.time || null;
-  const apptAddress = appt?.location || localBooking?.address || null;
+  const rawLocalAddress = localBooking?.address || '';
+  const localAddressIsCoordinates = Boolean(currentLocationCoordinates(rawLocalAddress));
+  const apptAddress = appt?.location || resolvedAddress || (localAddressIsCoordinates ? null : rawLocalAddress) || null;
   const localTimeIsPending = /asap|soonest|today/i.test(String(localBooking?.time || localBooking?.timeIntent || ''));
   const calendarAppointment = appt?.datetime
     ? {
@@ -307,10 +333,10 @@ export default function BookingConfirmation() {
         }
       : null;
   const titleText = paymentSuccess
-    ? (appt?.id ? 'Session Confirmed.' : 'Payment Received.')
+    ? 'Thank You.'
     : (isFastHold ? 'Hold Received.' : 'Request Received.');
   const statusText = paymentSuccess
-    ? (appt?.id ? 'Your appointment is confirmed.' : 'We are confirming your appointment now.')
+    ? 'A nurse will be in touch shortly.'
     : (isFastHold ? 'Pay the hold. Review comes next.' : 'Review comes next.');
   return (
     <div className="min-h-screen bg-background">
@@ -349,16 +375,8 @@ export default function BookingConfirmation() {
               </div>
             )}
 
-            {!apptLoading && fulfillmentPending && !appt && !apptError && (
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-6 py-3">
-                <p className="font-body text-sm text-foreground/60">
-                  Payment is complete. Appointment confirmation is still processing.
-                </p>
-              </div>
-            )}
-
             {/* Real booking details */}
-            {!apptLoading && (referenceNum || apptDate) && (
+            {(referenceNum || apptDate) && (
               <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3 text-left space-y-0 mx-auto backdrop-blur-xl">
                 {serviceLabel && (
                   <DetailPill icon={Droplets} label="Service" value={serviceLabel} />
