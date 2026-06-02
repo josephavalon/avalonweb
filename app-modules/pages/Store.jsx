@@ -139,7 +139,7 @@ export default function Store() {
       addOns: addonItems.map((item) => item.label),
       total,
     });
-    navigate(`/book?protocol=${recommended.key}`);
+    navigate('/book');
   };
 
   const continueCustom = () => {
@@ -149,7 +149,7 @@ export default function Store() {
       people,
       note: customNote,
     });
-    navigate('/book?protocol=myers&custom=1');
+    navigate('/book');
   };
 
   return (

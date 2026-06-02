@@ -72,7 +72,7 @@ export default function DehydrationIV() {
             </div>
 
             <Link
-              to="/book?protocol=hydration"
+              to="/book"
               className="inline-block bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full px-8 py-4 hover:bg-foreground/90 transition-colors mb-6"
             >
               BUY NOW
@@ -166,7 +166,7 @@ export default function DehydrationIV() {
                 </ul>
 
                 <a
-                   href="/book?protocol=hydration"
+                   href="/book"
                    className="block text-center py-3.5 font-body text-xs tracking-widest uppercase font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
                  >
                    BUY NOW

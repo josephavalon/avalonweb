@@ -145,9 +145,8 @@ export default function Subscription() {
   const activeTier = tiers.find((tier) => tier.key === activeTierKey) || tiers[1];
   const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
   const switchTier = (tier) => setActiveTierKey(tier.key);
-  const selectTier = (tier) => {
-    const outcome = tier.custom ? 'longevity' : 'recover';
-    navigate(`/book?reset=1&outcome=${outcome}&subscription=${tier.key}`);
+  const selectTier = () => {
+    navigate('/book?reset=1');
   };
 
   return (

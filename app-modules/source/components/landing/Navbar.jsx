@@ -12,7 +12,7 @@ const mainLinks = [
   { to: '/subscription', label: 'Plans' },
   { to: '/launches', label: 'Launches' },
 ];
-const BOOK_URL = '/book?protocol=recovery&time=asap';
+const BOOK_URL = '/book';
 
 const dashboardPathFor = (user) => {
   if (!user) return '/login';

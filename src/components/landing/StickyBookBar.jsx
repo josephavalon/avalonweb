@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { EASE, premiumTap } from '@/lib/motion';
 
-const BOOK_URL = '/book?protocol=recovery&time=asap';
+const BOOK_URL = '/book';
 
 export default function StickyBookBar() {
   const [visible, setVisible] = useState(false);

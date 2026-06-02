@@ -116,7 +116,7 @@ export default function ProtocolPage() {
 
           <motion.div {...fadeUp(0.4)} className="mb-14 max-w-md">
             <Link
-              to={`/book?protocol=${protocol.key}`}
+              to="/book"
               className="flex min-h-[58px] w-full items-center justify-between rounded-2xl bg-foreground px-6 font-body text-xs font-semibold tracking-[0.2em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)] transition-opacity hover:opacity-90"
             >
               Book This IV

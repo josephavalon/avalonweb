@@ -27,9 +27,9 @@ const FILTERS = [
 ];
 
 const HERO_GOALS = [
-  { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book?outcome=recover&protocol=hydration' },
-  { key: 'energy', label: 'Energy', icon: Zap, href: '/book?outcome=perform&protocol=energy' },
-  { key: 'longevity', label: 'Longevity', icon: BatteryCharging, href: '/book?outcome=longevity&protocol=nad' },
+  { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book' },
+  { key: 'energy', label: 'Energy', icon: Zap, href: '/book' },
+  { key: 'longevity', label: 'Longevity', icon: BatteryCharging, href: '/book' },
   { key: 'all', label: 'All Protocols', icon: FlaskConical, href: '#protocol-directory' },
 ];
 
@@ -148,7 +148,7 @@ function ProtocolCard({ session, index = 0 }) {
             ))}
           </div>
           <Link
-            to={`/book?protocol=${session.key}`}
+            to="/book"
             className="mt-4 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
           >
             Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
@@ -328,7 +328,7 @@ export default function Menu() {
             <h2 className="font-heading text-[2.7rem] uppercase leading-none tracking-normal md:text-[4rem]">Custom?</h2>
             <PremiumButton
               as={Link}
-              to="/book?outcome=longevity&subscription=custom"
+              to="/book"
               className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-black uppercase tracking-[0.14em] text-background"
             >
               Build Custom <ArrowRight className="h-4 w-4" strokeWidth={2.35} />

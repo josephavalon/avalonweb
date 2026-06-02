@@ -2,7 +2,7 @@ import React from 'react';
 import { Home, CalendarCheck, Menu, Crown } from 'lucide-react';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 
-const BOOK_URL = '/book?protocol=recovery&time=asap';
+const BOOK_URL = '/book';
 
 const TABS = [
   { to: '/',             label: 'Home',     icon: Home,          exact: true },

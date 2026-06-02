@@ -5,7 +5,7 @@ import { ArrowRight, Droplets } from 'lucide-react';
 import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
-const BOOK_URL = '/book?protocol=recovery&time=asap';
+const BOOK_URL = '/book';
 
 export default function Hero() {
   React.useEffect(() => {

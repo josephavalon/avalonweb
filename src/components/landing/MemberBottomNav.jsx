@@ -3,7 +3,7 @@ import { Home, Calendar, Crown, MessageCircle, User } from 'lucide-react';
 import { useCommunicationCenter } from '@/hooks/useCommunicationCenter';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 
-const BOOK_URL = '/book?protocol=recovery&time=asap';
+const BOOK_URL = '/book';
 
 export default function MemberBottomNav() {
   const { snapshot } = useCommunicationCenter();

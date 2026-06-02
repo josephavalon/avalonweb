@@ -184,7 +184,7 @@ export default function ProductDetail() {
       type: category === 'iv-vitamins' ? 'iv' : 'addon',
     });
     appendActivity(`Added product to checkout: ${treatment.name}`, { role: 'client', product: slug });
-    navigate(`/book?protocol=${encodeURIComponent(protocolKeyForProduct(treatment))}`);
+    navigate('/book');
   };
 
   return (

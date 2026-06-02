@@ -2380,9 +2380,9 @@ function SummaryRail({
 
 const defaultState = {
   draftVersion: BOOKING_DRAFT_VERSION,
-  outcome: 'recover',
+  outcome: '',
   visitType: 'one-time',
-  productKey: 'recovery',
+  productKey: '',
   planKey: FEATURED_SUBSCRIPTION_TIER_KEY,
   clientType: 'new',
   eventType: 'Private',
@@ -2462,13 +2462,14 @@ export default function BookNow() {
     gfeExpiresAt: clientProfile.gfe?.validUntil,
   }), [clientProfile]);
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
-  const [step, setStep] = useState(() => (fastMode ? 1 : 1));
+  const [step, setStep] = useState(() => (fastMode ? 1 : 0));
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const shouldResetDraft = searchParams.get('reset') === '1';
+  const shouldResumeDraft = searchParams.get('resume') === '1';
   const [state, setState] = useState(() => {
-    const draft = shouldResetDraft ? {} : readBookingDraft()?.webstore || {};
+    const draft = shouldResetDraft || !shouldResumeDraft ? {} : readBookingDraft()?.webstore || {};
     const savedWebstore = draft.draftVersion === BOOKING_DRAFT_VERSION ? draft : {};
     const savedProductKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(savedWebstore.productKey) ? savedWebstore.productKey : '';
     const savedContact = shouldResetDraft ? {} : lastBooking?.contact || {};
@@ -2608,7 +2609,7 @@ export default function BookNow() {
   const pricedGuestCount = isGroupVisit ? Math.min(guestCount, 4) : 1;
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
-  const totalLabel = groupContactRequired ? 'Contact' : currency(subtotal);
+  const totalLabel = !product ? 'Select' : groupContactRequired ? 'Contact' : currency(subtotal);
   const balanceDue = 0;
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
@@ -3004,6 +3005,7 @@ export default function BookNow() {
   };
 
   const canAdvance = () => {
+    if (step === 0) return Boolean(state.outcome);
     if (step === 1 && isCustomTreatment) return Boolean(state.productKey && state.customBase);
     if (step === 1) return Boolean(state.productKey);
     if (step === 2) return Boolean(state.productKey);
@@ -3018,7 +3020,7 @@ export default function BookNow() {
       return;
     }
     if (!canAdvance()) {
-      const reason = step === 3 ? 'Add where and when.' : 'Choose therapy.';
+      const reason = step === 0 ? 'Choose goal.' : step === 3 ? 'Add where and when.' : 'Choose therapy.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
