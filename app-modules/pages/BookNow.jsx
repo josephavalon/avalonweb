@@ -610,7 +610,7 @@ function SelectCard({ item, active, onClick, children, className = '', index = 0
       whileHover={{ y: -3 }}
       transition={{ duration: 0.72, ease: EASE }}
       onClick={onClick}
-      className={`relative isolate grid min-h-[112px] grid-rows-[3rem_2.75rem_auto] gap-y-5 overflow-hidden rounded-[1.25rem] border p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_80px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors ${
+      className={`av-glass-card relative isolate grid min-h-[112px] grid-rows-[3rem_2.75rem_auto] gap-y-5 overflow-hidden rounded-[1.25rem] border p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_80px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors ${
         active
           ? 'border-foreground/42 bg-foreground/[0.14] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
           : 'border-foreground/12 bg-background/48 text-foreground hover:border-foreground/24 hover:bg-background/62'
@@ -657,7 +657,7 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
       whileHover={{ y: -2, scale: active ? 1.008 : 1.003 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
       onClick={onClick}
-      className={`group relative flex min-h-[118px] flex-col items-start justify-between gap-3 overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
+      className={`av-glass-card group relative flex min-h-[118px] flex-col items-start justify-between gap-3 overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
         active
           ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_105px_hsl(var(--foreground)/0.18)]'
           : 'border-foreground/9 bg-background/30 text-foreground hover:border-foreground/20 hover:bg-background/48'
@@ -755,7 +755,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
       }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
-      className={`relative overflow-hidden rounded-[1.75rem] border p-3.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:p-4 ${
+      className={`av-glass-card relative overflow-hidden rounded-[1.75rem] border p-3.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:p-4 ${
         active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : featured ? 'border-foreground/16 bg-background/42 text-foreground' : 'border-foreground/9 bg-background/30 text-foreground'
       }`}
     >
@@ -2301,7 +2301,7 @@ function SummaryRail({
   const [open, setOpen] = useState(false);
   return (
     <aside className="hidden lg:block">
-      <div className="sticky top-28 overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
+      <div className="av-glass-card sticky top-28 overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.11),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_58%)]" />
         <button
           type="button"
@@ -3456,7 +3456,7 @@ export default function BookNow() {
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
           >
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5">
+            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5">
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -3562,7 +3562,7 @@ export default function BookNow() {
             )}
             <motion.div
               key={step}
-              className="relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-5"
+              className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-5"
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.995 }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 1 }}

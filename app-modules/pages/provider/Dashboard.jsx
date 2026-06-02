@@ -77,7 +77,7 @@ function VisitDrawer({ req, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ duration: 0.38, ease: EASE }}
-        className="w-full md:max-w-2xl bg-background border border-foreground/[0.1] rounded-t-2xl md:rounded-2xl max-h-[90vh] overflow-y-auto"
+        className="av-glass-card w-full max-h-[90vh] overflow-y-auto rounded-t-2xl border border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150 md:max-w-2xl md:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}

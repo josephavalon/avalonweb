@@ -247,7 +247,7 @@ export default function LanguageSelect() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="absolute bottom-full mb-2 left-0 w-44 rounded-2xl bg-background border border-foreground/[0.09] shadow-[0_-4px_32px_hsl(var(--foreground)/0.14)] overflow-hidden z-50"
+            className="av-glass-card absolute bottom-full left-0 z-50 mb-2 w-44 overflow-hidden rounded-2xl border border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_-18px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150"
             role="listbox"
             aria-label="Language options"
           >

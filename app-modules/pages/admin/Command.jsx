@@ -672,7 +672,7 @@ function VisitDetailSheet({ req, onClose, onUpdate }) {
         onClick={onClose}
       />
 
-      <div className="relative bg-background border-t border-foreground/[0.1] rounded-t-3xl flex flex-col overflow-hidden">
+      <div className="av-glass-card relative flex flex-col overflow-hidden rounded-t-3xl border-t border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-10 h-1 rounded-full bg-foreground/20" />
@@ -5597,7 +5597,7 @@ function MoreMenuSheet({ onClose, onNav, onSignOut }) {
     <motion.div
       initial={{ y:'100%' }} animate={{ y: 0 }} exit={{ y:'100%' }}
       transition={{ duration: 0.38, ease: EASE }}
-      className="fixed inset-x-0 bottom-0 z-50 bg-background border-t border-foreground/[0.1] rounded-t-3xl"
+      className="av-glass-card fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150"
       style={{ paddingBottom:'max(env(safe-area-inset-bottom), 1.5rem)' }}
     >
       <motion.div
