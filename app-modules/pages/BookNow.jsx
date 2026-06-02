@@ -287,12 +287,6 @@ const TIME_INTENTS = [
   { key: 'choose', label: 'Pick date', icon: Calendar },
 ];
 
-const TIME_PRESETS = [
-  { key: 'morning', label: 'Morning', time: '09:00' },
-  { key: 'afternoon', label: 'Afternoon', time: '13:00' },
-  { key: 'evening', label: 'Evening', time: '17:00' },
-];
-
 function todayDate(offset = 0) {
   const date = new Date();
   date.setDate(date.getDate() + offset);
@@ -424,6 +418,19 @@ async function createCheckoutSession(payload) {
     error.code = body?.code || (!body ? 'checkout_api_unavailable' : 'checkout_failed');
     error.body = body;
     throw error;
+  }
+  return body;
+}
+
+async function reverseGeocodeLocation({ latitude, longitude }) {
+  const params = new URLSearchParams({
+    lat: String(latitude),
+    lng: String(longitude),
+  });
+  const response = await fetch(`/api/reverse-geocode?${params}`);
+  const body = await response.json().catch(() => null);
+  if (!response.ok || !body?.address) {
+    throw new Error(body?.error || 'Address lookup failed.');
   }
   return body;
 }
@@ -2044,6 +2051,7 @@ export default function BookNow() {
   });
   const [error, setError] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
 
   useEffect(() => {
@@ -2405,20 +2413,34 @@ export default function BookNow() {
 
   const useCurrentLocation = () => {
     setError('');
+    if (locationLoading) return;
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setError('Location is unavailable. Add address.');
       return;
     }
+    setLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const lat = Number(coords.latitude).toFixed(5);
-        const lng = Number(coords.longitude).toFixed(5);
-        setState((current) => ({
-          ...current,
-          address: `Current location · ${lat}, ${lng}`,
-        }));
+      async ({ coords }) => {
+        try {
+          const result = await reverseGeocodeLocation({
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          });
+          setState((current) => ({
+            ...current,
+            address: result.address,
+            zip: result.zip || current.zip,
+          }));
+        } catch (err) {
+          setError(err.message || 'Address lookup failed. Add street address.');
+        } finally {
+          setLocationLoading(false);
+        }
       },
-      () => setError('Location blocked. Add address.'),
+      () => {
+        setLocationLoading(false);
+        setError('Location blocked. Add address.');
+      },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   };
@@ -3074,11 +3096,12 @@ export default function BookNow() {
                       <button
                         type="button"
                         onClick={useCurrentLocation}
+                        disabled={locationLoading}
                         className="mb-3 flex min-h-[54px] w-full items-center justify-between gap-3 rounded-2xl border border-foreground/12 bg-background/44 px-4 font-body text-sm font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl"
                       >
                         <span className="flex items-center gap-2">
                           <Navigation className="h-4.5 w-4.5" strokeWidth={2.4} />
-                          Use current location
+                          {locationLoading ? 'Finding address' : 'Use current location'}
                         </span>
                         <ArrowRight className="h-4 w-4" />
                       </button>
@@ -3230,20 +3253,6 @@ export default function BookNow() {
 	                              ))}
 	                            </select>
 	                          </label>
-                            <div className="grid grid-cols-3 gap-2 sm:col-span-2">
-                              {TIME_PRESETS.map((preset) => (
-                                <button
-                                  key={preset.key}
-                                  type="button"
-                                  onClick={() => chooseAvailabilityWindow({ key: preset.time, time: preset.time, display: formatTimeLabel(preset.time) })}
-                                  className={`min-h-[48px] rounded-full border px-3 font-body text-sm font-black uppercase tracking-[0.07em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
-                                    state.customTime === preset.time ? 'border-foreground/36 bg-foreground/[0.15] text-foreground' : 'border-foreground/12 bg-background/36 text-foreground/68'
-                                  }`}
-                                >
-                                  {preset.label}
-                                </button>
-                              ))}
-                            </div>
                             </div>
 	                        </motion.div>
 	                      )}
