@@ -1901,6 +1901,161 @@ function SafetyFlagChoice({ value, onChange }) {
   );
 }
 
+function FastReviewSurface({
+  product,
+  serviceLabel,
+  subtotal,
+  balanceDue,
+  state,
+  resolvedZip,
+  topAddressSuggestion,
+  savedVisitAddress,
+  savedContactProfile,
+  locationLoading,
+  checkoutLoading,
+  error,
+  onAddress,
+  onAddressKeyDown,
+  onAddressSuggestion,
+  onValue,
+  onUseCurrentLocation,
+  onChangeTherapy,
+  onSubmit,
+}) {
+  const Icon = product?.icon || Droplets;
+  const canPay = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
+
+  return (
+    <section className="mx-auto max-w-3xl scroll-mt-28 pb-28 md:pb-6">
+      <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
+        <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">Review & pay</p>
+        <p className="mt-1 font-body text-sm font-semibold leading-snug text-foreground/66">Defaulted to fastest legal hold. Change only what needs changing.</p>
+      </div>
+      {error && (
+        <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+          <p className="font-body text-sm font-black">{error}</p>
+          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.08em]">
+            Text us
+          </a>
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        <div className="relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
+          <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.16),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.025))]" />
+          <div className="relative flex items-start justify-between gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/18 bg-foreground/[0.07] text-foreground">
+              <Icon className="h-6 w-6" strokeWidth={2.45} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Fast hold</span>
+              <span className="mt-2 block font-heading text-[2.55rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
+              <span className="mt-2 block font-body text-base font-bold text-foreground/70">ASAP nurse window</span>
+            </span>
+            <button
+              type="button"
+              onClick={onChangeTherapy}
+              className="min-h-[42px] shrink-0 rounded-full border border-foreground/14 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/68"
+            >
+              Change
+            </button>
+          </div>
+          <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/34 p-3 font-body text-sm font-bold text-foreground/68">
+            <div className="flex items-center justify-between gap-3">
+              <span>Pay now</span>
+              <span>{currency(DEPOSIT_DUE)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span>Due at visit</span>
+              <span>{currency(balanceDue)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+          <div className="relative mb-3 flex items-center justify-between gap-3">
+            <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Address</p>
+            {resolvedZip && <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/58">{resolvedZip}</span>}
+          </div>
+          <div className="relative grid gap-2">
+            <button
+              type="button"
+              onClick={onUseCurrentLocation}
+              disabled={locationLoading}
+              className="flex min-h-[52px] w-full items-center justify-between gap-3 rounded-2xl border border-foreground/12 bg-background/44 px-4 font-body text-sm font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]"
+            >
+              <span className="flex items-center gap-2">
+                <Navigation className="h-4.5 w-4.5" strokeWidth={2.4} />
+                {locationLoading ? 'Finding address' : 'Use current location'}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <TextInput
+              label="Street address"
+              value={state.address}
+              onChange={onAddress}
+              onKeyDown={onAddressKeyDown}
+              placeholder="Street address, city, ZIP"
+              autoComplete="street-address"
+              actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
+              onAction={() => onAddressSuggestion(savedVisitAddress)}
+              required
+            />
+            <AddressPrediction suggestion={topAddressSuggestion} onUse={onAddressSuggestion} compact />
+            {state.address.trim() && !resolvedZip && (
+              <TextInput
+                label="ZIP"
+                value={state.zip}
+                onChange={(value) => onValue('zip', value.replace(/\D/g, '').slice(0, 5))}
+                onKeyDown={onAddressKeyDown}
+                placeholder="94107"
+                autoComplete="postal-code"
+                inputMode="numeric"
+                actionLabel={savedVisitAddress?.zip ? 'Saved' : ''}
+                onAction={() => onValue('zip', savedVisitAddress?.zip || '')}
+                required
+              />
+            )}
+          </div>
+        </div>
+
+        <ContactConfirmCard state={state} onChange={onValue} savedContact={savedContactProfile} />
+        <SafetyFlagChoice value={state.safetyFlag} onChange={(value) => onValue('safetyFlag', value)} />
+
+        <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
+          By paying, I consent to telehealth review, medical intake, privacy terms, and a non-refundable deductible. Treatment is subject to clinical approval.
+        </p>
+
+        <div className="rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/58">
+          Apple Pay, Google Pay, Link, or card appear in secure payment when available.
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0 md:pb-0">
+        <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
+          <div className="hidden min-w-0 flex-1 px-4 md:block">
+            <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">$1 today</p>
+            <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">{currency(balanceDue)} due at visit</p>
+          </div>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={checkoutLoading}
+            aria-label="Pay $1 hold and continue to secure payment"
+            className={`relative flex min-h-[56px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 ${
+              canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/42 text-foreground/58'
+            }`}
+          >
+            <span>{checkoutLoading ? 'Preparing payment' : 'Pay $1 hold'}</span>
+            <span>{currency(balanceDue)} later</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
   const options = [
     { key: false, label: 'Need review', icon: ShieldCheck },
@@ -3264,7 +3419,35 @@ export default function BookNow() {
             </div>
           </motion.section>
         )}
-        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} ${fastMode ? 'mx-auto max-w-3xl gap-4' : 'gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10'}`}>
+        {!embeddedCheckoutSession && fastMode ? (
+          <FastReviewSurface
+            product={product}
+            serviceLabel={serviceLabel}
+            subtotal={subtotal}
+            balanceDue={balanceDue}
+            state={state}
+            resolvedZip={resolvedZip}
+            topAddressSuggestion={topAddressSuggestion}
+            savedVisitAddress={savedVisitAddress}
+            savedContactProfile={savedContactProfile}
+            locationLoading={locationLoading}
+            checkoutLoading={checkoutLoading}
+            error={error}
+            onAddress={setAddressValue}
+            onAddressKeyDown={handleAddressKeyDown}
+            onAddressSuggestion={chooseAddressSuggestion}
+            onValue={setValue}
+            onUseCurrentLocation={useCurrentLocation}
+            onChangeTherapy={() => {
+              const next = new URLSearchParams(searchParams);
+              next.delete('fast');
+              const query = next.toString();
+              navigate(query ? `/book?${query}` : '/book');
+            }}
+            onSubmit={submit}
+          />
+        ) : (
+        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10`}>
           <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
             {fastMode ? (
               <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
@@ -3636,9 +3819,10 @@ export default function BookNow() {
 		            onAction={submit}
 		          />}
         </div>
+        )}
       </main>
 
-      {step > 0 && <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:hidden">
+      {!fastMode && step > 0 && <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/72 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
           {step > 0 && (
             <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[54px] rounded-full border border-foreground/14 bg-background/30 px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground/80 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
