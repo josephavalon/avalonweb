@@ -2836,7 +2836,7 @@ export default function BookNow() {
         : current.addOns,
       addOnDecision: true,
     }));
-    setStep(3);
+    setStep(2);
   };
 
   const chooseProduct = (key, overrides = {}) => {
@@ -2858,7 +2858,7 @@ export default function BookNow() {
 
   const chooseProductAndContinue = (key, overrides = {}) => {
     chooseProduct(key, overrides);
-    setStep(3);
+    setStep(2);
   };
 
   const chooseCustomBase = (key) => {
@@ -3048,21 +3048,21 @@ export default function BookNow() {
       visit_type: state.visitType,
       protocol_key: state.productKey,
     });
-    setStep((current) => Math.min(current === 1 ? 3 : current + 1, LAST_STEP));
+    setStep((current) => Math.min(current + 1, LAST_STEP));
   };
 
-  const back = () => setStep((current) => Math.max(current === 3 ? 1 : current - 1, 0));
+  const back = () => setStep((current) => Math.max(current - 1, 0));
 
   const goToStep = (targetStep) => {
     if (targetStep === step) return;
     if (targetStep < step) {
       setError('');
-      setStep(targetStep === 2 ? 1 : targetStep);
+      setStep(targetStep);
       return;
     }
     if (targetStep === step + 1 && canAdvance()) {
       setError('');
-      setStep(targetStep === 2 ? 3 : targetStep);
+      setStep(targetStep);
       return;
     }
     setError('Finish this step first.');
