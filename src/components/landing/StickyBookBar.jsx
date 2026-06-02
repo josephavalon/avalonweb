@@ -36,11 +36,8 @@ export default function StickyBookBar() {
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white/[0.14] via-white/[0.06] to-foreground/[0.05]" aria-hidden="true" />
             {/* Label */}
             <div className="flex-1 min-w-0">
-              <p className="font-body text-[9px] tracking-[0.22em] uppercase text-foreground/55">
-                Book now
-              </p>
-              <p className="font-body text-[9px] tracking-[0.12em] uppercase text-foreground font-semibold truncate">
-                Full checkout
+              <p className="font-body text-[9px] tracking-[0.22em] uppercase text-foreground font-semibold">
+                Book
               </p>
             </div>
 

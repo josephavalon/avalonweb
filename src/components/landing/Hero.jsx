@@ -94,7 +94,6 @@ export default function Hero() {
               </span>
               <span className="min-w-0">
                 <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Book</span>
-                <span className="mt-1 hidden font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/58 md:block">Full checkout</span>
               </span>
             </span>
             <span className="relative flex shrink-0 items-center justify-center text-background transition-transform group-hover:translate-x-1 md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/24 md:bg-foreground/[0.10] md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
