@@ -188,23 +188,20 @@ export default async function handler(req, res) {
     });
 
     const db = await getSupabaseServiceClient();
-    if (!db) {
-      return res.status(503).json({
-        error: 'Booking persistence is not configured',
-        code: 'booking_persistence_missing',
-      });
+    if (db) {
+      const { data: pendingRecord, error: pendingError } = await db.from('appointments')
+        .insert(buildPendingAppointmentRecord(checkoutPayload))
+        .select('id')
+        .single();
+
+      if (pendingError || !pendingRecord?.id) {
+        throw httpError(pendingError?.message || 'Could not prepare booking for checkout', 500, 'booking_prepare_failed');
+      }
+
+      pendingRecordId = pendingRecord.id;
+    } else {
+      console.warn('[create-checkout-session] Supabase is not configured; using Stripe metadata fulfillment fallback.');
     }
-
-    const { data: pendingRecord, error: pendingError } = await db.from('appointments')
-      .insert(buildPendingAppointmentRecord(checkoutPayload))
-      .select('id')
-      .single();
-
-    if (pendingError || !pendingRecord?.id) {
-      throw httpError(pendingError?.message || 'Could not prepare booking for checkout', 500, 'booking_prepare_failed');
-    }
-
-    pendingRecordId = pendingRecord.id;
 
     const successUrl = `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}&payment=success`;
     const cancelUrl = `${baseUrl}/checkout?payment=cancelled`;
@@ -220,6 +217,9 @@ export default async function handler(req, res) {
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,
         contact,
+        appointment,
+        items,
+        membership,
         paymentMethod,
         primaryService,
         visitSubtotalCents,
@@ -236,21 +236,23 @@ export default async function handler(req, res) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    const { error: sessionLinkError } = await db.from('appointments')
-      .update({
-        stripe_checkout_session_id: session.id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', pendingRecordId);
+    if (db && pendingRecordId) {
+      const { error: sessionLinkError } = await db.from('appointments')
+        .update({
+          stripe_checkout_session_id: session.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', pendingRecordId);
 
-    if (sessionLinkError) {
-      console.warn('[create-checkout-session] could not link Stripe session:', sessionLinkError.message);
+      if (sessionLinkError) {
+        console.warn('[create-checkout-session] could not link Stripe session:', sessionLinkError.message);
+      }
     }
 
     return res.status(200).json({
       ok: true,
       provider: 'stripe',
-      appointment: { id: pendingRecordId, provider: 'avalon_checkout', status: 'payment_pending' },
+      appointment: { id: pendingRecordId || session.id, provider: pendingRecordId ? 'avalon_checkout' : 'stripe_metadata', status: 'payment_pending' },
       balanceDueCents,
       url: session.url,
     });

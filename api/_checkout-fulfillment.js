@@ -184,6 +184,9 @@ export function checkoutPayloadFromRecord(record = {}) {
 export function buildStripeCheckoutMetadata({
   appointmentRecordId,
   contact = {},
+  appointment = {},
+  items = [],
+  membership = null,
   paymentMethod = 'card',
   primaryService = 'Avalon Visit',
   visitSubtotalCents = 0,
@@ -195,13 +198,79 @@ export function buildStripeCheckoutMetadata({
     appointmentRecordId: metadataValue(appointmentRecordId),
     customerName: metadataValue(contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim()),
     customerEmail: metadataValue(contact.email),
+    firstName: metadataValue(contact.firstName),
+    lastName: metadataValue(contact.lastName),
     phone: metadataValue(contact.phone),
     paymentMethod: metadataValue(paymentMethod || 'card'),
     service: metadataValue(primaryService),
+    acuityDatetime: metadataValue(appointment.acuityDatetime),
+    acuityTimezone: metadataValue(appointment.acuityTimezone || TZ),
+    acuityTypeId: metadataValue(appointment.acuityTypeId),
+    timeLabel: metadataValue(appointment.timeLabel),
+    address: metadataValue(appointment.address),
+    zip: metadataValue(appointment.zip),
+    guests: metadataValue(appointment.guests || '1'),
+    itemLabels: metadataValue(items.map((item) => item.label || item.key || 'Avalon Visit').join(' | ')),
+    itemKeys: metadataValue(items.map((item) => item.cartKey || item.key || '').filter(Boolean).join(' | ')),
+    itemTypes: metadataValue(items.map((item) => item.type || 'service').join(' | ')),
+    itemPrices: metadataValue(items.map((item) => item.price || 0).join(' | ')),
+    membershipName: metadataValue(membership?.name),
+    membershipBilling: metadataValue(membership?.billing),
+    membershipPrice: metadataValue(membership?.price),
     depositType: 'non_refundable_deductible',
     visitSubtotalCents: String(visitSubtotalCents),
     depositAmountCents: String(depositCents),
     balanceDueCents: String(balanceDueCents),
+  };
+}
+
+export function checkoutPayloadFromStripeMetadata(metadata = {}) {
+  const split = (value) => String(value || '').split('|').map((item) => item.trim());
+  const labels = split(metadata.itemLabels).filter(Boolean);
+  const keys = split(metadata.itemKeys);
+  const types = split(metadata.itemTypes);
+  const prices = split(metadata.itemPrices);
+  const items = labels.map((label, index) => ({
+    label,
+    key: keys[index] || label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    cartKey: keys[index] || label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    type: types[index] || 'service',
+    price: Number(prices[index] || 0),
+  }));
+
+  return {
+    fulfillment: metadata.fulfillment || STRIPE_PAID_FULFILLMENT_VERSION,
+    contact: {
+      name: metadata.customerName || [metadata.firstName, metadata.lastName].filter(Boolean).join(' '),
+      firstName: metadata.firstName || String(metadata.customerName || '').trim().split(/\s+/)[0] || '',
+      lastName: metadata.lastName || String(metadata.customerName || '').trim().split(/\s+/).slice(1).join(' '),
+      email: metadata.customerEmail || '',
+      phone: metadata.phone || '',
+    },
+    appointment: {
+      acuityDatetime: metadata.acuityDatetime || '',
+      acuityTimezone: metadata.acuityTimezone || TZ,
+      acuityTypeId: metadata.acuityTypeId || '',
+      timeLabel: metadata.timeLabel || '',
+      address: metadata.address || '',
+      zip: metadata.zip || '',
+      guests: metadata.guests || '1',
+    },
+    items,
+    membership: metadata.membershipName ? {
+      name: metadata.membershipName,
+      billing: metadata.membershipBilling || 'monthly',
+      price: Number(metadata.membershipPrice || 0),
+    } : null,
+    paymentMethod: metadata.paymentMethod || 'card',
+    primaryService: metadata.service || labels[0] || metadata.membershipName || 'Avalon Visit',
+    amounts: {
+      currency: 'usd',
+      visitSubtotalCents: Number(metadata.visitSubtotalCents || 0),
+      depositAmountCents: Number(metadata.depositAmountCents || 0),
+      balanceDueCents: Number(metadata.balanceDueCents || 0),
+      depositType: metadata.depositType || 'non_refundable_deductible',
+    },
   };
 }
 

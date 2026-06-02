@@ -5,6 +5,7 @@ import { getDepositAmountCents } from '../../../src/lib/checkoutConfig.js';
 import { getSupabaseServiceClient } from '../../_supabase-server.js';
 import {
   checkoutPayloadFromRecord,
+  checkoutPayloadFromStripeMetadata,
   createSchedulingAppointment,
   syncCheckoutAttioPerson,
 } from '../../_checkout-fulfillment.js';
@@ -64,6 +65,19 @@ function buildExternalPayload(existingPayload = {}, patch = {}) {
   };
 }
 
+async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
+  try {
+    await stripe.checkout.sessions.update(session.id, {
+      metadata: {
+        ...(session.metadata || {}),
+        ...patch,
+      },
+    });
+  } catch (err) {
+    console.warn('[stripe/webhook] checkout session metadata update failed:', err.message);
+  }
+}
+
 async function handleCheckoutCompleted(stripe, db, session) {
   const md = session.metadata || {};
   if (session.payment_status && session.payment_status !== 'paid') {
@@ -71,11 +85,13 @@ async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   const appointmentRecordId = md.appointmentRecordId || null;
-  let record = await findAppointmentRecord(db, {
-    acuityId: md.acuityAppointmentId || null,
-    sessionId: session.id,
-    appointmentRecordId,
-  });
+  let record = db
+    ? await findAppointmentRecord(db, {
+        acuityId: md.acuityAppointmentId || null,
+        sessionId: session.id,
+        appointmentRecordId,
+      })
+    : null;
 
   // Pull the saved card off the deposit PaymentIntent so the nurse can charge
   // the balance off-session later.
@@ -91,15 +107,15 @@ async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   const now = new Date().toISOString();
-  let acuityAppointment = record?.acuity_appointment_id
-    ? { id: record.acuity_appointment_id, alreadyCreated: true }
+  let acuityAppointment = (record?.acuity_appointment_id || md.acuityAppointmentId)
+    ? { id: record?.acuity_appointment_id || md.acuityAppointmentId, alreadyCreated: true }
     : null;
   let attioPersonId = null;
   let attioSynced = false;
   let fulfillmentError = null;
+  const checkout = record ? checkoutPayloadFromRecord(record) : checkoutPayloadFromStripeMetadata(md);
 
-  if (record && !acuityAppointment?.id) {
-    const checkout = checkoutPayloadFromRecord(record);
+  if (!acuityAppointment?.id) {
     try {
       acuityAppointment = await createSchedulingAppointment({
         appointment: checkout.appointment || {},
@@ -126,8 +142,20 @@ async function handleCheckoutCompleted(stripe, db, session) {
     }
   }
 
-  if (!record && appointmentRecordId) {
+  if (!record && appointmentRecordId && db) {
     console.warn('[stripe/webhook] appointment record not found:', appointmentRecordId);
+  }
+
+  if (acuityAppointment?.id && !acuityAppointment.alreadyCreated) {
+    await updateStripeFulfillmentMetadata(stripe, session, {
+      acuityAppointmentId: String(acuityAppointment.id),
+      fulfillmentStatus: 'acuity_created',
+    });
+  } else if (fulfillmentError) {
+    await updateStripeFulfillmentMetadata(stripe, session, {
+      fulfillmentStatus: 'acuity_failed',
+      fulfillmentError: fulfillmentError.message.slice(0, 480),
+    });
   }
 
   const patch = {
@@ -160,7 +188,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
   };
   Object.keys(patch).forEach((key) => patch[key] === undefined && delete patch[key]);
 
-  if (record?.id) {
+  if (db && record?.id) {
     await db.from('appointments').update(patch).eq('id', record.id);
     if (fulfillmentError) {
       await insertReconciliationCase(db, {
@@ -180,6 +208,16 @@ async function handleCheckoutCompleted(stripe, db, session) {
     return {
       action: fulfillmentError ? 'deposit_paid_acuity_failed' : 'deposit_paid_acuity_created',
       matched: true,
+      acuityAppointmentId: acuityAppointment?.id || null,
+      attioSynced,
+    };
+  }
+
+  if (!db) {
+    return {
+      action: fulfillmentError ? 'deposit_paid_acuity_failed_no_db' : 'deposit_paid_acuity_created_no_db',
+      matched: false,
+      persisted: false,
       acuityAppointmentId: acuityAppointment?.id || null,
       attioSynced,
     };
@@ -245,11 +283,11 @@ export default async function handler(req, res) {
     let result = { action: 'store_for_audit' };
     switch (event.type) {
       case 'checkout.session.completed':
-        if (!db) {
-          result = { action: 'fulfillment_blocked_db_not_configured' };
-          break;
-        }
-        result = await handleCheckoutCompleted(stripe, db, event.data.object);
+        result = await handleCheckoutCompleted(
+          stripe,
+          db,
+          await stripe.checkout.sessions.retrieve(event.data.object.id)
+        );
         break;
       case 'payment_intent.succeeded':
         if (!db) {
