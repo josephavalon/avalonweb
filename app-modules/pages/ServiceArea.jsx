@@ -201,7 +201,7 @@ function ZipChecker() {
               <p className="font-body text-sm text-foreground font-medium">We cover {result.label}.</p>
               <p className="font-body text-xs text-foreground/50 mt-0.5">{result.zone} · {result.window}. Book to confirm.</p>
               <Link
-                to="/store"
+                to="/book"
                 className="inline-flex items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-accent hover:text-foreground transition-colors"
               >
                 Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
@@ -294,7 +294,7 @@ export default function ServiceArea() {
       <main className="pt-24 md:pt-28">
 
         {/* Hero + Zip Checker */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20">
+        <section className="flex min-h-[calc(100svh-5rem)] items-center py-16 md:py-24 px-5 md:px-12 lg:px-20">
           <div className="max-w-5xl mx-auto">
             <motion.h1
               className="font-heading text-6xl md:text-8xl lg:text-[9rem] text-foreground uppercase leading-[0.9] mb-5"
@@ -306,7 +306,7 @@ export default function ServiceArea() {
               className="font-body text-sm md:text-base text-foreground/55 max-w-xl mb-10"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
             >
-              Mobile IV therapy and IM injections delivered by a licensed RN across San Francisco, Marin, the Peninsula, South Bay, and East Bay — no clinic visit required.
+              Licensed RN visits across San Francisco, Marin, the Peninsula, South Bay, and East Bay.
             </motion.p>
 
             {/* Zip code checker */}
@@ -321,8 +321,8 @@ export default function ServiceArea() {
           </div>
         </section>
 
-        {/* Bay Area SEO overview */}
-        <section className="py-10 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        {/* Bay Area overview */}
+        <section className="py-8 md:py-12 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto grid md:grid-cols-[0.95fr_1.25fr] gap-8 md:gap-12 items-start">
             <motion.div
               initial={{ opacity: 0, y: 18 }}
@@ -331,10 +331,10 @@ export default function ServiceArea() {
               transition={{ duration: 0.6, ease: EASE }}
             >
               <h2 className="font-heading text-4xl md:text-6xl text-foreground uppercase leading-[0.9]">
-                Mobile IVs Across the Bay
+                Covered Zones
               </h2>
               <p className="font-body text-sm text-foreground/50 mt-4 leading-relaxed">
-                Avalon Vitality provides concierge mobile IV therapy in the San Francisco Bay Area, including same-day IV drips and IM shots for homes, hotels, offices, private events, and team recovery.
+                Homes. Hotels. Offices. Events.
               </p>
             </motion.div>
 
@@ -349,7 +349,7 @@ export default function ServiceArea() {
                 Popular Mobile IV Service Areas
               </h3>
               <div className="flex flex-wrap gap-2">
-                {PRIMARY_SERVICE_AREAS.map((area) => (
+                {PRIMARY_SERVICE_AREAS.slice(0, 10).map((area) => (
                   <span
                     key={area}
                     className="font-body text-[11px] tracking-[0.08em] text-foreground/60 border border-foreground/[0.08] rounded-full px-3.5 py-1.5 bg-background/40"

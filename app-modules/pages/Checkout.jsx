@@ -165,14 +165,23 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
 
   if (!hasItems) {
     return (
-      <div className="mx-auto flex min-h-[calc(100svh-18rem)] max-w-sm flex-col justify-end pb-8 pt-10 text-center md:block md:min-h-0 md:py-16">
-        <h1 className="font-heading text-h1 uppercase text-foreground">Choose protocol</h1>
+      <div className="mx-auto flex min-h-[calc(100svh-12rem)] max-w-md flex-col justify-center py-8 text-center md:min-h-[520px] md:py-12">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+          <Droplets className="h-6 w-6" strokeWidth={2.35} />
+        </div>
+        <h1 className="font-heading text-[4.75rem] uppercase leading-[0.86] text-foreground md:text-7xl">Book IV</h1>
+        <p className="mx-auto mt-4 max-w-xs font-body text-base font-semibold leading-snug text-foreground/62">
+          Choose protocol. Pick visit. Pay securely.
+        </p>
         <Link
           to="/book"
-          className="mt-7 flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-foreground px-6 font-body text-xs font-semibold uppercase tracking-[0.18em] text-background transition-opacity hover:opacity-85"
+          className="mt-8 flex min-h-[62px] items-center justify-between gap-3 rounded-full bg-foreground px-7 font-body text-xs font-black uppercase tracking-[0.18em] text-background shadow-[0_22px_90px_hsl(var(--foreground)/0.14)] transition-opacity hover:opacity-85"
         >
-          Start <ArrowRight className="h-4 w-4" strokeWidth={2} />
+          Start <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
         </Link>
+        <p className="mt-4 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/38">
+          Bay Area · Licensed RN
+        </p>
       </div>
     );
   }
@@ -1011,6 +1020,7 @@ export default function Checkout() {
     path: '/checkout',
   });
   const { items, membership, removeItem, clearMembership } = useCart();
+  const hasCheckoutSelection = items.length > 0 || Boolean(membership);
   const appointmentTypeId = acuityTypeForCart(items, membership);
   const hasOnlyMembership = membership && items.length === 0;
   const [prefill] = useState(() => {
@@ -1112,7 +1122,7 @@ export default function Checkout() {
       <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-foreground/[0.08] via-transparent to-transparent" />
       <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-80 bg-gradient-to-t from-foreground/[0.04] via-transparent to-transparent" />
       <Navbar />
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-24 md:pt-28">
+      <div className={`${hasCheckoutSelection ? 'max-w-2xl' : 'max-w-3xl'} mx-auto px-4 pt-24 pb-24 md:pt-28`}>
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1120,8 +1130,8 @@ export default function Checkout() {
           className="relative overflow-hidden rounded-[2rem] border border-foreground/[0.13] bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_32px_120px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl sm:p-5"
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          <CheckoutTrustConsole current={step} items={items} membership={membership} appointment={appointment} />
-          {step !== 3 && <StepBar current={step} />}
+          {hasCheckoutSelection && <CheckoutTrustConsole current={step} items={items} membership={membership} appointment={appointment} />}
+          {hasCheckoutSelection && step !== 3 && <StepBar current={step} />}
           <div className="relative px-1 sm:px-2">
             <AnimatePresence mode="wait" custom={dir}>
               <motion.div

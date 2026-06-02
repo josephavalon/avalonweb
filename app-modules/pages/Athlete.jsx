@@ -368,7 +368,7 @@ export default function Athlete() {
           <div className="max-w-5xl mx-auto flex flex-wrap items-center gap-6">
             <p className="font-body text-sm text-foreground/50">Booking for yourself?</p>
             <Link
-              to="/store"
+              to="/book"
               className="flex min-h-10 items-center gap-1 font-body text-sm text-foreground/70 hover:text-foreground transition-colors duration-200"
             >
               Browse Sessions <ArrowRight className="w-3.5 h-3.5" />

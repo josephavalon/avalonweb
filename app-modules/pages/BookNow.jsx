@@ -3542,7 +3542,7 @@ export default function BookNow() {
                   />
                 </div>
               </div>
-            ) : (
+            ) : step > 0 ? (
               <>
                 <StepProgress step={step} onStepSelect={goToStep} />
                 <StepControls
@@ -3554,7 +3554,7 @@ export default function BookNow() {
                   onNext={step < LAST_STEP ? next : submit}
                 />
               </>
-            )}
+            ) : null}
             {error && (
               <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
                 <p className="font-body text-sm font-black">{error}</p>
@@ -3865,7 +3865,7 @@ export default function BookNow() {
 
           </section>
 
-	          {!fastMode && <SummaryRail
+	          {!fastMode && step > 0 && <SummaryRail
 	            state={state}
 	            product={product}
 	            plan={{ ...plan, price: activePlanPrice }}

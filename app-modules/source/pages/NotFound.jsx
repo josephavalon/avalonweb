@@ -57,7 +57,7 @@ export default function NotFound() {
               Back to Home
             </Link>
             <Link
-              to="/store"
+              to="/book"
               className="inline-flex items-center justify-center px-7 py-3 rounded-xl bg-accent text-background font-body text-xs tracking-[0.2em] uppercase hover:bg-accent/90 transition-colors duration-200 w-full sm:w-auto"
             >
               Book a Session

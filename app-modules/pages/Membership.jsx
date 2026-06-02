@@ -152,10 +152,10 @@ export default function Subscription() {
   return (
     <div className="bg-background min-h-screen w-full">
       <Navbar />
-      <main className="pt-[4.5rem] md:pt-24 pb-28 md:pb-0">
+      <main className="min-h-screen pt-[4.5rem] md:pt-24 pb-28 md:pb-0">
 
         {/* Tier Cards */}
-        <section id="subscription-plans" className="scroll-mt-24 py-8 md:py-12 px-5 md:px-12 lg:px-20">
+        <section id="subscription-plans" className="scroll-mt-24 py-8 md:flex md:min-h-[calc(100svh-6rem)] md:items-center md:py-12 px-5 md:px-12 lg:px-20">
           <div className="max-w-6xl mx-auto">
             <div className="grid gap-5 md:grid-cols-[0.92fr_1.08fr] md:items-center">
               <div>

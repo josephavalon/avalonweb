@@ -63,7 +63,7 @@ export default function JetLag() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.34 }}
             >
               <Link
-                to="/store"
+                to="/book"
                 className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-8 py-4 rounded-xl hover:bg-accent/90 transition-colors duration-200"
               >
                 BUY NOW <ArrowRight className="w-4 h-4" />
@@ -130,7 +130,7 @@ export default function JetLag() {
 
               <div className="mt-8">
                 <Link
-                  to="/store"
+                  to="/book"
                   className="inline-flex items-center gap-2 bg-accent text-background font-body text-sm tracking-[0.15em] uppercase px-7 py-3.5 rounded-xl hover:bg-accent/90 transition-colors duration-200"
                 >
                   BUY NOW <ArrowRight className="w-4 h-4" />

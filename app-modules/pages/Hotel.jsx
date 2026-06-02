@@ -108,7 +108,7 @@ export default function Hotel() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.24 }}
             >
               <Link
-                to="/store"
+                to="/book"
                 className="inline-block px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
               >
                 BUY NOW
@@ -267,7 +267,7 @@ export default function Hotel() {
             </motion.p>
             <motion.div {...fadeUp}>
               <Link
-                to="/store"
+                to="/book"
                 className="inline-block px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
               >
                 Book a Session

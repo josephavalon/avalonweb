@@ -57,7 +57,7 @@ export default function Hero() {
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          RN care.<br />At home.
+          Bay Area.<br />Licensed RNs.<br />At home.
         </motion.p>
         </div>
 
@@ -103,7 +103,7 @@ export default function Hero() {
         </motion.div>
 
         <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
-          Review required.
+          Nurse review required.
         </p>
 
         {/* Proof rail */}
