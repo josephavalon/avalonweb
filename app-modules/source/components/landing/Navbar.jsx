@@ -154,7 +154,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-center font-body text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-background transition-opacity hover:opacity-85"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-foreground/38 bg-foreground/[0.13] px-5 py-2.5 text-center font-body text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.16),0_18px_60px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl backdrop-saturate-150 transition-colors hover:border-foreground/48 hover:bg-foreground/[0.16]"
           >
             Book
             <ArrowLeft className="h-3.5 w-3.5 rotate-180" strokeWidth={2.2} />

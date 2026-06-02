@@ -2012,7 +2012,7 @@ function FastReviewSurface({
             <span className="min-w-0 flex-1">
               <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Checkout</span>
               <span className="mt-2 block font-heading text-[2.55rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
-              <span className="mt-2 block font-body text-base font-bold text-foreground/70">Pay online · clinical review required</span>
+              <span className="mt-2 block font-body text-base font-bold text-foreground/70">Clinical review required</span>
             </span>
             <button
               type="button"
@@ -2084,7 +2084,7 @@ function FastReviewSurface({
       <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0 md:pb-0">
         <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
           <div className="hidden min-w-0 flex-1 px-4 md:block">
-            <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Pay online</p>
+            <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Checkout</p>
             <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">Apple Pay, Google Pay, Link, or card</p>
           </div>
           <button
@@ -2104,7 +2104,7 @@ function FastReviewSurface({
                 transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
               />
             )}
-            <span>{checkoutLoading ? 'Opening' : 'Pay online'}</span>
+            <span>{checkoutLoading ? 'Opening' : 'Checkout'}</span>
             <span>Full amount</span>
           </button>
         </div>
@@ -3606,7 +3606,7 @@ export default function BookNow() {
 	                  <>
                     {fastMode ? (
                       <>
-                        <SectionTitle icon={Droplets} title="Checkout" sub="Pay online. Nurse review before treatment." />
+                        <SectionTitle icon={Droplets} title="Checkout" sub="Nurse review before treatment." />
                         <FastHoldPanel
                           product={product}
                           serviceLabel={serviceLabel}
