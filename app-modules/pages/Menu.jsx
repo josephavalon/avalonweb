@@ -19,13 +19,6 @@ import PremiumButton from '@/components/ui/PremiumButton';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
-const FILTERS = [
-  { key: 'all', label: 'All protocols', selectLabel: 'All', icon: FlaskConical },
-  { key: 'recovery', label: 'Hydration', icon: Droplets },
-  { key: 'energy', label: 'Energy', icon: Zap },
-  { key: 'advanced', label: 'Longevity', icon: BatteryCharging },
-];
-
 const HERO_GOALS = [
   { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book' },
   { key: 'energy', label: 'Energy', icon: Zap, href: '/book' },
@@ -56,11 +49,6 @@ function includesText(session) {
   if (session.inside) return session.inside;
   if (session.doses?.length) return `${session.doses.length} dose options`;
   return session.desc || session.tagline || 'Clinician-guided protocol';
-}
-
-function categoryFor(session) {
-  if (ADVANCED_KEYS.includes(session.key)) return 'advanced';
-  return session.category || 'all';
 }
 
 function sortSessions(sessions) {
@@ -207,7 +195,6 @@ function Foldout({ title, icon: Icon, children }) {
 }
 
 export default function Menu() {
-  const [filter, setFilter] = useState('all');
   const [showAllProtocols, setShowAllProtocols] = useState(false);
 
   useSeo({
@@ -233,10 +220,7 @@ export default function Menu() {
     },
   });
 
-  const filtered = useMemo(() => {
-    const sessions = filter === 'all' ? PUBLIC_SESSIONS : PUBLIC_SESSIONS.filter((session) => categoryFor(session) === filter);
-    return sortSessions(sessions);
-  }, [filter]);
+  const filtered = useMemo(() => sortSessions(PUBLIC_SESSIONS), []);
   const visibleSessions = showAllProtocols ? filtered : filtered.slice(0, 6);
   const standardAddons = IV_ADDONS.filter((item) => !item.group).slice(0, 8);
   const shotPreview = IM_SHOTS.slice(0, 8);
@@ -254,7 +238,7 @@ export default function Menu() {
             className="max-w-3xl"
           >
             <h1 className="font-heading text-display-xl uppercase leading-[0.86] tracking-normal text-foreground">
-              Choose Your<br />Protocol
+              Protocols
             </h1>
           </motion.div>
 
@@ -268,26 +252,13 @@ export default function Menu() {
         <section id="protocol-directory" className="mt-8 scroll-mt-28 md:mt-14">
           <div className="relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/34 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:rounded-[1.9rem] md:p-5">
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))]" />
-            <div className="relative mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <h2 className="font-heading text-[3rem] uppercase leading-none tracking-normal text-foreground md:text-[4.75rem]">Protocols</h2>
-              <div className="md:w-56">
-                <label className="relative block">
-                  <span className="sr-only">Filter protocols</span>
-                  <select
-                    value={filter}
-                    onChange={(event) => setFilter(event.target.value)}
-                    className="min-h-[54px] w-full appearance-none rounded-full border border-foreground/12 bg-background/70 px-4 pr-10 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground outline-none backdrop-blur-xl"
-                  >
-                    {FILTERS.map((item) => <option key={item.key} value={item.key}>{item.selectLabel || item.label}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/58" strokeWidth={2.35} />
-                </label>
-              </div>
+            <div className="relative mb-4">
+              <h2 className="font-heading text-[3rem] uppercase leading-none tracking-normal text-foreground md:text-[4.75rem]">IV</h2>
             </div>
 
             <LayoutGroup id="menu-protocols">
               <motion.div
-                key={`${filter}-${showAllProtocols}`}
+                key={showAllProtocols ? 'all-open' : 'all-preview'}
                 layout
                 initial="hidden"
                 animate="show"

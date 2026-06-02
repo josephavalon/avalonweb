@@ -465,7 +465,7 @@ function SectionTitle({ title, sub, icon: Icon }) {
   const reduceMotion = useReducedMotion();
   return (
     <motion.div
-      className="mb-6"
+      className="mb-4 md:mb-6"
       initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
       animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
@@ -483,7 +483,7 @@ function SectionTitle({ title, sub, icon: Icon }) {
           </motion.span>
         )}
       </div>
-      <h1 className="mt-3 font-heading text-[3.35rem] uppercase leading-[0.86] tracking-0 text-foreground md:text-7xl">
+      <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-[0.86] tracking-0 text-foreground md:mt-3 md:text-7xl">
         {title}
       </h1>
       {sub && <p className="mt-3 max-w-xl font-body text-lg font-medium leading-snug text-foreground/72 md:text-xl">{sub}</p>}
@@ -657,7 +657,7 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
       whileHover={{ y: -2, scale: active ? 1.008 : 1.003 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
       onClick={onClick}
-      className={`av-glass-card group relative flex min-h-[118px] flex-col items-start justify-between gap-3 overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
+      className={`av-glass-card group relative flex min-h-[96px] flex-col items-start justify-between gap-2 overflow-hidden rounded-[1.2rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
         active
           ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_105px_hsl(var(--foreground)/0.18)]'
           : 'border-foreground/9 bg-background/30 text-foreground hover:border-foreground/20 hover:bg-background/48'
@@ -675,14 +675,14 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
       )}
       {active && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-foreground/26" />}
       <span
-        className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16 ${
+        className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16 md:rounded-2xl ${
           active ? 'border-foreground/34 bg-foreground/[0.13] text-foreground shadow-[0_0_38px_hsl(var(--foreground)/0.20)]' : 'border-foreground/14 bg-foreground/[0.055] text-foreground/90'
         }`}
       >
-        <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.45} />
+        <Icon className="h-5 w-5 md:h-7 md:w-7" strokeWidth={2.45} />
       </span>
       <span className="relative w-full min-w-0 pr-10 md:flex-1 md:pr-0">
-        <span className="block break-normal font-heading text-[1.52rem] uppercase leading-[0.86] tracking-normal min-[420px]:text-[1.68rem] md:text-[2.35rem]">
+        <span className="block break-normal font-heading text-[1.46rem] uppercase leading-[0.86] tracking-normal min-[420px]:text-[1.62rem] md:text-[2.35rem]">
           {item.label}
         </span>
       </span>
@@ -717,7 +717,7 @@ function MoreGoalsAccordion({ items, activeKey, onChoose }) {
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.055] text-foreground">
             <Plus className="h-5 w-5" strokeWidth={2.45} />
           </span>
-          <span className="font-heading text-[2rem] uppercase leading-none tracking-normal">More goals</span>
+          <span className="font-heading text-[2rem] uppercase leading-none tracking-normal">More</span>
         </span>
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/38 text-foreground/58">
           <ChevronDown className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.4} />
@@ -3572,7 +3572,7 @@ export default function BookNow() {
               <div className="relative">
                 {step === 0 && (
                   <>
-                    <SectionTitle icon={Sparkles} title="CHOOSE YOUR GOAL" />
+                    <SectionTitle icon={Sparkles} title="GOAL" />
                     <LayoutGroup id="outcomes">
                       <div className="grid grid-cols-2 gap-2 md:gap-3">
                         {OUTCOMES.filter((item) => PRIMARY_OUTCOME_KEYS.includes(item.key)).map((item, index) => (
@@ -3587,20 +3587,6 @@ export default function BookNow() {
                         />
                       </div>
                     </LayoutGroup>
-                    <ClientPathHint
-                      signedIn={signedInClient}
-                      hasSavedVisit={Boolean(lastBooking)}
-                      gfeReady={!profileGfe.required}
-                      onSignIn={goToReturningSignIn}
-                    />
-                    <ClientReusePanel
-                      signedIn={signedInClient}
-                      lastBooking={lastBooking}
-                      savedContact={savedContactProfile}
-                      savedAddress={savedVisitAddress}
-                      onRepeat={repeatLastVisit}
-                      onSavedInfo={useSavedInfo}
-                    />
                   </>
                 )}
 
