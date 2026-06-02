@@ -491,8 +491,8 @@ function StepProgress({ step, onStepSelect }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-2 overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background/38 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl md:mb-5 md:rounded-[1.6rem] md:p-2.5">
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))]" />
+    <div className="relative mb-2 overflow-hidden rounded-[1.35rem] border-0 bg-transparent p-2 shadow-none backdrop-blur-none md:mb-5 md:rounded-[1.6rem] md:border md:border-foreground/10 md:bg-background/38 md:p-2.5 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] md:backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))] md:block" />
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
