@@ -80,8 +80,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       compact ? 'left-3 right-3 rounded-2xl' : 'left-4 right-4 rounded-3xl'
     } ${
       scrolled
-        ? 'top-2 border-0 bg-background/60 shadow-lg shadow-black/25 backdrop-blur-2xl md:border md:border-foreground/10'
-        : `${compact ? 'top-2' : 'top-2 md:top-4'} border-0 bg-background/60 backdrop-blur-2xl md:border md:border-foreground/10`
+        ? 'top-2 border-0 bg-background shadow-none md:border md:border-foreground/10 md:bg-background/60 md:shadow-lg md:shadow-black/25 md:backdrop-blur-2xl'
+        : `${compact ? 'top-2' : 'top-2 md:top-4'} border-0 bg-background shadow-none md:border md:border-foreground/10 md:bg-background/60 md:backdrop-blur-2xl`
     }`}>
 
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
