@@ -538,8 +538,17 @@ html:not(.dark):not(.golden):not(.dubs) .bg-card {
 }
 
 .av-glass-card,
+.av-glass-menu,
+.av-glass-modal,
+.av-glass-drawer,
+.av-glass-widget,
 .bg-card,
-[class*="bg-card/"] {
+[class*="bg-card/"],
+.bg-popover,
+[class*="bg-popover/"],
+.bg-muted,
+[class*="bg-muted/"],
+[class*="bg-background/"] {
   background:
     radial-gradient(circle at 16% 0%, hsl(var(--foreground) / 0.105), transparent 34%),
     radial-gradient(circle at 88% 92%, hsl(var(--foreground) / 0.052), transparent 36%),

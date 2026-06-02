@@ -43,7 +43,7 @@ export const glassCardClassName = ({
   className
 );
 
-export function GlassCard({
+export const GlassCard = React.forwardRef(function GlassCard({
   as: Tag = 'div',
   tone = 'default',
   radius = '3xl',
@@ -51,9 +51,10 @@ export function GlassCard({
   className = '',
   children,
   ...rest
-}) {
+}, ref) {
   return (
     <Tag
+      ref={ref}
       className={glassCardClassName({ tone, radius, interactive, className })}
       {...rest}
     >
@@ -64,6 +65,6 @@ export function GlassCard({
       {children}
     </Tag>
   );
-}
+});
 
 export default GlassCard;
