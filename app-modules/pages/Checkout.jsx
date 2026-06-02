@@ -206,7 +206,6 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
             <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
             <span className="font-heading text-2xl text-foreground tracking-wide">${itemsTotal.toLocaleString()}</span>
           </div>
-          <p className="font-body text-[10px] text-foreground/45 px-1">Paid in full online.</p>
         </div>
       )}
 
@@ -743,10 +742,10 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const dueToday = (hasItems ? itemsTotal : 0) + subscriptionDue;
   const futureBalance = 0;
   const payCta = hasItems && hasMembership
-    ? `Pay $${dueToday.toLocaleString()} now`
+      ? `Pay $${dueToday.toLocaleString()}`
     : hasItems
-      ? `Pay $${itemsTotal.toLocaleString()} now`
-      : 'Pay now';
+      ? `Pay $${itemsTotal.toLocaleString()}`
+      : 'Pay';
 
   const handleCheckout = async () => {
     if (!contactReady) {
@@ -825,7 +824,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         service: membership ? membershipTitle : (items[0]?.label || 'Avalon visit'),
         plan: membership?.name,
         date: appointment?.date || 'First visit pending',
-        time: appointment?.acuitySlot?.timeLabel || 'Schedule intake',
+        time: appointment?.acuitySlot?.timeLabel || 'Intake',
         address: appointment?.address || 'Service area pending',
         items,
         subtotal: itemsTotal,
@@ -962,8 +961,8 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             <CreditCard className="h-4 w-4" strokeWidth={1.7} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Secure Stripe checkout</span>
-            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card, Apple Pay, or Google Pay when available</span>
+            <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Stripe</span>
+            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card · Apple Pay · Google Pay</span>
           </span>
         </div>
       </div>
@@ -987,7 +986,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           {loading ? (
             <span className="flex items-center gap-2">
               <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="inline-block w-4 h-4 border-2 border-background/30 border-t-background rounded-full" />
-              Opening checkout…
+              Opening…
             </span>
           ) : (
             <>
@@ -998,7 +997,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
-        Clinical review required.
+        Review required.
       </p>
     </div>
   );
@@ -1008,7 +1007,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 export default function Checkout() {
   useSeo({
     title: 'Secure Checkout — Avalon Vitality',
-    description: 'Complete your mobile IV therapy booking. Review your order, set your appointment time, and pay online.',
+    description: 'Book, review, and pay for mobile IV therapy.',
     path: '/checkout',
   });
   const { items, membership, removeItem, clearMembership } = useCart();

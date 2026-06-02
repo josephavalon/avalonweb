@@ -143,7 +143,7 @@ export default function MembershipSection() {
         >
           <div>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
-              Choose Your Subscription
+              Plans
             </h2>
           </div>
         </motion.div>
@@ -167,13 +167,13 @@ export default function MembershipSection() {
             whileTap={premiumTap}
             className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground font-body text-xs tracking-[0.2em] uppercase hover:bg-white/[0.08] hover:border-foreground/35 transition-all duration-base ease-editorial"
           >
-            VIEW SUBSCRIPTIONS
+            Plans
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
           </MotionLink>
         </div>
 
         <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">
-          3-month minimum · credits roll over · subject to clinical approval
+          3-month minimum · clinical approval
         </p>
 
       </div>

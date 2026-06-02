@@ -18,7 +18,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
       service: `${tier.name} Subscription`,
       plan: tier.name,
       date: 'First visit pending',
-      time: 'Schedule intake',
+      time: 'Intake',
       address: form.zip ? `ZIP ${form.zip}` : 'Service area pending',
       contact: { name: form.name, email: form.email, phone: form.phone },
       nurse: 'Unassigned',
@@ -113,7 +113,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
                     <span className="inline-block w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
                   ) : (
                     <>
-                      {tier.custom ? 'Request My Protocol' : `Request ${tier.name}`}
+                      Request
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -121,7 +121,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
               </div>
 
               <p className="font-body text-[9px] text-foreground/25 text-center tracking-[0.12em] leading-relaxed">
-                3-month minimum · billing begins after clinical intake · cancel with 7 days notice after term
+                3-month minimum · billing starts after intake
               </p>
             </form>
           </div>
@@ -130,15 +130,15 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
             <div className="w-12 h-12 rounded-full bg-foreground/[0.06] border border-foreground/[0.1] flex items-center justify-center mx-auto mb-6">
               <Check className="w-5 h-5 text-foreground" />
             </div>
-            <h3 className="font-heading text-3xl text-foreground uppercase mb-3">Request Sent.</h3>
+            <h3 className="font-heading text-3xl text-foreground uppercase mb-3">Thank you.</h3>
             <p className="font-body text-sm text-foreground/50 mb-6 max-w-xs mx-auto">
-              We'll confirm your <span className="text-foreground">{tier.name}</span> subscription request and schedule your clinical intake within 24 hours.
+              A nurse will be in touch shortly.
             </p>
             <button
               onClick={onClose}
               className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40 hover:text-foreground transition-colors"
             >
-              Back to Subscription
+              Back
             </button>
           </div>
         )}

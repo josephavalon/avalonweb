@@ -71,7 +71,7 @@ export default function ProtocolPage() {
             className="mb-10 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-foreground/[0.10] px-4 font-body text-xs tracking-[0.2em] uppercase text-foreground/45 transition-colors hover:border-foreground/22 hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
-            All Protocols
+            Protocols
           </motion.button>
 
           {/* Tag + label */}
@@ -119,7 +119,7 @@ export default function ProtocolPage() {
               to="/book"
               className="flex min-h-[58px] w-full items-center justify-between rounded-2xl bg-foreground px-6 font-body text-xs font-semibold tracking-[0.2em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)] transition-opacity hover:opacity-90"
             >
-              Book This IV
+              Book
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </Link>
           </motion.div>
@@ -129,7 +129,7 @@ export default function ProtocolPage() {
             <motion.div {...fadeUp(0.44)} className="mb-14">
               <div className="flex items-center gap-2 mb-6">
                 <FlaskConical className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
-                <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Composition</p>
+                <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Ingredients</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ingredients.map((item) => (
@@ -149,7 +149,7 @@ export default function ProtocolPage() {
           <motion.div {...fadeUp(0.48)} className="mb-14">
             <div className="flex items-center gap-2 mb-6">
               <ShieldCheck className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
-              <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">How It Works</p>
+              <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Action</p>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {mechanism.map((item) => (
@@ -191,7 +191,7 @@ export default function ProtocolPage() {
               {getBestFor(protocol)}
             </p>
             <div className="mt-6 grid gap-2 sm:grid-cols-3">
-              {['Clinical clearance required', 'Licensed RN visit', 'Final protocol may be adjusted'].map((item) => (
+              {['Clinical review', 'Licensed RN', 'Protocol may adjust'].map((item) => (
                 <div key={item} className="flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-3 py-3">
                   <Check className="h-3.5 w-3.5 text-foreground/45" strokeWidth={1.8} />
                   <span className="font-body text-xs text-foreground/58">{item}</span>
@@ -205,9 +205,7 @@ export default function ProtocolPage() {
             {...fadeUp(0.7)}
             className="mt-16 font-body text-[10px] leading-relaxed text-foreground/30 max-w-2xl"
           >
-            Statements made by Avalon Vitality have not been evaluated by the FDA. Services are not intended to
-            diagnose, treat, cure, or prevent any disease. Individual results vary. Always consult your physician
-            before beginning any therapy.
+            Not FDA evaluated. Not intended to diagnose, treat, cure, or prevent disease. Results vary. Consult your physician.
           </motion.p>
 
         </div>
@@ -237,26 +235,26 @@ function getMechanism(protocol) {
   const common = [
     {
       title: 'Hydrate',
-      body: 'Fluids help replenish volume. Electrolytes support normal fluid balance and comfort after travel, heat, or high-output days.',
+      body: 'Fluids and electrolytes support normal hydration.',
     },
     {
       title: 'Replenish',
-      body: 'Selected vitamins, minerals, or amino acids are paired to the protocol and reviewed for eligibility before treatment.',
+      body: 'Vitamins, minerals, or amino acids are reviewed before treatment.',
     },
     {
       title: 'Review',
-      body: 'The clinical team may adjust, hold, or decline a protocol based on intake, contraindications, and vitals.',
+      body: 'The clinical team may adjust, hold, or decline service.',
     },
   ];
   const map = {
     nad: [
-      { title: 'NAD+', body: 'NAD+ is a molecule involved in cellular energy pathways. Appointment length and dose are reviewed before service.' },
-      { title: 'Slow Infusion', body: 'NAD+ visits can run longer than standard hydration. The nurse monitors comfort and pauses or slows as needed.' },
+      { title: 'NAD+', body: 'Dose and timing are reviewed before service.' },
+      { title: 'Slow Infusion', body: 'The nurse monitors comfort and adjusts pace.' },
       common[2],
     ],
     cbd: [
-      { title: 'Approval Gated', body: 'CBD IV content is held until legal, physician, and compliance review are complete.' },
-      { title: 'No Claims', body: 'Avalon will not publish disease-treatment, pain-cure, anxiety-cure, or guaranteed-result claims.' },
+      { title: 'Review gated', body: 'CBD IV content is held for legal and clinical review.' },
+      { title: 'No claims', body: 'No disease, pain, anxiety, or guaranteed-result claims.' },
       common[2],
     ],
   };
@@ -265,17 +263,17 @@ function getMechanism(protocol) {
 
 function getBestFor(protocol) {
   const map = {
-    hydration:    'Anyone needing rapid rehydration — post-workout, post-flight, or just feeling run down.',
-    energy:       'High performers, professionals, and athletes looking to sharpen focus and sustain output.',
-    immunity:     'Anyone feeling run down, fighting something off, or wanting to front-load their defenses.',
-    beauty:       'Those looking to support skin clarity, hair strength, and a natural glow from the inside out.',
-    recovery:     'Post-workout, travel, event, or late-night hydration support.',
-    jetlag:       'Travelers crossing time zones who need to land sharp and stay that way.',
-    myers:        'Anyone wanting the most well-rounded, clinically proven IV protocol available.',
-    postnight:    'The morning after a long night — fast return to baseline, no questions asked.',
-    nad:       'Clients interested in clinician-reviewed NAD+ support with longer appointment windows.',
-    cbd:       'CBD IV information is held for clinical approval, legal review, and compliance-approved copy.',
-    exosomes:  'Clients interested in advanced wellness support after clinician review.',
+    hydration:    'Post-workout, post-flight, heat, or dehydration support.',
+    energy:       'Long days, travel, training, or demanding work.',
+    immunity:     'Run-down days and seasonal support.',
+    beauty:       'Skin, hair, and glow support.',
+    recovery:     'Training, travel, events, or late nights.',
+    jetlag:       'Time-zone shifts and arrival support.',
+    myers:        'Broad hydration and vitamin support.',
+    postnight:    'Late-night recovery support.',
+    nad:       'Clinician-reviewed NAD+ support.',
+    cbd:       'Held for clinical, legal, and compliance review.',
+    exosomes:  'Advanced wellness support after review.',
   };
   return map[protocol.key] || protocol.tagline;
 }

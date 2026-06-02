@@ -164,10 +164,10 @@ export default function Store() {
           className="pb-5"
         >
           <h1 className="mt-3 font-heading text-[4.1rem] uppercase leading-[0.82] tracking-tight">
-            Start<br />Simple.
+            Start
           </h1>
           <p className="mt-4 max-w-sm font-body text-base leading-relaxed text-foreground/62">
-            Pick a goal. We recommend the visit. Customize only if you need to.
+            Pick a goal. We recommend the visit.
           </p>
         </motion.header>
 
@@ -224,11 +224,11 @@ export default function Store() {
               })}
             </div>
 
-            <VisitCard session={recommended} active label="Recommended Visit" />
+            <VisitCard session={recommended} active label="Recommended" />
 
             <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
               <div className="mb-3 flex items-center justify-between">
-                <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Quick Add-ons</p>
+                <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Add-ons</p>
                 <p className="font-body text-xs text-foreground/45">{selectedAddons.size} selected</p>
               </div>
               <div className="grid gap-2">
@@ -255,7 +255,7 @@ export default function Store() {
             </div>
 
             <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
-              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Other good fits</p>
+              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">More</p>
               <div className="grid gap-2">
                 {alternatives.map((session) => (
                   <button
@@ -274,9 +274,9 @@ export default function Store() {
         ) : (
           <section className="mt-4 space-y-4">
             <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-4">
-              <h2 className="mt-3 font-heading text-4xl uppercase leading-none">Tell us the outcome.</h2>
+              <h2 className="mt-3 font-heading text-4xl uppercase leading-none">Outcome</h2>
               <p className="mt-3 font-body text-sm leading-relaxed text-foreground/58">
-                Use this when you are not sure what to choose, want a stack, or need something built around a group, event, travel, or recovery plan.
+                For groups, events, travel, or custom recovery.
               </p>
             </div>
 
@@ -319,13 +319,13 @@ export default function Store() {
               </div>
               {customNeedsContact && (
                 <p className="mt-3 rounded-2xl border border-accent/20 bg-accent/[0.08] px-3 py-2 font-body text-xs leading-relaxed text-accent/85">
-                  Groups over 4 need direct coordination so we can staff appropriately.
+                  Groups over 4 need coordination.
                 </p>
               )}
             </div>
 
             <label className="block rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
-              <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Anything we should know?</span>
+              <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Notes</span>
               <textarea
                 value={customNote}
                 onChange={(event) => setCustomNote(event.target.value)}
@@ -360,7 +360,7 @@ export default function Store() {
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">
-              {mode === 'guided' ? 'Visit total' : 'Custom request'}
+              {mode === 'guided' ? 'Total' : 'Custom'}
             </p>
             <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">
               {mode === 'guided' ? `${recommended.label} · ${money(total)}` : `${Array.from(customGoals).slice(0, 2).join(' + ')} · ${people} people`}
@@ -375,7 +375,7 @@ export default function Store() {
           </button>
         </div>
         <p className="mx-auto mt-2 max-w-lg text-center font-body text-[10px] text-foreground/34">
-          No charge here. Your visit is confirmed after clinical review and scheduling.
+          Confirmed after clinical review.
         </p>
       </div>
     </div>

@@ -2014,7 +2014,7 @@ function FastReviewSurface({
             <span className="min-w-0 flex-1">
               <span className="block font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/62">Checkout</span>
               <span className="mt-2 block font-heading text-[2.55rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</span>
-              <span className="mt-2 block font-body text-base font-bold text-foreground/70">Clinical review required</span>
+              <span className="mt-2 block font-body text-base font-bold text-foreground/70">Review required</span>
             </span>
             <button
               type="button"
@@ -2422,8 +2422,8 @@ const DEMO_CLIENT_PROFILE = {
 
 export default function BookNow() {
   useSeo({
-    title: 'Choose Your Protocol — Avalon Vitality',
-    description: 'Book a premium mobile recovery protocol in the Bay Area with flat pricing, licensed clinicians, and clinical clearance before treatment.',
+    title: 'Book — Avalon Vitality',
+    description: 'Book mobile IV therapy with licensed clinicians and clinical review.',
     path: '/book',
   });
 
@@ -3064,7 +3064,7 @@ export default function BookNow() {
   };
 
 	  const primaryActionLabel = () => {
-	    if (checkoutLoading) return 'Opening checkout';
+	    if (checkoutLoading) return 'Opening';
 	    if (embeddedCheckoutSession) return 'Payment ready';
 	    if (fastMode && step === 1) return 'Continue';
 	    if (fastMode && step === 3) return 'Continue';
