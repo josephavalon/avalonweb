@@ -208,7 +208,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
             <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
             <span className="font-heading text-2xl text-foreground tracking-wide">${itemsTotal.toLocaleString()}</span>
           </div>
-          <p className="font-body text-[10px] text-foreground/45 px-1">${DEPOSIT_DUE} today. Balance after visit.</p>
+          <p className="font-body text-[10px] text-foreground/45 px-1">${DEPOSIT_DUE} today. Balance at visit.</p>
         </div>
       )}
 
@@ -232,7 +232,6 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
               <X className="w-4 h-4" strokeWidth={1.8} />
             </button>
           </div>
-          <p className="font-body text-[10px] text-foreground/45 px-1">Recurring {membership.billing}.</p>
         </div>
       )}
 
@@ -908,9 +907,6 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-amber-100">
                   ${DEPOSIT_DUE} today
                 </p>
-                <p className="mt-1 font-body text-xs font-semibold leading-relaxed text-foreground/68">
-                  Balance is due at visit.
-                </p>
               </div>
             </div>
           </div>
@@ -1004,7 +1000,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
-        ${DEPOSIT_DUE} today. Balance due at visit. Nurse reviews before service.
+        Clinical review required.
       </p>
     </div>
   );

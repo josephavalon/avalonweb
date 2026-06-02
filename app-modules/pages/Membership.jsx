@@ -5,8 +5,6 @@ import { ArrowRight, Check } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
-import { Reveal } from '@/components/ui/Reveal';
-import SubscriptionFaq from '@/components/subscription/SubscriptionFaq';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -25,17 +23,17 @@ function PlanBuilder({ tier }) {
     {
       label: 'Monthly visits',
       value: tier.custom ? 'Custom' : `${tier.sessions}`,
-      sub: tier.custom ? 'Set cadence' : 'RN-delivered protocols',
+      sub: tier.custom ? 'Set cadence' : 'RN visits',
     },
     {
       label: 'Add-ons',
       value: tier.custom ? 'Custom' : tier.discount,
-      sub: 'Fluids, B12, glutathione, NAD+ when eligible',
+      sub: 'Eligible upgrades',
     },
     {
       label: 'Control',
       value: tier.custom ? 'Designed' : 'Flexible',
-      sub: tier.custom ? 'Built around your schedule' : 'Pause or adjust with notice',
+      sub: tier.custom ? 'Your schedule' : 'Pause with notice',
     },
   ];
 
@@ -166,13 +164,8 @@ export default function Subscription() {
                   Build your plan
                 </motion.h1>
                 <motion.p className="mt-4 max-w-md font-body text-sm leading-relaxed text-foreground/58" {...fadeUp}>
-                  Choose monthly visits. Add recovery upgrades. Adjust before checkout.
+                  Monthly visits. Add-ons. Pause anytime.
                 </motion.p>
-                <motion.div className="mt-6 flex flex-wrap gap-2" {...fadeUp}>
-                  <span className="rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[11px] text-foreground/55">Priority booking</span>
-                  <span className="rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[11px] text-foreground/55">Add-on savings</span>
-                  <span className="rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[11px] text-foreground/55">Pause anytime</span>
-                </motion.div>
               </div>
 
               <div className="space-y-3">
@@ -187,25 +180,6 @@ export default function Subscription() {
             </div>
           </div>
         </section>
-
-        {/* Pause / Cancel Policy */}
-        <Reveal as="section" className="py-10 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
-          <div className="max-w-5xl mx-auto">
-            <motion.div
-              className="max-w-xl"
-              {...fadeUp}
-            >
-              <div>
-                <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/40 mb-2">Flexibility</p>
-                <p className="font-body text-sm text-foreground/60 max-w-xl">
-                  Pause anytime. Cancel after 3 months with 7 days notice.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </Reveal>
-
-        <SubscriptionFaq />
 
       </main>
       <Footer />

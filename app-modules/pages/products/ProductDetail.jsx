@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, LockKeyhole,
-  ShieldCheck, Sparkles, Truck, UserRoundCheck,
+  ArrowLeft, ArrowRight, CheckCircle2, ChevronDown,
+  ShieldCheck, Truck, UserRoundCheck,
 } from 'lucide-react';
 
 import Navbar from '@/components/landing/Navbar';
@@ -277,46 +277,23 @@ export default function ProductDetail() {
                     ))}
                   </div>
                 </AccordionRow>
-                <AccordionRow title="Best For">
-                  <p>
-                    Best for clients looking for convenient mobile IV support before or after travel, work, training,
-                    events, long weeks, or routine wellness days across the SF Bay Area.
-                  </p>
-                </AccordionRow>
                 <AccordionRow title="How It Works">
                   <p>
-                    Choose your product, complete checkout, and Avalon confirms clinical eligibility and timing. A
-                    California-licensed RN arrives with the supplies needed for your visit.
+                    Book. Pay the hold. A California-licensed RN arrives after clinical approval.
                   </p>
                 </AccordionRow>
                 <AccordionRow title="Clinical Oversight">
                   <p>
-                    Every visit is administered by a licensed clinician under medical protocols. Final formulation and
-                    eligibility are subject to clinical review.
+                    Licensed clinician. Medical protocols. Clinical review required.
                   </p>
                 </AccordionRow>
                 <AccordionRow title="FAQ">
                   <p>
-                    Most sessions take 30-60 minutes. Same-day availability depends on location, nurse coverage, and
-                    clinical clearance. Your card is authorized first and charged after confirmation.
+                    Most sessions take 30-60 minutes. Same-day depends on location, nurse coverage, and clinical clearance.
                   </p>
                 </AccordionRow>
               </div>
             </motion.div>
-          </section>
-
-          <section className="mt-12 grid gap-4 border-t border-foreground/[0.10] pt-8 md:grid-cols-3">
-            {[
-              { icon: CreditCard, title: 'Secure checkout', body: 'Encrypted card checkout.' },
-              { icon: LockKeyhole, title: 'Clinical clearance', body: 'Required before your RN visit is confirmed.' },
-              { icon: Sparkles, title: 'Transparent estimate', body: 'Pricing clarity before care begins.' },
-            ].map((item) => (
-              <div key={item.title} className="rounded-[1.25rem] border border-foreground/12 bg-card/86 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-                <item.icon className="mb-4 h-5 w-5 text-foreground/78" strokeWidth={1.6} />
-                <p className="font-body text-sm font-semibold text-foreground">{item.title}</p>
-                <p className="mt-1 font-body text-xs leading-relaxed text-foreground/58">{item.body}</p>
-              </div>
-            ))}
           </section>
 
           <p className="mx-auto mt-10 max-w-3xl text-center font-body text-[10px] leading-relaxed text-foreground/30">

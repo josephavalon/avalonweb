@@ -395,7 +395,7 @@ export default function ServiceArea() {
               className="font-body text-xs text-foreground/25 mt-6"
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE, delay: 0.3 }}
             >
-              Don't see your area? <a href="mailto:hello@avalonvitality.co" className="inline-flex min-h-[44px] items-center text-accent hover:text-foreground transition-colors">Contact us</a> — we'll do our best to accommodate.
+              Outside coverage? <a href="mailto:hello@avalonvitality.co" className="inline-flex min-h-[44px] items-center text-accent hover:text-foreground transition-colors">Contact us</a>.
             </motion.p>
           </div>
         </section>
@@ -418,28 +418,6 @@ export default function ServiceArea() {
                 <p className="font-body text-sm text-foreground/50">{f.desc}</p>
               </motion.div>
             ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-16 md:py-20 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
-          <div className="max-w-5xl mx-auto text-center">
-            <motion.h2
-              className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-[0.9] mb-6"
-              initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
-            >
-              Ready to Book?
-            </motion.h2>
-            <motion.div
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: EASE, delay: 0.1 }}
-            >
-              <Link
-                to="/store"
-                className="inline-block px-10 py-4 rounded-full bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase font-semibold hover:bg-foreground/85 transition-colors"
-              >
-                Book
-              </Link>
-            </motion.div>
           </div>
         </section>
 
