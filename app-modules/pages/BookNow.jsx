@@ -1317,7 +1317,7 @@ function hasDob(value) {
   return Boolean(date) && !Number.isNaN(date.getTime()) && date < new Date();
 }
 
-function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, actionLabel, onAction }) {
+function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction }) {
   return (
     <div className="block">
       <div className="flex min-h-[28px] items-center justify-between gap-2">
@@ -1344,6 +1344,7 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
+        autoFocus={autoFocus}
         className="mt-2 min-h-[60px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-xl font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40"
       />
     </div>
@@ -2077,6 +2078,7 @@ function FastReviewSurface({
               onKeyDown={onAddressKeyDown}
               placeholder="Street address, city, ZIP"
               autoComplete="street-address"
+              autoFocus={!state.address}
               actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
               onAction={() => onAddressSuggestion(savedVisitAddress)}
               required
