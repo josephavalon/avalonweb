@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { motion, LayoutGroup, useReducedMotion } from '@/components/ui/PageTransitionMotion';
@@ -19,6 +19,8 @@ import {
   Leaf,
   MapPin,
   Mail,
+  Menu,
+  MessageCircle,
   Moon,
   Minus,
   Navigation,
@@ -627,17 +629,38 @@ function TrustSpeedStrip() {
   return null;
 }
 
+function BookingMobileHeader() {
+  return (
+    <header className="fixed inset-x-0 top-0 z-40 flex h-[4.35rem] items-center justify-between bg-background px-4 pt-2 md:hidden">
+      <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none" aria-label="Avalon Vitality home">
+        <span className="font-heading text-[1.15rem] uppercase leading-none tracking-[0.24em] text-foreground">AVALON</span>
+        <span className="mt-1 font-body text-[0.48rem] uppercase leading-none tracking-[0.38em] text-foreground/72">VITALITY</span>
+      </Link>
+      <div className="flex items-center gap-2">
+        <a href="tel:+14159807708" className="flex h-11 w-11 items-center justify-center text-foreground/88" aria-label="Call Avalon">
+          <Phone className="h-5 w-5" strokeWidth={2.2} />
+        </a>
+        <a href="sms:+14159807708" className="flex h-11 w-11 items-center justify-center text-foreground/88" aria-label="Text Avalon">
+          <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
+        </a>
+        <Link to="/protocols" className="flex h-11 w-11 items-center justify-center text-foreground/88" aria-label="Open menu">
+          <Menu className="h-6 w-6" strokeWidth={2.2} />
+        </Link>
+      </div>
+    </header>
+  );
+}
+
 function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitle = STEPS[step], progressIndex = displayStepIndex }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-2 overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background/38 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl md:mb-3">
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))]" />
+    <div className="relative mb-3 px-1 pt-1 md:mb-3">
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <motion.span
-              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/22 bg-foreground/[0.105] text-foreground shadow-[0_12px_34px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
+              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/30 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-xl"
               key={step}
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0.72, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -646,7 +669,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
               <CurrentIcon className="h-4 w-4" strokeWidth={2.7} />
             </motion.span>
             <div className="min-w-0">
-              <p className="truncate font-body text-[1.05rem] font-black uppercase tracking-[0.02em] text-foreground">
+              <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
                 {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
               </p>
             </div>
@@ -682,7 +705,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
         </div>
       </div>
 
-      <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/8 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
+      <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
         <motion.div
           className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
           initial={false}
@@ -713,7 +736,7 @@ function UniversalBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[8.85rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+    <section className="mx-auto flex h-[calc(100svh-4.35rem)] max-h-[calc(100svh-4.35rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[6.95rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
         step={step}
         onStepSelect={onStepSelect}
@@ -731,30 +754,29 @@ function UniversalBookingFrame({
       )}
       <motion.div
         key={step}
-        className="av-glass-card relative min-h-0 flex-1 overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/32 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-4"
+        className="relative min-h-0 flex-1 overflow-hidden p-0"
         initial={{ opacity: 1, y: 0, scale: 1 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 1 }}
         transition={{ duration: 0.16, ease: EASE }}
       >
-        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
         <div className="relative h-full min-h-0 overflow-hidden">
           {children}
         </div>
       </motion.div>
       <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
-        <div className="mx-auto flex max-w-lg items-center gap-2 overflow-hidden rounded-[1.35rem] border border-foreground/14 bg-background/78 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:max-w-4xl">
-          <div className="min-w-[132px] shrink-0 border-r border-foreground/12 px-2">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Due now</p>
-            <p className="mt-1 font-body text-[1.55rem] font-black leading-none text-foreground">{dueNow || total}</p>
-            <p className="mt-1 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/50">Upon completion</p>
-            <p className="mt-0.5 font-body text-sm font-black leading-none text-foreground/72">{dueAfter || '$0'}</p>
+        <div className="mx-auto max-w-lg overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/82 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl">
+          <div className="flex items-center gap-2">
+          <div className="min-w-[124px] shrink-0 border-r border-foreground/12 px-2">
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Total</p>
+            <p className="mt-1 font-body text-[1.45rem] font-black leading-none text-foreground">{total}</p>
+            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Before tax</p>
           </div>
           <button
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
-            className={`relative flex min-h-[64px] flex-1 items-center justify-center gap-3 overflow-hidden rounded-2xl border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
+            className={`relative flex min-h-[56px] flex-1 items-center justify-center gap-3 overflow-hidden rounded-xl border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
               canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/18 bg-background/42 text-foreground/58'
             }`}
           >
@@ -778,6 +800,11 @@ function UniversalBookingFrame({
           >
             Back
           </button>
+          </div>
+          <div className="mt-1 flex items-center justify-center gap-1.5 font-body text-[10px] font-semibold text-foreground/56">
+            <ShieldCheck className="h-3 w-3" strokeWidth={2.2} />
+            Secure booking
+          </div>
         </div>
         <div className="mx-auto mt-1 flex max-w-lg justify-center md:hidden">
           <button
@@ -3965,7 +3992,13 @@ export default function BookNow() {
           <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>
             Choose your {activeTherapyDisplayTitle.toLowerCase()} therapy
           </p>
-          <div className={`grid min-h-0 gap-2 ${activeTherapies.length <= 4 ? 'grid-cols-2 auto-rows-fr' : 'grid-cols-3 auto-rows-fr'}`}>
+          <div className={`grid min-h-0 content-start gap-2 ${
+            activeTherapies.length <= 4
+              ? 'grid-cols-2 auto-rows-[9.4rem]'
+              : activeTherapies.length <= 6
+                ? 'grid-cols-3 auto-rows-[9rem]'
+                : 'grid-cols-3 auto-rows-[6.75rem]'
+          }`}>
             {activeTherapies.map((item) => {
               const Icon = item.icon || Droplets;
               const active = state.productKey === item.key;
@@ -3987,7 +4020,7 @@ export default function BookNow() {
                     </span>
                   )}
                   <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-foreground">
-                    <Icon className="h-7 w-7" strokeWidth={2.15} />
+                    <Icon className="h-6 w-6" strokeWidth={2.15} />
                   </span>
                   <span className="relative min-w-0">
                     <span className="block break-words font-heading text-[1rem] uppercase leading-[0.9] tracking-normal text-foreground min-[390px]:text-[1.08rem] md:text-[1.75rem]">{copy.label}</span>
@@ -4215,8 +4248,11 @@ export default function BookNow() {
 
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
-      <Navbar />
-      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-20 md:max-h-none md:min-h-screen md:max-w-6xl md:px-8 md:pb-6 md:pt-20">
+      <BookingMobileHeader />
+      <div className="hidden md:block">
+        <Navbar />
+      </div>
+      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[4.65rem] md:max-h-none md:min-h-screen md:max-w-6xl md:px-8 md:pb-6 md:pt-20">
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
