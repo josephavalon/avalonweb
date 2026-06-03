@@ -32,17 +32,6 @@ const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set(['exosomes']);
 const PUBLIC_SESSIONS = IV_SESSIONS.filter((session) => !HIDDEN_PUBLIC_PROTOCOL_KEYS.has(session.key));
 const DEFAULT_ORDER = new Map(PUBLIC_SESSIONS.map((session, index) => [session.key, index]));
 const FEATURED_ORDER = new Map(FEATURED_KEYS.map((key, index) => [key, index]));
-const PRODUCT_ROUTE_BY_SESSION = {
-  hydration: '/products/iv-vitamins/hydration-iv',
-  myers: '/products/iv-vitamins/myers-cocktail-iv',
-  postnight: '/products/iv-vitamins/post-night-out-iv',
-  immunity: '/products/iv-vitamins/immunity-iv',
-  energy: '/products/iv-vitamins/energy-iv',
-  recovery: '/products/iv-vitamins/recovery-iv',
-  jetlag: '/products/iv-vitamins/jet-lag-iv',
-  nad: '/products/nad/nad-iv-250mg',
-  cbd: '/products/cbd/cbd-iv-33mg',
-};
 
 const CONTROL_TRANSITION = { duration: 0.48, ease: EASE };
 const CARD_TRANSITION = { duration: 0.54, ease: EASE };
@@ -60,10 +49,6 @@ function includesText(session) {
   if (session.inside) return session.inside;
   if (session.doses?.length) return `${session.doses.length} dose options`;
   return session.desc || session.tagline || 'Clinician-guided protocol';
-}
-
-function productPathForSession(session) {
-  return PRODUCT_ROUTE_BY_SESSION[session.key] || '/protocols';
 }
 
 function bookingPathForSession(session) {
@@ -157,18 +142,12 @@ function ProtocolCard({ session, index = 0 }) {
               </span>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-[1fr_0.72fr] gap-2">
+          <div className="mt-4">
             <Link
               to={bookingPathForSession(session)}
               className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
             >
               Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-            </Link>
-            <Link
-              to={productPathForSession(session)}
-              className="flex min-h-[52px] items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.08] px-4 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-foreground/[0.13]"
-            >
-              Details
             </Link>
           </div>
         </div>

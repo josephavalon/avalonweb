@@ -131,7 +131,7 @@ const CATEGORIES = [
 
 export default function Ingredients() {
   useSeo({ title: 'Ingredients & Formulations — Avalon Vitality', description: 'Full ingredient transparency for every Avalon IV drip and IM shot protocol.', path: '/ingredients' });
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].label);
 
   return (
     <div className="bg-background min-h-screen w-full">

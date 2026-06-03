@@ -117,7 +117,7 @@ export default function Safety() {
       <main className="pt-24 md:pt-28">
 
         {/* Hero */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20">
+        <section className="py-10 md:py-16 px-5 md:px-12 lg:px-20">
           <div className="max-w-5xl mx-auto">
             <motion.h1
               {...REVEAL}
@@ -137,9 +137,9 @@ export default function Safety() {
         </section>
 
         {/* Contraindications */}
-        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <Reveal as="section" className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
-            <motion.div {...REVEAL} className="flex items-start gap-4 mb-10">
+            <motion.div {...REVEAL} className="flex items-start gap-4 mb-6">
               <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-1">
                 <AlertTriangle className="w-5 h-5 text-amber-400" />
               </div>
@@ -159,7 +159,7 @@ export default function Safety() {
                   key={i}
                   {...REVEAL}
                   transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
-                  className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 flex items-start gap-3"
+                  className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4 flex items-start gap-3"
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
                   <p className="font-body text-sm text-foreground/80 leading-relaxed">{item}</p>
@@ -170,12 +170,12 @@ export default function Safety() {
         </Reveal>
 
         {/* What to Expect */}
-        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <Reveal as="section" className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-12"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-6"
             >
               Before. During. After.
             </motion.h2>
@@ -188,7 +188,7 @@ export default function Safety() {
                     key={phase.phase}
                     {...REVEAL}
                     transition={{ duration: 0.7, ease: EASE, delay: i * 0.1 }}
-                    className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-8"
+                    className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-6"
                   >
                     <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mb-5">
                       <Icon className="w-5 h-5 text-accent" />
@@ -210,12 +210,12 @@ export default function Safety() {
         </Reveal>
 
         {/* Core standards */}
-        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <Reveal as="section" className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-10"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-6"
             >
               Clear rules. No noise.
             </motion.h2>
@@ -246,7 +246,7 @@ export default function Safety() {
                     key={item.title}
                     {...REVEAL}
                     transition={{ duration: 0.7, ease: EASE, delay: i * 0.08 }}
-                    className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-8"
+                    className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-6"
                   >
                     <div className={`mb-5 flex h-10 w-10 items-center justify-center rounded-full ${item.tone}`}>
                       <Icon className="h-5 w-5" />
@@ -261,12 +261,12 @@ export default function Safety() {
         </Reveal>
 
         {/* FAQ */}
-        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <Reveal as="section" className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-10"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-6"
             >
               Safety FAQ
             </motion.h2>

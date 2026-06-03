@@ -352,6 +352,21 @@ export default function ProductDetail() {
                   <ProductMedia product={treatment} compact />
                 </div>
               </div>
+              <div className="mt-4 grid grid-cols-[1fr_0.8fr] gap-2">
+                <button
+                  type="button"
+                  onClick={buyNow}
+                  className="flex min-h-[3.35rem] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background"
+                >
+                  Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                </button>
+                <Link
+                  to={bookingPath(treatment, true)}
+                  className="flex min-h-[3.35rem] items-center justify-center rounded-full border border-foreground/18 bg-foreground/[0.12] px-3 text-center font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground"
+                >
+                  Subscribe
+                </Link>
+              </div>
             </GlassPanel>
 
             <div className="hidden md:block">

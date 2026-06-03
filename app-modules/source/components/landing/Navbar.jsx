@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumSelectionTransition, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -10,9 +10,11 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 const mainLinks = [
   { to: '/protocols', label: 'Protocols' },
   { to: '/subscription', label: 'Plans' },
-  { to: '/launches', label: 'Launches' },
 ];
 const BOOK_URL = '/book';
+const PHONE_DISPLAY = '(415) 980-7708';
+const PHONE_URL = 'tel:+14159807708';
+const TEXT_URL = 'sms:+14159807708';
 
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
@@ -65,11 +67,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
+  const contactActionClass = "inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.07] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-foreground/[0.12] hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const mobileLinks = [
     ...mainLinks,
     { to: BOOK_URL, label: 'Book', primary: true },
-    { to: dashboardPathFor(user), label: user ? 'Dashboard' : 'Login' },
+    ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : []),
   ];
 
   return (
@@ -140,6 +143,16 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
         {/* Col 3 — account link + booking CTA, right-aligned */}
         <div className="flex h-full items-center justify-end gap-4">
+          {!compact && !focusMode && (
+            <div className="flex items-center gap-1.5" aria-label="Contact Avalon">
+              <a href={PHONE_URL} className={contactActionClass} aria-label={`Call Avalon ${PHONE_DISPLAY}`} title={`Call ${PHONE_DISPLAY}`}>
+                <Phone className="h-4 w-4" strokeWidth={2} />
+              </a>
+              <a href={TEXT_URL} className={contactActionClass} aria-label="Text Avalon" title="Text Avalon">
+                <MessageCircle className="h-4 w-4" strokeWidth={2} />
+              </a>
+            </div>
+          )}
           {!compact && !focusMode && user && (
             <button
               type="button"
@@ -150,7 +163,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               Sign Out
             </button>
           )}
-          {!compact && !focusMode && <Link to={dashboardPathFor(user)} className={linkClass}>{user ? 'Dashboard' : 'Login'}</Link>}
+          {!compact && !focusMode && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}
@@ -185,6 +198,20 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         <div className="flex h-full items-center gap-2">
           {!focusMode && (
             <>
+              <a
+                href={PHONE_URL}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                aria-label={`Call Avalon ${PHONE_DISPLAY}`}
+              >
+                <Phone className="h-5 w-5" strokeWidth={2} />
+              </a>
+              <a
+                href={TEXT_URL}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                aria-label="Text Avalon"
+              >
+                <MessageCircle className="h-5 w-5" strokeWidth={2} />
+              </a>
               <motion.button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 whileTap={premiumTap}

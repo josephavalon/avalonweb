@@ -60,7 +60,7 @@ export default function MedicalDirection() {
       <main className="pt-24 md:pt-28">
 
         {/* Hero */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20">
+        <section className="py-10 md:py-16 px-5 md:px-12 lg:px-20">
           <div className="max-w-5xl mx-auto">
             <motion.h1
               {...REVEAL}
@@ -80,7 +80,7 @@ export default function MedicalDirection() {
         </section>
 
         {/* Oversight Model */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <section className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
@@ -92,7 +92,7 @@ export default function MedicalDirection() {
             <motion.p
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.14 }}
-              className="font-body text-sm md:text-base text-foreground/60 leading-relaxed max-w-2xl mb-12"
+              className="font-body text-sm md:text-base text-foreground/60 leading-relaxed max-w-2xl mb-6"
             >
               Avalon operates under the oversight of a licensed physician medical director. This is not a checkbox — it shapes every protocol, every standing order, and every session.
             </motion.p>
@@ -105,7 +105,7 @@ export default function MedicalDirection() {
                     key={pillar.title}
                     {...REVEAL}
                     transition={{ duration: 0.7, ease: EASE, delay: i * 0.1 }}
-                    className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-8"
+                    className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-6"
                   >
                     <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mb-5">
                       <Icon className="w-5 h-5 text-accent" />
@@ -120,12 +120,12 @@ export default function MedicalDirection() {
         </section>
 
         {/* Medical Director Card */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <section className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-10"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-6"
             >
               Medical Director
             </motion.h2>
@@ -133,7 +133,7 @@ export default function MedicalDirection() {
             <motion.div
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.14 }}
-              className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-10 flex flex-col md:flex-row gap-8 items-start"
+              className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-8 flex flex-col md:flex-row gap-6 items-start"
             >
               {/* Portrait pending announcement */}
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-foreground/[0.06] border border-foreground/[0.08] flex items-center justify-center flex-shrink-0">
@@ -157,11 +157,11 @@ export default function MedicalDirection() {
         </section>
 
         {/* State Licensing */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <section className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.div
               {...REVEAL}
-              className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10 items-start"
+              className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8 items-start"
             >
               <div className="w-10 h-10 rounded-full bg-foreground/[0.06] flex items-center justify-center flex-shrink-0">
                 <Scale className="w-5 h-5 text-foreground/60" />
@@ -179,12 +179,12 @@ export default function MedicalDirection() {
         </section>
 
         {/* Protocol Review Process */}
-        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
+        <section className="py-8 md:py-14 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-12"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-6"
             >
               How Protocols Are Built
             </motion.h2>
@@ -195,7 +195,7 @@ export default function MedicalDirection() {
                   key={step.step}
                   {...REVEAL}
                   transition={{ duration: 0.7, ease: EASE, delay: i * 0.1 }}
-                  className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start"
+                  className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-6 flex flex-col md:flex-row gap-5 items-start"
                 >
                   <p className="font-heading text-4xl text-foreground/15 leading-none flex-shrink-0 w-12">{step.step}</p>
                   <div>

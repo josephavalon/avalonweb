@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Droplets, Syringe, ArrowRight, ArrowLeft,
@@ -1116,6 +1116,10 @@ export default function Checkout() {
     }
     if (step === 2 && contactReady) setStep(3);
   }, [step, appointmentReady, contactReady]);
+
+  if (!hasCheckoutSelection) {
+    return <Navigate to="/book" replace />;
+  }
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-background text-foreground">
