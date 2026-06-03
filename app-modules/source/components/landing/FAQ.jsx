@@ -100,7 +100,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How do I book?',
-        a: 'Book directly through the Avalon app or at avalonvitality.co/store. Same-day appointments are available 8 AM–8 PM.',
+        a: 'Book at avalonvitality.co/book. Same-day appointments are available 8 AM–8 PM.',
       },
       {
         q: 'What payment methods do you accept?',

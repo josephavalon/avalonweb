@@ -6,6 +6,8 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS } from '@/config/verticals';
+import GlassCard from '@/components/ui/GlassCard';
+import PremiumButton from '@/components/ui/PremiumButton';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
@@ -91,42 +93,41 @@ export default function ProtocolPage() {
           </motion.p>
 
           {/* Meta widgets */}
-          <motion.div
-            {...fadeUp(0.36)}
-            className="mb-8 grid grid-cols-2 gap-2 border-b border-foreground/[0.08] pb-8 md:grid-cols-4"
-          >
-            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+          <motion.div {...fadeUp(0.36)} className="mb-8 grid grid-cols-2 gap-2 md:grid-cols-4">
+            <GlassCard tone="soft" radius="1.35rem" className="p-3">
               <DollarSign className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
               <p className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">${price}</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Price</p>
-            </div>
+            </GlassCard>
             {protocol.duration && (
-              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+              <GlassCard tone="soft" radius="1.35rem" className="p-3">
                 <Clock className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
                 <p className="mt-3 truncate font-heading text-3xl uppercase leading-none text-foreground">{protocol.duration}</p>
                 <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Time</p>
-              </div>
+              </GlassCard>
             )}
-            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+            <GlassCard tone="soft" radius="1.35rem" className="p-3">
               <ShieldCheck className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
               <p className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">RN</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Mobile</p>
-            </div>
-            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+            </GlassCard>
+            <GlassCard tone="soft" radius="1.35rem" className="p-3">
               <Sparkles className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
               <p className="mt-3 truncate font-heading text-3xl uppercase leading-none text-foreground capitalize">{protocol.category || 'IV'}</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Type</p>
-            </div>
+            </GlassCard>
           </motion.div>
 
           <motion.div {...fadeUp(0.4)} className="mb-14 max-w-md">
-            <Link
+            <PremiumButton
+              as={Link}
               to="/book"
-              className="flex min-h-[58px] w-full items-center justify-between rounded-2xl bg-foreground px-6 font-body text-xs font-semibold tracking-[0.2em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)] transition-opacity hover:opacity-90"
+              className="flex min-h-[58px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-xs font-black tracking-[0.16em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)]"
+              wrapperClassName="w-full"
             >
               Book
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
-            </Link>
+            </PremiumButton>
           </motion.div>
 
           {/* Composition */}
@@ -138,13 +139,15 @@ export default function ProtocolPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ingredients.map((item) => (
-                  <div
+                  <GlassCard
                     key={item}
-                    className="flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3"
+                    tone="soft"
+                    radius="1.35rem"
+                    className="flex items-center gap-3 px-4 py-3"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-foreground/30 shrink-0" />
                     <span className="font-body text-sm text-foreground/75">{item.trim()}</span>
-                  </div>
+                  </GlassCard>
                 ))}
               </div>
             </motion.div>
@@ -158,10 +161,10 @@ export default function ProtocolPage() {
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {mechanism.map((item) => (
-                <div key={item.title} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4">
+                <GlassCard key={item.title} tone="soft" radius="1.35rem" className="p-4">
                   <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/42">{item.title}</p>
                   <p className="mt-3 font-body text-sm leading-snug text-foreground/62">{item.body}</p>
-                </div>
+                </GlassCard>
               ))}
             </div>
           </motion.div>
@@ -174,13 +177,13 @@ export default function ProtocolPage() {
               </div>
               <div className="grid gap-2">
                 {doseOptions.map((dose) => (
-                  <div key={dose.key || dose.label} className="flex min-h-[64px] items-center justify-between gap-4 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-4">
+                  <GlassCard key={dose.key || dose.label} tone="soft" radius="1.35rem" className="flex min-h-[64px] items-center justify-between gap-4 px-4">
                     <div>
                       <p className="font-body text-sm font-semibold text-foreground">{dose.label}</p>
                       <p className="mt-1 font-body text-xs text-foreground/45">{dose.duration || protocol.duration || 'Timing confirmed before visit'}</p>
                     </div>
                     <p className="font-heading text-2xl text-foreground">${Number(dose.price || price).toLocaleString()}</p>
-                  </div>
+                  </GlassCard>
                 ))}
               </div>
             </motion.div>
@@ -192,16 +195,16 @@ export default function ProtocolPage() {
               <Sparkles className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
               <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Best For</p>
             </div>
-            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-4">
+            <GlassCard tone="soft" radius="1.35rem" className="p-4">
               <p className="font-heading text-3xl uppercase leading-none text-foreground">Fit</p>
               <p className="mt-2 font-body text-sm font-semibold leading-snug text-foreground/62">{getBestFor(protocol)}</p>
-            </div>
+            </GlassCard>
             <div className="mt-6 grid gap-2 sm:grid-cols-3">
               {['Clinical review', 'Licensed RN', 'Protocol may adjust'].map((item) => (
-                <div key={item} className="flex items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-3 py-3">
+                <GlassCard key={item} tone="soft" radius="1.35rem" className="flex items-center gap-2 px-3 py-3">
                   <Check className="h-3.5 w-3.5 text-foreground/45" strokeWidth={1.8} />
                   <span className="font-body text-xs text-foreground/58">{item}</span>
-                </div>
+                </GlassCard>
               ))}
             </div>
           </motion.div>

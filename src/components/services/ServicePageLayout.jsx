@@ -4,6 +4,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '../landing/Navbar';
 import Footer from '../landing/Footer';
 import { slugify } from '@/data/products';
+import GlassCard from '@/components/ui/GlassCard';
 
 export default function ServicePageLayout({
   title,
@@ -23,14 +24,14 @@ export default function ServicePageLayout({
       <Navbar />
 
       {/* Hero */}
-      <section className="relative h-[32vh] md:h-[50vh] flex items-end justify-start overflow-hidden">
+      <section className="relative flex min-h-[34rem] items-end justify-start overflow-hidden md:min-h-[calc(100svh-7rem)]">
         {heroImage && (
           <div className="absolute inset-0">
             <img src={heroImage} alt={title} loading="eager" fetchPriority="high" decoding="async" className={imgClass} />
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
           </div>
         )}
-        <div className="relative z-10 px-6 md:px-16 pb-6 md:pb-14">
+        <div className="relative z-10 px-6 pb-8 md:px-16 md:pb-14">
           {badge && (
             <p className="text-xs tracking-[0.3em] text-accent font-body uppercase mb-2">{badge}</p>
           )}
@@ -38,28 +39,28 @@ export default function ServicePageLayout({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="font-heading text-6xl md:text-[8rem] text-foreground tracking-wide leading-none"
+            className="font-heading text-[clamp(4rem,17vw,8rem)] uppercase leading-[0.86] tracking-normal text-foreground"
           >
             {title}
           </motion.h1>
           {subtitle && (
-            <p className="font-body text-sm text-muted-foreground mt-3 tracking-widest uppercase">{subtitle}</p>
+            <p className="mt-3 max-w-xl font-body text-sm font-semibold uppercase tracking-[0.18em] text-foreground/58">{subtitle}</p>
           )}
         </div>
       </section>
 
       {/* Description */}
       {description && (
-        <section className="py-6 md:py-12 px-6 md:px-16 border-b border-border">
-          <div className="max-w-2xl">
-            <p className="font-body text-sm md:text-base text-foreground leading-relaxed">{description}</p>
-          </div>
+        <section className="px-6 py-4 md:px-16 md:py-6">
+          <GlassCard tone="soft" radius="1.55rem" className="mx-auto max-w-6xl p-5 md:p-6">
+            <p className="relative max-w-3xl font-body text-sm font-semibold leading-relaxed text-foreground/62 md:text-base">{description}</p>
+          </GlassCard>
         </section>
       )}
 
       {/* Treatments grid OR Coming Soon block */}
       {comingSoon ? (
-        <section className="py-20 px-6 md:px-16">
+        <section className="px-6 py-20 md:px-16">
           <div className="max-w-2xl mx-auto text-center">
             <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">
               Joining after launch
@@ -73,7 +74,7 @@ export default function ServicePageLayout({
           </div>
         </section>
       ) : (
-        <section className="py-8 md:py-16 px-6 md:px-16">
+        <section className="px-6 py-6 md:px-16 md:py-10">
           <div className="max-w-6xl mx-auto">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -125,10 +126,10 @@ export default function ServicePageLayout({
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.06 }}
-                    className="border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden group hover:border-accent/50 hover:bg-white/[0.06] transition-all"
-                  >
-                    {href ? (
-                      <Link to={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-3xl">
+                  className="av-glass-card group relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-xl transition-colors hover:border-foreground/24 hover:bg-background/54"
+                >
+                  {href ? (
+                      <Link to={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[1.35rem]">
                         {CardBody}
                       </Link>
                     ) : (
