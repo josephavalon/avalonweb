@@ -8,7 +8,7 @@ import { Reveal } from '@/components/ui/Reveal';
 
 const EASE = [0.16, 1, 0.3, 1];
 const REVEAL = {
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 1, y: 24 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
   transition: { duration: 0.7, ease: EASE },
