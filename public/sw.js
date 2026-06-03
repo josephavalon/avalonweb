@@ -1,10 +1,10 @@
-const CACHE_NAME = 'avalon-shell-v1';
+const CACHE_NAME = 'avalon-shell-v2';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.png?v=2',
-  '/images/avalon-hero.webp',
+  '/images/avalon-hero-new.jpg',
 ];
 
 self.addEventListener('install', (event) => {

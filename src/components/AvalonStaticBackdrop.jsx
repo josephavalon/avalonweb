@@ -16,12 +16,12 @@ export default function AvalonStaticBackdrop() {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 h-screen z-0 overflow-hidden bg-black" aria-hidden="true">
       <img
-        src="/images/avalon-hero.webp"
-        srcSet="/images/avalon-hero-512.webp 512w, /images/avalon-hero-768.webp 768w, /images/avalon-hero.webp 1024w"
+        src="/images/avalon-hero-new.jpg"
+        srcSet="/images/avalon-hero-new-512.jpg 512w, /images/avalon-hero-new-768.jpg 768w, /images/avalon-hero-new.jpg 1122w"
         sizes="100vw"
         alt=""
         className="absolute inset-0 h-full w-full scale-[1.32] object-cover opacity-34 blur-[3px] saturate-[0.48] brightness-[0.48]"
-        style={{ objectPosition: '42% 34%' }}
+        style={{ objectPosition: '52% 42%' }}
         loading="eager"
         fetchPriority="high"
       />
