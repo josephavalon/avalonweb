@@ -18,12 +18,12 @@ const TIERS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
 }));
 
 const COMPARE_ROWS = [
-  { label: 'Monthly IV credits', starter: '1', pro: '2', vip: '4' },
-  { label: 'Add-on discount', starter: '20%', pro: '25%', vip: '30%' },
-  { label: 'IM shot credit', starter: '—', pro: '1/mo', vip: '2/mo' },
-  { label: 'Priority booking', starter: '✓', pro: '✓', vip: '✓' },
-  { label: 'Dedicated RN', starter: '—', pro: '—', vip: '✓' },
-  { label: 'Household sharing', starter: '—', pro: '—', vip: '✓' },
+  { label: 'IV credits', values: ['Starter 1', 'Pro 2', 'VIP 4'] },
+  { label: 'Add-ons', values: ['20%', '25%', '30%'] },
+  { label: 'IM credits', values: ['Starter —', 'Pro 1/mo', 'VIP 2/mo'] },
+  { label: 'Priority', values: ['All plans'] },
+  { label: 'Dedicated RN', values: ['VIP'] },
+  { label: 'Household', values: ['VIP'] },
 ];
 
 function TierComparator() {
@@ -54,34 +54,27 @@ function TierComparator() {
           variants={premiumListContainer(0.025, 0.03)}
           className="border-t border-foreground/[0.07]"
         >
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.07] bg-white/[0.02]">
-                <div className="px-4 py-2.5" />
-                {TIERS.map((tier) => (
-                  <div key={tier.key} className="py-2.5 text-center">
-                    <span className={`font-body text-[9px] tracking-[0.2em] uppercase ${tier.key === FEATURED_SUBSCRIPTION_TIER_KEY ? 'text-accent' : 'text-foreground/40'}`}>{tier.name}</span>
-                  </div>
-                ))}
-              </div>
-              {/* Rows */}
-              {COMPARE_ROWS.map(({ label, starter, pro, vip }, i) => (
+              <div className="grid gap-2 p-3 md:grid-cols-3">
+              {COMPARE_ROWS.map(({ label, values }, i) => (
                 <motion.div
                   key={label}
                   variants={premiumListItem}
-                  className={`grid grid-cols-[1fr_60px_60px_60px] md:grid-cols-[1fr_80px_80px_80px] border-b border-foreground/[0.05] last:border-0 ${i % 2 === 0 ? '' : 'bg-white/[0.015]'}`}
+                  className="relative min-h-[92px] overflow-hidden rounded-2xl border border-foreground/[0.07] bg-background/32 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl"
                 >
-                  <div className="px-4 py-3 flex items-center">
-                    <span className="font-body text-[11px] text-foreground/60">{label}</span>
-                  </div>
-                  {[starter, pro, vip].map((val, j) => (
-                    <div key={j} className="py-3 flex items-center justify-center">
-                      <span className={`font-body text-[11px] text-center ${val === '—' ? 'text-foreground/20' : j === 1 ? 'text-accent' : 'text-foreground/75'}`}>
-                        {val}
-                      </span>
+                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_34%),linear-gradient(135deg,hsl(var(--foreground)/0.035),transparent_55%)]" />
+                  <div className="relative">
+                    <p className="font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/52">{label}</p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {values.map((value) => (
+                        <span key={value} className={`rounded-full border px-2.5 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em] ${value.includes('Pro') || value === '25%' ? 'border-accent/24 text-accent' : 'border-foreground/10 text-foreground/64'}`}>
+                          {value}
+                        </span>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </motion.div>
               ))}
+              </div>
         </motion.div>
       </SmoothDisclosure>
     </div>

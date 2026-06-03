@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -131,6 +131,31 @@ function SectionTitle({ label, title }) {
   );
 }
 
+function CollapsibleSection({ label, title, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <GlassPanel className="mt-3 md:mt-4">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="relative flex min-h-[68px] w-full items-center justify-between gap-4 px-4 text-left md:min-h-[78px] md:px-5"
+        aria-expanded={open}
+      >
+        <span className="min-w-0">
+          <span className="block font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/42">{label}</span>
+          <span className="mt-1 block font-heading text-[2.35rem] uppercase leading-none tracking-normal text-foreground md:text-[3.25rem]">{title}</span>
+        </span>
+        <ArrowRight className={`h-4 w-4 shrink-0 text-foreground/52 transition-transform ${open ? 'rotate-90' : ''}`} strokeWidth={2.2} />
+      </button>
+      {open && (
+        <SmoothDisclosure open>
+          <div className="border-t border-foreground/8 p-3 md:p-5">{children}</div>
+        </SmoothDisclosure>
+      )}
+    </GlassPanel>
+  );
+}
+
 function BenefitGrid({ items = [] }) {
   return (
     <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
@@ -162,44 +187,40 @@ function IdealForGrid({ items = [] }) {
 
 function IncludedGrid({ items = [] }) {
   return (
-    <GlassPanel className="p-3 md:p-5">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-        {items.slice(0, 6).map((item) => (
-          <div key={item} className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-3">
-            <Droplets className="h-4 w-4 shrink-0 text-foreground/62" strokeWidth={2.1} />
-            <p className="truncate font-body text-sm font-bold text-foreground/78">{item}</p>
-          </div>
-        ))}
-      </div>
-    </GlassPanel>
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+      {items.slice(0, 6).map((item) => (
+        <div key={item} className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-3">
+          <Droplets className="h-4 w-4 shrink-0 text-foreground/62" strokeWidth={2.1} />
+          <p className="truncate font-body text-sm font-bold text-foreground/78">{item}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
 function Timeline({ items = [] }) {
   return (
-    <GlassPanel className="p-3 md:p-5">
-      <div className="grid gap-2 md:grid-cols-4">
-        {items.slice(0, 4).map((item, index) => (
-          <div key={item.label} className="relative rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.06] font-body text-xs font-black text-foreground">
-              {index + 1}
-            </span>
-            <p className="mt-4 font-heading text-[1.75rem] uppercase leading-none text-foreground">{item.label}</p>
-            <p className="mt-1 font-body text-sm font-bold text-foreground/62">{item.value}</p>
-          </div>
-        ))}
-      </div>
-    </GlassPanel>
+    <div className="grid gap-2 md:grid-cols-4">
+      {items.slice(0, 4).map((item, index) => (
+        <div key={item.label} className="relative rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.06] font-body text-xs font-black text-foreground">
+            {index + 1}
+          </span>
+          <p className="mt-4 font-heading text-[1.75rem] uppercase leading-none text-foreground">{item.label}</p>
+          <p className="mt-1 font-body text-sm font-bold text-foreground/62">{item.value}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
 function FaqList({ items = [] }) {
   return (
-    <GlassPanel className="px-4 md:px-5">
+    <div>
       {items.slice(0, 5).map((item, index) => (
         <FaqRow key={item.q} item={item} defaultOpen={index === 0} />
       ))}
-    </GlassPanel>
+    </div>
   );
 }
 
@@ -380,19 +401,16 @@ export default function ProductDetail() {
           <IdealForGrid items={treatment.idealFor || []} />
         </section>
 
-        <section className="mt-6 grid gap-6 md:mt-10 md:grid-cols-[0.94fr_1.06fr]">
-          <div>
-            <SectionTitle label="Included" title="Inside" />
+        <section className="mt-6 grid gap-3 md:mt-10 md:grid-cols-2">
+          <CollapsibleSection label="Included" title="Inside">
             <IncludedGrid items={treatment.included || []} />
-          </div>
-          <div>
-            <SectionTitle label="Experience" title="Timeline" />
+          </CollapsibleSection>
+          <CollapsibleSection label="Experience" title="Timeline">
             <Timeline items={treatment.timeline || []} />
-          </div>
+          </CollapsibleSection>
         </section>
 
-        <section className="mt-6 md:mt-10">
-          <SectionTitle label="Related" title="Therapies" />
+        <CollapsibleSection label="Related" title="Therapies">
           <div className="grid gap-2 md:grid-cols-3 md:gap-3">
             {related.map((item) => (
               <Link key={item.path} to={item.path} className="group block">
@@ -403,12 +421,11 @@ export default function ProductDetail() {
               </Link>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="mt-6 md:mt-10">
-          <SectionTitle label="FAQ" title="Need To Know" />
+        <CollapsibleSection label="FAQ" title="Need To Know">
           <FaqList items={treatment.faq || []} />
-        </section>
+        </CollapsibleSection>
 
         <p className="mx-auto mt-8 max-w-3xl text-center font-body text-[10px] leading-relaxed text-foreground/34">
           Educational content only. Avalon Vitality provides wellness and recovery support and does not diagnose,

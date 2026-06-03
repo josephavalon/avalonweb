@@ -66,6 +66,13 @@ function productPathForSession(session) {
   return PRODUCT_ROUTE_BY_SESSION[session.key] || '/protocols';
 }
 
+function bookingPathForSession(session) {
+  const params = new URLSearchParams();
+  if (session.key) params.set('protocol', session.key);
+  params.set('time', 'asap');
+  return `/book?${params.toString()}`;
+}
+
 function sortSessions(sessions) {
   return [...sessions].sort((a, b) => {
     const aFeatured = FEATURED_ORDER.has(a.key) ? FEATURED_ORDER.get(a.key) : 100 + (DEFAULT_ORDER.get(a.key) || 0);
@@ -150,12 +157,20 @@ function ProtocolCard({ session, index = 0 }) {
               </span>
             ))}
           </div>
-          <Link
-            to={productPathForSession(session)}
-            className="mt-4 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
-          >
-            View Therapy <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-          </Link>
+          <div className="mt-4 grid grid-cols-[1fr_0.72fr] gap-2">
+            <Link
+              to={bookingPathForSession(session)}
+              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
+            >
+              Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
+            </Link>
+            <Link
+              to={productPathForSession(session)}
+              className="flex min-h-[52px] items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.08] px-4 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-foreground/[0.13]"
+            >
+              Details
+            </Link>
+          </div>
         </div>
       </div>
     </motion.article>
