@@ -11,7 +11,7 @@ export const MEDICAL_REVIEW = {
 
 export const LOCAL_BUSINESS_PROFILE = {
   '@context': 'https://schema.org',
-  '@type': 'MedicalBusiness',
+  '@type': ['MedicalBusiness', 'LocalBusiness'],
   '@id': `${SEO_BASE_URL}/#localbusiness`,
   name: 'Avalon Vitality',
   url: SEO_BASE_URL,

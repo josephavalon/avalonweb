@@ -338,7 +338,7 @@ function realValue(value) {
 
 function realAddress(value) {
   const text = realValue(value);
-  if (!text || /address pending|client address/i.test(text)) return '';
+  if (!text || /address pending|client address|2100\s+webster/i.test(text)) return '';
   return text;
 }
 
@@ -2409,12 +2409,12 @@ const defaultState = {
   customPlanSessions: 2,
 };
 
-const DEMO_CLIENT_PROFILE = {
-  name: 'Sarah Morgan',
-  email: 'client.preview@avalon.local',
-  phone: '(415) 980-7708',
-  address: '2100 Webster St, San Francisco, CA',
-  zip: '94115',
+const EMPTY_CLIENT_PROFILE = {
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
+  zip: '',
   locationType: 'home',
 };
 
@@ -2435,7 +2435,7 @@ export default function BookNow() {
   const lastBooking = useMemo(() => readLastBooking(), []);
   const savedContactProfile = useMemo(() => {
     const savedContact = lastBooking?.contact || {};
-    const fallback = signedInClient ? DEMO_CLIENT_PROFILE : {};
+    const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
     return {
       name: realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || fallback.name || '',
       email: realValue(savedContact.email) || realValue(clientProfile.email) || fallback.email || '',
@@ -2445,7 +2445,7 @@ export default function BookNow() {
     };
   }, [clientProfile, lastBooking, signedInClient]);
   const savedVisitAddress = useMemo(() => {
-    const fallback = signedInClient ? DEMO_CLIENT_PROFILE : {};
+    const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
     const address = realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress) || realAddress(fallback.address);
     if (!address) return null;
     return {
@@ -2476,13 +2476,19 @@ export default function BookNow() {
   const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
     const draft = shouldResetDraft || !shouldResumeDraft ? {} : readBookingDraft()?.webstore || {};
-    const savedWebstore = draft.draftVersion === BOOKING_DRAFT_VERSION ? draft : {};
+    const savedWebstoreRaw = draft.draftVersion === BOOKING_DRAFT_VERSION ? draft : {};
+    const savedWebstoreAddress = realAddress(savedWebstoreRaw.address);
+    const savedWebstore = {
+      ...savedWebstoreRaw,
+      address: savedWebstoreAddress,
+      zip: savedWebstoreAddress ? realValue(savedWebstoreRaw.zip) : '',
+    };
     const savedProductKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(savedWebstore.productKey) ? savedWebstore.productKey : '';
     const savedContact = shouldResetDraft ? {} : lastBooking?.contact || {};
-    const fallback = signedInClient ? DEMO_CLIENT_PROFILE : {};
+    const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
     const savedAddress = shouldResetDraft
       ? realAddress(fallback.address)
-      : realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress) || realAddress(fallback.address);
+      : savedWebstoreAddress || realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress) || realAddress(fallback.address);
     const returningClient = signedInClient;
     return {
       ...defaultState,
@@ -2827,16 +2833,16 @@ export default function BookNow() {
     setState((current) => {
       if (key !== 'returning') return { ...current, clientType: 'new' };
       const savedContact = lastBooking?.contact || {};
-      const savedAddress = realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress) || realAddress(DEMO_CLIENT_PROFILE.address);
+      const savedAddress = realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress);
       return {
         ...current,
         clientType: 'returning',
         address: current.address || savedAddress || '',
-        zip: current.zip || (savedAddress ? realValue(lastBooking?.zip) || realValue(clientProfile.zip) || DEMO_CLIENT_PROFILE.zip : '') || '',
-        locationType: lastBooking?.locationType || DEMO_CLIENT_PROFILE.locationType || current.locationType,
-        name: current.name || realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || DEMO_CLIENT_PROFILE.name || '',
-        email: current.email || realValue(savedContact.email) || realValue(clientProfile.email) || DEMO_CLIENT_PROFILE.email || '',
-        phone: current.phone || realValue(savedContact.phone) || realValue(clientProfile.phone) || DEMO_CLIENT_PROFILE.phone || '',
+        zip: current.zip || (savedAddress ? realValue(lastBooking?.zip) || realValue(clientProfile.zip) : '') || '',
+        locationType: lastBooking?.locationType || clientProfile.locationType || current.locationType,
+        name: current.name || realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || '',
+        email: current.email || realValue(savedContact.email) || realValue(clientProfile.email) || '',
+        phone: current.phone || realValue(savedContact.phone) || realValue(clientProfile.phone) || '',
       };
     });
   };

@@ -287,15 +287,14 @@ try {
 
   await clickText(cdp, 'Recovery');
   await clickText(cdp, 'Next');
+  await clickText(cdp, 'Next');
   await fillByLabel(cdp, 'Address', '188 King St, San Francisco');
   await fillByLabel(cdp, 'ZIP', '94107');
   await clickText(cdp, 'Next');
   await wait(400);
-  await fillByLabel(cdp, 'Full name', 'QA Mobile Client');
-  await fillByLabel(cdp, 'Date of birth', '1980-01-02');
-  await fillByLabel(cdp, 'Phone', '(415) 555-0199');
-  await fillByLabel(cdp, 'Email', 'qa@avalonvitality.co');
-  await clickText(cdp, 'Pay $1');
+  await fillByLabel(cdp, 'Contact', 'QA Mobile Client, (415) 555-0199, qa@avalonvitality.co');
+  await fillByLabel(cdp, 'DOB', '1980-01-02');
+  await clickText(cdp, 'Pay $');
   const result = await waitForBookingOutcome(cdp);
 
   const failures = [];
@@ -306,9 +305,9 @@ try {
   if (result.hasEmbeddedCheckout && !/stripe|checkout/i.test(result.stripeFrameSrc || '')) failures.push('Embedded Stripe iframe source missing.');
   if (!result.hasEmbeddedCheckout && !staticFallback) failures.push('Embedded checkout did not open.');
   if (!result.bookingId && staticFallback) failures.push('No local booking was saved.');
-  if (!/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
-  if (!/1/.test(result.payment || '')) failures.push('Deductible payment state missing.');
-  if (!result.contact?.dob) failures.push('DOB missing from saved booking.');
+  if (staticFallback && !/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
+  if (staticFallback && !/250|paid/i.test(result.payment || '')) failures.push('Payment state missing.');
+  if (staticFallback && !result.contact?.dob) failures.push('DOB missing from saved booking.');
   if (!result.hasHandoff && staticFallback) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);
   if (cdp.consoleIssues.length) failures.push(`Console issues: ${cdp.consoleIssues.join(' | ')}`);

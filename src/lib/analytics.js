@@ -245,7 +245,46 @@ function localAnalyticsProvider(event) {
   saved.push(event);
   const bounded = saved.slice(-QUEUE_CAP);
   window.localStorage.setItem(LOCAL_EVENT_KEY, JSON.stringify(bounded));
+  pushBrowserDestinations(event);
+  sendFirstPartyEvent(event);
   window.dispatchEvent(new CustomEvent('avalon:analytics', { detail: event }));
+}
+
+function pushBrowserDestinations(event) {
+  try {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: event.name,
+      avalon_event: event,
+    });
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', event.name, event.props || {});
+    }
+    if (typeof window.fbq === 'function') {
+      window.fbq('trackCustom', event.name, event.props || {});
+    }
+  } catch {
+    // Browser destination failures must never affect booking.
+  }
+}
+
+function sendFirstPartyEvent(event) {
+  try {
+    const payload = JSON.stringify({ event });
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics', blob);
+      return;
+    }
+    fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics collection is best-effort only.
+  }
 }
 
 function readLocalJson(key, fallback) {

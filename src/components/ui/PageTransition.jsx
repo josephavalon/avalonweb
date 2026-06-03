@@ -11,23 +11,23 @@ function transitionKind(from, to) {
 const stageMotion = {
   initial: (kind) => {
     if (kind === 'booking-entry') {
-      return { opacity: 0, y: 18, scale: 0.996, filter: 'blur(6px)' };
+      return { opacity: 1, y: 6, scale: 1, filter: 'blur(0px)' };
     }
-    return { opacity: 0, y: 8, filter: 'blur(3px)' };
+    return { opacity: 1, y: 0, filter: 'blur(0px)' };
   },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
     filter: 'blur(0px)',
-    transition: { duration: 0.72, ease: EASE },
+    transition: { duration: 0.32, ease: EASE },
   },
   exit: (kind) => ({
-    opacity: 0,
+    opacity: 1,
     y: kind === 'booking-entry' ? -6 : -8,
     scale: 1,
-    filter: 'blur(3px)',
-    transition: { duration: 0.28, ease: EASE },
+    filter: 'blur(0px)',
+    transition: { duration: 0.16, ease: EASE },
   }),
 };
 
