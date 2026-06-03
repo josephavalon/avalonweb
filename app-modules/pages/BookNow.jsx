@@ -821,6 +821,207 @@ function UniversalBookingFrame({
   );
 }
 
+function DesktopStepRail({ displayStepIndex = 0 }) {
+  return (
+    <div className="mt-4 flex max-w-xl items-center">
+      {STEPS.map((item, index) => {
+        const active = index === displayStepIndex;
+        const complete = index < displayStepIndex;
+        const reachable = index <= displayStepIndex + 1;
+        return (
+          <React.Fragment key={item}>
+            <span
+              aria-label={`Go to ${item}`}
+              aria-current={active ? 'step' : undefined}
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-body text-xs font-black transition-colors ${
+                active
+                  ? 'border-foreground bg-foreground text-background shadow-[0_0_26px_hsl(var(--foreground)/0.24)]'
+                  : complete
+                    ? 'border-foreground/34 bg-foreground/12 text-foreground'
+                    : reachable
+                      ? 'border-foreground/24 bg-background/34 text-foreground/66'
+                      : 'border-foreground/14 bg-background/24 text-foreground/36'
+              }`}
+            >
+              {index + 1}
+            </span>
+            {index < STEPS.length - 1 && (
+              <span className="mx-0 h-px flex-1 bg-foreground/16">
+                <span className={`block h-full bg-foreground/70 ${index < displayStepIndex ? 'w-full' : 'w-0'}`} />
+              </span>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+function DesktopOrderRail({
+  state,
+  product,
+  selectedAddons,
+  subtotal,
+  dueNow,
+  balanceDue,
+  totalLabel,
+  displayStepIndex,
+  actionLabel,
+  canGoNext,
+  checkoutLoading,
+  onNext,
+}) {
+  const hasTherapySelection = displayStepIndex > 0 && Boolean(product);
+  const displaySubtotal = hasTherapySelection ? subtotal : 0;
+  const displayDueNow = hasTherapySelection ? dueNow : 0;
+  const displayBalanceDue = hasTherapySelection ? balanceDue : 0;
+  const selectedIvAddons = selectedAddons.filter((item) => item.type !== 'im');
+  const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
+  const dateLabel = displayStepIndex >= 3 && state.timeIntent === 'choose' && state.customDate ? formatDateShort(state.customDate) : 'Not selected';
+  const timeLabel = displayStepIndex >= 3 && state.timeIntent === 'choose' && state.customTime ? formatTimeLabel(state.customTime) : 'Not selected';
+
+  const rows = [
+    ['Therapy', hasTherapySelection ? product.label : 'Not selected'],
+    ['IV Add-ons', hasTherapySelection && selectedIvAddons.length ? selectedIvAddons.map((item) => item.label).join(', ') : 'None'],
+    ['IM Add-ons', hasTherapySelection && selectedImAddons.length ? selectedImAddons.map((item) => item.label).join(', ') : 'None'],
+    ['Date', dateLabel],
+    ['Time', timeLabel],
+  ];
+
+  return (
+    <aside className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.105),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_62%)]" />
+      <div className="relative">
+        <p className="font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/72">Your Order</p>
+        <div className="mt-4 divide-y divide-foreground/10 border-t border-foreground/10">
+          {rows.map(([label, value]) => (
+            <div key={label} className="grid grid-cols-[96px_1fr] gap-3 py-3">
+              <p className="font-body text-xs font-black text-foreground/58">{label}</p>
+              <p className="text-right font-body text-xs font-bold leading-snug text-foreground/82">{value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 border-t border-foreground/10 pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Subtotal</p>
+            <p className="font-body text-sm font-black text-foreground">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
+          </div>
+          <div className="mt-4">
+            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Due Now</p>
+            <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground">{currency(displayDueNow)}</p>
+            <p className="mt-1 font-body text-xs font-semibold text-foreground/56">Secure your booking</p>
+            {displayBalanceDue > 0 && <p className="mt-2 font-body text-[11px] font-bold text-foreground/46">{currency(displayBalanceDue)} due upon completion</p>}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!canGoNext || checkoutLoading}
+          className={`relative mt-5 flex min-h-[58px] w-full items-center justify-center gap-4 overflow-hidden rounded-xl border px-5 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
+            canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
+          }`}
+        >
+          {checkoutLoading && (
+            <motion.span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-background/35 to-transparent"
+              animate={{ x: ['0%', '420%'] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
+            />
+          )}
+          <span>{actionLabel}</span>
+          <ArrowRight className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+        <div className="mt-4 flex items-center justify-center gap-1.5 font-body text-[11px] font-semibold text-foreground/52">
+          <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
+          Secure booking
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function DesktopBookingFrame({
+  step,
+  displayStepIndex,
+  displayTitle,
+  canGoNext,
+  actionLabel,
+  checkoutLoading,
+  error,
+  state,
+  product,
+  selectedAddons,
+  subtotal,
+  dueNow,
+  balanceDue,
+  totalLabel,
+  onNext,
+  onStepSelect,
+  children,
+}) {
+  return (
+    <section className="mx-auto hidden w-full max-w-[1180px] overflow-hidden rounded-[1.15rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl md:block">
+      <div className="flex h-[4.65rem] items-center justify-between border-b border-foreground/10 px-6">
+        <Link to="/" className="block" aria-label="Avalon home">
+          <span className="block font-heading text-[1.15rem] uppercase leading-none tracking-[0.34em] text-foreground">Avalon</span>
+          <span className="mt-1 block font-body text-[0.6rem] font-black uppercase tracking-[0.32em] text-foreground/72">Vitality</span>
+        </Link>
+        <div className="flex items-center gap-8 font-body text-xs font-bold text-foreground/78">
+          <a href="tel:+14159807708" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" strokeWidth={2.1} />
+            (424) 555-0123
+          </a>
+          <a href="sms:+14159807708" className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" strokeWidth={2.1} />
+            Live Chat
+          </a>
+        </div>
+      </div>
+      <div className="grid min-h-[610px] grid-cols-[minmax(0,1fr)_300px] gap-8 p-6">
+        <div className="min-w-0">
+          <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
+            {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+          </h1>
+          <DesktopStepRail displayStepIndex={displayStepIndex} />
+          <div className="my-5 h-px bg-foreground/10" />
+          {error && (
+            <div role="alert" className="mb-4 flex min-h-[42px] items-center justify-between gap-3 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
+              <p className="font-body text-sm font-black">{error}</p>
+              <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em]">
+                Text
+              </a>
+            </div>
+          )}
+          <motion.div
+            key={step}
+            className="relative h-[500px] min-h-0 overflow-hidden"
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16, ease: EASE }}
+          >
+            {children}
+          </motion.div>
+        </div>
+        <DesktopOrderRail
+          state={state}
+          product={product}
+          selectedAddons={selectedAddons}
+          subtotal={subtotal}
+          dueNow={dueNow}
+          balanceDue={balanceDue}
+          totalLabel={totalLabel}
+          displayStepIndex={displayStepIndex}
+          actionLabel={actionLabel}
+          canGoNext={canGoNext}
+          checkoutLoading={checkoutLoading}
+          onNext={onNext}
+        />
+      </div>
+    </section>
+  );
+}
+
 function StepControls({ step, canGoNext, nextLabel, total, onBack, onNext }) {
   const compactNextLabel = nextLabel;
   return (
@@ -4041,9 +4242,10 @@ export default function BookNow() {
 
       if (!selectedAddonGroup) {
         return (
-          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
-            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-on category</p>
-            <div className="grid min-h-0 content-start gap-3">
+          <div className="h-full min-h-0">
+            <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:hidden">
+              <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-on category</p>
+              <div className="grid min-h-0 content-start gap-3">
               {addonCatalog.groups.map((group) => {
                 const GroupIcon = group.key === 'iv' ? Plus : group.icon;
                 const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
@@ -4070,6 +4272,45 @@ export default function BookNow() {
                   </button>
                 );
               })}
+              </div>
+            </div>
+            <div className="hidden h-full min-h-0 content-start gap-4 md:grid">
+              <p className={`${microLabelClass} pt-1 tracking-[0.22em]`}>Choose your add-ons</p>
+              <div className="grid min-h-0 gap-4">
+                {addonCatalog.groups.map((group) => (
+                  <section key={group.key} className="min-h-0">
+                    <p className="mb-2 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/72">{group.label}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {group.items.map((item) => {
+                        const Icon = item.icon || Plus;
+                        const active = state.addOns.includes(item.label);
+                        return (
+                          <button
+                            key={`${group.key}-${item.label}`}
+                            type="button"
+                            onClick={() => toggleAddon(item.label)}
+                            aria-pressed={active}
+                            className={`${panelCardClass} flex min-h-[82px] flex-col justify-between p-3 text-left transition-colors ${
+                              active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/32' : 'hover:border-foreground/24'
+                            }`}
+                          >
+                            <span className="flex items-center justify-between">
+                              <span className="flex h-5 w-5 items-center justify-center rounded border border-foreground/20 bg-background/32 text-foreground/82">
+                                {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.6} /> : <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />}
+                              </span>
+                              <span className="h-4 w-4 rounded border border-foreground/20 bg-background/32" />
+                            </span>
+                            <span>
+                              <span className="block font-body text-sm font-black leading-tight text-foreground">{item.label}</span>
+                              <span className="mt-1 block font-body text-xs font-bold text-foreground/64">+ {currency(item.price)}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
             </div>
           </div>
         );
@@ -4253,10 +4494,10 @@ export default function BookNow() {
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <BookingMobileHeader />
-      <div className="hidden md:block">
+      <div className="hidden">
         <Navbar />
       </div>
-      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[4.65rem] md:max-h-none md:min-h-screen md:max-w-6xl md:px-8 md:pb-6 md:pt-20">
+      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[4.65rem] md:flex md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:py-4">
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
@@ -4307,24 +4548,48 @@ export default function BookNow() {
           </motion.section>
         )}
         {!embeddedCheckoutSession && (
-          <UniversalBookingFrame
-            step={step}
-            total={totalLabel}
-            dueNow={dueNowLabel}
-            dueAfter={dueAfterLabel}
-            displayStepIndex={progressDisplay.index}
-            displayTitle={progressDisplay.title}
-            progressIndex={progressDisplay.index}
-            canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
-            actionLabel={primaryActionLabel()}
-            checkoutLoading={checkoutLoading}
-            error={error}
-            onBack={back}
-            onNext={step < LAST_STEP ? next : submit}
-            onStepSelect={goToStep}
-          >
-            {renderUniversalStep()}
-          </UniversalBookingFrame>
+          <>
+            <div className="md:hidden">
+              <UniversalBookingFrame
+                step={step}
+                total={totalLabel}
+                dueNow={dueNowLabel}
+                dueAfter={dueAfterLabel}
+                displayStepIndex={progressDisplay.index}
+                displayTitle={progressDisplay.title}
+                progressIndex={progressDisplay.index}
+                canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
+                actionLabel={primaryActionLabel()}
+                checkoutLoading={checkoutLoading}
+                error={error}
+                onBack={back}
+                onNext={step < LAST_STEP ? next : submit}
+                onStepSelect={goToStep}
+              >
+                {renderUniversalStep()}
+              </UniversalBookingFrame>
+            </div>
+            <DesktopBookingFrame
+              step={step}
+              displayStepIndex={progressDisplay.index}
+              displayTitle={progressDisplay.title}
+              canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
+              actionLabel={step === LAST_STEP ? `CONFIRM & PAY ${currency(dueNowAmount)}` : primaryActionLabel()}
+              checkoutLoading={checkoutLoading}
+              error={error}
+              state={state}
+              product={product}
+              selectedAddons={selectedAddons}
+              subtotal={subtotal}
+              dueNow={dueNowAmount}
+              balanceDue={balanceDue}
+              totalLabel={totalLabel}
+              onNext={step < LAST_STEP ? next : submit}
+              onStepSelect={goToStep}
+            >
+              {renderUniversalStep()}
+            </DesktopBookingFrame>
+          </>
         )}
         {false && !embeddedCheckoutSession && fastMode ? (
           <FastReviewSurface
@@ -4353,7 +4618,7 @@ export default function BookNow() {
             onSubmit={submit}
           />
         ) : (
-        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8`}>
+        <div className="hidden">
           <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
             {fastMode ? (
               <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
