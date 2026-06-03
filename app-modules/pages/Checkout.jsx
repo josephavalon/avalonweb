@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Droplets, Syringe, ArrowRight, ArrowLeft,
@@ -1118,7 +1118,49 @@ export default function Checkout() {
   }, [step, appointmentReady, contactReady]);
 
   if (!hasCheckoutSelection) {
-    return <Navigate to="/book" replace />;
+    return (
+      <div className="relative isolate min-h-screen overflow-hidden bg-background text-foreground">
+        <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-foreground/[0.08] via-transparent to-transparent" />
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-80 bg-gradient-to-t from-foreground/[0.04] via-transparent to-transparent" />
+        <Navbar />
+        <main className="mx-auto flex min-h-screen w-full max-w-2xl items-center px-4 pb-20 pt-24">
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: EASE }}
+            className="relative w-full overflow-hidden rounded-[2rem] border border-foreground/[0.13] bg-background/58 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_32px_120px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl sm:p-6"
+          >
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+            <div className="relative">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.08] text-foreground">
+                <Droplets className="h-7 w-7" strokeWidth={2.45} />
+              </div>
+              <p className="font-body text-[11px] font-black uppercase tracking-[0.22em] text-foreground/54">Checkout</p>
+              <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-none tracking-normal text-foreground sm:text-[4rem]">Choose IV</h1>
+              <p className="mt-3 max-w-md font-body text-sm font-semibold leading-relaxed text-foreground/62">
+                Select a therapy first. Then confirm address, patient details, and secure payment.
+              </p>
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                <Link
+                  to="/protocols"
+                  className="flex min-h-[54px] items-center justify-between rounded-full border border-foreground/20 bg-foreground text-background px-4 font-body text-xs font-black uppercase tracking-[0.12em] transition-colors hover:bg-foreground/90"
+                >
+                  Browse protocols
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
+                </Link>
+                <Link
+                  to="/book?protocol=hydration&time=asap"
+                  className="flex min-h-[54px] items-center justify-between rounded-full border border-foreground/14 bg-background/42 px-4 font-body text-xs font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:border-foreground/28"
+                >
+                  Book Hydration
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
+                </Link>
+              </div>
+            </div>
+          </motion.section>
+        </main>
+      </div>
+    );
   }
 
   return (

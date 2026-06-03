@@ -1708,7 +1708,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
         </div>
         <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/34 p-3 font-body text-sm font-bold text-foreground/68">
           <div className="flex items-center justify-between gap-3">
-            <span>Paid online</span>
+            <span>Secure checkout</span>
             <span>{currency(subtotal)}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
@@ -2669,6 +2669,31 @@ export default function BookNow() {
   }, [state, step, subtotal, customPlanEstimate]);
 
   useEffect(() => {
+    if (
+      !compressedFlow ||
+      step !== 3 ||
+      groupContactRequired ||
+      !state.address.trim() ||
+      resolvedZip.length !== 5 ||
+      (state.timeIntent === 'choose' && (!state.customDate || !state.customTime))
+    ) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => setStep(LAST_STEP), 420);
+    return () => window.clearTimeout(timer);
+  }, [
+    compressedFlow,
+    step,
+    groupContactRequired,
+    state.address,
+    resolvedZip,
+    state.timeIntent,
+    state.customDate,
+    state.customTime,
+  ]);
+
+  useEffect(() => {
     track(ANALYTICS_EVENTS.STEP_VIEWED, {
       funnel: 'webstore',
       step_index: step,
@@ -3171,7 +3196,7 @@ export default function BookNow() {
       ],
       subtotal,
       depositAmount: subtotal,
-      payment: `${currency(subtotal)} paid online`,
+      payment: `${currency(subtotal)} due today`,
       status: 'Payment received',
       holdType: 'paid',
       nextStep: 'Clinical review and scheduling handoff',
@@ -3682,8 +3707,8 @@ export default function BookNow() {
 
                 {step === 3 && (
                   <>
-                    <SectionTitle icon={Home} title={fastMode ? 'Address' : 'Visit'} sub={fastMode ? 'Street address with ZIP.' : ''} />
-                    {!fastMode && <VisitForSelector value={state.who} onChoose={chooseWho} />}
+                    <SectionTitle icon={Home} title={fastMode ? 'Address' : 'Visit'} sub={fastMode ? 'Street address with ZIP.' : compressedFlow ? 'Address only. ASAP is selected.' : ''} />
+                    {!fastMode && !compressedFlow && <VisitForSelector value={state.who} onChoose={chooseWho} />}
                     {!fastMode && (state.who === 'group' || state.visitType === 'event') && (
                       <GroupPricingPanel
                         baseTotal={baseSubtotal}
@@ -3694,7 +3719,7 @@ export default function BookNow() {
                         onEventType={(value) => setValue('eventType', value)}
                       />
                     )}
-                    {!fastMode && <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />}
+                    {!fastMode && !compressedFlow && <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />}
                     <div className="mt-3 md:mt-2">
                       <SavedAddressShortcut
                         signedIn={signedInClient}
@@ -3770,9 +3795,76 @@ export default function BookNow() {
                       ))}
                     </div>
                     <div className="mt-2">
-                      {!fastMode && <OptionalNotes value={state.notes} onChange={(value) => setValue('notes', value)} />}
+                      {!fastMode && !compressedFlow && <OptionalNotes value={state.notes} onChange={(value) => setValue('notes', value)} />}
                     </div>
-		                    {!fastMode && <div className="relative mt-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-2 md:rounded-[1.15rem] md:p-2.5">
+                    {compressedFlow && !fastMode && (
+                      <div className="relative mt-3 flex min-h-[56px] items-center justify-between gap-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-2">
+                        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.025))]" />
+                        <span className="relative flex min-w-0 items-center gap-2 font-body text-sm font-black text-foreground">
+                          <Calendar className="h-4 w-4" strokeWidth={2.35} />
+                          {state.timeIntent === 'choose' ? 'Scheduled' : 'ASAP selected'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => chooseTimeIntent(state.timeIntent === 'choose' ? 'asap' : 'choose')}
+                          className="relative min-h-[40px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/72"
+                        >
+                          {state.timeIntent === 'choose' ? 'ASAP' : 'Pick time'}
+                        </button>
+                      </div>
+                    )}
+                    {compressedFlow && state.timeIntent === 'choose' && (
+                      <motion.div
+                        initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+                        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                        transition={{ duration: reduceMotion ? 0 : 0.22, ease: EASE }}
+                        className="mt-3 grid gap-2 sm:grid-cols-2"
+                      >
+                        <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
+                          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
+                          <span className="relative block font-body text-sm font-black text-foreground/68">Date</span>
+                          <select
+                            aria-label="Choose date"
+                            value={state.customDate}
+                            onChange={(event) => {
+                              const nextDate = event.target.value;
+                              const nextTime = state.customTime || DEFAULT_EXACT_TIME;
+                              setState((current) => ({
+                                ...current,
+                                customDate: nextDate,
+                                customTime: nextTime,
+                                availabilityWindow: `${nextDate}-${nextTime}`,
+                                timeIntent: 'choose',
+                              }));
+                            }}
+                            className="relative mt-1 min-h-[34px] w-full bg-transparent font-body text-xl font-black leading-none text-foreground outline-none [color-scheme:dark] light:[color-scheme:light]"
+                          >
+                            {dateOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label} · {option.day}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
+                          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
+                          <span className="relative block font-body text-sm font-black text-foreground/68">Time</span>
+                          <select
+                            aria-label="Choose time"
+                            value={state.customTime || DEFAULT_EXACT_TIME}
+                            onChange={(event) => chooseAvailabilityWindow({ key: event.target.value, time: event.target.value, display: formatTimeLabel(event.target.value) })}
+                            className="relative mt-1 min-h-[34px] w-full bg-transparent font-body text-xl font-black leading-none text-foreground outline-none [color-scheme:dark] light:[color-scheme:light]"
+                          >
+                            {timeSlots.map((slot) => (
+                              <option key={slot.key} value={slot.time}>
+                                {slot.display}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </motion.div>
+                    )}
+		                    {!fastMode && !compressedFlow && <div className="relative mt-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-2 md:rounded-[1.15rem] md:p-2.5">
 	                      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),radial-gradient(circle_at_92%_95%,hsl(var(--foreground)/0.055),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.025))]" />
 		                      <div className="mb-2 flex items-center justify-between gap-3 md:mb-2">
 		                        <span className="relative flex items-center gap-2 font-body text-base font-black text-foreground md:text-base">
@@ -3945,9 +4037,7 @@ export default function BookNow() {
               />
             )}
             <span>{primaryActionLabel()}</span>
-            {step === LAST_STEP && !groupContactRequired && state.visitType !== 'subscription'
-              ? <span>Paid online</span>
-              : <span>{totalLabel}</span>}
+            <span>{totalLabel}</span>
 	          </button>
         </div>
       </div>}

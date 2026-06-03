@@ -61,10 +61,7 @@ export default function Hero() {
         </motion.p>
         </div>
 
-        <motion.div
-          {...premiumFadeUp(0.98)}
-          initial={{ opacity: 0, y: 22 }}
-          transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
+        <div
           className="relative mt-5 flex w-[19rem] max-w-full flex-col gap-2.5 md:mt-0 md:w-full md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
         >
           <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.17),transparent_38%),radial-gradient(circle_at_88%_88%,hsl(var(--foreground)/0.08),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_50%,hsl(var(--foreground)/0.034))] md:block" />
@@ -74,9 +71,6 @@ export default function Hero() {
             to={BOOK_URL}
             onPointerEnter={() => import('@/pages/BookNow')}
             onFocus={() => import('@/pages/BookNow')}
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.72, delay: 1.08, ease: EASE }}
             whileHover={premiumHover}
             whileTap={premiumTap}
             className="group relative flex min-h-[54px] w-full items-center justify-between gap-4 overflow-hidden rounded-xl border border-foreground bg-foreground px-5 text-background shadow-[0_18px_60px_hsl(var(--foreground)/0.14)] transition-all duration-base ease-editorial hover:bg-foreground/90 md:min-h-[118px] md:rounded-[1.55rem] md:border-foreground/38 md:bg-foreground/[0.13] md:p-5 md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.16),0_28px_105px_hsl(var(--foreground)/0.17)] md:backdrop-blur-2xl md:backdrop-saturate-150 md:hover:border-foreground/48 md:hover:bg-foreground/[0.16]"
@@ -100,7 +94,7 @@ export default function Hero() {
               <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
             </span>
           </MotionLink>
-        </motion.div>
+        </div>
 
         <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
           Licensed RN. Clinical review.

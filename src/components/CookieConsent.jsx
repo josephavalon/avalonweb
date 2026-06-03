@@ -2,14 +2,21 @@ import React, { useState, useEffect } from 'react';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
-  const bookingPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/book');
-  const suppressed = typeof window !== 'undefined' && (window.location.pathname.startsWith('/b2b') || bookingPath);
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const revenuePath = path === '/' ||
+    path.startsWith('/book') ||
+    path.startsWith('/booking') ||
+    path.startsWith('/checkout') ||
+    path.startsWith('/products') ||
+    path.startsWith('/protocols') ||
+    path.startsWith('/subscription');
+  const suppressed = typeof window !== 'undefined' && (path.startsWith('/b2b') || revenuePath);
 
   useEffect(() => {
     if (suppressed) return;
     const consentGiven = localStorage.getItem('cookieConsent');
     if (!consentGiven) {
-      const delay = window.location.pathname.startsWith('/book') ? 14000 : 8000;
+      const delay = 8000;
       const timer = window.setTimeout(() => setShowConsent(true), delay);
       return () => window.clearTimeout(timer);
     }
@@ -32,7 +39,7 @@ export default function CookieConsent() {
       {showConsent ? (
         <div
           className={`fixed left-2 right-2 z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-reveal sm:left-auto sm:right-3 sm:w-[360px] ${
-            bookingPath
+            path.startsWith('/book')
               ? 'bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]'
               : 'bottom-16 sm:bottom-3'
           }`}
