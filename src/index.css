@@ -853,7 +853,7 @@ body,
 /* hover:none targets true touch devices (phones, tablets). */
 @media (hover: none) {
   button, a, [role="button"] {
-    min-height: 44px;
+    min-height: 44px !important;
   }
 }
 
