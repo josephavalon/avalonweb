@@ -21,10 +21,10 @@ import { Reveal } from '@/components/ui/Reveal';
 // Editorial easing per non-negotiable #5.
 const EASE = [0.16, 1, 0.3, 1];
 const REVEAL = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 1, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-80px' },
-  transition: { duration: 0.8, ease: EASE },
+  transition: { duration: 0.42, ease: EASE },
 };
 
 const MEET_YOU = [
@@ -82,10 +82,10 @@ export default function OurStory() {
       <section className="px-6 md:px-16 py-section-sm md:py-section">
         <div className="max-w-content mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 1, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
             className="text-left mb-6 md:mb-10"
           >
             <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
@@ -118,10 +118,10 @@ export default function OurStory() {
             ].map(({ Icon, title, desc }, i) => (
               <motion.div
                 key={title}
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 1, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-10%' }}
-                transition={{ duration: 0.6, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.3, delay: i * 0.025, ease: [0.16, 1, 0.3, 1] }}
                 className="border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-7 flex flex-col items-start gap-4"
               >
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-accent/55 flex items-center justify-center text-accent shrink-0">
@@ -249,10 +249,10 @@ export default function OurStory() {
             {MEET_YOU.map(({ icon: Icon, label }, i) => (
               <motion.div
                 key={label}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 1, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ delay: i * 0.08, duration: 0.6, ease: EASE }}
+                transition={{ delay: i * 0.025, duration: 0.3, ease: EASE }}
                 className="flex flex-col items-center justify-center gap-3 border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-2xl p-5 md:p-6 min-h-[120px]"
               >
                 <Icon className="w-5 h-5 text-accent" strokeWidth={1.5} />

@@ -60,14 +60,14 @@ const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 const CARD_REVEAL = {
-  hidden: { opacity: 0, y: 12, scale: 0.992 },
+  hidden: { opacity: 1, y: 6, scale: 1 },
   show: (index = 0) => ({
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
-      duration: 0.42,
-      delay: Math.min(index, 8) * 0.035,
+      duration: 0.22,
+      delay: Math.min(index, 4) * 0.015,
       ease: EASE,
     },
   }),
@@ -3625,10 +3625,10 @@ export default function BookNow() {
             <motion.div
               key={step}
               className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-4"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.995 }}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 4, scale: 1 }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 1 }}
-              transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
+              transition={{ duration: reduceMotion ? 0 : 0.16, ease: EASE }}
             >
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
