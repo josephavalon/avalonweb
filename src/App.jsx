@@ -213,7 +213,9 @@ function AppRoutes() {
             <Route path="/events" element={<EventsPage />} />
             <Route path="/hotel" element={<Hotel />} />
             <Route path="/service-area" element={<ServiceArea />} />
+            <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Navigate to="/terms-of-service" replace />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/terms-of-service" element={<TermsAndConditions />} />
             <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />

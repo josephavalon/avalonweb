@@ -3634,7 +3634,7 @@ export default function BookNow() {
               <div className="relative">
                 {step === 0 && (
                   <>
-                    <SectionTitle icon={Sparkles} title="GOAL" />
+                    <SectionTitle icon={Sparkles} title="CHOOSE YOUR GOAL" />
                     <LayoutGroup id="outcomes">
                       <div className="grid grid-cols-2 gap-2 md:gap-3">
                         {OUTCOMES.filter((item) => PRIMARY_OUTCOME_KEYS.includes(item.key)).map((item, index) => (
