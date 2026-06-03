@@ -173,7 +173,7 @@ export default function MembershipSection() {
         </div>
 
         <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">
-          3-month minimum · clinical approval
+          3-month minimum
         </p>
 
       </div>

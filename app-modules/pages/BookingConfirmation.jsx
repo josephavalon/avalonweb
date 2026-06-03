@@ -308,7 +308,7 @@ export default function BookingConfirmation() {
         items: localBooking?.items || [],
         subtotal: appt.price ?? localBooking?.subtotal,
         status: localBooking?.status || 'Scheduling received',
-        nextStep: localBooking?.manualReview ? 'Nurse review before RN assignment' : 'RN assignment and arrival text',
+        nextStep: localBooking?.manualReview ? 'Clinical review before RN assignment' : 'RN assignment and arrival text',
         gfe: localBooking?.gfe || 'Pending',
         nurse: localBooking?.nurse || 'Unassigned',
         payment: paymentSuccess ? 'Payment received' : localBooking?.payment || 'Pending',

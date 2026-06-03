@@ -65,18 +65,39 @@ function FooterContactLink({ href, icon: Icon, children }) {
   );
 }
 
-function FooterDesktopGroup({ title, children }) {
+function FooterDesktopGroup({ title, icon: Icon, open, onToggle, children }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-32px' }}
       transition={{ duration: 0.55, ease: EASE }}
-      className="relative overflow-hidden rounded-[1.35rem] border border-foreground/[0.09] bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_72px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl"
+      className={`relative overflow-hidden rounded-[1.35rem] border border-foreground/[0.09] bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_72px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl transition-colors ${open ? 'bg-background/46' : ''}`}
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.075),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.045),transparent_56%,hsl(var(--foreground)/0.022))]" />
-      <p className="relative mb-2 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/48">{title}</p>
-      <div className="relative grid gap-1.5">{children}</div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="relative flex min-h-[68px] w-full items-center justify-between gap-3 px-4 text-left transition-colors hover:bg-foreground/[0.035]"
+        aria-expanded={open}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          {Icon && (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/[0.08] bg-background/30 text-foreground/58">
+              <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
+            </span>
+          )}
+          <span className="font-body text-[11px] uppercase tracking-[0.28em] text-foreground/62">{title}</span>
+        </span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.32, ease: EASE }} className="text-foreground/42">
+          <ChevronDown className="h-4 w-4" strokeWidth={2} />
+        </motion.span>
+      </button>
+      {open && (
+        <SmoothDisclosure open>
+          <div className="relative grid gap-1.5 border-t border-foreground/[0.07] p-3">{children}</div>
+        </SmoothDisclosure>
+      )}
     </motion.div>
   );
 }
@@ -155,6 +176,7 @@ function FooterGroup({ group, open, onToggle }) {
 
 export default function Footer() {
   const [openGroup, setOpenGroup] = useState(null);
+  const [openDesktopGroup, setOpenDesktopGroup] = useState(null);
 
   return (
     <footer className="px-4 pb-4 pt-6 md:pb-5 md:pt-10">
@@ -192,11 +214,16 @@ export default function Footer() {
 
         </div>
 
-        {/* Mobile: single column stacked. Desktop: 4-col grid */}
+        {/* Desktop: hidden accordions */}
         <div className="mb-4 hidden gap-3 md:grid md:grid-cols-4">
 
           {/* Services */}
-          <FooterDesktopGroup title="Services">
+          <FooterDesktopGroup
+            title="Services"
+            icon={Layers}
+            open={openDesktopGroup === 'Services'}
+            onToggle={() => setOpenDesktopGroup(current => current === 'Services' ? null : 'Services')}
+          >
             <div className="grid grid-cols-2 gap-1.5">
               {SERVICES.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
@@ -205,14 +232,24 @@ export default function Footer() {
           </FooterDesktopGroup>
 
           {/* Company */}
-          <FooterDesktopGroup title="Company">
+          <FooterDesktopGroup
+            title="Company"
+            icon={Building2}
+            open={openDesktopGroup === 'Company'}
+            onToggle={() => setOpenDesktopGroup(current => current === 'Company' ? null : 'Company')}
+          >
               {COMPANY.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}
           </FooterDesktopGroup>
 
           {/* Contact */}
-          <FooterDesktopGroup title="Contact">
+          <FooterDesktopGroup
+            title="Contact"
+            icon={Mail}
+            open={openDesktopGroup === 'Contact'}
+            onToggle={() => setOpenDesktopGroup(current => current === 'Contact' ? null : 'Contact')}
+          >
               <FooterContactLink href="mailto:support@avalonvitality.co" icon={Mail}>
                 support@avalonvitality.co
               </FooterContactLink>
@@ -230,7 +267,12 @@ export default function Footer() {
           </FooterDesktopGroup>
 
           {/* Legal */}
-          <FooterDesktopGroup title="Legal">
+          <FooterDesktopGroup
+            title="Legal"
+            icon={Scale}
+            open={openDesktopGroup === 'Legal'}
+            onToggle={() => setOpenDesktopGroup(current => current === 'Legal' ? null : 'Legal')}
+          >
               {LEGAL.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}

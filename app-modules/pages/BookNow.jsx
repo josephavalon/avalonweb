@@ -1668,7 +1668,7 @@ function ClinicalReviewCard({ bookingGfeRequirement }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-heading text-3xl uppercase leading-none text-foreground">Nurse Review</p>
+            <p className="font-heading text-3xl uppercase leading-none text-foreground">Clinical Review</p>
             <span className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-xs font-bold uppercase tracking-[0.08em] ${valid ? 'border-emerald-300/20 text-emerald-100' : 'border-amber-300/24 text-amber-200'}`}>
               {valid ? 'Valid' : 'Needed'}
             </span>
@@ -1719,7 +1719,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
           </div>
         </div>
         <p className="relative mt-3 font-body text-xs font-semibold leading-snug text-foreground/56">
-          Nurse review required.
+          Clinical review required.
         </p>
       </button>
       <button
@@ -2125,7 +2125,7 @@ function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
-        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Nurse review</p>
+        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Clinical review</p>
       </div>
       <div className="relative mt-3 grid grid-cols-2 gap-2">
         {options.map((item) => {
@@ -2188,7 +2188,7 @@ function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0 })
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
   const items = [
     { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
-    { label: 'Nurse review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
+    { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
     { label: 'Today', value: currency(subtotal), icon: Check },
   ];
 
@@ -3152,7 +3152,7 @@ export default function BookNow() {
       payment: `${currency(subtotal)} paid online`,
       status: 'Payment received',
       holdType: 'paid',
-      nextStep: 'Nurse review and scheduling handoff',
+      nextStep: 'Clinical review and scheduling handoff',
       intake: 'Needed',
       consent: 'Needed',
       gfe: clinicalReviewClaimedOnFile ? 'On file' : gfeRequirement.required ? 'Pending' : 'Cleared',
@@ -3177,10 +3177,10 @@ export default function BookNow() {
       event: isGroupVisit ? { type: state.eventType, guestCount: guests, gfeTiming: 'Before launch' } : null,
       lifecycleWarnings: [
         clinicalReviewClaimedOnFile
-          ? 'Nurse review on file selected. Avalon verifies before dispatch.'
+          ? 'Clinical review on file selected. Avalon verifies before dispatch.'
           : gfeRequirement.required
-          ? 'Nurse review required before dispatch.'
-          : `Nurse review ready${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
+          ? 'Clinical review required before dispatch.'
+          : `Clinical review ready${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
         'Final eligibility verified before RN dispatch.',
         'Scheduling handoff is represented locally until connected.',
         !COVERED_ZIPS.has(resolvedZip) && 'Service-area review required.',
@@ -3208,7 +3208,7 @@ export default function BookNow() {
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
-      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Nurse review', 'RN dispatch', 'Inventory deduction'],
+      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Clinical review', 'RN dispatch', 'Inventory deduction'],
       noThirdPartyCalls: false,
       updatedAt: new Date().toISOString(),
     });
@@ -3597,7 +3597,7 @@ export default function BookNow() {
 	                  <>
                     {fastMode ? (
                       <>
-                        <SectionTitle icon={Droplets} title="Checkout" sub="Nurse review before treatment." />
+                        <SectionTitle icon={Droplets} title="Checkout" sub="Clinical review before treatment." />
                         <FastHoldPanel
                           product={product}
                           serviceLabel={serviceLabel}
