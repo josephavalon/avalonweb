@@ -286,11 +286,6 @@ body {
   }
 }
 
-.av-red-carpet {
-  transform: translateZ(0);
-  contain: paint style;
-}
-
 /* Accessibility: respect user's motion preference globally */
 @media (prefers-reduced-motion: reduce) {
   .av-page-stage {
