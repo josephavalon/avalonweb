@@ -79,6 +79,8 @@ export default async function handler(req, res) {
       off_session: true,
       confirm: true,
       metadata,
+    }, {
+      idempotencyKey: `balance:${appt.id}:${amount}`,
     });
 
     const now = new Date().toISOString();

@@ -77,6 +77,7 @@ export function buildReconciliationCase({
   payload = {},
   severity,
   ownerRole,
+  tenantId,
 } = {}) {
   if (!RECONCILIATION_CASE_TYPES.includes(caseType)) {
     throw new Error(`Unknown reconciliation case: ${caseType || 'missing'}`);
@@ -84,6 +85,7 @@ export function buildReconciliationCase({
 
   const defaults = RECONCILIATION_CASE_DEFAULTS[caseType];
   return {
+    tenant_id: tenantId || undefined,
     case_type: caseType,
     severity: severity || defaults.severity,
     provider,

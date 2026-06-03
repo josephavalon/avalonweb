@@ -254,12 +254,15 @@ export default function BookingConfirmation() {
   }, [sessionId, initialAppointmentId]);
 
   useEffect(() => {
-    if (!appointmentId) return;
+    if (!appointmentId && !sessionId) return;
     let cancelled = false;
     (async () => {
       setAppointmentLoading(true);
       try {
-        const res = await fetch(`/api/scheduling-appointment?id=${encodeURIComponent(appointmentId)}`);
+        const query = sessionId
+          ? `session_id=${encodeURIComponent(sessionId)}`
+          : `appointment=${encodeURIComponent(appointmentId)}`;
+        const res = await fetch(`/api/appointment-summary?${query}`);
         const data = await res.json();
         if (!cancelled) {
           if (res.ok) setAppt(data);
@@ -272,7 +275,7 @@ export default function BookingConfirmation() {
       }
     })();
     return () => { cancelled = true; };
-  }, [appointmentId]);
+  }, [appointmentId, sessionId]);
 
   useEffect(() => {
     const coords = currentLocationCoordinates(localBooking?.address);

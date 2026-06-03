@@ -15,7 +15,7 @@ const DEMO_SHORTCUTS = [
   { username: 'PHYSICIAN0001', label: 'MD', detail: 'standing orders', icon: ShieldCheck },
   { username: 'ADMIN001', label: 'Admin', detail: 'handoff, dispatch, ops', icon: ShieldCheck },
 ];
-const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
 const PASSKEY_ENABLED = false;
 
 // ── Reusable field ────────────────────────────────────────────────────────────

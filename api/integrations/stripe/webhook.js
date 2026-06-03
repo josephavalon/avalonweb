@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { reconciliationTypeForStripeEvent } from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
-import { getSupabaseServiceClient } from '../../_supabase-server.js';
+import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
 import { sendPaymentReceivedEmail } from '../../_booking-email.js';
 import {
   checkoutPayloadFromRecord,
@@ -115,6 +115,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   const now = new Date().toISOString();
+  const tenantId = db ? await getDefaultTenantId(db) : null;
   let acuityAppointment = (record?.acuity_appointment_id || md.acuityAppointmentId)
     ? { id: record?.acuity_appointment_id || md.acuityAppointmentId, alreadyCreated: true }
     : null;
@@ -199,6 +200,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   const patch = {
+    tenant_id:                    tenantId,
     stripe_checkout_session_id:   session.id,
     stripe_customer_id:           session.customer || null,
     stripe_deposit_payment_intent: paymentIntentId,
@@ -232,6 +234,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
     await db.from('appointments').update(patch).eq('id', record.id);
     if (fulfillmentError) {
       await insertReconciliationCase(db, {
+        tenant_id: tenantId,
         case_type: 'stripe_succeeded_acuity_failed',
         provider: 'stripe',
         external_reference: session.id,
@@ -265,6 +268,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
   // Legacy fallback for older sessions created before the paid-first flow.
   const { error } = await db.from('appointments').insert({
+    tenant_id: tenantId,
     acuity_appointment_id: md.acuityAppointmentId || null,
     ...patch,
     created_at: now,

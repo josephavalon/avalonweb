@@ -200,8 +200,7 @@ export default async function handler(req, res) {
       html: internalHtml,
     });
     if (applyResult?.error) {
-      console.error('Apply internal email failed:', applyResult.error);
-      return res.status(502).json({ error: 'Email service rejected the send.', detail: applyResult.error.message || JSON.stringify(applyResult.error) });
+      console.warn('Apply internal email failed:', applyResult.error.message || applyResult.error);
     }
 
     // 2. Applicant confirmation — fire-and-forget. Failure shouldn't block.
@@ -214,7 +213,7 @@ export default async function handler(req, res) {
         html: applicantHtml,
       });
     } catch (err) {
-      console.error('Applicant confirmation email failed:', err);
+      console.warn('Applicant confirmation email failed:', err.message || err);
     }
 
     return res.status(200).json({ success: true });

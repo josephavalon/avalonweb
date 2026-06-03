@@ -9,3 +9,9 @@ export async function getSupabaseServiceClient() {
   supabaseClient = createClient(url, key, { auth: { persistSession: false } });
   return supabaseClient;
 }
+
+export async function getDefaultTenantId(db) {
+  if (!db) return null;
+  const { data } = await db.from('tenants').select('id').eq('slug', 'avalon-vitality').maybeSingle();
+  return data?.id || null;
+}

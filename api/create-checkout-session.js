@@ -1,7 +1,8 @@
 import Stripe from 'stripe';
+import crypto from 'crypto';
 import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
 import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
-import { getSupabaseServiceClient } from './_supabase-server.js';
+import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
 import {
   buildCheckoutPayload,
   buildPendingAppointmentRecord,
@@ -80,6 +81,42 @@ function checkoutExpiresAt() {
     ? Math.min(24 * 60, Math.max(30, rawMinutes))
     : 30;
   return Math.floor(Date.now() / 1000) + minutes * 60;
+}
+
+function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = [], membership = null } = {}) {
+  const fingerprint = {
+    mode,
+    email: String(contact.email || '').trim().toLowerCase(),
+    phone: String(contact.phone || '').replace(/\D/g, ''),
+    appointment: {
+      localBookingId: appointment.localBookingId || '',
+      reference: appointment.reference || '',
+      acuityDatetime: appointment.acuityDatetime || '',
+      address: appointment.address || '',
+    },
+    items: items.map((item) => ({
+      key: item.cartKey || item.key || '',
+      label: item.label || '',
+      type: item.type || '',
+      price: Number(item.price || 0),
+    })),
+    membership: membership ? {
+      name: membership.name || '',
+      billing: membership.billing || 'monthly',
+      price: Number(membership.price || 0),
+    } : null,
+  };
+  const hash = crypto.createHash('sha256').update(JSON.stringify(fingerprint)).digest('hex').slice(0, 32);
+  return `checkout:${hash}`;
+}
+
+function publicCheckoutError(err = {}) {
+  if (err.status && err.status < 500) return err.message || 'Checkout could not be started.';
+  if (err.code === 'payment_provider_missing') return 'Secure checkout is not configured.';
+  if (err.code === 'public_site_url_missing' || err.code === 'public_site_url_invalid' || err.code === 'public_site_url_unsafe') {
+    return 'Checkout is not configured for this domain.';
+  }
+  return 'Checkout could not be started. Please try again or contact Avalon.';
 }
 
 export default async function handler(req, res) {
@@ -173,8 +210,12 @@ export default async function handler(req, res) {
 
     const db = await getSupabaseServiceClient();
     if (db) {
+      const tenantId = await getDefaultTenantId(db);
       const { data: pendingRecord, error: pendingError } = await db.from('appointments')
-        .insert(buildPendingAppointmentRecord(checkoutPayload))
+        .insert({
+          ...buildPendingAppointmentRecord(checkoutPayload),
+          tenant_id: tenantId,
+        })
         .select('id')
         .single();
 
@@ -230,7 +271,15 @@ export default async function handler(req, res) {
       };
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const session = await stripe.checkout.sessions.create(sessionParams, {
+      idempotencyKey: checkoutIdempotencyKey({
+        mode: sessionMode,
+        contact,
+        appointment,
+        items,
+        membership,
+      }),
+    });
 
     if (db && pendingRecordId) {
       const { error: sessionLinkError } = await db.from('appointments')
@@ -269,9 +318,9 @@ export default async function handler(req, res) {
         console.error('[create-checkout-session:rollback]', rollbackErr.message || rollbackErr);
       }
     }
-    console.error('[create-checkout-session]', err.message, err.body || '');
+    console.error('[create-checkout-session]', err.message || 'Checkout failed');
     return res.status(err.status || 500).json({
-      error: err.message || 'Checkout failed',
+      error: publicCheckoutError(err),
     });
   }
 }

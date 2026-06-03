@@ -19,6 +19,16 @@ const ITEM_PRICE_BY_KEY = new Map(Object.entries({
   cbd_66: 450,
   cbd_99: 550,
   cbd_132: 650,
+  custom_hydration: 150,
+  custom_recovery: 250,
+  custom_energy: 250,
+  custom_myers: 250,
+  custom_immunity: 250,
+  custom_beauty: 250,
+  custom_postnight: 250,
+  custom_travel: 250,
+  custom_advanced: 350,
+  custom_cbd: 350,
   exosomes_30: 700,
   exosomes_50: 1200,
   exosomes_90: 1800,
@@ -78,11 +88,6 @@ function normalizeKey(value = '') {
 function priceForItem(item = {}) {
   const key = normalizeKey(item.key || item.cartKey || '');
   if (ITEM_PRICE_BY_KEY.has(key)) return ITEM_PRICE_BY_KEY.get(key);
-
-  if (item.type === 'custom-treatment') {
-    const proposed = Number(item.price);
-    if (Number.isFinite(proposed) && proposed >= 150 && proposed <= 5000) return proposed;
-  }
 
   const label = normalize(item.label || item.name || '');
   if (ADDON_PRICE_BY_LABEL.has(label)) return ADDON_PRICE_BY_LABEL.get(label);

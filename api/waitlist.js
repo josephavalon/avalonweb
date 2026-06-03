@@ -134,8 +134,7 @@ export default async function handler(req, res) {
       html: internalHtml,
     });
     if (internalResult?.error) {
-      console.error('Waitlist internal email failed:', internalResult.error);
-      return res.status(502).json({ error: 'Email service rejected the send.', detail: internalResult.error.message || JSON.stringify(internalResult.error) });
+      console.warn('Waitlist internal email failed:', internalResult.error.message || internalResult.error);
     }
 
     // 2. Subscriber confirmation — fire-and-forget.
@@ -148,7 +147,7 @@ export default async function handler(req, res) {
         html: subscriberHtml,
       });
     } catch (err) {
-      console.error('Waitlist confirmation email failed:', err);
+      console.warn('Waitlist confirmation email failed:', err.message || err);
     }
 
     return res.status(200).json({ success: true });
