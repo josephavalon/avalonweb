@@ -103,7 +103,7 @@ export default function Hero() {
         </motion.div>
 
         <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
-          Clinical review required.
+          Licensed RN. Clinical review.
         </p>
 
         {/* Proof rail */}

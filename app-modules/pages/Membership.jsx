@@ -38,7 +38,7 @@ function PlanBuilder({ tier }) {
   ];
 
   return (
-    <motion.div className="mt-5 grid gap-2 sm:grid-cols-3" {...fadeUp}>
+    <motion.div className="mt-3 grid gap-2 sm:grid-cols-3 md:mt-5" {...fadeUp}>
       {builder.map((item) => (
         <div key={item.label} className="rounded-[1rem] border border-foreground/10 bg-foreground/[0.025] p-3">
           <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{item.label}</p>
@@ -90,6 +90,34 @@ function FeaturedTier({ tier, onSelect }) {
         type="button"
         onClick={() => onSelect(tier)}
         className="mt-6 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-xs font-semibold uppercase tracking-[0.2em] text-background transition-opacity hover:opacity-85"
+      >
+        {actionLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+      </button>
+    </motion.div>
+  );
+}
+
+function MobilePlanSummary({ tier, onSelect }) {
+  const actionLabel = tier.custom ? 'Design Custom' : `Start ${tier.name}`;
+  return (
+    <motion.div
+      className="mt-4 rounded-[1.25rem] border border-accent/28 bg-card/64 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-xl md:hidden"
+      {...fadeUp}
+    >
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="font-body text-[10px] font-black uppercase tracking-[0.18em] text-accent">{tier.badge || tier.tagline}</p>
+          <p className="mt-1 font-heading text-4xl uppercase leading-none text-foreground">{tier.name}</p>
+        </div>
+        <div className="text-right">
+          <p className="font-heading text-4xl leading-none text-foreground">{tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}</p>
+          <p className="font-body text-[11px] font-semibold text-foreground/48">{tier.unit}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => onSelect(tier)}
+        className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-[11px] font-black uppercase tracking-[0.16em] text-background"
       >
         {actionLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
       </button>
@@ -162,7 +190,7 @@ export default function Subscription() {
                 <motion.h1 className="font-heading text-5xl uppercase leading-[0.9] text-foreground md:text-7xl" {...fadeUp}>
                   Build your plan
                 </motion.h1>
-                <motion.p className="mt-4 max-w-md font-body text-sm leading-relaxed text-foreground/58" {...fadeUp}>
+                <motion.p className="mt-3 max-w-md font-body text-sm leading-relaxed text-foreground/58 md:mt-4" {...fadeUp}>
                   Monthly visits. Add-ons. Pause anytime.
                 </motion.p>
               </div>
@@ -173,8 +201,11 @@ export default function Subscription() {
                     <TierSwitch key={tier.key} tier={tier} active={activeTier.key === tier.key} onSelect={switchTier} />
                   ))}
                 </motion.div>
+                <MobilePlanSummary tier={activeTier} onSelect={selectTier} />
                 <PlanBuilder tier={activeTier} />
-                <FeaturedTier tier={activeTier} onSelect={selectTier} />
+                <div className="hidden md:block">
+                  <FeaturedTier tier={activeTier} onSelect={selectTier} />
+                </div>
               </div>
             </div>
           </div>

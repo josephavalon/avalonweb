@@ -805,28 +805,26 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
 
 function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) {
   const [openOther, setOpenOther] = useState(false);
-  const featuredOptions = productOptions.slice(0, 3);
-  const otherOptions = productOptions.slice(3);
+  const activeOption = productOptions.find((item) => item.key === activeKey) || productOptions[0];
+  const otherOptions = productOptions.filter((item) => item.key !== activeOption?.key);
 
   useEffect(() => {
-    if (otherOptions.some((item) => item.key === activeKey)) setOpenOther(true);
-  }, [activeKey, otherOptions]);
+    setOpenOther(false);
+  }, [activeKey]);
 
-  if (!featuredOptions.length) return null;
+  if (!activeOption) return null;
 
   return (
     <div className="grid gap-2 md:gap-2">
-      {featuredOptions.map((item, index) => (
-        <ProductCard
-          key={item.key}
-          product={item}
-          index={index}
-          active={activeKey === item.key}
-          onSelect={() => onSelect(item.key)}
-          onPrimary={() => onPrimary(item.key)}
-          recommendation={index === 0 ? 'Recommended' : index === 1 ? 'Option 2' : 'Option 3'}
-        />
-      ))}
+      <ProductCard
+        key={activeOption.key}
+        product={activeOption}
+        index={0}
+        active
+        onSelect={() => onSelect(activeOption.key)}
+        onPrimary={() => onPrimary(activeOption.key)}
+        recommendation="Selected"
+      />
       {otherOptions.length > 0 && (
         <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:rounded-[1.1rem]">
           <button
@@ -840,8 +838,8 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
                 <Plus className="h-4 w-4 md:h-4 md:w-4" strokeWidth={2.45} />
               </span>
               <span className="min-w-0">
-                <span className="block truncate font-heading text-[1.55rem] uppercase leading-none tracking-normal md:text-[1.55rem]">Other options</span>
-                <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62 md:mt-1 md:text-xs">{otherOptions.length} more</span>
+                <span className="block truncate font-heading text-[1.55rem] uppercase leading-none tracking-normal md:text-[1.55rem]">Change therapy</span>
+                <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62 md:mt-1 md:text-xs">{otherOptions.length} alternatives</span>
               </span>
             </span>
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/38 text-foreground/58 md:h-8 md:w-8">
@@ -858,7 +856,7 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
                   active={activeKey === item.key}
                   onSelect={() => onSelect(item.key)}
                   onPrimary={() => onPrimary(item.key)}
-                  recommendation="Alternate"
+                  recommendation="Alternative"
                 />
               ))}
             </div>

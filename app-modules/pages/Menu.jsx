@@ -73,17 +73,17 @@ function GoalTile({ item, index }) {
       initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.7, delay: 0.16 + index * 0.08, ease: EASE }}
-      className="av-glass-card group relative flex min-h-[88px] items-center gap-4 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/42 px-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/54 md:min-h-[116px] md:rounded-[1.6rem] md:px-5"
+      className="av-glass-card group relative flex min-h-[54px] items-center gap-2 overflow-hidden rounded-full border border-foreground/12 bg-background/42 px-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/54 md:min-h-[116px] md:gap-3 md:rounded-[1.6rem] md:px-4 lg:gap-4 lg:px-5"
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
-      <span className="relative flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16">
-        <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.4} />
+      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-12 md:w-12 md:rounded-2xl">
+        <Icon className="h-4.5 w-4.5 md:h-5 md:w-5" strokeWidth={2.4} />
       </span>
-      <span className="relative min-w-0 flex-1 font-heading text-[2.15rem] uppercase leading-none tracking-normal text-foreground md:text-[2.75rem]">
+      <span className="relative min-w-0 flex-1 truncate font-body text-[10px] font-black uppercase leading-none tracking-[0.14em] text-foreground md:whitespace-normal md:text-clip md:font-heading md:text-[1.55rem] md:leading-[0.9] md:tracking-normal lg:text-[1.8rem]">
         {item.label}
       </span>
-      <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/36 text-foreground transition-transform group-hover:translate-x-1">
-        <ArrowRight className="h-5 w-5" strokeWidth={2.35} />
+      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/36 text-foreground transition-transform group-hover:translate-x-1 md:h-9 md:w-9">
+        <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
       </span>
     </motion.span>
   );
@@ -251,7 +251,7 @@ export default function Menu() {
             </h1>
           </motion.div>
 
-          <div className="mt-7 grid gap-2 md:mt-10 md:grid-cols-4 md:gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-2 md:mt-10 md:grid-cols-4 md:gap-3">
             {HERO_GOALS.map((item, index) => (
               <GoalTile key={item.key} item={item} index={index} />
             ))}

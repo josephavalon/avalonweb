@@ -56,7 +56,7 @@ function ProductMedia({ product, compact = false }) {
   const reduceMotion = useReducedMotion();
   const { image, motionVideo, name } = product;
   const transparentMedia = product.transparentMedia || image?.includes('-cutout.');
-  const mediaPadding = compact ? (transparentMedia ? 'p-0' : 'p-2') : (transparentMedia ? 'p-2' : 'p-5');
+  const mediaPadding = compact ? 'p-0' : (transparentMedia ? 'p-2' : 'p-4');
 
   if (motionVideo) {
     return (
@@ -77,7 +77,7 @@ function ProductMedia({ product, compact = false }) {
     <motion.img
       src={image}
       alt={name}
-      className={`h-full w-full object-contain drop-shadow-[0_22px_42px_rgba(0,0,0,0.24)] ${mediaPadding}`}
+      className={`h-full w-full object-contain drop-shadow-[0_22px_42px_rgba(0,0,0,0.24)] ${mediaPadding} ${compact && !transparentMedia ? 'scale-[1.22]' : ''}`}
       initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8, scale: 0.992 }}
       animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.72, ease: EASE }}
@@ -348,7 +348,7 @@ export default function ProductDetail() {
                   <p className="mt-3 font-body text-sm font-semibold leading-snug text-foreground/64">{treatment.benefitStatement || treatment.desc}</p>
                   <p className="mt-4 font-heading text-3xl text-foreground">{price}</p>
                 </div>
-                <div className="min-h-[13rem] overflow-hidden rounded-[1.1rem] border border-foreground/10 bg-foreground/90">
+                <div className="min-h-[13rem] overflow-hidden rounded-[1.1rem] border border-foreground/12 bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-xl">
                   <ProductMedia product={treatment} compact />
                 </div>
               </div>
