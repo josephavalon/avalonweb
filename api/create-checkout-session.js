@@ -13,6 +13,8 @@ function dollarsToCents(value) {
   return Math.max(0, Math.round(Number(value || 0) * 100));
 }
 
+const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || 50);
+
 function httpError(message, status = 500, code = 'server_error') {
   return Object.assign(new Error(message), { status, code });
 }
@@ -44,8 +46,9 @@ function publicBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
-function stripeLineItems(items = [], membership = null) {
-  const lineItems = items.map((item) => ({
+function stripeLineItems(items = [], membership = null, checkoutChargeItems = null) {
+  const sourceItems = Array.isArray(checkoutChargeItems) ? checkoutChargeItems : items;
+  const lineItems = membership ? [] : sourceItems.map((item) => ({
     quantity: 1,
     price_data: {
       currency: 'usd',
@@ -58,12 +61,17 @@ function stripeLineItems(items = [], membership = null) {
   }));
 
   if (membership) {
+    const recurring = membership.billing === 'annual'
+      ? { interval: 'year' }
+      : membership.billing === 'six-month'
+        ? { interval: 'month', interval_count: 6 }
+        : { interval: 'month' };
     lineItems.push({
       quantity: 1,
       price_data: {
         currency: 'usd',
         unit_amount: dollarsToCents(membership.price),
-        recurring: { interval: membership.billing === 'annual' ? 'year' : 'month' },
+        recurring,
         product_data: {
           name: `${membership.name} Subscription`,
           metadata: { type: 'subscription' },
@@ -185,17 +193,29 @@ export default async function handler(req, res) {
       });
     }
 
-    const line_items = stripeLineItems(items, membership);
+    const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';
+    const visitSubtotalCents = dollarsToCents(visitSubtotal);
+    const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
+    const requestedDepositCents = dollarsToCents(appointment.depositAmount || 0);
+    const depositCents = membership
+      ? dollarsToCents(membership.price)
+      : hasVisitItems
+        ? Math.min(requestedDepositCents || BOOKING_DEPOSIT_CENTS, visitSubtotalCents)
+        : 0;
+    const balanceDueCents = membership ? 0 : Math.max(0, visitSubtotalCents - depositCents);
+    const checkoutChargeItems = membership ? [] : [{
+      key: 'booking-deposit',
+      cartKey: 'booking-deposit',
+      label: `${primaryService} booking deposit`,
+      price: depositCents / 100,
+      type: 'deposit',
+    }];
+    const line_items = stripeLineItems(items, membership, checkoutChargeItems);
 
     if (!line_items.length) {
       return res.status(400).json({ error: 'No items to checkout' });
     }
 
-    const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';
-    const visitSubtotalCents = dollarsToCents(visitSubtotal);
-    const depositCents = hasVisitItems ? visitSubtotalCents : 0;
-    const balanceDueCents = 0;
-    const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
     const checkoutPayload = buildCheckoutPayload({
       contact,
       appointment,

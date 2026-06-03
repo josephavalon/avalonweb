@@ -4,21 +4,33 @@ const ITEM_PRICE_BY_KEY = new Map(Object.entries({
   immunity: 250,
   beauty: 250,
   recovery: 250,
+  performance: 250,
+  food_poisoning: 250,
   jetlag: 250,
   myers: 250,
   postnight: 250,
   nad: 350,
   nad_250: 350,
+  nad_250mg: 350,
   nad_500: 500,
+  nad_500mg: 500,
   nad_750: 600,
+  nad_750mg: 600,
   nad_1000: 750,
+  nad_1000mg: 750,
   nad_1250: 950,
+  nad_1250mg: 950,
   nad_1500: 1100,
+  nad_1500mg: 1100,
   cbd: 350,
   cbd_33: 350,
+  cbd_33mg: 350,
   cbd_66: 450,
+  cbd_66mg: 450,
   cbd_99: 550,
+  cbd_99mg: 550,
   cbd_132: 650,
+  cbd_132mg: 650,
   custom_hydration: 150,
   custom_recovery: 250,
   custom_energy: 250,
@@ -66,6 +78,15 @@ const MEMBERSHIP_PRICE_BY_NAME = new Map(Object.entries({
   concierge: 899,
 }));
 
+const MEMBERSHIP_TERMS = {
+  monthly: { key: 'monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
+  'six month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
+  'six-month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
+  annual: { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
+  '12 month': { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
+  '12-month': { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
+};
+
 function normalize(value = '') {
   return String(value)
     .toLowerCase()
@@ -93,9 +114,16 @@ function priceForItem(item = {}) {
   if (ADDON_PRICE_BY_LABEL.has(label)) return ADDON_PRICE_BY_LABEL.get(label);
 
   if (label.includes('nad') && label.includes('1000')) return 750;
+  if (label.includes('nad') && label.includes('1500')) return 1100;
+  if (label.includes('nad') && label.includes('1250')) return 950;
+  if (label.includes('nad') && label.includes('750')) return 600;
   if (label.includes('nad') && label.includes('500')) return 500;
   if (label.includes('nad') && label.includes('250')) return 350;
   if (label.includes('cbd') && label.includes('review plus')) return 450;
+  if (label.includes('cbd') && label.includes('132')) return 650;
+  if (label.includes('cbd') && label.includes('99')) return 550;
+  if (label.includes('cbd') && label.includes('66')) return 450;
+  if (label.includes('cbd') && label.includes('33')) return 350;
   if (label.includes('cbd')) return 350;
 
   return null;
@@ -120,14 +148,19 @@ export function sanitizeCheckoutItems(items = []) {
 export function sanitizeCheckoutMembership(membership = null) {
   if (!membership) return null;
   const key = normalize(membership.name || '');
-  const price = MEMBERSHIP_PRICE_BY_NAME.get(key);
+  const termKey = normalize(membership.term || membership.billing || 'monthly');
+  const term = MEMBERSHIP_TERMS[termKey] || MEMBERSHIP_TERMS.monthly;
+  const monthlyPrice = MEMBERSHIP_PRICE_BY_NAME.get(key);
+  const price = monthlyPrice == null ? null : Math.max(0, Math.round(monthlyPrice * term.months * (1 - term.discount)));
   if (price == null && key === 'custom') {
     const proposed = Number(membership.price);
     if (Number.isFinite(proposed) && proposed >= 150 && proposed <= 10000) {
       return {
         ...membership,
         price: proposed,
-        billing: membership.billing === 'annual' ? 'annual' : 'monthly',
+        billing: term.billing,
+        term: term.key,
+        commitmentMonths: term.commitmentMonths,
       };
     }
   }
@@ -137,6 +170,9 @@ export function sanitizeCheckoutMembership(membership = null) {
   return {
     ...membership,
     price,
-    billing: membership.billing === 'annual' ? 'annual' : 'monthly',
+    monthlyPrice,
+    billing: term.billing,
+    term: term.key,
+    commitmentMonths: term.commitmentMonths,
   };
 }

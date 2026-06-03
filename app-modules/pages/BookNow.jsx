@@ -11,6 +11,7 @@ import {
   Calendar,
   Check,
   ChevronDown,
+  CreditCard,
   Droplets,
   Flame,
   Home,
@@ -182,6 +183,39 @@ const BOOKING_THERAPY_KEYS = [
   'nad-1250mg',
   'nad-1500mg',
 ];
+const THERAPY_GROUPS = [
+  {
+    key: 'vitamin',
+    label: 'Vitamin IVs',
+    sub: '9 therapies',
+    icon: Droplets,
+    keys: ['hydration', 'myers', 'postnight', 'immunity', 'energy', 'recovery', 'performance', 'jetlag', 'food-poisoning'],
+  },
+  {
+    key: 'cbd',
+    label: 'CBD',
+    sub: '4 doses',
+    icon: Leaf,
+    keys: ['cbd-33mg', 'cbd-66mg', 'cbd-99mg', 'cbd-132mg'],
+  },
+  {
+    key: 'nad',
+    label: 'NAD+',
+    sub: '6 doses',
+    icon: BatteryCharging,
+    keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
+  },
+];
+const STACK_LAYERS = [
+  { key: 'iv', label: 'IVs', status: 'Base', icon: Droplets, active: true },
+  { key: 'addons', label: 'Add-ons', status: 'Step 2', icon: Plus, active: true },
+  { key: 'shots', label: 'Shots', status: 'Step 2', icon: Syringe, active: true },
+  { key: 'peptides', label: 'Peptides', status: 'Soon', icon: Sparkles },
+  { key: 'hrt', label: 'HRT', status: 'Soon', icon: ShieldCheck },
+  { key: 'aesthetics', label: 'Aesthetics', status: 'Soon', icon: Sparkles },
+  { key: 'supplements', label: 'Supplements', status: 'Soon', icon: Leaf },
+  { key: 'diet', label: 'Diet', status: 'Soon', icon: Zap },
+];
 
 const CUSTOM_BASE_OPTIONS = [
   { key: 'hydration', label: 'Hydration IV', productKey: 'hydration', icon: Droplets },
@@ -256,6 +290,13 @@ const EVENT_TYPES = ['Private', 'Hotel', 'Office', 'Festival', 'Venue'];
 const CLIENT_TYPES = [
   { key: 'new', label: 'New', sub: 'First visit.', icon: Sparkles },
   { key: 'returning', label: 'Return', sub: 'Use saved info.', icon: Check },
+];
+
+const BOOKING_DEPOSIT_AMOUNT = 50;
+const SUBSCRIPTION_TERMS = [
+  { key: 'monthly', label: 'Monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
+  { key: 'six-month', label: '6 months', months: 6, discount: 0.08, billing: 'six-month' },
+  { key: 'annual', label: '12 months', months: 12, discount: 0.15, billing: 'annual' },
 ];
 
 const PUBLIC_BOOKING_PROTOCOL_KEYS = new Set([...OUTCOMES.flatMap((item) => item.productKeys), ...BOOKING_THERAPY_KEYS]);
@@ -368,6 +409,16 @@ function currency(value) {
   return `$${Number(value || 0).toLocaleString()}`;
 }
 
+function subscriptionTermForKey(key) {
+  return SUBSCRIPTION_TERMS.find((item) => item.key === key) || SUBSCRIPTION_TERMS[0];
+}
+
+function subscriptionTermPrice(monthlyPrice, termKey) {
+  const term = subscriptionTermForKey(termKey);
+  const raw = Number(monthlyPrice || 0) * term.months * (1 - term.discount);
+  return Math.max(0, Math.round(raw));
+}
+
 function protocolPrice(protocol) {
   return Number(protocol?.price || protocol?.doses?.[0]?.price || 250);
 }
@@ -434,6 +485,10 @@ function getBookingTherapyByKey(key) {
 
 function getProductByKey(key) {
   return getBookingTherapyByKey(key) || getCatalogProductByKey(key);
+}
+
+function therapyGroupForKey(key) {
+  return THERAPY_GROUPS.find((group) => group.keys.includes(key))?.key || 'vitamin';
 }
 
 function safeProtocol(protocol) {
@@ -643,6 +698,8 @@ function StepProgress({ step, onStepSelect }) {
 function UniversalBookingFrame({
   step,
   total,
+  dueNow,
+  dueAfter,
   canGoNext,
   actionLabel,
   checkoutLoading,
@@ -678,10 +735,11 @@ function UniversalBookingFrame({
       </motion.div>
       <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
         <div className="mx-auto flex max-w-lg items-center gap-2 overflow-hidden rounded-[1.35rem] border border-foreground/14 bg-background/78 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:max-w-4xl">
-          <div className="min-w-[108px] shrink-0 border-r border-foreground/12 px-2">
-            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/70">Total</p>
-            <p className="mt-1 font-body text-[1.7rem] font-black leading-none text-foreground">{total}</p>
-            <p className="mt-0.5 font-body text-xs font-semibold text-foreground/62">Before tax</p>
+          <div className="min-w-[132px] shrink-0 border-r border-foreground/12 px-2">
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Due now</p>
+            <p className="mt-1 font-body text-[1.55rem] font-black leading-none text-foreground">{dueNow || total}</p>
+            <p className="mt-1 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/50">Upon completion</p>
+            <p className="mt-0.5 font-body text-sm font-black leading-none text-foreground/72">{dueAfter || '$0'}</p>
           </div>
           <button
             type="button"
@@ -1734,11 +1792,11 @@ function LocationTypeDropdown({ value, onChange }) {
   );
 }
 
-function RetentionChoice({ state, plan, customSessions, customEstimate, serviceLabel, onType, onPlan, onCustomSessions }) {
+function RetentionChoice({ state, plan, term, termPrice, monthlyPrice, customSessions, customEstimate, serviceLabel, onType, onPlan, onTerm, onCustomSessions }) {
   const [openPlans, setOpenPlans] = useState(false);
   const choices = [
     { key: 'one-time', label: 'One visit', value: 'Full checkout', icon: Calendar },
-    { key: 'subscription', label: 'Monthly', value: plan.custom ? `${currency(customEstimate)}/mo` : `${currency(plan.price)}/mo`, icon: Sparkles },
+    { key: 'subscription', label: 'Membership', value: `${currency(monthlyPrice)}/mo · 3 mo min`, icon: Sparkles },
   ];
 
   return (
@@ -1771,7 +1829,7 @@ function RetentionChoice({ state, plan, customSessions, customEstimate, serviceL
             <div className="min-w-0">
               <p className="font-body text-sm font-extrabold text-foreground/76">Plan</p>
               <p className="mt-1 truncate font-heading text-3xl uppercase leading-none text-foreground">
-                {plan.label} · {plan.custom ? `${currency(customEstimate)}/mo` : `${currency(plan.price)}/mo`}
+                {plan.label} · {term.key === 'monthly' ? `${currency(monthlyPrice)}/mo` : `${currency(termPrice)} today`}
               </p>
             </div>
             <button
@@ -1805,6 +1863,28 @@ function RetentionChoice({ state, plan, customSessions, customEstimate, serviceL
               })}
             </div>
           </SmoothDisclosure>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {SUBSCRIPTION_TERMS.map((item) => {
+              const active = state.subscriptionTerm === item.key;
+              const price = subscriptionTermPrice(monthlyPrice, item.key);
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => onTerm(item.key)}
+                  className={`min-h-[58px] rounded-2xl border px-2 text-left transition-colors ${
+                    active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/10 text-foreground/64 hover:border-foreground/24'
+                  }`}
+                >
+                  <span className="block truncate font-body text-[10px] font-black uppercase tracking-[0.08em]">{item.label}</span>
+                  <span className="mt-1 block font-body text-xs font-black">{item.key === 'monthly' ? `${currency(monthlyPrice)}/mo` : currency(price)}</span>
+                  <span className="mt-0.5 block truncate font-body text-[9px] font-bold uppercase tracking-[0.08em] text-foreground/48">
+                    {item.key === 'monthly' ? '3 mo min' : `${Math.round(item.discount * 100)}% off`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
           {plan.custom && (
             <CustomSubscriptionBuilder
 	              sessions={customSessions}
@@ -2344,14 +2424,15 @@ function OptionalNotes({ value, onChange }) {
   );
 }
 
-function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0 }) {
+function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, dueNow = 0, balanceDue = 0 }) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
   const items = [
     { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
     { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
-    { label: 'Today', value: currency(subtotal), icon: Check },
+    { label: 'Due now', value: currency(dueNow), icon: Check },
+    { label: 'Upon completion', value: currency(balanceDue), icon: CreditCard },
   ];
 
   return (
@@ -2450,6 +2531,8 @@ function SummaryRail({
   plan,
   subtotal,
   totalLabel,
+  dueNow,
+  balanceDue,
   groupContactRequired,
   guestCount,
   serviceLabel,
@@ -2461,7 +2544,6 @@ function SummaryRail({
 }) {
   const isSubscription = state.visitType === 'subscription';
   const subscriptionPrice = Number(plan.price || 0);
-  const balanceDue = 0;
   const [open, setOpen] = useState(false);
   return (
     <aside className="hidden lg:block">
@@ -2489,9 +2571,9 @@ function SummaryRail({
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
-              ['Due now', isSubscription ? `${currency(subscriptionPrice)}/mo` : currency(subtotal)],
+              ['Due now', isSubscription ? currency(subscriptionPrice) : currency(dueNow)],
               [groupContactRequired ? 'Group' : isSubscription ? 'Therapy' : 'Estimate', groupContactRequired ? 'Contact' : totalLabel || currency(subtotal)],
-              isSubscription ? ['Plan', plan.label] : ['Balance', currency(balanceDue)],
+              isSubscription ? ['Plan', plan.label] : ['Upon completion', currency(balanceDue)],
               ['Time', bookingTimeSummary(state)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
@@ -2548,6 +2630,7 @@ const defaultState = {
   visitType: 'one-time',
   productKey: 'recovery',
   planKey: FEATURED_SUBSCRIPTION_TIER_KEY,
+  subscriptionTerm: 'monthly',
   clientType: 'new',
   eventType: 'Private',
   locationType: 'home',
@@ -2633,6 +2716,7 @@ export default function BookNow() {
   const initialProtocolKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(initialProtocolParam) ? initialProtocolParam : '';
   const initialSubscriptionParam = searchParams.get('subscription');
   const initialSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === initialSubscriptionParam);
+  const initialSubscriptionTerm = subscriptionTermForKey(searchParams.get('term'));
   const initialOutcome = initialProtocolKey ? outcomeForProtocol(initialProtocolKey) : null;
   const [step, setStep] = useState(0);
   const stepShellRef = useRef(null);
@@ -2670,6 +2754,7 @@ export default function BookNow() {
       productKey: initialProtocolKey || savedProductKey || defaultState.productKey,
       visitType: initialSubscriptionPlan ? 'subscription' : savedWebstore.visitType || defaultState.visitType,
       planKey: initialSubscriptionPlan?.key || savedWebstore.planKey || defaultState.planKey,
+      subscriptionTerm: initialSubscriptionPlan ? initialSubscriptionTerm.key : savedWebstore.subscriptionTerm || defaultState.subscriptionTerm,
       addOns: initialProtocolKey ? [] : savedProductKey ? (savedWebstore.addOns || []) : [],
       addOnDecision: true,
     };
@@ -2678,6 +2763,7 @@ export default function BookNow() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
+  const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
 
   useEffect(() => {
     if (shouldResetDraft) clearBookingDraft();
@@ -2708,8 +2794,10 @@ export default function BookNow() {
     const outcomeParam = searchParams.get('outcome');
     const protocolParam = searchParams.get('protocol');
     const subscriptionParam = searchParams.get('subscription');
+    const subscriptionTermParam = searchParams.get('term');
     const timeParam = searchParams.get('time');
     const selectedSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === subscriptionParam);
+    const selectedSubscriptionTerm = subscriptionTermForKey(subscriptionTermParam);
     const wantsSubscription = Boolean(selectedSubscriptionPlan);
     const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
     if (protocolParam && PUBLIC_BOOKING_PROTOCOL_KEYS.has(protocolParam)) {
@@ -2720,6 +2808,7 @@ export default function BookNow() {
         productKey: protocolParam,
         visitType: wantsSubscription ? 'subscription' : current.visitType,
         planKey: selectedSubscriptionPlan?.key || current.planKey,
+        subscriptionTerm: wantsSubscription ? selectedSubscriptionTerm.key : current.subscriptionTerm,
         timeIntent: timeParam === 'asap' ? 'asap' : current.timeIntent,
         addOns: [],
         addOnDecision: true,
@@ -2736,6 +2825,7 @@ export default function BookNow() {
           productKey: isCustom ? selectedBase.productKey : nextOutcome.productKeys[0] || 'recovery',
           visitType: wantsSubscription ? 'subscription' : current.visitType,
           planKey: selectedSubscriptionPlan?.key || current.planKey,
+          subscriptionTerm: wantsSubscription ? selectedSubscriptionTerm.key : current.subscriptionTerm,
           timeIntent: timeParam === 'asap' ? 'asap' : current.timeIntent,
           addOns: [],
           addOnDecision: true,
@@ -2752,6 +2842,7 @@ export default function BookNow() {
         productKey: fallbackProtocol,
         visitType: 'subscription',
         planKey: selectedSubscriptionPlan.key,
+        subscriptionTerm: selectedSubscriptionTerm.key,
         timeIntent: timeParam === 'asap' ? 'asap' : current.timeIntent,
         addOns: [],
         addOnDecision: true,
@@ -2796,7 +2887,9 @@ export default function BookNow() {
   const baseSubtotal = (product ? protocolPrice(product) : 0) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
   const customPlanSessions = Math.max(1, Number(state.customPlanSessions || 2));
   const customPlanEstimate = Math.max(150, baseSubtotal || protocolPrice(product) || 250) * customPlanSessions;
-  const activePlanPrice = plan.custom ? customPlanEstimate : Number(plan.price || 0);
+  const activePlanMonthlyPrice = plan.custom ? customPlanEstimate : Number(plan.price || 0);
+  const activeSubscriptionTerm = subscriptionTermForKey(state.subscriptionTerm);
+  const activePlanPrice = subscriptionTermPrice(activePlanMonthlyPrice, activeSubscriptionTerm.key);
   const activePlanSessions = plan.custom ? customPlanSessions : Number(plan.sessions || 0);
   const isGroupVisit = state.who === 'group' || state.visitType === 'event';
   const guestCount = isGroupVisit ? Math.max(2, Number(state.guests || 2)) : 1;
@@ -2804,7 +2897,10 @@ export default function BookNow() {
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
   const totalLabel = !product ? 'Select' : groupContactRequired ? 'Contact' : currency(subtotal);
-  const balanceDue = 0;
+  const dueNowAmount = state.visitType === 'subscription' ? activePlanPrice : groupContactRequired ? 0 : Math.min(BOOKING_DEPOSIT_AMOUNT, subtotal || 0);
+  const balanceDue = state.visitType === 'subscription' ? 0 : Math.max(0, subtotal - dueNowAmount);
+  const dueNowLabel = state.visitType === 'subscription' ? `${currency(activePlanPrice)} ${activeSubscriptionTerm.key === 'monthly' ? 'today' : 'prepaid'}` : currency(dueNowAmount);
+  const dueAfterLabel = groupContactRequired ? 'Quote' : currency(balanceDue);
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
   const resolvedZip = useMemo(
@@ -2876,6 +2972,11 @@ export default function BookNow() {
   const setValue = (key, value) => {
     setError('');
     setState((current) => ({ ...current, [key]: value }));
+  };
+
+  const setSubscriptionTerm = (key) => {
+    setError('');
+    setState((current) => ({ ...current, subscriptionTerm: key }));
   };
 
   const setAddressValue = (value) => {
@@ -3041,6 +3142,7 @@ export default function BookNow() {
 
   const chooseProduct = (key, overrides = {}) => {
     setError('');
+    setActiveTherapyGroup(therapyGroupForKey(key));
     track(ANALYTICS_EVENTS.STEP_COMPLETED, {
       funnel: 'webstore',
       step_index: 0,
@@ -3344,8 +3446,9 @@ export default function BookNow() {
         })),
       ],
       subtotal,
-      depositAmount: subtotal,
-      payment: `${currency(subtotal)} due today`,
+      depositAmount: dueNowAmount,
+      balanceDue,
+      payment: `${currency(dueNowAmount)} due today · ${currency(balanceDue)} after visit`,
       status: 'Payment received',
       holdType: 'paid',
       nextStep: 'Clinical review and scheduling handoff',
@@ -3369,7 +3472,7 @@ export default function BookNow() {
       manualReview: true,
 	      clientType: state.clientType,
 	      customTreatment,
-	      subscription: state.visitType === 'subscription' ? { ...plan, frequency: 'monthly', preferredOutcome: outcome.label, preferredProtocol: serviceLabel, customTreatment } : null,
+	      subscription: state.visitType === 'subscription' ? { ...plan, frequency: activeSubscriptionTerm.key, term: activeSubscriptionTerm, monthlyPrice: activePlanMonthlyPrice, price: activePlanPrice, preferredOutcome: outcome.label, preferredProtocol: serviceLabel, customTreatment } : null,
       event: isGroupVisit ? { type: state.eventType, guestCount: guests, gfeTiming: 'Before launch' } : null,
       lifecycleWarnings: [
         clinicalReviewClaimedOnFile
@@ -3400,7 +3503,7 @@ export default function BookNow() {
       source: 'avalon-webstore',
       type: visitType.label,
       scope: scopeLabel,
-      depositAmount: subtotal,
+      depositAmount: localBooking.depositAmount,
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
@@ -3429,8 +3532,10 @@ export default function BookNow() {
       membership: membershipOverride || (localBooking.subscription ? {
         key: localBooking.subscription.key,
         name: localBooking.subscription.label || localBooking.subscription.name || plan.label,
-        billing: 'monthly',
-        price: activePlanPrice,
+        billing: activeSubscriptionTerm.billing,
+        price: localBooking.subscription.price || activePlanPrice,
+        term: activeSubscriptionTerm.key,
+        commitmentMonths: activeSubscriptionTerm.commitmentMonths || activeSubscriptionTerm.months,
       } : null),
       contact: {
         name: localBooking.contact?.name || state.name.trim(),
@@ -3455,6 +3560,8 @@ export default function BookNow() {
         notes: localBooking.notes,
         clinicalReviewOnFile: localBooking.clinicalReviewOnFile,
         gfeRequired: localBooking.gfeRequired,
+        depositAmount: localBooking.depositAmount,
+        balanceDue: localBooking.balanceDue,
         clientType: localBooking.clientType,
         dob: localBooking.dob || localBooking.contact?.dob || state.dob,
         emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || state.emergencyContact.trim(),
@@ -3546,10 +3653,13 @@ export default function BookNow() {
     });
 
     if (state.visitType === 'subscription') {
-	      const subscriptionPlan = {
+      const subscriptionPlan = {
 	        key: plan.key,
 	        name: plan.label,
-	        billing: 'monthly',
+	        billing: activeSubscriptionTerm.billing,
+	        term: activeSubscriptionTerm.key,
+	        commitmentMonths: activeSubscriptionTerm.commitmentMonths || activeSubscriptionTerm.months,
+	        monthlyPrice: activePlanMonthlyPrice,
 	        price: activePlanPrice,
 		        ivCount: activePlanSessions,
 		        discount: plan.discount,
@@ -3613,6 +3723,8 @@ export default function BookNow() {
         key: subscriptionPlan.key,
         name: subscriptionPlan.name,
         billing: subscriptionPlan.billing,
+        term: subscriptionPlan.term,
+        commitmentMonths: subscriptionPlan.commitmentMonths,
         price: subscriptionPlan.price,
       });
       return;
@@ -3647,6 +3759,14 @@ export default function BookNow() {
   const menuTherapies = useMemo(() => {
     return BOOKING_THERAPY_KEYS.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean);
   }, []);
+  const therapyGroups = useMemo(() => (
+    THERAPY_GROUPS.map((group) => ({
+      ...group,
+      items: group.keys.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean),
+    }))
+  ), []);
+  const activeTherapyGroupData = therapyGroups.find((group) => group.key === activeTherapyGroup) || therapyGroups[0];
+  const activeTherapies = activeTherapyGroupData?.items || [];
 
   const compactAddons = useMemo(() => addonCatalog.all.slice(0, 4), [addonCatalog]);
 
@@ -3754,49 +3874,114 @@ export default function BookNow() {
     }
 
     if (step === 0) {
+      const selectedCopy = compactProtocolCopy(product);
+      const SelectedIcon = product?.icon || Droplets;
       return (
-        <div className="grid h-full min-h-0 grid-cols-3 auto-rows-fr gap-1.5 md:gap-2">
-          {menuTherapies.map((item, index) => {
-            const Icon = item.icon || Droplets;
-            const active = state.productKey === item.key;
-            const copy = compactProtocolCopy(item);
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => chooseProduct(item.key)}
-                aria-pressed={active}
-                className={`${panelCardClass} relative flex min-h-0 flex-col justify-between gap-1 p-2 text-left transition-colors md:gap-2 md:p-3 ${
-                  active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46' : 'hover:border-foreground/24'
-                }`}
-              >
-                <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                <span className="relative flex w-full items-start justify-between gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-foreground/16 bg-foreground/[0.06] text-foreground md:h-11 md:w-11 md:rounded-xl">
-                    <Icon className="h-3.5 w-3.5 md:h-5 md:w-5" strokeWidth={2.45} />
+        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-2">
+          <div className={`${panelCardClass} grid min-h-[98px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-3`}>
+            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.03))]" />
+            <span className="relative flex min-w-0 items-center gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/18 bg-foreground/[0.075] text-foreground">
+                <SelectedIcon className="h-6 w-6" strokeWidth={2.45} />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/58">How are you feeling?</span>
+                <span className="mt-1 block truncate font-heading text-[1.65rem] uppercase leading-none tracking-normal text-foreground">{selectedCopy.label}</span>
+                <span className="mt-1 block truncate font-body text-[11px] font-bold text-foreground/58">Clinical review.</span>
+              </span>
+            </span>
+            <span className="relative shrink-0 text-right">
+              <span className="block font-body text-[1.7rem] font-black leading-none text-foreground">{currency(protocolPrice(product))}</span>
+              <span className="mt-1 block font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/56">{protocolDuration(product)}</span>
+            </span>
+            <div className="relative col-span-2 grid grid-cols-4 gap-1.5">
+              {STACK_LAYERS.slice(0, 4).map((item) => {
+                const LayerIcon = item.icon;
+                return (
+                  <span
+                    key={item.key}
+                    className={`flex min-h-[26px] items-center justify-center gap-1 rounded-full border px-2 font-body text-[9px] font-black uppercase tracking-[0.08em] ${
+                      item.active ? 'border-foreground/18 bg-foreground/[0.075] text-foreground/74' : 'border-foreground/10 bg-background/28 text-foreground/42'
+                    }`}
+                  >
+                    <LayerIcon className="h-3 w-3" strokeWidth={2.3} />
+                    {item.label}
                   </span>
-                  <span className="shrink-0 text-right">
-                    {active ? (
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-foreground/20 bg-foreground/[0.10] text-foreground md:h-8 md:w-8">
-                        <Check className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
-                      </span>
-                    ) : (
-                      <span className="block font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>
-                    )}
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5">
+            {therapyGroups.map((group) => {
+              const GroupIcon = group.icon;
+              const active = activeTherapyGroup === group.key;
+              const selectedInGroup = group.keys.includes(state.productKey);
+              return (
+                <button
+                  key={group.key}
+                  type="button"
+                  onClick={() => setActiveTherapyGroup(group.key)}
+                  aria-pressed={active}
+                  className={`relative min-h-[60px] overflow-hidden rounded-[1rem] border px-2 py-2 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
+                    active ? 'border-foreground/46 bg-foreground/[0.14] text-foreground' : 'border-foreground/10 bg-background/34 text-foreground/72'
+                  }`}
+                >
+                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
+                  <span className="relative flex items-center justify-between gap-2">
+                    <GroupIcon className="h-4 w-4" strokeWidth={2.45} />
+                    {selectedInGroup && <Check className="h-3.5 w-3.5" strokeWidth={2.7} />}
                   </span>
-                </span>
-                <span className="relative min-w-0">
-                  <span className="block break-words font-heading text-[0.92rem] uppercase leading-[0.88] tracking-normal text-foreground min-[390px]:text-[0.98rem] md:text-[1.85rem]">{copy.label}</span>
-                  <span className="hidden truncate font-body text-[9px] font-black text-foreground/72 md:mt-1 md:block md:text-sm">{protocolDuration(item)}</span>
-                  <span className="hidden truncate font-body text-[11px] font-semibold text-foreground/60 md:mt-0.5 md:block md:text-sm">{copy.line}</span>
-                </span>
-                <span className="relative hidden w-full items-center justify-between gap-2 md:flex">
-                  <span className="truncate font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/56 md:text-[10px]">{active ? 'Selected' : 'Select'}</span>
-                  {active && <span className="font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>}
-                </span>
-              </button>
-            );
-          })}
+                  <span className="relative mt-2 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em]">{group.label}</span>
+                  <span className="relative mt-0.5 block truncate font-body text-[9px] font-bold uppercase tracking-[0.08em] text-foreground/48">{group.sub}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={`grid min-h-0 gap-1.5 ${activeTherapies.length <= 4 ? 'grid-cols-2 auto-rows-fr' : 'grid-cols-3 auto-rows-fr'}`}>
+            {activeTherapies.map((item) => {
+              const Icon = item.icon || Droplets;
+              const active = state.productKey === item.key;
+              const copy = compactProtocolCopy(item);
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => chooseProduct(item.key)}
+                  aria-pressed={active}
+                  className={`${panelCardClass} relative flex min-h-0 flex-col justify-between gap-1 p-2 text-left transition-colors md:gap-2 md:p-3 ${
+                    active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46' : 'hover:border-foreground/24'
+                  }`}
+                >
+                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+                  <span className="relative flex w-full items-start justify-between gap-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/16 bg-foreground/[0.06] text-foreground md:h-11 md:w-11 md:rounded-xl">
+                      <Icon className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.45} />
+                    </span>
+                    <span className="shrink-0 text-right">
+                      {active ? (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-foreground/20 bg-foreground/[0.10] text-foreground md:h-8 md:w-8">
+                          <Check className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
+                        </span>
+                      ) : (
+                        <span className="block font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>
+                      )}
+                    </span>
+                  </span>
+                  <span className="relative min-w-0">
+                    <span className="block break-words font-heading text-[1rem] uppercase leading-[0.88] tracking-normal text-foreground min-[390px]:text-[1.08rem] md:text-[1.85rem]">{copy.label}</span>
+                    <span className="hidden truncate font-body text-[9px] font-black text-foreground/72 md:mt-1 md:block md:text-sm">{protocolDuration(item)}</span>
+                    <span className="hidden truncate font-body text-[11px] font-semibold text-foreground/60 md:mt-0.5 md:block md:text-sm">{copy.line}</span>
+                  </span>
+                  <span className="relative hidden w-full items-center justify-between gap-2 md:flex">
+                    <span className="truncate font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/56 md:text-[10px]">{active ? 'Selected' : 'Select'}</span>
+                    {active && <span className="font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       );
     }
@@ -3990,7 +4175,7 @@ export default function BookNow() {
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${currency(subtotal)} today`} />
+                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${dueNowLabel}`} />
                   <button
                     type="button"
                     onClick={() => {
@@ -4032,6 +4217,8 @@ export default function BookNow() {
           <UniversalBookingFrame
             step={step}
             total={totalLabel}
+            dueNow={dueNowLabel}
+            dueAfter={dueAfterLabel}
             canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
             actionLabel={primaryActionLabel()}
             checkoutLoading={checkoutLoading}
@@ -4464,6 +4651,8 @@ export default function BookNow() {
                       product={product}
                       bookingGfeRequirement={bookingGfeRequirement}
                       subtotal={subtotal}
+                      dueNow={dueNowAmount}
+                      balanceDue={balanceDue}
                     />
                     {canUseClinicalReviewOnFile && (
 	                    <ClinicalReviewChoice
@@ -4491,6 +4680,8 @@ export default function BookNow() {
 	            product={product}
 	            plan={{ ...plan, price: activePlanPrice }}
 	            subtotal={subtotal}
+	            dueNow={dueNowAmount}
+	            balanceDue={balanceDue}
 		            totalLabel={totalLabel}
 		            groupContactRequired={groupContactRequired}
 		            guestCount={guestCount}

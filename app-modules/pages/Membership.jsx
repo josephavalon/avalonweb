@@ -16,6 +16,21 @@ const fadeUp = {
 };
 
 const tiers = SUBSCRIPTION_TIERS.map((tier) => ({ ...tier, perks: tier.benefits }));
+const SUBSCRIPTION_TERMS = [
+  { key: 'monthly', label: 'Monthly', detail: '3 mo min', multiplier: 1, discount: 0 },
+  { key: 'six-month', label: '6 months', detail: '8% off', multiplier: 6, discount: 0.08 },
+  { key: 'annual', label: '12 months', detail: '15% off', multiplier: 12, discount: 0.15 },
+];
+
+function termPrice(monthlyPrice, term) {
+  if (!monthlyPrice || !term) return 0;
+  return Math.max(0, Math.round(Number(monthlyPrice) * term.multiplier * (1 - term.discount)));
+}
+
+function planPriceLabel(tier, term) {
+  if (tier.custom || !tier.price) return 'Custom';
+  return `$${termPrice(tier.price, term).toLocaleString()}`;
+}
 
 function PlanBuilder({ tier }) {
   const builder = [
@@ -49,9 +64,10 @@ function PlanBuilder({ tier }) {
   );
 }
 
-function FeaturedTier({ tier, onSelect }) {
+function FeaturedTier({ tier, term, onSelect }) {
   const concisePerks = tier.perks.slice(0, tier.custom ? 4 : 3);
   const actionLabel = tier.custom ? 'Design Custom' : `Start ${tier.name}`;
+  const unitLabel = tier.custom ? tier.unit : term.key === 'monthly' ? '/mo' : 'today';
 
   return (
     <motion.div
@@ -69,10 +85,12 @@ function FeaturedTier({ tier, onSelect }) {
       </div>
 
       <div className="mt-5 flex items-end gap-2">
-        <span className="font-heading text-6xl leading-none text-foreground">{tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}</span>
-        <span className="mb-1 font-body text-sm text-foreground/45">{tier.unit}</span>
+        <span className="font-heading text-6xl leading-none text-foreground">{planPriceLabel(tier, term)}</span>
+        <span className="mb-1 font-body text-sm text-foreground/45">{unitLabel}</span>
       </div>
-      <p className="mt-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/45">{tier.perSessionNote}</p>
+      <p className="mt-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/45">
+        {tier.custom ? tier.perSessionNote : term.key === 'monthly' ? 'First month due now · 3-month commitment' : `${term.label} prepaid · ${term.detail}`}
+      </p>
 
       <div className="my-5 h-px bg-foreground/[0.08]" />
 
@@ -96,8 +114,9 @@ function FeaturedTier({ tier, onSelect }) {
   );
 }
 
-function MobilePlanSummary({ tier, onSelect }) {
+function MobilePlanSummary({ tier, term, onSelect }) {
   const actionLabel = tier.custom ? 'Design Custom' : `Start ${tier.name}`;
+  const unitLabel = tier.custom ? tier.unit : term.key === 'monthly' ? '/mo' : 'today';
   return (
     <motion.div
       className="mt-4 rounded-[1.25rem] border border-accent/28 bg-card/64 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-xl md:hidden"
@@ -109,8 +128,8 @@ function MobilePlanSummary({ tier, onSelect }) {
           <p className="mt-1 font-heading text-4xl uppercase leading-none text-foreground">{tier.name}</p>
         </div>
         <div className="text-right">
-          <p className="font-heading text-4xl leading-none text-foreground">{tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}</p>
-          <p className="font-body text-[11px] font-semibold text-foreground/48">{tier.unit}</p>
+          <p className="font-heading text-4xl leading-none text-foreground">{planPriceLabel(tier, term)}</p>
+          <p className="font-body text-[11px] font-semibold text-foreground/48">{unitLabel}</p>
         </div>
       </div>
       <button
@@ -120,6 +139,32 @@ function MobilePlanSummary({ tier, onSelect }) {
       >
         {actionLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
       </button>
+    </motion.div>
+  );
+}
+
+function TermSelector({ activeKey, onSelect }) {
+  return (
+    <motion.div className="grid grid-cols-3 gap-2" {...fadeUp}>
+      {SUBSCRIPTION_TERMS.map((term) => {
+        const active = activeKey === term.key;
+        return (
+          <button
+            key={term.key}
+            type="button"
+            onClick={() => onSelect(term.key)}
+            aria-pressed={active}
+            className={`min-h-[58px] rounded-2xl border px-3 text-left transition-colors ${
+              active
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-foreground/10 bg-foreground/[0.025] text-foreground hover:border-foreground/25 hover:bg-foreground/[0.045]'
+            }`}
+          >
+            <span className="block font-body text-[10px] font-black uppercase tracking-[0.12em]">{term.label}</span>
+            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.1em] opacity-55">{term.detail}</span>
+          </button>
+        );
+      })}
     </motion.div>
   );
 }
@@ -145,7 +190,7 @@ function TierSwitch({ tier, active, onSelect }) {
 export default function Subscription() {
   useSeo({
     title: 'Subscriptions — Avalon Vitality',
-    description: 'Monthly IV therapy subscriptions starting from $199/mo. Credits roll over, no long-term lock-in.',
+    description: 'Monthly IV therapy subscriptions starting from $199/mo. First month due now with a 3-month commitment. Prepay 6 or 12 months for savings.',
     path: '/subscription',
     jsonLd: {
       '@context': 'https://schema.org',
@@ -169,13 +214,16 @@ export default function Subscription() {
   });
   const navigate = useNavigate();
   const [activeTierKey, setActiveTierKey] = useState(FEATURED_SUBSCRIPTION_TIER_KEY);
+  const [activeTermKey, setActiveTermKey] = useState('monthly');
   const activeTier = tiers.find((tier) => tier.key === activeTierKey) || tiers[1];
+  const activeTerm = SUBSCRIPTION_TERMS.find((term) => term.key === activeTermKey) || SUBSCRIPTION_TERMS[0];
   const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
   const switchTier = (tier) => setActiveTierKey(tier.key);
   const selectTier = () => {
     const params = new URLSearchParams({
       reset: '1',
       subscription: activeTier.key,
+      term: activeTerm.key,
       protocol: 'recovery',
       time: 'asap',
     });
@@ -196,7 +244,7 @@ export default function Subscription() {
                   Build your plan
                 </motion.h1>
                 <motion.p className="mt-3 max-w-md font-body text-sm leading-relaxed text-foreground/58 md:mt-4" {...fadeUp}>
-                  Monthly visits. Add-ons. Pause anytime.
+                  Monthly plans require 3 months. Prepay 6 or 12 months for savings.
                 </motion.p>
               </div>
 
@@ -206,10 +254,11 @@ export default function Subscription() {
                     <TierSwitch key={tier.key} tier={tier} active={activeTier.key === tier.key} onSelect={switchTier} />
                   ))}
                 </motion.div>
-                <MobilePlanSummary tier={activeTier} onSelect={selectTier} />
+                <TermSelector activeKey={activeTerm.key} onSelect={setActiveTermKey} />
+                <MobilePlanSummary tier={activeTier} term={activeTerm} onSelect={selectTier} />
                 <PlanBuilder tier={activeTier} />
                 <div className="hidden md:block">
-                  <FeaturedTier tier={activeTier} onSelect={selectTier} />
+                  <FeaturedTier tier={activeTier} term={activeTerm} onSelect={selectTier} />
                 </div>
               </div>
             </div>
