@@ -74,8 +74,8 @@ const CARD_REVEAL = {
 };
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Goal', 'Therapy', 'Extras', 'Visit', 'Confirm'];
-const STEP_ICONS = [Sparkles, Droplets, Plus, Home, Check];
+const STEPS = ['Location', 'Therapy', 'Add-ons', 'Date & Time', 'Review'];
+const STEP_ICONS = [MapPin, Droplets, Plus, Calendar, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
 const PRIMARY_OUTCOME_KEYS = ['recover', 'perform', 'performance', 'longevity'];
@@ -499,8 +499,8 @@ function StepProgress({ step, onStepSelect }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className={`${step === 0 ? 'hidden md:block' : ''} relative mb-2 overflow-hidden rounded-[1.35rem] border-0 bg-transparent p-2 shadow-none backdrop-blur-none md:mb-3 md:rounded-[1.35rem] md:border md:border-foreground/10 md:bg-background/38 md:p-2 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] md:backdrop-blur-2xl`}>
-      <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))] md:block" />
+    <div className="relative mb-2 overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background/38 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl md:mb-3">
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))]" />
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -514,12 +514,12 @@ function StepProgress({ step, onStepSelect }) {
               <CurrentIcon className="h-4 w-4" strokeWidth={2.7} />
             </motion.span>
             <div className="min-w-0">
-              <p className="truncate font-body text-base font-black text-foreground">
-                {step + 1} of {STEPS.length} · {STEPS[step]}
+              <p className="truncate font-body text-[1.05rem] font-black uppercase tracking-[0.02em] text-foreground">
+                {step + 1} OF {STEPS.length} • {STEPS[step]}
               </p>
             </div>
           </div>
-          <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+          <div className="hidden shrink-0 items-center gap-1.5 md:flex">
             {STEPS.map((item, index) => {
               const active = index === step;
               const complete = index < step;
@@ -550,16 +550,103 @@ function StepProgress({ step, onStepSelect }) {
         </div>
       </div>
 
-      <div className="relative mt-2 h-1 overflow-hidden rounded-full bg-foreground/8 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] md:mt-2 md:h-1.5">
+      <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/8 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
         <motion.div
           className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
           initial={false}
-          animate={{ width: `${(step / LAST_STEP) * 100}%` }}
+          animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           transition={{ duration: 0.56, ease: EASE }}
         >
         </motion.div>
       </div>
     </div>
+  );
+}
+
+function UniversalBookingFrame({
+  step,
+  total,
+  canGoNext,
+  actionLabel,
+  checkoutLoading,
+  error,
+  onBack,
+  onNext,
+  onStepSelect,
+  children,
+}) {
+  return (
+    <section className="mx-auto flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[8.85rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+      <StepProgress step={step} onStepSelect={onStepSelect} />
+      {error && (
+        <div role="alert" className="mb-2 flex min-h-[42px] items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
+          <p className="truncate font-body text-sm font-black">{error}</p>
+          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-2.5 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em]">
+            Text
+          </a>
+        </div>
+      )}
+      <motion.div
+        key={step}
+        className="av-glass-card relative min-h-0 flex-1 overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/32 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-4"
+        initial={{ opacity: 1, y: 0, scale: 1 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 1 }}
+        transition={{ duration: 0.16, ease: EASE }}
+      >
+        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
+        <div className="relative h-full min-h-0 overflow-hidden">
+          {children}
+        </div>
+      </motion.div>
+      <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
+        <div className="mx-auto flex max-w-lg items-center gap-2 overflow-hidden rounded-[1.35rem] border border-foreground/14 bg-background/78 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:max-w-4xl">
+          <div className="min-w-[108px] shrink-0 border-r border-foreground/12 px-2">
+            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/70">Total</p>
+            <p className="mt-1 font-body text-[1.7rem] font-black leading-none text-foreground">{total}</p>
+            <p className="mt-0.5 font-body text-xs font-semibold text-foreground/62">Before tax</p>
+          </div>
+          <button
+            type="button"
+            onClick={onNext}
+            aria-label={actionLabel}
+            className={`relative flex min-h-[64px] flex-1 items-center justify-center gap-3 overflow-hidden rounded-2xl border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
+              canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/18 bg-background/42 text-foreground/58'
+            }`}
+          >
+            {checkoutLoading && (
+              <motion.span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-background/35 to-transparent"
+                animate={{ x: ['0%', '420%'] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
+              />
+            )}
+            <span>{actionLabel}</span>
+            <ArrowRight className="h-5 w-5" strokeWidth={2.7} />
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={step === 0}
+            aria-label="Go back"
+            className="hidden min-h-[64px] w-[92px] shrink-0 rounded-2xl border border-foreground/14 bg-background/30 px-3 font-body text-xs font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 md:block"
+          >
+            Back
+          </button>
+        </div>
+        <div className="mx-auto mt-1 flex max-w-lg justify-center md:hidden">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={step === 0}
+            className="min-h-[34px] rounded-full px-4 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/58 disabled:opacity-0"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -2380,9 +2467,9 @@ function SummaryRail({
 
 const defaultState = {
   draftVersion: BOOKING_DRAFT_VERSION,
-  outcome: '',
+  outcome: 'recover',
   visitType: 'one-time',
-  productKey: '',
+  productKey: 'recovery',
   planKey: FEATURED_SUBSCRIPTION_TIER_KEY,
   clientType: 'new',
   eventType: 'Private',
@@ -2470,8 +2557,7 @@ export default function BookNow() {
   const initialSubscriptionParam = searchParams.get('subscription');
   const initialSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === initialSubscriptionParam);
   const initialOutcome = initialProtocolKey ? outcomeForProtocol(initialProtocolKey) : null;
-  const shouldStartAtVisit = Boolean(initialProtocolKey || initialSubscriptionPlan);
-  const [step, setStep] = useState(() => (fastMode ? 1 : shouldStartAtVisit ? 3 : 0));
+  const [step, setStep] = useState(0);
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
@@ -2561,7 +2647,7 @@ export default function BookNow() {
         addOns: [],
         addOnDecision: true,
       }));
-      setStep(3);
+      setStep(0);
     } else if (nextOutcome) {
       const isCustom = nextOutcome.key === 'longevity';
       const base = CUSTOM_BASE_OPTIONS.find((item) => item.key === 'advanced') || CUSTOM_BASE_OPTIONS[1];
@@ -2579,7 +2665,7 @@ export default function BookNow() {
           customBase: isCustom ? selectedBase.key : current.customBase,
         };
       });
-      setStep(1);
+      setStep(0);
     } else if (wantsSubscription) {
       const fallbackProtocol = 'recovery';
       const inferredOutcome = outcomeForProtocol(fallbackProtocol);
@@ -2593,7 +2679,7 @@ export default function BookNow() {
         addOns: [],
         addOnDecision: true,
       }));
-      setStep(3);
+      setStep(0);
     }
   }, [searchParams]);
 
@@ -2686,8 +2772,7 @@ export default function BookNow() {
       return undefined;
     }
 
-    const timer = window.setTimeout(() => setStep(LAST_STEP), 420);
-    return () => window.clearTimeout(timer);
+    return undefined;
   }, [
     compressedFlow,
     step,
@@ -2724,14 +2809,6 @@ export default function BookNow() {
       address: value,
       zip: nextZip || current.zip,
     }));
-    if (
-      step === 3 &&
-      !groupContactRequired &&
-      nextZip &&
-      (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
-    ) {
-      window.setTimeout(() => setStep(LAST_STEP), 250);
-    }
   };
 
   useEffect(() => {
@@ -2821,7 +2898,6 @@ export default function BookNow() {
         customBase: isCustom ? nextCustomBase.key : current.customBase,
       };
     });
-    setStep(1);
   };
 
   const chooseClientType = (key) => {
@@ -2883,7 +2959,7 @@ export default function BookNow() {
         : current.addOns,
       addOnDecision: true,
     }));
-    setStep(2);
+    setStep(1);
   };
 
   const chooseProduct = (key, overrides = {}) => {
@@ -2905,7 +2981,6 @@ export default function BookNow() {
 
   const chooseProductAndContinue = (key, overrides = {}) => {
     chooseProduct(key, overrides);
-    setStep(2);
   };
 
   const chooseCustomBase = (key) => {
@@ -2947,12 +3022,12 @@ export default function BookNow() {
       locationType: item.locationType,
     }));
     if (
-      step === 3 &&
+      step === 0 &&
       !groupContactRequired &&
       String(nextZip || '').replace(/\D/g, '').length === 5 &&
       (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
     ) {
-      setStep(LAST_STEP);
+      setStep(1);
     }
   };
 
@@ -2977,12 +3052,12 @@ export default function BookNow() {
             zip: result.zip || current.zip,
           }));
           if (
-            step === 3 &&
+            step === 0 &&
             !groupContactRequired &&
             String(result.zip || '').replace(/\D/g, '').length === 5 &&
             (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
           ) {
-            setStep(LAST_STEP);
+            setStep(1);
           }
         } catch (err) {
           setError(err.message || 'Address lookup failed. Add street address.');
@@ -3057,33 +3132,31 @@ export default function BookNow() {
       addon_revenue: 0,
       addon_decision: 'none',
     });
-    setStep(3);
   };
 
   const canAdvance = () => {
-    if (step === 0) return Boolean(state.outcome);
+    if (step === 0) return Boolean(state.address.trim() && resolvedZip.length === 5);
     if (step === 1 && isCustomTreatment) return Boolean(state.productKey && state.customBase);
     if (step === 1) return Boolean(state.productKey);
-    if (step === 2) return Boolean(state.productKey);
-    if (step === 3 && groupContactRequired) return true;
-    if (step === 3) return Boolean(state.address.trim() && resolvedZip.length === 5 && (state.timeIntent !== 'choose' || (state.customDate && state.customTime)));
+    if (step === 2) return true;
+    if (step === 3) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
     return true;
   };
 
   const next = () => {
-    if (step === 3 && groupContactRequired) {
+    if (step === 0 && groupContactRequired) {
       routeGroupContact();
       return;
     }
     if (!canAdvance()) {
-      const reason = step === 0 ? 'Choose goal.' : step === 3 ? 'Add where and when.' : 'Choose therapy.';
+      const reason = step === 0 ? 'Add address and ZIP.' : step === 1 ? 'Choose therapy.' : step === 3 ? 'Choose date and time.' : 'Finish this step.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
         step_index: step,
         step_name: STEPS[step],
-        reason: step === 3 ? 'place_time_missing' : 'protocol_missing',
+        reason,
       });
       return;
     }
@@ -3117,17 +3190,10 @@ export default function BookNow() {
   };
 
 	  const primaryActionLabel = () => {
-	    if (checkoutLoading) return 'Opening';
-	    if (embeddedCheckoutSession) return 'Payment ready';
-	    if (fastMode && step === 1) return 'Continue';
-	    if (fastMode && step === 3) return 'Continue';
-	    if (fastMode && step === LAST_STEP) return `Pay ${currency(subtotal)}`;
-	    if (step === 2) return selectedAddons.length ? `Next · ${selectedAddons.length}` : 'Next';
-	    if (step === 3 && groupContactRequired) return 'Contact us';
-	    if (step === 3 && !canAdvance()) return 'Add place';
-	    if (step === LAST_STEP && groupContactRequired) return 'Contact us';
-	    if (step === LAST_STEP && state.visitType === 'subscription') return `Start ${plan.label}`;
-	    return step < LAST_STEP ? 'Next' : `Pay ${currency(subtotal)} today`;
+	    if (checkoutLoading) return 'OPENING';
+	    if (embeddedCheckoutSession) return 'PAYMENT READY';
+	    if (step === LAST_STEP && groupContactRequired) return 'CONTACT US';
+	    return step < LAST_STEP ? 'NEXT' : 'CONFIRM & PAY';
 	  };
 
 	  const buildBooking = () => {
@@ -3501,10 +3567,330 @@ export default function BookNow() {
     };
   }, [embeddedCheckoutSession?.clientSecret, embeddedCheckoutSession?.sessionId, navigate]);
 
+  const compactTherapies = useMemo(() => {
+    const fallback = uniqueProtocols(['recovery', 'immunity', 'hydration']);
+    const options = productOptions.length ? productOptions : fallback;
+    const active = product || options[0];
+    return [active, ...options.filter((item) => item.key !== active?.key)].filter(Boolean).slice(0, 3);
+  }, [productOptions, product]);
+
+  const compactAddons = useMemo(() => addonCatalog.all.slice(0, 4), [addonCatalog]);
+
+  const compactProtocolCopy = (item) => {
+    const overrides = {
+      recovery: { label: 'Recovery', line: 'Hydration support.' },
+      postnight: { label: 'Night Out', line: 'After-hours reset.' },
+      hydration: { label: 'Hydration', line: 'Fluids + electrolytes.' },
+      energy: { label: 'Energy', line: 'Nutrients + focus.' },
+      immunity: { label: 'Immunity', line: 'Vitamin support.' },
+      myers: { label: 'Wellness', line: 'Core nutrient blend.' },
+      jetlag: { label: 'Travel', line: 'Arrival support.' },
+      beauty: { label: 'Glow', line: 'Beauty support.' },
+      nad: { label: 'NAD+', line: 'Advanced protocol.' },
+      cbd: { label: 'CBD', line: 'Clinical review.' },
+    };
+    return overrides[item?.key] || { label: item?.tabLabel || item?.label || 'Therapy', line: 'Clinical review.' };
+  };
+
+  const contactLine = state.contactLine || formatContactLine({
+    name: state.name,
+    phone: state.phone,
+    email: state.email,
+  });
+
+  const updateContactLine = (value) => {
+    const parsed = parseContactLine(value);
+    setValue('contactLine', value);
+    setState((current) => ({
+      ...current,
+      name: parsed.name || current.name,
+      email: parsed.email || current.email,
+      phone: parsed.phone || current.phone,
+    }));
+  };
+
+  const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl';
+  const microLabelClass = 'font-body text-[10px] font-black uppercase tracking-[0.13em] text-foreground/58';
+
+  const renderUniversalStep = () => {
+    if (step === 0) {
+      return (
+        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-2">
+          <div className={`${panelCardClass} p-2`}>
+            <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={locationLoading}
+              className="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/44 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]"
+            >
+              <span className="flex items-center gap-2">
+                <Navigation className="h-4 w-4" strokeWidth={2.4} />
+                {locationLoading ? 'Finding address' : 'Use current location'}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className={`${panelCardClass} p-3`}>
+            <div className="grid gap-2">
+              <TextInput
+                label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'}
+                value={state.address}
+                onChange={setAddressValue}
+                onKeyDown={handleAddressKeyDown}
+                placeholder="Street address"
+                autoComplete="street-address"
+                actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
+                onAction={() => chooseAddressSuggestion(savedVisitAddress)}
+                required
+              />
+              {state.address.trim() && !resolvedZip && (
+                <TextInput
+                  label="ZIP"
+                  value={state.zip}
+                  onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))}
+                  onKeyDown={handleAddressKeyDown}
+                  placeholder="94107"
+                  autoComplete="postal-code"
+                  inputMode="numeric"
+                  required
+                />
+              )}
+            </div>
+          </div>
+          <div className="min-h-0">
+            <AddressPrediction suggestion={topAddressSuggestion} onUse={chooseAddressSuggestion} compact />
+            {!topAddressSuggestion && (
+              <div className={`${panelCardClass} mt-0 flex min-h-[76px] items-center gap-3 p-3`}>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground/80">
+                  <MapPin className="h-5 w-5" strokeWidth={2.4} />
+                </span>
+                <div className="min-w-0">
+                  <p className={microLabelClass}>Coverage</p>
+                  <p className="mt-1 font-body text-sm font-bold leading-snug text-foreground/72">Enter your street address. Avalon checks the ZIP before payment.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (step === 1) {
+      return (
+        <div className="grid h-full min-h-0 grid-rows-3 gap-2">
+          {compactTherapies.map((item, index) => {
+            const Icon = item.icon || Droplets;
+            const active = state.productKey === item.key;
+            const copy = compactProtocolCopy(item);
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => chooseProduct(item.key)}
+                aria-pressed={active}
+                className={`${panelCardClass} relative flex min-h-0 items-center gap-3 p-3 text-left transition-colors ${
+                  active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46' : 'hover:border-foreground/24'
+                }`}
+              >
+                <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+                <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/16 bg-foreground/[0.06] text-foreground">
+                  <Icon className="h-7 w-7" strokeWidth={2.45} />
+                </span>
+                <span className="relative min-w-0 flex-1">
+                  <span className="block font-heading text-[2rem] uppercase leading-none tracking-normal text-foreground">{copy.label}</span>
+                  <span className="mt-1 block font-body text-sm font-black text-foreground/76">{protocolDuration(item)}</span>
+                  <span className="mt-1 block font-body text-sm font-semibold text-foreground/60">{copy.line}</span>
+                </span>
+                <span className="relative shrink-0 text-right">
+                  {active && <span className="mb-2 block rounded-full border border-foreground/18 px-2 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/76">Selected</span>}
+                  <span className="block font-body text-[2rem] font-black leading-none text-foreground">{currency(protocolPrice(item))}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (step === 2) {
+      return (
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
+          <button
+            type="button"
+            onClick={chooseNoAddons}
+            className={`${panelCardClass} flex min-h-[58px] items-center justify-between gap-3 px-3 text-left ${state.addOnDecision && !selectedAddons.length ? 'border-foreground/42 bg-foreground/[0.13]' : ''}`}
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055]">
+                {!selectedAddons.length ? <Check className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
+              </span>
+              <span className="font-heading text-[1.7rem] uppercase leading-none tracking-normal">No add-ons</span>
+            </span>
+            <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Fastest</span>
+          </button>
+          <div className="grid min-h-0 grid-cols-2 gap-2">
+            {compactAddons.map((item) => {
+              const active = state.addOns.includes(item.label);
+              const Icon = item.icon || Plus;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => toggleAddon(item.label)}
+                  className={`${panelCardClass} flex min-h-0 flex-col justify-between p-3 text-left transition-colors ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055]">
+                      <Icon className="h-5 w-5" strokeWidth={2.45} />
+                    </span>
+                    {active ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                  </span>
+                  <span>
+                    <span className="block font-heading text-[1.45rem] uppercase leading-none tracking-normal">{item.label}</span>
+                    <span className="mt-1 block font-body text-lg font-black">{currency(item.price)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    if (step === 3) {
+      return (
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            {TIME_INTENTS.map((item) => {
+              const active = state.timeIntent === item.key || (item.key === 'asap' && ['today', 'soonest'].includes(state.timeIntent));
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => chooseTimeIntent(item.key)}
+                  className={`${panelCardClass} flex min-h-[86px] flex-col justify-between p-3 text-left ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
+                >
+                  <span className="flex items-center justify-between">
+                    <Icon className="h-5 w-5" strokeWidth={2.45} />
+                    {active && <Check className="h-4 w-4" />}
+                  </span>
+                  <span className="font-heading text-[1.9rem] uppercase leading-none tracking-normal">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className={`${panelCardClass} grid min-h-0 grid-rows-[auto_auto_1fr] gap-3 p-3`}>
+            <div className="flex items-center justify-between">
+              <p className={microLabelClass}>Arrival</p>
+              <p className="font-body text-sm font-black text-foreground/76">{bookingTimeSummary(state)}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
+                <span className={microLabelClass}>Date</span>
+                <select
+                  aria-label="Choose date"
+                  value={state.customDate}
+                  onChange={(event) => {
+                    const nextDate = event.target.value;
+                    const nextTime = state.customTime || DEFAULT_EXACT_TIME;
+                    setState((current) => ({
+                      ...current,
+                      customDate: nextDate,
+                      customTime: nextTime,
+                      availabilityWindow: `${nextDate}-${nextTime}`,
+                      timeIntent: 'choose',
+                    }));
+                  }}
+                  className="mt-1 min-h-[34px] w-full bg-transparent font-body text-base font-black text-foreground outline-none [color-scheme:dark]"
+                >
+                  {dateOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label} · {option.day}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
+                <span className={microLabelClass}>Time</span>
+                <select
+                  aria-label="Choose time"
+                  value={state.customTime || DEFAULT_EXACT_TIME}
+                  onChange={(event) => chooseAvailabilityWindow({ key: event.target.value, time: event.target.value, display: formatTimeLabel(event.target.value) })}
+                  className="mt-1 min-h-[34px] w-full bg-transparent font-body text-base font-black text-foreground outline-none [color-scheme:dark]"
+                >
+                  {timeSlots.map((slot) => (
+                    <option key={slot.key} value={slot.time}>{slot.display}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-sm font-semibold leading-snug text-foreground/62">
+              ASAP uses the first clinically available RN window. Exact times are confirmed after review.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid h-full min-h-0 grid-rows-[auto_1fr_auto] gap-2">
+        <div className={`${panelCardClass} p-3`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className={microLabelClass}>Ready</p>
+              <p className="mt-1 truncate font-heading text-[2rem] uppercase leading-none tracking-normal">{serviceLabel}</p>
+            </div>
+            <p className="shrink-0 font-body text-[1.8rem] font-black">{currency(subtotal)}</p>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {[
+              ['Where', resolvedZip || 'ZIP'],
+              ['When', bookingTimeSummary(state)],
+              ['Review', state.clinicalReviewOnFile ? 'On file' : 'Needed'],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-foreground/10 bg-foreground/[0.035] p-2">
+                <p className="font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground/52">{label}</p>
+                <p className="mt-1 truncate font-body text-xs font-black text-foreground/78">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className={`${panelCardClass} grid min-h-0 gap-2 p-3`}>
+          <TextInput
+            label="Contact"
+            value={contactLine}
+            onChange={updateContactLine}
+            placeholder="Name, phone, email"
+            autoComplete="name"
+            actionLabel={savedContactProfile?.name || savedContactProfile?.email ? 'Saved' : ''}
+            onAction={() => updateContactLine(formatContactLine({
+              name: savedContactProfile?.name || '',
+              phone: formatPhoneNumber(savedContactProfile?.phone || ''),
+              email: savedContactProfile?.email || '',
+            }))}
+            required
+          />
+          <TextInput
+            label="DOB"
+            value={state.dob}
+            onChange={(value) => setValue('dob', formatDobInput(value))}
+            placeholder="MM/DD/YYYY"
+            autoComplete="bday"
+            inputMode="numeric"
+            required
+          />
+        </div>
+        <p className="rounded-2xl border border-foreground/10 bg-background/38 px-3 py-2 font-body text-[11px] font-semibold leading-snug text-foreground/58">
+          By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
-      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] px-0 pb-24 pt-20 md:max-w-6xl md:px-8 md:pt-20 lg:pb-4">
+      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-20 md:max-h-none md:min-h-screen md:max-w-6xl md:px-8 md:pb-6 md:pt-20">
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
@@ -3554,7 +3940,22 @@ export default function BookNow() {
             </div>
           </motion.section>
         )}
-        {!embeddedCheckoutSession && fastMode ? (
+        {!embeddedCheckoutSession && (
+          <UniversalBookingFrame
+            step={step}
+            total={totalLabel}
+            canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
+            actionLabel={primaryActionLabel()}
+            checkoutLoading={checkoutLoading}
+            error={error}
+            onBack={back}
+            onNext={step < LAST_STEP ? next : submit}
+            onStepSelect={goToStep}
+          >
+            {renderUniversalStep()}
+          </UniversalBookingFrame>
+        )}
+        {false && !embeddedCheckoutSession && fastMode ? (
           <FastReviewSurface
             product={product}
             serviceLabel={serviceLabel}
@@ -4020,7 +4421,7 @@ export default function BookNow() {
         )}
       </main>
 
-      {!fastMode && step > 0 && <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:hidden">
+      {false && !fastMode && step > 0 && <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/72 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
           {step > 0 && !(compressedFlow && step === 3) && (
             <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[54px] rounded-full border border-foreground/14 bg-background/30 px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground/80 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
