@@ -73,16 +73,16 @@ function GoalTile({ item, index }) {
       initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.7, delay: 0.16 + index * 0.08, ease: EASE }}
-      className="av-glass-card group relative flex min-h-[54px] items-center gap-2 overflow-hidden rounded-full border border-foreground/12 bg-background/42 px-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/54 md:min-h-[116px] md:gap-3 md:rounded-[1.6rem] md:px-4 lg:gap-4 lg:px-5"
+      className="av-glass-card group relative flex min-h-[54px] min-w-0 items-center gap-2 overflow-hidden rounded-full border border-foreground/12 bg-background/42 px-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/54 md:min-h-[116px] md:gap-3 md:rounded-[1.6rem] md:px-4 lg:gap-4 lg:px-5"
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-12 md:w-12 md:rounded-2xl">
         <Icon className="h-4.5 w-4.5 md:h-5 md:w-5" strokeWidth={2.4} />
       </span>
-      <span className="relative min-w-0 flex-1 truncate font-body text-[10px] font-black uppercase leading-none tracking-[0.14em] text-foreground md:whitespace-normal md:text-clip md:font-heading md:text-[1.55rem] md:leading-[0.9] md:tracking-normal lg:text-[1.8rem]">
+      <span className="relative min-w-0 flex-1 truncate font-body text-[9px] font-black uppercase leading-none tracking-[0.1em] text-foreground md:whitespace-normal md:text-clip md:font-heading md:text-[1.55rem] md:leading-[0.9] md:tracking-normal lg:text-[1.8rem]">
         {item.label}
       </span>
-      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/36 text-foreground transition-transform group-hover:translate-x-1 md:h-9 md:w-9">
+      <span className="relative hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/36 text-foreground transition-transform group-hover:translate-x-1 sm:flex md:h-9 md:w-9">
         <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
       </span>
     </motion.span>
@@ -112,25 +112,26 @@ function ProtocolCard({ session, index = 0 }) {
       layout
       variants={premiumStaggerItem}
       transition={{ ...CARD_TRANSITION, delay: Math.min(index * 0.025, 0.12), layout: CARD_TRANSITION }}
-      className="av-glass-card group relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.6rem] md:p-4"
+      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.6rem] md:p-4"
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
-      <div className="relative flex items-start gap-3 md:gap-4">
+      <div className="relative flex min-w-0 items-start gap-3 md:gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16">
           <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.4} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="truncate font-heading text-[2.35rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
+              <h2 className="truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
                 {session.label}
               </h2>
               <p className="mt-1 flex items-center gap-2 font-body text-base font-bold text-foreground/78 md:text-lg">
                 <Clock className="h-4 w-4 shrink-0" strokeWidth={2.25} />
                 {session.duration || session.doses?.[0]?.duration || '45-60 min'}
               </p>
+              <p className="mt-1 font-heading text-[1.85rem] leading-none text-foreground sm:hidden">{money(priceFor(session))}</p>
             </div>
-            <div className="shrink-0 text-right">
+            <div className="hidden shrink-0 text-right sm:block">
               <p className="font-heading text-[2.25rem] leading-none text-foreground md:text-[2.75rem]">{money(priceFor(session))}</p>
               <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/58">from</p>
             </div>
@@ -238,7 +239,7 @@ export default function Menu() {
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-28 md:px-8 md:pt-32">
+      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-28 md:max-w-6xl md:px-8 md:pt-32">
         <section className="relative">
           <motion.div
             initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
@@ -251,7 +252,7 @@ export default function Menu() {
             </h1>
           </motion.div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 md:mt-10 md:grid-cols-4 md:gap-3">
+          <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 md:mt-10 md:grid-cols-4 md:gap-3">
             {HERO_GOALS.map((item, index) => (
               <GoalTile key={item.key} item={item} index={index} />
             ))}
@@ -259,7 +260,7 @@ export default function Menu() {
         </section>
 
         <section id="protocol-directory" className="mt-8 scroll-mt-28 md:mt-14">
-          <div className="relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/34 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:rounded-[1.9rem] md:p-5">
+          <div className="relative min-w-0 overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/34 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:rounded-[1.9rem] md:p-5">
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))]" />
             <div className="relative mb-4">
               <h2 className="font-heading text-[3rem] uppercase leading-none tracking-normal text-foreground md:text-[4.75rem]">IV</h2>

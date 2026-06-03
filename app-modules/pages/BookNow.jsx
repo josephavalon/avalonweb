@@ -2462,12 +2462,18 @@ export default function BookNow() {
     gfeExpiresAt: clientProfile.gfe?.validUntil,
   }), [clientProfile]);
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
-  const [step, setStep] = useState(() => (fastMode ? 1 : 0));
-  const stepShellRef = useRef(null);
-  const hasMountedStepRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const shouldResetDraft = searchParams.get('reset') === '1';
   const shouldResumeDraft = searchParams.get('resume') === '1';
+  const initialProtocolParam = searchParams.get('protocol');
+  const initialProtocolKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(initialProtocolParam) ? initialProtocolParam : '';
+  const initialSubscriptionParam = searchParams.get('subscription');
+  const initialSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === initialSubscriptionParam);
+  const initialOutcome = initialProtocolKey ? outcomeForProtocol(initialProtocolKey) : null;
+  const shouldStartAtVisit = Boolean(initialProtocolKey || initialSubscriptionPlan);
+  const [step, setStep] = useState(() => (fastMode ? 1 : shouldStartAtVisit ? 3 : 0));
+  const stepShellRef = useRef(null);
+  const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
     const draft = shouldResetDraft || !shouldResumeDraft ? {} : readBookingDraft()?.webstore || {};
     const savedWebstore = draft.draftVersion === BOOKING_DRAFT_VERSION ? draft : {};
@@ -2491,8 +2497,11 @@ export default function BookNow() {
       dob: realValue(savedContact.dob) || realValue(clientProfile.dob) || defaultState.dob,
       emergencyContact: realValue(savedContact.emergencyContact) || realValue(clientProfile.emergencyContact) || defaultState.emergencyContact,
       ...savedWebstore,
-      productKey: savedProductKey || defaultState.productKey,
-      addOns: savedProductKey ? (savedWebstore.addOns || []) : [],
+      outcome: initialOutcome?.key || savedWebstore.outcome || defaultState.outcome,
+      productKey: initialProtocolKey || savedProductKey || defaultState.productKey,
+      visitType: initialSubscriptionPlan ? 'subscription' : savedWebstore.visitType || defaultState.visitType,
+      planKey: initialSubscriptionPlan?.key || savedWebstore.planKey || defaultState.planKey,
+      addOns: initialProtocolKey ? [] : savedProductKey ? (savedWebstore.addOns || []) : [],
       addOnDecision: true,
     };
   });
@@ -2546,7 +2555,7 @@ export default function BookNow() {
         addOns: [],
         addOnDecision: true,
       }));
-      setStep(1);
+      setStep(3);
     } else if (nextOutcome) {
       const isCustom = nextOutcome.key === 'longevity';
       const base = CUSTOM_BASE_OPTIONS.find((item) => item.key === 'advanced') || CUSTOM_BASE_OPTIONS[1];
@@ -2565,6 +2574,20 @@ export default function BookNow() {
         };
       });
       setStep(1);
+    } else if (wantsSubscription) {
+      const fallbackProtocol = 'recovery';
+      const inferredOutcome = outcomeForProtocol(fallbackProtocol);
+      setState((current) => ({
+        ...current,
+        outcome: inferredOutcome.key,
+        productKey: fallbackProtocol,
+        visitType: 'subscription',
+        planKey: selectedSubscriptionPlan.key,
+        timeIntent: timeParam === 'asap' ? 'asap' : current.timeIntent,
+        addOns: [],
+        addOnDecision: true,
+      }));
+      setStep(3);
     }
   }, [searchParams]);
 
@@ -2579,6 +2602,7 @@ export default function BookNow() {
   const product = state.productKey ? safeProtocol(getProductByKey(state.productKey)) : null;
   const serviceLabel = isCustomTreatment ? customBase.label : product?.label || 'Therapy';
   const plan = MEMBERSHIP_OPTIONS.find((item) => item.key === state.planKey) || MEMBERSHIP_OPTIONS[0];
+  const compressedFlow = Boolean(searchParams.get('protocol') || searchParams.get('subscription'));
   const isReturningClient = state.clientType === 'returning';
   const clinicalReviewOnFile = Boolean(state.clinicalReviewOnFile);
   const bookingGfeRecord = clinicalReviewOnFile
@@ -3449,7 +3473,7 @@ export default function BookNow() {
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 pb-24 pt-20 md:px-8 md:pt-20 lg:pb-4">
+      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] px-0 pb-24 pt-20 md:max-w-6xl md:px-8 md:pt-20 lg:pb-4">
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
@@ -3537,6 +3561,18 @@ export default function BookNow() {
                   <div
                     className="h-full rounded-full bg-foreground transition-all duration-500"
                     style={{ width: step === 1 ? '33%' : step === 3 ? '66%' : '100%' }}
+                  />
+                </div>
+              </div>
+            ) : compressedFlow && step >= 3 ? (
+              <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
+                <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">
+                  {step === 3 ? '1 of 2 · Visit' : '2 of 2 · Patient'}
+                </p>
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/8">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all duration-500"
+                    style={{ width: step === 3 ? '50%' : '100%' }}
                   />
                 </div>
               </div>
@@ -3888,7 +3924,7 @@ export default function BookNow() {
 
       {!fastMode && step > 0 && <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/72 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
-          {step > 0 && (
+          {step > 0 && !(compressedFlow && step === 3) && (
             <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[54px] rounded-full border border-foreground/14 bg-background/30 px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground/80 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
               Back
             </button>

@@ -10,10 +10,9 @@ import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/sub
 const EASE = [0.16, 1, 0.3, 1];
 
 const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.7, ease: EASE },
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.24, ease: EASE },
 };
 
 const tiers = SUBSCRIPTION_TIERS.map((tier) => ({ ...tier, perks: tier.benefits }));
@@ -38,7 +37,7 @@ function PlanBuilder({ tier }) {
   ];
 
   return (
-    <motion.div className="mt-3 grid gap-2 sm:grid-cols-3 md:mt-5" {...fadeUp}>
+    <motion.div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-3 md:mt-5" {...fadeUp}>
       {builder.map((item) => (
         <div key={item.label} className="rounded-[1rem] border border-foreground/10 bg-foreground/[0.025] p-3">
           <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{item.label}</p>
@@ -174,18 +173,24 @@ export default function Subscription() {
   const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
   const switchTier = (tier) => setActiveTierKey(tier.key);
   const selectTier = () => {
-    navigate('/book?reset=1');
+    const params = new URLSearchParams({
+      reset: '1',
+      subscription: activeTier.key,
+      protocol: 'recovery',
+      time: 'asap',
+    });
+    navigate(`/book?${params.toString()}`);
   };
 
   return (
-    <div className="bg-background min-h-screen w-full">
+    <div className="bg-background min-h-screen w-full overflow-x-hidden">
       <Navbar />
-      <main className="min-h-screen pt-[4.5rem] md:pt-24 pb-28 md:pb-0">
+      <main className="min-h-screen overflow-x-hidden pb-28 pt-[4.5rem] md:pb-0 md:pt-24">
 
         {/* Tier Cards */}
-        <section id="subscription-plans" className="scroll-mt-24 py-8 md:flex md:min-h-[calc(100svh-6rem)] md:items-center md:py-12 px-5 md:px-12 lg:px-20">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid gap-5 md:grid-cols-[0.92fr_1.08fr] md:items-center">
+        <section id="subscription-plans" className="mx-auto w-full max-w-[calc(100vw-2rem)] scroll-mt-24 px-0 py-4 md:flex md:min-h-[calc(100svh-6rem)] md:max-w-none md:items-center md:px-12 md:py-12 lg:px-20">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="grid min-w-0 gap-4 md:grid-cols-[0.92fr_1.08fr] md:items-center">
               <div>
                 <motion.h1 className="font-heading text-5xl uppercase leading-[0.9] text-foreground md:text-7xl" {...fadeUp}>
                   Build your plan
@@ -195,8 +200,8 @@ export default function Subscription() {
                 </motion.p>
               </div>
 
-              <div className="space-y-3">
-                <motion.div className="grid grid-cols-2 gap-2 sm:grid-cols-4" {...fadeUp}>
+              <div className="min-w-0 space-y-3">
+                <motion.div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4" {...fadeUp}>
                   {tiers.map((tier) => (
                     <TierSwitch key={tier.key} tier={tier} active={activeTier.key === tier.key} onSelect={switchTier} />
                   ))}

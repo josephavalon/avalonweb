@@ -324,7 +324,7 @@ export default function ProductDetail() {
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 pb-32 pt-24 md:px-8 md:pb-20 md:pt-28">
+      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-32 pt-24 md:max-w-7xl md:px-8 md:pb-20 md:pt-28">
         <Link
           to={cat.backTo || '/protocols'}
           className="mb-5 inline-flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/46 transition-colors hover:text-foreground"
@@ -341,18 +341,13 @@ export default function ProductDetail() {
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.9, ease: EASE }}
           >
-            <GlassPanel className="p-4 md:hidden">
-              <div className="grid grid-cols-[1fr_0.42fr] gap-3">
-                <div className="min-w-0">
-                  <h1 className="font-heading text-[3.1rem] uppercase leading-[0.84] tracking-normal text-foreground">{treatment.name}</h1>
-                  <p className="mt-3 font-body text-sm font-semibold leading-snug text-foreground/64">{treatment.benefitStatement || treatment.desc}</p>
-                  <p className="mt-4 font-heading text-3xl text-foreground">{price}</p>
-                </div>
-                <div className="min-h-[13rem] overflow-hidden rounded-[1.1rem] border border-foreground/12 bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-xl">
-                  <ProductMedia product={treatment} compact />
-                </div>
+            <GlassPanel className="p-3 md:hidden">
+              <div className="min-w-0">
+                <h1 className="font-heading text-[2.9rem] uppercase leading-[0.84] tracking-normal text-foreground">{treatment.name}</h1>
+                <p className="mt-3 font-body text-sm font-semibold leading-snug text-foreground/64">{treatment.benefitStatement || treatment.desc}</p>
+                <p className="mt-4 font-heading text-3xl text-foreground">{price}</p>
               </div>
-              <div className="mt-4 grid grid-cols-[1fr_0.8fr] gap-2">
+              <div className="mt-4 grid gap-2">
                 <button
                   type="button"
                   onClick={buyNow}
@@ -362,9 +357,9 @@ export default function ProductDetail() {
                 </button>
                 <Link
                   to={bookingPath(treatment, true)}
-                  className="flex min-h-[3.35rem] items-center justify-center rounded-full border border-foreground/18 bg-foreground/[0.12] px-3 text-center font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground"
+                  className="flex min-h-[2.75rem] items-center justify-center rounded-full border border-foreground/14 bg-background/34 px-3 text-center font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/72"
                 >
-                  Subscribe
+                  Monthly plan
                 </Link>
               </div>
             </GlassPanel>
@@ -449,20 +444,14 @@ export default function ProductDetail() {
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/86 px-3 pb-[calc(env(safe-area-inset-bottom)+0.65rem)] pt-2.5 shadow-[0_-18px_45px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-[1fr_0.82fr] gap-2">
+        <div className="mx-auto grid max-w-lg gap-2">
           <button
             type="button"
             onClick={buyNow}
             className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[12px] font-black uppercase tracking-[0.15em] text-background"
           >
-            Buy Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+            Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
           </button>
-          <Link
-            to={bookingPath(treatment, true)}
-            className="flex min-h-[3.5rem] items-center justify-center rounded-full border border-foreground/18 bg-foreground/[0.12] px-3 text-center font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground"
-          >
-            Subscribe
-          </Link>
         </div>
       </div>
 

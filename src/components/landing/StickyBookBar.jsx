@@ -9,10 +9,10 @@ const BOOK_URL = '/book';
 export default function StickyBookBar() {
   return (
     <motion.div
-      initial={{ y: 72, opacity: 0 }}
+      initial={{ y: 18, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.58, delay: 1.05, ease: EASE }}
-      className="fixed inset-x-0 bottom-0 z-50 md:hidden"
+      transition={{ duration: 0.28, delay: 0.12, ease: EASE }}
+      className="fixed inset-x-0 bottom-0 z-[70] md:hidden"
       aria-label="Quick booking bar"
     >
       <div className="relative isolate mx-2 mb-1 overflow-hidden rounded-[18px] border border-foreground/[0.12] bg-[hsl(var(--background)/0.86)] p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.24)] backdrop-blur-2xl">

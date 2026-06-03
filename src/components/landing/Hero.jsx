@@ -21,8 +21,8 @@ export default function Hero() {
     >
       <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
 
-        {/* Mobile: fixed spacer keeps the CTA inside the first viewport. */}
-        <div className="h-[28svh] shrink-0 md:hidden" />
+        {/* Mobile: keep the revenue action inside the first viewport. */}
+        <div className="h-[11svh] shrink-0 md:hidden" />
 
 	        <motion.div
 	          {...premiumFadeUp(0.1)}
@@ -65,7 +65,7 @@ export default function Hero() {
           {...premiumFadeUp(0.98)}
           initial={{ opacity: 0, y: 22 }}
           transition={{ duration: 1.05, delay: 0.98, ease: EASE }}
-          className="relative mt-5 flex w-full max-w-[19rem] flex-col gap-2.5 md:mt-0 md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
+          className="relative mt-5 flex w-[19rem] max-w-full flex-col gap-2.5 md:mt-0 md:w-full md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
         >
           <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.17),transparent_38%),radial-gradient(circle_at_88%_88%,hsl(var(--foreground)/0.08),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_50%,hsl(var(--foreground)/0.034))] md:block" />
           <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/34 to-transparent md:block" />
