@@ -370,6 +370,17 @@ body {
   min-height: 100dvh;
 }
 
+.hero-root h1,
+.hero-root p,
+.hero-root a {
+  opacity: 1;
+}
+
+.av-reveal-safe,
+.av-reveal-safe * {
+  opacity: 1;
+}
+
 /* Dubs hero title: no sports-blue/gold treatment. */
 .dubs .hero-root h1 {
   color: hsl(var(--foreground));

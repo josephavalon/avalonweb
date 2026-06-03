@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight } from 'lucide-react';
 
@@ -7,6 +7,18 @@ import { EASE, premiumTap } from '@/lib/motion';
 const BOOK_URL = '/book';
 
 export default function StickyBookBar() {
+  const { pathname } = useLocation();
+  const hidden = pathname === '/book' ||
+    pathname.startsWith('/book/') ||
+    pathname.startsWith('/checkout') ||
+    pathname.startsWith('/booking/confirmation') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/provider') ||
+    pathname.startsWith('/members') ||
+    pathname.startsWith('/login');
+
+  if (hidden) return null;
+
   return (
     <motion.div
       initial={false}

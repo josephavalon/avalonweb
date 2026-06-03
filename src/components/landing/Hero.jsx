@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Droplets } from 'lucide-react';
-import { EASE, premiumFadeUp, premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
@@ -24,41 +24,36 @@ export default function Hero() {
         {/* Mobile: keep the revenue action inside the first viewport. */}
         <div className="h-[11svh] shrink-0 md:hidden" />
 
-	        <motion.div
-	          {...premiumFadeUp(0.1)}
-	          initial={{ opacity: 0, y: 18, scale: 0.985 }}
-	          transition={{ duration: 1.05, delay: 0.1, ease: EASE }}
+	        <div
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
 	          <div className="relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-12 lg:gap-16">
         <div className="md:max-w-xl">
 
-        <motion.p
-          {...premiumFadeUp(0.28)}
+        <p
           className="mb-3 font-body text-[11px] uppercase tracking-[0.34em] text-foreground/55 md:mb-4 md:text-xs"
         >
           Avalon Vitality
-        </motion.p>
+        </p>
 
-        <motion.h1
-          {...premiumFadeUp(0.38)}
-          initial={{ opacity: 0, y: 38 }}
-          transition={{ duration: 1.6, delay: 0.38, ease: EASE }}
+        <h1
           className="font-heading text-display-xl text-foreground uppercase max-w-3xl"
-          style={{ willChange: 'opacity, transform' }}
         >
           Recovery<br />On Demand
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          {...premiumFadeUp(0.72)}
-          initial={{ opacity: 0, y: 18 }}
-          transition={{ duration: 1.15, delay: 0.72, ease: EASE }}
+        <p
+          className="mt-3 font-body text-[11px] font-semibold uppercase leading-relaxed tracking-[0.18em] text-foreground/72 md:text-xs"
+        >
+          Licensed RN. Clinical review. Bay Area arrival window.
+        </p>
+
+        <p
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
           Bay Area.<br />Licensed RNs.<br />At home.
-        </motion.p>
+        </p>
         </div>
 
         <div
@@ -80,7 +75,7 @@ export default function Hero() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-y-0 -left-1/2 hidden w-1/2 bg-gradient-to-r from-transparent via-foreground/16 to-transparent md:block"
               animate={{ x: ['0%', '320%'] }}
-              transition={{ duration: 1.2, delay: 1.65, ease: EASE }}
+              transition={{ duration: 0.72, delay: 0.35, ease: EASE }}
             />
             <span className="relative flex min-w-0 items-center gap-4">
               <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/30 bg-foreground/[0.11] text-foreground shadow-[0_16px_42px_hsl(var(--foreground)/0.12),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:flex md:h-16 md:w-16">
@@ -102,7 +97,7 @@ export default function Hero() {
 
         {/* Proof rail */}
           </div>
-        </motion.div>
+        </div>
 
         <div className="pb-10 md:pb-0 md:flex-1" />
 

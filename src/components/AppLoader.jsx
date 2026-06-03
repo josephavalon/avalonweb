@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-const MIN_BOOT_MS = 920;
-const EXIT_MS = 560;
-const HARD_REMOVE_MS = 2400;
+const MIN_BOOT_MS = 160;
+const EXIT_MS = 160;
+const HARD_REMOVE_MS = 650;
 
 function removeSplash() {
   const splash = document.getElementById('av-boot-splash');

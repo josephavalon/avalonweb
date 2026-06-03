@@ -67,7 +67,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
-  const contactActionClass = "inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.07] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-foreground/[0.12] hover:text-foreground";
+  const contactActionClass = "inline-flex h-12 w-12 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.07] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-foreground/[0.12] hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const mobileLinks = [
     ...mainLinks,
@@ -200,14 +200,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             <>
               <a
                 href={PHONE_URL}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={`Call Avalon ${PHONE_DISPLAY}`}
               >
                 <Phone className="h-5 w-5" strokeWidth={2} />
               </a>
               <a
                 href={TEXT_URL}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label="Text Avalon"
               >
                 <MessageCircle className="h-5 w-5" strokeWidth={2} />
@@ -215,7 +215,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <motion.button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 whileTap={premiumTap}
-                className="mobile-menu-btn flex h-11 w-11 items-center justify-center rounded-full text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="mobile-menu-btn flex h-12 w-12 items-center justify-center rounded-full text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileOpen}
               >

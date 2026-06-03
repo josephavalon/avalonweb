@@ -7,6 +7,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import AppLoader from '@/components/AppLoader';
 import AvalonStaticBackdrop from '@/components/AvalonStaticBackdrop';
+import StickyBookBar from '@/components/landing/StickyBookBar';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -310,6 +311,7 @@ function App() {
           <ScrollProgress />
           <AvalonStaticBackdrop />
           <AppRoutes />
+          <StickyBookBar />
         </Router>
         <Toaster />
         <CookieConsent />

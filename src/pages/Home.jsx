@@ -4,7 +4,6 @@ import React, { lazy, Suspense } from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
-import StickyBookBar from '../components/landing/StickyBookBar';
 
 const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
 const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
@@ -36,8 +35,6 @@ export default function Home() {
           <MembershipSection />
         </Suspense>
       </div>
-      <StickyBookBar />
-
       <div className="pb-24 md:pb-0">
         <Suspense fallback={null}>
           <Footer />

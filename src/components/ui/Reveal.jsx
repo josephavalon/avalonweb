@@ -25,8 +25,8 @@ export function Reveal({
   children,
   className,
   delay     = 0,
-  duration  = 1.12,
-  y         = 64,
+  duration  = 0.52,
+  y         = 16,
   scale     = 1,       // ← default 1: scaling a section wrapper clips its children's top/bottom edges
   blur      = false,   // ← OFF by default — blur creates compositing layers that break iOS scroll
   margin    = '-40px',
@@ -39,10 +39,10 @@ export function Reveal({
     <Tag
       className={className}
       initial={{
-        opacity: 0,
-        y,
+        opacity: 1,
+        y: 0,
         ...(scale !== 1 ? { scale } : {}),
-        pointerEvents: 'none',                        // ← don't eat touches while invisible
+        pointerEvents: 'auto',
         ...(blur ? { filter: 'blur(8px)' } : {}),
       }}
       whileInView={{
@@ -65,7 +65,7 @@ export function Reveal({
 export function RevealGroup({
   children,
   className,
-  stagger   = 0.12,
+  stagger   = 0.045,
   delay     = 0,
   margin    = '-50px',
   as        = 'div',
@@ -80,7 +80,7 @@ export function RevealGroup({
       whileInView="visible"
       viewport={{ once: true, margin }}
       variants={{
-        hidden:  { pointerEvents: 'none' },
+        hidden:  { pointerEvents: 'auto' },
         visible: { pointerEvents: 'auto', transition: { staggerChildren: stagger, delayChildren: delay } },
       }}
       {...rest}
@@ -94,10 +94,10 @@ export function RevealGroup({
 export function RevealItem({
   children,
   className,
-  y        = 48,
+  y        = 12,
   scale    = 1,        // ← default 1: scaling clips children near edges
   blur     = false,   // ← OFF by default
-  duration = 1.05,
+  duration = 0.48,
   as       = 'div',
   ...rest
 }) {
@@ -108,10 +108,10 @@ export function RevealItem({
       className={className}
       variants={{
         hidden:  {
-          opacity: 0,
-          y,
+          opacity: 1,
+          y: 0,
           ...(scale !== 1 ? { scale } : {}),
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
           ...(blur ? { filter: 'blur(5px)' } : {}),
         },
         visible: {

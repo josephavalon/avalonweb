@@ -3807,7 +3807,7 @@ export default function BookNow() {
                         <button
                           type="button"
                           onClick={() => chooseTimeIntent(state.timeIntent === 'choose' ? 'asap' : 'choose')}
-                          className="relative min-h-[40px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/72"
+                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/72"
                         >
                           {state.timeIntent === 'choose' ? 'ASAP' : 'Pick time'}
                         </button>
