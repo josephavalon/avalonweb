@@ -473,7 +473,7 @@ function SectionTitle({ title, sub, icon: Icon }) {
       <div className="flex items-center gap-2">
         {Icon && (
           <motion.span
-            className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-foreground/14 bg-background/42 text-foreground/88 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_16px_52px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl"
+            className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-foreground/14 bg-background/42 text-foreground/88 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_16px_52px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl md:hidden"
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={reduceMotion ? { duration: 0 } : CHECKOUT_MOTION}
@@ -483,7 +483,7 @@ function SectionTitle({ title, sub, icon: Icon }) {
           </motion.span>
         )}
       </div>
-      <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-[0.86] tracking-0 text-foreground md:mt-3 md:text-7xl">
+      <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-[0.86] tracking-0 text-foreground md:mt-0 md:text-[4rem]">
         {title}
       </h1>
       {sub && <p className="mt-3 max-w-xl font-body text-lg font-medium leading-snug text-foreground/72 md:text-xl">{sub}</p>}
@@ -499,7 +499,7 @@ function StepProgress({ step, onStepSelect }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className={`${step === 0 ? 'hidden md:block' : ''} relative mb-2 overflow-hidden rounded-[1.35rem] border-0 bg-transparent p-2 shadow-none backdrop-blur-none md:mb-5 md:rounded-[1.6rem] md:border md:border-foreground/10 md:bg-background/38 md:p-2.5 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] md:backdrop-blur-2xl`}>
+    <div className={`${step === 0 ? 'hidden md:block' : ''} relative mb-2 overflow-hidden rounded-[1.35rem] border-0 bg-transparent p-2 shadow-none backdrop-blur-none md:mb-3 md:rounded-[1.35rem] md:border md:border-foreground/10 md:bg-background/38 md:p-2 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_20px_90px_hsl(var(--foreground)/0.08)] md:backdrop-blur-2xl`}>
       <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.13),transparent_36%),radial-gradient(circle_at_90%_100%,hsl(var(--foreground)/0.06),transparent_42%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_45%,hsl(var(--foreground)/0.035))] md:block" />
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
@@ -566,12 +566,12 @@ function StepProgress({ step, onStepSelect }) {
 function StepControls({ step, canGoNext, nextLabel, total, onBack, onNext }) {
   const compactNextLabel = nextLabel;
   return (
-    <div className="mb-4 hidden items-center gap-2 md:mb-6 md:flex">
+    <div className="mb-4 hidden items-center gap-2 md:mb-3 md:flex">
       <button
         type="button"
         onClick={onBack}
         disabled={step === 0}
-        className={`flex min-h-[52px] w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border bg-background/45 px-3 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl transition-colors md:min-h-[56px] md:w-[124px] md:gap-2 md:text-sm ${
+        className={`flex min-h-[52px] w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border bg-background/45 px-3 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl transition-colors md:min-h-[48px] md:w-[112px] md:gap-2 md:text-xs ${
           step === 0
             ? 'cursor-not-allowed border-foreground/8 text-foreground/22'
             : 'border-foreground/14 text-foreground/66 hover:border-foreground/32 hover:text-foreground'
@@ -583,7 +583,7 @@ function StepControls({ step, canGoNext, nextLabel, total, onBack, onNext }) {
       <button
         type="button"
         onClick={onNext}
-        className="relative flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-3 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] md:min-h-[56px] md:gap-4 md:px-6 md:text-sm"
+        className="relative flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-3 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] md:min-h-[48px] md:gap-4 md:px-5 md:text-xs"
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.14] to-foreground/[0.04] opacity-80" />
         <span className="truncate">{canGoNext ? compactNextLabel : 'Finish step'}</span>
@@ -757,38 +757,38 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
       }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
-      className={`av-glass-card relative overflow-hidden rounded-[1.75rem] border p-3.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:p-4 ${
+      className={`av-glass-card relative overflow-hidden rounded-[1.75rem] border p-3.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:rounded-[1.35rem] md:p-2.5 ${
         active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : featured ? 'border-foreground/16 bg-background/42 text-foreground' : 'border-foreground/9 bg-background/30 text-foreground'
       }`}
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.16),transparent_38%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.06),transparent_35%),linear-gradient(145deg,hsl(var(--foreground)/0.065),transparent_55%,hsl(var(--foreground)/0.026))]" />
       <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
-      <button type="button" onClick={onSelect} aria-label={`Select ${product.label}`} className="block min-h-[72px] w-full text-left">
+      <button type="button" onClick={onSelect} aria-label={`Select ${product.label}`} className="block min-h-[72px] w-full text-left md:min-h-[64px]">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] ${
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-10 md:w-10 md:rounded-xl ${
                 active ? 'border-foreground/30 bg-foreground/[0.105] text-foreground' : 'border-foreground/16 bg-foreground/[0.055] text-foreground/86'
               }`}
             >
-              <Icon className="h-5 w-5" strokeWidth={2.45} />
+              <Icon className="h-5 w-5 md:h-4.5 md:w-4.5" strokeWidth={2.45} />
             </div>
             <div className="min-w-0">
-              <p className="truncate font-heading text-[2rem] uppercase leading-none tracking-normal md:text-[2.35rem]">{product.label}</p>
-              <p className={`mt-1 font-body text-lg font-bold ${active ? 'text-foreground/78' : 'text-foreground/72'}`}>{protocolDuration(product)}</p>
+              <p className="truncate font-heading text-[2rem] uppercase leading-none tracking-normal md:text-[1.85rem]">{product.label}</p>
+              <p className={`mt-1 font-body text-lg font-bold md:text-sm ${active ? 'text-foreground/78' : 'text-foreground/72'}`}>{protocolDuration(product)}</p>
             </div>
           </div>
-          <div className="flex min-w-[86px] shrink-0 flex-col items-end justify-center text-right">
+          <div className="flex min-w-[86px] shrink-0 flex-col items-end justify-center text-right md:min-w-[72px]">
             {recommendation && (
-              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-2 py-0.5 font-body text-[10px] font-black uppercase leading-none tracking-[0.12em] text-foreground/66 backdrop-blur-2xl">
+              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-2 py-0.5 font-body text-[10px] font-black uppercase leading-none tracking-[0.12em] text-foreground/66 backdrop-blur-2xl md:text-[9px]">
                 {recommendation}
               </span>
             )}
-            <p className="font-body text-[2rem] font-black leading-none md:text-3xl">{currency(price)}</p>
+            <p className="font-body text-[2rem] font-black leading-none md:text-2xl">{currency(price)}</p>
           </div>
         </div>
       </button>
-      <div className="mt-3">
+      <div className="mt-3 md:hidden">
         <button
           type="button"
           onClick={onPrimary}
@@ -815,7 +815,7 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
   if (!featuredOptions.length) return null;
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 md:gap-2">
       {featuredOptions.map((item, index) => (
         <ProductCard
           key={item.key}
@@ -828,24 +828,24 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
         />
       ))}
       {otherOptions.length > 0 && (
-        <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
+        <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:rounded-[1.1rem]">
           <button
             type="button"
             onClick={() => setOpenOther((value) => !value)}
-            className="flex min-h-[84px] w-full items-center justify-between gap-3 px-4 text-left"
+            className="flex min-h-[84px] w-full items-center justify-between gap-3 px-4 text-left md:min-h-[58px] md:px-3"
             aria-expanded={openOther}
           >
             <span className="flex min-w-0 items-center gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.055] text-foreground/86">
-                <Plus className="h-5 w-5" strokeWidth={2.45} />
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.055] text-foreground/86 md:h-9 md:w-9 md:rounded-xl">
+                <Plus className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2.45} />
               </span>
               <span className="min-w-0">
-                <span className="block truncate font-heading text-[2rem] uppercase leading-none tracking-normal">Other options</span>
-                <span className="mt-1 block font-body text-sm font-bold text-foreground/62">{otherOptions.length} more</span>
+                <span className="block truncate font-heading text-[2rem] uppercase leading-none tracking-normal md:text-[1.55rem]">Other options</span>
+                <span className="mt-1 block font-body text-sm font-bold text-foreground/62 md:text-xs">{otherOptions.length} more</span>
               </span>
             </span>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/38 text-foreground/58">
-              <ChevronDown className={`h-4.5 w-4.5 transition-transform ${openOther ? 'rotate-180' : ''}`} strokeWidth={2.35} />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/38 text-foreground/58 md:h-8 md:w-8">
+              <ChevronDown className={`h-4.5 w-4.5 transition-transform md:h-4 md:w-4 ${openOther ? 'rotate-180' : ''}`} strokeWidth={2.35} />
             </span>
           </button>
           <SmoothDisclosure open={openOther}>
@@ -1294,7 +1294,7 @@ function hasDob(value) {
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction }) {
   return (
     <div className="block">
-      <div className="flex min-h-[28px] items-center justify-between gap-2">
+      <div className="flex min-h-[28px] items-center justify-between gap-2 md:min-h-[22px]">
         <span className="font-body text-sm font-extrabold tracking-[0.02em] text-foreground/76">{label}</span>
         {actionLabel && onAction && !value && (
           <button
@@ -1319,7 +1319,7 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         autoComplete={autoComplete}
         inputMode={inputMode}
         autoFocus={autoFocus}
-        className="mt-2 min-h-[60px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-xl font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40"
+        className="mt-2 min-h-[60px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-xl font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:text-lg"
       />
     </div>
   );
@@ -1332,20 +1332,20 @@ function AddressPrediction({ suggestion, onUse, compact = false }) {
     <button
       type="button"
       onClick={() => onUse(suggestion)}
-      className={`relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-foreground/28 bg-foreground/[0.13] px-4 text-left text-foreground shadow-[0_18px_70px_hsl(var(--foreground)/0.10),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-transform active:scale-[0.99] ${
+      className={`relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-foreground/28 bg-foreground/[0.13] px-4 text-left text-foreground shadow-[0_18px_70px_hsl(var(--foreground)/0.10),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-transform active:scale-[0.99] md:px-3 ${
         compact ? 'min-h-[62px]' : 'min-h-[72px]'
       }`}
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.13),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.06),transparent_58%,hsl(var(--foreground)/0.03))]" />
       <span className="relative flex min-w-0 items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/16 bg-foreground/[0.06] text-foreground/88">
-          <Icon className="h-5 w-5" strokeWidth={2.35} />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/16 bg-foreground/[0.06] text-foreground/88 md:h-9 md:w-9">
+          <Icon className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2.35} />
         </span>
         <span className="min-w-0">
           <span className="block font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/64">
             Use this address
           </span>
-          <span className="mt-1 block truncate font-body text-lg font-black leading-tight">{suggestion.address}</span>
+          <span className="mt-1 block truncate font-body text-lg font-black leading-tight md:text-base">{suggestion.address}</span>
         </span>
       </span>
       {suggestion.zip && (
@@ -1501,8 +1501,8 @@ function VisitForSelector({ value, onChoose }) {
   };
 
   return (
-    <div className="mb-5 rounded-[1.25rem] border border-foreground/12 bg-background/48 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="mb-5 rounded-[1.25rem] border border-foreground/12 bg-background/48 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:mb-2 md:p-2">
+      <div className="mb-3 flex items-center justify-between gap-3 md:hidden">
         <div className="min-w-0">
           <p className="font-body text-xs font-bold uppercase tracking-[0.16em] text-foreground/62">Who</p>
           <p className="mt-1 truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal text-foreground">{copy[value] || activeOption.label}</p>
@@ -1511,7 +1511,7 @@ function VisitForSelector({ value, onChoose }) {
           {activeOption.label}
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 md:gap-1.5">
         {WHO_OPTIONS.map((item) => {
           const Icon = item.icon;
           const active = value === item.key;
@@ -1521,13 +1521,13 @@ function VisitForSelector({ value, onChoose }) {
               type="button"
               onClick={() => onChoose(item.key)}
               aria-pressed={active}
-              className={`relative flex min-h-[76px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border px-2 text-center shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors active:scale-[0.985] ${
+              className={`relative flex min-h-[76px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border px-2 text-center shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors active:scale-[0.985] md:min-h-[44px] md:flex-row md:rounded-xl md:gap-1.5 ${
                 active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/14 bg-background/45 text-foreground/72 hover:border-foreground/24'
               }`}
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
-              <Icon className="relative h-5 w-5" strokeWidth={2.55} />
-              <span className="relative font-body text-xs font-extrabold uppercase tracking-[0.1em]">{item.label}</span>
+              <Icon className="relative h-5 w-5 md:h-4 md:w-4" strokeWidth={2.55} />
+              <span className="relative font-body text-xs font-extrabold uppercase tracking-[0.1em] md:text-[11px]">{item.label}</span>
               {active && <Check className="absolute right-2 top-2 h-3.5 w-3.5" strokeWidth={2.8} />}
             </button>
           );
@@ -1542,19 +1542,19 @@ function LocationTypeDropdown({ value, onChange }) {
   const Icon = selected.icon || Home;
 
   return (
-    <label className="relative mb-3 flex min-h-[76px] cursor-pointer items-center justify-between gap-4 overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/46 px-4 text-left text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/58">
+    <label className="relative mb-3 flex min-h-[76px] cursor-pointer items-center justify-between gap-4 overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/46 px-4 text-left text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/58 md:mb-2 md:min-h-[50px] md:rounded-xl md:px-3">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.075] via-transparent to-transparent" />
       <span className="relative flex min-w-0 items-center gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.055] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
-          <Icon className="h-5 w-5" strokeWidth={2.45} />
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.055] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-9 md:w-9 md:rounded-xl">
+          <Icon className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2.45} />
         </span>
         <span className="min-w-0">
           <span className="block font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/58">Place</span>
-          <span className="mt-1 block truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal">{selected.label}</span>
+          <span className="mt-1 block truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal md:text-[1.55rem]">{selected.label}</span>
         </span>
       </span>
-      <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/42 text-foreground/84">
-        <ChevronDown className="h-5 w-5" strokeWidth={2.4} />
+      <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/42 text-foreground/84 md:h-8 md:w-8">
+        <ChevronDown className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2.4} />
       </span>
       <select
         aria-label="Choose visit place"
@@ -2161,11 +2161,11 @@ function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
 function OptionalNotes({ value, onChange }) {
   const [open, setOpen] = useState(Boolean(value));
   return (
-    <div className="mb-3">
+    <div className="mb-3 md:mb-2">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex min-h-[54px] w-full items-center justify-between rounded-2xl border border-foreground/12 bg-background/45 px-4 font-body text-sm font-extrabold text-foreground/76 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl"
+        className="flex min-h-[54px] w-full items-center justify-between rounded-2xl border border-foreground/12 bg-background/45 px-4 font-body text-sm font-extrabold text-foreground/76 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl md:min-h-[44px] md:rounded-xl md:px-3 md:text-xs"
       >
         <span>{open ? 'Hide nurse instructions' : 'Nurse instructions'}</span>
         <Plus className={`h-5 w-5 transition-transform ${open ? 'rotate-45' : ''}`} strokeWidth={2.4} />
@@ -2175,7 +2175,7 @@ function OptionalNotes({ value, onChange }) {
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder="Gate code, parking, hotel room, concierge."
-          className="mt-2 min-h-[96px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] p-4 font-body text-xl font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40"
+          className="mt-2 min-h-[96px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] p-4 font-body text-xl font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:min-h-[72px] md:text-base"
         />
       </SmoothDisclosure>
     </div>
@@ -3451,7 +3451,7 @@ export default function BookNow() {
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 pb-32 pt-20 md:px-8 md:pt-24 lg:pb-16">
+      <main className="mx-auto max-w-6xl px-4 pb-32 pt-20 md:px-8 md:pt-20 lg:pb-4">
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
@@ -3459,7 +3459,7 @@ export default function BookNow() {
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
           >
-            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5">
+            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4">
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -3494,7 +3494,7 @@ export default function BookNow() {
                     stripe={stripePromise}
                     options={embeddedCheckoutOptions}
                   >
-                    <EmbeddedCheckout className="min-h-[620px]" />
+                    <EmbeddedCheckout className="min-h-[calc(100svh-250px)]" />
                   </EmbeddedCheckoutProvider>
                 </div>
               </div>
@@ -3528,7 +3528,7 @@ export default function BookNow() {
             onSubmit={submit}
           />
         ) : (
-        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10`}>
+        <div className={`${embeddedCheckoutSession ? 'hidden' : 'grid'} gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8`}>
           <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
             {fastMode ? (
               <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
@@ -3565,7 +3565,7 @@ export default function BookNow() {
             )}
             <motion.div
               key={step}
-              className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-5"
+              className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-4"
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.995 }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 1 }}
@@ -3661,7 +3661,7 @@ export default function BookNow() {
                       />
                     )}
                     {!fastMode && <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />}
-                    <div className="mt-5">
+                    <div className="mt-5 md:mt-2">
                       <SavedAddressShortcut
                         signedIn={signedInClient}
                         savedAddress={savedVisitAddress}
@@ -3672,7 +3672,7 @@ export default function BookNow() {
                         type="button"
                         onClick={useCurrentLocation}
                         disabled={locationLoading}
-                        className="mb-3 flex min-h-[54px] w-full items-center justify-between gap-3 rounded-2xl border border-foreground/12 bg-background/44 px-4 font-body text-sm font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl"
+                        className="mb-3 flex min-h-[54px] w-full items-center justify-between gap-3 rounded-2xl border border-foreground/12 bg-background/44 px-4 font-body text-sm font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl md:mb-2 md:min-h-[46px] md:rounded-xl md:px-3 md:text-xs"
                       >
                         <span className="flex items-center gap-2">
                           <Navigation className="h-4.5 w-4.5" strokeWidth={2.4} />
@@ -3681,7 +3681,7 @@ export default function BookNow() {
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="mt-5 grid gap-3">
+                    <div className="mt-5 grid gap-3 md:mt-2 md:gap-2">
                       <div className="grid gap-2">
                         <TextInput
                           label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'}
@@ -3720,7 +3720,7 @@ export default function BookNow() {
                               key={item.address}
                               type="button"
                               onClick={() => chooseAddressSuggestion(item)}
-                              className="relative flex min-h-[72px] items-center gap-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/45 px-3 text-left font-body text-base font-bold text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors hover:border-foreground/24 hover:bg-background/58 hover:text-foreground"
+                              className="relative flex min-h-[72px] items-center gap-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/45 px-3 text-left font-body text-base font-bold text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors hover:border-foreground/24 hover:bg-background/58 hover:text-foreground md:min-h-[52px] md:rounded-xl md:text-sm"
                             >
                               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
                               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.05] text-foreground/82">
@@ -3738,16 +3738,16 @@ export default function BookNow() {
                     <div className="mt-3">
                       {!fastMode && <OptionalNotes value={state.notes} onChange={(value) => setValue('notes', value)} />}
                     </div>
-	                    {!fastMode && <div className="relative mt-5 overflow-hidden rounded-[1.45rem] border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl">
+		                    {!fastMode && <div className="relative mt-5 overflow-hidden rounded-[1.45rem] border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-2 md:rounded-[1.15rem] md:p-2.5">
 	                      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),radial-gradient(circle_at_92%_95%,hsl(var(--foreground)/0.055),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.025))]" />
-	                      <div className="mb-3 flex items-center justify-between gap-3">
-	                        <span className="relative flex items-center gap-2 font-body text-xl font-black text-foreground">
+		                      <div className="mb-3 flex items-center justify-between gap-3 md:mb-2">
+		                        <span className="relative flex items-center gap-2 font-body text-xl font-black text-foreground md:text-base">
                             <Calendar className="h-5 w-5" strokeWidth={2.35} />
                             When
                           </span>
 	                        <span className="relative truncate font-body text-sm font-bold text-foreground/72">{bookingTimeSummary(state)}</span>
 	                      </div>
-	                      <div className="grid grid-cols-2 gap-2">
+		                      <div className="grid grid-cols-2 gap-2 md:gap-1.5">
 	                        {TIME_INTENTS.map((item) => {
 	                          const active = state.timeIntent === item.key || (item.key === 'asap' && (state.timeIntent === 'today' || state.timeIntent === 'soonest'));
 	                          const Icon = item.icon;
@@ -3756,7 +3756,7 @@ export default function BookNow() {
 	                              key={item.key}
 	                              type="button"
 	                              onClick={() => chooseTimeIntent(item.key)}
-	                              className={`relative flex min-h-[78px] items-center gap-3 overflow-hidden rounded-2xl border px-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-xl transition-all active:scale-[0.98] ${
+		                              className={`relative flex min-h-[78px] items-center gap-3 overflow-hidden rounded-2xl border px-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-xl transition-all active:scale-[0.98] md:min-h-[54px] md:rounded-xl md:px-2.5 ${
 	                                active ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.14)]' : 'border-foreground/10 bg-background/36 text-foreground hover:border-foreground/22'
 	                              }`}
 	                            >
@@ -3767,12 +3767,12 @@ export default function BookNow() {
                                     className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-foreground shadow-[0_0_24px_hsl(var(--foreground)/0.42)]"
                                   />
                                 )}
-	                              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.05]">
-	                                <Icon className="h-5 w-5" strokeWidth={2.4} />
+		                              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.05] md:h-9 md:w-9">
+		                                <Icon className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2.4} />
 	                              </span>
 	                              <span className="relative min-w-0">
-	                                <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{item.label}</span>
-	                                {active && <span className="mt-1 block font-body text-sm font-bold text-foreground/62">{item.key === 'choose' ? '30 days' : 'Fastest'}</span>}
+		                                <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground md:text-[1.35rem]">{item.label}</span>
+		                                {active && <span className="mt-1 block font-body text-sm font-bold text-foreground/62 md:text-xs">{item.key === 'choose' ? '30 days' : 'Fastest'}</span>}
 	                              </span>
 	                            </button>
 	                          );
