@@ -186,21 +186,21 @@ const BOOKING_THERAPY_KEYS = [
 const THERAPY_GROUPS = [
   {
     key: 'vitamin',
-    label: 'Vitamin IVs',
+    label: 'IV Vitamins',
     sub: '9 therapies',
     icon: Droplets,
     keys: ['hydration', 'myers', 'postnight', 'immunity', 'energy', 'recovery', 'performance', 'jetlag', 'food-poisoning'],
   },
   {
     key: 'cbd',
-    label: 'CBD',
+    label: 'IV CBD',
     sub: '4 doses',
     icon: Leaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-99mg', 'cbd-132mg'],
   },
   {
     key: 'nad',
-    label: 'NAD+',
+    label: 'IV NAD+',
     sub: '6 doses',
     icon: BatteryCharging,
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
@@ -627,7 +627,7 @@ function TrustSpeedStrip() {
   return null;
 }
 
-function StepProgress({ step, onStepSelect }) {
+function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitle = STEPS[step], progressIndex = displayStepIndex }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
@@ -647,7 +647,7 @@ function StepProgress({ step, onStepSelect }) {
             </motion.span>
             <div className="min-w-0">
               <p className="truncate font-body text-[1.05rem] font-black uppercase tracking-[0.02em] text-foreground">
-                {step + 1} OF {STEPS.length} • {STEPS[step]}
+                {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
               </p>
             </div>
           </div>
@@ -686,7 +686,7 @@ function StepProgress({ step, onStepSelect }) {
         <motion.div
           className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
           initial={false}
-          animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+          animate={{ width: `${((progressIndex + 1) / STEPS.length) * 100}%` }}
           transition={{ duration: 0.56, ease: EASE }}
         >
         </motion.div>
@@ -700,6 +700,9 @@ function UniversalBookingFrame({
   total,
   dueNow,
   dueAfter,
+  displayStepIndex,
+  displayTitle,
+  progressIndex,
   canGoNext,
   actionLabel,
   checkoutLoading,
@@ -711,7 +714,13 @@ function UniversalBookingFrame({
 }) {
   return (
     <section className="mx-auto flex h-[calc(100svh-5rem)] max-h-[calc(100svh-5rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[8.85rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
-      <StepProgress step={step} onStepSelect={onStepSelect} />
+      <StepProgress
+        step={step}
+        onStepSelect={onStepSelect}
+        displayStepIndex={displayStepIndex}
+        displayTitle={displayTitle}
+        progressIndex={progressIndex}
+      />
       {error && (
         <div role="alert" className="mb-2 flex min-h-[42px] items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
           <p className="truncate font-body text-sm font-black">{error}</p>
@@ -2763,7 +2772,9 @@ export default function BookNow() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
+  const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(true);
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
+  const [activeAddonGroup, setActiveAddonGroup] = useState('');
 
   useEffect(() => {
     if (shouldResetDraft) clearBookingDraft();
@@ -3297,6 +3308,7 @@ export default function BookNow() {
 
   const chooseNoAddons = () => {
     setError('');
+    setActiveAddonGroup('');
     setState((current) => ({
       ...current,
       addOns: [],
@@ -3323,6 +3335,11 @@ export default function BookNow() {
   };
 
   const next = () => {
+    if (step === 0 && therapyCategoryScreen) {
+      setError('');
+      setTherapyCategoryScreen(false);
+      return;
+    }
     if (step === 3 && groupContactRequired) {
       routeGroupContact();
       return;
@@ -3351,12 +3368,26 @@ export default function BookNow() {
     setStep((current) => Math.min(current + 1, LAST_STEP));
   };
 
-  const back = () => setStep((current) => Math.max(current - 1, 0));
+  const back = () => {
+    if (step === 0 && !therapyCategoryScreen) {
+      setError('');
+      setTherapyCategoryScreen(true);
+      return;
+    }
+    if (step === 1 && activeAddonGroup) {
+      setError('');
+      setActiveAddonGroup('');
+      return;
+    }
+    setStep((current) => Math.max(current - 1, 0));
+  };
 
   const goToStep = (targetStep) => {
     if (targetStep === step) return;
     if (targetStep < step) {
       setError('');
+      setTherapyCategoryScreen(targetStep === 0);
+      if (targetStep !== 1) setActiveAddonGroup('');
       setStep(targetStep);
       return;
     }
@@ -3767,6 +3798,25 @@ export default function BookNow() {
   ), []);
   const activeTherapyGroupData = therapyGroups.find((group) => group.key === activeTherapyGroup) || therapyGroups[0];
   const activeTherapies = activeTherapyGroupData?.items || [];
+  const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
+    ? 'IV VITAMINS'
+    : activeTherapyGroupData?.key === 'cbd'
+      ? 'IV CBD'
+      : 'IV NAD+';
+  const progressDisplay = {
+    index: step === 0
+      ? (therapyCategoryScreen ? 0 : 1)
+      : step === 1
+        ? 2
+        : step === LAST_STEP
+          ? 4
+          : 3,
+    title: step === 0
+      ? (therapyCategoryScreen ? 'THERAPY CATEGORY' : activeTherapyDisplayTitle)
+      : step === 1
+        ? 'ADD-ONS'
+        : STEPS[step].toUpperCase(),
+  };
 
   const compactAddons = useMemo(() => addonCatalog.all.slice(0, 4), [addonCatalog]);
 
@@ -3874,72 +3924,48 @@ export default function BookNow() {
     }
 
     if (step === 0) {
-      const selectedCopy = compactProtocolCopy(product);
-      const SelectedIcon = product?.icon || Droplets;
-      return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-2">
-          <div className={`${panelCardClass} grid min-h-[98px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-3`}>
-            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.03))]" />
-            <span className="relative flex min-w-0 items-center gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/18 bg-foreground/[0.075] text-foreground">
-                <SelectedIcon className="h-6 w-6" strokeWidth={2.45} />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/58">How are you feeling?</span>
-                <span className="mt-1 block truncate font-heading text-[1.65rem] uppercase leading-none tracking-normal text-foreground">{selectedCopy.label}</span>
-                <span className="mt-1 block truncate font-body text-[11px] font-bold text-foreground/58">Clinical review.</span>
-              </span>
-            </span>
-            <span className="relative shrink-0 text-right">
-              <span className="block font-body text-[1.7rem] font-black leading-none text-foreground">{currency(protocolPrice(product))}</span>
-              <span className="mt-1 block font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/56">{protocolDuration(product)}</span>
-            </span>
-            <div className="relative col-span-2 grid grid-cols-4 gap-1.5">
-              {STACK_LAYERS.slice(0, 4).map((item) => {
-                const LayerIcon = item.icon;
+      if (therapyCategoryScreen) {
+        return (
+          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
+            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose a therapy category</p>
+            <div className="grid min-h-0 content-start gap-2">
+              {therapyGroups.map((group) => {
+                const GroupIcon = group.icon;
                 return (
-                  <span
-                    key={item.key}
-                    className={`flex min-h-[26px] items-center justify-center gap-1 rounded-full border px-2 font-body text-[9px] font-black uppercase tracking-[0.08em] ${
-                      item.active ? 'border-foreground/18 bg-foreground/[0.075] text-foreground/74' : 'border-foreground/10 bg-background/28 text-foreground/42'
-                    }`}
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => {
+                      setActiveTherapyGroup(group.key);
+                      setTherapyCategoryScreen(false);
+                    }}
+                    className={`${panelCardClass} grid min-h-[96px] grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
                   >
-                    <LayerIcon className="h-3 w-3" strokeWidth={2.3} />
-                    {item.label}
-                  </span>
+                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
+                      <GroupIcon className="h-8 w-8" strokeWidth={2.05} />
+                    </span>
+                    <span className="relative min-w-0 border-l border-foreground/10 pl-4">
+                      <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
+                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">{group.sub.replace('doses', 'therapies')}</span>
+                    </span>
+                    <span className="relative flex justify-end text-foreground/84">
+                      <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                    </span>
+                  </button>
                 );
               })}
             </div>
           </div>
+        );
+      }
 
-          <div className="grid grid-cols-3 gap-1.5">
-            {therapyGroups.map((group) => {
-              const GroupIcon = group.icon;
-              const active = activeTherapyGroup === group.key;
-              const selectedInGroup = group.keys.includes(state.productKey);
-              return (
-                <button
-                  key={group.key}
-                  type="button"
-                  onClick={() => setActiveTherapyGroup(group.key)}
-                  aria-pressed={active}
-                  className={`relative min-h-[60px] overflow-hidden rounded-[1rem] border px-2 py-2 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
-                    active ? 'border-foreground/46 bg-foreground/[0.14] text-foreground' : 'border-foreground/10 bg-background/34 text-foreground/72'
-                  }`}
-                >
-                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
-                  <span className="relative flex items-center justify-between gap-2">
-                    <GroupIcon className="h-4 w-4" strokeWidth={2.45} />
-                    {selectedInGroup && <Check className="h-3.5 w-3.5" strokeWidth={2.7} />}
-                  </span>
-                  <span className="relative mt-2 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em]">{group.label}</span>
-                  <span className="relative mt-0.5 block truncate font-body text-[9px] font-bold uppercase tracking-[0.08em] text-foreground/48">{group.sub}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className={`grid min-h-0 gap-1.5 ${activeTherapies.length <= 4 ? 'grid-cols-2 auto-rows-fr' : 'grid-cols-3 auto-rows-fr'}`}>
+      return (
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
+          <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>
+            Choose your {activeTherapyDisplayTitle.toLowerCase()} therapy
+          </p>
+          <div className={`grid min-h-0 gap-2 ${activeTherapies.length <= 4 ? 'grid-cols-2 auto-rows-fr' : 'grid-cols-3 auto-rows-fr'}`}>
             {activeTherapies.map((item) => {
               const Icon = item.icon || Droplets;
               const active = state.productKey === item.key;
@@ -3950,33 +3976,22 @@ export default function BookNow() {
                   type="button"
                   onClick={() => chooseProduct(item.key)}
                   aria-pressed={active}
-                  className={`${panelCardClass} relative flex min-h-0 flex-col justify-between gap-1 p-2 text-left transition-colors md:gap-2 md:p-3 ${
-                    active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46' : 'hover:border-foreground/24'
+                  className={`${panelCardClass} relative flex min-h-0 flex-col items-center justify-center gap-2 p-2 text-center transition-colors ${
+                    active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
                   }`}
                 >
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                  <span className="relative flex w-full items-start justify-between gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/16 bg-foreground/[0.06] text-foreground md:h-11 md:w-11 md:rounded-xl">
-                      <Icon className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.45} />
+                  {active && (
+                    <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground">
+                      <Check className="h-4 w-4" strokeWidth={2.7} />
                     </span>
-                    <span className="shrink-0 text-right">
-                      {active ? (
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-foreground/20 bg-foreground/[0.10] text-foreground md:h-8 md:w-8">
-                          <Check className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
-                        </span>
-                      ) : (
-                        <span className="block font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>
-                      )}
-                    </span>
+                  )}
+                  <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-foreground">
+                    <Icon className="h-7 w-7" strokeWidth={2.15} />
                   </span>
                   <span className="relative min-w-0">
-                    <span className="block break-words font-heading text-[1rem] uppercase leading-[0.88] tracking-normal text-foreground min-[390px]:text-[1.08rem] md:text-[1.85rem]">{copy.label}</span>
-                    <span className="hidden truncate font-body text-[9px] font-black text-foreground/72 md:mt-1 md:block md:text-sm">{protocolDuration(item)}</span>
-                    <span className="hidden truncate font-body text-[11px] font-semibold text-foreground/60 md:mt-0.5 md:block md:text-sm">{copy.line}</span>
-                  </span>
-                  <span className="relative hidden w-full items-center justify-between gap-2 md:flex">
-                    <span className="truncate font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/56 md:text-[10px]">{active ? 'Selected' : 'Select'}</span>
-                    {active && <span className="font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>}
+                    <span className="block break-words font-heading text-[1rem] uppercase leading-[0.9] tracking-normal text-foreground min-[390px]:text-[1.08rem] md:text-[1.75rem]">{copy.label}</span>
+                    {active && <span className="mt-1 block font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62">{currency(protocolPrice(item))}</span>}
                   </span>
                 </button>
               );
@@ -3987,23 +4002,61 @@ export default function BookNow() {
     }
 
     if (step === 1) {
+      const selectedAddonGroup = addonCatalog.groups.find((group) => group.key === activeAddonGroup);
+
+      if (!selectedAddonGroup) {
+        return (
+          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
+            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-on category</p>
+            <div className="grid min-h-0 content-start gap-3">
+              {addonCatalog.groups.map((group) => {
+                const GroupIcon = group.key === 'iv' ? Plus : group.icon;
+                const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
+                return (
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => setActiveAddonGroup(group.key)}
+                    className={`${panelCardClass} grid min-h-[126px] grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
+                  >
+                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
+                      <GroupIcon className="h-9 w-9" strokeWidth={2.05} />
+                    </span>
+                    <span className="relative min-w-0 border-l border-foreground/10 pl-4">
+                      <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
+                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">
+                        {selectedCount ? `${selectedCount} selected` : group.key === 'iv' ? 'Enhance your IV therapy' : 'Enhance with IM injections'}
+                      </span>
+                    </span>
+                    <span className="relative flex justify-end text-foreground/84">
+                      <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
           <button
             type="button"
-            onClick={chooseNoAddons}
-            className={`${panelCardClass} flex min-h-[58px] items-center justify-between gap-3 px-3 text-left ${state.addOnDecision && !selectedAddons.length ? 'border-foreground/42 bg-foreground/[0.13]' : ''}`}
+            onClick={() => setActiveAddonGroup('')}
+            className={`${panelCardClass} flex min-h-[58px] items-center justify-between gap-3 px-3 text-left`}
           >
             <span className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055]">
-                {!selectedAddons.length ? <Check className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
+                <ArrowLeft className="h-4 w-4" />
               </span>
-              <span className="font-heading text-[1.7rem] uppercase leading-none tracking-normal">No add-ons</span>
+              <span className="font-heading text-[1.55rem] uppercase leading-none tracking-normal">{selectedAddonGroup.label}</span>
             </span>
-            <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Fastest</span>
+            <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Category</span>
           </button>
           <div className="grid min-h-0 grid-cols-2 gap-2">
-            {compactAddons.map((item) => {
+            {selectedAddonGroup.items.map((item) => {
               const active = state.addOns.includes(item.label);
               const Icon = item.icon || Plus;
               return (
@@ -4219,6 +4272,9 @@ export default function BookNow() {
             total={totalLabel}
             dueNow={dueNowLabel}
             dueAfter={dueAfterLabel}
+            displayStepIndex={progressDisplay.index}
+            displayTitle={progressDisplay.title}
+            progressIndex={progressDisplay.index}
             canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
             actionLabel={primaryActionLabel()}
             checkoutLoading={checkoutLoading}
