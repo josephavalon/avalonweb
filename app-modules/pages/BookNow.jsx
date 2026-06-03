@@ -4194,7 +4194,7 @@ export default function BookNow() {
     }
 
     return (
-      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-2">
+      <div className="grid h-full min-h-0 content-start gap-2">
         <div className={`${panelCardClass} p-2.5`}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
