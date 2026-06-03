@@ -74,8 +74,8 @@ const CARD_REVEAL = {
 };
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Location', 'Therapy', 'Add-ons', 'Date & Time', 'Review'];
-const STEP_ICONS = [MapPin, Droplets, Plus, Calendar, Check];
+const STEPS = ['Therapy', 'Add-ons', 'Date & Time', 'Location', 'Review'];
+const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
 const PRIMARY_OUTCOME_KEYS = ['recover', 'perform', 'performance', 'longevity'];
@@ -2959,15 +2959,15 @@ export default function BookNow() {
         : current.addOns,
       addOnDecision: true,
     }));
-    setStep(1);
+    setStep(0);
   };
 
   const chooseProduct = (key, overrides = {}) => {
     setError('');
     track(ANALYTICS_EVENTS.STEP_COMPLETED, {
       funnel: 'webstore',
-      step_index: 1,
-      step_name: STEPS[1],
+      step_index: 0,
+      step_name: STEPS[0],
       protocol_key: key,
     });
     setState((current) => ({
@@ -2987,8 +2987,8 @@ export default function BookNow() {
     const base = CUSTOM_BASE_OPTIONS.find((item) => item.key === key) || CUSTOM_BASE_OPTIONS[1];
     track(ANALYTICS_EVENTS.STEP_COMPLETED, {
       funnel: 'webstore',
-      step_index: 1,
-      step_name: STEPS[1],
+      step_index: 0,
+      step_name: STEPS[0],
       protocol_key: `custom-${base.key}`,
     });
     setError('');
@@ -3022,12 +3022,12 @@ export default function BookNow() {
       locationType: item.locationType,
     }));
     if (
-      step === 0 &&
+      step === 3 &&
       !groupContactRequired &&
       String(nextZip || '').replace(/\D/g, '').length === 5 &&
       (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
     ) {
-      setStep(1);
+      setStep(LAST_STEP);
     }
   };
 
@@ -3052,12 +3052,12 @@ export default function BookNow() {
             zip: result.zip || current.zip,
           }));
           if (
-            step === 0 &&
+            step === 3 &&
             !groupContactRequired &&
             String(result.zip || '').replace(/\D/g, '').length === 5 &&
             (state.timeIntent !== 'choose' || (state.customDate && state.customTime))
           ) {
-            setStep(1);
+            setStep(LAST_STEP);
           }
         } catch (err) {
           setError(err.message || 'Address lookup failed. Add street address.');
@@ -3125,8 +3125,8 @@ export default function BookNow() {
     }));
     track(ANALYTICS_EVENTS.STEP_COMPLETED, {
       funnel: 'webstore',
-      step_index: 2,
-      step_name: STEPS[2],
+      step_index: 1,
+      step_name: STEPS[1],
       protocol_key: state.productKey,
       addon_count: 0,
       addon_revenue: 0,
@@ -3135,21 +3135,21 @@ export default function BookNow() {
   };
 
   const canAdvance = () => {
-    if (step === 0) return Boolean(state.address.trim() && resolvedZip.length === 5);
-    if (step === 1 && isCustomTreatment) return Boolean(state.productKey && state.customBase);
-    if (step === 1) return Boolean(state.productKey);
-    if (step === 2) return true;
-    if (step === 3) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
+    if (step === 0 && isCustomTreatment) return Boolean(state.productKey && state.customBase);
+    if (step === 0) return Boolean(state.productKey);
+    if (step === 1) return true;
+    if (step === 2) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
+    if (step === 3) return Boolean(state.address.trim() && resolvedZip.length === 5);
     return true;
   };
 
   const next = () => {
-    if (step === 0 && groupContactRequired) {
+    if (step === 3 && groupContactRequired) {
       routeGroupContact();
       return;
     }
     if (!canAdvance()) {
-      const reason = step === 0 ? 'Add address and ZIP.' : step === 1 ? 'Choose therapy.' : step === 3 ? 'Choose date and time.' : 'Finish this step.';
+      const reason = step === 0 ? 'Choose therapy.' : step === 2 ? 'Choose date and time.' : step === 3 ? 'Add address and ZIP.' : 'Finish this step.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -3613,7 +3613,7 @@ export default function BookNow() {
   const microLabelClass = 'font-body text-[10px] font-black uppercase tracking-[0.13em] text-foreground/58';
 
   const renderUniversalStep = () => {
-    if (step === 0) {
+    if (step === 3) {
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-2">
           <div className={`${panelCardClass} p-2`}>
@@ -3676,7 +3676,7 @@ export default function BookNow() {
       );
     }
 
-    if (step === 1) {
+    if (step === 0) {
       return (
         <div className="grid h-full min-h-0 grid-rows-3 gap-2">
           {compactTherapies.map((item, index) => {
@@ -3713,7 +3713,7 @@ export default function BookNow() {
       );
     }
 
-    if (step === 2) {
+    if (step === 1) {
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
           <button
@@ -3758,7 +3758,7 @@ export default function BookNow() {
       );
     }
 
-    if (step === 3) {
+    if (step === 2) {
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
           <div className="grid grid-cols-2 gap-2">
