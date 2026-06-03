@@ -286,11 +286,6 @@ function writeSitemap(routes) {
   fs.writeFileSync(path.join(dist, 'sitemap.xml'), xml, 'utf8');
 }
 
-function writeRobots() {
-  const robots = `# Avalon Vitality robots policy\nUser-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /admin/\nDisallow: /provider\nDisallow: /provider/\nDisallow: /members\nDisallow: /members/\n\nSitemap: ${SEO_BASE_URL}/sitemap.xml\n`;
-  fs.writeFileSync(path.join(dist, 'robots.txt'), robots, 'utf8');
-}
-
 const serviceRoutes = servicePillars.map((page) => ({
   ...page,
   priority: page.noindex ? '0.0' : '0.85',
@@ -376,7 +371,6 @@ writeSitemap(dedupeRoutes([
   learnHub,
   ...indexedEducationArticles.map((page) => ({ ...page, priority: '0.65', changefreq: 'monthly' })),
 ]));
-writeRobots();
 ensureCanonicalRootHtml('index');
 ensureCanonicalRootHtml('b2b');
 

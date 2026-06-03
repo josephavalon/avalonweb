@@ -19,6 +19,13 @@ const jsonLdMatchesPath = (scriptEl, expectedUrl) => {
   }
 };
 
+const PRIVATE_BETA_ROBOTS = 'noindex, nofollow, noarchive';
+
+function isPrivateBetaHost() {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname === 'snooches.avalonvitality.co';
+}
+
 export function useSeo({ title, description, path, jsonLd, robots = 'index, follow, max-image-preview:large' }) {
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -57,7 +64,7 @@ export function useSeo({ title, description, path, jsonLd, robots = 'index, foll
     };
 
     if (description) setMeta('description', description);
-    setMeta('robots', robots);
+    setMeta('robots', isPrivateBetaHost() ? PRIVATE_BETA_ROBOTS : robots);
     if (description) setProp('og:description', description);
     if (title) setProp('og:title', title);
     if (path) {
