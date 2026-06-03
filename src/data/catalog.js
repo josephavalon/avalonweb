@@ -321,10 +321,18 @@ export const VERTICALS = {
 function treatmentFromSession(session) {
   return {
     name: session.label,
+    protocolKey: session.key,
     oneTime: money(session.price),
     monthly: subscriberPrice(session.price),
     annual: annualPrice(session.price),
     desc: session.desc || session.tagline,
+    benefitStatement: session.tagline,
+    benefits: session.features,
+    idealFor: idealForSession(session),
+    included: includedSession(session),
+    timeline: defaultTimeline(session.duration),
+    faq: defaultFaq(session),
+    related: relatedForSession(session.key),
     image: session.image,
     transparentMedia: session.transparentMedia,
     motionVideo: session.motionVideo,
@@ -333,16 +341,95 @@ function treatmentFromSession(session) {
 
 function treatmentFromDose(parent, dose) {
   return {
-    name: `${parent.label} ${dose.label}`,
+    name: `${parent.label} IV ${dose.label}`,
+    protocolKey: parent.key,
+    doseKey: dose.key,
     price: money(dose.price),
     annualPrice: subscriberPrice(dose.price),
     desc: `${parent.tagline} ${dose.duration ? `Typical visit time: ${dose.duration}.` : ''}`.trim(),
+    benefitStatement: parent.tagline,
+    benefits: parent.features,
+    idealFor: idealForSession(parent),
+    included: includedSession(parent),
+    timeline: defaultTimeline(dose.duration),
+    faq: defaultFaq(parent),
+    related: relatedForSession(parent.key),
     image: dose.image,
   };
 }
 
 const ivVitaminKeys = new Set(['hydration', 'myers', 'recovery', 'energy', 'postnight', 'immunity', 'beauty', 'jetlag']);
 const byKey = Object.fromEntries(IV_SESSIONS.map((session) => [session.key, session]));
+
+function includedSession(session) {
+  if (session.key === 'nad') return ['NAD+', 'IV fluids', 'B-complex support'];
+  if (session.key === 'cbd') return ['Zero-THC CBD', 'IV fluids', 'Clinician-guided dose'];
+  return String(session.inside || 'IV fluids · Electrolytes · Vitamin support')
+    .split(' · ')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function idealForSession(session) {
+  const key = session.key;
+  if (key === 'postnight') return ['Nightlife', 'Travel', 'Recovery'];
+  if (key === 'jetlag') return ['Travel', 'Corporate', 'Recovery'];
+  if (key === 'energy') return ['Performance', 'Corporate', 'Wellness'];
+  if (key === 'myers') return ['Wellness', 'Energy', 'Recovery'];
+  if (key === 'immunity') return ['Wellness', 'Travel', 'Corporate'];
+  if (key === 'hydration') return ['Travel', 'Recovery', 'Wellness'];
+  if (key === 'nad') return ['Longevity', 'Performance', 'Wellness'];
+  if (key === 'cbd') return ['Wellness', 'Recovery', 'Clinical Review'];
+  return ['Recovery', 'Wellness', 'Performance'];
+}
+
+function defaultTimeline(duration = '45-60 min') {
+  return [
+    { label: 'Booking', value: 'Choose protocol' },
+    { label: 'Review', value: 'Clinical intake' },
+    { label: 'Arrival', value: 'Licensed RN' },
+    { label: 'Treatment', value: duration },
+  ];
+}
+
+function defaultFaq(session) {
+  return [
+    { q: 'How long does it take?', a: session.duration || session.doses?.[0]?.duration || 'Most visits take 30-60 minutes after clinical clearance.' },
+    { q: 'Who administers it?', a: 'A California-licensed RN after intake and clinical review.' },
+    { q: 'Can I book today?', a: 'Same-day availability depends on location, nurse coverage, and clinical clearance.' },
+    { q: 'Is this medical treatment?', a: 'Avalon provides clinician-reviewed wellness services. Eligibility is confirmed before service.' },
+    { q: 'Where do you serve?', a: 'Avalon serves eligible clients across the San Francisco Bay Area.' },
+  ];
+}
+
+function relatedForSession(key) {
+  const map = {
+    hydration: ['recovery-iv', 'post-night-out-iv', 'myers-cocktail-iv'],
+    myers: ['hydration-iv', 'energy-iv', 'immunity-iv'],
+    postnight: ['hydration-iv', 'recovery-iv', 'jet-lag-iv'],
+    immunity: ['myers-cocktail-iv', 'hydration-iv', 'energy-iv'],
+    energy: ['myers-cocktail-iv', 'performance-iv', 'nad-iv-250mg'],
+    recovery: ['hydration-iv', 'post-night-out-iv', 'performance-iv'],
+    jetlag: ['hydration-iv', 'energy-iv', 'post-night-out-iv'],
+    nad: ['energy-iv', 'myers-cocktail-iv', 'recovery-iv'],
+    cbd: ['recovery-iv', 'hydration-iv', 'myers-cocktail-iv'],
+  };
+  return map[key] || ['hydration-iv', 'myers-cocktail-iv', 'recovery-iv'];
+}
+
+function namedSession(session, name, overrides = {}) {
+  return {
+    ...treatmentFromSession(session),
+    name,
+    desc: overrides.desc || session.desc || session.tagline,
+    benefitStatement: overrides.benefitStatement || session.tagline,
+    image: overrides.image || session.image,
+    related: overrides.related || relatedForSession(session.key),
+    idealFor: overrides.idealFor || idealForSession(session),
+    included: overrides.included || includedSession(session),
+  };
+}
 
 export const productsByCategory = {
   cbd: {
@@ -355,7 +442,11 @@ export const productsByCategory = {
     categoryLabel: 'CBD Review',
     backTo: '/services/cbd',
     backLabel: 'Back to CBD Review',
-    treatments: byKey.cbd.doses.map((dose) => treatmentFromDose(byKey.cbd, dose)),
+    treatments: byKey.cbd.doses.map((dose) => ({
+      ...treatmentFromDose(byKey.cbd, dose),
+      name: `CBD IV ${dose.label}`,
+      desc: 'Approval-gated CBD IV information for clinician-reviewed wellness visits.',
+    })),
   },
   nad: {
     title: 'IV NAD+',
@@ -368,12 +459,23 @@ export const productsByCategory = {
     backTo: '/services/nad',
     backLabel: 'Back to IV NAD+',
     treatments: [
-      ...byKey.nad.doses.map((dose) => treatmentFromDose(byKey.nad, dose)),
+      ...byKey.nad.doses.map((dose) => ({
+        ...treatmentFromDose(byKey.nad, dose),
+        name: `NAD+ IV ${dose.label}`,
+      })),
       {
-        name: "NAD+ Myers' Cocktail",
+        name: "NAD+ Myers' Cocktail IV",
+        protocolKey: 'nad',
         price: money(700),
         annualPrice: subscriberPrice(700),
         desc: 'NAD+ paired with B vitamins and amino acids.',
+        benefitStatement: 'NAD+ with classic IV vitamin support.',
+        benefits: ['NAD+ review', 'B vitamins', 'Amino acid support', 'Clinician-guided dosing'],
+        idealFor: ['Longevity', 'Wellness', 'Performance'],
+        included: ['NAD+', 'B vitamins', 'Amino acids', 'IV fluids'],
+        timeline: defaultTimeline('3-5 hr'),
+        faq: defaultFaq(byKey.nad),
+        related: ['nad-iv-250mg', 'myers-cocktail-iv', 'energy-iv'],
         image: '/bags/nad-750.png',
       },
     ],
@@ -400,38 +502,74 @@ export const productsByCategory = {
     backTo: '/services/iv-vitamins',
     backLabel: 'Back to IV Vitamins',
     treatments: [
-      treatmentFromSession(byKey.hydration),
-      {
-        ...treatmentFromSession(byKey.hydration),
-        name: 'Dehydration',
-        desc: '1000ml saline with electrolytes. A classic formula used for hydration support.',
-      },
-      treatmentFromSession(byKey.myers),
-      treatmentFromSession(byKey.recovery),
-      {
-        ...treatmentFromSession(byKey.recovery),
-        name: 'Launch Recovery',
-        desc: 'Post-launch hydration with amino acids and electrolytes - popular with clients bouncing back from long days.',
-      },
-      {
-        ...treatmentFromSession(byKey.energy),
-        name: 'Launch Performance',
-        desc: 'Pre-launch hydration featuring B vitamins and amino acids - often chosen by performers and athletes.',
-      },
-      ...IV_SESSIONS.filter((session) => ivVitaminKeys.has(session.key) && !['hydration', 'myers', 'recovery', 'energy'].includes(session.key)).map(treatmentFromSession),
-      {
-        ...treatmentFromSession(byKey.recovery),
-        name: 'Food Poisoning',
-        desc: 'Electrolytes, anti-nausea support, and hydration - commonly chosen after GI distress.',
+      namedSession(byKey.hydration, 'Hydration IV', {
+        benefitStatement: 'Fluid and electrolyte support at home, hotel, or office.',
+      }),
+      namedSession(byKey.myers, "Myers' Cocktail IV", {
+        benefitStatement: 'Classic IV vitamin support for broad wellness days.',
+      }),
+      namedSession(byKey.postnight, 'Post Night Out IV', {
+        benefitStatement: 'Hydration support after late nights and heavy schedules.',
+      }),
+      namedSession(byKey.immunity, 'Immunity IV', {
+        benefitStatement: 'Vitamin and mineral support for wellness routines.',
+      }),
+      namedSession(byKey.energy, 'Energy IV', {
+        benefitStatement: 'B-vitamin and amino acid support for high-output days.',
+      }),
+      namedSession(byKey.recovery, 'Recovery IV', {
+        benefitStatement: 'Hydration and nutrient support for recovery days.',
+      }),
+      namedSession(byKey.energy, 'Performance IV', {
+        desc: 'B vitamins, magnesium, taurine, Vitamin C, and hydration support for performance-focused routines.',
+        benefitStatement: 'Nutrient support before or after high-output performance.',
+        idealFor: ['Performance', 'Corporate', 'Recovery'],
+        related: ['energy-iv', 'recovery-iv', 'nad-iv-250mg'],
+      }),
+      namedSession(byKey.jetlag, 'Jet Lag IV', {
+        desc: 'B vitamins, electrolytes, magnesium, and hydration support for travel days.',
+        benefitStatement: 'Travel-day hydration support across the Bay Area.',
+      }),
+      namedSession(byKey.recovery, 'Food Poisoning Recovery IV', {
+        desc: 'Hydration and electrolyte support commonly selected after GI distress. Anti-nausea support may be considered when clinically appropriate.',
+        benefitStatement: 'Hydration support after GI distress, subject to clinical review.',
         image: '/bags/food-poisoning.png',
-      },
+        idealFor: ['Recovery', 'Travel', 'Wellness'],
+        related: ['hydration-iv', 'recovery-iv', 'post-night-out-iv'],
+      }),
     ],
   },
 };
 
 const PRODUCT_SLUG_ALIASES = {
   'iv-vitamins': {
-    myers: 'myers-cocktail',
+    dehydration: 'hydration-iv',
+    hydration: 'hydration-iv',
+    myers: 'myers-cocktail-iv',
+    'myers-cocktail': 'myers-cocktail-iv',
+    postnight: 'post-night-out-iv',
+    'post-night-out': 'post-night-out-iv',
+    immunity: 'immunity-iv',
+    energy: 'energy-iv',
+    recovery: 'recovery-iv',
+    travel: 'jet-lag-iv',
+    'launch-performance': 'performance-iv',
+    'launch-recovery': 'recovery-iv',
+    'food-poisoning': 'food-poisoning-recovery-iv',
+  },
+  nad: {
+    'nad-250mg': 'nad-iv-250mg',
+    'nad-500mg': 'nad-iv-500mg',
+    'nad-750mg': 'nad-iv-750mg',
+    'nad-1000mg': 'nad-iv-1000mg',
+    'nad-1250mg': 'nad-iv-1250mg',
+    'nad-1500mg': 'nad-iv-1500mg',
+  },
+  cbd: {
+    'cbd-33mg': 'cbd-iv-33mg',
+    'cbd-66mg': 'cbd-iv-66mg',
+    'cbd-99mg': 'cbd-iv-99mg',
+    'cbd-132mg': 'cbd-iv-132mg',
   },
 };
 

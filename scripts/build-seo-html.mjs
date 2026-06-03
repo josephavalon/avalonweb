@@ -335,15 +335,13 @@ const protocolRoutes = IV_SESSIONS.map((session) => ({
 const productRoutes = Object.entries(productsByCategory).flatMap(([categorySlug, category]) => (
   (category.treatments || []).map((treatment) => {
     const productSlug = slugify(treatment.name);
-    const noindex = categorySlug === 'cbd';
     return {
       path: `/products/${categorySlug}/${productSlug}`,
       title: `${treatment.name} | Avalon Vitality`,
       description: `${treatment.name} protocol details from Avalon Vitality. Final service is subject to clinical review, eligibility, and appointment availability.`,
       h1: treatment.name,
-      priority: noindex ? '0.0' : '0.5',
+      priority: categorySlug === 'cbd' ? '0.35' : '0.5',
       changefreq: 'monthly',
-      noindex,
     };
   })
 ));
