@@ -161,6 +161,27 @@ const OUTCOMES = [
 	];
 
 const OTHER_PROTOCOL_KEYS = ['hydration', 'recovery', 'energy', 'myers', 'postnight', 'jetlag', 'immunity', 'beauty', 'nad', 'cbd'];
+const BOOKING_THERAPY_KEYS = [
+  'hydration',
+  'myers',
+  'postnight',
+  'immunity',
+  'energy',
+  'recovery',
+  'performance',
+  'jetlag',
+  'food-poisoning',
+  'cbd-33mg',
+  'cbd-66mg',
+  'cbd-99mg',
+  'cbd-132mg',
+  'nad-250mg',
+  'nad-500mg',
+  'nad-750mg',
+  'nad-1000mg',
+  'nad-1250mg',
+  'nad-1500mg',
+];
 
 const CUSTOM_BASE_OPTIONS = [
   { key: 'hydration', label: 'Hydration IV', productKey: 'hydration', icon: Droplets },
@@ -237,7 +258,7 @@ const CLIENT_TYPES = [
   { key: 'returning', label: 'Return', sub: 'Use saved info.', icon: Check },
 ];
 
-const PUBLIC_BOOKING_PROTOCOL_KEYS = new Set(OUTCOMES.flatMap((item) => item.productKeys));
+const PUBLIC_BOOKING_PROTOCOL_KEYS = new Set([...OUTCOMES.flatMap((item) => item.productKeys), ...BOOKING_THERAPY_KEYS]);
 
 // Canned demo address suggestions removed — clients enter their own address.
 const ADDRESS_SUGGESTIONS = [];
@@ -355,8 +376,64 @@ function protocolDuration(protocol) {
   return protocol?.duration || protocol?.doses?.[0]?.duration || '45-60 min';
 }
 
-function getProductByKey(key) {
+function getCatalogProductByKey(key) {
   return IV_SESSIONS.find((item) => item.key === key) || null;
+}
+
+function buildDoseProduct(parentKey, key, label) {
+  const parent = getCatalogProductByKey(parentKey);
+  const doseAmount = String(key || '').replace(`${parentKey}-`, '').replace(/mg$/i, '');
+  const dose = parent?.doses?.find((item) => item.key === `${parentKey}_${doseAmount}`);
+  if (!parent || !dose) return null;
+  return {
+    ...parent,
+    ...dose,
+    key,
+    label,
+    tabLabel: label,
+    category: parent.category,
+    icon: parent.icon,
+    tagline: parent.tagline,
+    inside: parent.inside,
+    features: parent.features,
+    desc: parent.desc || parent.tagline,
+    parentProtocolKey: parent.key,
+    doseKey: dose.key,
+  };
+}
+
+function getBookingTherapyByKey(key) {
+  const overrides = {
+    hydration: { source: 'hydration', label: 'Hydration' },
+    myers: { source: 'myers', label: "Myers' Cocktail" },
+    postnight: { source: 'postnight', label: 'Night Out' },
+    immunity: { source: 'immunity', label: 'Immunity' },
+    energy: { source: 'energy', label: 'Energy' },
+    recovery: { source: 'recovery', label: 'Recovery' },
+    performance: { source: 'energy', label: 'Performance', tagline: 'Performance-focused hydration support.' },
+    jetlag: { source: 'jetlag', label: 'Jet Lag' },
+    'food-poisoning': { source: 'recovery', label: 'Food Poisoning', tagline: 'Hydration support after GI distress.' },
+  };
+
+  if (key?.startsWith('cbd-')) return buildDoseProduct('cbd', key, `CBD ${key.replace('cbd-', '').toUpperCase()}`);
+  if (key?.startsWith('nad-')) return buildDoseProduct('nad', key, `NAD+ ${key.replace('nad-', '').toUpperCase()}`);
+
+  const override = overrides[key];
+  if (!override) return null;
+  const source = getCatalogProductByKey(override.source);
+  if (!source) return null;
+  return {
+    ...source,
+    key,
+    label: override.label,
+    tabLabel: override.label,
+    tagline: override.tagline || source.tagline,
+    parentProtocolKey: source.key,
+  };
+}
+
+function getProductByKey(key) {
+  return getBookingTherapyByKey(key) || getCatalogProductByKey(key);
 }
 
 function safeProtocol(protocol) {
@@ -3567,12 +3644,9 @@ export default function BookNow() {
     };
   }, [embeddedCheckoutSession?.clientSecret, embeddedCheckoutSession?.sessionId, navigate]);
 
-  const compactTherapies = useMemo(() => {
-    const fallback = uniqueProtocols(['recovery', 'immunity', 'hydration']);
-    const options = productOptions.length ? productOptions : fallback;
-    const active = product || options[0];
-    return [active, ...options.filter((item) => item.key !== active?.key)].filter(Boolean).slice(0, 3);
-  }, [productOptions, product]);
+  const menuTherapies = useMemo(() => {
+    return BOOKING_THERAPY_KEYS.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean);
+  }, []);
 
   const compactAddons = useMemo(() => addonCatalog.all.slice(0, 4), [addonCatalog]);
 
@@ -3583,13 +3657,16 @@ export default function BookNow() {
       hydration: { label: 'Hydration', line: 'Fluids + electrolytes.' },
       energy: { label: 'Energy', line: 'Nutrients + focus.' },
       immunity: { label: 'Immunity', line: 'Vitamin support.' },
-      myers: { label: 'Wellness', line: 'Core nutrient blend.' },
-      jetlag: { label: 'Travel', line: 'Arrival support.' },
+      myers: { label: "Myers' Cocktail", line: 'Core nutrient blend.' },
+      performance: { label: 'Performance', line: 'High-output support.' },
+      jetlag: { label: 'Jet Lag', line: 'Arrival support.' },
+      'food-poisoning': { label: 'Food Poisoning', line: 'GI hydration support.' },
       beauty: { label: 'Glow', line: 'Beauty support.' },
-      nad: { label: 'NAD+', line: 'Advanced protocol.' },
-      cbd: { label: 'CBD', line: 'Clinical review.' },
     };
-    return overrides[item?.key] || { label: item?.tabLabel || item?.label || 'Therapy', line: 'Clinical review.' };
+    if (overrides[item?.key]) return overrides[item.key];
+    if (item?.parentProtocolKey === 'nad') return { label: item.label, line: 'Advanced protocol.' };
+    if (item?.parentProtocolKey === 'cbd') return { label: item.label, line: 'Clinical review.' };
+    return { label: item?.tabLabel || item?.label || 'Therapy', line: 'Clinical review.' };
   };
 
   const contactLine = state.contactLine || formatContactLine({
@@ -3678,8 +3755,8 @@ export default function BookNow() {
 
     if (step === 0) {
       return (
-        <div className="grid h-full min-h-0 grid-rows-3 gap-2">
-          {compactTherapies.map((item, index) => {
+        <div className="grid h-full min-h-0 grid-cols-3 auto-rows-fr gap-1.5 md:gap-2">
+          {menuTherapies.map((item, index) => {
             const Icon = item.icon || Droplets;
             const active = state.productKey === item.key;
             const copy = compactProtocolCopy(item);
@@ -3689,22 +3766,33 @@ export default function BookNow() {
                 type="button"
                 onClick={() => chooseProduct(item.key)}
                 aria-pressed={active}
-                className={`${panelCardClass} relative flex min-h-0 items-center gap-3 p-3 text-left transition-colors ${
+                className={`${panelCardClass} relative flex min-h-0 flex-col justify-between gap-1 p-2 text-left transition-colors md:gap-2 md:p-3 ${
                   active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46' : 'hover:border-foreground/24'
                 }`}
               >
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/16 bg-foreground/[0.06] text-foreground">
-                  <Icon className="h-7 w-7" strokeWidth={2.45} />
+                <span className="relative flex w-full items-start justify-between gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-foreground/16 bg-foreground/[0.06] text-foreground md:h-11 md:w-11 md:rounded-xl">
+                    <Icon className="h-3.5 w-3.5 md:h-5 md:w-5" strokeWidth={2.45} />
+                  </span>
+                  <span className="shrink-0 text-right">
+                    {active ? (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-foreground/20 bg-foreground/[0.10] text-foreground md:h-8 md:w-8">
+                        <Check className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
+                      </span>
+                    ) : (
+                      <span className="block font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>
+                    )}
+                  </span>
                 </span>
-                <span className="relative min-w-0 flex-1">
-                  <span className="block font-heading text-[2rem] uppercase leading-none tracking-normal text-foreground">{copy.label}</span>
-                  <span className="mt-1 block font-body text-sm font-black text-foreground/76">{protocolDuration(item)}</span>
-                  <span className="mt-1 block font-body text-sm font-semibold text-foreground/60">{copy.line}</span>
+                <span className="relative min-w-0">
+                  <span className="block break-words font-heading text-[0.92rem] uppercase leading-[0.88] tracking-normal text-foreground min-[390px]:text-[0.98rem] md:text-[1.85rem]">{copy.label}</span>
+                  <span className="hidden truncate font-body text-[9px] font-black text-foreground/72 md:mt-1 md:block md:text-sm">{protocolDuration(item)}</span>
+                  <span className="hidden truncate font-body text-[11px] font-semibold text-foreground/60 md:mt-0.5 md:block md:text-sm">{copy.line}</span>
                 </span>
-                <span className="relative shrink-0 text-right">
-                  {active && <span className="mb-2 block rounded-full border border-foreground/18 px-2 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/76">Selected</span>}
-                  <span className="block font-body text-[2rem] font-black leading-none text-foreground">{currency(protocolPrice(item))}</span>
+                <span className="relative hidden w-full items-center justify-between gap-2 md:flex">
+                  <span className="truncate font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/56 md:text-[10px]">{active ? 'Selected' : 'Select'}</span>
+                  {active && <span className="font-body text-xs font-black leading-none text-foreground md:text-lg">{currency(protocolPrice(item))}</span>}
                 </span>
               </button>
             );
