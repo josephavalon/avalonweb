@@ -1547,11 +1547,11 @@ function hasDob(value) {
   return Boolean(date) && !Number.isNaN(date.getTime()) && date < new Date();
 }
 
-function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction }) {
+function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false }) {
   return (
     <div className="block">
       <div className="flex min-h-[22px] items-center justify-between gap-2 md:min-h-[22px]">
-        <span className="font-body text-sm font-extrabold tracking-[0.02em] text-foreground/76">{label}</span>
+        <span className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-xs' : 'text-sm'}`}>{label}</span>
         {actionLabel && onAction && !value && (
           <button
             type="button"
@@ -1575,7 +1575,9 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         autoComplete={autoComplete}
         inputMode={inputMode}
         autoFocus={autoFocus}
-        className="mt-1 min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:min-h-[50px] md:text-lg"
+        className={`mt-1 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:min-h-[50px] md:text-lg ${
+          compact ? 'min-h-[44px] text-base' : 'min-h-[52px] text-lg'
+        }`}
       />
     </div>
   );
@@ -4192,35 +4194,36 @@ export default function BookNow() {
     }
 
     return (
-      <div className="grid h-full min-h-0 grid-rows-[auto_1fr_auto] gap-2">
-        <div className={`${panelCardClass} p-3`}>
+      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-2">
+        <div className={`${panelCardClass} p-2.5`}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className={microLabelClass}>Ready</p>
-              <p className="mt-1 truncate font-heading text-[2rem] uppercase leading-none tracking-normal">{serviceLabel}</p>
+              <p className="mt-1 truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal">{serviceLabel}</p>
             </div>
-            <p className="shrink-0 font-body text-[1.8rem] font-black">{currency(subtotal)}</p>
+            <p className="shrink-0 font-body text-[1.55rem] font-black">{currency(subtotal)}</p>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
             {[
               ['Where', resolvedZip || 'ZIP'],
               ['When', bookingTimeSummary(state)],
               ['Review', state.clinicalReviewOnFile ? 'On file' : 'Needed'],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-foreground/10 bg-foreground/[0.035] p-2">
+              <div key={label} className="rounded-xl border border-foreground/10 bg-foreground/[0.035] p-1.5">
                 <p className="font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground/52">{label}</p>
                 <p className="mt-1 truncate font-body text-xs font-black text-foreground/78">{value}</p>
               </div>
             ))}
           </div>
         </div>
-        <div className={`${panelCardClass} grid min-h-0 gap-2 p-3`}>
+        <div className={`${panelCardClass} grid min-h-0 content-start gap-2 p-2.5`}>
           <TextInput
             label="Contact"
             value={contactLine}
             onChange={updateContactLine}
             placeholder="Name, phone, email"
             autoComplete="name"
+            compact
             actionLabel={savedContactProfile?.name || savedContactProfile?.email ? 'Saved' : ''}
             onAction={() => updateContactLine(formatContactLine({
               name: savedContactProfile?.name || '',
@@ -4236,12 +4239,13 @@ export default function BookNow() {
             placeholder="MM/DD/YYYY"
             autoComplete="bday"
             inputMode="numeric"
+            compact
             required
           />
+          <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2 font-body text-[10px] font-semibold leading-snug text-foreground/52">
+            By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
+          </p>
         </div>
-        <p className="rounded-2xl border border-foreground/10 bg-background/38 px-3 py-2 font-body text-[11px] font-semibold leading-snug text-foreground/58">
-          By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
-        </p>
       </div>
     );
   };
