@@ -72,13 +72,13 @@ function TierCard({ tier, active, onSelect, term }) {
       type="button"
       onClick={() => onSelect(tier)}
       aria-pressed={active}
-      className={`av-treatment-card group relative flex min-h-[116px] w-full flex-col items-stretch justify-between gap-3 overflow-hidden rounded-[1.15rem] border px-4 py-4 text-left transition-colors duration-base ease-editorial md:min-h-[132px] md:flex-row md:items-center md:gap-4 md:px-5 ${
+      className={`av-treatment-card group relative flex min-h-[84px] w-full flex-col items-stretch justify-between gap-2 overflow-hidden rounded-[1.05rem] border px-4 py-3 text-left transition-colors duration-base ease-editorial md:min-h-[132px] md:flex-row md:items-center md:gap-4 md:px-5 md:py-4 ${
         active ? 'is-open' : ''
       }`}
     >
       <div className="relative min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="min-w-0 font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
+          <p className="min-w-0 font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
             {tier.name}
           </p>
           {tier.badge && (
@@ -87,8 +87,8 @@ function TierCard({ tier, active, onSelect, term }) {
             </span>
           )}
         </div>
-        <p className="mt-2 font-body text-[11px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
-        <p className="mt-1 max-w-[17rem] font-body text-xs leading-snug text-foreground/52">{tier.tagline}</p>
+        <p className="mt-1.5 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/42 md:text-[11px]">{tier.note}</p>
+        <p className="mt-0.5 max-w-[17rem] font-body text-[11px] leading-snug text-foreground/52 md:text-xs">{tier.tagline}</p>
       </div>
 
       <div className="absolute right-4 top-4 md:relative md:right-auto md:top-auto md:flex md:min-w-0 md:shrink-0 md:items-center md:justify-end md:gap-3">
@@ -110,12 +110,12 @@ function TermCard({ term, active, onSelect }) {
       type="button"
       onClick={() => onSelect(term.key)}
       aria-pressed={active}
-      className={`av-treatment-card relative flex min-h-[86px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.05rem] border px-4 py-3 text-left transition-colors duration-base ease-editorial md:min-h-[96px] ${
+      className={`av-treatment-card relative flex min-h-[62px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.05rem] border px-4 py-2.5 text-left transition-colors duration-base ease-editorial md:min-h-[96px] md:py-3 ${
         active ? 'is-open' : ''
       }`}
     >
       <div>
-        <p className="font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground/72">{term.label}</p>
+        <p className="font-heading text-lg uppercase leading-none tracking-[0.04em] text-foreground/72 md:text-xl">{term.label}</p>
         <p className="mt-1 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/40">{term.detail}</p>
       </div>
       <SelectCheck active={active} />
@@ -196,12 +196,12 @@ export default function Subscription() {
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-background">
       <Navbar />
-      <main className="min-h-screen overflow-x-hidden pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[4.75rem] md:pb-16 md:pt-24">
-        <section id="subscription-plans" className="mx-auto w-full max-w-[calc(100vw-2rem)] scroll-mt-24 py-4 md:max-w-6xl md:px-8 md:py-10">
-          <motion.header className="mb-5 md:mb-8" {...fadeUp}>
+      <main className="min-h-screen overflow-x-hidden pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[4.5rem] md:pb-16 md:pt-24">
+        <section id="subscription-plans" className="mx-auto w-full max-w-[calc(100vw-2rem)] scroll-mt-24 py-3 md:max-w-6xl md:px-8 md:py-10">
+          <motion.header className="mb-4 md:mb-8" {...fadeUp}>
             <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">Membership</p>
-            <h1 className="mt-2 font-heading text-6xl uppercase leading-[0.85] text-foreground md:text-8xl">Plans</h1>
-            <div className="mt-3 flex max-w-full flex-col gap-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/44 md:flex-row md:flex-wrap md:items-center md:gap-x-3 md:gap-y-1 md:text-sm">
+            <h1 className="mt-1.5 font-heading text-5xl uppercase leading-[0.85] text-foreground md:text-8xl">Plans</h1>
+            <div className="mt-3 flex max-w-full flex-col gap-0.5 font-body text-[11px] uppercase tracking-[0.14em] text-foreground/44 md:flex-row md:flex-wrap md:items-center md:gap-x-3 md:gap-y-1 md:text-sm">
               <span>Choose your cadence.</span>
               <span className="hidden h-1 w-1 rounded-full bg-foreground/24 md:block" aria-hidden="true" />
               <span>First month due today.</span>
@@ -243,25 +243,22 @@ export default function Subscription() {
 
       <motion.div
         className="pointer-events-none fixed inset-x-0 z-40 px-2 pt-1 md:hidden"
-        style={{ bottom: 'max(env(safe-area-inset-bottom), 0.2rem)' }}
+        style={{ bottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.38, ease: EASE, delay: 0.08 }}
       >
-        <div className="av-treatment-card pointer-events-auto rounded-[1.1rem] border p-2">
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 flex-1 px-2">
-              <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/40">Due today</p>
-              <div className="flex items-baseline gap-2">
-                <p className="font-heading text-2xl uppercase leading-none text-foreground/78">{planPriceLabel(activeTier, activeTerm)}</p>
-              </div>
-              <p className="mt-0.5 truncate font-body text-[10px] uppercase tracking-[0.1em] text-foreground/42">
-                {activeTier.name} - {priceDurationLabel(activeTier, activeTerm)}
+        <div className="av-treatment-card pointer-events-auto rounded-[1.1rem] border p-1.5">
+          <div className="flex min-h-[52px] items-center gap-2">
+            <div className="min-w-0 flex-1 px-2.5">
+              <p className="font-body text-[8px] uppercase tracking-[0.18em] text-foreground/38">Due today</p>
+              <p className="mt-0.5 truncate font-body text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/68">
+                {planPriceLabel(activeTier, activeTerm)} - {priceDurationLabel(activeTier, activeTerm)}
               </p>
             </div>
             <button
               onClick={selectTier}
-              className="flex min-h-[48px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground"
+              className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground"
             >
               {activeTier.custom ? 'Design' : 'Start'} <ArrowRight className="h-3.5 w-3.5" />
             </button>
