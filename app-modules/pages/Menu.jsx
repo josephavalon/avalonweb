@@ -15,21 +15,20 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
-import PremiumButton from '@/components/ui/PremiumButton';
 import UniversalCard from '@/components/ui/UniversalCard';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const HERO_GOALS = [
-  { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book?protocol=hydration&time=asap' },
-  { key: 'energy', label: 'Energy', icon: Zap, href: '/book?protocol=energy&time=asap' },
-  { key: 'longevity', label: 'NAD+', icon: BatteryCharging, href: '/book?protocol=nad&time=asap' },
-  { key: 'all', label: 'All Protocols', icon: FlaskConical, href: '#protocol-directory' },
+  { key: 'vitamins', label: 'IV Vitamins', icon: Droplets, href: '#iv-vitamins', section: 'vitamins' },
+  { key: 'nad', label: 'IV NAD+', icon: BatteryCharging, href: '#iv-nad', section: 'nad' },
+  { key: 'cbd', label: 'IV CBD', icon: Zap, href: '#iv-cbd', section: 'cbd' },
+  { key: 'all', label: 'All Protocols', icon: FlaskConical, href: '#protocol-directory', section: 'all' },
 ];
 
 const FEATURED_KEYS = ['hydration', 'energy', 'myers', 'recovery', 'nad', 'cbd'];
-const ADVANCED_KEYS = ['nad', 'cbd', 'exosomes'];
 const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set(['exosomes']);
+const DOSE_PROTOCOL_KEYS = new Set(['nad', 'cbd']);
 const PUBLIC_SESSIONS = IV_SESSIONS.filter((session) => !HIDDEN_PUBLIC_PROTOCOL_KEYS.has(session.key));
 const DEFAULT_ORDER = new Map(PUBLIC_SESSIONS.map((session, index) => [session.key, index]));
 const FEATURED_ORDER = new Map(FEATURED_KEYS.map((key, index) => [key, index]));
@@ -125,7 +124,7 @@ function sortSessions(sessions) {
   });
 }
 
-function GoalTile({ item, index }) {
+function GoalTile({ item, index, onOpen }) {
   const Icon = item.icon;
   const content = (
     <UniversalCard
@@ -142,9 +141,9 @@ function GoalTile({ item, index }) {
 
   if (item.href.startsWith('#')) {
     return (
-      <a href={item.href} className="block">
+      <button type="button" onClick={() => onOpen(item)} className="block w-full text-left">
         {content}
-      </a>
+      </button>
     );
   }
 
@@ -156,6 +155,7 @@ function GoalTile({ item, index }) {
 }
 
 function ProtocolCard({ session, index = 0 }) {
+  const [open, setOpen] = useState(false);
   const Icon = session.icon || Droplets;
   const pieces = includesText(session).split(' · ').filter(Boolean).slice(0, 3);
 
@@ -167,7 +167,12 @@ function ProtocolCard({ session, index = 0 }) {
       className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.6rem] md:p-4"
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
-      <div className="relative flex min-w-0 items-start gap-3 md:gap-4">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4"
+        aria-expanded={open}
+      >
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16">
           <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.4} />
         </div>
@@ -188,24 +193,35 @@ function ProtocolCard({ session, index = 0 }) {
               <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/58">from</p>
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {pieces.map((item) => (
-              <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-2.5 py-1 font-body text-[11px] font-bold text-foreground/72">
-                {item}
-              </span>
-            ))}
-          </div>
-          <DoseLadder session={session} />
-          <div className="mt-4">
-            <Link
-              to={bookingPathForSession(session)}
-              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
-            >
-              Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-            </Link>
-          </div>
         </div>
-      </div>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={CONTROL_TRANSITION} className="relative shrink-0 text-foreground/70" aria-hidden="true">
+          <ChevronDown className="h-5 w-5" strokeWidth={2.2} />
+        </motion.span>
+      </button>
+      {open && (
+        <SmoothDisclosure open>
+          <div className="relative border-t border-foreground/8 pt-3">
+            {pieces.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {pieces.map((item) => (
+                  <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-2.5 py-1 font-body text-[11px] font-bold text-foreground/72">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+            <DoseLadder session={session} />
+            <div className="mt-3">
+              <Link
+                to={bookingPathForSession(session)}
+                className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
+              >
+                Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
+              </Link>
+            </div>
+          </div>
+        </SmoothDisclosure>
+      )}
     </motion.article>
   );
 }
@@ -229,14 +245,67 @@ function CompactRow({ item, type = 'addon' }) {
   );
 }
 
-function Foldout({ title, icon: Icon, children }) {
-  const [open, setOpen] = useState(false);
+function CustomProtocolRow() {
+  return (
+    <MotionLink
+      to="/custom?mode=subscription"
+      whileTap={premiumTap}
+      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.6rem] md:p-4"
+    >
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
+      <span className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16">
+          <FlaskConical className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.4} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
+            Custom
+          </span>
+          <span className="mt-1 block font-body text-base font-bold text-foreground/64 md:text-lg">
+            Build your own protocol
+          </span>
+        </span>
+        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/30 text-foreground/72 transition-colors group-hover:border-foreground/28 group-hover:text-foreground">
+          <ArrowRight className="h-5 w-5" strokeWidth={2.35} />
+        </span>
+      </span>
+    </MotionLink>
+  );
+}
+
+function ProtocolList({ id, sessions, includeCustom = false }) {
+  return (
+    <LayoutGroup id={id}>
+      <motion.div
+        key={id}
+        layout
+        initial="hidden"
+        animate="show"
+        variants={premiumListContainer(0.04, 0.05)}
+        className="relative grid gap-2 py-3 md:grid-cols-2 md:gap-3 md:py-4"
+      >
+        <AnimatePresence mode="popLayout">
+          {sessions.map((session, index) => (
+            <ProtocolCard key={session.key} session={session} index={index} />
+          ))}
+          {includeCustom && <CustomProtocolRow />}
+        </AnimatePresence>
+      </motion.div>
+    </LayoutGroup>
+  );
+}
+
+function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }) {
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = controlledOpen ?? localOpen;
+  const toggle = onToggle || (() => setLocalOpen((value) => !value));
+
   return (
     <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
         className="relative flex min-h-[76px] w-full items-center gap-3 px-4 text-left transition-colors hover:bg-foreground/[0.035] md:min-h-[88px] md:px-5"
         aria-expanded={open}
       >
@@ -248,17 +317,19 @@ function Foldout({ title, icon: Icon, children }) {
           <ChevronDown className="h-5 w-5" strokeWidth={2.2} />
         </motion.span>
       </button>
-      <SmoothDisclosure open={open}>
-        <div className="relative border-t border-foreground/8 px-4">
-          {children}
-        </div>
-      </SmoothDisclosure>
+      {open && (
+        <SmoothDisclosure open>
+          <div className="relative border-t border-foreground/8 px-4">
+            {children}
+          </div>
+        </SmoothDisclosure>
+      )}
     </div>
   );
 }
 
 export default function Menu() {
-  const [showAllProtocols, setShowAllProtocols] = useState(false);
+  const [openSections, setOpenSections] = useState({});
 
   useSeo({
     title: 'Protocols — Avalon Vitality',
@@ -284,9 +355,19 @@ export default function Menu() {
   });
 
   const filtered = useMemo(() => sortSessions(PUBLIC_SESSIONS), []);
-  const visibleSessions = showAllProtocols ? filtered : filtered.slice(0, 6);
+  const vitaminSessions = useMemo(() => filtered.filter((session) => !DOSE_PROTOCOL_KEYS.has(session.key)), [filtered]);
+  const nadSessions = useMemo(() => filtered.filter((session) => session.key === 'nad'), [filtered]);
+  const cbdSessions = useMemo(() => filtered.filter((session) => session.key === 'cbd'), [filtered]);
   const standardAddons = IV_ADDONS.filter((item) => !item.group).slice(0, 8);
   const shotPreview = IM_SHOTS.slice(0, 8);
+  const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
+  const openCategory = (item) => {
+    if (!item?.section) return;
+    setOpenSections((current) => ({ ...current, [item.section]: true }));
+    window.setTimeout(() => {
+      document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
 
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
@@ -306,45 +387,33 @@ export default function Menu() {
 
           <div className="av-wide-card-grid mt-5 min-w-0 md:mt-10">
             {HERO_GOALS.map((item, index) => (
-              <GoalTile key={item.key} item={item} index={index} />
+              <GoalTile key={item.key} item={item} index={index} onOpen={openCategory} />
             ))}
           </div>
         </section>
 
-        <section id="protocol-directory" className="mt-8 scroll-mt-28 md:mt-14">
-          <div className="relative min-w-0 overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/34 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:rounded-[1.9rem] md:p-5">
-            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))]" />
-            <div className="relative mb-4">
-              <h2 className="font-heading text-[3rem] uppercase leading-none tracking-normal text-foreground md:text-[4.75rem]">IV</h2>
-            </div>
-
-            <LayoutGroup id="menu-protocols">
-              <motion.div
-                key={showAllProtocols ? 'all-open' : 'all-preview'}
-                layout
-                initial="hidden"
-                animate="show"
-                variants={premiumListContainer(0.04, 0.05)}
-                className="relative grid gap-2 md:grid-cols-2 md:gap-3"
-              >
-                <AnimatePresence mode="popLayout">
-                  {visibleSessions.map((session, index) => (
-                    <ProtocolCard key={session.key} session={session} index={index} />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            </LayoutGroup>
-
-            {filtered.length > 6 && (
-              <button
-                type="button"
-                onClick={() => setShowAllProtocols((value) => !value)}
-                className="relative mt-3 flex min-h-[58px] w-full items-center justify-center gap-2 rounded-full border border-foreground/14 bg-background/42 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground/28 hover:bg-background/54"
-              >
-                {showAllProtocols ? 'Show less' : `View all ${filtered.length}`} <ArrowRight className={`h-4 w-4 transition-transform ${showAllProtocols ? '-rotate-90' : 'rotate-90'}`} strokeWidth={2.35} />
-              </button>
-            )}
+        <section className="mt-8 grid gap-2 scroll-mt-44 md:mt-14 md:gap-3">
+          <div id="iv-vitamins" className="scroll-mt-44">
+            <Foldout title="IV Vitamins" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
+              <ProtocolList id="iv-vitamins-protocols" sessions={vitaminSessions} />
+            </Foldout>
           </div>
+          <div id="iv-nad" className="scroll-mt-44">
+            <Foldout title="IV NAD+" icon={BatteryCharging} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
+              <ProtocolList id="iv-nad-protocols" sessions={nadSessions} />
+            </Foldout>
+          </div>
+          <div id="iv-cbd" className="scroll-mt-44">
+            <Foldout title="IV CBD" icon={Zap} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+              <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} />
+            </Foldout>
+          </div>
+        </section>
+
+        <section id="protocol-directory" className="mt-4 scroll-mt-44 md:mt-6">
+          <Foldout title="All Protocols" icon={FlaskConical} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
+            <ProtocolList id="all-protocols" sessions={filtered} includeCustom />
+          </Foldout>
         </section>
 
         <section className="mt-4 grid gap-2 md:mt-6 md:grid-cols-2 md:gap-3">
@@ -356,18 +425,6 @@ export default function Menu() {
           </Foldout>
         </section>
 
-        <section className="av-glass-card mt-4 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-6 md:rounded-[1.6rem] md:p-5">
-          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-            <h2 className="font-heading text-[2.7rem] uppercase leading-none tracking-normal md:text-[4rem]">Custom?</h2>
-            <PremiumButton
-              as={Link}
-              to="/custom?mode=subscription"
-              className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-black uppercase tracking-[0.14em] text-background"
-            >
-              Build Custom <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-            </PremiumButton>
-          </div>
-        </section>
       </main>
 
       <Footer />

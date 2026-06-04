@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { getAvalonConciergeReply } from '../../content/avalonConciergeKnowledge';
 
-const HIDDEN_PREFIXES = ['/admin', '/provider', '/login', '/subscription', '/book'];
+const HIDDEN_PREFIXES = ['/admin', '/provider', '/login', '/subscription', '/book', '/protocols'];
 
 function hiddenRoute(pathname = '') {
   return HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
