@@ -16,7 +16,7 @@ const discoverySections = [
         sub: 'Recover faster.',
         href: '/book?protocol=recovery&time=asap',
         image: '/bags/optimized/recovery.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
       {
         title: 'Founder Membership',
@@ -34,21 +34,21 @@ const discoverySections = [
         sub: 'Classic wellness.',
         href: '/book?protocol=myers&time=asap',
         image: '/bags/optimized/myers-cocktail-cutout.png',
-        tone: 'object-contain p-8',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
       {
         title: 'Jet Lag',
         sub: 'Land recovered.',
         href: '/book?protocol=jetlag&time=asap',
         image: '/bags/optimized/jet-lag.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
       {
         title: 'Hydration',
         sub: 'The essential.',
         href: '/book?protocol=hydration&time=asap',
         image: '/bags/optimized/dehydration.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
     ],
   },
@@ -77,14 +77,14 @@ const discoverySections = [
         sub: 'Cellular recovery.',
         href: '/book?protocol=nad&dose=nad_1000&time=asap',
         image: '/bags/optimized/nad-1000.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
       {
         title: 'NAD+ Launch',
         sub: 'Dose menu live.',
         href: '/protocols#protocol-directory',
         image: '/bags/optimized/nad-1500.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
     ],
   },
@@ -96,14 +96,14 @@ const discoverySections = [
         sub: 'Calm. Restore. Recover.',
         href: '/book?protocol=cbd&time=asap',
         image: '/bags/optimized/cbd-132.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
       {
         title: 'CBD Review',
         sub: 'Approval gated.',
         href: '/protocols#protocol-directory',
         image: '/bags/optimized/cbd-66.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
     ],
   },
@@ -149,14 +149,14 @@ const discoverySections = [
         sub: 'Morning restored.',
         href: '/hangover',
         image: '/bags/optimized/recovery.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
       {
         title: 'Performance',
         sub: 'Ready again.',
         href: '/athlete',
         image: '/bags/optimized/energy.png',
-        tone: 'object-contain p-10',
+        tone: 'object-contain object-right p-8 pl-32 md:pl-56',
       },
     ],
   },
@@ -204,14 +204,14 @@ function DiscoveryCard({ card, index }) {
         <img
           src={card.image}
           alt=""
-          className={`h-full w-full opacity-72 saturate-[0.74] transition-transform ease-editorial group-hover:scale-[1.035] ${card.tone || 'object-cover'}`}
+          className={`relative z-0 h-full w-full opacity-72 saturate-[0.74] transition-transform ease-editorial group-hover:scale-[1.035] ${card.tone || 'object-cover'}`}
           style={{ transitionDuration: '1600ms' }}
           loading="lazy"
         />
       </span>
-      <span className="absolute inset-0 bg-gradient-to-b from-black/16 via-black/42 to-black/88" />
-      <span className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.12),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.04),transparent_60%)]" />
-      <span className="relative flex min-h-[255px] flex-col justify-end p-5 md:min-h-[390px] md:p-8">
+      <span className="absolute inset-0 z-10 bg-gradient-to-b from-black/16 via-black/42 to-black/88" />
+      <span className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.12),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.04),transparent_60%)]" />
+      <span className="relative z-20 flex min-h-[255px] flex-col justify-end p-5 md:min-h-[390px] md:p-8">
         <span className="max-w-[12ch] font-heading text-[3.35rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[7rem]">
           {card.title}
         </span>
@@ -283,7 +283,7 @@ export default function Events() {
             Launches
           </h1>
           <p className="mt-4 max-w-xl font-body text-2xl font-semibold leading-tight text-foreground/74 md:text-3xl">
-            Browse what is live, next, and private beta.
+            Live. Next. Private beta.
           </p>
         </motion.header>
 
