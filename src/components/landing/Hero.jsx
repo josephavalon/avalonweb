@@ -1,11 +1,16 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Droplets } from 'lucide-react';
+import { ArrowRight, Droplets, LayoutGrid, UserRound } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
+const HERO_ACTIONS = [
+  { to: BOOK_URL, label: 'Book Now', icon: Droplets, preload: () => import('@/pages/BookNow') },
+  { to: '/protocols', label: 'View Protocols', icon: LayoutGrid },
+  { to: '/subscription', label: 'Memberships', icon: UserRound },
+];
 
 export default function Hero() {
   React.useEffect(() => {
@@ -27,7 +32,7 @@ export default function Hero() {
 	        <div
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
-	          <div className="relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-12 lg:gap-16">
+	          <div className="relative">
         <div className="md:max-w-xl">
 
         <p
@@ -57,38 +62,41 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-5 flex w-[19rem] max-w-full flex-col gap-2.5 md:mt-0 md:w-full md:max-w-[38rem] md:gap-3 md:overflow-hidden md:rounded-[1.9rem] md:border md:border-foreground/16 md:bg-background/18 md:p-3 md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.18),0_28px_120px_hsl(var(--foreground)/0.13)] md:backdrop-blur-2xl md:backdrop-saturate-150"
+          className="relative mt-6 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-9 md:max-w-6xl md:grid-cols-3 md:gap-4"
         >
-          <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.17),transparent_38%),radial-gradient(circle_at_88%_88%,hsl(var(--foreground)/0.08),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_50%,hsl(var(--foreground)/0.034))] md:block" />
-          <span className="pointer-events-none absolute inset-x-5 top-0 hidden h-px bg-gradient-to-r from-transparent via-foreground/34 to-transparent md:block" />
-          <span className="pointer-events-none absolute inset-x-8 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-background/50 to-transparent md:block" />
-          <MotionLink
-            to={BOOK_URL}
-            onPointerEnter={() => import('@/pages/BookNow')}
-            onFocus={() => import('@/pages/BookNow')}
-            whileHover={premiumHover}
-            whileTap={premiumTap}
-            className="group relative flex min-h-[54px] w-full items-center justify-between gap-4 overflow-hidden rounded-xl border border-foreground bg-foreground px-5 text-background shadow-[0_18px_60px_hsl(var(--foreground)/0.14)] transition-all duration-base ease-editorial hover:bg-foreground/90 md:min-h-[118px] md:rounded-[1.55rem] md:border-foreground/38 md:bg-foreground/[0.13] md:p-5 md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.16),0_28px_105px_hsl(var(--foreground)/0.17)] md:backdrop-blur-2xl md:backdrop-saturate-150 md:hover:border-foreground/48 md:hover:bg-foreground/[0.16]"
-          >
-            <span className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.18),transparent_34%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.07),transparent_32%),linear-gradient(145deg,hsl(var(--foreground)/0.08),transparent_52%,hsl(var(--foreground)/0.032))] opacity-95 md:block" />
-            <motion.span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 -left-1/2 hidden w-1/2 bg-gradient-to-r from-transparent via-foreground/16 to-transparent md:block"
-              animate={{ x: ['0%', '320%'] }}
-              transition={{ duration: 0.72, delay: 0.35, ease: EASE }}
-            />
-            <span className="relative flex min-w-0 items-center gap-4">
-              <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/30 bg-foreground/[0.11] text-foreground shadow-[0_16px_42px_hsl(var(--foreground)/0.12),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:flex md:h-16 md:w-16">
-                <Droplets className="h-7 w-7" strokeWidth={2.45} />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-body text-[11px] font-semibold uppercase leading-none tracking-[0.24em] md:font-heading md:text-[2.35rem] md:font-black md:tracking-normal">Book</span>
-              </span>
-            </span>
-            <span className="relative flex shrink-0 items-center justify-center text-background transition-transform group-hover:translate-x-1 md:h-12 md:w-12 md:rounded-full md:border md:border-foreground/24 md:bg-foreground/[0.10] md:text-foreground md:shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
-              <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
-            </span>
-          </MotionLink>
+          {HERO_ACTIONS.map((action) => {
+            const Icon = action.icon;
+            return (
+              <MotionLink
+                key={action.to}
+                to={action.to}
+                onPointerEnter={action.preload}
+                onFocus={action.preload}
+                whileHover={premiumHover}
+                whileTap={premiumTap}
+                className="group relative flex min-h-[72px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.05rem] border border-foreground/28 bg-background/[0.16] px-4 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_18px_70px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-base ease-editorial hover:border-foreground/42 hover:bg-foreground/[0.12] md:min-h-[96px] md:rounded-[1.45rem] md:px-5"
+              >
+                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.13),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_55%,hsl(var(--foreground)/0.028))]" />
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 -left-1/2 hidden w-1/2 bg-gradient-to-r from-transparent via-foreground/12 to-transparent md:block"
+                  animate={{ x: ['0%', '320%'] }}
+                  transition={{ duration: 0.72, delay: 0.28, ease: EASE }}
+                />
+                <span className="relative flex min-w-0 items-center gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.075] text-foreground/86 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:h-14 md:w-14">
+                    <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.15} />
+                  </span>
+                  <span className="min-w-0 truncate font-body text-[13px] font-black uppercase leading-none tracking-[0.16em] text-foreground md:text-[15px]">
+                    {action.label}
+                  </span>
+                </span>
+                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.055] text-foreground transition-transform group-hover:translate-x-1 md:h-11 md:w-11">
+                  <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
+                </span>
+              </MotionLink>
+            );
+          })}
         </div>
 
         <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
