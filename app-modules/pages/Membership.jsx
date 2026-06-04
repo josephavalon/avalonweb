@@ -230,8 +230,26 @@ export default function Subscription() {
               ))}
             </motion.div>
 
-            <motion.aside className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] min-w-0 space-y-2.5 md:sticky md:top-24 md:w-auto md:max-w-none md:self-start" {...fadeUp}>
-              <div className="grid w-full min-w-0 grid-cols-[repeat(3,minmax(0,1fr))] gap-2 overflow-hidden md:block md:space-y-2 md:overflow-visible">
+            <motion.aside className="w-full max-w-full min-w-0 space-y-2.5 md:sticky md:top-24 md:w-auto md:max-w-none md:self-start" {...fadeUp}>
+              <div className="av-treatment-card overflow-hidden rounded-[1.05rem] border px-4 py-3 md:hidden">
+                <label htmlFor="mobile-membership-duration" className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">
+                  Duration
+                </label>
+                <select
+                  id="mobile-membership-duration"
+                  value={activeTerm.key}
+                  onChange={(event) => setActiveTermKey(event.target.value)}
+                  className="mt-1 min-h-[40px] w-full appearance-none bg-transparent font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 outline-none"
+                >
+                  {SUBSCRIPTION_TERMS.map((term) => (
+                    <option key={term.key} value={term.key} className="bg-background text-foreground">
+                      {term.label} - {term.detail}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="hidden md:block md:space-y-2">
                 {SUBSCRIPTION_TERMS.map((term) => (
                   <TermCard
                     key={term.key}
