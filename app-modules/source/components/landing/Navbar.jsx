@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
-import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
-import { EASE, premiumSelectionTransition, premiumTap } from '@/lib/motion';
+import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -123,31 +123,25 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         </div>
 
         {/* Col 2 — nav links, auto width, inherently centered */}
-        {!compact && !focusMode && <LayoutGroup id="desktop-nav-links">
-          <div className="flex items-center justify-center gap-2 rounded-full border border-foreground/[0.07] bg-foreground/[0.025] p-1 backdrop-blur-xl">
+        {!compact && !focusMode && (
+          <div className="flex items-center justify-center gap-7">
             {mainLinks.map((link) => {
               const active = isActiveLink(link.to);
               return (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`relative isolate inline-flex min-h-11 items-center justify-center overflow-hidden rounded-full px-3 py-2 text-center font-body text-xs uppercase leading-none tracking-[0.18em] transition-colors ${
-                    active ? 'text-foreground' : 'text-foreground/58 hover:text-foreground'
+                  className={`relative inline-flex min-h-10 items-center justify-center px-1 text-center font-body text-[11px] uppercase leading-none tracking-[0.24em] transition-colors ${
+                    active ? 'text-foreground' : 'text-foreground/62 hover:text-foreground'
                   }`}
                 >
-                  {active && (
-                    <motion.span
-                      layoutId="desktop-nav-active"
-                      className="absolute inset-0 rounded-full bg-foreground/[0.095] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]"
-                      transition={premiumSelectionTransition}
-                    />
-                  )}
+                  <span className={`absolute inset-x-0 bottom-1 h-px transition-opacity ${active ? 'bg-foreground/64 opacity-100' : 'bg-foreground/32 opacity-0'}`} />
                   <span className="relative z-10">{link.label}</span>
                 </Link>
               );
             })}
           </div>
-        </LayoutGroup>}
+        )}
 
         {/* Col 3 — account link + booking CTA, right-aligned */}
         <div className="flex h-full items-center justify-end gap-4">
