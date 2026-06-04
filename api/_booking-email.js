@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-const FROM_INTERNAL = 'Avalon Booking <onboarding@resend.dev>';
+const FROM_INTERNAL = process.env.RESEND_FROM_EMAIL || 'Avalon Booking <onboarding@resend.dev>';
 const DEFAULT_OPERATIONS_EMAIL = 'littonjose@gmail.com';
 
 function dollarsFromCents(cents = 0) {

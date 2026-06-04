@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarPlus,
@@ -205,6 +205,7 @@ export default function BookingConfirmation() {
   const [appointmentLoading, setAppointmentLoading] = useState(Boolean(initialAppointmentId));
   const [apptError, setApptError] = useState(null);
   const [fulfillmentPending, setFulfillmentPending] = useState(Boolean(sessionId && !initialAppointmentId));
+  const [verification, setVerification] = useState(null);
   const [calendarError, setCalendarError] = useState('');
   const [resolvedAddress, setResolvedAddress] = useState('');
   const apptLoading = !paymentSuccess && (verifyLoading || appointmentLoading);
@@ -214,6 +215,47 @@ export default function BookingConfirmation() {
     description: 'Your IV wellness session has been confirmed. A licensed RN will be in touch shortly.',
     path: '/booking/confirmation',
   });
+
+  const retryAppointmentConfirmation = useCallback(async () => {
+    if (!sessionId) return null;
+    setVerifyLoading(true);
+    setApptError(null);
+    try {
+      const res = await fetch('/api/checkout/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+      const data = await res.json();
+      setVerification(data);
+      if (res.ok && data.paid) {
+        if (data.appointmentId) {
+          setAppointmentId(String(data.appointmentId));
+          setFulfillmentPending(false);
+          return data;
+        }
+        const failed = data.fulfillmentStatus === 'acuity_failed';
+        setFulfillmentPending(Boolean(data.pendingFulfillment) && !failed);
+        if (failed) {
+          setApptError('Payment received. A nurse will confirm your appointment shortly.');
+          track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+            funnel: localBooking?.source === 'Fast Hold' ? 'fast_hold' : 'webstore',
+            reason: 'acuity_fulfillment_failed',
+            provider: 'acuity',
+            has_session: true,
+          });
+        }
+        return data;
+      }
+      setApptError(data.error || 'Could not verify payment.');
+      return data;
+    } catch {
+      setApptError('Could not verify payment.');
+      return null;
+    } finally {
+      setVerifyLoading(false);
+    }
+  }, [localBooking?.source, sessionId]);
 
   useEffect(() => {
     if (!sessionId || initialAppointmentId) return;
@@ -232,12 +274,24 @@ export default function BookingConfirmation() {
           });
           const data = await res.json();
           if (!cancelled && res.ok && data.paid) {
+            setVerification(data);
             if (data.appointmentId) {
               setAppointmentId(String(data.appointmentId));
               setFulfillmentPending(false);
               return;
             }
-            setFulfillmentPending(Boolean(data.pendingFulfillment));
+            const failed = data.fulfillmentStatus === 'acuity_failed';
+            setFulfillmentPending(Boolean(data.pendingFulfillment) && !failed);
+            if (failed) {
+              setApptError('Payment received. A nurse will confirm your appointment shortly.');
+              track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+                funnel: localBooking?.source === 'Fast Hold' ? 'fast_hold' : 'webstore',
+                reason: 'acuity_fulfillment_failed',
+                provider: 'acuity',
+                has_session: true,
+              });
+              return;
+            }
           } else if (!cancelled && !res.ok && attempt === 9) {
             setApptError(data.error || 'Could not verify payment');
           }
@@ -251,7 +305,7 @@ export default function BookingConfirmation() {
     });
 
     return () => { cancelled = true; };
-  }, [sessionId, initialAppointmentId]);
+  }, [localBooking?.source, sessionId, initialAppointmentId]);
 
   useEffect(() => {
     if (!appointmentId && !sessionId) return;
@@ -320,7 +374,7 @@ export default function BookingConfirmation() {
   }, [appt, localBooking, paymentSuccess]);
 
   useEffect(() => {
-    const bookingId = appt?.id || localBooking?.id || appointmentId;
+    const bookingId = appt?.id || appointmentId || verification?.appointmentId;
     if (!bookingId) return;
     track(ANALYTICS_EVENTS.BOOKING_CONFIRMED, {
       funnel: localBooking?.source === 'Fast Hold' ? 'fast_hold' : 'webstore',
@@ -330,7 +384,7 @@ export default function BookingConfirmation() {
       gfe_required: localBooking?.gfeRequired ?? true,
       has_appointment: Boolean(appt?.datetime || localBooking?.datetime || localBooking?.date),
     });
-  }, [appt?.id, appt?.datetime, localBooking, appointmentId]);
+  }, [appt?.id, appt?.datetime, localBooking, appointmentId, verification?.appointmentId]);
 
   // Scheduling self-service reschedule/cancel links
   const rescheduleUrl = appt?.confirmationPage || null;
@@ -370,9 +424,14 @@ export default function BookingConfirmation() {
   const titleText = paymentSuccess
     ? 'Thank you'
     : 'Request Received.';
-  const statusText = paymentSuccess
-    ? 'A nurse will text shortly.'
-    : 'Review comes next.';
+  const acuityNeedsOps = paymentSuccess && verification?.fulfillmentStatus === 'acuity_failed';
+  const statusText = acuityNeedsOps
+    ? 'Payment received. A nurse will confirm shortly.'
+    : fulfillmentPending
+      ? 'Payment received. Confirming your appointment.'
+      : paymentSuccess
+        ? 'A nurse will text shortly.'
+        : 'Review comes next.';
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -431,6 +490,21 @@ export default function BookingConfirmation() {
               </div>
             )}
 
+            {paymentSuccess && (
+              <div className="mt-3 rounded-[1.25rem] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3 text-left backdrop-blur-xl">
+                <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-foreground/38">Next</p>
+                <p className="mt-1 font-body text-sm font-semibold leading-snug text-foreground/72">
+                  Clinical review, RN assignment, arrival text.
+                </p>
+              </div>
+            )}
+
+            {apptError && (
+              <p className="mt-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] px-4 py-3 text-center font-body text-xs font-semibold leading-snug text-foreground/58">
+                {apptError}
+              </p>
+            )}
+
             {/* Fallback if no appointment data and no error */}
             {!apptLoading && !appt && !apptError && !referenceNum && !localBooking && (
               <div className="inline-grid grid-cols-2 gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-2">
@@ -470,6 +544,18 @@ export default function BookingConfirmation() {
                 </p>
               )}
             </>
+          )}
+
+          {paymentSuccess && sessionId && (fulfillmentPending || acuityNeedsOps || apptError) && (
+            <button
+              type="button"
+              onClick={retryAppointmentConfirmation}
+              disabled={verifyLoading}
+              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-foreground/[0.16] bg-foreground/[0.055] px-5 font-body text-xs font-bold uppercase tracking-[0.14em] text-foreground/72 transition-colors hover:border-foreground/30 hover:text-foreground disabled:cursor-wait disabled:opacity-60"
+            >
+              {verifyLoading ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <CreditCard className="h-4 w-4" strokeWidth={1.8} />}
+              Retry Confirmation
+            </button>
           )}
 
           <a

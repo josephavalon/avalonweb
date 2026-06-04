@@ -1,7 +1,8 @@
 import Stripe from 'stripe';
 import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
-import { getSupabaseServiceClient } from '../_supabase-server.js';
+import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
 import { sendPaymentReceivedEmail } from '../_booking-email.js';
+import { buildReconciliationCase } from '../_reconciliation.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
@@ -44,6 +45,90 @@ async function updatePaymentIntentMetadata(stripe, paymentIntentId, existingMeta
   return nextMetadata;
 }
 
+function buildExternalPayload(existingPayload = {}, patch = {}) {
+  return {
+    ...existingPayload,
+    fulfillment: {
+      ...(existingPayload.fulfillment || {}),
+      ...patch,
+      source: 'checkout_verify',
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+async function insertAcuityFailureCase(db, { appointment, session, error }) {
+  if (!db || !appointment?.id) return;
+  try {
+    const tenantId = await getDefaultTenantId(db);
+    const externalReference = session.id;
+    const { data: existing } = await db.from('reconciliation_cases')
+      .select('id')
+      .eq('case_type', 'stripe_succeeded_acuity_failed')
+      .eq('provider', 'stripe')
+      .eq('external_reference', externalReference)
+      .maybeSingle();
+    if (existing?.id) return;
+
+    await db.from('reconciliation_cases').insert(buildReconciliationCase({
+      caseType: 'stripe_succeeded_acuity_failed',
+      provider: 'stripe',
+      externalReference,
+      tenantId,
+      payload: {
+        appointmentRecordId: appointment.id,
+        stripeSessionId: session.id,
+        error: error || 'Acuity appointment creation failed after successful Stripe payment.',
+        local_contract: 'stripe_paid_then_acuity_attio_v1',
+      },
+    }));
+  } catch (err) {
+    console.warn('[checkout/verify] reconciliation insert failed:', err.message);
+  }
+}
+
+async function persistVerifyFulfillment({ appointment, session, paymentIntentId, fulfillment, attioPersonId }) {
+  if (!appointment?.id) return;
+  const db = await getSupabaseServiceClient();
+  if (!db) return;
+
+  const now = new Date().toISOString();
+  const appointmentId = fulfillment.appointmentId ? String(fulfillment.appointmentId) : null;
+  const failed = fulfillment.fulfillmentStatus === 'acuity_failed';
+  const patch = {
+    stripe_checkout_session_id: session.id,
+    stripe_customer_id: session.customer || null,
+    stripe_deposit_payment_intent: paymentIntentId || null,
+    deposit_paid_at: now,
+    payment_status: Number(session.metadata?.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
+    status: appointmentId ? 'scheduled' : 'payment_received',
+    acuity_appointment_id: appointmentId || undefined,
+    reconciliation_status: failed ? 'action_required' : appointmentId ? 'ok' : 'pending',
+    attio_person_id: attioPersonId || undefined,
+    attio_synced_at: attioPersonId ? now : undefined,
+    external_payload: buildExternalPayload(appointment.external_payload || {}, {
+      stripeSessionId: session.id,
+      stripePaymentIntentId: paymentIntentId || null,
+      acuityAppointmentId: appointmentId,
+      attioPersonId: attioPersonId || null,
+      fulfillmentStatus: fulfillment.fulfillmentStatus || null,
+      error: fulfillment.fulfillmentError ? { message: fulfillment.fulfillmentError } : null,
+    }),
+    updated_at: now,
+  };
+  Object.keys(patch).forEach((key) => patch[key] === undefined && delete patch[key]);
+
+  const { error } = await db.from('appointments').update(patch).eq('id', appointment.id);
+  if (error) console.warn('[checkout/verify] appointment status update failed:', error.message);
+  if (failed) {
+    await insertAcuityFailureCase(db, {
+      appointment,
+      session,
+      error: fulfillment.fulfillmentError,
+    });
+  }
+}
+
 async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, paymentIntent, paymentIntentMetadata }) {
   const paymentIntentId = paymentIntent?.id || (typeof session.payment_intent === 'string' ? session.payment_intent : null);
   const existingAppointmentId = appointment?.acuity_appointment_id
@@ -54,6 +139,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
   let acuityAppointmentId = existingAppointmentId;
   let fulfillmentStatus = appointment?.status || metadata.fulfillmentStatus || null;
   let fulfillmentError = metadata.fulfillmentError || null;
+  let attioPersonId = null;
   const checkout = appointment ? checkoutPayloadFromRecord(appointment) : checkoutPayloadFromStripeMetadata(session.metadata || {});
 
   if (!acuityAppointmentId) {
@@ -81,7 +167,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
 
         if (checkout.contact?.email) {
           try {
-            await syncCheckoutAttioPerson({
+            attioPersonId = await syncCheckoutAttioPerson({
               contact: checkout.contact,
               primaryService: checkout.primaryService || session.metadata?.service || 'Avalon Visit',
               appointment: checkout.appointment || {},
@@ -126,6 +212,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
     appointmentId: acuityAppointmentId,
     fulfillmentStatus,
     fulfillmentError,
+    attioPersonId,
     paymentIntentMetadata: metadata,
   };
 }
@@ -181,6 +268,15 @@ export default async function handler(req, res) {
           fulfillmentError: paymentIntentMetadata.fulfillmentError || null,
           paymentIntentMetadata,
         };
+    if (paid && appointment) {
+      await persistVerifyFulfillment({
+        appointment,
+        session,
+        paymentIntentId: paymentIntent?.id || (typeof session.payment_intent === 'string' ? session.payment_intent : null),
+        fulfillment,
+        attioPersonId: fulfillment.attioPersonId,
+      });
+    }
 
     return res.status(paid ? 200 : 402).json({
       paid,
