@@ -16,19 +16,19 @@ export default function AvalonStaticBackdrop() {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 h-[100dvh] z-0 overflow-hidden bg-black" aria-hidden="true">
       <img
-        src="/images/avalon-hero-new.jpg"
-        srcSet="/images/avalon-hero-new-512.jpg 512w, /images/avalon-hero-new-768.jpg 768w, /images/avalon-hero-new.jpg 1122w"
+        src="/images/avalon-static-back.jpg"
+        srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
         sizes="100vw"
         alt=""
-        className="absolute inset-0 h-full w-full scale-[1.0] object-cover opacity-45 blur-[2px] saturate-[0.56] brightness-[0.58] md:scale-[1.18]"
-        style={{ objectPosition: '76% 34%' }}
+        className="absolute inset-0 h-full w-full scale-[1.0] object-cover opacity-58 blur-[1.5px] saturate-[0.72] brightness-[0.68] md:scale-[1.03]"
+        style={{ objectPosition: '74% 52%' }}
         loading="eager"
         fetchPriority="high"
       />
-      <div className="absolute inset-0 bg-black/76" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/94 via-black/82 to-black/64" />
-      <div className="absolute inset-x-0 bottom-0 h-[78svh] bg-gradient-to-t from-black via-black/96 to-black/22" />
-      <div className="absolute inset-x-0 top-0 h-[38svh] bg-gradient-to-b from-black/76 via-black/42 to-transparent" />
+      <div className="absolute inset-0 bg-black/62" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/78 to-black/52" />
+      <div className="absolute inset-x-0 bottom-0 h-[78svh] bg-gradient-to-t from-black via-black/94 to-black/18" />
+      <div className="absolute inset-x-0 top-0 h-[38svh] bg-gradient-to-b from-black/72 via-black/36 to-transparent" />
     </div>
   );
 }
