@@ -10,6 +10,10 @@ export default function StickyBookBar() {
   const { pathname } = useLocation();
   const hidden = pathname === '/book' ||
     pathname.startsWith('/book/') ||
+    pathname.startsWith('/protocols') ||
+    pathname.startsWith('/custom') ||
+    pathname.startsWith('/store') ||
+    pathname.startsWith('/products') ||
     pathname.startsWith('/checkout') ||
     pathname.startsWith('/booking/confirmation') ||
     pathname.startsWith('/admin') ||

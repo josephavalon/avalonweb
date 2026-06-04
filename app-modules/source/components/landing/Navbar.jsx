@@ -81,7 +81,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
       className={`av-motion-rail fixed z-40 border-0 bg-background shadow-none transition-all duration-700 ease-editorial md:bg-background/60 md:backdrop-blur-2xl ${
-      mobileOpen && !focusMode ? 'bottom-0 left-0 right-0 top-0 overflow-y-auto rounded-none' : compact ? 'left-3 right-3 top-2 rounded-2xl' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
+      mobileOpen && !focusMode
+        ? 'left-3 right-3 top-2 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl backdrop-saturate-150'
+        : compact ? 'left-3 right-3 top-2 rounded-2xl' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
     } ${
       scrolled
         ? 'md:border md:border-foreground/10 md:shadow-lg md:shadow-black/25'
@@ -238,8 +240,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       </div>
 
       {/* Mobile dropdown */}
-      {!focusMode && <div className="md:hidden overflow-hidden">
-        <SmoothDisclosure open={mobileOpen} snapClosed className="px-2 bg-background" innerClassName="pb-0 bg-background">
+      {!focusMode && <div className="md:hidden overflow-hidden px-2">
+        <SmoothDisclosure open={mobileOpen} snapClosed className="pb-2" innerClassName="pb-0">
               <motion.div
                 initial={false}
                 animate={mobileOpen ? 'visible' : 'hidden'}
@@ -247,8 +249,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="relative overflow-hidden rounded-none bg-background p-1.5 shadow-none"
+                className="av-glass-card relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/50 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
               >
+                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_58%,hsl(var(--foreground)/0.025))]" />
 
                 {showBack && !compact && (
                   <motion.div
@@ -261,7 +264,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                         close();
                         goBack();
                       }}
-                      className="flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-foreground/[0.045] px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 transition-colors hover:bg-foreground/[0.075] hover:text-foreground"
+                      className="relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-background/38 px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors hover:bg-foreground/[0.075] hover:text-foreground"
                     >
                       <span>Back</span>
                       <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
@@ -280,12 +283,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                       <Link
                         to={item.to}
                         onClick={close}
-                        className={`group flex min-h-[58px] items-center justify-between rounded-none border border-transparent bg-background px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground transition-all duration-300 ${
+                        className={`group relative flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-all duration-300 ${
                           item.primary
-                            ? 'text-foreground hover:text-foreground'
+                            ? 'border-foreground/18 bg-foreground/[0.10] text-foreground hover:bg-foreground/[0.14]'
                             : active
-                              ? 'text-foreground'
-                              : 'text-foreground/66 hover:text-foreground'
+                              ? 'border-foreground/16 bg-background/48 text-foreground'
+                              : 'border-foreground/8 bg-background/30 text-foreground/66 hover:border-foreground/16 hover:bg-background/44 hover:text-foreground'
                         }`}
                       >
                         <span>{item.label}</span>
@@ -310,7 +313,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-foreground/[0.035] px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+                      className="relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-background/30 px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
                     >
                       <span>Sign Out</span>
                       <LogOut className="h-3.5 w-3.5" strokeWidth={1.7} />

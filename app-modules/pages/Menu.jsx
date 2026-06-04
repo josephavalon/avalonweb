@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
@@ -20,9 +21,9 @@ import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const HERO_GOALS = [
-  { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book' },
-  { key: 'energy', label: 'Energy', icon: Zap, href: '/book' },
-  { key: 'longevity', label: 'Longevity', icon: BatteryCharging, href: '/book' },
+  { key: 'hydration', label: 'Hydration', icon: Droplets, href: '/book?protocol=hydration&time=asap' },
+  { key: 'energy', label: 'Energy', icon: Zap, href: '/book?protocol=energy&time=asap' },
+  { key: 'longevity', label: 'NAD+', icon: BatteryCharging, href: '/book?protocol=nad&time=asap' },
   { key: 'all', label: 'All Protocols', icon: FlaskConical, href: '#protocol-directory' },
 ];
 
@@ -56,6 +57,64 @@ function bookingPathForSession(session) {
   if (session.key) params.set('protocol', session.key);
   params.set('time', 'asap');
   return `/book?${params.toString()}`;
+}
+
+function doseIntroFor(session) {
+  if (session.key === 'nad') return 'Dose menu';
+  if (session.key === 'cbd') return 'Approval-gated';
+  return 'Dose options';
+}
+
+function doseNoteFor(session) {
+  if (session.key === 'nad') return 'Higher mg = longer appointment window.';
+  if (session.key === 'cbd') return 'Eligibility confirmed before treatment.';
+  return '';
+}
+
+function compactDuration(value = '') {
+  return String(value).replace(/\s*min\b/i, 'm').replace(/\s*hr\b/i, ' hr');
+}
+
+function DoseLadder({ session }) {
+  if (!session.doses?.length) return null;
+  const doseCount = session.doses.length;
+  const first = session.doses[0];
+  const last = session.doses[doseCount - 1];
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl">
+      <div className="mb-2 grid gap-1 px-1 sm:flex sm:items-end sm:justify-between sm:gap-3">
+        <div className="min-w-0">
+          <p className="font-body text-[9px] font-black uppercase tracking-[0.15em] text-foreground/54">{doseIntroFor(session)}</p>
+          {doseNoteFor(session) && (
+            <p className="mt-0.5 truncate font-body text-[10px] font-bold leading-none text-foreground/48">{doseNoteFor(session)}</p>
+          )}
+        </div>
+        <p className="shrink-0 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/42">
+          {first.label}-{last.label}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5 md:grid-cols-3">
+        {session.doses.map((dose, doseIndex) => (
+          <Link
+            key={dose.key || dose.label}
+            to={`${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`}
+            className={`group/dose min-h-[54px] rounded-xl border px-2.5 py-2 text-left transition-colors ${
+              doseIndex === 0
+                ? 'border-foreground/24 bg-foreground/[0.10]'
+                : 'border-foreground/9 bg-background/34 hover:border-foreground/18 hover:bg-background/48'
+            }`}
+          >
+            <span className="block font-body text-xs font-black uppercase leading-none tracking-[0.05em] text-foreground">{dose.label}</span>
+            <span className="mt-1 flex items-center justify-between gap-2 font-body text-[10px] font-bold leading-none text-foreground/58">
+              <span>{money(dose.price)}</span>
+              <span className="truncate text-foreground/42">{compactDuration(dose.duration)}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function sortSessions(sessions) {
@@ -143,6 +202,7 @@ function ProtocolCard({ session, index = 0 }) {
               </span>
             ))}
           </div>
+          <DoseLadder session={session} />
           <div className="mt-4">
             <Link
               to={bookingPathForSession(session)}
@@ -236,18 +296,20 @@ export default function Menu() {
   const shotPreview = IM_SHOTS.slice(0, 8);
 
   return (
-    <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
+    <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-28 md:max-w-6xl md:px-8 md:pt-32">
+      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
         <section className="relative">
           <motion.div
             initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.9, ease: EASE }}
-            className="max-w-3xl"
+            className="av-glass-card relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/38 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:max-w-3xl md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-0"
           >
-            <h1 className="font-heading text-display-xl uppercase leading-[0.86] tracking-normal text-foreground">
+            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))] md:hidden" />
+            <p className="relative mb-3 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Choose a therapy base</p>
+            <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
               Protocols
             </h1>
           </motion.div>
@@ -309,7 +371,7 @@ export default function Menu() {
             <h2 className="font-heading text-[2.7rem] uppercase leading-none tracking-normal md:text-[4rem]">Custom?</h2>
             <PremiumButton
               as={Link}
-              to="/book"
+              to="/custom?mode=subscription"
               className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-black uppercase tracking-[0.14em] text-background"
             >
               Build Custom <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
@@ -317,6 +379,24 @@ export default function Menu() {
           </div>
         </section>
       </main>
+
+      {typeof document !== 'undefined' && createPortal(<div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/94 px-4 pt-3 backdrop-blur-2xl md:hidden"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.85rem)' }}
+      >
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.24em] text-foreground/38">Start</p>
+            <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">Book from $50 deposit</p>
+          </div>
+          <Link
+            to="/book"
+            className="flex min-h-[60px] min-w-[148px] items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-5 font-body text-[11px] font-black uppercase tracking-[0.18em] text-background"
+          >
+            Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          </Link>
+        </div>
+      </div>, document.body)}
 
       <Footer />
     </div>

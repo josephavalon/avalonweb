@@ -978,22 +978,6 @@ function DesktopBookingFrame({
 }) {
   return (
     <section className="mx-auto hidden w-full max-w-[1180px] overflow-hidden rounded-[1.15rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl md:block">
-      <div className="flex h-[4.65rem] items-center justify-between border-b border-foreground/10 px-6">
-        <Link to="/" className="block" aria-label="Avalon home">
-          <span className="block font-heading text-[1.15rem] uppercase leading-none tracking-[0.34em] text-foreground">Avalon</span>
-          <span className="mt-1 block font-body text-[0.6rem] font-black uppercase tracking-[0.32em] text-foreground/72">Vitality</span>
-        </Link>
-        <div className="flex items-center gap-8 font-body text-xs font-bold text-foreground/78">
-          <a href="tel:+14159807708" className="flex items-center gap-2">
-            <Phone className="h-4 w-4" strokeWidth={2.1} />
-            (424) 555-0123
-          </a>
-          <a href="sms:+14159807708" className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" strokeWidth={2.1} />
-            Live Chat
-          </a>
-        </div>
-      </div>
       <div className="grid min-h-[610px] grid-cols-[minmax(0,1fr)_300px] gap-8 p-6">
         <div className="min-w-0">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
@@ -4583,10 +4567,10 @@ export default function BookNow() {
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <BookingMobileHeader />
-      <div className="hidden">
+      <div className="hidden md:block">
         <Navbar />
       </div>
-      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[4.65rem] md:flex md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:py-4">
+      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[4.65rem] md:flex md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24">
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { track } from '@/lib/analytics';
@@ -54,7 +55,7 @@ function StyledSelect({ value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-2xl border border-foreground/[0.10] bg-card/[0.72] px-4 py-3 pr-10 font-body text-xs uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground/25 focus:outline-none focus:border-foreground/40"
+        className="w-full appearance-none rounded-2xl border border-foreground/[0.12] bg-background/42 px-4 py-3 pr-10 font-body text-xs font-black uppercase tracking-[0.16em] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors hover:border-foreground/25 focus:border-foreground/40 focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-background text-foreground normal-case tracking-normal">
@@ -71,7 +72,7 @@ function StyledSelect({ value, onChange, options }) {
 function QtyPicker({ value, onChange }) {
   return (
     <div className="mt-4 flex items-center gap-3">
-      <p className="shrink-0 font-body text-[9px] uppercase tracking-[0.25em] text-foreground/40">
+      <p className="shrink-0 font-body text-[9px] font-black uppercase tracking-[0.22em] text-foreground/44">
         Monthly Qty
       </p>
       <div className="flex gap-1">
@@ -83,7 +84,7 @@ function QtyPicker({ value, onChange }) {
             className={`h-11 w-11 rounded-lg font-body text-xs font-semibold transition-all duration-150 ${
               value === q
                 ? 'bg-foreground text-background'
-                : 'border border-foreground/15 bg-card/[0.45] text-foreground/50 hover:border-foreground/40 hover:text-foreground'
+                : 'border border-foreground/15 bg-background/42 text-foreground/58 hover:border-foreground/40 hover:text-foreground'
             }`}
           >
             {q}
@@ -96,7 +97,7 @@ function QtyPicker({ value, onChange }) {
 
 function OneTimeNote() {
   return (
-    <p className="mt-4 inline-flex rounded-full border border-foreground/[0.10] bg-background/[0.22] px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.16em] text-foreground/45">
+    <p className="mt-4 inline-flex rounded-full border border-foreground/[0.12] bg-background/[0.28] px-3 py-1.5 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/50">
       One-time visit
     </p>
   );
@@ -104,14 +105,15 @@ function OneTimeNote() {
 
 function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, children }) {
   return (
-    <motion.div layout className="overflow-hidden rounded-3xl border border-foreground/[0.10] bg-card/[0.60] backdrop-blur-md">
+    <motion.div layout className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       <div className="flex items-start gap-4 p-4">
         <button
           type="button"
           onClick={onToggle}
           className={`mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
             active
-              ? 'bg-foreground border-foreground text-background'
+              ? 'border-foreground bg-foreground text-background'
               : 'border-border/60 text-foreground/40 hover:border-foreground/50 hover:text-foreground/70'
           }`}
           aria-pressed={active}
@@ -124,18 +126,18 @@ function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, chi
           <div className="mb-1 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <Icon className="mt-0.5 h-4 w-4 text-foreground/65" strokeWidth={1.5} />
-              <span className="font-heading text-2xl uppercase tracking-wide text-foreground">{title}</span>
+              <span className="font-heading text-2xl uppercase leading-none tracking-normal text-foreground md:text-[2rem]">{title}</span>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {!active && (
-                <span className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+                <span className="font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/50">
                   from ${fromPrice}
                 </span>
               )}
               <ChevronDown className={`h-4 w-4 text-foreground/60 transition-transform duration-300 ${active ? 'rotate-180' : ''}`} strokeWidth={1.8} />
             </div>
           </div>
-          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/50">{tag}</p>
+          <p className="font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/52">{tag}</p>
           </button>
 
           <AnimatePresence>
@@ -241,27 +243,72 @@ export default function CustomProtocol() {
       })),
   ].filter(Boolean);
 
+  const continueProtocol = () => {
+    clearItems();
+    const items = [];
+    if (vitaminsOn && vitaminsVariant) {
+      for (let i = 0; i < effectiveVitaminsQty; i++)
+        items.push({ cartKey: `iv-vitamins-${i}`, label: vitaminsVariant.label, price: vitaminsVariant.price, type: 'iv' });
+    }
+    if (nadOn && nadDose) {
+      for (let i = 0; i < effectiveNadQty; i++)
+        items.push({ cartKey: `iv-nad-${i}`, label: `NAD+ ${nadDose.label}`, price: nadDose.price, type: 'iv' });
+    }
+    if (cbdOn && cbdDose) {
+      for (let i = 0; i < effectiveCbdQty; i++)
+        items.push({ cartKey: `iv-cbd-${i}`, label: `CBD ${cbdDose.label}`, price: cbdDose.price, type: 'iv' });
+    }
+    imSelected.forEach((shotKey) => {
+      const shot = IM_OPTIONS.find(s => s.key === shotKey);
+      if (shot) {
+        for (let i = 0; i < effectiveImQty(shotKey); i++)
+          items.push({ cartKey: `im-${shotKey}-${i}`, label: shot.label, price: shot.price, type: 'im' });
+      }
+    });
+    if (billingMode === 'subscription') {
+      clearMembership?.();
+      setMembershipTier?.({
+        key: 'custom',
+        name: 'Custom Subscription',
+        billing: 'monthly',
+        price: monthlyTotal,
+        ivCount: effectiveVitaminsQty + effectiveCbdQty + effectiveNadQty,
+        custom: true,
+        items,
+      });
+      track('protocol_completed', { item_count: items.length, billing: billingMode });
+      navigate('/checkout');
+      return;
+    }
+    clearMembership?.();
+    items.forEach(item => addItem?.(item));
+    track('protocol_completed', { item_count: items.length, billing: billingMode });
+    navigate('/checkout');
+  };
+
   return (
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-background pt-28 pb-32">
-        <div className="max-w-6xl mx-auto px-4">
+      <div className="app-shell min-h-screen bg-transparent pb-32 pt-24 text-foreground md:pt-32">
+        <div className="mx-auto max-w-6xl px-4">
 
           {/* ── Header ── */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE }}
-            className="mb-8 md:mb-12"
+            className="av-glass-card relative mb-4 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/38 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:mb-8 md:rounded-[1.55rem] md:p-6"
           >
-            <h1 className="mb-4 font-heading text-[13vw] uppercase leading-[0.88] tracking-wide text-foreground md:text-[7rem] lg:text-[9rem]">
-              Build Your<br />Protocol
+            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))]" />
+            <p className="relative mb-2 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/58 md:mb-3 md:tracking-[0.22em]">
+              Custom subscription generator
+            </p>
+            <h1 className="relative mb-3 font-heading text-[3.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:mb-4 md:text-[7rem] lg:text-[8rem]">
+              Build Protocol
             </h1>
-            <div className="mb-4 h-px w-12 bg-foreground/35" />
-            <p className="max-w-lg font-body text-sm leading-relaxed text-foreground/70">
-              Choose your stack, set your quantity per treatment, get an instant estimate.
-              Final pricing confirmed with your care team before you commit.
+            <p className="relative max-w-lg font-body text-sm font-semibold leading-snug text-foreground/66 md:text-base">
+              Choose a stack. Set monthly quantity. Checkout after clinical review.
             </p>
           </motion.div>
 
@@ -280,7 +327,7 @@ export default function CustomProtocol() {
                 icon={Droplets}
                 title="IV Vitamins"
                 tag="Hydration & Micronutrients"
-                fromPrice={150}
+                fromPrice={200}
                 active={vitaminsOn}
                 onToggle={() => setVitaminsOn(v => !v)}
               >
@@ -346,7 +393,8 @@ export default function CustomProtocol() {
               </TreatmentRow>
 
               {/* ── IM Shots ── */}
-              <div className="rounded-3xl border border-foreground/[0.10] bg-card/[0.60] p-4 backdrop-blur-md">
+              <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
+                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
                 <div className="mb-1 flex items-center gap-2">
                   <Syringe className="h-4 w-4 text-foreground/65" strokeWidth={1.5} />
                   <span className="font-heading text-2xl uppercase tracking-wide text-foreground">IM Shots</span>
@@ -433,13 +481,14 @@ export default function CustomProtocol() {
               transition={{ delay: 0.3, duration: 0.7, ease: EASE }}
               className="lg:sticky lg:top-28"
             >
-              <div className="rounded-3xl border border-foreground/[0.10] bg-card/[0.70] p-6 shadow-[0_24px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-md">
-                <p className="mb-4 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/60">
+              <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:rounded-[1.6rem] md:p-6">
+                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
+                <p className="relative mb-4 font-body text-[10px] font-black uppercase tracking-[0.24em] text-foreground/60">
                   Protocol Summary
                 </p>
 
                 {/* One-time / Subscription toggle */}
-                <div className="mb-5 flex gap-1 rounded-2xl border border-foreground/[0.10] bg-background/[0.45] p-1">
+                <div className="relative mb-5 flex gap-1 rounded-2xl border border-foreground/[0.10] bg-background/[0.45] p-1">
                   {['onetime', 'subscription'].map((mode) => (
                     <button
                       key={mode}
@@ -457,7 +506,7 @@ export default function CustomProtocol() {
                 </div>
 
                 {/* Line items */}
-                <div className="mb-5 min-h-[72px] space-y-2">
+                <div className="relative mb-5 min-h-[72px] space-y-2">
                   <AnimatePresence mode="popLayout">
                     {lineItems.length === 0 ? (
                       <motion.p
@@ -499,7 +548,7 @@ export default function CustomProtocol() {
                 </div>
 
                 {/* Monthly total — hero number */}
-                <div className="mb-5 border-t border-foreground/[0.10] pt-4">
+                <div className="relative mb-5 border-t border-foreground/[0.10] pt-4">
                   <p className="mb-1 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/55">
                     {billingMode === 'subscription' ? 'Est. Monthly' : 'Est. Total'}
                   </p>
@@ -525,49 +574,8 @@ export default function CustomProtocol() {
                 {/* CTA */}
                 <button
                   type="button"
-                  onClick={() => {
-                    clearItems();
-                    const items = [];
-                    if (vitaminsOn && vitaminsVariant) {
-                      for (let i = 0; i < effectiveVitaminsQty; i++)
-                        items.push({ cartKey: `iv-vitamins-${i}`, label: vitaminsVariant.label, price: vitaminsVariant.price, type: 'iv' });
-                    }
-                    if (nadOn && nadDose) {
-                      for (let i = 0; i < effectiveNadQty; i++)
-                        items.push({ cartKey: `iv-nad-${i}`, label: `NAD+ ${nadDose.label}`, price: nadDose.price, type: 'iv' });
-                    }
-                    if (cbdOn && cbdDose) {
-                      for (let i = 0; i < effectiveCbdQty; i++)
-                        items.push({ cartKey: `iv-cbd-${i}`, label: `CBD ${cbdDose.label}`, price: cbdDose.price, type: 'iv' });
-                    }
-                    imSelected.forEach((shotKey) => {
-                      const shot = IM_OPTIONS.find(s => s.key === shotKey);
-                      if (shot) {
-                        for (let i = 0; i < effectiveImQty(shotKey); i++)
-                          items.push({ cartKey: `im-${shotKey}-${i}`, label: shot.label, price: shot.price, type: 'im' });
-                      }
-                    });
-                    if (billingMode === 'subscription') {
-                      clearMembership?.();
-                      setMembershipTier?.({
-                        key: 'custom',
-                        name: 'Custom Subscription',
-                        billing: 'monthly',
-                        price: monthlyTotal,
-                        ivCount: effectiveVitaminsQty + effectiveCbdQty + effectiveNadQty,
-                        custom: true,
-                        items,
-                      });
-                      track('protocol_completed', { item_count: items.length, billing: billingMode });
-                      navigate('/checkout');
-                      return;
-                    }
-                    clearMembership?.();
-                    items.forEach(item => addItem?.(item));
-                    track('protocol_completed', { item_count: items.length, billing: billingMode });
-                    navigate('/checkout');
-                  }}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground py-4 font-body text-xs font-semibold uppercase tracking-[0.24em] text-background transition-colors hover:bg-foreground/90"
+                  onClick={continueProtocol}
+                  className="relative flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground py-4 font-body text-xs font-black uppercase tracking-[0.18em] text-background transition-colors hover:bg-foreground/90"
                 >
                   {billingMode === 'subscription' ? 'Start Subscription' : 'Proceed to Checkout'}
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -591,6 +599,29 @@ export default function CustomProtocol() {
           </div>
         </div>
       </div>
+
+      {typeof document !== 'undefined' && createPortal(<div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/94 px-4 pt-3 backdrop-blur-2xl lg:hidden"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.85rem)' }}
+      >
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.24em] text-foreground/38">
+              {billingMode === 'subscription' ? 'Monthly estimate' : 'Estimate'}
+            </p>
+            <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">
+              ${monthlyTotal.toLocaleString()} · {lineItems.length || 0} selected
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={continueProtocol}
+            className="flex min-h-[60px] min-w-[148px] items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-5 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background"
+          >
+            {billingMode === 'subscription' ? 'Start' : 'Checkout'} <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          </button>
+        </div>
+      </div>, document.body)}
 
       <Footer />
     </>
