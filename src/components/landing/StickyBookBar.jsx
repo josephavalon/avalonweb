@@ -14,6 +14,7 @@ export default function StickyBookBar() {
     pathname.startsWith('/custom') ||
     pathname.startsWith('/store') ||
     pathname.startsWith('/products') ||
+    pathname.startsWith('/launches') ||
     pathname.startsWith('/checkout') ||
     pathname.startsWith('/booking/confirmation') ||
     pathname.startsWith('/admin') ||
