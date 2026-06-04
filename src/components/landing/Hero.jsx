@@ -8,8 +8,8 @@ const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Droplets, preload: () => import('@/pages/BookNow') },
-  { to: '/protocols', label: 'View Protocols', icon: LayoutGrid },
-  { to: '/subscription', label: 'Memberships', icon: UserRound },
+  { to: '/protocols', label: 'Protocols', icon: LayoutGrid },
+  { to: '/subscription', label: 'Plans', icon: UserRound },
 ];
 
 export default function Hero() {
@@ -56,7 +56,7 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[54vw] md:max-w-[80rem] md:grid-cols-3 md:gap-3"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[74vw] md:max-w-[86rem] md:grid-cols-3 md:gap-3 xl:w-[56vw]"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -68,7 +68,7 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className="group relative flex min-h-[72px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.05rem] border border-foreground/28 bg-background/[0.16] px-4 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_18px_70px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-base ease-editorial hover:border-foreground/42 hover:bg-foreground/[0.12] md:min-h-[96px] md:rounded-[1.45rem] md:px-5"
+                className="group relative flex min-h-[72px] w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border border-foreground/28 bg-background/[0.16] px-4 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_18px_70px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-base ease-editorial hover:border-foreground/42 hover:bg-foreground/[0.12] md:min-h-[96px] md:rounded-[1.45rem] md:px-4"
               >
                 <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.13),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_55%,hsl(var(--foreground)/0.028))]" />
                 <motion.span
@@ -77,16 +77,16 @@ export default function Hero() {
                   animate={{ x: ['0%', '320%'] }}
                   transition={{ duration: 0.72, delay: 0.28, ease: EASE }}
                 />
-                <span className="relative flex min-w-0 items-center gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.075] text-foreground/86 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:h-14 md:w-14">
-                    <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.15} />
+                <span className="relative flex min-w-0 flex-1 items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.075] text-foreground/86 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:h-12 md:w-12">
+                    <Icon className="h-6 w-6" strokeWidth={2.15} />
                   </span>
-                  <span className="min-w-0 truncate font-body text-[13px] font-black uppercase leading-none tracking-[0.16em] text-foreground md:text-[15px]">
+                  <span className="min-w-0 whitespace-nowrap font-body text-[13px] font-black uppercase leading-none tracking-[0.12em] text-foreground md:text-[14px] md:tracking-[0.18em]">
                     {action.label}
                   </span>
                 </span>
-                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.055] text-foreground transition-transform group-hover:translate-x-1 md:h-11 md:w-11">
-                  <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.4} />
+                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.055] text-foreground transition-transform group-hover:translate-x-1">
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
                 </span>
               </MotionLink>
             );
