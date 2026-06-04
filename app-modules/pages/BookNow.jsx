@@ -749,7 +749,7 @@ function UniversalBookingFrame({
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/82 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl">
           <div className="flex items-center gap-2">
           <div className="min-w-[124px] shrink-0 border-r border-foreground/12 px-2">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Deposit</p>
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Reservation Deposit</p>
             <p className="mt-1 font-body text-[1.45rem] font-black leading-none text-foreground">{dueNow}</p>
             <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Balance {dueAfter}</p>
           </div>
@@ -890,7 +890,7 @@ function DesktopOrderRail({
             <p className="font-body text-sm font-black text-foreground">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
           <div className="mt-4">
-            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Deposit</p>
+            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Reservation Deposit</p>
             <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground">{currency(displayDueNow)}</p>
             <p className="mt-1 font-body text-xs font-semibold text-foreground/56">Secure your booking</p>
             {displayBalanceDue > 0 && <p className="mt-2 font-body text-[11px] font-bold text-foreground/46">Balance {currency(displayBalanceDue)} due upon completion</p>}

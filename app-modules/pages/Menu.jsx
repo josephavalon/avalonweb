@@ -20,9 +20,9 @@ import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const HERO_GOALS = [
-  { key: 'vitamins', label: 'IV Vitamins', icon: Droplets, href: '#iv-vitamins', section: 'vitamins' },
+  { key: 'vitamins', label: 'IV Therapy', icon: Droplets, href: '#iv-vitamins', section: 'vitamins' },
   { key: 'nad', label: 'IV NAD+', icon: BatteryCharging, href: '#iv-nad', section: 'nad' },
-  { key: 'cbd', label: 'IV CBD', icon: Zap, href: '#iv-cbd', section: 'cbd' },
+  { key: 'cbd', label: 'CBD IV Therapy', icon: Zap, href: '#iv-cbd', section: 'cbd' },
   { key: 'all', label: 'All Protocols', icon: FlaskConical, href: '#protocol-directory', section: 'all' },
 ];
 
@@ -394,7 +394,7 @@ export default function Menu() {
 
         <section className="mt-8 grid gap-2 scroll-mt-44 md:mt-14 md:gap-3">
           <div id="iv-vitamins" className="scroll-mt-44">
-            <Foldout title="IV Vitamins" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
+            <Foldout title="IV Therapy" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
               <ProtocolList id="iv-vitamins-protocols" sessions={vitaminSessions} />
             </Foldout>
           </div>
@@ -404,7 +404,7 @@ export default function Menu() {
             </Foldout>
           </div>
           <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="IV CBD" icon={Zap} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+            <Foldout title="CBD IV Therapy" icon={Zap} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
               <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} />
             </Foldout>
           </div>
