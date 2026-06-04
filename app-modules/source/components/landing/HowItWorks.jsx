@@ -34,9 +34,7 @@ function StepCard({ step, index, open, onToggle }) {
       viewport={{ once: true, margin: '-12%' }}
       transition={{ duration: 0.82, delay: index * 0.18, ease: EASE }}
       whileHover={premiumHover}
-      className={`relative overflow-hidden rounded-[1.05rem] border border-foreground/12 bg-black/24 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.09),0_14px_54px_rgba(0,0,0,0.18)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-base ease-editorial ${
-        open ? 'border-foreground/22 bg-black/30' : 'hover:border-foreground/18 hover:bg-black/28'
-      }`}
+      className={`av-treatment-card relative overflow-hidden rounded-[1.05rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
       <motion.button
         type="button"
@@ -46,7 +44,7 @@ function StepCard({ step, index, open, onToggle }) {
         aria-expanded={open}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+          <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
             <span className="font-body text-[10px] tracking-[0.2em] text-foreground/58">{step.n}</span>
           </div>
           <div className="min-w-0 text-left">
