@@ -10,6 +10,7 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 const mainLinks = [
   { to: '/protocols', label: 'Protocols' },
   { to: '/subscription', label: 'Plans' },
+  { to: '/launches', label: 'Launches' },
 ];
 const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
