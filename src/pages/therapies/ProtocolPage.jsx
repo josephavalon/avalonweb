@@ -93,27 +93,27 @@ export default function ProtocolPage() {
           </motion.p>
 
           {/* Meta widgets */}
-          <motion.div {...fadeUp(0.36)} className="mb-8 grid grid-cols-2 gap-2 md:grid-cols-4">
-            <GlassCard tone="soft" radius="1.35rem" className="p-3">
+          <motion.div {...fadeUp(0.36)} className="av-wide-card-grid mb-8">
+            <GlassCard tone="soft" radius="1.35rem" className="av-rect-card min-h-[120px] p-4">
               <DollarSign className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
-              <p className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">${price}</p>
+              <p className="mt-4 font-heading text-4xl uppercase leading-none text-foreground">${price}</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Price</p>
             </GlassCard>
             {protocol.duration && (
-              <GlassCard tone="soft" radius="1.35rem" className="p-3">
+              <GlassCard tone="soft" radius="1.35rem" className="av-rect-card min-h-[120px] p-4">
                 <Clock className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
-                <p className="mt-3 truncate font-heading text-3xl uppercase leading-none text-foreground">{protocol.duration}</p>
+                <p className="mt-4 truncate font-heading text-4xl uppercase leading-none text-foreground">{protocol.duration}</p>
                 <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Time</p>
               </GlassCard>
             )}
-            <GlassCard tone="soft" radius="1.35rem" className="p-3">
+            <GlassCard tone="soft" radius="1.35rem" className="av-rect-card min-h-[120px] p-4">
               <ShieldCheck className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
-              <p className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">RN</p>
+              <p className="mt-4 font-heading text-4xl uppercase leading-none text-foreground">RN</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Mobile</p>
             </GlassCard>
-            <GlassCard tone="soft" radius="1.35rem" className="p-3">
+            <GlassCard tone="soft" radius="1.35rem" className="av-rect-card min-h-[120px] p-4">
               <Sparkles className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
-              <p className="mt-3 truncate font-heading text-3xl uppercase leading-none text-foreground capitalize">{protocol.category || 'IV'}</p>
+              <p className="mt-4 truncate font-heading text-4xl uppercase leading-none text-foreground capitalize">{protocol.category || 'IV'}</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Type</p>
             </GlassCard>
           </motion.div>
@@ -159,7 +159,7 @@ export default function ProtocolPage() {
               <ShieldCheck className="h-4 w-4 text-foreground/40" strokeWidth={1.6} />
               <p className="font-body text-[11px] tracking-[0.32em] uppercase text-foreground/40">Action</p>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {mechanism.map((item) => (
                 <GlassCard key={item.title} tone="soft" radius="1.35rem" className="p-4">
                   <p className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/42">{item.title}</p>
@@ -199,7 +199,7 @@ export default function ProtocolPage() {
               <p className="font-heading text-3xl uppercase leading-none text-foreground">Fit</p>
               <p className="mt-2 font-body text-sm font-semibold leading-snug text-foreground/62">{getBestFor(protocol)}</p>
             </GlassCard>
-            <div className="mt-6 grid gap-2 sm:grid-cols-3">
+            <div className="mt-6 grid gap-2 md:grid-cols-2">
               {['Clinical review', 'Licensed RN', 'Protocol may adjust'].map((item) => (
                 <GlassCard key={item} tone="soft" radius="1.35rem" className="flex items-center gap-2 px-3 py-3">
                   <Check className="h-3.5 w-3.5 text-foreground/45" strokeWidth={1.8} />

@@ -230,30 +230,30 @@ export default function RecoveryMenuSection() {
               <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40">IV Drip</p>
 
               {/* Session grid */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-2">
                 {filteredSessions.map((s) => (
                   <button key={s.key} type="button" onClick={() => { setSelectedKey(s.key); setInsideOpen(false); }}
-                    className={`relative flex flex-col gap-2 p-4 rounded-2xl border text-left transition-all duration-200 ${
+                    className={`av-rect-card relative flex min-h-[124px] w-full items-center gap-4 rounded-[1.35rem] border p-4 text-left transition-all duration-200 ${
                       selectedKey === s.key ? 'border-foreground/50 bg-foreground/[0.06]' : 'border-foreground/[0.12] hover:border-foreground/25 hover:bg-foreground/[0.02]'
                     }`}>
                     {selectedKey === s.key && (
-                      <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-foreground flex items-center justify-center">
+                      <div className="absolute right-4 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
                         <Check className="w-2.5 h-2.5 text-background" strokeWidth={3} />
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <s.icon className={`w-4 h-4 shrink-0 ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/40'}`} strokeWidth={1.5} />
-                      <span className={`font-body text-xs font-semibold tracking-[0.08em] ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/70'}`}>{s.label}</span>
+                    <s.icon className={`h-5 w-5 shrink-0 ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/45'}`} strokeWidth={1.8} />
+                    <div className="min-w-0 flex-1 pr-4">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={`truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/82'}`}>{s.label}</span>
+                        {s.tag && (
+                          <span className={`hidden shrink-0 rounded-full border px-2 py-0.5 font-body text-[8px] font-black uppercase tracking-[0.15em] sm:inline-flex ${
+                            s.popular ? 'border-foreground/24 bg-foreground/[0.12] text-foreground' : 'border-foreground/[0.08] bg-foreground/[0.06] text-foreground/44'
+                          }`}>{s.tag}</span>
+                        )}
+                      </div>
+                      <span className="mt-1 block max-w-[28ch] font-body text-xs font-bold leading-tight text-foreground/52">{s.tagline}</span>
                     </div>
-                    {s.tag && (
-                      <span className={`self-start font-body text-[8px] tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border ${
-                        s.popular ? 'bg-accent/20 text-accent border-accent/30' : 'bg-foreground/[0.06] text-foreground/40 border-foreground/[0.08]'
-                      }`}>{s.tag}</span>
-                    )}
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="font-body text-[10px] text-foreground/40 leading-tight flex-1 pr-2">{s.tagline}</span>
-                      <span className={`font-body text-sm font-semibold shrink-0 ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/50'}`}>${s.price}</span>
-                    </div>
+                    <span className={`shrink-0 font-heading text-[2rem] leading-none ${selectedKey === s.key ? 'text-foreground' : 'text-foreground/58'}`}>${s.price}</span>
                   </button>
                 ))}
               </div>

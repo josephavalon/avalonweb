@@ -52,9 +52,9 @@ function PlanBuilder({ tier }) {
   ];
 
   return (
-    <motion.div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-3 md:mt-5" {...fadeUp}>
+    <motion.div className="mt-3 grid min-w-0 gap-2 md:mt-5 md:grid-cols-2" {...fadeUp}>
       {builder.map((item) => (
-        <div key={item.label} className="rounded-[1rem] border border-foreground/10 bg-foreground/[0.025] p-3">
+        <div key={item.label} className="av-rect-card min-h-[120px] rounded-[1rem] border border-foreground/10 bg-foreground/[0.025] p-4">
           <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{item.label}</p>
           <p className="mt-2 font-heading text-3xl uppercase leading-none text-foreground">{item.value}</p>
           <p className="mt-1 font-body text-[11px] leading-snug text-foreground/48">{item.sub}</p>
@@ -145,7 +145,7 @@ function MobilePlanSummary({ tier, term, onSelect }) {
 
 function TermSelector({ activeKey, onSelect }) {
   return (
-    <motion.div className="grid grid-cols-3 gap-2" {...fadeUp}>
+    <motion.div className="grid gap-2 md:grid-cols-2" {...fadeUp}>
       {SUBSCRIPTION_TERMS.map((term) => {
         const active = activeKey === term.key;
         return (
@@ -154,7 +154,7 @@ function TermSelector({ activeKey, onSelect }) {
             type="button"
             onClick={() => onSelect(term.key)}
             aria-pressed={active}
-            className={`min-h-[58px] rounded-2xl border px-3 text-left transition-colors ${
+            className={`av-rect-card flex h-[96px] flex-col justify-center rounded-2xl border px-4 text-left transition-colors ${
               active
                 ? 'border-foreground bg-foreground text-background'
                 : 'border-foreground/10 bg-foreground/[0.025] text-foreground hover:border-foreground/25 hover:bg-foreground/[0.045]'
@@ -175,7 +175,7 @@ function TierSwitch({ tier, active, onSelect }) {
       type="button"
       onClick={() => onSelect(tier)}
       aria-pressed={active}
-      className={`min-h-[58px] rounded-2xl border px-3 text-left transition-colors ${
+      className={`av-rect-card flex h-[96px] flex-col justify-center rounded-2xl border px-4 text-left transition-colors ${
         active
           ? 'border-foreground bg-foreground text-background'
           : 'border-foreground/10 bg-foreground/[0.025] text-foreground hover:border-foreground/25 hover:bg-foreground/[0.045]'
@@ -249,7 +249,7 @@ export default function Subscription() {
               </div>
 
               <div className="min-w-0 space-y-3">
-                <motion.div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4" {...fadeUp}>
+                <motion.div className="grid min-w-0 gap-2 md:grid-cols-2" {...fadeUp}>
                   {tiers.map((tier) => (
                     <TierSwitch key={tier.key} tier={tier} active={activeTier.key === tier.key} onSelect={switchTier} />
                   ))}

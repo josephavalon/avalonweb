@@ -7,7 +7,7 @@ export function ItemGridCard({ item, isSelected, onSelect, onOpen, onMenuOpen })
   const exp = expiryLabel(item.expirationDate);
 
   return (
-    <div className="group relative cursor-pointer rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/20">
+    <div className="av-rect-card group relative flex min-h-[128px] cursor-pointer overflow-hidden rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/20">
       <div className={`absolute left-2 top-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <button
           onClick={(event) => { event.stopPropagation(); onSelect(item.id); }}
@@ -22,18 +22,18 @@ export function ItemGridCard({ item, isSelected, onSelect, onOpen, onMenuOpen })
       )}
 
       <div
-        className="relative flex aspect-square w-full items-center justify-center rounded-t-2xl overflow-hidden"
+        className="relative flex w-24 shrink-0 items-center justify-center overflow-hidden border-r border-foreground/[0.06] sm:w-32"
         style={{ background: `linear-gradient(135deg, ${color}20 0%, ${color}08 100%)` }}
         onClick={() => onOpen(item)}
       >
-        <Icon className="h-12 w-12 opacity-50" style={{ color }} />
+        <Icon className="h-8 w-8 opacity-50 sm:h-10 sm:w-10" style={{ color }} />
         {item.refrigeration && (
           <div className="absolute bottom-2 right-2 rounded-md border border-sky-400/20 bg-background/80 px-1.5 py-0.5 font-body text-[9px] font-semibold text-sky-300 backdrop-blur-sm">cold</div>
         )}
       </div>
 
-      <div className="absolute bottom-[72px] left-0 right-0 translate-y-1 opacity-0 transition-all duration-150 group-hover:translate-y-0 group-hover:opacity-100">
-        <div className="mx-2 flex items-center justify-around rounded-xl border border-foreground/10 bg-card/95 p-1.5 backdrop-blur-sm">
+      <div className="absolute bottom-2 right-2 translate-y-1 opacity-0 transition-all duration-150 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="flex items-center justify-around rounded-xl border border-foreground/10 bg-card/95 p-1.5 backdrop-blur-sm">
           {[[Plus, 'Add sub-item'], [Edit, 'Edit'], [Bell, 'Set alert'], [MoveRight, 'Move'], [MoreHorizontal, 'More']].map(([Icon2, title]) => (
             <button key={title} title={title}
               onClick={(event) => { event.stopPropagation(); if (title === 'More') onMenuOpen(item.id, event); }}
@@ -45,8 +45,8 @@ export function ItemGridCard({ item, isSelected, onSelect, onOpen, onMenuOpen })
         </div>
       </div>
 
-      <div className="px-3 pb-3 pt-2" onClick={() => onOpen(item)}>
-        <p className="truncate font-body text-xs font-semibold text-foreground">{item.name}</p>
+      <div className="min-w-0 flex-1 px-4 py-4 pr-12" onClick={() => onOpen(item)}>
+        <p className="line-clamp-2 font-body text-sm font-semibold leading-tight text-foreground">{item.name}</p>
         <div className="mt-1 flex items-center justify-between">
           <span className={`font-body text-xs font-semibold ${stockCls(item.qty, item.minLevel)}`}>{item.qty} {item.unit}</span>
           {exp && <span className={`font-body text-[10px] ${exp.cls}`}>{exp.text}</span>}

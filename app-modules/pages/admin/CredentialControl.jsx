@@ -59,7 +59,7 @@ function Metric({ label, value, detail, icon: Icon, tone = 'default' }) {
 function StageStrip({ stages }) {
   return (
     <div className="rounded-xl border border-foreground/10 bg-background/58 p-3 shadow-[0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
-      <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid gap-2 md:grid-cols-2">
         {stages.map((stage) => (
           <div key={stage.key} className="rounded-lg border border-foreground/8 bg-foreground/[0.03] p-3">
             <p className="font-body text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/46">{stage.label}</p>
@@ -431,7 +431,7 @@ export default function CredentialControl() {
             </motion.div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-3 md:grid-cols-2">
             <Metric label="Roster" value={tower.metrics.roster} detail="known nurses" icon={Stethoscope} />
             <Metric label="Clear" value={tower.metrics.clear} detail="can claim" icon={CheckCircle2} tone="ready" />
             <Metric label="Blocked" value={tower.metrics.blocked} detail="hold until clear" icon={ShieldAlert} tone={tower.metrics.blocked ? 'critical' : 'ready'} />

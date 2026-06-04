@@ -83,7 +83,7 @@ export default function ClinicalClearancePanel({
         </div>
       </div>
 
-      <div className={`mt-4 grid gap-2 ${compact ? 'grid-cols-2 sm:grid-cols-4' : 'sm:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className={`mt-4 grid gap-2 ${compact ? 'grid-cols-1 md:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-1 md:grid-cols-2'}`}>
         {verdict.checkpoints.map((item) => (
           <Checkpoint key={item.key} item={item} compact={compact} />
         ))}

@@ -112,14 +112,14 @@ function SubRow({ sub }) {
           initial={false}
           animate={open ? 'show' : 'hidden'}
           variants={premiumListContainer(0.025, 0.03)}
-          className="grid grid-cols-2 gap-1.5 border-t border-foreground/[0.06] px-4 pb-4 pt-3"
+          className="grid gap-2 border-t border-foreground/[0.06] px-4 pb-4 pt-3 md:grid-cols-2"
         >
               {sub.treatments.map((t) => (
                 <MotionLink
                   key={t.label}
                   to="/book"
                   variants={premiumListItem}
-                  className="av-treatment-chip flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-base ease-editorial group"
+                  className="av-treatment-chip group flex min-h-[72px] items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-base ease-editorial"
                 >
                   <t.icon className="w-3 h-3 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                   <div className="min-w-0">
@@ -217,13 +217,13 @@ function CategoryRow({ cat, index, open, onToggle }) {
                 cat.data.map((sub) => <SubRow key={sub.label} sub={sub} />)
               ) : (
                 // Flat grid
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid gap-2 md:grid-cols-2">
                   {cat.data.map((addon) => (
                     <MotionLink
                       key={addon.label}
                       to="/book"
                       variants={premiumListItem}
-                      className="av-treatment-chip flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-base ease-editorial group"
+                      className="av-treatment-chip group flex min-h-[76px] items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-base ease-editorial"
                     >
                       <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                       <div>

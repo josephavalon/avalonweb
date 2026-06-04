@@ -136,7 +136,7 @@ function DemoShortcutsPanel({ demoAuthAllowed, loading, onDemoSignIn }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="grid gap-2 md:grid-cols-2">
         {DEMO_SHORTCUTS.map(({ username: demoUsername, label, detail, icon: Icon }) => (
           <button
             key={demoUsername}
@@ -456,7 +456,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid gap-3 md:grid-cols-2">
             {PORTAL_METRICS.map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-background/48 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.045)] backdrop-blur-xl">
                 <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{label}</p>

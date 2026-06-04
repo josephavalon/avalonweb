@@ -226,7 +226,7 @@ export default function TrainingControl() {
             </motion.div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-3 md:grid-cols-2">
             <Metric label="Nurses" value={tower.metrics.nurses} detail="tracked" icon={UserCheck} tone="default" />
             <Metric label="Clear" value={tower.metrics.clear} detail="fully reviewed" icon={CheckCircle2} tone="ready" />
             <Metric label="Review" value={tower.metrics.review} detail="due soon" icon={ClipboardCheck} tone={tower.metrics.review ? 'action' : 'ready'} />

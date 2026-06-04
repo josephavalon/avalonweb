@@ -229,7 +229,7 @@ export default function Reports() {
       </div>
 
       {/* 2×4 Card grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-8">
         {REPORT_CARDS.map(card => (
           <ReportCard key={card.id} {...card} />
         ))}

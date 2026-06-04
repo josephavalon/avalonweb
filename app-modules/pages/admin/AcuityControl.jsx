@@ -56,7 +56,7 @@ function MetricTile({ label, value, detail, tone = 'default', icon: Icon }) {
 function StageRail({ stages }) {
   return (
     <div className="rounded-xl border border-foreground/10 bg-background/58 p-3 shadow-[0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
-      <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid gap-2 md:grid-cols-2">
         {stages.map((stage) => (
           <div key={stage.key} className="rounded-lg border border-foreground/8 bg-foreground/[0.03] p-3">
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -264,7 +264,7 @@ function CloseoutDock({ dock, onSweep }) {
         </button>
       </div>
 
-      <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mb-4 grid gap-2 sm:grid-cols-2 md:grid-cols-2">
         <MetricTile label="Closeouts" value={dock.metrics.total} detail="RN packets" icon={ClipboardCheck} />
         <MetricTile label="Clean" value={dock.metrics.ready} detail="all proof done" tone="ready" icon={CheckCircle2} />
         <MetricTile label="Acuity" value={dock.metrics.acuityAction} detail="entry needed" tone={dock.metrics.acuityAction ? 'critical' : 'ready'} icon={CalendarClock} />
@@ -396,7 +396,7 @@ export default function AcuityControl() {
             </motion.div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-3 md:grid-cols-2">
             <MetricTile label="Queue" value={state.metrics.total} detail="mirrored visits" icon={Activity} />
             <MetricTile label="Ready" value={state.metrics.ready} detail="no local blockers" tone="ready" icon={CheckCircle2} />
             <MetricTile label="Acuity" value={state.metrics.acuityAction} detail="manual handoff" tone={state.metrics.acuityAction ? 'action' : 'ready'} icon={CalendarClock} />

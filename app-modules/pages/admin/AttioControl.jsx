@@ -52,7 +52,7 @@ function Metric({ label, value, detail, icon: Icon, tone = 'default' }) {
 function StageStrip({ stages }) {
   return (
     <div className="rounded-xl border border-foreground/10 bg-background/58 p-3 shadow-[0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
-      <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid gap-2 md:grid-cols-2">
         {stages.map((stage) => (
           <div key={stage.key} className="rounded-lg border border-foreground/8 bg-foreground/[0.03] p-3">
             <p className="font-body text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/46">{stage.label}</p>
@@ -366,7 +366,7 @@ export default function AttioControl() {
             </motion.div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-3 md:grid-cols-2">
             <Metric label="People" value={tower.metrics.people} detail="CRM-safe records" icon={Contact} />
             <Metric label="Sync" value={tower.metrics.needsSync} detail="ready for Attio" icon={DatabaseZap} tone={tower.metrics.needsSync ? 'action' : 'ready'} />
             <Metric label="Outreach" value={tower.metrics.tasks} detail="open reasons" icon={Send} tone="action" />

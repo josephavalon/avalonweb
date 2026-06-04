@@ -441,7 +441,7 @@ export default function Accounting() {
         </motion.div>
 
         {/* ── Summary Tiles ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-8">
           <SummaryTile
             icon={AlertTriangle}
             label="Total Pending"

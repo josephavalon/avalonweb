@@ -44,7 +44,7 @@ export default function ComparisonTable() {
           </p>
         </motion.div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2">
           {POINTS.map((point, index) => (
             <motion.div
               key={point.label}
@@ -52,7 +52,7 @@ export default function ComparisonTable() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-24px' }}
               transition={{ duration: 0.65, delay: index * 0.04, ease: EASE }}
-              className="flex min-h-[13rem] flex-col rounded-3xl border border-foreground/10 bg-foreground/[0.035] p-5 md:p-6"
+              className="av-rect-card flex min-h-[10rem] flex-col rounded-3xl border border-foreground/10 bg-foreground/[0.035] p-5 md:p-6"
             >
               <div className="mb-8 flex items-start justify-between gap-4">
                 <p className="max-w-[11rem] font-heading text-3xl leading-none text-foreground md:text-[2.35rem]">

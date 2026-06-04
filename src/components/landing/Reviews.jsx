@@ -68,7 +68,7 @@ export default function Reviews() {
           <p className="font-body text-sm text-foreground/50 leading-relaxed mt-3 max-w-md">
             Private clients. Groups. Hotels.
           </p>
-          <div className="grid grid-cols-3 gap-2 mt-5 max-w-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-5 max-w-md">
             {[
               ['5.0', 'Client rating'],
               ['90min', 'Arrival window'],

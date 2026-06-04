@@ -402,7 +402,7 @@ export default function CustomProtocol() {
                 <p className="mb-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/50">
                   Add-Ons — Select any combination
                 </p>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid gap-2.5 md:grid-cols-2">
                   {IM_OPTIONS.map(shot => {
                     const on = imSelected.includes(shot.key);
                     return (
@@ -417,7 +417,7 @@ export default function CustomProtocol() {
                         <button
                           type="button"
                           onClick={() => toggleIM(shot.key)}
-                          className="flex items-start justify-between gap-2 p-3.5 w-full text-left"
+                          className="flex min-h-[96px] w-full items-center justify-between gap-4 p-4 text-left"
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">

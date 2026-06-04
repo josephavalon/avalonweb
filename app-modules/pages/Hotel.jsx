@@ -75,7 +75,7 @@ export default function Hotel() {
             transition={{ duration: 0.75, ease: EASE, delay: 0.18 }}
           >
             <GlassCard tone="command" radius="1.75rem" className="p-4 md:p-5">
-              <div className="relative grid grid-cols-3 gap-2">
+              <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2">
                 {status.map(({ icon: Icon, value, label }) => (
                   <div key={label} className="rounded-[1.2rem] border border-foreground/10 bg-foreground/[0.045] p-3">
                     <Icon className="h-4 w-4 text-foreground/45" strokeWidth={1.8} />

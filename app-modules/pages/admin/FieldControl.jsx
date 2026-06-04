@@ -62,7 +62,7 @@ function Metric({ label, value, detail, icon: Icon, tone = 'default' }) {
 function StageStrip({ stages }) {
   return (
     <div className="rounded-xl border border-foreground/10 bg-background/58 p-3 shadow-[0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
-      <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid gap-2 md:grid-cols-2">
         {stages.map((stage) => (
           <div key={stage.key} className="rounded-lg border border-foreground/8 bg-foreground/[0.03] p-3">
             <p className="font-body text-[9px] font-semibold uppercase tracking-[0.2em] text-foreground/46">{stage.label}</p>
@@ -377,7 +377,7 @@ export default function FieldControl() {
             </motion.div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-3 md:grid-cols-2">
             <Metric label="Assigned" value={tower.metrics.assigned} detail="ready for ETA" icon={Send} tone={tower.metrics.assigned ? 'action' : 'default'} />
             <Metric label="En Route" value={tower.metrics.enRoute} detail="moving" icon={Navigation} tone={tower.metrics.enRoute ? 'action' : 'default'} />
             <Metric label="Arrived" value={tower.metrics.arrived} detail="at site" icon={MapPin} tone={tower.metrics.arrived ? 'action' : 'default'} />

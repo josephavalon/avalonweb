@@ -344,7 +344,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Metric tiles ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-6">
         {METRICS.map((m, i) => {
           const Icon = m.icon;
           return (

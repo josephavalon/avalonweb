@@ -253,7 +253,7 @@ export default function Communications() {
       </div>
 
       {/* Summary strip */}
-      {!isNurse && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      {!isNurse && <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-6">
         <SummaryChip label="Overdue"       value={overdueCount}  color="text-red-400" />
         <SummaryChip label="Due Today"     value={dueTodayCount} color="text-amber-400" />
         <SummaryChip label="Pending"       value={pendingCount}  color="text-foreground/70" />

@@ -140,7 +140,7 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
-      className="mb-7 grid grid-cols-4 gap-2 rounded-[1.35rem] border border-accent/20 bg-accent/[0.055] p-2 shadow-[0_18px_70px_hsl(var(--accent)/0.08)] backdrop-blur-xl"
+      className="mb-7 grid grid-cols-1 md:grid-cols-2 gap-2 rounded-[1.35rem] border border-accent/20 bg-accent/[0.055] p-2 shadow-[0_18px_70px_hsl(var(--accent)/0.08)] backdrop-blur-xl"
     >
       {rail.map(({ icon: Icon, label, value, active }) => (
         <div key={label} className={`rounded-xl border px-2 py-2.5 text-center transition-colors ${
@@ -421,7 +421,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
             <label className={labelClass}>Time</label>
 
             {slotsLoading && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
@@ -472,7 +472,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
             )}
 
             {!slotsLoading && slots.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {slots.map((slot) => {
                   const label = formatTimeLabel(slot.time);
                   const active = selectedSlot?.datetime === slot.time;
@@ -539,7 +539,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
             ].map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[
             ['covidPositive', 'Covid?'],
             ['infectiousDisease', 'Infection?'],

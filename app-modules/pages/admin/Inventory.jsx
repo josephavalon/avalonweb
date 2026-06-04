@@ -1394,7 +1394,7 @@ function ReportsView({ items, folders, tags }) {
           {/* ── Inventory Summary ── */}
           {activeReport === 'summary' && (
             <>
-              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mb-5 grid gap-3 md:grid-cols-2">
                 {[
                   { label:'Total SKUs',  value:items.length,         unit:'' },
                   { label:'Total Units', value:totalUnits,            unit:'' },
@@ -2542,7 +2542,7 @@ export default function AdminInventory() {
               {visibleFolders.length > 0 && (
                 <div className="px-5 pb-3 pt-5">
                   <p className="mb-3 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/30">Folders</p>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  <div className="grid gap-3 md:grid-cols-2">
                     {visibleFolders.map(folder => (
                       <FolderCard key={folder.id} folder={folder} items={items} onClick={navigateFolder} onMenuOpen={openFolderMenu} />
                     ))}
@@ -2565,7 +2565,7 @@ export default function AdminInventory() {
 
               {/* Grid */}
               {layout === 'grid' && visibleItems.length > 0 && (
-                <div className="grid grid-cols-2 gap-4 px-5 pb-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid gap-4 px-5 pb-6 md:grid-cols-2">
                   {pagedItems.map(item => (
                     <ItemGridCard key={item.id} item={item} tags={tags} isSelected={selectedIds.has(item.id)} onSelect={toggleSelect} onOpen={handleOpenItem} onMenuOpen={openItemMenu} />
                   ))}

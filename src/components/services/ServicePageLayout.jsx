@@ -77,25 +77,25 @@ export default function ServicePageLayout({
         <section className="px-6 py-6 md:px-16 md:py-10">
           <div className="max-w-6xl mx-auto">
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {treatments.map((t, i) => {
                 const href = categorySlug ? `/products/${categorySlug}/${slugify(t.name)}` : null;
                 const CardBody = (
                   <>
                     {t.image && (
-                      <div className="aspect-square overflow-hidden bg-background flex items-center justify-center">
+                      <div className="absolute inset-y-0 right-0 flex w-[42%] items-center justify-center overflow-hidden bg-background/35">
                         <img
                           src={t.image}
                           alt={t.name}
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                          className="h-full w-full object-contain p-3 opacity-80 transition-opacity group-hover:opacity-100"
                         />
                       </div>
                     )}
-                    <div className="p-5">
-                       <h3 className="font-heading text-xl md:text-2xl text-foreground tracking-wide mb-1">{t.name}</h3>
-                       {t.desc && <p className="font-body text-xs text-muted-foreground leading-relaxed mb-3">{t.desc}</p>}
+                    <div className="relative z-10 flex min-h-[144px] w-[68%] flex-col justify-center p-5">
+                       <h3 className="font-heading text-[2.45rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[3rem]">{t.name}</h3>
+                       {t.desc && <p className="mt-2 font-body text-xs font-bold leading-relaxed text-muted-foreground md:text-sm">{t.desc}</p>}
                        <div className="space-y-1">
                          {t.oneTime && <div className="font-body text-sm text-foreground">{t.oneTime} <span className="text-xs text-muted-foreground">one-time</span></div>}
                          {t.price && <div className="font-body text-sm text-foreground">{t.price} <span className="text-xs text-muted-foreground">session</span></div>}
@@ -126,7 +126,7 @@ export default function ServicePageLayout({
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.06 }}
-                  className="av-glass-card group relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-xl transition-colors hover:border-foreground/24 hover:bg-background/54"
+                  className="av-rect-card av-glass-card group relative min-h-[144px] overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-xl transition-colors hover:border-foreground/24 hover:bg-background/54"
                 >
                   {href ? (
                       <Link to={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[1.35rem]">

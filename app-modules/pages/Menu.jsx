@@ -16,6 +16,7 @@ import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import PremiumButton from '@/components/ui/PremiumButton';
+import UniversalCard from '@/components/ui/UniversalCard';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
@@ -93,7 +94,7 @@ function DoseLadder({ session }) {
           {first.label}-{last.label}
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-1.5 md:grid-cols-3">
+      <div className="grid gap-1.5 md:grid-cols-2">
         {session.doses.map((dose, doseIndex) => (
           <Link
             key={dose.key || dose.label}
@@ -127,23 +128,16 @@ function sortSessions(sessions) {
 function GoalTile({ item, index }) {
   const Icon = item.icon;
   const content = (
-    <motion.span
+    <UniversalCard
+      as={motion.span}
       initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.7, delay: 0.16 + index * 0.08, ease: EASE }}
-      className="av-glass-card group relative flex min-h-[54px] min-w-0 items-center gap-2 overflow-hidden rounded-full border border-foreground/12 bg-background/42 px-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/54 md:min-h-[116px] md:gap-3 md:rounded-[1.6rem] md:px-4 lg:gap-4 lg:px-5"
-    >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
-      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-12 md:w-12 md:rounded-2xl">
-        <Icon className="h-4.5 w-4.5 md:h-5 md:w-5" strokeWidth={2.4} />
-      </span>
-      <span className="relative min-w-0 flex-1 truncate font-body text-[9px] font-black uppercase leading-none tracking-[0.1em] text-foreground md:whitespace-normal md:text-clip md:font-heading md:text-[1.55rem] md:leading-[0.9] md:tracking-normal lg:text-[1.8rem]">
-        {item.label}
-      </span>
-      <span className="relative hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/36 text-foreground transition-transform group-hover:translate-x-1 sm:flex md:h-9 md:w-9">
-        <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-      </span>
-    </motion.span>
+      icon={Icon}
+      title={item.label}
+      size="compact"
+      className="min-h-[120px] md:min-h-[150px]"
+    />
   );
 
   if (item.href.startsWith('#')) {
@@ -300,10 +294,7 @@ export default function Menu() {
 
       <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
         <section className="relative">
-          <motion.div
-            initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.9, ease: EASE }}
+          <div
             className="av-glass-card relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/38 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:max-w-3xl md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-0"
           >
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))] md:hidden" />
@@ -311,9 +302,9 @@ export default function Menu() {
             <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
               Protocols
             </h1>
-          </motion.div>
+          </div>
 
-          <div className="mt-5 grid min-w-0 grid-cols-2 gap-2 md:mt-10 md:grid-cols-4 md:gap-3">
+          <div className="av-wide-card-grid mt-5 min-w-0 md:mt-10">
             {HERO_GOALS.map((item, index) => (
               <GoalTile key={item.key} item={item} index={index} />
             ))}

@@ -171,7 +171,7 @@ export default function Store() {
           </p>
         </motion.header>
 
-        <div className="grid grid-cols-2 gap-2 rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-1">
+        <div className="grid gap-2 rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-1 md:grid-cols-2">
           {[
             ['guided', 'Recommended'],
             ['custom', 'Custom'],
@@ -303,13 +303,13 @@ export default function Store() {
 
             <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
               <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">How many people?</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid gap-2 md:grid-cols-2">
                 {['1', '2', '3-4', '5+'].map((value) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setPeople(value)}
-                    className={`min-h-[54px] rounded-2xl border font-body text-sm font-semibold ${
+                    className={`av-rect-card min-h-[88px] rounded-2xl border font-body text-sm font-semibold ${
                       people === value ? 'border-foreground bg-foreground text-background' : 'border-foreground/[0.10] bg-background/55 text-foreground/62'
                     }`}
                   >
@@ -335,7 +335,7 @@ export default function Store() {
               />
             </label>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-2 md:grid-cols-2">
               <a
                 href="tel:+14159807708"
                 className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.035] font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/68"
@@ -401,15 +401,15 @@ function VisitCard({ session, label }) {
           <p className="mt-1 font-body text-[10px] text-foreground/36">from</p>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid gap-2 md:grid-cols-2">
         {[
           ['Mobile', MapPin],
           [session.duration || session.doses?.[0]?.duration || '45-60 min', BatteryCharging],
           ['RN', ShieldCheck],
         ].map(([text, IconItem]) => (
-          <div key={text} className="rounded-2xl border border-foreground/[0.08] bg-background/45 px-2 py-3 text-center">
-            <IconItem className="mx-auto mb-2 h-4 w-4 text-foreground/42" strokeWidth={1.6} />
-            <p className="font-body text-[10px] uppercase tracking-[0.12em] text-foreground/58">{text}</p>
+          <div key={text} className="av-rect-card flex min-h-[88px] items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-background/45 px-4">
+            <IconItem className="h-4 w-4 shrink-0 text-foreground/42" strokeWidth={1.6} />
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/58">{text}</p>
           </div>
         ))}
       </div>

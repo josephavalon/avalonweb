@@ -93,7 +93,7 @@ export default function OurStory() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+          <div className="grid md:grid-cols-2 gap-3 md:gap-5">
             {[
               {
                 Icon: Star,
@@ -245,7 +245,7 @@ export default function OurStory() {
               Home, office, hotel, venue.
             </p>
           </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid md:grid-cols-2 gap-3">
             {MEET_YOU.map(({ icon: Icon, label }, i) => (
               <motion.div
                 key={label}
@@ -327,7 +327,7 @@ export default function OurStory() {
 
       {/* Trust trailer */}
       <Reveal as="section" className="px-6 md:px-16 py-section-sm border-t border-border">
-        <div className="max-w-content mx-auto grid grid-cols-1 md:grid-cols-3 gap-rhythm-4">
+        <div className="max-w-content mx-auto grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-rhythm-4">
           <motion.div
             {...REVEAL}
             className="flex flex-col gap-2.5"

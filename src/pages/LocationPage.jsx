@@ -71,7 +71,7 @@ export function LocationsHub() {
               {locationPages.length} city pages
             </span>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 md:grid-cols-2">
             {locationPages.map((item) => (
               <Link
                 key={item.slug}
@@ -197,7 +197,7 @@ export default function LocationPage() {
               <p className="font-body text-base leading-relaxed text-foreground/62">
                 {page.communityRecovery}
               </p>
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="mt-6 grid gap-3 md:grid-cols-1 md:grid-cols-2">
                 {page.localUseCases.map((item) => (
                   <div key={item} className="rounded-xl border border-foreground/[0.08] bg-background/35 p-4">
                     <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/58">{item}</p>
@@ -232,7 +232,7 @@ export default function LocationPage() {
         </section>
 
         <section className="border-t border-foreground/[0.07] px-5 py-12 md:px-12 md:py-16 lg:px-20">
-          <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-5">
+          <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-2">
             {locationServices.map(({ icon: Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-4">
                 <Icon className="h-5 w-5 text-foreground/45" strokeWidth={1.6} />

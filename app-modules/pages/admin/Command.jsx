@@ -955,7 +955,7 @@ function NurseAlertBackendPanel() {
       defaultOpen={active.length > 0}
     >
       <div className="space-y-3">
-        <div className="grid gap-2 sm:grid-cols-4">
+        <div className="grid gap-2 md:grid-cols-2">
           {[
             { label: 'Status', value: settings.enabled ? 'Active' : 'Paused' },
             { label: 'Repeats', value: `${settings.repeatMinutes} min` },
@@ -1087,7 +1087,7 @@ function OperatingSpinePanel({ requests, latestBooking, onSelectRequest }) {
   const latestId = latestBooking?.id || latestBooking?.reference;
   return (
     <AdminAccordion title="Operating Spine" icon={Plug} meta={`${spine.stages.length} stages`} defaultOpen>
-      <div className="grid gap-2 md:grid-cols-4">
+      <div className="grid gap-2 md:grid-cols-2">
         {spine.stages.map((stage, index) => {
           const hot = stage.count > 0 && ['deposit', 'acuity', 'gfe', 'shift'].includes(stage.key);
           return (
@@ -1199,7 +1199,7 @@ function LocalLaunchPanel({ latestBooking }) {
                   {items.filter((item) => !['Action', 'Needed'].includes(item.status)).length}/{items.length}
                 </span>
               </div>
-              <div className="grid gap-2 md:grid-cols-5">
+              <div className="grid gap-2 md:grid-cols-2">
                 {items.map((item) => {
                   const hot = ['Action', 'Needed'].includes(item.status);
                   return (
@@ -1325,7 +1325,7 @@ function AvalonKernelPanel({ latestBooking }) {
     >
       <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-4">
+          <div className="grid gap-2 md:grid-cols-2">
             {[
               ['Health', `${snapshot.health.score}/100`, snapshot.health.status],
               ['Founder', `${snapshot.founder.score}/100`, snapshot.founder.topMove],
@@ -4689,7 +4689,7 @@ function CommandScreen({ onSelectRequest }) {
 
       {/* Metrics strip */}
       <AdminAccordion title="Metrics" icon={LayoutDashboard} meta="4">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-2">
           {tiles.map((t, index) => (
             <div key={t.label} className={index > 3 ? 'hidden sm:block' : ''}>
               <StatusTile {...t} />

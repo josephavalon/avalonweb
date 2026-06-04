@@ -1331,7 +1331,7 @@ function CustomTreatmentBuilder({
       <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/50 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
         <p className="relative font-body text-xs font-bold uppercase tracking-[0.16em] text-foreground/68">Choose IV</p>
-        <div className="relative mt-3 grid grid-cols-2 gap-2">
+        <div className="relative mt-3 grid gap-2 md:grid-cols-2">
           {CUSTOM_BASE_OPTIONS.map((item) => {
             const Icon = item.icon;
             const protocol = safeProtocol(getProductByKey(item.productKey));
@@ -1383,7 +1383,7 @@ function CustomSubscriptionBuilder({ sessions, estimate, serviceLabel, onSession
         </div>
         <p className="shrink-0 text-right font-heading text-3xl leading-none">{currency(estimate)}<span className="font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/58"> / mo</span></p>
       </div>
-      <div className="relative mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="relative mt-3 grid gap-2 md:grid-cols-2">
         {CUSTOM_SUBSCRIPTION_VISITS.map((item) => {
           const Icon = item.icon;
           const active = Number(sessions) === item.key;
@@ -1600,7 +1600,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                 </span>
               </button>
               <SmoothDisclosure open={open}>
-                <div className="relative grid grid-cols-2 gap-1.5 border-t border-foreground/8 pt-2.5 sm:grid-cols-4">
+                <div className="relative grid grid-cols-2 gap-1.5 border-t border-foreground/8 pt-2.5 sm:grid-cols-1 md:grid-cols-2">
                   {group.items.map((item) => {
                     const active = state.addOns.includes(item.label);
                     const Icon = item.icon || Plus;
@@ -1938,7 +1938,7 @@ function VisitForSelector({ value, onChoose }) {
           {activeOption.label}
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-1.5 md:gap-1.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 md:gap-1.5">
         {WHO_OPTIONS.map((item) => {
           const Icon = item.icon;
           const active = value === item.key;
@@ -2048,7 +2048,7 @@ function RetentionChoice({ state, plan, term, termPrice, monthlyPrice, customSes
             </button>
           </div>
           <SmoothDisclosure open={openPlans}>
-            <div className="mt-3 grid gap-2 sm:grid-cols-4">
+            <div className="mt-3 grid gap-2 sm:grid-cols-1 md:grid-cols-2">
               {MEMBERSHIP_OPTIONS.map((item) => {
                 const active = state.planKey === item.key;
                 return (
@@ -2070,7 +2070,7 @@ function RetentionChoice({ state, plan, term, termPrice, monthlyPrice, customSes
               })}
             </div>
           </SmoothDisclosure>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
             {SUBSCRIPTION_TERMS.map((item) => {
               const active = state.subscriptionTerm === item.key;
               const price = subscriptionTermPrice(monthlyPrice, item.key);
@@ -2245,7 +2245,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
       <p className="relative mb-3 font-body text-sm font-semibold leading-snug text-foreground/68">
         Used for receipt and nurse follow-up.
       </p>
-      <div className="relative grid grid-cols-2 gap-2 sm:gap-3">
+      <div className="relative grid gap-2 md:grid-cols-2 md:gap-3">
         <div className="col-span-2">
           <TextInput
             label="Name"
@@ -2322,7 +2322,7 @@ function SafetyFlagChoice({ value, onChange }) {
           {open ? 'Hide' : 'View'}
         </button>
       </div>
-      <div className="relative mt-3 grid grid-cols-2 gap-2">
+      <div className="relative mt-3 grid gap-2 md:grid-cols-2">
         {[
           { key: 'none', label: 'No' },
           { key: 'call', label: 'Yes' },
@@ -2380,7 +2380,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
     <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative grid gap-3">
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <div className="grid gap-2 md:grid-cols-2 md:gap-3">
           <div className="col-span-2">
             <TextInput
               label="Name"
@@ -2441,7 +2441,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
               {open ? 'Hide' : 'View'}
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 md:grid-cols-2">
             {[
               { key: 'none', label: 'No' },
               { key: 'call', label: 'Yes' },
@@ -2633,7 +2633,7 @@ function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
       <div className="relative flex items-center justify-between gap-3">
         <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Clinical review</p>
       </div>
-      <div className="relative mt-3 grid grid-cols-2 gap-2">
+      <div className="relative mt-3 grid gap-2 md:grid-cols-2">
         {options.map((item) => {
           const active = Boolean(value) === item.key;
           const disabled = item.key === true && !allowOnFile;
@@ -2833,7 +2833,7 @@ function SummaryRail({
             <p className="font-heading text-4xl uppercase leading-none">{serviceLabel || product?.label || 'Select protocol'}</p>
             <p className="mt-1 font-body text-base font-medium text-foreground/64">{state.visitType === 'subscription' ? 'Monthly' : state.visitType === 'event' ? 'Group' : 'One-time'}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 md:grid-cols-2">
             {[
               ['Due now', isSubscription ? currency(subscriptionPrice) : currency(dueNow)],
               [groupContactRequired ? 'Group' : isSubscription ? 'Therapy' : 'Estimate', groupContactRequired ? 'Contact' : totalLabel || currency(subtotal)],
@@ -4226,10 +4226,10 @@ export default function BookNow() {
           </p>
           <div className={`grid min-h-0 content-start gap-2 ${
             activeTherapies.length <= 4
-              ? 'grid-cols-2 auto-rows-[9.4rem]'
+              ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
               : activeTherapies.length <= 6
-                ? 'grid-cols-3 auto-rows-[9rem]'
-                : 'grid-cols-3 auto-rows-[6.75rem]'
+                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9rem]'
+                : 'grid-cols-1 md:grid-cols-2 auto-rows-[6.75rem]'
           }`}>
             {activeTherapies.map((item) => {
               const Icon = item.icon || Droplets;
@@ -4309,7 +4309,7 @@ export default function BookNow() {
                 {addonCatalog.groups.map((group) => (
                   <section key={group.key} className="min-h-0">
                     <p className="mb-2 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/72">{group.label}</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid gap-2 md:grid-cols-2">
                       {group.items.map((item) => {
                         const Icon = item.icon || Plus;
                         const active = state.addOns.includes(item.label);
@@ -4360,7 +4360,7 @@ export default function BookNow() {
             </span>
             <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Category</span>
           </button>
-          <div className="grid min-h-0 grid-cols-2 gap-2">
+          <div className="grid min-h-0 gap-2 md:grid-cols-2">
             {selectedAddonGroup.items.map((item) => {
               const active = state.addOns.includes(item.label);
               const Icon = item.icon || Plus;
@@ -4392,7 +4392,7 @@ export default function BookNow() {
     if (step === 2) {
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 md:grid-cols-2">
             {TIME_INTENTS.map((item) => {
               const active = state.timeIntent === item.key || (item.key === 'asap' && ['today', 'soonest'].includes(state.timeIntent));
               const Icon = item.icon;
@@ -4417,7 +4417,7 @@ export default function BookNow() {
               <p className={microLabelClass}>Arrival</p>
               <p className="font-body text-sm font-black text-foreground/76">{bookingTimeSummary(state)}</p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-2 md:grid-cols-2">
               <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
                 <span className={microLabelClass}>Date</span>
                 <select
@@ -4473,7 +4473,7 @@ export default function BookNow() {
             </div>
             <p className="shrink-0 font-body text-[1.55rem] font-black">{currency(subtotal)}</p>
           </div>
-          <div className="mt-2 grid grid-cols-3 gap-1.5">
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-1.5">
             {[
               ['Where', resolvedZip || 'ZIP'],
               ['When', bookingTimeSummary(state)],
@@ -4487,7 +4487,7 @@ export default function BookNow() {
           </div>
         </div>
         <div className={`${panelCardClass} grid min-h-0 content-start gap-2 p-2.5`}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 md:grid-cols-2">
             <div className="col-span-2">
               <TextInput
                 label="Name"
@@ -4735,7 +4735,7 @@ export default function BookNow() {
                   <>
                     <SectionTitle icon={Sparkles} title="CHOOSE YOUR GOAL" />
                     <LayoutGroup id="outcomes">
-                      <div className="grid grid-cols-2 gap-2 md:gap-3">
+                      <div className="grid gap-2 md:grid-cols-2 md:gap-3">
                         {OUTCOMES.filter((item) => PRIMARY_OUTCOME_KEYS.includes(item.key)).map((item, index) => (
                           <OutcomeCard key={item.key} item={item} index={index} active={state.outcome === item.key} onClick={() => chooseOutcome(item.key)} />
                         ))}
@@ -4869,7 +4869,7 @@ export default function BookNow() {
                         )}
                       </div>
                     </div>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div className="mt-3 grid gap-2 sm:grid-cols-1 md:grid-cols-2">
                     {addressSuggestions.filter((item) => item.address !== topAddressSuggestion?.address).map((item) => (
                         (() => {
                           const Icon = LOCATION_TYPES.find((type) => type.key === item.locationType)?.icon || MapPin;
@@ -4972,7 +4972,7 @@ export default function BookNow() {
                           </span>
 	                        <span className="relative truncate font-body text-xs font-bold text-foreground/72 md:text-sm">{bookingTimeSummary(state)}</span>
 	                      </div>
-		                      <div className="grid grid-cols-2 gap-2 md:gap-1.5">
+		                      <div className="grid gap-2 md:grid-cols-2 md:gap-1.5">
 	                        {TIME_INTENTS.map((item) => {
 	                          const active = state.timeIntent === item.key || (item.key === 'asap' && (state.timeIntent === 'today' || state.timeIntent === 'soonest'));
 	                          const Icon = item.icon;

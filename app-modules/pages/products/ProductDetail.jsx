@@ -158,11 +158,13 @@ function CollapsibleSection({ label, title, children, defaultOpen = false }) {
 
 function BenefitGrid({ items = [] }) {
   return (
-    <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+    <div className="av-wide-card-grid">
       {items.slice(0, 4).map((item) => (
-        <GlassPanel key={item} className="min-h-[104px] p-3 md:min-h-[132px] md:p-4">
-          <CheckCircle2 className="mb-4 h-5 w-5 text-foreground/70" strokeWidth={2.2} />
-          <p className="font-body text-sm font-black leading-tight text-foreground md:text-base">{item}</p>
+        <GlassPanel key={item} className="av-rect-card min-h-[120px] p-4 md:min-h-[150px] md:p-5">
+          <div className="flex h-full items-center gap-4">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-foreground/70" strokeWidth={2.2} />
+            <p className="font-heading text-[2.25rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[2.75rem]">{item}</p>
+          </div>
         </GlassPanel>
       ))}
     </div>
@@ -171,13 +173,15 @@ function BenefitGrid({ items = [] }) {
 
 function IdealForGrid({ items = [] }) {
   return (
-    <div className="grid grid-cols-3 gap-2 md:grid-cols-6 md:gap-3">
+    <div className="av-wide-card-grid">
       {items.slice(0, 6).map((item) => {
         const Icon = IDEAL_ICONS[item] || Sparkles;
         return (
-          <GlassPanel key={item} className="min-h-[92px] p-3 text-center md:min-h-[116px]">
-            <Icon className="mx-auto h-5 w-5 text-foreground/72" strokeWidth={2.2} />
-            <p className="mt-3 font-body text-[11px] font-black uppercase tracking-[0.09em] text-foreground/78">{item}</p>
+          <GlassPanel key={item} className="av-rect-card min-h-[120px] p-4 md:min-h-[150px]">
+            <div className="flex h-full items-center gap-4">
+              <Icon className="h-5 w-5 shrink-0 text-foreground/72" strokeWidth={2.2} />
+              <p className="font-heading text-[2.25rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[2.75rem]">{item}</p>
+            </div>
           </GlassPanel>
         );
       })}
@@ -187,11 +191,11 @@ function IdealForGrid({ items = [] }) {
 
 function IncludedGrid({ items = [] }) {
   return (
-    <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+    <div className="grid gap-2 md:grid-cols-2">
       {items.slice(0, 6).map((item) => (
-        <div key={item} className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-3">
-          <Droplets className="h-4 w-4 shrink-0 text-foreground/62" strokeWidth={2.1} />
-          <p className="truncate font-body text-sm font-bold text-foreground/78">{item}</p>
+        <div key={item} className="av-rect-card flex min-h-[88px] items-center gap-4 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-4">
+          <Droplets className="h-5 w-5 shrink-0 text-foreground/62" strokeWidth={2.1} />
+          <p className="font-body text-base font-black leading-tight text-foreground/78">{item}</p>
         </div>
       ))}
     </div>
@@ -200,9 +204,9 @@ function IncludedGrid({ items = [] }) {
 
 function Timeline({ items = [] }) {
   return (
-    <div className="grid gap-2 md:grid-cols-4">
+    <div className="av-wide-card-grid">
       {items.slice(0, 4).map((item, index) => (
-        <div key={item.label} className="relative rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-3">
+        <div key={item.label} className="av-rect-card relative min-h-[132px] rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.06] font-body text-xs font-black text-foreground">
             {index + 1}
           </span>
@@ -421,7 +425,7 @@ export default function ProductDetail() {
         </section>
 
         <CollapsibleSection label="Related" title="Therapies">
-          <div className="grid gap-2 md:grid-cols-3 md:gap-3">
+          <div className="grid gap-2 md:grid-cols-2 md:gap-3">
             {related.map((item) => (
               <Link key={item.path} to={item.path} className="group block">
                 <GlassPanel className="min-h-[118px] p-4 transition-colors group-hover:border-foreground/24 group-hover:bg-background/54">

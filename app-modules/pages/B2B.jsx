@@ -590,7 +590,7 @@ export default function B2B() {
       <section className="relative z-10 px-5 md:px-10 pb-6 md:pb-10 pt-3 md:pt-5">
         <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">How it works</p>
-          <div className="grid grid-cols-3 gap-3 md:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
             {isLoading
               ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-h-${i}`} variant="step" />)
               : [
@@ -614,7 +614,7 @@ export default function B2B() {
       <section className="relative z-10 px-5 md:px-10 pt-2 pb-8 md:pb-12">
         <div className="max-w-6xl mx-auto">
           <p className="b2b-display text-lg md:text-2xl mb-3 md:mb-5 uppercase tracking-wide">Pick your tier &darr;</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
             {isLoading
               ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-s-${i}`} variant="single" />)
               : B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p, i) => {

@@ -45,19 +45,19 @@ export default function IVVitaminsCategory() {
               >
                 <Link
                   to={`/products/iv-vitamins/${slugify(t.name)}`}
-                  className="group block h-full border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden hover:border-accent/50 hover:bg-white/[0.06] transition-all duration-500"
+                  className="av-rect-card group relative block min-h-[150px] overflow-hidden rounded-3xl border border-white/20 bg-white/[0.03] backdrop-blur-md transition-all duration-500 hover:border-accent/50 hover:bg-white/[0.06]"
                 >
-                  <div className="aspect-square relative overflow-hidden">
+                  <div className="absolute inset-y-0 right-0 w-[44%] overflow-hidden">
                     <img
                       src={t.image}
                       alt={t.name}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                   </div>
-                  <div className="p-6">
+                  <div className="relative z-10 w-[68%] p-6">
                     {t.oneTime && (
                       <p className="text-[10px] tracking-[0.2em] text-accent font-body uppercase mb-2">
                         {t.oneTime} <span className="text-muted-foreground">session</span>
