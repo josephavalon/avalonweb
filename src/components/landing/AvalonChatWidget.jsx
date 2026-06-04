@@ -1,11 +1,9 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { MessageCircle, Phone, Send, X } from 'lucide-react';
-import { AVALON_CONCIERGE_PROMPTS, getAvalonConciergeReply } from '../../content/avalonConciergeKnowledge';
+import { useLocation } from 'react-router-dom';
+import { MessageCircle, Send, X } from 'lucide-react';
+import { getAvalonConciergeReply } from '../../content/avalonConciergeKnowledge';
 
 const HIDDEN_PREFIXES = ['/admin', '/provider', '/login'];
-const PHONE_URL = 'tel:+14159807708';
-const TEXT_URL = 'sms:+14159807708';
 
 function hiddenRoute(pathname = '') {
   return HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -85,18 +83,6 @@ export default function AvalonChatWidget() {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2 border-t border-foreground/10 px-3 py-3">
-            {AVALON_CONCIERGE_PROMPTS.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                onClick={() => sendMessage(prompt)}
-                className="min-h-10 rounded-full border border-foreground/10 bg-background/34 px-3 text-left font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/64 transition-colors hover:text-foreground"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
           <div className="border-t border-foreground/10 px-3 py-3">
             <form onSubmit={handleSubmit} className="flex items-center gap-2 rounded-full border border-foreground/12 bg-foreground/[0.06] p-1">
               <input
@@ -117,17 +103,6 @@ export default function AvalonChatWidget() {
                 <Send className="h-4 w-4" strokeWidth={2} />
               </button>
             </form>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <Link to="/book" className="flex min-h-11 items-center justify-center rounded-full bg-foreground px-3 font-body text-[10px] font-black uppercase tracking-[0.16em] text-background">
-                Book
-              </Link>
-              <a href={TEXT_URL} className="flex min-h-11 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.055] text-foreground" aria-label="Text Avalon">
-                <Send className="h-4 w-4" strokeWidth={2} />
-              </a>
-              <a href={PHONE_URL} className="flex min-h-11 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.055] text-foreground" aria-label="Call Avalon">
-                <Phone className="h-4 w-4" strokeWidth={2} />
-              </a>
-            </div>
           </div>
         </div>
       )}
