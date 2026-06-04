@@ -85,11 +85,11 @@ function TierCard({ tier, active, onSelect, term }) {
         <p className="mt-1 max-w-[17rem] font-body text-xs leading-snug text-foreground/52">{tier.tagline}</p>
       </div>
 
-      <div className="relative flex min-w-0 shrink-0 items-center justify-between gap-3 md:justify-end">
+      <div className="absolute right-4 top-4 md:relative md:right-auto md:top-auto md:flex md:min-w-0 md:shrink-0 md:items-center md:justify-end md:gap-3">
         <SelectCheck active={active} />
-        <div className="min-w-0 text-right">
+        <div className="hidden min-w-0 text-right md:block">
           <p className="font-heading text-2xl leading-none text-foreground/72 md:text-3xl">{planPriceLabel(tier, term)}</p>
-          <p className="mt-1 max-w-[8.5rem] font-body text-[9px] uppercase leading-snug tracking-[0.1em] text-foreground/38 md:max-w-none md:text-[10px] md:tracking-[0.12em]">
+          <p className="mt-1 max-w-none font-body text-[10px] uppercase leading-snug tracking-[0.12em] text-foreground/38">
             {unitLabel(tier, term)}
           </p>
         </div>
