@@ -20,8 +20,7 @@ export default function AvalonStaticBackdrop() {
         srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
         sizes="100vw"
         alt=""
-        className="absolute inset-0 h-full w-full scale-[1.0] object-cover opacity-58 blur-[1.5px] saturate-[0.72] brightness-[0.68] md:scale-[1.03]"
-        style={{ objectPosition: '74% 52%' }}
+        className="absolute inset-0 h-full w-full scale-[0.82] object-cover opacity-58 blur-[1.5px] saturate-[0.72] brightness-[0.68] [object-position:92%_52%] md:scale-[1.03] md:[object-position:74%_52%]"
         loading="eager"
         fetchPriority="high"
       />
