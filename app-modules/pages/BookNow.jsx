@@ -1710,20 +1710,6 @@ function formatPhoneNumber(value) {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-function parseContactLine(value = '') {
-  const text = String(value || '').replace(/\s+/g, ' ').trim();
-  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
-  const phoneMatch = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/);
-  const phone = phoneMatch ? formatPhoneNumber(phoneMatch[0]) : '';
-  const name = text
-    .replace(email, ' ')
-    .replace(phoneMatch?.[0] || '', ' ')
-    .replace(/[|,;]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return { name, email, phone };
-}
-
 function formatContactLine({ name = '', phone = '', email = '' } = {}) {
   return [name, phone, email].filter(Boolean).join(', ');
 }
@@ -2235,18 +2221,28 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
 function ContactConfirmCard({ state, onChange, savedContact }) {
   const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
   const [editing, setEditing] = useState(!hasContact);
-  const contactLine = state.contactLine || formatContactLine(state);
+  const hasSavedContact = Boolean(savedContact?.name || savedContact?.email || savedContact?.phone);
 
   useEffect(() => {
     if (!hasContact) setEditing(true);
   }, [hasContact]);
 
-  const updateContactLine = (value) => {
-    const parsed = parseContactLine(value);
-    onChange('contactLine', value);
-    onChange('name', parsed.name);
-    onChange('email', parsed.email);
-    onChange('phone', parsed.phone);
+  const updateContactField = (field, value) => {
+    const next = { name: state.name, phone: state.phone, email: state.email, [field]: value };
+    onChange(field, value);
+    onChange('contactLine', formatContactLine(next));
+  };
+
+  const useSavedContact = () => {
+    const next = {
+      name: savedContact?.name || '',
+      phone: formatPhoneNumber(savedContact?.phone || ''),
+      email: savedContact?.email || '',
+    };
+    onChange('name', next.name);
+    onChange('phone', next.phone);
+    onChange('email', next.email);
+    onChange('contactLine', formatContactLine(next));
   };
 
   if (!editing) {
@@ -2285,26 +2281,31 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
       <p className="relative mb-3 font-body text-sm font-semibold leading-snug text-foreground/68">
         Used for receipt and nurse follow-up.
       </p>
-      <div className="relative grid gap-3 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+      <div className="relative grid grid-cols-2 gap-2 sm:gap-3">
+        <div className="col-span-2">
           <TextInput
-            label="Contact"
-            value={contactLine}
-            onChange={updateContactLine}
-            placeholder="Alex Morgan, (415) 555-0123, you@example.com"
+            label="Name"
+            value={state.name}
+            onChange={(value) => updateContactField('name', value)}
+            placeholder="Alex Morgan"
             autoComplete="name"
-            actionLabel={savedContact?.name || savedContact?.email || savedContact?.phone ? 'Saved' : ''}
-            onAction={() => {
-              const nextLine = formatContactLine({
-                name: savedContact?.name || '',
-                phone: formatPhoneNumber(savedContact?.phone || ''),
-                email: savedContact?.email || '',
-              });
-              updateContactLine(nextLine);
-            }}
+            actionLabel={hasSavedContact ? 'Saved' : ''}
+            onAction={useSavedContact}
+            compact
             required
           />
         </div>
+        <TextInput
+          label="Phone"
+          value={state.phone}
+          onChange={(value) => updateContactField('phone', value)}
+          placeholder="(415) 555-0123"
+          autoComplete="tel"
+          inputMode="tel"
+          type="tel"
+          compact
+          required
+        />
         <TextInput
           label="DOB"
           value={state.dob}
@@ -2312,8 +2313,22 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
           placeholder="MM/DD/YYYY"
           autoComplete="bday"
           inputMode="numeric"
+          compact
           required
         />
+        <div className="col-span-2">
+          <TextInput
+            label="Email"
+            value={state.email}
+            onChange={(value) => updateContactField('email', value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            inputMode="email"
+            type="email"
+            compact
+            required
+          />
+        </div>
       </div>
       {hasContact && (
         <button
@@ -2377,41 +2392,55 @@ function SafetyFlagChoice({ value, onChange }) {
 
 function FastContactSafetyCard({ state, onChange, savedContact }) {
   const [open, setOpen] = useState(false);
-  const contactLine = state.contactLine || formatContactLine(state);
   const hasSavedContact = Boolean(savedContact?.name || savedContact?.email || savedContact?.phone);
 
-  const updateContactLine = (value) => {
-    const parsed = parseContactLine(value);
-    onChange('contactLine', value);
-    onChange('name', parsed.name);
-    onChange('email', parsed.email);
-    onChange('phone', parsed.phone);
+  const updateContactField = (field, value) => {
+    const next = { name: state.name, phone: state.phone, email: state.email, [field]: value };
+    onChange(field, value);
+    onChange('contactLine', formatContactLine(next));
+  };
+
+  const useSavedContact = () => {
+    const next = {
+      name: savedContact?.name || '',
+      phone: formatPhoneNumber(savedContact?.phone || ''),
+      email: savedContact?.email || '',
+    };
+    onChange('name', next.name);
+    onChange('phone', next.phone);
+    onChange('email', next.email);
+    onChange('contactLine', formatContactLine(next));
   };
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative grid gap-3">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <div className="col-span-2">
             <TextInput
-              label="Contact"
-              value={contactLine}
-              onChange={updateContactLine}
-              placeholder="Alex Morgan, (415) 555-0123, you@example.com"
+              label="Name"
+              value={state.name}
+              onChange={(value) => updateContactField('name', value)}
+              placeholder="Alex Morgan"
               autoComplete="name"
               actionLabel={hasSavedContact ? 'Saved' : ''}
-              onAction={() => {
-                const nextLine = formatContactLine({
-                  name: savedContact?.name || '',
-                  phone: formatPhoneNumber(savedContact?.phone || ''),
-                  email: savedContact?.email || '',
-                });
-                updateContactLine(nextLine);
-              }}
+              onAction={useSavedContact}
+              compact
               required
             />
           </div>
+          <TextInput
+            label="Phone"
+            value={state.phone}
+            onChange={(value) => updateContactField('phone', value)}
+            placeholder="(415) 555-0123"
+            autoComplete="tel"
+            inputMode="tel"
+            type="tel"
+            compact
+            required
+          />
           <TextInput
             label="DOB"
             value={state.dob}
@@ -2419,8 +2448,22 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
             placeholder="MM/DD/YYYY"
             autoComplete="bday"
             inputMode="numeric"
+            compact
             required
           />
+          <div className="col-span-2">
+            <TextInput
+              label="Email"
+              value={state.email}
+              onChange={(value) => updateContactField('email', value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              inputMode="email"
+              type="email"
+              compact
+              required
+            />
+          </div>
         </div>
 
         <div className="border-t border-foreground/10 pt-3">
@@ -4088,21 +4131,24 @@ export default function BookNow() {
     return { label: item?.tabLabel || item?.label || 'Therapy', line: 'Clinical review.' };
   };
 
-  const contactLine = state.contactLine || formatContactLine({
-    name: state.name,
-    phone: state.phone,
-    email: state.email,
-  });
+  const hasSavedContactProfile = Boolean(savedContactProfile?.name || savedContactProfile?.email || savedContactProfile?.phone);
 
-  const updateContactLine = (value) => {
-    const parsed = parseContactLine(value);
-    setValue('contactLine', value);
-    setState((current) => ({
-      ...current,
-      name: parsed.name || current.name,
-      email: parsed.email || current.email,
-      phone: parsed.phone || current.phone,
-    }));
+  const updateInlineContactField = (field, value) => {
+    const next = { name: state.name, phone: state.phone, email: state.email, [field]: value };
+    setValue(field, value);
+    setValue('contactLine', formatContactLine(next));
+  };
+
+  const useSavedContactProfile = () => {
+    const next = {
+      name: savedContactProfile?.name || '',
+      phone: formatPhoneNumber(savedContactProfile?.phone || ''),
+      email: savedContactProfile?.email || '',
+    };
+    setValue('name', next.name);
+    setValue('phone', next.phone);
+    setValue('email', next.email);
+    setValue('contactLine', formatContactLine(next));
   };
 
   const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl';
@@ -4477,31 +4523,55 @@ export default function BookNow() {
           </div>
         </div>
         <div className={`${panelCardClass} grid min-h-0 content-start gap-2 p-2.5`}>
-          <TextInput
-            label="Contact"
-            value={contactLine}
-            onChange={updateContactLine}
-            placeholder="Name, phone, email"
-            autoComplete="name"
-            compact
-            actionLabel={savedContactProfile?.name || savedContactProfile?.email ? 'Saved' : ''}
-            onAction={() => updateContactLine(formatContactLine({
-              name: savedContactProfile?.name || '',
-              phone: formatPhoneNumber(savedContactProfile?.phone || ''),
-              email: savedContactProfile?.email || '',
-            }))}
-            required
-          />
-          <TextInput
-            label="DOB"
-            value={state.dob}
-            onChange={(value) => setValue('dob', formatDobInput(value))}
-            placeholder="MM/DD/YYYY"
-            autoComplete="bday"
-            inputMode="numeric"
-            compact
-            required
-          />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="col-span-2">
+              <TextInput
+                label="Name"
+                value={state.name}
+                onChange={(value) => updateInlineContactField('name', value)}
+                placeholder="Alex Morgan"
+                autoComplete="name"
+                compact
+                actionLabel={hasSavedContactProfile ? 'Saved' : ''}
+                onAction={useSavedContactProfile}
+                required
+              />
+            </div>
+            <TextInput
+              label="Phone"
+              value={state.phone}
+              onChange={(value) => updateInlineContactField('phone', value)}
+              placeholder="(415) 555-0123"
+              autoComplete="tel"
+              inputMode="tel"
+              type="tel"
+              compact
+              required
+            />
+            <TextInput
+              label="DOB"
+              value={state.dob}
+              onChange={(value) => setValue('dob', formatDobInput(value))}
+              placeholder="MM/DD/YYYY"
+              autoComplete="bday"
+              inputMode="numeric"
+              compact
+              required
+            />
+            <div className="col-span-2">
+              <TextInput
+                label="Email"
+                value={state.email}
+                onChange={(value) => updateInlineContactField('email', value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                inputMode="email"
+                type="email"
+                compact
+                required
+              />
+            </div>
+          </div>
           <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2 font-body text-[10px] font-semibold leading-snug text-foreground/52">
             By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
           </p>
