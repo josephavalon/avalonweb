@@ -34,23 +34,24 @@ function StepCard({ step, index, open, onToggle }) {
       viewport={{ once: true, margin: '-12%' }}
       transition={{ duration: 0.82, delay: index * 0.18, ease: EASE }}
       whileHover={premiumHover}
-      className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
+      className={`relative overflow-hidden rounded-[1.05rem] border border-foreground/12 bg-black/24 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.09),0_14px_54px_rgba(0,0,0,0.18)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-base ease-editorial ${
+        open ? 'border-foreground/22 bg-black/30' : 'hover:border-foreground/18 hover:bg-black/28'
+      }`}
     >
-      <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="w-full flex items-center justify-between px-5 py-4 [@media(hover:hover)]:hover:bg-muted/45 transition-colors duration-base ease-editorial"
+        className="flex w-full items-center justify-between px-4 py-3.5 transition-colors duration-base ease-editorial md:px-5"
         aria-expanded={open}
       >
-        <div className="flex items-center gap-3">
-          <div className="av-treatment-icon w-9 h-9 rounded-xl border flex items-center justify-center shrink-0">
-            <span className="font-body text-[10px] tracking-[0.2em] text-accent/80">{step.n}</span>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+            <span className="font-body text-[10px] tracking-[0.2em] text-foreground/58">{step.n}</span>
           </div>
-          <div className="text-left">
-            <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">{step.title}</p>
-            <p className="font-body text-[9px] text-foreground/58 tracking-[0.15em] uppercase mt-1">{step.preview}</p>
+          <div className="min-w-0 text-left">
+            <p className="font-heading text-lg tracking-[0.08em] text-foreground uppercase leading-none md:text-xl">{step.title}</p>
+            <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.16em] text-foreground/58">{step.preview}</p>
           </div>
         </div>
         <motion.div
@@ -66,7 +67,7 @@ function StepCard({ step, index, open, onToggle }) {
       </motion.button>
 
       <SmoothDisclosure open={open}>
-        <div className="border-t border-foreground/[0.07] px-5 pb-5 pt-4">
+        <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3 md:px-5">
           <p className="font-body text-xs text-foreground/62 leading-relaxed">{step.desc}</p>
         </div>
       </SmoothDisclosure>
