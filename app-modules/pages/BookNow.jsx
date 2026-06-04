@@ -19,8 +19,6 @@ import {
   Leaf,
   MapPin,
   Mail,
-  Menu,
-  MessageCircle,
   Moon,
   Minus,
   Navigation,
@@ -630,25 +628,7 @@ function TrustSpeedStrip() {
 }
 
 function BookingMobileHeader() {
-  return (
-    <header className="fixed inset-x-0 top-0 z-40 flex h-[4.35rem] items-center justify-between bg-background px-4 pt-2 md:hidden">
-      <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none" aria-label="Avalon Vitality home">
-        <span className="font-heading text-[1.15rem] uppercase leading-none tracking-[0.24em] text-foreground">AVALON</span>
-        <span className="mt-1 font-body text-[0.48rem] uppercase leading-none tracking-[0.38em] text-foreground/72">VITALITY</span>
-      </Link>
-      <div className="flex items-center gap-2">
-        <a href="tel:+14159807708" className="flex h-11 w-11 items-center justify-center text-foreground/88" aria-label="Call Avalon">
-          <Phone className="h-5 w-5" strokeWidth={2.2} />
-        </a>
-        <a href="sms:+14159807708" className="flex h-11 w-11 items-center justify-center text-foreground/88" aria-label="Text Avalon">
-          <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
-        </a>
-        <Link to="/protocols" className="flex h-11 w-11 items-center justify-center text-foreground/88" aria-label="Open menu">
-          <Menu className="h-6 w-6" strokeWidth={2.2} />
-        </Link>
-      </div>
-    </header>
-  );
+  return null;
 }
 
 function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitle = STEPS[step], progressIndex = displayStepIndex }) {

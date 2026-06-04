@@ -6,8 +6,8 @@ import ScrollProgress from '@/components/landing/ScrollProgress';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteFallback from '@/components/RouteFallback';
 import AppLoader from '@/components/AppLoader';
-import AvalonStaticBackdrop from '@/components/AvalonStaticBackdrop';
 import StickyBookBar from '@/components/landing/StickyBookBar';
+import MobileShell from '@/components/MobileShell';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -311,7 +311,7 @@ function App() {
           <ScrollToTop />
           <AnalyticsRouteTracker />
           <ScrollProgress />
-          <AvalonStaticBackdrop />
+          <MobileShell />
           <AppRoutes />
           <StickyBookBar />
         </Router>

@@ -23,7 +23,7 @@ const dashboardPathFor = (user) => {
   return '/members/dashboard';
 };
 
-export default function Navbar({ showBack = false, compact = false, focusMode = false }) {
+export default function Navbar({ showBack = false, compact = false, focusMode = false, mobileGlobal = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -69,11 +69,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "inline-flex h-12 w-12 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.07] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-foreground/[0.12] hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
+  const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
     ...mainLinks,
     { to: BOOK_URL, label: 'Book', primary: true },
     ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : []),
   ];
+
+  if (mobileGlobal && internalToolRoute) return null;
 
   return (
     <motion.nav
@@ -81,6 +84,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
       className={`av-motion-rail fixed z-40 border-0 bg-background shadow-none transition-all duration-700 ease-editorial md:bg-background/60 md:backdrop-blur-2xl ${
+      mobileGlobal ? 'md:hidden' : 'hidden md:block'
+    } ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl backdrop-saturate-150'
         : compact ? 'left-3 right-3 top-2 rounded-2xl' : 'left-4 right-4 top-2 rounded-3xl md:top-4'

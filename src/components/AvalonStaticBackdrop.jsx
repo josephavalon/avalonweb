@@ -1,8 +1,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-const HIDDEN_PREFIXES = ['/admin', '/provider', '/members', '/login', '/checkout'];
-const HIDDEN_PATHS = ['/booking/confirmation'];
+const HIDDEN_PREFIXES = ['/admin', '/provider'];
+const HIDDEN_PATHS = [];
 
 function shouldShowBackdrop(pathname) {
   if (HIDDEN_PATHS.includes(pathname)) return false;
@@ -14,7 +14,7 @@ export default function AvalonStaticBackdrop() {
   if (!shouldShowBackdrop(pathname)) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 h-screen z-0 overflow-hidden bg-black" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-x-0 top-0 h-[100dvh] z-0 overflow-hidden bg-black" aria-hidden="true">
       <img
         src="/images/avalon-hero-new.jpg"
         srcSet="/images/avalon-hero-new-512.jpg 512w, /images/avalon-hero-new-768.jpg 768w, /images/avalon-hero-new.jpg 1122w"
