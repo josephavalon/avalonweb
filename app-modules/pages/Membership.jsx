@@ -34,7 +34,8 @@ function planPriceLabel(tier, term) {
 
 function unitLabel(tier, term) {
   if (tier.custom) return 'Designed with Avalon';
-  return term.key === 'monthly' ? '/mo' : 'due today';
+  if (term.key === 'monthly') return 'Monthly - 3 mo min';
+  return `${term.label} - due today`;
 }
 
 function actionLabel(tier) {
@@ -45,6 +46,11 @@ function planCommitmentCopy(tier, term) {
   if (tier.custom) return 'Concierge plan design.';
   if (term.key === 'monthly') return 'First month due today. 3-month minimum.';
   return `${term.label} prepaid. ${term.detail}.`;
+}
+
+function priceDurationLabel(tier, term) {
+  if (tier.custom) return 'Custom duration';
+  return term.key === 'monthly' ? 'Monthly - 3 mo min' : `${term.label} prepaid`;
 }
 
 function SelectCheck({ active }) {
@@ -127,7 +133,8 @@ function PlanSummary({ tier, term, onSelect, className = '' }) {
         </div>
         <div className="max-w-[9.5rem] text-right">
           <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/42">{tier.name}</p>
-          <p className="mt-1 font-body text-xs leading-snug text-foreground/54">{planCommitmentCopy(tier, term)}</p>
+          <p className="mt-1 font-body text-xs leading-snug text-foreground/54">{priceDurationLabel(tier, term)}</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.1em] text-foreground/34">{planCommitmentCopy(tier, term)}</p>
         </div>
       </div>
 
@@ -247,8 +254,10 @@ export default function Subscription() {
               <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/40">Due today</p>
               <div className="flex items-baseline gap-2">
                 <p className="font-heading text-2xl uppercase leading-none text-foreground/78">{planPriceLabel(activeTier, activeTerm)}</p>
-                <p className="truncate font-body text-[10px] uppercase tracking-[0.1em] text-foreground/40">{activeTier.name}</p>
               </div>
+              <p className="mt-0.5 truncate font-body text-[10px] uppercase tracking-[0.1em] text-foreground/42">
+                {activeTier.name} - {priceDurationLabel(activeTier, activeTerm)}
+              </p>
             </div>
             <button
               onClick={selectTier}
