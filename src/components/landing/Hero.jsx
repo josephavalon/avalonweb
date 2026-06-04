@@ -7,7 +7,7 @@ import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
-  { to: BOOK_URL, label: 'Book Now', icon: Droplets, preload: () => import('@/pages/BookNow') },
+  { to: BOOK_URL, label: 'Book', icon: Droplets, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'View Protocols', icon: LayoutGrid },
   { to: '/subscription', label: 'Memberships', icon: UserRound },
 ];
@@ -46,12 +46,6 @@ export default function Hero() {
         >
           Recovery<br />On Demand
         </h1>
-
-        <p
-          className="mt-3 font-body text-[11px] font-semibold uppercase leading-relaxed tracking-[0.18em] text-foreground/72 md:text-xs"
-        >
-          Licensed RN. Clinical review. Bay Area arrival window.
-        </p>
 
         <p
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
@@ -98,10 +92,6 @@ export default function Hero() {
             );
           })}
         </div>
-
-        <p className="mt-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40 md:mt-5">
-          Licensed RN. Clinical review.
-        </p>
 
         {/* Proof rail */}
           </div>
