@@ -66,13 +66,13 @@ function TierCard({ tier, active, onSelect, term }) {
       type="button"
       onClick={() => onSelect(tier)}
       aria-pressed={active}
-      className={`av-treatment-card group relative flex min-h-[116px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.15rem] border px-4 py-4 text-left transition-colors duration-base ease-editorial md:min-h-[132px] md:px-5 ${
+      className={`av-treatment-card group relative flex min-h-[116px] w-full flex-col items-stretch justify-between gap-3 overflow-hidden rounded-[1.15rem] border px-4 py-4 text-left transition-colors duration-base ease-editorial md:min-h-[132px] md:flex-row md:items-center md:gap-4 md:px-5 ${
         active ? 'is-open' : ''
       }`}
     >
       <div className="relative min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
+          <p className="min-w-0 font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
             {tier.name}
           </p>
           {tier.badge && (
@@ -85,12 +85,14 @@ function TierCard({ tier, active, onSelect, term }) {
         <p className="mt-1 max-w-[17rem] font-body text-xs leading-snug text-foreground/52">{tier.tagline}</p>
       </div>
 
-      <div className="relative flex shrink-0 items-center gap-3">
-        <div className="text-right">
-          <p className="font-heading text-2xl leading-none text-foreground/72 md:text-3xl">{planPriceLabel(tier, term)}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/38">{unitLabel(tier, term)}</p>
-        </div>
+      <div className="relative flex min-w-0 shrink-0 items-center justify-between gap-3 md:justify-end">
         <SelectCheck active={active} />
+        <div className="min-w-0 text-right">
+          <p className="font-heading text-2xl leading-none text-foreground/72 md:text-3xl">{planPriceLabel(tier, term)}</p>
+          <p className="mt-1 max-w-[8.5rem] font-body text-[9px] uppercase leading-snug tracking-[0.1em] text-foreground/38 md:max-w-none md:text-[10px] md:tracking-[0.12em]">
+            {unitLabel(tier, term)}
+          </p>
+        </div>
       </div>
     </button>
   );
@@ -192,7 +194,7 @@ export default function Subscription() {
           <motion.header className="mb-5 md:mb-8" {...fadeUp}>
             <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">Membership</p>
             <h1 className="mt-2 font-heading text-6xl uppercase leading-[0.85] text-foreground md:text-8xl">Plans</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/44 md:text-sm">
+            <div className="mt-3 flex max-w-full flex-col gap-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/44 md:flex-row md:flex-wrap md:items-center md:gap-x-3 md:gap-y-1 md:text-sm">
               <span>Choose your cadence.</span>
               <span className="hidden h-1 w-1 rounded-full bg-foreground/24 md:block" aria-hidden="true" />
               <span>First month due today.</span>
