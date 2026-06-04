@@ -55,7 +55,7 @@ function priceDurationLabel(tier, term) {
 
 function checkoutButtonLabel(tier, term) {
   if (tier.custom) return 'Design - Custom';
-  return `Book - ${planPriceLabel(tier, term)} - ${term.label}`;
+  return `${planPriceLabel(tier, term)} - ${term.label} - Book`;
 }
 
 function SelectCheck({ active }) {
