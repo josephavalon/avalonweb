@@ -32,164 +32,117 @@ function planPriceLabel(tier, term) {
   return `$${termPrice(tier.price, term).toLocaleString()}`;
 }
 
-function PlanBuilder({ tier }) {
-  const builder = [
-    {
-      label: 'Monthly visits',
-      value: tier.custom ? 'Custom' : `${tier.sessions}`,
-      sub: tier.custom ? 'Set cadence' : 'RN visits',
-    },
-    {
-      label: 'Add-ons',
-      value: tier.custom ? 'Custom' : tier.discount,
-      sub: 'Eligible upgrades',
-    },
-    {
-      label: 'Control',
-      value: tier.custom ? 'Designed' : 'Flexible',
-      sub: tier.custom ? 'Your schedule' : 'Pause with notice',
-    },
-  ];
-
-  return (
-    <motion.div className="mt-3 grid min-w-0 gap-2 md:mt-5 md:grid-cols-2" {...fadeUp}>
-      {builder.map((item) => (
-        <div key={item.label} className="av-rect-card min-h-[120px] rounded-[1rem] border border-foreground/10 bg-foreground/[0.025] p-4">
-          <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{item.label}</p>
-          <p className="mt-2 font-heading text-3xl uppercase leading-none text-foreground">{item.value}</p>
-          <p className="mt-1 font-body text-[11px] leading-snug text-foreground/48">{item.sub}</p>
-        </div>
-      ))}
-    </motion.div>
-  );
+function unitLabel(tier, term) {
+  if (tier.custom) return 'Designed with Avalon';
+  return term.key === 'monthly' ? '/mo' : 'due today';
 }
 
-function FeaturedTier({ tier, term, onSelect }) {
-  const concisePerks = tier.perks.slice(0, tier.custom ? 4 : 3);
-  const actionLabel = tier.custom ? 'Design Custom' : `Start ${tier.name}`;
-  const unitLabel = tier.custom ? tier.unit : term.key === 'monthly' ? '/mo' : 'today';
+function actionLabel(tier) {
+  return tier.custom ? 'Design plan' : `Start ${tier.name}`;
+}
 
+function planCommitmentCopy(tier, term) {
+  if (tier.custom) return 'Concierge plan design.';
+  if (term.key === 'monthly') return 'First month due today. 3-month minimum.';
+  return `${term.label} prepaid. ${term.detail}.`;
+}
+
+function SelectCheck({ active }) {
   return (
-    <motion.div
-      className="rounded-[1.5rem] border border-accent/35 bg-card/60 p-5 shadow-[0_24px_90px_hsl(var(--foreground)/0.14)] backdrop-blur-xl md:p-7"
-      {...fadeUp}
+    <span
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors duration-base ease-editorial ${
+        active ? 'border-foreground/35 bg-foreground/[0.1]' : 'border-foreground/14 bg-background/20'
+      }`}
+      aria-hidden="true"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.24em] text-accent">{tier.badge || tier.tagline}</p>
-          <h3 className="mt-2 font-heading text-5xl uppercase leading-none text-foreground md:text-6xl">{tier.name}</h3>
-        </div>
-        <div className="rounded-full border border-foreground/10 bg-foreground/[0.04] px-3 py-1.5">
-          <span className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground">{tier.sessions ? `${tier.sessions}/mo` : 'Custom'}</span>
-        </div>
-      </div>
-
-      <div className="mt-5 flex items-end gap-2">
-        <span className="font-heading text-6xl leading-none text-foreground">{planPriceLabel(tier, term)}</span>
-        <span className="mb-1 font-body text-sm text-foreground/45">{unitLabel}</span>
-      </div>
-      <p className="mt-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/45">
-        {tier.custom ? tier.perSessionNote : term.key === 'monthly' ? 'First month due now · 3-month commitment' : `${term.label} prepaid · ${term.detail}`}
-      </p>
-
-      <div className="my-5 h-px bg-foreground/[0.08]" />
-
-      <ul className="space-y-2.5">
-        {concisePerks.map((perk) => (
-          <li key={perk} className="flex items-start gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={1.8} />
-            <span className="font-body text-sm leading-snug text-foreground/68">{perk}</span>
-          </li>
-        ))}
-      </ul>
-
-      <button
-        type="button"
-        onClick={() => onSelect(tier)}
-        className="mt-6 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-xs font-semibold uppercase tracking-[0.2em] text-background transition-opacity hover:opacity-85"
-      >
-        {actionLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-      </button>
-    </motion.div>
+      {active && <Check className="h-3.5 w-3.5 text-foreground/74" strokeWidth={1.8} />}
+    </span>
   );
 }
 
-function MobilePlanSummary({ tier, term, onSelect }) {
-  const actionLabel = tier.custom ? 'Design Custom' : `Start ${tier.name}`;
-  const unitLabel = tier.custom ? tier.unit : term.key === 'monthly' ? '/mo' : 'today';
-  return (
-    <motion.div
-      className="mt-4 rounded-[1.25rem] border border-accent/28 bg-card/64 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-xl md:hidden"
-      {...fadeUp}
-    >
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="font-body text-[10px] font-black uppercase tracking-[0.18em] text-accent">{tier.badge || tier.tagline}</p>
-          <p className="mt-1 font-heading text-4xl uppercase leading-none text-foreground">{tier.name}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-heading text-4xl leading-none text-foreground">{planPriceLabel(tier, term)}</p>
-          <p className="font-body text-[11px] font-semibold text-foreground/48">{unitLabel}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={() => onSelect(tier)}
-        className="mt-4 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-[11px] font-black uppercase tracking-[0.16em] text-background"
-      >
-        {actionLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-      </button>
-    </motion.div>
-  );
-}
-
-function TermSelector({ activeKey, onSelect }) {
-  return (
-    <motion.div className="grid gap-2 md:grid-cols-2" {...fadeUp}>
-      {SUBSCRIPTION_TERMS.map((term) => {
-        const active = activeKey === term.key;
-        return (
-          <button
-            key={term.key}
-            type="button"
-            onClick={() => onSelect(term.key)}
-            aria-pressed={active}
-            className={`av-rect-card flex h-[96px] flex-col justify-center rounded-2xl border px-4 text-left transition-colors ${
-              active
-                ? 'border-foreground bg-foreground text-background'
-                : 'border-foreground/10 bg-foreground/[0.025] text-foreground hover:border-foreground/25 hover:bg-foreground/[0.045]'
-            }`}
-          >
-            <span className="block font-body text-[10px] font-black uppercase tracking-[0.12em]">{term.label}</span>
-            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.1em] opacity-55">{term.detail}</span>
-          </button>
-        );
-      })}
-    </motion.div>
-  );
-}
-
-function TierSwitch({ tier, active, onSelect }) {
+function TierCard({ tier, active, onSelect, term }) {
   return (
     <button
       type="button"
       onClick={() => onSelect(tier)}
       aria-pressed={active}
-      className={`av-rect-card flex h-[96px] flex-col justify-center rounded-2xl border px-4 text-left transition-colors ${
-        active
-          ? 'border-foreground bg-foreground text-background'
-          : 'border-foreground/10 bg-foreground/[0.025] text-foreground hover:border-foreground/25 hover:bg-foreground/[0.045]'
+      className={`av-treatment-card group relative flex min-h-[116px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.15rem] border px-4 py-4 text-left transition-colors duration-base ease-editorial md:min-h-[132px] md:px-5 ${
+        active ? 'is-open' : ''
       }`}
     >
-      <span className="block font-body text-[9px] uppercase tracking-[0.2em] opacity-55">{tier.tagline}</span>
-      <span className="mt-1 block font-body text-[11px] font-semibold uppercase tracking-[0.18em]">{tier.name}</span>
+      <div className="relative min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
+            {tier.name}
+          </p>
+          {tier.badge && (
+            <span className="rounded-full border border-foreground/12 bg-background/24 px-2 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.14em] text-foreground/46">
+              {tier.badge}
+            </span>
+          )}
+        </div>
+        <p className="mt-2 font-body text-[11px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
+        <p className="mt-1 max-w-[17rem] font-body text-xs leading-snug text-foreground/52">{tier.tagline}</p>
+      </div>
+
+      <div className="relative flex shrink-0 items-center gap-3">
+        <div className="text-right">
+          <p className="font-heading text-2xl leading-none text-foreground/72 md:text-3xl">{planPriceLabel(tier, term)}</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/38">{unitLabel(tier, term)}</p>
+        </div>
+        <SelectCheck active={active} />
+      </div>
     </button>
+  );
+}
+
+function TermCard({ term, active, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(term.key)}
+      aria-pressed={active}
+      className={`av-treatment-card relative flex min-h-[86px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.05rem] border px-4 py-3 text-left transition-colors duration-base ease-editorial md:min-h-[96px] ${
+        active ? 'is-open' : ''
+      }`}
+    >
+      <div>
+        <p className="font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground/72">{term.label}</p>
+        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/40">{term.detail}</p>
+      </div>
+      <SelectCheck active={active} />
+    </button>
+  );
+}
+
+function PlanSummary({ tier, term, onSelect, className = '' }) {
+  return (
+    <div className={`av-treatment-card overflow-hidden rounded-[1.15rem] border p-4 md:p-5 ${className}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/42">Due today</p>
+          <p className="mt-1 font-heading text-4xl uppercase leading-none text-foreground/76">{planPriceLabel(tier, term)}</p>
+        </div>
+        <div className="max-w-[9.5rem] text-right">
+          <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/42">{tier.name}</p>
+          <p className="mt-1 font-body text-xs leading-snug text-foreground/54">{planCommitmentCopy(tier, term)}</p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onSelect}
+        className="mt-4 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-full border border-foreground/18 bg-foreground/[0.09] px-5 font-body text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground transition-colors duration-base ease-editorial hover:bg-foreground/[0.13]"
+      >
+        {actionLabel(tier)} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+      </button>
+    </div>
   );
 }
 
 export default function Subscription() {
   useSeo({
-    title: 'Subscriptions — Avalon Vitality',
+    title: 'Subscriptions - Avalon Vitality',
     description: 'Monthly IV therapy subscriptions starting from $199/mo. First month due now with a 3-month commitment. Prepay 6 or 12 months for savings.',
     path: '/subscription',
     jsonLd: {
@@ -212,12 +165,13 @@ export default function Subscription() {
       },
     },
   });
+
   const navigate = useNavigate();
   const [activeTierKey, setActiveTierKey] = useState(FEATURED_SUBSCRIPTION_TIER_KEY);
   const [activeTermKey, setActiveTermKey] = useState('monthly');
   const activeTier = tiers.find((tier) => tier.key === activeTierKey) || tiers[1];
   const activeTerm = SUBSCRIPTION_TERMS.find((term) => term.key === activeTermKey) || SUBSCRIPTION_TERMS[0];
-  const activeActionLabel = activeTier.custom ? 'Design Custom Protocol' : `Start ${activeTier.name}`;
+
   const switchTier = (tier) => setActiveTierKey(tier.key);
   const selectTier = () => {
     const params = new URLSearchParams({
@@ -231,60 +185,78 @@ export default function Subscription() {
   };
 
   return (
-    <div className="bg-background min-h-screen w-full overflow-x-hidden">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background">
       <Navbar />
-      <main className="min-h-screen overflow-x-hidden pb-28 pt-[4.5rem] md:pb-0 md:pt-24">
-
-        {/* Tier Cards */}
-        <section id="subscription-plans" className="mx-auto w-full max-w-[calc(100vw-2rem)] scroll-mt-24 px-0 py-4 md:flex md:min-h-[calc(100svh-6rem)] md:max-w-none md:items-center md:px-12 md:py-12 lg:px-20">
-          <div className="mx-auto w-full max-w-6xl">
-            <div className="grid min-w-0 gap-4 md:grid-cols-[0.92fr_1.08fr] md:items-center">
-              <div>
-                <motion.h1 className="font-heading text-5xl uppercase leading-[0.9] text-foreground md:text-7xl" {...fadeUp}>
-                  Build your plan
-                </motion.h1>
-                <motion.p className="mt-3 max-w-md font-body text-sm leading-relaxed text-foreground/58 md:mt-4" {...fadeUp}>
-                  Monthly plans require 3 months. Prepay 6 or 12 months for savings.
-                </motion.p>
-              </div>
-
-              <div className="min-w-0 space-y-3">
-                <motion.div className="grid min-w-0 gap-2 md:grid-cols-2" {...fadeUp}>
-                  {tiers.map((tier) => (
-                    <TierSwitch key={tier.key} tier={tier} active={activeTier.key === tier.key} onSelect={switchTier} />
-                  ))}
-                </motion.div>
-                <TermSelector activeKey={activeTerm.key} onSelect={setActiveTermKey} />
-                <MobilePlanSummary tier={activeTier} term={activeTerm} onSelect={selectTier} />
-                <PlanBuilder tier={activeTier} />
-                <div className="hidden md:block">
-                  <FeaturedTier tier={activeTier} term={activeTerm} onSelect={selectTier} />
-                </div>
-              </div>
+      <main className="min-h-screen overflow-x-hidden pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[4.75rem] md:pb-16 md:pt-24">
+        <section id="subscription-plans" className="mx-auto w-full max-w-[calc(100vw-2rem)] scroll-mt-24 py-4 md:max-w-6xl md:px-8 md:py-10">
+          <motion.header className="mb-5 md:mb-8" {...fadeUp}>
+            <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">Membership</p>
+            <h1 className="mt-2 font-heading text-6xl uppercase leading-[0.85] text-foreground md:text-8xl">Plans</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-body text-xs uppercase tracking-[0.14em] text-foreground/44 md:text-sm">
+              <span>Choose your cadence.</span>
+              <span className="hidden h-1 w-1 rounded-full bg-foreground/24 md:block" aria-hidden="true" />
+              <span>First month due today.</span>
+              <span className="hidden h-1 w-1 rounded-full bg-foreground/24 md:block" aria-hidden="true" />
+              <span>3-month minimum.</span>
             </div>
+          </motion.header>
+
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.72fr)] md:gap-5">
+            <motion.div className="space-y-2.5" {...fadeUp}>
+              {tiers.map((tier) => (
+                <TierCard
+                  key={tier.key}
+                  tier={tier}
+                  active={activeTier.key === tier.key}
+                  onSelect={switchTier}
+                  term={activeTerm}
+                />
+              ))}
+            </motion.div>
+
+            <motion.aside className="space-y-2.5 md:sticky md:top-24 md:self-start" {...fadeUp}>
+              <div className="space-y-2">
+                {SUBSCRIPTION_TERMS.map((term) => (
+                  <TermCard
+                    key={term.key}
+                    term={term}
+                    active={activeTerm.key === term.key}
+                    onSelect={setActiveTermKey}
+                  />
+                ))}
+              </div>
+              <PlanSummary tier={activeTier} term={activeTerm} onSelect={selectTier} className="hidden md:block" />
+            </motion.aside>
           </div>
         </section>
-
       </main>
       <Footer />
 
       <motion.div
-        className="md:hidden fixed inset-x-0 z-40 px-2 pt-1 pointer-events-none"
+        className="pointer-events-none fixed inset-x-0 z-40 px-2 pt-1 md:hidden"
         style={{ bottom: 'max(env(safe-area-inset-bottom), 0.2rem)' }}
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: EASE, delay: 0.35 }}
+        transition={{ duration: 0.38, ease: EASE, delay: 0.08 }}
       >
-        <div className="pointer-events-auto rounded-[1.1rem] border border-foreground/10 bg-background/85 backdrop-blur-2xl shadow-[0_-12px_36px_rgba(0,0,0,0.22)] p-1">
-          <button
-            onClick={() => selectTier(activeTier)}
-            className="min-h-[44px] w-full rounded-full bg-foreground px-3.5 font-body text-[9px] font-semibold tracking-[0.15em] uppercase text-background flex items-center justify-center gap-1.5"
-          >
-            {activeActionLabel} <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+        <div className="av-treatment-card pointer-events-auto rounded-[1.1rem] border p-2">
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1 px-2">
+              <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/40">Due today</p>
+              <div className="flex items-baseline gap-2">
+                <p className="font-heading text-2xl uppercase leading-none text-foreground/78">{planPriceLabel(activeTier, activeTerm)}</p>
+                <p className="truncate font-body text-[10px] uppercase tracking-[0.1em] text-foreground/40">{activeTier.name}</p>
+              </div>
+            </div>
+            <button
+              onClick={selectTier}
+              className="flex min-h-[48px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground"
+            >
+              {activeTier.custom ? 'Design' : 'Start'} <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </motion.div>
-
     </div>
   );
 }

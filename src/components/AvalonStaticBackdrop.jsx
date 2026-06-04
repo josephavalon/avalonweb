@@ -14,13 +14,13 @@ export default function AvalonStaticBackdrop() {
   if (!shouldShowBackdrop(pathname)) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 h-[100dvh] z-0 overflow-hidden bg-black" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-black" aria-hidden="true">
       <img
         src="/images/avalon-static-back.jpg"
         srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
         sizes="100vw"
         alt=""
-        className="absolute inset-0 h-full w-full scale-100 object-cover opacity-58 blur-[1.5px] saturate-[0.72] brightness-[0.68] [object-position:86%_52%] md:scale-[1.03] md:[object-position:74%_52%]"
+        className="absolute inset-0 h-full w-full object-cover opacity-58 blur-[1.5px] saturate-[0.72] brightness-[0.68] [object-position:86%_52%] md:[object-position:74%_52%]"
         loading="eager"
         fetchPriority="high"
       />
