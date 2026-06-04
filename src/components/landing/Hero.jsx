@@ -56,7 +56,7 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-6 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-9 md:max-w-6xl md:grid-cols-3 md:gap-4"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[54vw] md:max-w-[80rem] md:grid-cols-3 md:gap-3"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;

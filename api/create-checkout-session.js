@@ -261,6 +261,7 @@ export default async function handler(req, res) {
       mode: sessionMode,
       customer_email: contact.email,
       line_items,
+      allow_promotion_codes: true,
       expires_at: checkoutExpiresAt(),
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,

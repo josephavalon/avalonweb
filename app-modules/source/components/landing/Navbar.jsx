@@ -88,8 +88,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       mobileGlobal ? 'md:hidden' : 'hidden md:block'
     } ${
       mobileOpen && !focusMode
-        ? 'left-3 right-3 top-2 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl backdrop-saturate-150'
-        : compact ? 'left-3 right-3 top-2 rounded-2xl' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
+        ? 'left-3 right-3 top-11 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl backdrop-saturate-150'
+        : compact ? 'left-3 right-3 top-11 rounded-2xl' : 'left-4 right-4 top-11 rounded-3xl md:top-12'
     } ${
       scrolled
         ? 'md:border md:border-foreground/10 md:shadow-lg md:shadow-black/25'
