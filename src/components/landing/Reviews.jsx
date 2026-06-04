@@ -31,7 +31,6 @@ function ReviewCard({ review, index }) {
       whileHover={premiumHover}
       className="av-treatment-card relative flex h-full w-[280px] shrink-0 flex-col gap-3 overflow-hidden rounded-[1.55rem] border p-5 transition-colors duration-base ease-editorial"
     >
-      <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       <StarRow count={review.stars || 5} />
       <p className="font-body text-sm text-foreground/75 leading-relaxed line-clamp-5">
         &ldquo;{review.quote}&rdquo;

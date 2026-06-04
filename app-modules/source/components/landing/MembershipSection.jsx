@@ -34,7 +34,7 @@ function TierComparator() {
         type="button"
         onClick={() => setOpen(o => !o)}
         whileTap={{ scale: 0.99 }}
-        className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-foreground/[0.04]"
+        className="w-full flex items-center justify-between px-5 py-3.5 transition-colors"
         aria-expanded={open}
       >
         <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/50">Compare tiers</span>

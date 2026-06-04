@@ -148,11 +148,10 @@ function CategoryRow({ cat, index, open, onToggle }) {
         whileHover={premiumHover}
         className="av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial"
       >
-        <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
         <MotionLink
           to={cat.href}
           whileTap={premiumTap}
-          className="group flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-muted/45"
+          className="group flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial"
         >
           <div className="flex min-w-0 items-center gap-3">
             <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
@@ -175,13 +174,12 @@ function CategoryRow({ cat, index, open, onToggle }) {
       whileHover={premiumHover}
       className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
-      <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       {/* Header */}
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-muted/45"
+        className="flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial"
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">

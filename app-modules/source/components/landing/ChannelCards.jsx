@@ -19,12 +19,11 @@ function ChannelRow({ channel, index, open, onToggle }) {
       whileHover={premiumHover}
       className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
-      <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/24 to-transparent" />
       <motion.button
         type="button"
         onClick={onToggle}
         whileTap={premiumTap}
-        className="w-full flex items-center gap-4 px-5 py-5 [@media(hover:hover)]:hover:bg-foreground/[0.04] transition-colors duration-base ease-editorial text-left"
+        className="w-full flex items-center gap-4 px-5 py-4 transition-colors duration-base ease-editorial text-left"
         aria-expanded={open}
       >
         <span className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
