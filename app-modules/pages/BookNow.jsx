@@ -4219,17 +4219,21 @@ export default function BookNow() {
         );
       }
 
+      const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
+
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
           <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>
             Choose your {activeTherapyDisplayTitle.toLowerCase()} therapy
           </p>
           <div className={`grid min-h-0 content-start gap-2 ${
-            activeTherapies.length <= 4
+            isDoseTherapyGroup
+              ? 'grid-cols-1 auto-rows-[4.15rem]'
+              : activeTherapies.length <= 4
               ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
               : activeTherapies.length <= 6
                 ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9rem]'
-                : 'grid-cols-1 md:grid-cols-2 auto-rows-[6.75rem]'
+                : 'grid-cols-1 auto-rows-[5.55rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
           }`}>
             {activeTherapies.map((item) => {
               const Icon = item.icon || Droplets;
@@ -4241,23 +4245,39 @@ export default function BookNow() {
                   type="button"
                   onClick={() => chooseProduct(item.key)}
                   aria-pressed={active}
-                  className={`${panelCardClass} relative flex min-h-0 flex-col items-center justify-center gap-2 p-2 text-center transition-colors ${
+                  className={`${panelCardClass} relative min-h-0 transition-colors ${
                     active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
-                  }`}
+                  } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
                 >
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                  {active && (
+                  {active && !isDoseTherapyGroup && (
                     <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground">
                       <Check className="h-4 w-4" strokeWidth={2.7} />
                     </span>
                   )}
-                  <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-foreground">
+                  <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
                     <Icon className="h-6 w-6" strokeWidth={2.15} />
                   </span>
-                  <span className="relative min-w-0">
-                    <span className="block break-words font-heading text-[1rem] uppercase leading-[0.9] tracking-normal text-foreground min-[390px]:text-[1.08rem] md:text-[1.75rem]">{copy.label}</span>
-                    {active && <span className="mt-1 block font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62">{currency(protocolPrice(item))}</span>}
+                  <span className={`relative min-w-0 ${isDoseTherapyGroup ? 'pr-1' : ''}`}>
+                    <span className={`block break-words font-heading uppercase tracking-normal text-foreground ${
+                      isDoseTherapyGroup
+                        ? 'text-[1.15rem] leading-none min-[390px]:text-[1.25rem] md:text-[1.75rem]'
+                        : 'text-[1rem] leading-[0.9] min-[390px]:text-[1.08rem] md:text-[1.75rem]'
+                    }`}>{copy.label}</span>
+                    {isDoseTherapyGroup && (
+                      <span className="mt-0.5 block truncate font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/58">
+                        {protocolDuration(item)} · {currency(protocolPrice(item))}
+                      </span>
+                    )}
+                    {!isDoseTherapyGroup && active && <span className="mt-1 block font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62">{currency(protocolPrice(item))}</span>}
                   </span>
+                  {isDoseTherapyGroup && (
+                    <span className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
+                      active ? 'border-foreground/26 bg-foreground/[0.10] text-foreground' : 'border-foreground/14 bg-background/28 text-foreground/62'
+                    }`}>
+                      {active ? <Check className="h-4 w-4" strokeWidth={2.7} /> : <ArrowRight className="h-4 w-4" strokeWidth={2.4} />}
+                    </span>
+                  )}
                 </button>
               );
             })}
