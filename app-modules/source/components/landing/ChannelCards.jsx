@@ -29,7 +29,7 @@ function ChannelRow({ channel, index, open, onToggle }) {
         <span className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
           <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
         </span>
-        <span className="font-heading text-lg uppercase text-foreground flex-1">{label}</span>
+        <span className="font-heading text-lg uppercase text-foreground/66 flex-1">{label}</span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.38, ease: EASE }}
@@ -44,7 +44,7 @@ function ChannelRow({ channel, index, open, onToggle }) {
           <p className="font-body text-sm text-foreground/60 leading-relaxed mb-3 mt-4">{detail}</p>
           <Link
             to={href}
-            className="group inline-flex items-center gap-1.5 font-body text-[11px] tracking-[0.15em] uppercase text-accent hover:text-accent/80 transition-colors duration-base ease-editorial"
+            className="group inline-flex items-center gap-1.5 font-body text-[11px] tracking-[0.15em] uppercase text-foreground/66 hover:text-foreground transition-colors duration-base ease-editorial"
           >
             {cta}
             <ArrowRight className="w-3 h-3 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />

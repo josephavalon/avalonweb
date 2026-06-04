@@ -94,27 +94,17 @@ function TierRow({ tier, index }) {
       whileHover={premiumHover}
       className={`av-treatment-card relative flex items-center justify-between overflow-hidden rounded-[1.55rem] border px-5 py-4 transition-colors duration-base ease-editorial ${featured ? 'is-open' : ''}`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.10),transparent_34%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.045),transparent_32%)]" />
-      {featured && (
-        <motion.span
-          className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-foreground/34 to-transparent"
-          initial={{ opacity: 0, scaleX: 0.35 }}
-          whileInView={{ opacity: 1, scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
-        />
-      )}
       <div className="relative flex items-center gap-3">
         <div className="av-treatment-icon w-8 h-8 rounded-xl border flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
+          <Icon className="w-4 h-4 text-foreground/66" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="font-heading text-lg tracking-[0.08em] text-foreground uppercase leading-none">{tier.name}</p>
+          <p className="font-heading text-lg tracking-[0.08em] text-foreground/66 uppercase leading-none">{tier.name}</p>
           <p className="font-body text-[10px] text-foreground/40 tracking-[0.1em] mt-0.5">{tier.note}</p>
         </div>
       </div>
       <div className="relative text-right">
-        <span className="font-heading text-xl text-foreground tracking-wide">{tier.price}</span>
+        <span className="font-heading text-xl text-foreground/66 tracking-wide">{tier.price}</span>
         {tier.unit && <span className="font-body text-[10px] text-foreground/30 ml-0.5">{tier.unit}</span>}
       </div>
     </motion.div>
@@ -158,7 +148,7 @@ export default function MembershipSection() {
             to="/subscription"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground font-body text-xs tracking-[0.2em] uppercase hover:bg-white/[0.08] hover:border-foreground/35 transition-all duration-base ease-editorial"
+            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground/66 font-body text-xs tracking-[0.2em] uppercase hover:border-foreground/35 hover:text-foreground transition-all duration-base ease-editorial"
           >
             Plans
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />

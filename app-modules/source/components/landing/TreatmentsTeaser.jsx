@@ -155,9 +155,9 @@ function CategoryRow({ cat, index, open, onToggle }) {
         >
           <div className="flex min-w-0 items-center gap-3">
             <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
-              <Icon className="h-4 w-4 text-accent/80" strokeWidth={1.8} />
+              <Icon className="h-4 w-4 text-foreground/66" strokeWidth={1.8} />
             </div>
-            <p className="truncate font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground">{cat.label}</p>
+            <p className="truncate font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground/66">{cat.label}</p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-foreground/30 transition-all duration-base ease-editorial group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
         </MotionLink>
@@ -184,10 +184,10 @@ function CategoryRow({ cat, index, open, onToggle }) {
       >
         <div className="flex items-center gap-3">
           <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
-            <Icon className="h-4 w-4 text-accent/80" strokeWidth={1.8} />
+            <Icon className="h-4 w-4 text-foreground/66" strokeWidth={1.8} />
           </div>
           <div className="text-left">
-            <p className="font-heading text-xl tracking-[0.06em] text-foreground uppercase leading-none">{cat.label}</p>
+            <p className="font-heading text-xl tracking-[0.06em] text-foreground/66 uppercase leading-none">{cat.label}</p>
             {cat.sub ? (
               <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
             ) : null}
