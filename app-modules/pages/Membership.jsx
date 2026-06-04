@@ -53,6 +53,11 @@ function priceDurationLabel(tier, term) {
   return term.key === 'monthly' ? 'Monthly - 3 mo min' : `${term.label} prepaid`;
 }
 
+function checkoutButtonLabel(tier, term) {
+  if (tier.custom) return 'Design - Custom';
+  return `Book - ${planPriceLabel(tier, term)} - ${term.label}`;
+}
+
 function SelectCheck({ active }) {
   return (
     <span
@@ -225,8 +230,8 @@ export default function Subscription() {
               ))}
             </motion.div>
 
-            <motion.aside className="min-w-0 space-y-2.5 md:sticky md:top-24 md:self-start" {...fadeUp}>
-              <div className="grid min-w-0 grid-cols-[repeat(3,minmax(0,1fr))] gap-2 md:block md:space-y-2">
+            <motion.aside className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] min-w-0 space-y-2.5 md:sticky md:top-24 md:w-auto md:max-w-none md:self-start" {...fadeUp}>
+              <div className="grid w-full min-w-0 grid-cols-[repeat(3,minmax(0,1fr))] gap-2 overflow-hidden md:block md:space-y-2 md:overflow-visible">
                 {SUBSCRIPTION_TERMS.map((term) => (
                   <TermCard
                     key={term.key}
@@ -252,17 +257,11 @@ export default function Subscription() {
       >
         <div className="av-treatment-card pointer-events-auto rounded-[1.1rem] border p-1.5">
           <div className="flex min-h-[52px] items-center gap-2">
-            <div className="min-w-0 flex-1 px-2.5">
-              <p className="font-body text-[8px] uppercase tracking-[0.18em] text-foreground/38">Due today</p>
-              <p className="mt-0.5 truncate font-body text-[12px] font-semibold uppercase tracking-[0.1em] text-foreground/80">
-                {planPriceLabel(activeTier, activeTerm)} - {priceDurationLabel(activeTier, activeTerm)}
-              </p>
-            </div>
             <button
               onClick={selectTier}
-              className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground"
+              className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground"
             >
-              {activeTier.custom ? 'Design' : 'Start'} <ArrowRight className="h-3.5 w-3.5" />
+              {checkoutButtonLabel(activeTier, activeTerm)} <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
