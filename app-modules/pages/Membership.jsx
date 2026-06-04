@@ -110,15 +110,17 @@ function TermCard({ term, active, onSelect }) {
       type="button"
       onClick={() => onSelect(term.key)}
       aria-pressed={active}
-      className={`av-treatment-card relative flex min-h-[62px] w-full items-center justify-between gap-4 overflow-hidden rounded-[1.05rem] border px-4 py-2.5 text-left transition-colors duration-base ease-editorial md:min-h-[96px] md:py-3 ${
+      className={`av-treatment-card relative flex min-h-[58px] w-full items-center justify-center gap-2 overflow-hidden rounded-[0.95rem] border px-2 py-2 text-center transition-colors duration-base ease-editorial md:min-h-[96px] md:justify-between md:gap-4 md:rounded-[1.05rem] md:px-4 md:py-3 md:text-left ${
         active ? 'is-open' : ''
       }`}
     >
       <div>
-        <p className="font-heading text-lg uppercase leading-none tracking-[0.04em] text-foreground/72 md:text-xl">{term.label}</p>
-        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/40">{term.detail}</p>
+        <p className="font-heading text-[15px] uppercase leading-none tracking-[0.04em] text-foreground/72 md:text-xl">{term.label}</p>
+        <p className="mt-1 font-body text-[8px] uppercase tracking-[0.12em] text-foreground/40 md:text-[10px] md:tracking-[0.14em]">{term.detail}</p>
       </div>
-      <SelectCheck active={active} />
+      <span className="hidden md:block">
+        <SelectCheck active={active} />
+      </span>
     </button>
   );
 }
@@ -224,7 +226,7 @@ export default function Subscription() {
             </motion.div>
 
             <motion.aside className="space-y-2.5 md:sticky md:top-24 md:self-start" {...fadeUp}>
-              <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-2 md:block md:space-y-2">
                 {SUBSCRIPTION_TERMS.map((term) => (
                   <TermCard
                     key={term.key}
