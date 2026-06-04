@@ -15,7 +15,7 @@ const QTY_OPTIONS = [1, 2, 3, 4];
 // ─── Catalogue ────────────────────────────────────────────────────────────────
 
 const VITAMINS_VARIANTS = [
-  { label: 'Hydration',        price: 150, desc: 'Fluids + electrolytes' },
+  { label: 'Hydration',        price: 200, desc: 'Fluids + electrolytes' },
   { label: "Myers' Cocktail",  price: 175, desc: 'B-complex, magnesium, vitamin C, calcium' },
   { label: 'Recovery',         price: 200, desc: 'Amino acids, electrolytes, B12' },
   { label: 'Athletic',         price: 200, desc: 'Performance amino acids + hydration' },

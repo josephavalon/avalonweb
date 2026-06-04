@@ -49,7 +49,7 @@ const TOP_CATEGORIES = [
     icon: Droplets,
     type: 'flat-treatments',
     data: [
-      { icon: Droplets,    label: 'Hydration IV',  price: 150 },
+      { icon: Droplets,    label: 'Hydration IV',  price: 200 },
       { icon: Zap,         label: 'Energy IV',     price: 250 },
       { icon: ShieldCheck, label: 'Immunity IV',   price: 250 },
       { icon: Sparkles,    label: 'Beauty IV',     price: 250 },

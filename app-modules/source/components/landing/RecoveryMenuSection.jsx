@@ -12,7 +12,7 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 const EASE = [0.16, 1, 0.3, 1];
 
 const SESSIONS = [
-  { key: 'hydration', label: 'Hydration', price: 150, icon: Droplets, tagline: 'Hydration and electrolyte support.', tag: 'Essential', category: 'recovery', duration: '30–45 min', inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals' },
+  { key: 'hydration', label: 'Hydration', price: 200, icon: Droplets, tagline: 'Hydration and electrolyte support.', tag: 'Essential', category: 'recovery', duration: '30–45 min', inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals' },
   { key: 'energy',    label: 'Energy',    price: 250, icon: Zap,       tagline: 'Energy and nutrient support.',       tag: 'Performance',    category: 'energy',    duration: '45–60 min', inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C' },
   { key: 'immunity',  label: 'Immunity',  price: 250, icon: ShieldCheck,tagline: 'Vitamin and mineral support.',             tag: 'Bestseller',     category: 'immunity',  duration: '45–60 min', inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline' },
   { key: 'beauty',    label: 'Beauty',    price: 250, icon: Sparkles,   tagline: 'Glow from within.',                           tag: 'Glow Favorite',  category: 'beauty',    duration: '45–60 min', inside: 'Glutathione · Biotin · Vitamin C · B-Complex · Collagen support nutrients · Saline' },

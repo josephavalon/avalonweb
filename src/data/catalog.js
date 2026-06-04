@@ -29,7 +29,7 @@ export const IV_SESSIONS = [
   {
     key: 'hydration',
     label: 'Hydration',
-    price: 150,
+    price: 200,
     icon: Droplets,
     tagline: 'Hydration and electrolyte support.',
     tag: 'Essential',

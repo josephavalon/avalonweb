@@ -730,6 +730,7 @@ function UniversalBookingFrame({
   actionLabel,
   checkoutLoading,
   error,
+  canGoBack,
   onBack,
   onNext,
   onStepSelect,
@@ -768,9 +769,9 @@ function UniversalBookingFrame({
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/82 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl">
           <div className="flex items-center gap-2">
           <div className="min-w-[124px] shrink-0 border-r border-foreground/12 px-2">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Total</p>
-            <p className="mt-1 font-body text-[1.45rem] font-black leading-none text-foreground">{total}</p>
-            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Before tax</p>
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Deposit</p>
+            <p className="mt-1 font-body text-[1.45rem] font-black leading-none text-foreground">{dueNow}</p>
+            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Balance {dueAfter}</p>
           </div>
           <button
             type="button"
@@ -794,7 +795,7 @@ function UniversalBookingFrame({
           <button
             type="button"
             onClick={onBack}
-            disabled={step === 0}
+            disabled={!canGoBack}
             aria-label="Go back"
             className="hidden min-h-[64px] w-[92px] shrink-0 rounded-2xl border border-foreground/14 bg-background/30 px-3 font-body text-xs font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 md:block"
           >
@@ -810,7 +811,7 @@ function UniversalBookingFrame({
           <button
             type="button"
             onClick={onBack}
-            disabled={step === 0}
+            disabled={!canGoBack}
             className="min-h-[34px] rounded-full px-4 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/58 disabled:opacity-0"
           >
             Back
@@ -869,6 +870,8 @@ function DesktopOrderRail({
   actionLabel,
   canGoNext,
   checkoutLoading,
+  canGoBack,
+  onBack,
   onNext,
 }) {
   const hasTherapySelection = displayStepIndex > 0 && Boolean(product);
@@ -907,31 +910,42 @@ function DesktopOrderRail({
             <p className="font-body text-sm font-black text-foreground">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
           <div className="mt-4">
-            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Due Now</p>
+            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Deposit</p>
             <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground">{currency(displayDueNow)}</p>
             <p className="mt-1 font-body text-xs font-semibold text-foreground/56">Secure your booking</p>
-            {displayBalanceDue > 0 && <p className="mt-2 font-body text-[11px] font-bold text-foreground/46">{currency(displayBalanceDue)} due upon completion</p>}
+            {displayBalanceDue > 0 && <p className="mt-2 font-body text-[11px] font-bold text-foreground/46">Balance {currency(displayBalanceDue)} due upon completion</p>}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!canGoNext || checkoutLoading}
-          className={`relative mt-5 flex min-h-[58px] w-full items-center justify-center gap-4 overflow-hidden rounded-xl border px-5 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
-            canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
-          }`}
-        >
-          {checkoutLoading && (
-            <motion.span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-background/35 to-transparent"
-              animate={{ x: ['0%', '420%'] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
-            />
+        <div className={`mt-5 grid gap-2 ${canGoBack ? 'grid-cols-[88px_1fr]' : 'grid-cols-1'}`}>
+          {canGoBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex min-h-[58px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-4 font-body text-xs font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground"
+            >
+              Back
+            </button>
           )}
-          <span>{actionLabel}</span>
-          <ArrowRight className="h-5 w-5" strokeWidth={2.6} />
-        </button>
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={!canGoNext || checkoutLoading}
+            className={`relative flex min-h-[58px] w-full items-center justify-center gap-4 overflow-hidden rounded-xl border px-5 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
+              canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
+            }`}
+          >
+            {checkoutLoading && (
+              <motion.span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-background/35 to-transparent"
+                animate={{ x: ['0%', '420%'] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
+              />
+            )}
+            <span>{actionLabel}</span>
+            <ArrowRight className="h-5 w-5" strokeWidth={2.6} />
+          </button>
+        </div>
         <div className="mt-4 flex items-center justify-center gap-1.5 font-body text-[11px] font-semibold text-foreground/52">
           <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
           Secure booking
@@ -949,6 +963,7 @@ function DesktopBookingFrame({
   actionLabel,
   checkoutLoading,
   error,
+  canGoBack,
   state,
   product,
   selectedAddons,
@@ -956,6 +971,7 @@ function DesktopBookingFrame({
   dueNow,
   balanceDue,
   totalLabel,
+  onBack,
   onNext,
   onStepSelect,
   children,
@@ -1015,6 +1031,8 @@ function DesktopBookingFrame({
           actionLabel={actionLabel}
           canGoNext={canGoNext}
           checkoutLoading={checkoutLoading}
+          canGoBack={canGoBack}
+          onBack={onBack}
           onNext={onNext}
         />
       </div>
@@ -4042,11 +4060,12 @@ export default function BookNow() {
           ? 4
           : 3,
     title: step === 0
-      ? (therapyCategoryScreen ? 'THERAPY CATEGORY' : activeTherapyDisplayTitle)
+      ? (therapyCategoryScreen ? 'THERAPY BASE' : activeTherapyDisplayTitle)
       : step === 1
         ? 'ADD-ONS'
-        : STEPS[step].toUpperCase(),
+      : STEPS[step].toUpperCase(),
   };
+  const canGoBack = step > 0 || (step === 0 && !therapyCategoryScreen);
 
   const compactAddons = useMemo(() => addonCatalog.all.slice(0, 4), [addonCatalog]);
 
@@ -4157,8 +4176,8 @@ export default function BookNow() {
       if (therapyCategoryScreen) {
         return (
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
-            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose a therapy category</p>
-            <div className="grid min-h-0 content-start gap-2">
+            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose a therapy base</p>
+            <div className="grid min-h-0 grid-rows-3 gap-2 md:grid-rows-none md:content-start">
               {therapyGroups.map((group) => {
                 const GroupIcon = group.icon;
                 return (
@@ -4169,7 +4188,7 @@ export default function BookNow() {
                       setActiveTherapyGroup(group.key);
                       setTherapyCategoryScreen(false);
                     }}
-                    className={`${panelCardClass} grid min-h-[96px] grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
+                    className={`${panelCardClass} grid min-h-0 grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24 md:min-h-[96px]`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
                     <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
@@ -4562,6 +4581,7 @@ export default function BookNow() {
                 actionLabel={primaryActionLabel()}
                 checkoutLoading={checkoutLoading}
                 error={error}
+                canGoBack={canGoBack}
                 onBack={back}
                 onNext={step < LAST_STEP ? next : submit}
                 onStepSelect={goToStep}
@@ -4577,6 +4597,7 @@ export default function BookNow() {
               actionLabel={step === LAST_STEP ? `CONFIRM & PAY ${currency(dueNowAmount)}` : primaryActionLabel()}
               checkoutLoading={checkoutLoading}
               error={error}
+              canGoBack={canGoBack}
               state={state}
               product={product}
               selectedAddons={selectedAddons}
@@ -4584,6 +4605,7 @@ export default function BookNow() {
               dueNow={dueNowAmount}
               balanceDue={balanceDue}
               totalLabel={totalLabel}
+              onBack={back}
               onNext={step < LAST_STEP ? next : submit}
               onStepSelect={goToStep}
             >

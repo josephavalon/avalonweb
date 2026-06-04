@@ -17,9 +17,9 @@ const CATEGORIES = [
     icon: Droplets,
     title: 'RECOVER',
     subtitle: 'Hydration, travel, recovery',
-    price: 'From $150',
+    price: 'From $200',
     drips: [
-      { name: 'Hydration', price: '$150' },
+      { name: 'Hydration', price: '$200' },
       { name: 'Recovery', price: '$250' },
       { name: "Myers' Cocktail", price: '$250' },
       { name: 'Immunity', price: '$250' },
