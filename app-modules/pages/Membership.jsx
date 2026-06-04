@@ -110,12 +110,12 @@ function TermCard({ term, active, onSelect }) {
       type="button"
       onClick={() => onSelect(term.key)}
       aria-pressed={active}
-      className={`av-treatment-card relative flex min-h-[58px] w-full items-center justify-center gap-2 overflow-hidden rounded-[0.95rem] border px-2 py-2 text-center transition-colors duration-base ease-editorial md:min-h-[96px] md:justify-between md:gap-4 md:rounded-[1.05rem] md:px-4 md:py-3 md:text-left ${
+      className={`av-treatment-card relative flex min-h-[58px] min-w-0 w-full items-center justify-center gap-2 overflow-hidden rounded-[0.95rem] border px-2 py-2 text-center transition-colors duration-base ease-editorial md:min-h-[96px] md:justify-between md:gap-4 md:rounded-[1.05rem] md:px-4 md:py-3 md:text-left ${
         active ? 'is-open' : ''
       }`}
     >
       <div>
-        <p className="font-heading text-[15px] uppercase leading-none tracking-[0.04em] text-foreground/72 md:text-xl">{term.label}</p>
+        <p className="truncate font-heading text-[15px] uppercase leading-none tracking-[0.04em] text-foreground/72 md:text-xl">{term.label}</p>
         <p className="mt-1 font-body text-[8px] uppercase tracking-[0.12em] text-foreground/40 md:text-[10px] md:tracking-[0.14em]">{term.detail}</p>
       </div>
       <span className="hidden md:block">
@@ -212,8 +212,8 @@ export default function Subscription() {
             </div>
           </motion.header>
 
-          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.72fr)] md:gap-5">
-            <motion.div className="space-y-2.5" {...fadeUp}>
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.72fr)] md:gap-5">
+            <motion.div className="min-w-0 space-y-2.5" {...fadeUp}>
               {tiers.map((tier) => (
                 <TierCard
                   key={tier.key}
@@ -225,8 +225,8 @@ export default function Subscription() {
               ))}
             </motion.div>
 
-            <motion.aside className="space-y-2.5 md:sticky md:top-24 md:self-start" {...fadeUp}>
-              <div className="grid grid-cols-3 gap-2 md:block md:space-y-2">
+            <motion.aside className="min-w-0 space-y-2.5 md:sticky md:top-24 md:self-start" {...fadeUp}>
+              <div className="grid min-w-0 grid-cols-[repeat(3,minmax(0,1fr))] gap-2 md:block md:space-y-2">
                 {SUBSCRIPTION_TERMS.map((term) => (
                   <TermCard
                     key={term.key}
@@ -254,7 +254,7 @@ export default function Subscription() {
           <div className="flex min-h-[52px] items-center gap-2">
             <div className="min-w-0 flex-1 px-2.5">
               <p className="font-body text-[8px] uppercase tracking-[0.18em] text-foreground/38">Due today</p>
-              <p className="mt-0.5 truncate font-body text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/68">
+              <p className="mt-0.5 truncate font-body text-[12px] font-semibold uppercase tracking-[0.1em] text-foreground/80">
                 {planPriceLabel(activeTier, activeTerm)} - {priceDurationLabel(activeTier, activeTerm)}
               </p>
             </div>
