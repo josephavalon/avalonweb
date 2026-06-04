@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
@@ -379,24 +378,6 @@ export default function Menu() {
           </div>
         </section>
       </main>
-
-      {typeof document !== 'undefined' && createPortal(<div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/94 px-4 pt-3 backdrop-blur-2xl md:hidden"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.85rem)' }}
-      >
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.24em] text-foreground/38">Start</p>
-            <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">Book from $50 deposit</p>
-          </div>
-          <Link
-            to="/book"
-            className="flex min-h-[60px] min-w-[148px] items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-5 font-body text-[11px] font-black uppercase tracking-[0.18em] text-background"
-          >
-            Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-          </Link>
-        </div>
-      </div>, document.body)}
 
       <Footer />
     </div>
