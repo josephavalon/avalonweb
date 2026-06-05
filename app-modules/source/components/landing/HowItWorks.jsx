@@ -45,20 +45,20 @@ function StepCard({ step, index, open, onToggle }) {
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-            <span className="font-body text-[10px] tracking-[0.2em] text-foreground/58">{step.n}</span>
+            <span className="font-body text-[10px] tracking-[0.2em] text-white">{step.n}</span>
           </div>
           <div className="min-w-0 text-left">
-            <p className="font-heading text-lg tracking-[0.08em] text-foreground/66 uppercase leading-none md:text-xl">{step.title}</p>
-            <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.16em] text-foreground/58">{step.preview}</p>
+            <p className="font-heading text-lg tracking-[0.08em] text-white uppercase leading-none md:text-xl">{step.title}</p>
+            <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.16em] text-white">{step.preview}</p>
           </div>
         </div>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.38, ease: EASE }}
-          className="text-foreground/45 shrink-0"
+          className="shrink-0 text-white"
         >
         <ChevronDown
-          className="w-4 h-4 text-foreground/45 shrink-0 transition-transform duration-300"
+          className="h-4 w-4 shrink-0 text-white transition-transform duration-300"
           strokeWidth={2}
         />
         </motion.div>
@@ -66,7 +66,7 @@ function StepCard({ step, index, open, onToggle }) {
 
       <SmoothDisclosure open={open}>
         <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3 md:px-5">
-          <p className="font-body text-xs text-foreground/62 leading-relaxed">{step.desc}</p>
+          <p className="font-body text-xs leading-relaxed text-white">{step.desc}</p>
         </div>
       </SmoothDisclosure>
     </motion.div>
