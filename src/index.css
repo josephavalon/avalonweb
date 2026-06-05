@@ -883,7 +883,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop {
   --av-backdrop-image-opacity: 0.77;
-  --av-backdrop-image-filter: blur(0.55px) saturate(1.06) brightness(0.90) contrast(1.08);
+  --av-backdrop-image-filter: blur(0.55px) saturate(1.06) brightness(0.95) contrast(1.08);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__veil {
