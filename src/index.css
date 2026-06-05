@@ -882,24 +882,24 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.77;
-  --av-backdrop-image-filter: blur(0.55px) saturate(1.06) brightness(0.95) contrast(1.08);
+  --av-backdrop-image-opacity: 0.85;
+  --av-backdrop-image-filter: blur(0.55px) saturate(1.06) brightness(1.00) contrast(1.08);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__veil {
-  background: hsl(var(--background) / 0.16);
+  background: hsl(var(--background) / 0.14);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__side {
-  background: linear-gradient(90deg, hsl(var(--background) / 0.78) 0%, hsl(var(--background) / 0.48) 34%, hsl(var(--background) / 0.18) 60%, hsl(var(--background) / 0.06) 82%, transparent 100%);
+  background: linear-gradient(90deg, hsl(var(--background) / 0.70) 0%, hsl(var(--background) / 0.43) 34%, hsl(var(--background) / 0.16) 60%, hsl(var(--background) / 0.05) 82%, transparent 100%);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__bottom {
-  background: linear-gradient(0deg, hsl(var(--background) / 0.70), hsl(var(--background) / 0.26), transparent 70%);
+  background: linear-gradient(0deg, hsl(var(--background) / 0.63), hsl(var(--background) / 0.23), transparent 70%);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__top {
-  background: linear-gradient(180deg, hsl(var(--background) / 0.46), hsl(var(--background) / 0.14), transparent);
+  background: linear-gradient(180deg, hsl(var(--background) / 0.41), hsl(var(--background) / 0.13), transparent);
 }
 
 .av-hero-copy {
