@@ -15,7 +15,7 @@ const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area.', icon: MapPin },
   { label: 'Licensed Registered Nurses.', icon: ShieldPlus },
   { label: 'At home.', icon: Home },
-  { label: '60 Seconds Checkout.', icon: Zap },
+  { label: '60 Second Checkout.', icon: Zap },
 ];
 
 export default function Hero() {
