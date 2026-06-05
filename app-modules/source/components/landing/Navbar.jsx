@@ -147,7 +147,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                 onClick={cycleTheme}
                 className="av-glass-widget inline-flex h-14 items-center justify-center rounded-full border px-7 font-body text-[13px] font-semibold uppercase tracking-[0.22em] text-foreground/88 transition-colors hover:text-foreground"
                 aria-label={`Avalon mode: ${themeLabel}. Change mode`}
-                title={`Avalon mode: ${themeLabel}`}
               >
                 <span>{themeLabel}</span>
               </button>

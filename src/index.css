@@ -650,6 +650,11 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
   min-height: 100dvh;
 }
 
+.hero-root .av-hero-copy {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .avalon-static-backdrop {
   --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.74) contrast(1.04);
