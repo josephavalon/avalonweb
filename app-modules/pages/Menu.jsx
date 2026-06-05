@@ -332,13 +332,13 @@ export default function Menu() {
   const [openSections, setOpenSections] = useState({});
 
   useSeo({
-    title: 'Protocols — Avalon Vitality',
-    description: 'Choose an Avalon protocol for hydration, recovery, performance, longevity, and future mobile clinical services.',
+    title: 'IV Protocols — Avalon Vitality',
+    description: 'Choose an Avalon IV therapy protocol for hydration, recovery, performance, longevity, and future mobile clinical services.',
     path: '/protocols',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'OfferCatalog',
-      name: 'Avalon Vitality Protocols',
+      name: 'Avalon Vitality IV Protocols',
       url: 'https://www.avalonvitality.co/protocols',
       itemListElement: PUBLIC_SESSIONS.map((session) => ({
         '@type': 'Offer',
@@ -381,7 +381,7 @@ export default function Menu() {
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))] md:hidden" />
             <p className="relative mb-3 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Choose a therapy base</p>
             <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
-              Protocols
+              IV Protocols
             </h1>
           </div>
 

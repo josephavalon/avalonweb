@@ -642,6 +642,12 @@ html:not(.dark):not(.golden):not(.dubs) .bg-card {
   border-color: hsl(var(--foreground) / 0.16);
 }
 
+.av-mobile-dropdown-panel {
+  --glass-bg: rgba(0, 0, 0, 0.76);
+  --glass-blur: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 18px 72px rgba(0, 0, 0, 0.46);
+}
+
 .av-universal-card,
 .av-rect-card,
 .av-treatment-card,

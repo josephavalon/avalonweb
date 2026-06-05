@@ -8,7 +8,7 @@ const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Droplets, preload: () => import('@/pages/BookNow') },
-  { to: '/protocols', label: 'Protocols', icon: LayoutGrid },
+  { to: '/protocols', label: 'IV Protocols', icon: LayoutGrid },
   { to: '/subscription', label: 'Plans', icon: UserRound },
 ];
 const HERO_PROOF_POINTS = [

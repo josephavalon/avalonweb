@@ -8,7 +8,7 @@ import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const mainLinks = [
-  { to: '/protocols', label: 'Protocols' },
+  { to: '/protocols', label: 'IV Protocols' },
   { to: '/subscription', label: 'Plans' },
   { to: '/launches', label: 'Launches' },
 ];
@@ -249,7 +249,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="relative grid gap-1.5 overflow-visible rounded-[1.15rem] p-1.5"
+                className="av-mobile-dropdown-panel av-glass-menu relative grid gap-1.5 overflow-visible rounded-[1.35rem] border p-2"
               >
                 {showBack && !compact && (
                   <motion.div
