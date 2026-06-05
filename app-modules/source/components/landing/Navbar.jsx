@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Flag, Heart, LogOut, Menu, MessageCircle, Moon, Palette, Phone, Sparkles, Sun, Trophy, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -17,14 +17,6 @@ const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
-const THEME_ICONS = {
-  dark: Moon,
-  daytime: Sun,
-  'golden-hour': Sparkles,
-  warriors: Trophy,
-  pride: Heart,
-  july: Flag,
-};
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
   if (user.role === 'admin') return '/admin';
@@ -96,7 +88,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const themeLabel = getThemeLabel(theme);
-  const ThemeIcon = THEME_ICONS[theme] || Palette;
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
@@ -154,11 +145,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <button
                 type="button"
                 onClick={cycleTheme}
-                className="av-glass-widget inline-flex h-14 items-center justify-center gap-3 rounded-full border px-5 font-body text-[13px] font-semibold uppercase tracking-[0.18em] text-foreground/88 transition-colors hover:text-foreground"
+                className="av-glass-widget inline-flex h-14 items-center justify-center rounded-full border px-7 font-body text-[13px] font-semibold uppercase tracking-[0.22em] text-foreground/88 transition-colors hover:text-foreground"
                 aria-label={`Avalon mode: ${themeLabel}. Change mode`}
                 title={`Avalon mode: ${themeLabel}`}
               >
-                <ThemeIcon className="h-5 w-5" strokeWidth={2} />
                 <span>{themeLabel}</span>
               </button>
             </>
@@ -356,10 +346,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                     className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
                   >
                     <span>Mode</span>
-                    <span className="flex items-center gap-2">
-                      <span>{themeLabel}</span>
-                      <Palette className="h-3.5 w-3.5" strokeWidth={1.8} />
-                    </span>
+                    <span>{themeLabel}</span>
                   </button>
                 </motion.div>
 

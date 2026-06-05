@@ -651,7 +651,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.66;
+  --av-backdrop-image-opacity: 0.72;
   --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.74) contrast(1.04);
   --av-backdrop-image-mix: normal;
   --av-hero-accent: hsl(var(--foreground));
@@ -711,7 +711,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .daytime .avalon-static-backdrop,
 .light .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.58;
+  --av-backdrop-image-opacity: 0.72;
   --av-backdrop-image-filter: blur(0.55px) saturate(0.62) brightness(0.92) contrast(1.06);
 }
 
@@ -777,7 +777,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .warriors .avalon-static-backdrop,
 .dubs .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.86;
+  --av-backdrop-image-opacity: 0.72;
   --av-backdrop-image-filter: blur(0.65px) saturate(1.45) brightness(0.74) contrast(1.18);
   --av-backdrop-special: linear-gradient(90deg, rgba(0, 70, 180, 0.42), rgba(0, 98, 210, 0.30) 52%, rgba(255, 199, 44, 0.16));
   --av-backdrop-special-mix: screen;
@@ -811,7 +811,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .pride .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.88;
+  --av-backdrop-image-opacity: 0.72;
   --av-backdrop-image-filter: blur(0.65px) saturate(1.5) brightness(0.70) contrast(1.12);
   --av-backdrop-special:
     linear-gradient(90deg, rgba(255, 45, 45, 0.12), rgba(255, 159, 28, 0.08) 18%, rgba(255, 228, 94, 0.08) 35%, rgba(46, 230, 107, 0.08) 52%, rgba(26, 167, 255, 0.10) 70%, rgba(189, 76, 255, 0.14)),
@@ -843,7 +843,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .july .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.86;
+  --av-backdrop-image-opacity: 0.72;
   --av-backdrop-image-filter: blur(0.65px) saturate(1.32) brightness(0.68) contrast(1.16);
   --av-backdrop-special:
     radial-gradient(circle at 58% 11%, rgba(255, 255, 255, 0.94) 0 1px, rgba(255, 36, 36, 0.78) 2px, transparent 7px),
@@ -940,64 +940,9 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
   color: #1e7bff;
 }
 
-.golden-hour .av-hero-action:first-child,
-.golden .av-hero-action:first-child {
-  color: hsl(var(--foreground));
-  background: linear-gradient(135deg, rgba(255, 189, 83, 0.66), rgba(255, 232, 184, 0.82));
-  border-color: rgba(126, 63, 8, 0.36);
-}
-
-.golden-hour .av-hero-action:first-child svg,
-.golden .av-hero-action:first-child svg {
-  color: hsl(var(--foreground));
-}
-
-.warriors .av-hero-action:first-child,
-.dubs .av-hero-action:first-child {
-  color: hsl(var(--accent));
-  border-color: hsl(var(--accent) / 0.78);
-}
-
-.warriors .av-hero-action:first-child svg,
-.dubs .av-hero-action:first-child svg,
-.warriors .av-hero-action:first-child .font-heading,
-.dubs .av-hero-action:first-child .font-heading {
-  color: hsl(var(--accent));
-}
-
 .pride .av-hero-action,
 .july .av-hero-action {
   border-color: hsl(var(--foreground) / 0.22);
-}
-
-.pride .av-hero-action:nth-child(1),
-.pride .av-hero-action:nth-child(1) .font-heading,
-.pride .av-hero-action:nth-child(1) svg {
-  color: #ffe45e;
-}
-
-.pride .av-hero-action:nth-child(2),
-.pride .av-hero-action:nth-child(2) .font-heading,
-.pride .av-hero-action:nth-child(2) svg {
-  color: #ff2d2d;
-}
-
-.pride .av-hero-action:nth-child(3),
-.pride .av-hero-action:nth-child(3) .font-heading,
-.pride .av-hero-action:nth-child(3) svg {
-  color: #bd4cff;
-}
-
-.july .av-hero-action:nth-child(1),
-.july .av-hero-action:nth-child(1) .font-heading,
-.july .av-hero-action:nth-child(1) svg {
-  color: #ff2424;
-}
-
-.july .av-hero-action:nth-child(3),
-.july .av-hero-action:nth-child(3) .font-heading,
-.july .av-hero-action:nth-child(3) svg {
-  color: #1e7bff;
 }
 
 .hero-root h1,
