@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, MessageCircle, Palette, Phone, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MessageCircle, Moon, Palette, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -135,21 +135,24 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
           )}
-          <Link to="/" onClick={handleLogoClick} className={logoClass}>
-            <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground">AVALON</span>
-            <span className="mt-1 block font-body text-[8px] uppercase leading-none tracking-[0.38em] text-foreground/60">VITALITY</span>
+          <Link to="/" onClick={handleLogoClick} className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}>
+            <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground md:text-[27px] md:tracking-[0.28em]">AVALON</span>
+            <span className="mt-1 block font-body text-[8px] uppercase leading-none tracking-[0.38em] text-foreground/60 md:text-[14px] md:tracking-[0.44em]">VITALITY</span>
           </Link>
           {!compact && !focusMode && (
-            <button
-              type="button"
-              onClick={cycleTheme}
-              className="av-glass-widget inline-flex h-12 items-center justify-center gap-2 rounded-full border px-3 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/74 transition-colors hover:text-foreground"
-              aria-label={`Avalon mode: ${themeLabel}. Change mode`}
-              title={`Avalon mode: ${themeLabel}`}
-            >
-              <Palette className="h-4 w-4" strokeWidth={2} />
-              <span>{themeLabel}</span>
-            </button>
+            <>
+              <span className="h-14 w-px bg-foreground/20" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={cycleTheme}
+                className="av-glass-widget inline-flex h-14 items-center justify-center gap-3 rounded-full border px-5 font-body text-[13px] font-semibold uppercase tracking-[0.18em] text-foreground/88 transition-colors hover:text-foreground"
+                aria-label={`Avalon mode: ${themeLabel}. Change mode`}
+                title={`Avalon mode: ${themeLabel}`}
+              >
+                <Moon className="h-5 w-5 fill-current" strokeWidth={2} />
+                <span>{themeLabel}</span>
+              </button>
+            </>
           )}
         </div>
 

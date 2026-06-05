@@ -1,15 +1,15 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Droplets, Home, LayoutGrid, MapPin, ShieldPlus, UserRound, Zap } from 'lucide-react';
+import { ArrowRight, Diamond, Droplet, Home, MapPin, Plus, ShieldPlus, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
-  { to: BOOK_URL, label: 'Book', icon: Droplets, primary: true, preload: () => import('@/pages/BookNow') },
-  { to: '/protocols', label: 'IV Therapy', icon: LayoutGrid },
-  { to: '/subscription', label: 'Plans', icon: UserRound },
+  { to: BOOK_URL, label: 'Book', icon: Plus, preload: () => import('@/pages/BookNow') },
+  { to: '/protocols', label: 'IV Therapy', icon: Droplet },
+  { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area.', icon: MapPin },
@@ -66,7 +66,7 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[74vw] md:max-w-[86rem] md:grid-cols-3 md:gap-3 xl:w-[56vw]"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[80vw] md:max-w-[92rem] md:grid-cols-3 md:gap-3"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -78,18 +78,18 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className="av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-white transition-colors duration-base ease-editorial md:px-5"
+                className="av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-white transition-colors duration-base ease-editorial md:min-h-[86px] md:px-7 md:py-5"
               >
-                <span className="relative flex min-w-0 flex-1 items-center gap-3">
-                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-                    <Icon className="h-4.5 w-4.5 text-white" strokeWidth={1.8} />
+                <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-16 md:w-16 md:rounded-[1.15rem]">
+                    <Icon className="h-4.5 w-4.5 text-white md:h-9 md:w-9" strokeWidth={1.8} />
                   </span>
-                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-white">
+                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-white md:text-3xl">
                     {action.label}
                   </span>
                 </span>
                 <span className="relative shrink-0 text-white transition-transform group-hover:translate-x-1">
-                  <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  <ArrowRight className="h-4 w-4 md:h-7 md:w-7" strokeWidth={2} />
                 </span>
               </MotionLink>
             );
