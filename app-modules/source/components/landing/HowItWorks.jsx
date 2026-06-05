@@ -48,7 +48,7 @@ function StepCard({ step, index, open, onToggle }) {
             <span className="font-body text-[10px] tracking-[0.2em] text-white">{step.n}</span>
           </div>
           <div className="min-w-0 text-left">
-            <p className="font-heading text-lg tracking-[0.08em] text-white uppercase leading-none md:text-xl">{step.title}</p>
+            <p className="font-heading text-xl tracking-[0.08em] text-white uppercase leading-none">{step.title}</p>
             <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.16em] text-white">{step.preview}</p>
           </div>
         </div>

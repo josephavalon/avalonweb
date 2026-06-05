@@ -123,7 +123,7 @@ function FooterGroup({ group, open, onToggle }) {
           <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
             <Icon className="h-4.5 w-4.5 text-accent" strokeWidth={1.8} />
           </span>
-          <span className="font-heading text-lg uppercase leading-none tracking-[0.06em] text-foreground">
+          <span className="font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground">
             {group.label}
           </span>
         </span>

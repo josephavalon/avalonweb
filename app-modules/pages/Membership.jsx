@@ -83,7 +83,7 @@ function TierCard({ tier, active, onSelect, term }) {
     >
       <div className="relative min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="min-w-0 font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
+          <p className="min-w-0 font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
             {tier.name}
           </p>
           {tier.badge && (
@@ -277,7 +277,7 @@ export default function Subscription() {
           <div className="flex min-h-[52px] items-center gap-2">
             <button
               onClick={selectTier}
-              className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground"
+              className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground"
             >
               {checkoutButtonLabel(activeTier, activeTerm)} <ArrowRight className="h-3.5 w-3.5" />
             </button>
