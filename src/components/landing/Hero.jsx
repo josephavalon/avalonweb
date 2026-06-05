@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Droplets, LayoutGrid, UserRound } from 'lucide-react';
+import { ArrowRight, Droplets, Home, LayoutGrid, MapPin, ShieldPlus, UserRound, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
@@ -10,6 +10,12 @@ const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Droplets, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'Protocols', icon: LayoutGrid },
   { to: '/subscription', label: 'Plans', icon: UserRound },
+];
+const HERO_PROOF_POINTS = [
+  { label: 'SF Bay Area.', icon: MapPin },
+  { label: 'Licensed Registered Nurses.', icon: ShieldPlus },
+  { label: 'At home.', icon: Home },
+  { label: '60 Seconds Checkout.', icon: Zap },
 ];
 
 export default function Hero() {
@@ -47,12 +53,17 @@ export default function Hero() {
           Recovery<br />On Demand
         </h1>
 
-        <p
-          className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
+        <ul
+          className="mt-5 grid gap-1.5 font-body text-[13px] uppercase leading-relaxed tracking-[0.16em] md:mt-6 md:text-sm"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          SF Bay Area.<br />Licensed Registered Nurses.<br />At home.<br />60 Seconds Checkout.
-        </p>
+          {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
+            <li key={label} className="flex items-center gap-3">
+              <Icon className="h-4 w-4 shrink-0 text-[#d6a447]" strokeWidth={2.15} aria-hidden="true" />
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
         </div>
 
         <div

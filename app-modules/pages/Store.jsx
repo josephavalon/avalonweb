@@ -173,7 +173,7 @@ export default function Store() {
 
         <div className="grid gap-2 rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-1 md:grid-cols-2">
           {[
-            ['guided', 'Recommended'],
+            ['guided', 'Guided'],
             ['custom', 'Custom'],
           ].map(([key, label]) => (
             <button
@@ -224,7 +224,7 @@ export default function Store() {
               })}
             </div>
 
-            <VisitCard session={recommended} active label="Recommended" />
+            <VisitCard session={recommended} active label="Selected" />
 
             <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
               <div className="mb-3 flex items-center justify-between">

@@ -80,7 +80,7 @@ export default function Hangover() {
           </div>
         </section>
 
-        {/* Recommended Protocol */}
+        {/* Protocol detail */}
         <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2

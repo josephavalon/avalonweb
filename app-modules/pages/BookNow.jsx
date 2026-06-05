@@ -1186,7 +1186,6 @@ function MoreGoalsAccordion({ items, activeKey, onChoose }) {
 function ProductCard({ product, active, onSelect, onPrimary, recommendation = '', index = 0 }) {
   const Icon = product.icon || Droplets;
   const price = protocolPrice(product);
-  const featured = recommendation === 'Recommended';
   return (
     <motion.div
       layout
@@ -1199,7 +1198,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
       whileHover={{ y: -2 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
       className={`av-glass-card relative overflow-hidden rounded-[1.35rem] border p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:rounded-[1.35rem] md:p-2.5 ${
-        active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : featured ? 'border-foreground/16 bg-background/42 text-foreground' : 'border-foreground/9 bg-background/30 text-foreground'
+        active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : 'border-foreground/9 bg-background/30 text-foreground'
       }`}
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.16),transparent_38%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.06),transparent_35%),linear-gradient(145deg,hsl(var(--foreground)/0.065),transparent_55%,hsl(var(--foreground)/0.026))]" />
