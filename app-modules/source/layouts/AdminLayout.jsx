@@ -13,19 +13,17 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
+import { applyTheme, readStoredTheme, THEME_KEY, VALID_THEMES } from '@/lib/theme';
 
 // ─── Theme sync ──────────────────────────────────────────────────────────────
-const THEMES = ['dark', 'light'];
-const THEME_KEY = 'avalon.theme';
-
 const readInitialTheme = () => {
   try {
     const s = window.localStorage.getItem(THEME_KEY);
-    if (s && THEMES.includes(s)) return s;
+    if (s && VALID_THEMES.includes(s)) return s;
   } catch (err) {
     if (import.meta.env?.DEV) console.warn('[admin-theme-read]', err);
   }
-  return 'dark';
+  return readStoredTheme();
 };
 
 // ─── Nav items ─────────────────────────────────────────────────────────────
@@ -95,9 +93,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
 
   // Sync theme to <html> + localStorage
   useEffect(() => {
-    document.documentElement.classList.remove('dark', 'golden', 'dubs');
-    if (theme !== 'light') document.documentElement.classList.add(theme);
-    try { window.localStorage.setItem(THEME_KEY, theme); } catch (err) {
+    try { applyTheme(theme); } catch (err) {
       if (import.meta.env?.DEV) console.warn('[admin-theme-write]', err);
     }
   }, [theme]);
@@ -191,7 +187,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
 
   // ── Layout ────────────────────────────────────────────────────────────
   return (
-    <div className={`${theme !== 'light' ? theme : ''} min-h-screen flex bg-background text-foreground`}>
+    <div className={`${theme} min-h-screen flex bg-background text-foreground`}>
 
       {/* ── Desktop sidebar ────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-60 shrink-0 fixed left-0 top-0 h-full z-30 border-r border-foreground/[0.08] bg-background/72 shadow-[18px_0_80px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
@@ -277,7 +273,7 @@ export default function AdminLayout({ children, fullBleed = false }) {
               animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
               exit={{ y: '105%', opacity: 0, filter: 'blur(8px)' }}
               transition={{ duration: 0.64, ease: EASE }}
-              className={`${theme !== 'light' ? theme : ''} md:hidden fixed bottom-0 inset-x-0 z-50 bg-background/92 border-t border-white/10 rounded-t-[1.75rem] shadow-[0_-28px_100px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl`}
+              className={`${theme} md:hidden fixed bottom-0 inset-x-0 z-50 bg-background/92 border-t border-white/10 rounded-t-[1.75rem] shadow-[0_-28px_100px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl`}
               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)' }}
             >
               {/* Handle */}

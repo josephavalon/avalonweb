@@ -91,49 +91,92 @@
     --glass-radius: 1.35rem;
   }
 
-  .golden {
-    --background: 28 35% 12%;
-    --foreground: 38 80% 88%;
-    --card: 26 32% 16%;
-    --card-foreground: 38 80% 88%;
-    --popover: 26 32% 16%;
-    --popover-foreground: 38 80% 88%;
-    --primary: 38 80% 88%;
-    --primary-foreground: 28 35% 12%;
-    --secondary: 26 28% 20%;
-    --secondary-foreground: 38 60% 75%;
-    --muted: 26 28% 20%;
-    --muted-foreground: 38 80% 88%;
-    --accent: 38 90% 58%;
-    --accent-foreground: 28 35% 12%;
+  .daytime,
+  .light {
+    --background: 0 0% 99%;
+    --foreground: 24 10% 14%;
+    --card: 38 20% 96%;
+    --card-foreground: 24 10% 14%;
+    --popover: 38 20% 96%;
+    --popover-foreground: 24 10% 14%;
+    --primary: 24 10% 14%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 35 16% 88%;
+    --secondary-foreground: 25 8% 30%;
+    --muted: 35 14% 86%;
+    --muted-foreground: 24 7% 40%;
+    --accent: 24 10% 14%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 30 25% 22%;
-    --input: 30 25% 22%;
-    --ring: 38 80% 88%;
-    --sidebar-background: 28 35% 12%;
-    --sidebar-foreground: 38 80% 88%;
-    --sidebar-primary: 38 80% 88%;
-    --sidebar-primary-foreground: 28 35% 12%;
-    --sidebar-accent: 26 28% 20%;
-    --sidebar-accent-foreground: 38 80% 88%;
-    --sidebar-border: 30 25% 22%;
-    --sidebar-ring: 38 80% 88%;
+    --border: 35 10% 80%;
+    --input: 38 20% 96%;
+    --ring: 24 10% 14%;
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 24 10% 14%;
+    --sidebar-primary: 24 10% 14%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 35 14% 86%;
+    --sidebar-accent-foreground: 24 10% 14%;
+    --sidebar-border: 35 10% 80%;
+    --sidebar-ring: 24 10% 14%;
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-overlay: linear-gradient(145deg, rgba(10, 10, 10, 0.030) 0%, rgba(10, 10, 10, 0.014) 56%, rgba(10, 10, 10, 0.010) 100%);
+    --glass-border: rgba(10, 10, 10, 0.12);
+    --glass-border-hover: rgba(10, 10, 10, 0.20);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76), 0 22px 86px rgba(0, 0, 0, 0.12);
   }
 
+  .golden-hour,
+  .golden {
+    --background: 38 45% 91%;
+    --foreground: 25 32% 18%;
+    --card: 38 42% 84%;
+    --card-foreground: 25 32% 18%;
+    --popover: 38 42% 86%;
+    --popover-foreground: 25 32% 18%;
+    --primary: 25 32% 18%;
+    --primary-foreground: 38 45% 94%;
+    --secondary: 35 34% 78%;
+    --secondary-foreground: 25 32% 18%;
+    --muted: 35 34% 80%;
+    --muted-foreground: 25 32% 18%;
+    --accent: 30 58% 42%;
+    --accent-foreground: 38 45% 94%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 28 22% 64%;
+    --input: 38 42% 86%;
+    --ring: 25 32% 18%;
+    --sidebar-background: 38 45% 91%;
+    --sidebar-foreground: 25 32% 18%;
+    --sidebar-primary: 25 32% 18%;
+    --sidebar-primary-foreground: 38 45% 94%;
+    --sidebar-accent: 35 34% 78%;
+    --sidebar-accent-foreground: 25 32% 18%;
+    --sidebar-border: 28 22% 64%;
+    --sidebar-ring: 25 32% 18%;
+    --glass-bg: rgba(255, 246, 224, 0.72);
+    --glass-overlay: linear-gradient(145deg, rgba(92, 54, 22, 0.052) 0%, rgba(92, 54, 22, 0.026) 56%, rgba(92, 54, 22, 0.018) 100%);
+    --glass-border: rgba(92, 54, 22, 0.16);
+    --glass-border-hover: rgba(92, 54, 22, 0.28);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 22px 86px rgba(92, 54, 22, 0.16);
+  }
+
+  .warriors,
   .dubs {
     --background: 218 60% 16%;
-    --foreground: 45 90% 94%;
+    --foreground: 0 0% 100%;
     --card: 218 52% 20%;
-    --card-foreground: 45 90% 94%;
+    --card-foreground: 0 0% 100%;
     --popover: 218 52% 20%;
-    --popover-foreground: 45 90% 94%;
+    --popover-foreground: 0 0% 100%;
     --primary: 45 100% 58%;
     --primary-foreground: 218 60% 16%;
     --secondary: 210 40% 28%;
-    --secondary-foreground: 45 90% 94%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 28%;
-    --muted-foreground: 45 90% 94%;
+    --muted-foreground: 0 0% 100%;
     --accent: 45 100% 58%;
     --accent-foreground: 218 60% 16%;
     --destructive: 0 84% 60%;
@@ -149,6 +192,81 @@
     --sidebar-accent-foreground: 45 90% 94%;
     --sidebar-border: 45 70% 42%;
     --sidebar-ring: 45 100% 58%;
+    --glass-bg: rgba(8, 32, 82, 0.66);
+    --glass-overlay: linear-gradient(145deg, rgba(255, 199, 44, 0.042) 0%, rgba(255, 255, 255, 0.012) 56%, rgba(255, 255, 255, 0.008) 100%);
+    --glass-border: rgba(255, 199, 44, 0.22);
+    --glass-border-hover: rgba(255, 199, 44, 0.34);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 22px 86px rgba(0, 0, 0, 0.34);
+  }
+
+  .pride {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 100%;
+    --accent: 292 76% 62%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 292 54% 36%;
+    --input: 0 0% 14%;
+    --ring: 292 76% 62%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 292 54% 36%;
+    --sidebar-ring: 292 76% 62%;
+    --glass-bg: rgba(10, 10, 10, 0.62);
+    --glass-overlay: linear-gradient(145deg, rgba(255, 0, 24, 0.024), rgba(255, 165, 44, 0.018) 20%, rgba(255, 255, 65, 0.014) 40%, rgba(0, 128, 24, 0.018) 60%, rgba(0, 0, 249, 0.020) 80%, rgba(134, 0, 125, 0.024));
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-border-hover: rgba(255, 255, 255, 0.22);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 22px 86px rgba(0, 0, 0, 0.34);
+  }
+
+  .july {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 220 48% 18%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 36% 16%;
+    --muted-foreground: 0 0% 100%;
+    --accent: 0 78% 56%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 74% 34%;
+    --input: 220 36% 16%;
+    --ring: 0 78% 56%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 220 48% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 74% 34%;
+    --sidebar-ring: 0 78% 56%;
+    --glass-bg: rgba(10, 10, 10, 0.62);
+    --glass-overlay: linear-gradient(145deg, rgba(191, 10, 48, 0.032) 0%, rgba(255, 255, 255, 0.012) 48%, rgba(0, 40, 104, 0.032) 100%);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-border-hover: rgba(255, 255, 255, 0.22);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 22px 86px rgba(0, 0, 0, 0.34);
   }
 }
 
@@ -234,7 +352,40 @@ body {
   [class*="text-muted-foreground"],
   [class*="text-accent/"]
 ),
+.warriors :where(
+  [class*="text-foreground/"],
+  [class*="text-white/"],
+  [class*="text-muted-foreground"],
+  [class*="text-accent/"]
+),
+.pride :where(
+  [class*="text-foreground/"],
+  [class*="text-white/"],
+  [class*="text-muted-foreground"],
+  [class*="text-accent/"]
+),
+.july :where(
+  [class*="text-foreground/"],
+  [class*="text-white/"],
+  [class*="text-muted-foreground"],
+  [class*="text-accent/"]
+),
 .dark :where(
+  [class*="stroke-foreground/"],
+  [class*="stroke-white/"],
+  [class*="stroke-accent/"]
+),
+.warriors :where(
+  [class*="stroke-foreground/"],
+  [class*="stroke-white/"],
+  [class*="stroke-accent/"]
+),
+.pride :where(
+  [class*="stroke-foreground/"],
+  [class*="stroke-white/"],
+  [class*="stroke-accent/"]
+),
+.july :where(
   [class*="stroke-foreground/"],
   [class*="stroke-white/"],
   [class*="stroke-accent/"]
@@ -247,6 +398,21 @@ body {
   [class*="fill-foreground/"],
   [class*="fill-white/"],
   [class*="fill-accent/"]
+),
+.warriors :where(
+  [class*="fill-foreground/"],
+  [class*="fill-white/"],
+  [class*="fill-accent/"]
+),
+.pride :where(
+  [class*="fill-foreground/"],
+  [class*="fill-white/"],
+  [class*="fill-accent/"]
+),
+.july :where(
+  [class*="fill-foreground/"],
+  [class*="fill-white/"],
+  [class*="fill-accent/"]
 ) {
   color: #fff !important;
   fill: #fff !important;
@@ -256,16 +422,24 @@ body {
   [class*="placeholder:text-foreground/"],
   [class*="placeholder:text-muted-foreground"],
   [class*="placeholder:text-white/"]
+)::placeholder,
+.warriors :where(
+  [class*="placeholder:text-foreground/"],
+  [class*="placeholder:text-muted-foreground"],
+  [class*="placeholder:text-white/"]
+)::placeholder,
+.pride :where(
+  [class*="placeholder:text-foreground/"],
+  [class*="placeholder:text-muted-foreground"],
+  [class*="placeholder:text-white/"]
+)::placeholder,
+.july :where(
+  [class*="placeholder:text-foreground/"],
+  [class*="placeholder:text-muted-foreground"],
+  [class*="placeholder:text-white/"]
 )::placeholder {
   color: #fff !important;
   opacity: 1 !important;
-}
-
-.golden [class*="text-foreground/"],
-.golden .text-muted-foreground,
-.dubs [class*="text-foreground/"],
-.dubs .text-muted-foreground {
-  color: #fff !important;
 }
 
 #root, .app-shell {
@@ -403,7 +577,9 @@ body {
    using the editorial easing cubic-bezier(0.16, 1, 0.3, 1). The former
    fadeInUp / slideInLeft / slideInRight / scaleIn CSS helpers lived here
    with `ease-out` and are removed — nothing referenced them. */
-/* Dubs theme stays inside the Avalon dark cream palette. */
+/* Warriors/Dubs theme stays inside variable-only color changes. */
+.warriors .av-logo,
+.warriors .mobile-menu-btn,
 .dubs .av-logo,
 .dubs .mobile-menu-btn {
   color: hsl(var(--foreground));
@@ -428,7 +604,8 @@ body {
   opacity: 1;
 }
 
-/* Dubs hero title: no sports-blue/gold treatment. */
+/* Warriors/Dubs hero title: no sports-blue/gold text treatment. */
+.warriors .hero-root h1,
 .dubs .hero-root h1 {
   color: hsl(var(--foreground));
   -webkit-text-fill-color: hsl(var(--foreground));
@@ -436,14 +613,20 @@ body {
   filter: none;
 }
 
+.warriors .apply-now-btn,
 .dubs .apply-now-btn {
   background-color: hsl(var(--accent)) !important;
   color: hsl(var(--accent-foreground)) !important;
 }
+.warriors .apply-now-btn:hover,
 .dubs .apply-now-btn:hover {
   background-color: hsl(38 56% 82%) !important;
 }
 
+.warriors h1,
+.warriors h2,
+.warriors h3,
+.warriors h4,
 .dubs h1,
 .dubs h2,
 .dubs h3,
@@ -451,6 +634,7 @@ body {
   color: hsl(var(--foreground)) !important;
   -webkit-text-fill-color: hsl(var(--foreground));
 }
+.warriors .hero-root h1,
 .dubs .hero-root h1 {
   filter: none;
 }
@@ -558,30 +742,30 @@ html, body {
 }
 
 /* ===== Light theme: keep glass language instead of reverting to flat cards ===== */
-html:not(.dark):not(.golden):not(.dubs) .av-glass,
-html:not(.dark):not(.golden):not(.dubs) .av-glass-heavy {
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .av-glass,
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .av-glass-heavy {
   background: var(--glass-overlay), var(--glass-bg) !important;
   border-color: var(--glass-border) !important;
   backdrop-filter: blur(var(--glass-blur)) saturate(1.45) !important;
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.45) !important;
   box-shadow: var(--glass-shadow);
 }
-html:not(.dark):not(.golden):not(.dubs) .av-glass:hover,
-html:not(.dark):not(.golden):not(.dubs) .av-glass-heavy:hover {
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .av-glass:hover,
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .av-glass-heavy:hover {
   box-shadow: var(--glass-shadow);
   border-color: var(--glass-border-hover) !important;
 }
 
-html:not(.dark):not(.golden):not(.dubs) body {
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) body {
   background: hsl(var(--background));
 }
 
-html:not(.dark):not(.golden):not(.dubs) .bg-white,
-html:not(.dark):not(.golden):not(.dubs) .bg-background {
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .bg-white,
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .bg-background {
   background-color: hsl(var(--background)) !important;
 }
 
-html:not(.dark):not(.golden):not(.dubs) .bg-card {
+html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.july):not(.golden):not(.dubs):not(.light) .bg-card {
   background-color: hsl(var(--background) / 0.62) !important;
 }
 

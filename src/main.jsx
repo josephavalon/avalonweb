@@ -4,26 +4,15 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
+import { applyTheme } from '@/lib/theme'
 
 function applyStoredTheme() {
   try {
-    const root = document.documentElement;
-    root.classList.remove('dark', 'golden', 'dubs');
-    root.classList.add('dark');
-    localStorage.setItem('avalon.theme', 'dark');
-    localStorage.setItem('avalon.theme.v2', '1');
+    applyTheme();
   } catch (err) {
     document.documentElement.classList.add('dark');
     if (import.meta.env?.DEV) console.warn('[theme-boot]', err);
   }
-}
-
-// Keep the public beta dark-only for now.
-try {
-  localStorage.setItem('avalon.theme', 'dark');
-  localStorage.setItem('avalon.theme.v2', '1');
-} catch (err) {
-  if (import.meta.env?.DEV) console.warn('[theme-migration]', err);
 }
 
 applyStoredTheme();

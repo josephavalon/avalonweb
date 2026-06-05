@@ -5,6 +5,7 @@ import { Eye, EyeOff, ArrowRight, Fingerprint, AlertCircle, CheckCircle, ShieldC
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { PRE_API_SECURITY_MODE, isDemoAuthAllowed } from '@/lib/preApiSecurity';
+import { applyTheme } from '@/lib/theme';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -412,12 +413,9 @@ export default function Login() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('signin');
 
-  // Public beta is dark-only.
   useEffect(() => {
     try {
-      document.documentElement.classList.remove('dark', 'golden', 'dubs');
-      document.documentElement.classList.add('dark');
-      window.localStorage.setItem('avalon.theme', 'dark');
+      applyTheme();
     } catch (err) {
       if (import.meta.env?.DEV) console.warn('[login-theme]', err);
     }
