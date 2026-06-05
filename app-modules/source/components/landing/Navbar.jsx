@@ -8,7 +8,7 @@ import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const mainLinks = [
-  { to: '/protocols', label: 'IV Protocols' },
+  { to: '/protocols', label: 'IV Therapy' },
   { to: '/subscription', label: 'Plans' },
   { to: '/launches', label: 'Launches' },
 ];
