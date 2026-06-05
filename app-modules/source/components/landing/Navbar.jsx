@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MessageCircle, Moon, Phone, Sun, Sunset, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -17,6 +17,24 @@ const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
+const THEME_ICON_LABELS = {
+  dark: 'Night',
+  daytime: 'Daytime',
+  'golden-hour': 'Golden hour',
+  warriors: 'Warriors 33',
+  pride: 'Pride rainbow',
+  july: 'USA flag',
+};
+
+function ThemeModeGlyph({ theme }) {
+  if (theme === 'daytime') return <Sun className="h-5 w-5" strokeWidth={2.1} aria-hidden="true" />;
+  if (theme === 'golden-hour') return <Sunset className="h-5 w-5" strokeWidth={2.1} aria-hidden="true" />;
+  if (theme === 'warriors') return <span className="av-theme-symbol av-theme-symbol--warriors" aria-hidden="true">33</span>;
+  if (theme === 'pride') return <span className="av-theme-symbol av-theme-symbol--pride" aria-hidden="true" />;
+  if (theme === 'july') return <span className="av-theme-symbol av-theme-symbol--usa" aria-hidden="true" />;
+  return <Moon className="h-5 w-5" strokeWidth={2.1} aria-hidden="true" />;
+}
+
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
   if (user.role === 'admin') return '/admin';
@@ -88,6 +106,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const themeLabel = getThemeLabel(theme);
+  const themeIconLabel = THEME_ICON_LABELS[theme] || themeLabel;
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
@@ -145,10 +164,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <button
                 type="button"
                 onClick={cycleTheme}
-                className="av-glass-widget inline-flex h-14 items-center justify-center rounded-full border px-7 font-body text-[13px] font-semibold uppercase tracking-[0.22em] text-foreground/88 transition-colors hover:text-foreground"
-                aria-label={`Avalon mode: ${themeLabel}. Change mode`}
+                className="av-glass-widget av-theme-icon-button inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border p-0 text-foreground/88 transition-colors hover:text-foreground"
+                aria-label={`Avalon mode: ${themeIconLabel}. Change mode`}
               >
-                <span>{themeLabel}</span>
+                <ThemeModeGlyph theme={theme} />
               </button>
             </>
           )}
@@ -343,9 +362,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                     type="button"
                     onClick={cycleTheme}
                     className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
+                    aria-label={`Avalon mode: ${themeIconLabel}. Change mode`}
                   >
                     <span>Mode</span>
-                    <span>{themeLabel}</span>
+                    <span className="av-theme-icon-button flex h-10 w-10 items-center justify-center rounded-full border border-foreground/14">
+                      <ThemeModeGlyph theme={theme} />
+                    </span>
                   </button>
                 </motion.div>
 

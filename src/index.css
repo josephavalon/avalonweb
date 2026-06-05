@@ -982,6 +982,62 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
   opacity: 1;
 }
 
+.av-theme-icon-button {
+  aspect-ratio: 1;
+}
+
+.av-theme-symbol {
+  display: block;
+  position: relative;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+}
+
+.av-theme-symbol--warriors {
+  width: auto;
+  height: auto;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: hsl(var(--foreground));
+}
+
+.av-theme-symbol--pride {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff2d2d 0 16.66%, #ff9f1c 16.66% 33.33%, #ffe45e 33.33% 50%, #2ee66b 50% 66.66%, #1aa7ff 66.66% 83.33%, #bd4cff 83.33% 100%);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.28);
+}
+
+.av-theme-symbol--usa {
+  overflow: hidden;
+  border-radius: 0.18rem;
+  background: repeating-linear-gradient(180deg, #b31942 0 7.69%, #ffffff 7.69% 15.38%);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.30);
+}
+
+.av-theme-symbol--usa::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48%;
+  height: 54%;
+  background: #0a3161;
+}
+
+.av-theme-symbol--usa::after {
+  content: "";
+  position: absolute;
+  left: 0.16rem;
+  top: 0.13rem;
+  width: 0.78rem;
+  height: 0.5rem;
+  background-image: radial-gradient(circle, #ffffff 0 0.04rem, transparent 0.045rem);
+  background-size: 0.2rem 0.16rem;
+}
+
 /* Warriors/Dubs hero title: no sports-blue/gold text treatment. */
 .warriors .hero-root h1,
 .dubs .hero-root h1 {
