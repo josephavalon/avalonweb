@@ -7,7 +7,7 @@ import { premiumHover, premiumTap } from '@/lib/motion';
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
-  { to: BOOK_URL, label: 'Book', icon: Droplets, preload: () => import('@/pages/BookNow') },
+  { to: BOOK_URL, label: 'Book', icon: Droplets, primary: true, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'IV Therapy', icon: LayoutGrid },
   { to: '/subscription', label: 'Plans', icon: UserRound },
 ];
@@ -47,6 +47,10 @@ export default function Hero() {
           Avalon Vitality
         </p>
 
+        <p className="mb-2 font-body text-[12px] font-black uppercase tracking-[0.2em] text-foreground md:text-sm">
+          Mobile IV Therapy
+        </p>
+
         <h1
           className="font-heading text-display-xl text-foreground uppercase max-w-3xl"
         >
@@ -78,7 +82,9 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className="av-glass-card group relative flex min-h-[72px] w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border px-4 text-foreground transition-all duration-base ease-editorial md:min-h-[96px] md:rounded-[1.45rem] md:px-4"
+                className={`av-glass-card group relative flex min-h-[72px] w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border px-4 text-foreground transition-all duration-base ease-editorial md:min-h-[96px] md:rounded-[1.45rem] md:px-4 ${
+                  action.primary ? 'border-foreground/34 bg-foreground/[0.13] shadow-[0_24px_90px_hsl(var(--foreground)/0.14)]' : ''
+                }`}
               >
                 <span className="relative flex min-w-0 flex-1 items-center gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.075] text-foreground/86 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:h-12 md:w-12">

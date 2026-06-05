@@ -186,22 +186,22 @@ const BOOKING_THERAPY_KEYS = [
 const THERAPY_GROUPS = [
   {
     key: 'vitamin',
-    label: 'IV Vitamins',
+    label: 'IV Therapy',
     sub: '9 therapies',
     icon: Droplets,
     keys: ['hydration', 'myers', 'postnight', 'immunity', 'energy', 'recovery', 'performance', 'jetlag', 'food-poisoning'],
   },
   {
     key: 'cbd',
-    label: 'IV CBD',
-    sub: '4 doses',
+    label: 'CBD IV Therapy',
+    sub: '4 therapies',
     icon: Leaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-99mg', 'cbd-132mg'],
   },
   {
     key: 'nad',
-    label: 'IV NAD+',
-    sub: '6 doses',
+    label: 'NAD+ IV Therapy',
+    sub: '6 therapies',
     icon: BatteryCharging,
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
@@ -717,7 +717,7 @@ function UniversalBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto flex h-[calc(100svh-4.35rem)] max-h-[calc(100svh-4.35rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[6.95rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+    <section className="mx-auto flex h-[calc(100svh-4.35rem)] max-h-[calc(100svh-4.35rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[7.85rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
         step={step}
         onStepSelect={onStepSelect}
@@ -747,11 +747,20 @@ function UniversalBookingFrame({
       </motion.div>
       <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/82 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl">
-          <div className="flex items-center gap-2">
-          <div className="min-w-[124px] shrink-0 border-r border-foreground/12 px-2">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/62">Reservation Deposit</p>
+          <div className="grid grid-cols-[86px_minmax(0,128px)_1fr] items-center gap-2 md:flex">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={!canGoBack}
+            aria-label="Go back"
+            className="flex min-h-[56px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[11px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+          >
+            Back
+          </button>
+          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1.5 md:min-w-[142px] md:px-2">
+            <p className="font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/62 md:text-[10px] md:tracking-[0.12em]">Reservation Deposit</p>
             <p className="mt-1 font-body text-[1.45rem] font-black leading-none text-foreground">{dueNow}</p>
-            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Balance {dueAfter}</p>
+            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Due after visit {dueAfter}</p>
           </div>
           <button
             type="button"
@@ -772,30 +781,11 @@ function UniversalBookingFrame({
             <span>{actionLabel}</span>
             <ArrowRight className="h-5 w-5" strokeWidth={2.7} />
           </button>
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={!canGoBack}
-            aria-label="Go back"
-            className="hidden min-h-[64px] w-[92px] shrink-0 rounded-2xl border border-foreground/14 bg-background/30 px-3 font-body text-xs font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 md:block"
-          >
-            Back
-          </button>
           </div>
           <div className="mt-1 flex items-center justify-center gap-1.5 font-body text-[10px] font-semibold text-foreground/56">
             <ShieldCheck className="h-3 w-3" strokeWidth={2.2} />
             Secure booking
           </div>
-        </div>
-        <div className="mx-auto mt-1 flex max-w-lg justify-center md:hidden">
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={!canGoBack}
-            className="min-h-[34px] rounded-full px-4 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/58 disabled:opacity-0"
-          >
-            Back
-          </button>
         </div>
       </div>
     </section>
@@ -854,14 +844,14 @@ function DesktopOrderRail({
   onBack,
   onNext,
 }) {
-  const hasTherapySelection = displayStepIndex > 0 && Boolean(product);
+  const hasTherapySelection = Boolean(product);
   const displaySubtotal = hasTherapySelection ? subtotal : 0;
   const displayDueNow = hasTherapySelection ? dueNow : 0;
   const displayBalanceDue = hasTherapySelection ? balanceDue : 0;
   const selectedIvAddons = selectedAddons.filter((item) => item.type !== 'im');
   const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
-  const dateLabel = displayStepIndex >= 3 && state.timeIntent === 'choose' && state.customDate ? formatDateShort(state.customDate) : 'Not selected';
-  const timeLabel = displayStepIndex >= 3 && state.timeIntent === 'choose' && state.customTime ? formatTimeLabel(state.customTime) : 'Not selected';
+  const dateLabel = displayStepIndex >= 2 && state.timeIntent === 'choose' && state.customDate ? formatDateShort(state.customDate) : 'Not selected';
+  const timeLabel = displayStepIndex >= 2 && state.timeIntent === 'choose' && state.customTime ? formatTimeLabel(state.customTime) : 'Not selected';
 
   const rows = [
     ['Therapy', hasTherapySelection ? product.label : 'Not selected'],
@@ -4053,18 +4043,20 @@ export default function BookNow() {
   const activeTherapyGroupData = therapyGroups.find((group) => group.key === activeTherapyGroup) || therapyGroups[0];
   const activeTherapies = activeTherapyGroupData?.items || [];
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
-    ? 'IV VITAMINS'
+    ? 'IV THERAPY'
     : activeTherapyGroupData?.key === 'cbd'
-      ? 'IV CBD'
-      : 'IV NAD+';
+      ? 'CBD IV THERAPY'
+      : 'NAD+ IV THERAPY';
   const progressDisplay = {
     index: step === 0
-      ? (therapyCategoryScreen ? 0 : 1)
+      ? 0
       : step === 1
-        ? 2
-        : step === LAST_STEP
-          ? 4
-          : 3,
+        ? 1
+        : step === 2
+          ? 2
+          : step === 3
+            ? 3
+            : 4,
     title: step === 0
       ? (therapyCategoryScreen ? 'THERAPY BASE' : activeTherapyDisplayTitle)
       : step === 1
@@ -4205,7 +4197,7 @@ export default function BookNow() {
                     </span>
                     <span className="relative min-w-0 border-l border-foreground/10 pl-4">
                       <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
-                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">{group.sub.replace('doses', 'therapies')}</span>
+                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">{group.sub}</span>
                     </span>
                     <span className="relative flex justify-end text-foreground/84">
                       <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
@@ -4223,7 +4215,7 @@ export default function BookNow() {
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
           <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>
-            Choose your {activeTherapyDisplayTitle.toLowerCase()} therapy
+            {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
           <div className={`grid min-h-0 content-start gap-2 ${
             isDoseTherapyGroup
@@ -4292,8 +4284,27 @@ export default function BookNow() {
         return (
           <div className="h-full min-h-0">
             <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:hidden">
-              <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-on category</p>
-              <div className="grid min-h-0 content-start gap-3">
+            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-ons</p>
+              <div className="grid min-h-0 content-start gap-2.5 overflow-y-auto pb-2 pr-1">
+                <button
+                  type="button"
+                  onClick={chooseNoAddons}
+                  className={`${panelCardClass} grid min-h-[88px] grid-cols-[58px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24 ${
+                    state.addOnDecision && state.addOns.length === 0 ? 'border-foreground/42 bg-foreground/[0.14]' : ''
+                  }`}
+                >
+                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+                  <span className="relative flex h-11 w-11 items-center justify-center rounded-xl text-foreground">
+                    <Check className="h-6 w-6" strokeWidth={2.3} />
+                  </span>
+                  <span className="relative min-w-0 border-l border-foreground/10 pl-4">
+                    <span className="block font-heading text-[1.55rem] uppercase leading-none tracking-normal text-foreground">No add-ons</span>
+                    <span className="mt-1 block font-body text-sm font-bold text-foreground/62">Fastest checkout</span>
+                  </span>
+                  <span className="relative flex justify-end text-foreground/84">
+                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                  </span>
+                </button>
               {addonCatalog.groups.map((group) => {
                 const GroupIcon = group.key === 'iv' ? Plus : group.icon;
                 const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
@@ -4302,7 +4313,7 @@ export default function BookNow() {
                     key={group.key}
                     type="button"
                     onClick={() => setActiveAddonGroup(group.key)}
-                    className={`${panelCardClass} grid min-h-[126px] grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
+                    className={`${panelCardClass} grid min-h-[104px] grid-cols-[64px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
                     <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
@@ -4475,7 +4486,7 @@ export default function BookNow() {
               </label>
             </div>
             <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-sm font-semibold leading-snug text-foreground/62">
-              ASAP uses the first clinically available Registered Nurse window. Exact times are confirmed after review.
+              Earliest available Registered Nurse window.
             </div>
           </div>
         </div>

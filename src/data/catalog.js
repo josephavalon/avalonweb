@@ -493,14 +493,14 @@ export const productsByCategory = {
     treatments: byKey.exosomes.doses.map((dose) => treatmentFromDose(byKey.exosomes, dose)),
   },
   'iv-vitamins': {
-    title: 'IV VITAMINS',
+    title: 'IV THERAPY',
     subtitle: 'Medical-grade intravenous vitamin therapy',
     description:
       'Every IV is customized and made fresh on-site with medical-grade ingredients - B-complex vitamins, glutathione, magnesium, zinc, and electrolytes.',
     heroImage: null,
-    categoryLabel: 'IV Vitamins',
+    categoryLabel: 'IV Therapy',
     backTo: '/services/iv-vitamins',
-    backLabel: 'Back to IV Vitamins',
+    backLabel: 'Back to IV Therapy',
     treatments: [
       namedSession(byKey.hydration, 'Hydration IV', {
         benefitStatement: 'Fluid and electrolyte support at home, hotel, or office.',
