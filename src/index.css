@@ -651,7 +651,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.74) contrast(1.04);
   --av-backdrop-image-mix: normal;
   --av-hero-accent: hsl(var(--foreground));
@@ -711,7 +711,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .daytime .avalon-static-backdrop,
 .light .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(0.55px) saturate(0.62) brightness(0.92) contrast(1.06);
 }
 
@@ -742,7 +742,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .golden-hour .avalon-static-backdrop,
 .golden .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(0.55px) sepia(0.22) saturate(1.14) brightness(0.88) contrast(1.10);
   --av-backdrop-special:
     radial-gradient(circle at 58% 34%, rgba(255, 186, 74, 0.32), transparent 38%),
@@ -777,7 +777,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .warriors .avalon-static-backdrop,
 .dubs .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(0.65px) saturate(1.45) brightness(0.74) contrast(1.18);
   --av-backdrop-special: linear-gradient(90deg, rgba(0, 70, 180, 0.42), rgba(0, 98, 210, 0.30) 52%, rgba(255, 199, 44, 0.16));
   --av-backdrop-special-mix: screen;
@@ -811,7 +811,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .pride .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(0.65px) saturate(1.5) brightness(0.70) contrast(1.12);
   --av-backdrop-special:
     linear-gradient(90deg, rgba(255, 45, 45, 0.12), rgba(255, 159, 28, 0.08) 18%, rgba(255, 228, 94, 0.08) 35%, rgba(46, 230, 107, 0.08) 52%, rgba(26, 167, 255, 0.10) 70%, rgba(189, 76, 255, 0.14)),
@@ -843,7 +843,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .july .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-opacity: 0.77;
   --av-backdrop-image-filter: blur(0.65px) saturate(1.32) brightness(0.68) contrast(1.16);
   --av-backdrop-special:
     radial-gradient(circle at 58% 11%, rgba(255, 255, 255, 0.94) 0 1px, rgba(255, 36, 36, 0.78) 2px, transparent 7px),
