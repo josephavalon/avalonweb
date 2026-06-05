@@ -78,20 +78,18 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className={`av-glass-card group relative flex min-h-[72px] w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border px-4 text-foreground transition-all duration-base ease-editorial md:min-h-[96px] md:rounded-[1.45rem] md:px-4 ${
-                  action.primary ? 'border-foreground/34 bg-foreground/[0.13] shadow-[0_24px_90px_hsl(var(--foreground)/0.14)]' : ''
-                }`}
+                className="av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-white transition-colors duration-base ease-editorial md:px-5"
               >
                 <span className="relative flex min-w-0 flex-1 items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.075] text-foreground/86 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:h-12 md:w-12">
-                    <Icon className="h-6 w-6" strokeWidth={2.15} />
+                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
+                    <Icon className="h-4.5 w-4.5 text-white" strokeWidth={1.8} />
                   </span>
-                  <span className="min-w-0 whitespace-nowrap font-body text-[13px] font-black uppercase leading-none tracking-[0.12em] text-foreground md:text-[14px] md:tracking-[0.18em]">
+                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-white">
                     {action.label}
                   </span>
                 </span>
-                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.055] text-foreground transition-transform group-hover:translate-x-1">
-                  <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
+                <span className="relative shrink-0 text-white transition-transform group-hover:translate-x-1">
+                  <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </span>
               </MotionLink>
             );
