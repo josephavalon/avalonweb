@@ -881,6 +881,27 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
   background: linear-gradient(180deg, hsl(220 48% 8% / 0.58), hsl(0 78% 42% / 0.08), transparent);
 }
 
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.77;
+  --av-backdrop-image-filter: blur(0.55px) saturate(1.06) brightness(0.90) contrast(1.08);
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__veil {
+  background: hsl(var(--background) / 0.16);
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__side {
+  background: linear-gradient(90deg, hsl(var(--background) / 0.78) 0%, hsl(var(--background) / 0.48) 34%, hsl(var(--background) / 0.18) 60%, hsl(var(--background) / 0.06) 82%, transparent 100%);
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(var(--background) / 0.70), hsl(var(--background) / 0.26), transparent 70%);
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__top {
+  background: linear-gradient(180deg, hsl(var(--background) / 0.46), hsl(var(--background) / 0.14), transparent);
+}
+
 .av-hero-copy {
   position: relative;
   padding-left: 0;
