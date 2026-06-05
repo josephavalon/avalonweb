@@ -531,6 +531,61 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july),
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) body,
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) #root {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) #main-content,
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .app-shell,
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .av-page-stage {
+  color: hsl(var(--foreground));
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) :where(
+  .bg-white,
+  [class^="bg-white/"],
+  [class*=" bg-white/"],
+  [class^="bg-white["],
+  [class*=" bg-white["]
+) {
+  background: hsl(var(--card) / 0.58) !important;
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) :where(
+  .bg-black,
+  [class^="bg-black/"],
+  [class*=" bg-black/"],
+  [class^="bg-black["],
+  [class*=" bg-black["]
+) {
+  background: hsl(var(--background) / 0.72) !important;
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) :where(
+  .text-white,
+  .text-black,
+  [class^="text-white/"],
+  [class*=" text-white/"],
+  [class^="text-black/"],
+  [class*=" text-black/"]
+) {
+  color: hsl(var(--foreground)) !important;
+}
+
+html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) :where(
+  .border-white,
+  .border-black,
+  [class^="border-white/"],
+  [class*=" border-white/"],
+  [class^="border-black/"],
+  [class*=" border-black/"]
+) {
+  border-color: hsl(var(--foreground) / 0.16) !important;
+}
+
 .font-heading { font-family: var(--font-heading); }
 .font-body { font-family: var(--font-body); }
 
@@ -822,18 +877,6 @@ body {
 .av-hero-copy {
   position: relative;
   padding-left: 0;
-}
-
-.av-hero-copy::before {
-  content: '';
-  position: absolute;
-  bottom: 0.18rem;
-  left: -1rem;
-  top: 3.8rem;
-  width: 2px;
-  border-radius: 999px;
-  background: var(--av-hero-accent);
-  opacity: 0.88;
 }
 
 .hero-root h1,
@@ -1220,9 +1263,8 @@ html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.
 }
 
 .av-mobile-dropdown-panel {
-  --glass-bg: rgba(0, 0, 0, 0.76);
   --glass-blur: 16px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 18px 72px rgba(0, 0, 0, 0.46);
+  box-shadow: var(--glass-shadow);
 }
 
 .av-universal-card,
