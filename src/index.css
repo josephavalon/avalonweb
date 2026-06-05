@@ -50,37 +50,37 @@
 
   .dark {
     --background: 0 0% 4%;
-    --foreground: 0 0% 95%;
+    --foreground: 0 0% 100%;
     --card: 0 0% 7%;
-    --card-foreground: 0 0% 96%;
+    --card-foreground: 0 0% 100%;
     --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 96%;
-    --primary: 0 0% 96%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
     --primary-foreground: 0 0% 4%;
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 80%;
     --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 96%;
-    --accent: 0 0% 96%;              /* white — no gold in dark theme */
+    --muted-foreground: 0 0% 100%;
+    --accent: 0 0% 100%;              /* white — no gold in dark theme */
     --accent-foreground: 0 0% 4%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14%;
     --input: 0 0% 14%;
-    --ring: 0 0% 96%;
+    --ring: 0 0% 100%;
     --chart-1: 45 90% 55%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 0 0% 96%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 14%;
-    --sidebar-ring: 0 0% 96%;
+    --sidebar-ring: 0 0% 100%;
     --glass-bg: rgba(10, 10, 10, 0.62);
     --glass-overlay: linear-gradient(145deg, rgba(255, 255, 255, 0.026) 0%, rgba(255, 255, 255, 0.012) 56%, rgba(255, 255, 255, 0.008) 100%);
     --glass-blur: 14px;
@@ -226,15 +226,14 @@ body {
 }
 
 /* #root containment — prevent any absolute/fixed children from pushing layout. */
-/* Dark editorial themes keep high text contrast. Light mode preserves opacity
-   modifiers so secondary copy can breathe instead of becoming hard black. */
+/* Dark editorial themes use hard white for all foreground text and icon states. */
 .dark [class*="text-foreground/"],
 .dark .text-muted-foreground,
 .golden [class*="text-foreground/"],
 .golden .text-muted-foreground,
 .dubs [class*="text-foreground/"],
 .dubs .text-muted-foreground {
-  color: hsl(var(--foreground) / 0.75) !important;
+  color: #fff !important;
 }
 
 #root, .app-shell {
