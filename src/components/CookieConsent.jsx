@@ -40,7 +40,7 @@ export default function CookieConsent() {
         <div
           className={`fixed left-2 right-2 z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-reveal sm:left-auto sm:right-3 sm:w-[360px] ${
             path.startsWith('/book')
-              ? 'bottom-[calc(env(safe-area-inset-bottom)+4.85rem)]'
+              ? 'bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]'
               : 'bottom-16 sm:bottom-3'
           }`}
         >

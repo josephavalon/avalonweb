@@ -81,10 +81,10 @@ export default function Gift() {
   return (
     <div className="bg-background min-h-screen w-full">
       <Navbar />
-      <main className="pb-[calc(5.75rem+env(safe-area-inset-bottom))] pt-20 md:pb-0 md:pt-28">
+      <main className="pt-24 md:pt-28">
 
         {/* Hero */}
-        <section className="px-5 py-10 md:px-12 md:py-24 lg:px-20">
+        <section className="py-16 md:py-24 px-5 md:px-12 lg:px-20">
           <div className="max-w-5xl mx-auto">
             <motion.h1
               {...REVEAL}
@@ -111,12 +111,12 @@ export default function Gift() {
         </section>
 
         {/* Amount Generator */}
-        <Reveal as="section" className="border-t border-foreground/[0.06] px-5 py-10 md:px-12 md:py-24 lg:px-20">
+        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="mb-6 font-heading text-3xl uppercase leading-[0.95] text-foreground md:mb-10 md:text-5xl"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-10"
             >
               Gift Amount
             </motion.h2>
@@ -125,7 +125,7 @@ export default function Gift() {
             <motion.div
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
-              className="mb-5 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] py-6 text-center md:mb-6 md:py-8"
+              className="text-center py-8 border border-foreground/[0.08] rounded-2xl bg-foreground/[0.02] mb-6"
             >
               <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/30 mb-2">Gift Value</p>
               <motion.p
@@ -133,7 +133,7 @@ export default function Gift() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: EASE }}
-                className="font-heading text-6xl leading-none text-foreground md:text-8xl"
+                className="font-heading text-7xl md:text-8xl text-foreground leading-none"
               >
                 {displayAmount ? `$${displayAmount}` : '—'}
               </motion.p>
@@ -144,7 +144,7 @@ export default function Gift() {
             <motion.div
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.18 }}
-              className="mb-4 flex flex-wrap gap-2"
+              className="flex flex-wrap gap-2 mb-4"
             >
               {PRESETS.map((amount) => {
                 const isActive = !customMode && selectedAmount === amount;
@@ -202,12 +202,12 @@ export default function Gift() {
         </Reveal>
 
         {/* How It Works */}
-        <Reveal as="section" className="border-t border-foreground/[0.06] px-5 py-10 md:px-12 md:py-24 lg:px-20">
+        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="mb-6 font-heading text-3xl uppercase leading-[0.95] text-foreground md:mb-10 md:text-5xl"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-10"
             >
               Three Steps
             </motion.h2>
@@ -230,12 +230,12 @@ export default function Gift() {
         </Reveal>
 
         {/* Gift Form */}
-        <Reveal as="section" className="border-t border-foreground/[0.06] px-5 py-10 md:px-12 md:py-24 lg:px-20">
+        <Reveal as="section" className="py-16 md:py-24 px-5 md:px-12 lg:px-20 border-t border-foreground/[0.06]">
           <div className="max-w-5xl mx-auto">
             <motion.h2
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-              className="mb-6 font-heading text-3xl uppercase leading-[0.95] text-foreground md:mb-10 md:text-5xl"
+              className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-10"
             >
               Gift Details
             </motion.h2>
