@@ -690,9 +690,9 @@ export const indexedSeoPaths = [
 export const publicStaticRoutes = [
   {
     path: '/',
-    title: 'Avalon Vitality | Mobile Recovery Therapy',
-    description: 'Avalon Vitality delivers clinical recovery to homes, hotels, offices, and launches with licensed registered nurse visits, clinical clearance, flat pricing, and fast Bay Area booking.',
-    h1: 'Mobile Recovery Therapy',
+    title: 'Avalon Vitality | Mobile IV Therapy in the SF Bay Area',
+    description: 'Avalon Vitality delivers mobile IV therapy to homes, hotels, offices, and events with registered nurse visits, clinical review, flat pricing, and fast SF Bay Area booking.',
+    h1: 'Mobile IV Therapy',
     priority: '1.0',
     changefreq: 'weekly',
   },
@@ -794,9 +794,9 @@ export const publicStaticRoutes = [
   },
   {
     path: '/book',
-    title: 'Book Mobile Recovery | Avalon Vitality',
-    description: 'Book a Bay Area mobile recovery appointment with Avalon. Appointments require intake, consent, and clinical review before service.',
-    h1: 'Book Mobile Recovery',
+    title: 'Book Mobile IV Therapy | Avalon Vitality',
+    description: 'Book Bay Area mobile IV therapy with Avalon. Appointments require intake, consent, and clinical review before service.',
+    h1: 'Book Mobile IV Therapy',
     priority: '1.0',
     changefreq: 'weekly',
   },
