@@ -633,7 +633,7 @@ function ItemDetailPage({ item, folders, tags, customFieldDefs = [], onClose, on
     <motion.div
       key="detail" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ ease: EASE, duration: 0.3 }}
-      className="dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
+      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
     >
       {/* Header */}
       <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
@@ -940,7 +940,7 @@ function ItemEditPage({ item, folders, customFieldDefs = [], onClose, onSave }) 
     <motion.div
       key="edit" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ ease: EASE, duration: 0.3 }}
-      className="dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
+      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
     >
       <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
         <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
@@ -1064,7 +1064,7 @@ function AddItemFullPage({ folders, customFieldDefs = [], onClose, onSave }) {
     <motion.div
       key="add-full" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ ease: EASE, duration: 0.3 }}
-      className="dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
+      className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground"
     >
       <div className="flex shrink-0 items-center gap-3 border-b border-foreground/[0.08] px-6 py-4">
         <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-foreground/[0.08] hover:text-foreground"><X className="h-4 w-4" /></button>
@@ -2431,7 +2431,7 @@ export default function AdminInventory() {
 
   return (
     <AdminLayout fullBleed>
-    <div className="dark flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative bg-background text-foreground">
+    <div className="flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative bg-background text-foreground">
       <h1 className="sr-only">Inventory</h1>
 
       {/* Icon nav — desktop only */}

@@ -58,7 +58,7 @@ export default function Hero() {
         >
           {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
             <li key={label} className="flex items-center gap-3">
-              <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
+              <Icon className="h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.15} aria-hidden="true" />
               <span>{label}</span>
             </li>
           ))}

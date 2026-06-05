@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MessageCircle, Palette, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
+import { applyTheme, readStoredTheme, VALID_THEMES } from '@/lib/theme';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
@@ -16,6 +17,14 @@ const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
+const THEME_LABELS = {
+  dark: 'Night',
+  daytime: 'Daytime',
+  'golden-hour': 'Golden',
+  warriors: 'Warriors',
+  pride: 'Pride',
+  july: 'July',
+};
 
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
@@ -27,6 +36,7 @@ const dashboardPathFor = (user) => {
 export default function Navbar({ showBack = false, compact = false, focusMode = false, mobileGlobal = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState(readStoredTheme);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
@@ -65,10 +75,17 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     close();
     navigate('/login');
   };
+  const cycleTheme = () => {
+    const currentIndex = Math.max(0, VALID_THEMES.indexOf(theme));
+    const nextTheme = VALID_THEMES[(currentIndex + 1) % VALID_THEMES.length];
+    applyTheme(nextTheme);
+    setTheme(nextTheme);
+  };
 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
+  const themeLabel = THEME_LABELS[theme] || 'Night';
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
@@ -147,6 +164,16 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         <div className="flex h-full items-center justify-end gap-4">
           {!compact && !focusMode && (
             <div className="flex items-center gap-1.5" aria-label="Contact Avalon">
+              <button
+                type="button"
+                onClick={cycleTheme}
+                className="av-glass-widget inline-flex h-12 items-center justify-center gap-2 rounded-full border px-3 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/74 transition-colors hover:text-foreground"
+                aria-label={`Theme: ${themeLabel}. Change theme`}
+                title={`Theme: ${themeLabel}`}
+              >
+                <Palette className="h-4 w-4" strokeWidth={2} />
+                <span>Theme</span>
+              </button>
               <a href={PHONE_URL} className={contactActionClass} aria-label={`Call Avalon ${PHONE_DISPLAY}`} title={`Call ${PHONE_DISPLAY}`}>
                 <Phone className="h-4 w-4" strokeWidth={2} />
               </a>
@@ -214,6 +241,15 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               >
                 <MessageCircle className="h-5 w-5" strokeWidth={2} />
               </a>
+              <button
+                type="button"
+                onClick={cycleTheme}
+                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                aria-label={`Theme: ${themeLabel}. Change theme`}
+                title={`Theme: ${themeLabel}`}
+              >
+                <Palette className="h-5 w-5" strokeWidth={2} />
+              </button>
               <motion.button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 whileTap={premiumTap}
@@ -302,6 +338,23 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   );
                 })}
                 </div>
+
+                <motion.div
+                  className="relative"
+                  variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
+                >
+                  <button
+                    type="button"
+                    onClick={cycleTheme}
+                    className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
+                  >
+                    <span>Theme</span>
+                    <span className="flex items-center gap-2">
+                      <span>{themeLabel}</span>
+                      <Palette className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    </span>
+                  </button>
+                </motion.div>
 
                 {user && (
                   <motion.div
