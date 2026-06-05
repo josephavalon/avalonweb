@@ -46,9 +46,9 @@ export default function AvalonChatWidget() {
   if (hiddenRoute(pathname)) return null;
 
   return (
-    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] right-3 z-50 md:bottom-6 md:right-6">
+    <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-3 right-3 z-50 flex flex-col items-end md:bottom-6 md:left-auto md:right-6">
       {open && (
-        <div className="av-glass-modal mb-3 w-[min(23rem,calc(100vw-1.5rem))] overflow-hidden rounded-[1.4rem] border text-foreground">
+        <div className="av-glass-modal pointer-events-auto mb-3 w-[min(23rem,calc(100vw-1.5rem))] overflow-hidden rounded-[1.4rem] border text-foreground">
           <div className="flex items-start justify-between gap-3 border-b border-foreground/10 px-4 py-4">
             <div>
               <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/54">Avalon Concierge</p>
@@ -106,12 +106,12 @@ export default function AvalonChatWidget() {
           </div>
         </div>
       )}
-      <div className="flex items-center justify-end gap-2">
+      <div className="pointer-events-auto flex max-w-full items-center justify-end gap-2">
         {!open && (
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="av-glass-widget min-h-11 rounded-full border px-4 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground"
+            className="av-glass-widget min-h-11 max-w-[calc(100vw-6.5rem)] truncate rounded-full border px-4 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground"
           >
             Have a question?
           </button>

@@ -226,9 +226,41 @@ body {
 }
 
 /* #root containment — prevent any absolute/fixed children from pushing layout. */
-/* Dark editorial themes use hard white for all foreground text and icon states. */
-.dark [class*="text-foreground/"],
-.dark .text-muted-foreground,
+/* Night theme purity: readable text and primary icon color must stay hard white.
+   Glass materials, shadows, disabled opacity, and filled CTA inverse text remain component-controlled. */
+.dark :where(
+  [class*="text-foreground/"],
+  [class*="text-white/"],
+  [class*="text-muted-foreground"],
+  [class*="text-accent/"]
+),
+.dark :where(
+  [class*="stroke-foreground/"],
+  [class*="stroke-white/"],
+  [class*="stroke-accent/"]
+) {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+.dark :where(
+  [class*="fill-foreground/"],
+  [class*="fill-white/"],
+  [class*="fill-accent/"]
+) {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+.dark :where(
+  [class*="placeholder:text-foreground/"],
+  [class*="placeholder:text-muted-foreground"],
+  [class*="placeholder:text-white/"]
+)::placeholder {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
 .golden [class*="text-foreground/"],
 .golden .text-muted-foreground,
 .dubs [class*="text-foreground/"],
