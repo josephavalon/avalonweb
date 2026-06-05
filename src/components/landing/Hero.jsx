@@ -42,7 +42,7 @@ export default function Hero() {
         <div className="md:max-w-xl">
 
         <p
-          className="mb-3 font-body text-[11px] uppercase tracking-[0.34em] text-foreground/55 md:mb-4 md:text-xs"
+          className="mb-3 font-body text-[11px] uppercase tracking-[0.34em] text-foreground md:mb-4 md:text-xs"
         >
           Avalon Vitality
         </p>
@@ -54,12 +54,11 @@ export default function Hero() {
         </h1>
 
         <ul
-          className="mt-5 grid gap-1.5 font-body text-[13px] uppercase leading-relaxed tracking-[0.16em] md:mt-6 md:text-sm"
-          style={{ color: 'hsl(var(--foreground) / 0.66)' }}
+          className="mt-5 grid gap-1.5 font-body text-[13px] uppercase leading-relaxed tracking-[0.16em] text-foreground md:mt-6 md:text-sm"
         >
           {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
             <li key={label} className="flex items-center gap-3">
-              <Icon className="h-4 w-4 shrink-0 text-[#d6a447]" strokeWidth={2.15} aria-hidden="true" />
+              <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
               <span>{label}</span>
             </li>
           ))}
