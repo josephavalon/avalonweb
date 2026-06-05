@@ -20,6 +20,23 @@ export const THEME_ALIASES = {
 };
 
 export const VALID_THEMES = ['dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july'];
+export const THEME_LABELS = {
+  dark: 'Night',
+  daytime: 'Daytime',
+  'golden-hour': 'Golden',
+  warriors: 'Warriors',
+  pride: 'Pride',
+  july: 'July',
+};
+
+const THEME_COLOR_SCHEMES = {
+  dark: 'dark',
+  daytime: 'light',
+  'golden-hour': 'light',
+  warriors: 'dark',
+  pride: 'dark',
+  july: 'dark',
+};
 
 export function normalizeTheme(theme) {
   const value = String(theme || '').trim();
@@ -35,11 +52,17 @@ export function readStoredTheme() {
   }
 }
 
+export function getThemeLabel(theme) {
+  return THEME_LABELS[normalizeTheme(theme)] || THEME_LABELS[DEFAULT_THEME];
+}
+
 export function applyTheme(theme = readStoredTheme(), { persist = true } = {}) {
   const normalized = normalizeTheme(theme);
   const root = document.documentElement;
   root.classList.remove(...THEME_CLASSES);
   root.classList.add(normalized);
+  root.dataset.avalonMode = normalized;
+  root.style.colorScheme = THEME_COLOR_SCHEMES[normalized] || 'dark';
   if (persist) {
     try {
       window.localStorage.setItem(THEME_KEY, normalized);

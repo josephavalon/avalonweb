@@ -4,7 +4,7 @@ import { ArrowLeft, LogOut, Menu, MessageCircle, Palette, Phone, X } from 'lucid
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
-import { applyTheme, readStoredTheme, VALID_THEMES } from '@/lib/theme';
+import { applyTheme, getThemeLabel, readStoredTheme, VALID_THEMES } from '@/lib/theme';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
@@ -17,15 +17,6 @@ const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
-const THEME_LABELS = {
-  dark: 'Night',
-  daytime: 'Daytime',
-  'golden-hour': 'Golden',
-  warriors: 'Warriors',
-  pride: 'Pride',
-  july: 'July',
-};
-
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
   if (user.role === 'admin') return '/admin';
@@ -96,7 +87,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
-  const themeLabel = THEME_LABELS[theme] || 'Night';
+  const themeLabel = getThemeLabel(theme);
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
@@ -153,8 +144,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               type="button"
               onClick={cycleTheme}
               className="av-glass-widget inline-flex h-12 items-center justify-center gap-2 rounded-full border px-3 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/74 transition-colors hover:text-foreground"
-              aria-label={`Theme: ${themeLabel}. Change theme`}
-              title={`Theme: ${themeLabel}`}
+              aria-label={`Avalon mode: ${themeLabel}. Change mode`}
+              title={`Avalon mode: ${themeLabel}`}
             >
               <Palette className="h-4 w-4" strokeWidth={2} />
               <span>{themeLabel}</span>
@@ -352,7 +343,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                     onClick={cycleTheme}
                     className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
                   >
-                    <span>Theme</span>
+                    <span>Mode</span>
                     <span className="flex items-center gap-2">
                       <span>{themeLabel}</span>
                       <Palette className="h-3.5 w-3.5" strokeWidth={1.8} />
