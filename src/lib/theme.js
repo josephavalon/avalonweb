@@ -48,5 +48,10 @@ export function applyTheme(theme = readStoredTheme(), { persist = true } = {}) {
       // Storage can be unavailable in private windows; the theme still applies for this render.
     }
   }
+  try {
+    window.dispatchEvent(new CustomEvent('avalon-theme-change', { detail: { theme: normalized } }));
+  } catch {
+    // CustomEvent can be unavailable in older embedded browsers; the root class still changed.
+  }
   return normalized;
 }

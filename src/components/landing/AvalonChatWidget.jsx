@@ -111,7 +111,7 @@ export default function AvalonChatWidget() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="av-glass-widget min-h-11 max-w-[calc(100vw-6.5rem)] truncate rounded-full border px-4 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground"
+            className="av-glass-widget hidden min-h-11 max-w-[calc(100vw-6.5rem)] truncate rounded-full border px-4 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground min-[430px]:inline-flex"
           >
             Have a question?
           </button>

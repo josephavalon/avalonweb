@@ -52,6 +52,17 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   }, [location]);
 
   useEffect(() => {
+    const syncTheme = (event) => setTheme(event?.detail?.theme || readStoredTheme());
+    const syncStoredTheme = () => setTheme(readStoredTheme());
+    window.addEventListener('avalon-theme-change', syncTheme);
+    window.addEventListener('storage', syncStoredTheme);
+    return () => {
+      window.removeEventListener('avalon-theme-change', syncTheme);
+      window.removeEventListener('storage', syncStoredTheme);
+    };
+  }, []);
+
+  useEffect(() => {
     import('@/pages/BookNow').catch((err) => {
       if (import.meta.env?.DEV) console.warn('[book-route-preload]', err);
     });
@@ -76,10 +87,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     navigate('/login');
   };
   const cycleTheme = () => {
-    const currentIndex = Math.max(0, VALID_THEMES.indexOf(theme));
+    const activeTheme = readStoredTheme();
+    const currentIndex = Math.max(0, VALID_THEMES.indexOf(activeTheme));
     const nextTheme = VALID_THEMES[(currentIndex + 1) % VALID_THEMES.length];
-    applyTheme(nextTheme);
-    setTheme(nextTheme);
+    setTheme(applyTheme(nextTheme));
   };
 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
@@ -137,6 +148,18 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground">AVALON</span>
             <span className="mt-1 block font-body text-[8px] uppercase leading-none tracking-[0.38em] text-foreground/60">VITALITY</span>
           </Link>
+          {!compact && !focusMode && (
+            <button
+              type="button"
+              onClick={cycleTheme}
+              className="av-glass-widget inline-flex h-12 items-center justify-center gap-2 rounded-full border px-3 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/74 transition-colors hover:text-foreground"
+              aria-label={`Theme: ${themeLabel}. Change theme`}
+              title={`Theme: ${themeLabel}`}
+            >
+              <Palette className="h-4 w-4" strokeWidth={2} />
+              <span>{themeLabel}</span>
+            </button>
+          )}
         </div>
 
         {/* Col 2 — nav links, auto width, inherently centered */}
@@ -164,16 +187,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         <div className="flex h-full items-center justify-end gap-4">
           {!compact && !focusMode && (
             <div className="flex items-center gap-1.5" aria-label="Contact Avalon">
-              <button
-                type="button"
-                onClick={cycleTheme}
-                className="av-glass-widget inline-flex h-12 items-center justify-center gap-2 rounded-full border px-3 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/74 transition-colors hover:text-foreground"
-                aria-label={`Theme: ${themeLabel}. Change theme`}
-                title={`Theme: ${themeLabel}`}
-              >
-                <Palette className="h-4 w-4" strokeWidth={2} />
-                <span>Theme</span>
-              </button>
               <a href={PHONE_URL} className={contactActionClass} aria-label={`Call Avalon ${PHONE_DISPLAY}`} title={`Call ${PHONE_DISPLAY}`}>
                 <Phone className="h-4 w-4" strokeWidth={2} />
               </a>
@@ -205,10 +218,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       </div>
 
       {/* Mobile bar */}
-      <div className={`av-glass-menu md:hidden flex items-center justify-between rounded-[1.35rem] border px-4 transition-all duration-500 ease-editorial ${
+      <div className={`av-glass-menu relative md:hidden flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
         compact ? 'h-12' : 'h-14'
       }`}>
-        <div className="flex h-full items-center gap-3">
+        <div className="flex h-full min-w-0 flex-1 items-center gap-3 pr-[8rem]">
           {showBack && (
             <button
               type="button"
@@ -224,36 +237,27 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             <span className="mt-1 font-body text-[7px] uppercase leading-none tracking-[0.38em] text-foreground/60">VITALITY</span>
           </Link>
         </div>
-        <div className="flex h-full items-center gap-2">
+        <div className="absolute right-2 top-1/2 flex -translate-y-1/2 shrink-0 items-center gap-0.5">
           {!focusMode && (
             <>
               <a
                 href={PHONE_URL}
-                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={`Call Avalon ${PHONE_DISPLAY}`}
               >
                 <Phone className="h-5 w-5" strokeWidth={2} />
               </a>
               <a
                 href={TEXT_URL}
-                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label="Text Avalon"
               >
                 <MessageCircle className="h-5 w-5" strokeWidth={2} />
               </a>
-              <button
-                type="button"
-                onClick={cycleTheme}
-                className="flex h-12 w-12 items-center justify-center rounded-full text-foreground/82 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                aria-label={`Theme: ${themeLabel}. Change theme`}
-                title={`Theme: ${themeLabel}`}
-              >
-                <Palette className="h-5 w-5" strokeWidth={2} />
-              </button>
               <motion.button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 whileTap={premiumTap}
-                className="mobile-menu-btn flex h-12 w-12 items-center justify-center rounded-full text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="mobile-menu-btn flex h-10 w-10 items-center justify-center rounded-full text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileOpen}
               >
