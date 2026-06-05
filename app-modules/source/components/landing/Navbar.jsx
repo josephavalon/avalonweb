@@ -84,20 +84,20 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
-      className={`av-motion-rail av-glass-menu fixed z-40 border transition-all duration-700 ease-editorial ${
+      className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
       mobileGlobal ? 'md:hidden' : 'hidden md:block'
     } ${
       mobileOpen && !focusMode
-        ? 'left-3 right-3 top-2 overflow-hidden rounded-[1.35rem] md:top-4'
+        ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
     } ${
       scrolled
-        ? 'md:border'
-        : 'md:border'
+        ? ''
+        : ''
     }`}>
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
       <div
-        className={`hidden md:grid items-center px-8 transition-all duration-500 ease-editorial ${
+        className={`av-glass-menu hidden rounded-3xl border md:grid items-center px-8 transition-all duration-500 ease-editorial ${
         compact ? 'h-12 px-4' : scrolled ? 'h-14' : 'h-16'
         }`}
         style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
@@ -178,7 +178,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       </div>
 
       {/* Mobile bar */}
-      <div className={`md:hidden flex items-center justify-between px-4 transition-all duration-500 ease-editorial ${
+      <div className={`av-glass-menu md:hidden flex items-center justify-between rounded-[1.35rem] border px-4 transition-all duration-500 ease-editorial ${
         compact ? 'h-12' : 'h-14'
       }`}>
         <div className="flex h-full items-center gap-3">
@@ -249,7 +249,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="av-glass-card relative overflow-hidden rounded-[1.15rem] border p-1.5"
+                className="relative grid gap-1.5 overflow-visible rounded-[1.15rem] p-1.5"
               >
                 {showBack && !compact && (
                   <motion.div
