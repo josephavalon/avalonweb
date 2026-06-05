@@ -129,38 +129,38 @@
 
   .golden-hour,
   .golden {
-    --background: 38 45% 91%;
-    --foreground: 25 32% 18%;
-    --card: 38 42% 84%;
-    --card-foreground: 25 32% 18%;
-    --popover: 38 42% 86%;
-    --popover-foreground: 25 32% 18%;
-    --primary: 25 32% 18%;
-    --primary-foreground: 38 45% 94%;
-    --secondary: 35 34% 78%;
-    --secondary-foreground: 25 32% 18%;
-    --muted: 35 34% 80%;
-    --muted-foreground: 25 32% 18%;
-    --accent: 30 58% 42%;
-    --accent-foreground: 38 45% 94%;
+    --background: 36 60% 88%;
+    --foreground: 25 42% 13%;
+    --card: 38 54% 82%;
+    --card-foreground: 25 42% 13%;
+    --popover: 38 54% 84%;
+    --popover-foreground: 25 42% 13%;
+    --primary: 25 42% 13%;
+    --primary-foreground: 39 66% 94%;
+    --secondary: 34 48% 74%;
+    --secondary-foreground: 25 42% 13%;
+    --muted: 34 44% 77%;
+    --muted-foreground: 25 34% 20%;
+    --accent: 32 88% 47%;
+    --accent-foreground: 25 42% 13%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 28 22% 64%;
     --input: 38 42% 86%;
     --ring: 25 32% 18%;
-    --sidebar-background: 38 45% 91%;
-    --sidebar-foreground: 25 32% 18%;
-    --sidebar-primary: 25 32% 18%;
-    --sidebar-primary-foreground: 38 45% 94%;
-    --sidebar-accent: 35 34% 78%;
-    --sidebar-accent-foreground: 25 32% 18%;
+    --sidebar-background: 36 60% 88%;
+    --sidebar-foreground: 25 42% 13%;
+    --sidebar-primary: 25 42% 13%;
+    --sidebar-primary-foreground: 39 66% 94%;
+    --sidebar-accent: 34 48% 74%;
+    --sidebar-accent-foreground: 25 42% 13%;
     --sidebar-border: 28 22% 64%;
     --sidebar-ring: 25 32% 18%;
-    --glass-bg: rgba(255, 246, 224, 0.72);
-    --glass-overlay: linear-gradient(145deg, rgba(92, 54, 22, 0.052) 0%, rgba(92, 54, 22, 0.026) 56%, rgba(92, 54, 22, 0.018) 100%);
-    --glass-border: rgba(92, 54, 22, 0.16);
-    --glass-border-hover: rgba(92, 54, 22, 0.28);
-    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 22px 86px rgba(92, 54, 22, 0.16);
+    --glass-bg: rgba(255, 232, 185, 0.72);
+    --glass-overlay: linear-gradient(145deg, rgba(180, 93, 12, 0.070) 0%, rgba(180, 93, 12, 0.032) 56%, rgba(255, 255, 255, 0.040) 100%);
+    --glass-border: rgba(126, 63, 8, 0.22);
+    --glass-border-hover: rgba(126, 63, 8, 0.36);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74), 0 22px 86px rgba(126, 63, 8, 0.20);
   }
 
   .warriors,
@@ -711,8 +711,8 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .daytime .avalon-static-backdrop,
 .light .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.76;
-  --av-backdrop-image-filter: blur(0.7px) saturate(0.72) brightness(1.12) contrast(0.94);
+  --av-backdrop-image-opacity: 0.58;
+  --av-backdrop-image-filter: blur(0.55px) saturate(0.62) brightness(0.92) contrast(1.06);
 }
 
 .daytime .hero-root,
@@ -722,55 +722,57 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .daytime .avalon-static-backdrop__veil,
 .light .avalon-static-backdrop__veil {
-  background: hsl(var(--background) / 0.10);
+  background: hsl(var(--background) / 0.22);
 }
 
 .daytime .avalon-static-backdrop__side,
 .light .avalon-static-backdrop__side {
-  background: linear-gradient(90deg, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.72) 30%, hsl(var(--background) / 0.20) 58%, transparent 100%);
+  background: linear-gradient(90deg, hsl(var(--background) / 0.98) 0%, hsl(var(--background) / 0.90) 34%, hsl(var(--background) / 0.46) 60%, hsl(var(--background) / 0.08) 82%, transparent 100%);
 }
 
 .daytime .avalon-static-backdrop__bottom,
 .light .avalon-static-backdrop__bottom {
-  background: linear-gradient(0deg, hsl(var(--background) / 0.58), hsl(var(--background) / 0.16), transparent 66%);
+  background: linear-gradient(0deg, hsl(var(--background) / 0.80), hsl(var(--background) / 0.34), transparent 70%);
 }
 
 .daytime .avalon-static-backdrop__top,
 .light .avalon-static-backdrop__top {
-  background: linear-gradient(180deg, hsl(var(--background) / 0.52), hsl(var(--background) / 0.14), transparent);
+  background: linear-gradient(180deg, hsl(var(--background) / 0.66), hsl(var(--background) / 0.22), transparent);
 }
 
 .golden-hour .avalon-static-backdrop,
 .golden .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.84;
-  --av-backdrop-image-filter: blur(0.6px) sepia(0.38) saturate(1.36) brightness(1.04) contrast(1.04);
-  --av-backdrop-special: linear-gradient(90deg, rgba(255, 176, 74, 0.24), rgba(255, 206, 122, 0.18) 48%, rgba(92, 54, 22, 0.10));
-  --av-backdrop-special-mix: multiply;
+  --av-backdrop-image-opacity: 0.72;
+  --av-backdrop-image-filter: blur(0.55px) sepia(0.22) saturate(1.14) brightness(0.88) contrast(1.10);
+  --av-backdrop-special:
+    radial-gradient(circle at 58% 34%, rgba(255, 186, 74, 0.32), transparent 38%),
+    linear-gradient(90deg, rgba(255, 232, 178, 0.58) 0%, rgba(245, 176, 82, 0.34) 42%, rgba(96, 49, 16, 0.22) 72%, rgba(24, 14, 8, 0.34) 100%);
+  --av-backdrop-special-mix: normal;
 }
 
 .golden-hour .hero-root,
 .golden .hero-root {
-  --av-hero-accent: hsl(30 58% 34%);
+  --av-hero-accent: hsl(32 88% 47%);
 }
 
 .golden-hour .avalon-static-backdrop__veil,
 .golden .avalon-static-backdrop__veil {
-  background: rgba(255, 182, 77, 0.12);
+  background: rgba(255, 194, 93, 0.14);
 }
 
 .golden-hour .avalon-static-backdrop__side,
 .golden .avalon-static-backdrop__side {
-  background: linear-gradient(90deg, hsl(var(--background) / 0.88) 0%, rgba(255, 222, 164, 0.46) 34%, rgba(255, 173, 72, 0.12) 62%, transparent 100%);
+  background: linear-gradient(90deg, hsl(var(--background) / 0.96) 0%, rgba(255, 224, 164, 0.74) 32%, rgba(244, 167, 67, 0.26) 58%, rgba(76, 40, 16, 0.10) 78%, transparent 100%);
 }
 
 .golden-hour .avalon-static-backdrop__bottom,
 .golden .avalon-static-backdrop__bottom {
-  background: linear-gradient(0deg, hsl(var(--background) / 0.62), rgba(255, 211, 142, 0.18), transparent 68%);
+  background: linear-gradient(0deg, hsl(var(--background) / 0.76), rgba(255, 206, 120, 0.30), transparent 70%);
 }
 
 .golden-hour .avalon-static-backdrop__top,
 .golden .avalon-static-backdrop__top {
-  background: linear-gradient(180deg, rgba(255, 218, 150, 0.48), rgba(255, 180, 76, 0.10), transparent);
+  background: linear-gradient(180deg, rgba(255, 224, 156, 0.60), rgba(255, 176, 74, 0.18), transparent);
 }
 
 .warriors .avalon-static-backdrop,
@@ -940,13 +942,14 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .golden-hour .av-hero-action:first-child,
 .golden .av-hero-action:first-child {
-  color: hsl(38 45% 94%);
-  background: linear-gradient(135deg, rgba(107, 62, 20, 0.82), rgba(165, 100, 35, 0.62));
+  color: hsl(var(--foreground));
+  background: linear-gradient(135deg, rgba(255, 189, 83, 0.66), rgba(255, 232, 184, 0.82));
+  border-color: rgba(126, 63, 8, 0.36);
 }
 
 .golden-hour .av-hero-action:first-child svg,
 .golden .av-hero-action:first-child svg {
-  color: hsl(38 45% 94%);
+  color: hsl(var(--foreground));
 }
 
 .warriors .av-hero-action:first-child,
