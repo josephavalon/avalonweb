@@ -39,26 +39,26 @@ export default function Hero() {
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
 	          <div className="relative">
-        <div className="md:max-w-xl">
+        <div className="av-hero-copy md:max-w-xl">
 
         <p
-          className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-white md:mb-4 md:text-3xl"
+          className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground md:mb-4 md:text-3xl"
         >
           Avalon Vitality
         </p>
 
         <h1
-          className="font-heading text-display-xl text-white uppercase max-w-3xl"
+          className="font-heading text-display-xl text-foreground uppercase max-w-3xl"
         >
           Recovery<br />On Demand
         </h1>
 
         <ul
-          className="mt-5 grid gap-1.5 font-body text-[13px] uppercase leading-relaxed tracking-[0.16em] text-white md:mt-6 md:text-sm"
+          className="mt-5 grid gap-1.5 font-body text-[13px] uppercase leading-relaxed tracking-[0.16em] text-foreground md:mt-6 md:text-sm"
         >
           {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
             <li key={label} className="flex items-center gap-3">
-              <Icon className="h-5 w-5 shrink-0 text-white md:h-6 md:w-6" strokeWidth={2.15} aria-hidden="true" />
+              <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
               <span>{label}</span>
             </li>
           ))}
@@ -66,7 +66,7 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[80vw] md:max-w-[92rem] md:grid-cols-3 md:gap-3"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[74vw] md:max-w-[86rem] md:grid-cols-3 md:gap-3 xl:w-[56vw]"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -78,18 +78,18 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className="av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-white transition-colors duration-base ease-editorial md:min-h-[86px] md:px-7 md:py-5"
+                className="av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:px-5"
               >
-                <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-5">
-                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-16 md:w-16 md:rounded-[1.15rem]">
-                    <Icon className="h-4.5 w-4.5 text-white md:h-9 md:w-9" strokeWidth={1.8} />
+                <span className="relative flex min-w-0 flex-1 items-center gap-3">
+                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
+                    <Icon className="h-4.5 w-4.5 text-foreground" strokeWidth={1.8} />
                   </span>
-                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-white md:text-3xl">
+                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-foreground">
                     {action.label}
                   </span>
                 </span>
-                <span className="relative shrink-0 text-white transition-transform group-hover:translate-x-1">
-                  <ArrowRight className="h-4 w-4 md:h-7 md:w-7" strokeWidth={2} />
+                <span className="relative shrink-0 text-foreground transition-transform group-hover:translate-x-1">
+                  <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </span>
               </MotionLink>
             );

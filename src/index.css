@@ -589,8 +589,369 @@ body {
 /* Hero fills the dynamic viewport so the next section never peeks on load.
    svh first as a fallback, dvh wins where supported (deterministic source order). */
 .hero-root {
+  --av-hero-accent: hsl(var(--foreground));
+  --av-hero-gradient: none;
   min-height: 100svh;
   min-height: 100dvh;
+}
+
+.avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.66;
+  --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.74) contrast(1.04);
+  --av-backdrop-image-mix: normal;
+  --av-hero-accent: hsl(var(--foreground));
+  --av-hero-gradient: none;
+  background: hsl(var(--background));
+}
+
+.avalon-static-backdrop__image {
+  opacity: var(--av-backdrop-image-opacity);
+  filter: var(--av-backdrop-image-filter);
+  mix-blend-mode: var(--av-backdrop-image-mix);
+}
+
+.avalon-static-backdrop::before,
+.avalon-static-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.avalon-static-backdrop::before {
+  z-index: 1;
+  background: var(--av-backdrop-special, none);
+  opacity: var(--av-backdrop-special-opacity, 1);
+  mix-blend-mode: var(--av-backdrop-special-mix, normal);
+}
+
+.avalon-static-backdrop::after {
+  z-index: 2;
+  background: var(--av-backdrop-sparks, none);
+  opacity: var(--av-backdrop-sparks-opacity, 1);
+}
+
+.avalon-static-backdrop__veil,
+.avalon-static-backdrop__side,
+.avalon-static-backdrop__bottom,
+.avalon-static-backdrop__top {
+  z-index: 3;
+}
+
+.avalon-static-backdrop__veil {
+  background: hsl(0 0% 0% / 0.28);
+}
+
+.avalon-static-backdrop__side {
+  background: linear-gradient(90deg, hsl(0 0% 0% / 0.88) 0%, hsl(0 0% 0% / 0.62) 36%, hsl(0 0% 0% / 0.18) 66%, transparent 100%);
+}
+
+.avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(0 0% 0%) 0%, hsl(0 0% 0% / 0.82) 28%, hsl(0 0% 0% / 0.10) 72%, transparent 100%);
+}
+
+.avalon-static-backdrop__top {
+  background: linear-gradient(180deg, hsl(0 0% 0% / 0.46), hsl(0 0% 0% / 0.18), transparent);
+}
+
+.daytime .avalon-static-backdrop,
+.light .avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.76;
+  --av-backdrop-image-filter: blur(0.7px) saturate(0.72) brightness(1.12) contrast(0.94);
+}
+
+.daytime .hero-root,
+.light .hero-root {
+  --av-hero-accent: hsl(214 94% 54%);
+}
+
+.daytime .avalon-static-backdrop__veil,
+.light .avalon-static-backdrop__veil {
+  background: hsl(var(--background) / 0.10);
+}
+
+.daytime .avalon-static-backdrop__side,
+.light .avalon-static-backdrop__side {
+  background: linear-gradient(90deg, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.72) 30%, hsl(var(--background) / 0.20) 58%, transparent 100%);
+}
+
+.daytime .avalon-static-backdrop__bottom,
+.light .avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(var(--background) / 0.58), hsl(var(--background) / 0.16), transparent 66%);
+}
+
+.daytime .avalon-static-backdrop__top,
+.light .avalon-static-backdrop__top {
+  background: linear-gradient(180deg, hsl(var(--background) / 0.52), hsl(var(--background) / 0.14), transparent);
+}
+
+.golden-hour .avalon-static-backdrop,
+.golden .avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.84;
+  --av-backdrop-image-filter: blur(0.6px) sepia(0.38) saturate(1.36) brightness(1.04) contrast(1.04);
+  --av-backdrop-special: linear-gradient(90deg, rgba(255, 176, 74, 0.24), rgba(255, 206, 122, 0.18) 48%, rgba(92, 54, 22, 0.10));
+  --av-backdrop-special-mix: multiply;
+}
+
+.golden-hour .hero-root,
+.golden .hero-root {
+  --av-hero-accent: hsl(30 58% 34%);
+}
+
+.golden-hour .avalon-static-backdrop__veil,
+.golden .avalon-static-backdrop__veil {
+  background: rgba(255, 182, 77, 0.12);
+}
+
+.golden-hour .avalon-static-backdrop__side,
+.golden .avalon-static-backdrop__side {
+  background: linear-gradient(90deg, hsl(var(--background) / 0.88) 0%, rgba(255, 222, 164, 0.46) 34%, rgba(255, 173, 72, 0.12) 62%, transparent 100%);
+}
+
+.golden-hour .avalon-static-backdrop__bottom,
+.golden .avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(var(--background) / 0.62), rgba(255, 211, 142, 0.18), transparent 68%);
+}
+
+.golden-hour .avalon-static-backdrop__top,
+.golden .avalon-static-backdrop__top {
+  background: linear-gradient(180deg, rgba(255, 218, 150, 0.48), rgba(255, 180, 76, 0.10), transparent);
+}
+
+.warriors .avalon-static-backdrop,
+.dubs .avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.86;
+  --av-backdrop-image-filter: blur(0.65px) saturate(1.45) brightness(0.74) contrast(1.18);
+  --av-backdrop-special: linear-gradient(90deg, rgba(0, 70, 180, 0.42), rgba(0, 98, 210, 0.30) 52%, rgba(255, 199, 44, 0.16));
+  --av-backdrop-special-mix: screen;
+}
+
+.warriors .hero-root,
+.dubs .hero-root {
+  --av-hero-accent: hsl(var(--accent));
+}
+
+.warriors .avalon-static-backdrop__veil,
+.dubs .avalon-static-backdrop__veil {
+  background: hsl(var(--background) / 0.24);
+}
+
+.warriors .avalon-static-backdrop__side,
+.dubs .avalon-static-backdrop__side {
+  background:
+    radial-gradient(circle at 77% 20%, hsl(var(--accent) / 0.20), transparent 26%),
+    linear-gradient(90deg, hsl(var(--background) / 0.92) 0%, hsl(var(--background) / 0.56) 35%, hsl(218 80% 28% / 0.16) 68%, transparent 100%);
+}
+
+.warriors .avalon-static-backdrop__bottom,
+.dubs .avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(var(--background) / 0.88), hsl(var(--background) / 0.28), transparent 70%);
+}
+
+.warriors .avalon-static-backdrop__top,
+.dubs .avalon-static-backdrop__top {
+  background: linear-gradient(180deg, hsl(var(--background) / 0.62), hsl(218 80% 28% / 0.18), transparent);
+}
+
+.pride .avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.88;
+  --av-backdrop-image-filter: blur(0.65px) saturate(1.5) brightness(0.70) contrast(1.12);
+  --av-backdrop-special:
+    linear-gradient(90deg, rgba(255, 45, 45, 0.12), rgba(255, 159, 28, 0.08) 18%, rgba(255, 228, 94, 0.08) 35%, rgba(46, 230, 107, 0.08) 52%, rgba(26, 167, 255, 0.10) 70%, rgba(189, 76, 255, 0.14)),
+    radial-gradient(circle at 62% 44%, rgba(189, 76, 255, 0.20), transparent 26%);
+  --av-backdrop-special-mix: screen;
+}
+
+.pride .hero-root {
+  --av-hero-accent: hsl(292 76% 62%);
+  --av-hero-gradient: linear-gradient(90deg, #ff2d2d 0%, #ff9f1c 18%, #ffe45e 35%, #2ee66b 52%, #1aa7ff 70%, #bd4cff 100%);
+}
+
+.pride .avalon-static-backdrop__veil {
+  background:
+    linear-gradient(135deg, rgba(255, 0, 24, 0.08), rgba(255, 165, 44, 0.06) 18%, rgba(255, 255, 65, 0.05) 36%, rgba(0, 128, 24, 0.06) 54%, rgba(0, 0, 249, 0.08) 72%, rgba(134, 0, 125, 0.10)),
+    hsl(0 0% 0% / 0.30);
+}
+
+.pride .avalon-static-backdrop__side {
+  background: linear-gradient(90deg, hsl(0 0% 0% / 0.86) 0%, rgba(0, 0, 0, 0.48) 36%, rgba(189, 76, 255, 0.10) 68%, transparent 100%);
+}
+
+.pride .avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(0 0% 0% / 0.88), hsl(0 0% 0% / 0.36), transparent 72%);
+}
+
+.pride .avalon-static-backdrop__top {
+  background: linear-gradient(180deg, hsl(0 0% 0% / 0.58), hsl(var(--accent) / 0.10), transparent);
+}
+
+.july .avalon-static-backdrop {
+  --av-backdrop-image-opacity: 0.86;
+  --av-backdrop-image-filter: blur(0.65px) saturate(1.32) brightness(0.68) contrast(1.16);
+  --av-backdrop-special:
+    radial-gradient(circle at 58% 11%, rgba(255, 255, 255, 0.94) 0 1px, rgba(255, 36, 36, 0.78) 2px, transparent 7px),
+    radial-gradient(circle at 63% 14%, rgba(255, 255, 255, 0.90) 0 1px, rgba(30, 123, 255, 0.78) 2px, transparent 8px),
+    radial-gradient(circle at 70% 10%, rgba(255, 255, 255, 0.86) 0 1px, rgba(255, 36, 36, 0.72) 2px, transparent 7px),
+    linear-gradient(135deg, rgba(191, 10, 48, 0.14), transparent 42%, rgba(0, 40, 104, 0.18));
+  --av-backdrop-special-mix: screen;
+}
+
+.july .hero-root {
+  --av-hero-accent: hsl(var(--accent));
+  --av-hero-gradient: linear-gradient(90deg, #ff2424 0 34%, #ffffff 34% 58%, #1e7bff 58% 100%);
+}
+
+.july .avalon-static-backdrop__veil {
+  background:
+    linear-gradient(135deg, rgba(191, 10, 48, 0.08), transparent 42%, rgba(0, 40, 104, 0.12)),
+    hsl(220 48% 8% / 0.30);
+}
+
+.july .avalon-static-backdrop__side {
+  background: linear-gradient(90deg, hsl(220 48% 8% / 0.88) 0%, hsl(220 48% 14% / 0.50) 38%, hsl(0 78% 32% / 0.12) 70%, transparent 100%);
+}
+
+.july .avalon-static-backdrop__bottom {
+  background: linear-gradient(0deg, hsl(220 48% 8% / 0.90), hsl(220 48% 8% / 0.34), transparent 72%);
+}
+
+.july .avalon-static-backdrop__top {
+  background: linear-gradient(180deg, hsl(220 48% 8% / 0.58), hsl(0 78% 42% / 0.08), transparent);
+}
+
+.av-hero-copy {
+  position: relative;
+  padding-left: 0;
+}
+
+.av-hero-copy::before {
+  content: '';
+  position: absolute;
+  bottom: 0.18rem;
+  left: -1rem;
+  top: 3.8rem;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--av-hero-accent);
+  opacity: 0.88;
+}
+
+.hero-root h1,
+.hero-root .font-heading,
+.hero-root svg,
+.hero-root a {
+  color: hsl(var(--foreground));
+}
+
+.warriors .hero-root svg,
+.warriors .hero-root .av-hero-copy p,
+.dubs .hero-root svg,
+.dubs .hero-root .av-hero-copy p {
+  color: hsl(var(--accent));
+}
+
+.pride .hero-root h1,
+.pride .hero-root .av-hero-copy p,
+.july .hero-root h1,
+.july .hero-root .av-hero-copy p {
+  background: var(--av-hero-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.pride .hero-root li:nth-child(1),
+.pride .hero-root li:nth-child(1) svg,
+.july .hero-root li:nth-child(1),
+.july .hero-root li:nth-child(1) svg {
+  color: #ff2d2d;
+}
+
+.pride .hero-root li:nth-child(2),
+.pride .hero-root li:nth-child(2) svg,
+.july .hero-root li:nth-child(2),
+.july .hero-root li:nth-child(2) svg {
+  color: #ffffff;
+}
+
+.pride .hero-root li:nth-child(3),
+.pride .hero-root li:nth-child(3) svg {
+  color: #2ee66b;
+}
+
+.july .hero-root li:nth-child(3),
+.july .hero-root li:nth-child(3) svg {
+  color: #1e7bff;
+}
+
+.pride .hero-root li:nth-child(4),
+.pride .hero-root li:nth-child(4) svg {
+  color: #1aa7ff;
+}
+
+.july .hero-root li:nth-child(4),
+.july .hero-root li:nth-child(4) svg {
+  color: #1e7bff;
+}
+
+.golden-hour .av-hero-action:first-child,
+.golden .av-hero-action:first-child {
+  color: hsl(38 45% 94%);
+  background: linear-gradient(135deg, rgba(107, 62, 20, 0.82), rgba(165, 100, 35, 0.62));
+}
+
+.golden-hour .av-hero-action:first-child svg,
+.golden .av-hero-action:first-child svg {
+  color: hsl(38 45% 94%);
+}
+
+.warriors .av-hero-action:first-child,
+.dubs .av-hero-action:first-child {
+  color: hsl(var(--accent));
+  border-color: hsl(var(--accent) / 0.78);
+}
+
+.warriors .av-hero-action:first-child svg,
+.dubs .av-hero-action:first-child svg,
+.warriors .av-hero-action:first-child .font-heading,
+.dubs .av-hero-action:first-child .font-heading {
+  color: hsl(var(--accent));
+}
+
+.pride .av-hero-action,
+.july .av-hero-action {
+  border-color: hsl(var(--foreground) / 0.22);
+}
+
+.pride .av-hero-action:nth-child(1),
+.pride .av-hero-action:nth-child(1) .font-heading,
+.pride .av-hero-action:nth-child(1) svg {
+  color: #ffe45e;
+}
+
+.pride .av-hero-action:nth-child(2),
+.pride .av-hero-action:nth-child(2) .font-heading,
+.pride .av-hero-action:nth-child(2) svg {
+  color: #ff2d2d;
+}
+
+.pride .av-hero-action:nth-child(3),
+.pride .av-hero-action:nth-child(3) .font-heading,
+.pride .av-hero-action:nth-child(3) svg {
+  color: #bd4cff;
+}
+
+.july .av-hero-action:nth-child(1),
+.july .av-hero-action:nth-child(1) .font-heading,
+.july .av-hero-action:nth-child(1) svg {
+  color: #ff2424;
+}
+
+.july .av-hero-action:nth-child(3),
+.july .av-hero-action:nth-child(3) .font-heading,
+.july .av-hero-action:nth-child(3) svg {
+  color: #1e7bff;
 }
 
 .hero-root h1,
