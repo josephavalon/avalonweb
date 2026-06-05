@@ -42,13 +42,9 @@ export default function Hero() {
         <div className="md:max-w-xl">
 
         <p
-          className="mb-3 font-body text-[11px] uppercase tracking-[0.34em] text-foreground md:mb-4 md:text-xs"
+          className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground md:mb-4 md:text-3xl"
         >
           Avalon Vitality
-        </p>
-
-        <p className="mb-2 font-body text-[12px] font-black uppercase tracking-[0.2em] text-foreground md:text-sm">
-          Mobile IV Therapy
         </p>
 
         <h1
