@@ -46,7 +46,7 @@ export default function AvalonChatWidget() {
   if (hiddenRoute(pathname)) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-3 right-3 z-50 flex flex-col items-end md:bottom-6 md:left-auto md:right-6">
+    <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+4.55rem)] left-3 right-3 z-50 flex flex-col items-end md:bottom-6 md:left-auto md:right-6">
       {open && (
         <div className="av-glass-modal pointer-events-auto mb-3 w-[min(23rem,calc(100vw-1.5rem))] overflow-hidden rounded-[1.4rem] border text-foreground">
           <div className="flex items-start justify-between gap-3 border-b border-foreground/10 px-4 py-4">
@@ -119,10 +119,10 @@ export default function AvalonChatWidget() {
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="flex h-14 w-14 items-center justify-center rounded-full border border-foreground/18 bg-foreground text-background shadow-[0_22px_70px_rgba(0,0,0,0.34)] transition-transform hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 md:h-16 md:w-16"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-foreground/18 bg-foreground text-background shadow-[0_18px_58px_rgba(0,0,0,0.34)] transition-transform hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 md:h-16 md:w-16"
           aria-label={open ? 'Close Avalon concierge chat' : 'Open Avalon concierge chat'}
         >
-          <MessageCircle className="h-6 w-6" strokeWidth={2.2} />
+          <MessageCircle className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.2} />
         </button>
       </div>
     </div>

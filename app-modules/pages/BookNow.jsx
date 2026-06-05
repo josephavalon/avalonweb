@@ -635,12 +635,12 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-3 px-1 pt-1 md:mb-3">
+    <div className="relative mb-2 px-1 pt-0.5 md:mb-3">
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <motion.span
-              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/30 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-xl"
+              className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/30 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-xl md:h-14 md:w-14"
               key={step}
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0.72, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -649,7 +649,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
               <CurrentIcon className="h-4 w-4" strokeWidth={2.7} />
             </motion.span>
             <div className="min-w-0">
-              <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
+              <p className="font-heading text-[1.32rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.55rem]">
                 {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
               </p>
             </div>
@@ -685,7 +685,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
         </div>
       </div>
 
-      <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
+      <div className="relative mt-2 h-2.5 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] md:mt-3 md:h-3">
         <motion.div
           className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
           initial={false}
@@ -717,7 +717,7 @@ function UniversalBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto flex h-[calc(100svh-4.35rem)] max-h-[calc(100svh-4.35rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[7.85rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+    <section className="mx-auto flex h-[calc(100svh-4.35rem)] max-h-[calc(100svh-4.35rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[6.7rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
         step={step}
         onStepSelect={onStepSelect}
@@ -745,28 +745,28 @@ function UniversalBookingFrame({
           {children}
         </div>
       </motion.div>
-      <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
-        <div className="mx-auto max-w-lg overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/82 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl">
-          <div className="grid grid-cols-[86px_minmax(0,128px)_1fr] items-center gap-2 md:flex">
+      <div className="fixed inset-x-0 bottom-0 z-40 px-2 pb-[calc(env(safe-area-inset-bottom)+0.2rem)] pt-0.5 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
+        <div className="mx-auto max-w-lg overflow-hidden rounded-[1rem] border border-foreground/14 bg-background/82 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
+          <div className="grid grid-cols-[72px_minmax(0,116px)_1fr] items-center gap-1.5 md:flex md:gap-2">
           <button
             type="button"
             onClick={onBack}
             disabled={!canGoBack}
             aria-label="Go back"
-            className="flex min-h-[56px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[11px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+            className="flex min-h-[50px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[10px] font-black uppercase tracking-[0.05em] text-foreground/80 disabled:opacity-25 md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
           >
             Back
           </button>
-          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1.5 md:min-w-[142px] md:px-2">
-            <p className="font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/62 md:text-[10px] md:tracking-[0.12em]">Reservation Deposit</p>
-            <p className="mt-1 font-body text-[1.45rem] font-black leading-none text-foreground">{dueNow}</p>
-            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Due after visit {dueAfter}</p>
+          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
+            <p className="font-body text-[7px] font-black uppercase tracking-[0.07em] text-foreground/62 md:text-[10px] md:tracking-[0.12em]">Reservation Deposit</p>
+            <p className="mt-0.5 font-body text-[1.3rem] font-black leading-none text-foreground md:mt-1 md:text-[1.45rem]">{dueNow}</p>
+            <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 md:text-[10px]">Due after visit {dueAfter}</p>
           </div>
           <button
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
-            className={`relative flex min-h-[56px] flex-1 items-center justify-center gap-3 overflow-hidden rounded-xl border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
+            className={`relative flex min-h-[50px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-[13px] font-black uppercase tracking-[0.05em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] md:min-h-[56px] md:gap-3 md:px-4 md:text-sm ${
               canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/18 bg-background/42 text-foreground/58'
             }`}
           >
@@ -782,7 +782,7 @@ function UniversalBookingFrame({
             <ArrowRight className="h-5 w-5" strokeWidth={2.7} />
           </button>
           </div>
-          <div className="mt-1 flex items-center justify-center gap-1.5 font-body text-[10px] font-semibold text-foreground/56">
+          <div className="mt-0.5 flex items-center justify-center gap-1.5 font-body text-[9px] font-semibold text-foreground/56 md:mt-1 md:text-[10px]">
             <ShieldCheck className="h-3 w-3" strokeWidth={2.2} />
             Secure booking
           </div>
@@ -4112,7 +4112,7 @@ export default function BookNow() {
   const renderUniversalStep = () => {
     if (step === 3) {
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-2">
+        <div className="grid h-full min-h-0 content-start gap-2">
           <div className={`${panelCardClass} p-2`}>
             <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
             <button
@@ -4176,9 +4176,9 @@ export default function BookNow() {
     if (step === 0) {
       if (therapyCategoryScreen) {
         return (
-          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
-            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose a therapy base</p>
-            <div className="grid min-h-0 grid-rows-3 gap-2 md:grid-rows-none md:content-start">
+          <div className="grid h-full min-h-0 content-start gap-2.5">
+            <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.2em]`}>Choose a therapy base</p>
+            <div className="grid min-h-0 content-start gap-2 md:grid-rows-none md:content-start">
               {therapyGroups.map((group) => {
                 const GroupIcon = group.icon;
                 return (
@@ -4189,15 +4189,15 @@ export default function BookNow() {
                       setActiveTherapyGroup(group.key);
                       setTherapyCategoryScreen(false);
                     }}
-                    className={`${panelCardClass} grid min-h-0 grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24 md:min-h-[96px]`}
+                    className={`${panelCardClass} grid min-h-[118px] grid-cols-[58px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 md:min-h-[96px] md:grid-cols-[76px_1fr_28px] md:gap-3 md:px-4`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
-                      <GroupIcon className="h-8 w-8" strokeWidth={2.05} />
+                    <span className="relative flex h-11 w-11 items-center justify-center rounded-2xl text-foreground md:h-14 md:w-14">
+                      <GroupIcon className="h-7 w-7 md:h-8 md:w-8" strokeWidth={2.05} />
                     </span>
-                    <span className="relative min-w-0 border-l border-foreground/10 pl-4">
-                      <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
-                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">{group.sub}</span>
+                    <span className="relative min-w-0 border-l border-foreground/10 pl-3 md:pl-4">
+                      <span className="block font-heading text-[1.42rem] uppercase leading-none tracking-normal text-foreground md:text-[1.7rem]">{group.label}</span>
+                      <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62 md:mt-1 md:text-sm">{group.sub}</span>
                     </span>
                     <span className="relative flex justify-end text-foreground/84">
                       <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
@@ -4213,18 +4213,18 @@ export default function BookNow() {
       const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
 
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
-          <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5">
+          <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.2em]`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
           <div className={`grid min-h-0 content-start gap-2 ${
             isDoseTherapyGroup
               ? 'grid-cols-1 auto-rows-[4.15rem]'
               : activeTherapies.length <= 4
-              ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
+                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[8.25rem]'
               : activeTherapies.length <= 6
-                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9rem]'
-                : 'grid-cols-1 auto-rows-[5.55rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
+                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[8rem]'
+                : 'grid-cols-1 auto-rows-[5rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
           }`}>
             {activeTherapies.map((item) => {
               const Icon = item.icon || Droplets;
@@ -4283,23 +4283,23 @@ export default function BookNow() {
       if (!selectedAddonGroup) {
         return (
           <div className="h-full min-h-0">
-            <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:hidden">
-            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-ons</p>
-              <div className="grid min-h-0 content-start gap-2.5 overflow-y-auto pb-2 pr-1">
+            <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5 md:hidden">
+            <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.2em]`}>Choose add-ons</p>
+              <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1">
                 <button
                   type="button"
                   onClick={chooseNoAddons}
-                  className={`${panelCardClass} grid min-h-[88px] grid-cols-[58px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24 ${
+                  className={`${panelCardClass} grid min-h-[76px] grid-cols-[48px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 ${
                     state.addOnDecision && state.addOns.length === 0 ? 'border-foreground/42 bg-foreground/[0.14]' : ''
                   }`}
                 >
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                  <span className="relative flex h-11 w-11 items-center justify-center rounded-xl text-foreground">
-                    <Check className="h-6 w-6" strokeWidth={2.3} />
+                  <span className="relative flex h-10 w-10 items-center justify-center rounded-xl text-foreground">
+                    <Check className="h-5 w-5" strokeWidth={2.3} />
                   </span>
-                  <span className="relative min-w-0 border-l border-foreground/10 pl-4">
-                    <span className="block font-heading text-[1.55rem] uppercase leading-none tracking-normal text-foreground">No add-ons</span>
-                    <span className="mt-1 block font-body text-sm font-bold text-foreground/62">Fastest checkout</span>
+                  <span className="relative min-w-0 border-l border-foreground/10 pl-3">
+                    <span className="block font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground">No add-ons</span>
+                    <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">Fastest checkout</span>
                   </span>
                   <span className="relative flex justify-end text-foreground/84">
                     <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
@@ -4313,15 +4313,15 @@ export default function BookNow() {
                     key={group.key}
                     type="button"
                     onClick={() => setActiveAddonGroup(group.key)}
-                    className={`${panelCardClass} grid min-h-[104px] grid-cols-[64px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
+                    className={`${panelCardClass} grid min-h-[86px] grid-cols-[52px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
-                      <GroupIcon className="h-9 w-9" strokeWidth={2.05} />
+                    <span className="relative flex h-11 w-11 items-center justify-center rounded-2xl text-foreground">
+                      <GroupIcon className="h-7 w-7" strokeWidth={2.05} />
                     </span>
-                    <span className="relative min-w-0 border-l border-foreground/10 pl-4">
-                      <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
-                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">
+                    <span className="relative min-w-0 border-l border-foreground/10 pl-3">
+                      <span className="block font-heading text-[1.45rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
+                      <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">
                         {selectedCount ? `${selectedCount} selected` : group.key === 'iv' ? 'Enhance your IV therapy' : 'Enhance with IM injections'}
                       </span>
                     </span>
@@ -4376,11 +4376,11 @@ export default function BookNow() {
       }
 
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
+        <div className="grid h-full min-h-0 content-start gap-2">
           <button
             type="button"
             onClick={() => setActiveAddonGroup('')}
-            className={`${panelCardClass} flex min-h-[58px] items-center justify-between gap-3 px-3 text-left`}
+            className={`${panelCardClass} flex min-h-[52px] items-center justify-between gap-3 px-3 text-left`}
           >
             <span className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055]">
@@ -4421,7 +4421,7 @@ export default function BookNow() {
 
     if (step === 2) {
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
+        <div className="grid h-full min-h-0 content-start gap-2">
           <div className="grid gap-2 md:grid-cols-2">
             {TIME_INTENTS.map((item) => {
               const active = state.timeIntent === item.key || (item.key === 'asap' && ['today', 'soonest'].includes(state.timeIntent));
@@ -4431,24 +4431,24 @@ export default function BookNow() {
                   key={item.key}
                   type="button"
                   onClick={() => chooseTimeIntent(item.key)}
-                  className={`${panelCardClass} flex min-h-[86px] flex-col justify-between p-3 text-left ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
+                  className={`${panelCardClass} flex min-h-[72px] flex-col justify-between p-2.5 text-left md:min-h-[86px] md:p-3 ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
                 >
                   <span className="flex items-center justify-between">
                     <Icon className="h-5 w-5" strokeWidth={2.45} />
                     {active && <Check className="h-4 w-4" />}
                   </span>
-                  <span className="font-heading text-[1.9rem] uppercase leading-none tracking-normal">{item.label}</span>
+                  <span className="font-heading text-[1.55rem] uppercase leading-none tracking-normal md:text-[1.9rem]">{item.label}</span>
                 </button>
               );
             })}
           </div>
-          <div className={`${panelCardClass} grid min-h-0 grid-rows-[auto_auto_1fr] gap-3 p-3`}>
+          <div className={`${panelCardClass} grid min-h-0 content-start gap-2.5 p-2.5 md:grid-rows-[auto_auto_1fr] md:gap-3 md:p-3`}>
             <div className="flex items-center justify-between">
               <p className={microLabelClass}>Arrival</p>
               <p className="font-body text-sm font-black text-foreground/76">{bookingTimeSummary(state)}</p>
             </div>
             <div className="grid gap-2 md:grid-cols-2">
-              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
+              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-2.5 md:p-3">
                 <span className={microLabelClass}>Date</span>
                 <select
                   aria-label="Choose date"
@@ -4471,7 +4471,7 @@ export default function BookNow() {
                   ))}
                 </select>
               </label>
-              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
+              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-2.5 md:p-3">
                 <span className={microLabelClass}>Time</span>
                 <select
                   aria-label="Choose time"
@@ -4485,7 +4485,7 @@ export default function BookNow() {
                 </select>
               </label>
             </div>
-            <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-sm font-semibold leading-snug text-foreground/62">
+            <div className="flex min-h-[48px] items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 py-2 font-body text-sm font-semibold leading-snug text-foreground/62 md:min-h-0 md:py-0">
               Earliest available Registered Nurse window.
             </div>
           </div>

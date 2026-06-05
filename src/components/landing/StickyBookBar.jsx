@@ -32,11 +32,11 @@ export default function StickyBookBar() {
       className="fixed inset-x-0 bottom-0 z-[70] md:hidden"
       aria-label="Quick booking bar"
     >
-      <div className="relative isolate mx-2 mb-1 overflow-hidden rounded-[18px]">
+      <div className="relative isolate mx-2 mb-[calc(env(safe-area-inset-bottom)+0.25rem)] overflow-hidden rounded-[16px]">
         <motion.div whileTap={premiumTap}>
           <Link
             to={BOOK_URL}
-            className="av-glass-widget group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[15px] border px-4 py-2 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/66 transition-colors duration-base ease-editorial hover:text-foreground"
+            className="av-glass-widget group flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[14px] border px-4 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.15em] text-foreground/66 transition-colors duration-base ease-editorial hover:text-foreground"
           >
             Book
             <ArrowRight className="h-4 w-4 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2.35} />
