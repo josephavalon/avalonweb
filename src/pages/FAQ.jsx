@@ -16,7 +16,7 @@ export default function FAQPage() {
         {
           '@type': 'Question',
           name: 'What is Avalon Vitality?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Avalon Vitality is a mobile IV therapy and longevity service serving the San Francisco Bay Area. RN-administered, MD-supervised.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'Avalon Vitality is a mobile IV therapy and longevity service serving the San Francisco Bay Area. administered by registered nurses, MD-supervised.' },
         },
         {
           '@type': 'Question',

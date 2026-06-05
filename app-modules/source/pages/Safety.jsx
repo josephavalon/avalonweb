@@ -29,7 +29,7 @@ const TIMELINE = [
     icon: ClipboardList,
     steps: [
       'Complete a brief health intake form at booking.',
-      'An RN reviews your history and flags any concerns.',
+      'An Registered Nurse reviews your history and flags any concerns.',
       'You are contacted directly if clarification is needed before arrival.',
     ],
   },
@@ -37,7 +37,7 @@ const TIMELINE = [
     phase: 'During',
     icon: Stethoscope,
     steps: [
-      'Your RN monitors you throughout the entire session.',
+      'Your registered nurse monitors you throughout the entire session.',
       'Typical sessions run 45–60 minutes.',
       'You remain seated comfortably — at home, at work, or on-site.',
     ],
@@ -46,7 +46,7 @@ const TIMELINE = [
     phase: 'After',
     icon: Shield,
     steps: [
-      'Your RN provides post-session guidance before departing.',
+      'Your registered nurse provides post-session guidance before departing.',
       'Direct contact information is left for any follow-up questions.',
       'All session notes are retained in your secure health record.',
     ],
@@ -56,15 +56,15 @@ const TIMELINE = [
 const FAQS = [
   {
     q: 'How does Avalon screen for safety before a session?',
-    a: 'Every client completes a health intake form at booking. A licensed RN reviews the form before the session. If any flags are identified, the RN contacts you to discuss next steps — which may include a physician consultation before proceeding.',
+    a: 'Every client completes a health intake form at booking. A licensed registered nurse reviews the form before the session. If any flags are identified, the Registered Nurse contacts you to discuss next steps — which may include a physician consultation before proceeding.',
   },
   {
     q: 'What happens if I have an adverse reaction?',
-    a: 'Your RN follows protocol and contacts emergency services when clinically indicated.',
+    a: 'Your registered nurse follows protocol and contacts emergency services when clinically indicated.',
   },
   {
-    q: 'Are your RNs licensed in California?',
-    a: 'Yes. All Avalon registered nurses hold current California RN licenses issued by the California Board of Registered Nursing. Credentials are verified before employment and maintained on file.',
+    q: 'Are your registered nurses licensed in California?',
+    a: 'Yes. All Avalon registered nurses hold current California Registered Nurse licenses issued by the California Board of Registered Nursing. Credentials are verified before employment and maintained on file.',
   },
   {
     q: 'Is the IV equipment sterile?',
@@ -223,7 +223,7 @@ export default function Safety() {
               {[
                 {
                   title: 'Emergency',
-                  body: 'RNs follow protocol. Emergency services are contacted when clinically indicated.',
+                  body: 'Registered Nurses follow protocol. Emergency services are contacted when clinically indicated.',
                   icon: Phone,
                   tone: 'text-red-300 bg-red-500/10',
                 },

@@ -51,7 +51,7 @@ export default function Hero() {
           className="font-body text-[13px] md:text-sm leading-relaxed mt-5 md:mt-6 uppercase tracking-[0.16em]"
           style={{ color: 'hsl(var(--foreground) / 0.66)' }}
         >
-          Bay Area.<br />Licensed RNs.<br />At home.
+          Bay Area.<br />Licensed Registered Nurses.<br />At home.
         </p>
         </div>
 

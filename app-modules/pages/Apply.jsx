@@ -43,7 +43,7 @@ const validators = {
 export default function Apply() {
   useSeo({
     title: 'Request a Visit — Avalon Vitality',
-    description: 'Request an Avalon mobile IV therapy visit in the SF Bay Area. RN-administered, MD-supervised. No payment until confirmed.',
+    description: 'Request an Avalon mobile IV therapy visit in the SF Bay Area. administered by registered nurses, MD-supervised. No payment until confirmed.',
     path: '/apply',
   });
 
@@ -191,7 +191,7 @@ export default function Apply() {
             REQUEST A VISIT
           </h1>
           <p className="font-body text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-            Tell us where and when. We'll text you to confirm your RN and arrival window.
+            Tell us where and when. We'll text you to confirm your registered nurse and arrival window.
           </p>
           <p className="font-body text-xs text-muted-foreground/60 mt-2">
             No charge until your appointment is confirmed.
@@ -345,7 +345,7 @@ export default function Apply() {
             </button>
 
             <p className="text-center font-body text-xs text-muted-foreground/75 pt-1">
-              No charge today. We'll text you to confirm availability and schedule your RN.
+              No charge today. We'll text you to confirm availability and schedule your registered nurse.
             </p>
 
             <p className="text-center font-body text-[10px] text-muted-foreground/50 leading-relaxed max-w-sm mx-auto">

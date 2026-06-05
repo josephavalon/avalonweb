@@ -53,7 +53,7 @@ export const clientHeatMapNeighborhoods = [
     primary: 'Membership',
     secondary: 'Recovery menu',
     signal: 'High household spend, landmark residential wealth, and strong in-home service adoption.',
-    action: 'Seed member referrals through concierge RNs and wellness memberships.',
+    action: 'Seed member referrals through concierge Registered Nurses and wellness memberships.',
     note: 'Best for recurring NAD, recovery, and custom protocol packages.',
   },
   {

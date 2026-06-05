@@ -214,7 +214,7 @@ export default function MemberAccount() {
           <p className="font-body text-[10px] uppercase tracking-[0.24em]" style={{ color: DIM }}>Visit Defaults</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <ChoiceRow label="Best window" value={prefs.window} values={['Afternoons', 'Morning', 'Evening']} onChange={(value) => updatePrefs('window', value)} />
-            <ChoiceRow label="RN note" value={prefs.nurseNotes} values={['Prefers slower drip rate', 'Left arm preferred', 'Quiet visit']} onChange={(value) => updatePrefs('nurseNotes', value)} />
+            <ChoiceRow label="Registered nurse note" value={prefs.nurseNotes} values={['Prefers slower drip rate', 'Left arm preferred', 'Quiet visit']} onChange={(value) => updatePrefs('nurseNotes', value)} />
           </div>
         </section>
 

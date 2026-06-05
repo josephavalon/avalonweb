@@ -219,7 +219,7 @@ function fallbackPoints(page) {
     ];
   }
   return [
-    'Licensed RN appointment execution',
+    'Licensed Registered Nurse appointment execution',
     'Clinician-reviewed intake before service',
     'Final service subject to clinical approval',
   ];

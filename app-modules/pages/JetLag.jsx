@@ -32,7 +32,7 @@ const ADD_ONS = [
 export default function JetLag() {
   useSeo({
     title: 'Jet Lag IV Therapy San Francisco — Avalon Vitality',
-    description: 'Travel hydration support with mobile IV therapy in San Francisco. Delivered to your hotel or home by licensed RNs after clinical approval.',
+    description: 'Travel hydration support with mobile IV therapy in San Francisco. Delivered to your hotel or home by licensed registered nurses after clinical approval.',
     path: '/jet-lag',
   });
 

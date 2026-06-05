@@ -129,7 +129,7 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
     },
     {
       icon: Sparkles,
-      label: 'RN',
+      label: 'Registered Nurse',
       value: 'Open',
       active: current >= 3,
     },
@@ -180,7 +180,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
           Start <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
         </Link>
         <p className="mt-4 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/38">
-          Bay Area · Licensed RN
+          Bay Area · Licensed Registered Nurse
         </p>
       </div>
     );
@@ -558,7 +558,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       {/* Notes */}
       <div>
-        <label htmlFor="co-medical-notes" className={labelClass}>RN note</label>
+        <label htmlFor="co-medical-notes" className={labelClass}>Registered nurse note</label>
         <textarea
           id="co-medical-notes"
           {...register('notes')}

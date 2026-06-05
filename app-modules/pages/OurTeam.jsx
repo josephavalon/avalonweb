@@ -24,8 +24,8 @@ const CLINICAL = [
   {
     name: 'Stephanie Weeks',
     role: 'Director of Nursing',
-    credentials: 'BSN, RN — 12+ Years IV Therapy',
-    bio: "Stephanie brings over a decade of IV therapy and critical care nursing to Avalon. She built our clinical protocols from the ground up, trains every nurse on the Avalon standard, and personally oversees quality assurance. Former ICU and infusion center RN.",
+    credentials: 'BSN, Registered Nurse — 12+ Years IV Therapy',
+    bio: "Stephanie brings over a decade of IV therapy and critical care nursing to Avalon. She built our clinical protocols from the ground up, trains every nurse on the Avalon standard, and personally oversees quality assurance. Former ICU and infusion center Registered Nurse.",
   },
 ];
 
@@ -45,7 +45,7 @@ const NURSING_TEAM = [
   {
     initials: 'SK',
     name: 'Sarah K.',
-    role: 'RN, BSN',
+    role: 'Registered Nurse, BSN',
     credential: 'Registered Nurse',
     specialty: 'Critical Care & IV Therapy',
     experience: '8 years',
@@ -57,7 +57,7 @@ const NURSING_TEAM = [
   {
     initials: 'MT',
     name: 'Marcus T.',
-    role: 'RN',
+    role: 'Registered Nurse',
     credential: 'Registered Nurse',
     specialty: 'Emergency Medicine',
     experience: '6 years',
@@ -69,7 +69,7 @@ const NURSING_TEAM = [
   {
     initials: 'PL',
     name: 'Priya L.',
-    role: 'RN, BSN',
+    role: 'Registered Nurse, BSN',
     credential: 'Registered Nurse',
     specialty: 'Oncology & Wellness',
     experience: '5 years',
@@ -81,7 +81,7 @@ const NURSING_TEAM = [
   {
     initials: 'DC',
     name: 'David C.',
-    role: 'RN',
+    role: 'Registered Nurse',
     credential: 'Registered Nurse',
     specialty: 'Sports Medicine & Recovery',
     experience: '7 years',
@@ -293,7 +293,7 @@ export default function OurTeam() {
               {
                 Icon: Shield,
                 title: 'Licensed & Supervised',
-                body: 'Every nurse is a California-licensed RN with IV certification and 2+ years clinical experience. All protocols are physician-reviewed.',
+                body: 'Every nurse is a California-licensed registered nurse with IV certification and 2+ years clinical experience. All protocols are physician-reviewed.',
               },
               {
                 Icon: Home,

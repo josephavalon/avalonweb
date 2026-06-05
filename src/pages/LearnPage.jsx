@@ -208,7 +208,7 @@ export default function LearnPage() {
               </div>
               <div className="space-y-6 font-body text-base leading-relaxed text-foreground/62">
                 <p>
-                  Avalon writes education pages to help clients understand the mobile workflow before they book. The practical sequence is request, intake, consent, clinical review, appointment confirmation, RN arrival, visit closeout, and follow-up when needed.
+                  Avalon writes education pages to help clients understand the mobile workflow before they book. The practical sequence is request, intake, consent, clinical review, appointment confirmation, registered nurse arrival, visit closeout, and follow-up when needed.
                 </p>
                 <p>
                   Mobile service does not remove clinical responsibility. IV-related services are subject to eligibility, location, nurse availability, supply readiness, and clinical approval. The care team may adjust the protocol or decline service when a mobile appointment is not appropriate.

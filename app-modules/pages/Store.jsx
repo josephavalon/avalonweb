@@ -405,7 +405,7 @@ function VisitCard({ session, label }) {
         {[
           ['Mobile', MapPin],
           [session.duration || session.doses?.[0]?.duration || '45-60 min', BatteryCharging],
-          ['RN', ShieldCheck],
+          ['Registered Nurse', ShieldCheck],
         ].map(([text, IconItem]) => (
           <div key={text} className="av-rect-card flex min-h-[88px] items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-background/45 px-4">
             <IconItem className="h-4 w-4 shrink-0 text-foreground/42" strokeWidth={1.6} />

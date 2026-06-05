@@ -12,13 +12,13 @@ const EASE = [0.16, 1, 0.3, 1];
 
 const stats = [
   { value: 'Site', label: 'Office / event', icon: Building2 },
-  { value: 'RN', label: 'California licensed', icon: ShieldCheck },
+  { value: 'Registered Nurse', label: 'California licensed', icon: ShieldCheck },
   { value: 'Bill', label: 'One invoice', icon: CalendarCheck },
 ];
 
 const plan = [
   { value: '1', label: 'Pick day' },
-  { value: '2', label: 'RN team arrives' },
+  { value: '2', label: 'registered nurse team arrives' },
   { value: '3', label: 'Employees rotate in' },
 ];
 
@@ -54,7 +54,7 @@ export default function Corporate() {
               Team IV
             </h1>
             <p className="mt-5 max-w-lg font-body text-base font-semibold leading-relaxed text-foreground/64 md:text-lg">
-              Licensed RN visits for offices, offsites, and executive teams.
+              Licensed Registered Nurse visits for offices, offsites, and executive teams.
             </p>
             <div className="mt-7">
               <PremiumButton

@@ -18,7 +18,7 @@ import {
 
 const locationServices = [
   { icon: MapPin, title: 'Mobile Appointments', body: 'Home, hotel, office, and launch appointments can be reviewed for eligible addresses.' },
-  { icon: ShieldCheck, title: 'IV Therapy', body: 'IV hydration support and selected protocols are clinician-reviewed before RN dispatch.' },
+  { icon: ShieldCheck, title: 'IV Therapy', body: 'IV hydration support and selected protocols are clinician-reviewed before registered nurse dispatch.' },
   { icon: Calendar, title: 'NAD+ Review', body: 'NAD+ appointment requests are reviewed for eligibility, visit length, and service setting.' },
   { icon: Hotel, title: 'Hotel Service', body: 'Avalon can support concierge and VIP hotel requests when location and clinical review align.' },
   { icon: Building2, title: 'Launches', body: 'Private launches, corporate programs, and recovery lounges can be planned in advance.' },

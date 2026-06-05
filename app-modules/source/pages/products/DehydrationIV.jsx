@@ -11,7 +11,7 @@ export default function DehydrationIV() {
   const oneTimePerks = [
     '1000mL Lactated Ringers',
     'Delivered to you',
-    'California-licensed RNs',
+    'California-licensed registered nurses',
     'Physician supervised',
     'In-home or clinic',
   ];
@@ -20,7 +20,7 @@ export default function DehydrationIV() {
     '1 IV per month included',
     '1000mL Lactated Ringers per session',
     'Delivered to you',
-    'California-licensed RNs',
+    'California-licensed registered nurses',
     'Physician supervised',
     'Priority scheduling',
     'Plan client pricing',

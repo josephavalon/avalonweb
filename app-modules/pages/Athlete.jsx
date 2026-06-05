@@ -49,7 +49,7 @@ const SPORTS = [
 ];
 
 const STATS = [
-  { value: 'On-site', label: 'RN comes to you' },
+  { value: 'On-site', label: 'Registered Nurse comes to you' },
   { value: 'Zero', label: 'Waiting rooms' },
   { value: 'SF Bay Area', label: 'Service area' },
 ];
@@ -201,7 +201,7 @@ export default function Athlete() {
                   We Come to You
                 </h2>
                 <p className="font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-xl mb-6">
-                  Book for your whole team. We come to your facility, hotel, or training site. RN-administered sessions run concurrently for groups. Ideal for pre-competition prep and post-event recovery.
+                  Book for your whole team. We come to your facility, hotel, or training site. administered by registered nurses sessions run concurrently for groups. Ideal for pre-competition prep and post-event recovery.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   {[

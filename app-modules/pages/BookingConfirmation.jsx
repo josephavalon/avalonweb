@@ -212,7 +212,7 @@ export default function BookingConfirmation() {
 
   useSeo({
     title: 'Session Confirmed — Avalon Vitality',
-    description: 'Your IV wellness session has been confirmed. A licensed RN will be in touch shortly.',
+    description: 'Your IV wellness session has been confirmed. A licensed registered nurse will be in touch shortly.',
     path: '/booking/confirmation',
   });
 
@@ -362,7 +362,7 @@ export default function BookingConfirmation() {
         items: localBooking?.items || [],
         subtotal: appt.price ?? localBooking?.subtotal,
         status: localBooking?.status || 'Scheduling received',
-        nextStep: localBooking?.manualReview ? 'Clinical review before RN assignment' : 'RN assignment and arrival text',
+        nextStep: localBooking?.manualReview ? 'Clinical review before registered nurse assignment' : 'registered nurse assignment and arrival text',
         gfe: localBooking?.gfe || 'Pending',
         nurse: localBooking?.nurse || 'Unassigned',
         payment: paymentSuccess ? 'Payment received' : localBooking?.payment || 'Pending',
@@ -494,7 +494,7 @@ export default function BookingConfirmation() {
               <div className="mt-3 rounded-[1.25rem] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3 text-left backdrop-blur-xl">
                 <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-foreground/38">Next</p>
                 <p className="mt-1 font-body text-sm font-semibold leading-snug text-foreground/72">
-                  Clinical review, RN assignment, arrival text.
+                  Clinical review, registered nurse assignment, arrival text.
                 </p>
               </div>
             )}

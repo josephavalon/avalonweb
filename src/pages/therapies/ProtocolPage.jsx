@@ -35,7 +35,7 @@ export default function ProtocolPage() {
       name: `${protocol.label} IV Therapy`,
       description: protocol.desc || protocol.tagline,
       procedureType: 'Mobile IV therapy',
-      howPerformed: 'A licensed RN administers the protocol after clinical clearance and eligibility review.',
+      howPerformed: 'A licensed registered nurse administers the protocol after clinical clearance and eligibility review.',
       preparation: 'Clinical clearance and intake are required before treatment. Final protocol may be adjusted by the clinical team.',
       followup: 'Post-visit instructions and support are provided when appropriate.',
       provider: {
@@ -108,7 +108,7 @@ export default function ProtocolPage() {
             )}
             <GlassCard tone="soft" radius="1.35rem" className="av-rect-card min-h-[120px] p-4">
               <ShieldCheck className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
-              <p className="mt-4 font-heading text-4xl uppercase leading-none text-foreground">RN</p>
+              <p className="mt-4 font-heading text-4xl uppercase leading-none text-foreground">Registered Nurse</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Mobile</p>
             </GlassCard>
             <GlassCard tone="soft" radius="1.35rem" className="av-rect-card min-h-[120px] p-4">
@@ -200,7 +200,7 @@ export default function ProtocolPage() {
               <p className="mt-2 font-body text-sm font-semibold leading-snug text-foreground/62">{getBestFor(protocol)}</p>
             </GlassCard>
             <div className="mt-6 grid gap-2 md:grid-cols-2">
-              {['Clinical review', 'Licensed RN', 'Protocol may adjust'].map((item) => (
+              {['Clinical review', 'Licensed Registered Nurse', 'Protocol may adjust'].map((item) => (
                 <GlassCard key={item} tone="soft" radius="1.35rem" className="flex items-center gap-2 px-3 py-3">
                   <Check className="h-3.5 w-3.5 text-foreground/45" strokeWidth={1.8} />
                   <span className="font-body text-xs text-foreground/58">{item}</span>

@@ -122,7 +122,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
             Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
           <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">
-            No charge until your RN confirms availability.
+            No charge until your registered nurse confirms availability.
           </p>
         </div>
       </div>
@@ -348,7 +348,7 @@ export default function RecoveryMenuSection() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-body text-xs text-foreground">Number of guests</p>
-                            <p className="font-body text-[10px] text-foreground/40 mt-0.5">We bring additional RNs for groups of 4+</p>
+                            <p className="font-body text-[10px] text-foreground/40 mt-0.5">We bring additional Registered Nurses for groups of 4+</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <button type="button" onClick={() => setGroupCount((c) => Math.max(1, c - 1))} className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/20 text-foreground/60 hover:text-foreground transition-colors text-lg leading-none">−</button>

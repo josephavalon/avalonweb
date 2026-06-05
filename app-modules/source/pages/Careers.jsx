@@ -16,7 +16,7 @@ const REVEAL = {
 
 const ROLES = [
   {
-    title: 'Field RN — San Francisco Bay Area',
+    title: 'Field Registered Nurse — San Francisco Bay Area',
     type: 'Contract (1099)',
     location: 'San Francisco, CA',
     description: 'Administer IV therapy and injections in client homes and partner venues. Flexible scheduling, competitive per-visit pay.',
@@ -130,21 +130,21 @@ export default function Careers() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
               className="font-heading text-3xl md:text-5xl text-foreground uppercase leading-[0.95] mb-6"
             >
-              Are You an RN?
+              Are You an Registered Nurse?
             </motion.h2>
             <motion.p
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.14 }}
               className="font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-2xl mb-4"
             >
-              We partner with licensed RNs as independent 1099 field nurses. You set your own schedule. We handle the clients, protocols, and supplies. You show up and deliver exceptional care.
+              We partner with licensed registered nurses as independent 1099 field nurses. You set your own schedule. We handle the clients, protocols, and supplies. You show up and deliver exceptional care.
             </motion.p>
             <motion.p
               {...REVEAL}
               transition={{ duration: 0.7, ease: EASE, delay: 0.2 }}
               className="font-body text-sm text-foreground/50 leading-relaxed max-w-2xl mb-10"
             >
-              IV experience preferred. Active California RN license required. Competitive per-visit compensation with flexible scheduling across the Bay Area.
+              IV experience preferred. Active California Registered Nurse license required. Competitive per-visit compensation with flexible scheduling across the Bay Area.
             </motion.p>
             <motion.div
               {...REVEAL}

@@ -103,7 +103,7 @@ export default function OurStory() {
               {
                 Icon: Stethoscope,
                 title: 'Expert medical team',
-                desc: 'Board-certified clinicians, RNs, and longevity-trained nurses.',
+                desc: 'Board-certified clinicians, Registered Nurses, and longevity-trained nurses.',
               },
               {
                 Icon: HeartPulse,
@@ -312,13 +312,13 @@ export default function OurStory() {
                 <span className="font-heading text-xl text-accent tracking-wider">SW</span>
               </div>
               <h3 className="font-heading text-h4 text-foreground tracking-wide mb-1">
-                Stephanie Weeks, RN
+                Stephanie Weeks, Registered Nurse
               </h3>
               <p className="text-micro tracking-[0.2em] text-accent font-body uppercase mb-5">
                 Lead Registered Nurse
               </p>
               <p className="font-body text-body-sm text-muted-foreground leading-relaxed">
-                Lead RN for field standards, sterility, and bedside care.
+                Lead Registered Nurse for field standards, sterility, and bedside care.
               </p>
             </motion.div>
           </div>

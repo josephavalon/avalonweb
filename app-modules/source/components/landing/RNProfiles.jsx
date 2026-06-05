@@ -10,21 +10,21 @@ const RNS = [
     name: 'Alexandra R.',
     years: 8,
     specialties: ['Emergency Medicine', 'IV Therapy'],
-    license: 'CA RN license verified on file',
+    license: 'CA Registered Nurse license verified on file',
   },
   {
     initials: 'M.T.',
     name: 'Marcus T.',
     years: 6,
     specialties: ['Critical Care', 'Sports Medicine'],
-    license: 'CA RN license verified on file',
+    license: 'CA Registered Nurse license verified on file',
   },
   {
     initials: 'J.L.',
     name: 'Jessica L.',
     years: 5,
     specialties: ['Oncology', 'IV Therapy'],
-    license: 'CA RN license verified on file',
+    license: 'CA Registered Nurse license verified on file',
   },
 ];
 
@@ -93,7 +93,7 @@ export default function RNProfiles() {
           Our Team
         </p>
         <h2 className="font-heading text-5xl md:text-7xl text-foreground uppercase leading-none mb-4">
-          The RNs
+          The Registered Nurses
         </h2>
         <p className="font-body text-sm text-foreground/55 leading-relaxed max-w-xl">
           Licensed registered nurses. Emergency-trained. Background-checked. Dedicated to your care.

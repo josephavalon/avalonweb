@@ -376,7 +376,7 @@ export default function ProductDetail() {
 
             <div className="mt-4 flex flex-wrap gap-2 md:mt-7">
               <TrustItem icon={MapPin} title="Bay Area mobile" />
-              <TrustItem icon={UserRoundCheck} title="Licensed RN" />
+              <TrustItem icon={UserRoundCheck} title="Licensed Registered Nurse" />
               <TrustItem icon={ShieldCheck} title="Clinical review" />
             </div>
 

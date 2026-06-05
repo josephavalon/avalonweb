@@ -581,7 +581,7 @@ export default function B2B() {
           </p>
 
           <p className="mt-3 md:mt-4 font-body text-[11px] md:text-xs tracking-[0.24em] uppercase text-center text-white/45">
-            RN-administered · physician-supervised · mobile
+            administered by registered nurses · physician-supervised · mobile
           </p>
         </div>
       </section>
@@ -975,7 +975,7 @@ export default function B2B() {
             Avalon Vitality &middot; California-licensed clinicians
           </p>
           <p className="text-sm md:text-base leading-relaxed text-white/55 max-w-xl">
-            Mobile recovery, RN-administered.
+            Mobile recovery, administered by registered nurses.
           </p>
           <Link to="/" className="b2b-display inline-flex min-h-10 items-center gap-2 text-xs uppercase tracking-[0.25em] transition-colors hover:b2b-pink md:text-sm">
             Back to avalonvitality.co

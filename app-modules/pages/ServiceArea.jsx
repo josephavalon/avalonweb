@@ -125,7 +125,7 @@ const serviceAreaJsonLd = {
         },
       })),
       description:
-        'RN-administered mobile IV drips and IM injections delivered to homes, hotels, offices, and events throughout the San Francisco Bay Area.',
+        'administered by registered nurses mobile IV drips and IM injections delivered to homes, hotels, offices, and events throughout the San Francisco Bay Area.',
     },
     {
       '@type': 'Service',
@@ -283,7 +283,7 @@ export default function ServiceArea() {
   useSeo({
     title: 'Mobile IV Therapy Service Area in the San Francisco Bay Area — Avalon Vitality',
     description:
-      'Avalon Vitality delivers RN-administered mobile IV therapy and IM injections across San Francisco, Oakland, Berkeley, Marin, Peninsula, South Bay, and East Bay cities.',
+      'Avalon Vitality delivers administered by registered nurses mobile IV therapy and IM injections across San Francisco, Oakland, Berkeley, Marin, Peninsula, South Bay, and East Bay cities.',
     path: '/service-area',
     jsonLd: serviceAreaJsonLd,
   });
@@ -306,7 +306,7 @@ export default function ServiceArea() {
               className="font-body text-sm md:text-base text-foreground/55 max-w-xl mb-10"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
             >
-              Licensed RN visits across San Francisco, Marin, the Peninsula, South Bay, and East Bay.
+              Licensed Registered Nurse visits across San Francisco, Marin, the Peninsula, South Bay, and East Bay.
             </motion.p>
 
             {/* Zip code checker */}
@@ -406,7 +406,7 @@ export default function ServiceArea() {
             {[
               { label: 'Same-day', desc: 'Most ZIPs before 2pm.' },
               { label: 'Travel included', desc: 'Standard zone.' },
-              { label: 'Hotel-ready', desc: 'RN to room.' },
+              { label: 'Hotel-ready', desc: 'registered nurse to room.' },
             ].map((f, i) => (
               <motion.div
                 key={f.label}

@@ -9,7 +9,7 @@ export const AVALON_CONCIERGE_PROMPTS = [
 
 const RESPONSE_BANK = {
   greeting:
-    'Welcome to Avalon. I can help with booking, therapies, pricing, memberships, service area, and checkout. For clinical guidance, the nurse reviews your intake after you book.',
+    'I can help with booking, therapies, pricing, memberships, service area, and checkout. For clinical guidance, the nurse reviews your intake after you book.',
   booking:
     'Book in five steps: choose therapy, add-ons, date/time, address, then confirm and pay. After checkout, Avalon reviews intake and a nurse texts you shortly.',
   services:
@@ -110,4 +110,3 @@ export function getAvalonConciergeReply(rawInput = '') {
   const match = INTENTS.find((intent) => hasAnyTerm(input, intent.terms));
   return RESPONSE_BANK[match?.key] || RESPONSE_BANK.fallback;
 }
-

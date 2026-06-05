@@ -14,14 +14,14 @@ const STEPS = [
   {
     n: '02',
     title: 'Confirm',
-    preview: 'RN · arrival window',
-    desc: 'We confirm the visit and RN details.',
+    preview: 'Registered Nurse · arrival window',
+    desc: 'We confirm the visit and registered nurse details.',
   },
   {
     n: '03',
     title: 'Recover',
     preview: '30-60 min',
-    desc: 'Your RN handles setup and care.',
+    desc: 'Your registered nurse handles setup and care.',
   },
 ];
 

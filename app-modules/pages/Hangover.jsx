@@ -32,7 +32,7 @@ const ADD_ONS = [
 export default function Hangover() {
   useSeo({
     title: 'Hangover IV Support San Francisco — Avalon Vitality',
-    description: "Same-day hydration support delivered to your home or hotel in San Francisco. Licensed RNs. Clinical review required before treatment.",
+    description: "Same-day hydration support delivered to your home or hotel in San Francisco. Licensed Registered Nurses. Clinical review required before treatment.",
     path: '/hangover',
   });
 

@@ -46,7 +46,7 @@ const BRAND_ASSETS = [
 const FAST_FACTS = [
   { label: 'Founded', value: '2025' },
   { label: 'Location', value: 'San Francisco, CA' },
-  { label: 'Clinicians', value: 'Licensed RNs' },
+  { label: 'Clinicians', value: 'Licensed Registered Nurses' },
   { label: 'Delivery', value: 'Mobile — at your location' },
   { label: 'Model', value: 'Subscription + à la carte' },
   { label: 'Launch', value: 'SF Bay Area, 2026' },
@@ -226,7 +226,7 @@ export default function Press() {
               <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/35 mb-6">Founder</p>
               <div className="border-l-2 border-accent/40 pl-6 md:pl-8">
                 <p className="font-heading text-2xl md:text-3xl text-foreground/70 uppercase leading-[1.1] mb-6 italic">
-                  "Most wellness brands sell you supplements and wish you luck. We show up at your door with a licensed RN. That's not a service — that's a relationship with your health."
+                  "Most wellness brands sell you supplements and wish you luck. We show up at your door with a licensed registered nurse. That's not a service — that's a relationship with your health."
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-foreground/[0.06] border border-foreground/[0.08] flex items-center justify-center">

@@ -71,7 +71,7 @@ export default function Reviews() {
             {[
               ['5.0', 'Client rating'],
               ['90min', 'Arrival window'],
-              ['RN', 'Administered'],
+              ['Registered Nurse', 'Administered'],
             ].map(([value, label]) => (
               <div key={label} className="av-treatment-card overflow-hidden rounded-xl border px-3 py-3">
                 <p className="font-heading text-2xl text-foreground leading-none tracking-[0.04em]">{value}</p>

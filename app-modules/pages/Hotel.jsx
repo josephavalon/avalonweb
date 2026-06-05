@@ -12,14 +12,14 @@ import PremiumButton from '@/components/ui/PremiumButton';
 const EASE = [0.16, 1, 0.3, 1];
 
 const status = [
-  { icon: ShieldCheck, value: 'RN', label: 'Licensed' },
+  { icon: ShieldCheck, value: 'Registered Nurse', label: 'Licensed' },
   { icon: Clock, value: '45m', label: 'Visit' },
   { icon: MapPin, value: 'SF', label: 'Bay hotels' },
 ];
 
 const steps = [
   { value: '1', label: 'Book' },
-  { value: '2', label: 'RN to room' },
+  { value: '2', label: 'registered nurse to room' },
   { value: '3', label: 'Recover' },
 ];
 
@@ -28,7 +28,7 @@ const fit = ['Jet lag', 'Late nights', 'Events', 'Work travel'];
 export default function Hotel() {
   useSeo({
     title: 'Hotel IV Delivery — Avalon Vitality',
-    description: 'Licensed RN hotel IV therapy in the San Francisco Bay Area.',
+    description: 'Licensed Registered Nurse hotel IV therapy in the San Francisco Bay Area.',
     path: '/hotel',
   });
 
@@ -49,7 +49,7 @@ export default function Hotel() {
               In-Room IV
             </h1>
             <p className="mt-5 max-w-lg font-body text-base font-semibold leading-relaxed text-foreground/64 md:text-lg">
-              Licensed RN to your hotel room. No lobby. No clinic.
+              Licensed Registered Nurse to your hotel room. No lobby. No clinic.
             </p>
             <div className="mt-7 flex flex-col gap-2 sm:flex-row">
               <PremiumButton

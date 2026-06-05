@@ -110,7 +110,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
           <Link to="/book" className="flex items-center justify-center gap-2.5 w-full py-4 font-body text-sm tracking-widest uppercase font-semibold rounded-2xl bg-accent text-background hover:bg-accent/90 transition-colors">
             Request Appointment <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
-          <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">A licensed RN will confirm availability and arrive at your location.</p>
+          <p className="font-body text-[10px] text-center text-foreground/30 tracking-wide">A licensed registered nurse will confirm availability and arrive at your location.</p>
         </div>
       </div>
     </motion.div>

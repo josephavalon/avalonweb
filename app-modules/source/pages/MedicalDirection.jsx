@@ -23,12 +23,12 @@ const PILLARS = [
   {
     icon: UserCheck,
     title: 'Standing Orders',
-    desc: 'RNs conduct sessions under standing orders reviewed and maintained by the medical director. Standing orders are updated as clinical evidence evolves.',
+    desc: 'Registered Nurses conduct sessions under standing orders reviewed and maintained by the medical director. Standing orders are updated as clinical evidence evolves.',
   },
   {
     icon: Stethoscope,
     title: 'Available for Consultation',
-    desc: 'Physician availability is maintained during all Avalon operating hours. RNs can escalate any clinical concern in real time.',
+    desc: 'Physician availability is maintained during all Avalon operating hours. Registered Nurses can escalate any clinical concern in real time.',
   },
 ];
 
@@ -41,7 +41,7 @@ const PROTOCOL_STEPS = [
   {
     step: '02',
     title: 'Standing Order Issuance',
-    desc: 'Approved protocols are issued as standing orders to the RN team. Orders define dosage ranges, administration parameters, and contraindication criteria.',
+    desc: 'Approved protocols are issued as standing orders to the registered nurse team. Orders define dosage ranges, administration parameters, and contraindication criteria.',
   },
   {
     step: '03',
@@ -171,7 +171,7 @@ export default function MedicalDirection() {
                   California Compliance
                 </h2>
                 <p className="font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-2xl">
-                  Avalon operates in compliance with California Board of Registered Nursing regulations. All RNs hold current California RN licenses. Licensure is verified before employment and maintained on file. We do not operate outside our licensed scope.
+                  Avalon operates in compliance with California Board of Registered Nursing regulations. All Registered Nurses hold current California Registered Nurse licenses. Licensure is verified before employment and maintained on file. We do not operate outside our licensed scope.
                 </p>
               </div>
             </motion.div>

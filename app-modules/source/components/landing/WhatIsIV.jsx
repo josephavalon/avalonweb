@@ -13,9 +13,9 @@ const MODALITIES = [
       { value: 'Direct', label: 'IV Delivery',    icon: FlaskConical },
       { value: '30min',  label: 'Avg Session',      icon: Clock },
       { value: 'MD',     label: 'Clinical Oversight', icon: ShieldCheck },
-      { value: 'RN',     label: 'Secure Intake',      icon: Stethoscope },
+      { value: 'Registered Nurse',     label: 'Secure Intake',      icon: Stethoscope },
       { value: '100%',   label: 'Customizable',     icon: SlidersHorizontal },
-      { value: 'RN',     label: 'Licensed Nurses',  icon: UserCheck },
+      { value: 'Registered Nurse',     label: 'Licensed Nurses',  icon: UserCheck },
     ],
     faq: [
       {
@@ -24,11 +24,11 @@ const MODALITIES = [
       },
       {
         title: 'How long does a session take?',
-        body: 'Most sessions run 30–45 minutes. Our licensed RN sets up at your location — home, hotel, or office — with zero waiting room.',
+        body: 'Most sessions run 30–45 minutes. Our licensed registered nurse sets up at your location — home, hotel, or office — with zero waiting room.',
       },
       {
         title: 'Is it safe?',
-        body: 'Every session is MD-supervised and administered by a licensed RN using pharmaceutical-grade nutrients.',
+        body: 'Every session is MD-supervised and administered by a licensed registered nurse using pharmaceutical-grade nutrients.',
       },
     ],
   },
@@ -65,7 +65,7 @@ const MODALITIES = [
     faq: [
       {
         title: 'What is Avalon Vitality?',
-        body: 'Mobile concierge IV therapy and longevity service for the SF Bay Area. RN-administered, MD-supervised, delivered to your home or office.',
+        body: 'Mobile concierge IV therapy and longevity service for the SF Bay Area. administered by registered nurses, MD-supervised, delivered to your home or office.',
       },
       {
         title: 'How quickly can a nurse arrive?',

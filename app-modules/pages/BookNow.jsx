@@ -3766,7 +3766,7 @@ export default function BookNow() {
           : gfeRequirement.required
           ? 'Clinical review required before dispatch.'
           : `Clinical review ready${gfeRequirement.expiresAt ? ` through ${formatGfeDate(gfeRequirement.expiresAt)}` : ''}.`,
-        'Final eligibility verified before RN dispatch.',
+        'Final eligibility verified before registered nurse dispatch.',
         'Scheduling handoff is represented locally until connected.',
         !COVERED_ZIPS.has(resolvedZip) && 'Service-area review required.',
         isGroupVisit && 'Pre-launch nurse coordination required.',
@@ -3774,7 +3774,7 @@ export default function BookNow() {
       notificationPreview: {
         sms: state.phone.trim() ? `Confirmation text queued to ${state.phone.trim()}` : 'Phone required before SMS confirmation.',
         calendar: 'Calendar invite generated locally until Apple/Google calendar is connected.',
-        availability: state.availabilityWindow ? 'RN availability window selected locally.' : 'RN availability will be confirmed before dispatch.',
+        availability: state.availabilityWindow ? 'registered nurse availability window selected locally.' : 'registered nurse availability will be confirmed before dispatch.',
       },
     };
   };
@@ -3793,7 +3793,7 @@ export default function BookNow() {
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
-      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Clinical review', 'RN dispatch', 'Inventory deduction'],
+      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
       noThirdPartyCalls: false,
       updatedAt: new Date().toISOString(),
     });
@@ -4476,7 +4476,7 @@ export default function BookNow() {
               </label>
             </div>
             <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-sm font-semibold leading-snug text-foreground/62">
-              ASAP uses the first clinically available RN window. Exact times are confirmed after review.
+              ASAP uses the first clinically available Registered Nurse window. Exact times are confirmed after review.
             </div>
           </div>
         </div>

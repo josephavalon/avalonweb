@@ -59,7 +59,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: 'Are your nurses licensed?',
-        a: 'All Avalon nurses are California-licensed registered nurses (RNs) with IV therapy certification and a minimum of two years clinical experience.',
+        a: 'All Avalon nurses are California-licensed registered nurses (Registered Nurses) with IV therapy certification and a minimum of two years clinical experience.',
       },
       {
         q: 'Is there a medical director?',

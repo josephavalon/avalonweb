@@ -10,7 +10,7 @@ const EASE = [0.16, 1, 0.3, 1];
 export default function CheckoutSuccess() {
   useSeo({
     title: 'Booking Confirmed — Avalon Vitality',
-    description: 'Your Avalon Vitality session is confirmed. A licensed RN will be in touch shortly with arrival details.',
+    description: 'Your Avalon Vitality session is confirmed. A licensed registered nurse will be in touch shortly with arrival details.',
     path: '/checkout/success',
   });
   const [params] = useSearchParams();

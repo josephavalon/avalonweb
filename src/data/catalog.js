@@ -388,7 +388,7 @@ function defaultTimeline(duration = '45-60 min') {
   return [
     { label: 'Booking', value: 'Choose protocol' },
     { label: 'Review', value: 'Clinical intake' },
-    { label: 'Arrival', value: 'Licensed RN' },
+    { label: 'Arrival', value: 'Licensed Registered Nurse' },
     { label: 'Treatment', value: duration },
   ];
 }
@@ -396,7 +396,7 @@ function defaultTimeline(duration = '45-60 min') {
 function defaultFaq(session) {
   return [
     { q: 'How long does it take?', a: session.duration || session.doses?.[0]?.duration || 'Most visits take 30-60 minutes after clinical clearance.' },
-    { q: 'Who administers it?', a: 'A California-licensed RN after intake and clinical review.' },
+    { q: 'Who administers it?', a: 'A California-licensed registered nurse after intake and clinical review.' },
     { q: 'Can I book today?', a: 'Same-day availability depends on location, nurse coverage, and clinical clearance.' },
     { q: 'Is this medical treatment?', a: 'Avalon provides clinician-reviewed wellness services. Eligibility is confirmed before service.' },
     { q: 'Where do you serve?', a: 'Avalon serves eligible clients across the San Francisco Bay Area.' },
