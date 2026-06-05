@@ -36,7 +36,7 @@ export default function StickyBookBar() {
         <motion.div whileTap={premiumTap}>
           <Link
             to={BOOK_URL}
-            className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[15px] border border-foreground/28 bg-background/[0.16] px-4 py-2 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/66 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_18px_70px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-base ease-editorial hover:border-foreground/42 hover:bg-foreground/[0.12] hover:text-foreground"
+            className="av-glass-widget group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[15px] border px-4 py-2 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/66 transition-colors duration-base ease-editorial hover:text-foreground"
           >
             Book
             <ArrowRight className="h-4 w-4 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2.35} />

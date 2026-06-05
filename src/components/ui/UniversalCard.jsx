@@ -26,9 +26,9 @@ export default function UniversalCard({
   return (
     <Element
       className={cn(
-        'av-universal-card av-glass-card group relative flex w-full min-w-0 overflow-hidden rounded-[1.45rem] border border-foreground/12 bg-background/42 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.11),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors duration-500 hover:border-foreground/24 hover:bg-background/54',
+        'av-universal-card av-glass-card group relative flex w-full min-w-0 overflow-hidden rounded-[1.45rem] border text-left transition-colors duration-500 hover:border-[var(--glass-border-hover)]',
         heightClass[size] || heightClass.default,
-        selected && 'border-foreground/35 bg-foreground/[0.08]',
+        selected && 'ring-1 ring-foreground/20',
         className
       )}
       {...props}
@@ -38,7 +38,6 @@ export default function UniversalCard({
           {media}
         </span>
       ) : null}
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       {media ? <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/88 via-background/62 to-background/14" /> : null}
       <span className="relative z-10 flex min-w-0 flex-1 items-center gap-4 p-4 md:p-5">
         {Icon ? (

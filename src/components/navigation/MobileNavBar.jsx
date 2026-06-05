@@ -84,7 +84,7 @@ export default function MobileNavBar({
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.2rem)',
       }}
     >
-      <div className={`mx-auto grid ${maxWidthClass} ${gridClass} gap-0.5 rounded-[16px] border border-foreground/[0.08] bg-background/66 p-0.5 shadow-[0_-8px_24px_rgba(0,0,0,0.16)]`}>
+      <div className={`av-glass-menu mx-auto grid ${maxWidthClass} ${gridClass} gap-0.5 rounded-[16px] border p-0.5`}>
         {items.map((item) => {
           const active = resolveActive(pathname, item);
           const Icon = item.icon;

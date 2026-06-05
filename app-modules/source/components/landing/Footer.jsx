@@ -35,10 +35,10 @@ const GROUPS = [
 ];
 
 const DESKTOP_LINK =
-  'avalon-footer-link group/link flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-foreground/[0.075] bg-background/30 px-3 font-body text-[11px] uppercase leading-none tracking-[0.14em] text-foreground/64 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl transition-colors hover:border-foreground/18 hover:bg-foreground/[0.055] hover:text-foreground';
+  'av-glass-widget avalon-footer-link group/link flex min-h-11 items-center justify-between gap-3 rounded-2xl border px-3 font-body text-[11px] uppercase leading-none tracking-[0.14em] text-foreground/64 transition-colors hover:text-foreground';
 
 const DESKTOP_CONTACT_LINK =
-  'avalon-footer-link group/link flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-foreground/[0.075] bg-background/30 px-3 font-body text-[11px] leading-none text-foreground/64 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl transition-colors hover:border-foreground/18 hover:bg-foreground/[0.055] hover:text-foreground';
+  'av-glass-widget avalon-footer-link group/link flex min-h-11 items-center justify-between gap-3 rounded-2xl border px-3 font-body text-[11px] leading-none text-foreground/64 transition-colors hover:text-foreground';
 
 function FooterLink({ to, children }) {
   return (
@@ -72,9 +72,8 @@ function FooterDesktopGroup({ title, icon: Icon, open, onToggle, children }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-32px' }}
       transition={{ duration: 0.55, ease: EASE }}
-      className={`relative overflow-hidden rounded-[1.35rem] border border-foreground/[0.09] bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_72px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl transition-colors ${open ? 'bg-background/46' : ''}`}
+      className="av-glass-card relative overflow-hidden rounded-[1.35rem] border transition-colors"
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.075),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.045),transparent_56%,hsl(var(--foreground)/0.022))]" />
       <button
         type="button"
         onClick={onToggle}
@@ -185,9 +184,8 @@ export default function Footer() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-40px' }}
         transition={{ duration: 0.65, ease: EASE }}
-        className="relative mx-auto max-w-6xl overflow-hidden rounded-[1.6rem] border border-foreground/[0.10] bg-background/46 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_22px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl md:p-5"
+        className="av-glass-card relative mx-auto max-w-6xl overflow-hidden rounded-[1.6rem] border p-3 md:p-5"
       >
-        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.085),transparent_32%),radial-gradient(circle_at_92%_18%,hsl(var(--foreground)/0.05),transparent_25%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_58%,hsl(var(--foreground)/0.02))]" />
         <div className="relative">
 
         {/* Brand */}

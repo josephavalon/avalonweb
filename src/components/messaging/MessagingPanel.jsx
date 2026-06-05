@@ -306,7 +306,7 @@ function NewConversationModal({ onClose, onCreated, myRole }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 24 }}
         transition={{ duration: 0.35, ease: EASE }}
-        className="av-glass-card w-full max-w-md rounded-2xl border border-foreground/[0.13] bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150"
+        className="av-glass-card w-full max-w-md rounded-2xl border p-5"
       >
         <div className="flex items-center justify-between mb-4">
           <p className="font-body text-sm font-semibold text-foreground">New Message</p>

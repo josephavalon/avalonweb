@@ -68,7 +68,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
-  const contactActionClass = "inline-flex h-12 w-12 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.07] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-foreground/[0.12] hover:text-foreground";
+  const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
@@ -84,16 +84,16 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
-      className={`av-motion-rail fixed z-40 border-0 bg-background shadow-none transition-all duration-700 ease-editorial md:bg-background/60 md:backdrop-blur-2xl ${
+      className={`av-motion-rail av-glass-menu fixed z-40 border transition-all duration-700 ease-editorial ${
       mobileGlobal ? 'md:hidden' : 'hidden md:block'
     } ${
       mobileOpen && !focusMode
-        ? 'left-3 right-3 top-2 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl backdrop-saturate-150 md:top-4'
+        ? 'left-3 right-3 top-2 overflow-hidden rounded-[1.35rem] md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
     } ${
       scrolled
-        ? 'md:border md:border-foreground/10 md:shadow-lg md:shadow-black/25'
-        : 'md:border md:border-foreground/10'
+        ? 'md:border'
+        : 'md:border'
     }`}>
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
       <div
@@ -169,7 +169,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-foreground/28 bg-background/[0.16] px-5 py-2.5 text-center font-body text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-foreground/66 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_18px_70px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl backdrop-saturate-150 transition-colors hover:border-foreground/42 hover:bg-foreground/[0.12] hover:text-foreground"
+            className="av-glass-widget inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-center font-body text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
           >
             Book
             <ArrowLeft className="h-3.5 w-3.5 rotate-180" strokeWidth={2.2} />
@@ -249,10 +249,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="av-glass-card relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/50 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
+                className="av-glass-card relative overflow-hidden rounded-[1.15rem] border p-1.5"
               >
-                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_58%,hsl(var(--foreground)/0.025))]" />
-
                 {showBack && !compact && (
                   <motion.div
                     className="relative"
@@ -264,7 +262,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                         close();
                         goBack();
                       }}
-                      className="relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-background/38 px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors hover:bg-foreground/[0.075] hover:text-foreground"
+                      className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/74 transition-colors hover:text-foreground"
                     >
                       <span>Back</span>
                       <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
@@ -283,12 +281,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                       <Link
                         to={item.to}
                         onClick={close}
-                        className={`group relative flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-all duration-300 ${
+                        className={`av-glass-widget group relative flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground transition-all duration-300 ${
                           item.primary
-                            ? 'border-foreground/18 bg-foreground/[0.10] text-foreground hover:bg-foreground/[0.14]'
+                            ? 'text-foreground ring-1 ring-foreground/18'
                             : active
-                              ? 'border-foreground/16 bg-background/48 text-foreground'
-                              : 'border-foreground/8 bg-background/30 text-foreground/66 hover:border-foreground/16 hover:bg-background/44 hover:text-foreground'
+                              ? 'text-foreground ring-1 ring-foreground/16'
+                              : 'text-foreground/66 hover:text-foreground'
                         }`}
                       >
                         <span>{item.label}</span>
@@ -313,7 +311,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border border-foreground/[0.10] bg-background/30 px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+                      className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/52 transition-colors hover:text-foreground"
                     >
                       <span>Sign Out</span>
                       <LogOut className="h-3.5 w-3.5" strokeWidth={1.7} />

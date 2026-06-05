@@ -2,19 +2,19 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 const TONES = {
-  default: 'border-foreground/[0.12] bg-background/38 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.11),0_22px_86px_hsl(var(--foreground)/0.08)]',
-  soft: 'border-foreground/[0.08] bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_14px_54px_hsl(var(--foreground)/0.045)]',
-  command: 'border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_110px_hsl(var(--foreground)/0.12)]',
-  selected: 'border-accent/35 bg-accent/[0.075] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_24px_90px_hsl(var(--accent)/0.13)]',
-  heavy: 'border-foreground/[0.14] bg-background/48 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_30px_120px_hsl(var(--foreground)/0.12)]',
+  default: '',
+  soft: '',
+  command: '',
+  selected: 'ring-1 ring-foreground/20',
+  heavy: '',
 };
 
 const BLUR = {
-  soft: 'backdrop-blur-md',
-  default: 'backdrop-blur-xl',
-  command: 'backdrop-blur-2xl',
-  selected: 'backdrop-blur-xl',
-  heavy: 'backdrop-blur-2xl',
+  soft: '',
+  default: '',
+  command: '',
+  selected: '',
+  heavy: '',
 };
 
 const RADIUS = {
@@ -35,11 +35,11 @@ export const glassCardClassName = ({
   interactive = false,
   className = '',
 } = {}) => cn(
-  'av-glass-card relative overflow-hidden border text-foreground backdrop-saturate-150 transition-colors duration-500 ease-editorial',
+  'av-glass-card relative overflow-hidden border text-foreground transition-colors duration-500 ease-editorial',
   TONES[tone] || TONES.default,
   BLUR[tone] || BLUR.default,
   RADIUS[radius] || RADIUS['3xl'],
-  interactive && 'hover:border-foreground/24 hover:bg-background/54',
+  interactive && 'hover:border-[var(--glass-border-hover)]',
   className
 );
 
@@ -58,10 +58,6 @@ export const GlassCard = React.forwardRef(function GlassCard({
       className={glassCardClassName({ tone, radius, interactive, className })}
       {...rest}
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.11),transparent_38%),radial-gradient(circle_at_88%_100%,hsl(var(--foreground)/0.05),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.045),transparent_55%,hsl(var(--foreground)/0.026))]"
-      />
       {children}
     </Tag>
   );

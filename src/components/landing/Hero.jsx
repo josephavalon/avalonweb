@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Droplets, LayoutGrid, UserRound } from 'lucide-react';
-import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
@@ -68,15 +68,8 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className="group relative flex min-h-[72px] w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border border-foreground/28 bg-background/[0.16] px-4 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.14),0_18px_70px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-base ease-editorial hover:border-foreground/42 hover:bg-foreground/[0.12] md:min-h-[96px] md:rounded-[1.45rem] md:px-4"
+                className="av-glass-card group relative flex min-h-[72px] w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border px-4 text-foreground transition-all duration-base ease-editorial md:min-h-[96px] md:rounded-[1.45rem] md:px-4"
               >
-                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,hsl(var(--foreground)/0.13),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_55%,hsl(var(--foreground)/0.028))]" />
-                <motion.span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 -left-1/2 hidden w-1/2 bg-gradient-to-r from-transparent via-foreground/12 to-transparent md:block"
-                  animate={{ x: ['0%', '320%'] }}
-                  transition={{ duration: 0.72, delay: 0.28, ease: EASE }}
-                />
                 <span className="relative flex min-w-0 flex-1 items-center gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.075] text-foreground/86 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl md:h-12 md:w-12">
                     <Icon className="h-6 w-6" strokeWidth={2.15} />

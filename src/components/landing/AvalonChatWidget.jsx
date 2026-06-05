@@ -48,7 +48,7 @@ export default function AvalonChatWidget() {
   return (
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] right-3 z-50 md:bottom-6 md:right-6">
       {open && (
-        <div className="mb-3 w-[min(23rem,calc(100vw-1.5rem))] overflow-hidden rounded-[1.4rem] border border-foreground/14 bg-background/82 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_110px_rgba(0,0,0,0.34)] backdrop-blur-2xl backdrop-saturate-150">
+        <div className="av-glass-modal mb-3 w-[min(23rem,calc(100vw-1.5rem))] overflow-hidden rounded-[1.4rem] border text-foreground">
           <div className="flex items-start justify-between gap-3 border-b border-foreground/10 px-4 py-4">
             <div>
               <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/54">Avalon Concierge</p>
@@ -111,7 +111,7 @@ export default function AvalonChatWidget() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="min-h-11 rounded-full border border-foreground/14 bg-background/72 px-4 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_16px_60px_rgba(0,0,0,0.24)] backdrop-blur-2xl backdrop-saturate-150"
+            className="av-glass-widget min-h-11 rounded-full border px-4 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground"
           >
             Have a question?
           </button>

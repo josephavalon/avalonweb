@@ -81,7 +81,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
         className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
         onClick={onClose}
       />
-      <div className="av-glass-card relative flex flex-col overflow-hidden rounded-t-3xl border-t border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150">
+      <div className="av-glass-card relative flex flex-col overflow-hidden rounded-t-3xl border-t">
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-foreground/[0.08]">
           <div>
             <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-0.5">Your Order</p>

@@ -45,7 +45,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <motion.div
-        className="av-glass-card relative w-full overflow-hidden rounded-t-3xl border border-foreground/[0.13] bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl backdrop-saturate-150 md:max-w-md md:rounded-3xl max-h-[90vh] overflow-y-auto"
+        className="av-glass-card relative w-full overflow-hidden rounded-t-3xl border md:max-w-md md:rounded-3xl max-h-[90vh] overflow-y-auto"
         initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
