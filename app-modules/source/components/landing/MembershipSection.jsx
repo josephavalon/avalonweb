@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumTap } from '@/lib/motion';
-import { BOOKABLE_SUBSCRIPTION_TIERS, FEATURED_SUBSCRIPTION_TIER_KEY } from '@/config/subscriptionTiers';
+import { BOOKABLE_SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const MotionLink = motion.create(Link);
@@ -34,7 +34,6 @@ function planDetails(tier) {
 }
 
 function TierRow({ tier, index, open, onToggle }) {
-  const featured = tier.key === FEATURED_SUBSCRIPTION_TIER_KEY;
   return (
     <motion.div
       layout
@@ -43,7 +42,7 @@ function TierRow({ tier, index, open, onToggle }) {
       viewport={{ once: true, margin: '-24px' }}
       transition={{ duration: 0.84, ease: EASE, delay: index * 0.18, layout: premiumExpandTransition }}
       whileHover={premiumHover}
-      className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open || featured ? 'is-open' : ''}`}
+      className={`av-treatment-card relative overflow-hidden rounded-[1.55rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
     >
       <button
         type="button"
@@ -54,11 +53,6 @@ function TierRow({ tier, index, open, onToggle }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-heading text-2xl uppercase leading-none tracking-[0.06em] text-foreground/72 md:text-3xl">{tier.name}</p>
-            {featured && (
-              <span className="rounded-full border border-foreground/12 bg-background/24 px-2 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.14em] text-foreground/44">
-                Recommended
-              </span>
-            )}
           </div>
           <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
         </div>

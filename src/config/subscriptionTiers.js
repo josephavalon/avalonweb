@@ -22,7 +22,6 @@ export const SUBSCRIPTION_TIERS = [
     name: 'Pro',
     sessions: 2,
     tagline: 'The sweet spot.',
-    badge: 'Recommended',
     price: 389,
     unit: '/mo',
     perSessionNote: '$195 / session',
@@ -80,8 +79,8 @@ export const SUBSCRIPTION_TIERS = [
 ];
 
 export const BOOKABLE_SUBSCRIPTION_TIERS = SUBSCRIPTION_TIERS.filter((tier) => !tier.custom);
-export const FEATURED_SUBSCRIPTION_TIER_KEY = 'pro';
+export const FEATURED_SUBSCRIPTION_TIER_KEY = null;
 
 export function getSubscriptionTier(key) {
-  return SUBSCRIPTION_TIERS.find((tier) => tier.key === key) || SUBSCRIPTION_TIERS.find((tier) => tier.key === FEATURED_SUBSCRIPTION_TIER_KEY);
+  return SUBSCRIPTION_TIERS.find((tier) => tier.key === key) || SUBSCRIPTION_TIERS.find((tier) => tier.key === 'starter');
 }
