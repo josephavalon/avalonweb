@@ -206,6 +206,7 @@ const THERAPY_GROUPS = [
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
 ];
+const DESKTOP_THERAPY_MENU_KEYS = ['energy', 'recovery', 'jetlag', 'postnight', 'myers', 'hydration', 'immunity', 'nad-250mg', 'cbd-33mg'];
 const STACK_LAYERS = [
   { key: 'iv', label: 'IVs', status: 'Base', icon: Droplets, active: true },
   { key: 'addons', label: 'Add-ons', status: 'Step 2', icon: Plus, active: true },
@@ -624,7 +625,30 @@ function SectionTitle({ title, sub, icon: Icon }) {
 }
 
 function TrustSpeedStrip() {
-  return null;
+  return (
+    <div className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
+      <div className="grid grid-cols-3 divide-x divide-foreground/10">
+        {[
+          { icon: ShieldCheck, title: 'Clinically supervised', body: 'RN oversight for every treatment' },
+          { icon: Calendar, title: 'Flexible scheduling', body: 'Book at your convenience' },
+          { icon: CreditCard, title: 'Secure booking', body: 'Your health is protected' },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.title} className="flex min-w-0 items-center gap-3 px-4 first:pl-0 last:pr-0">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-foreground">
+                <Icon className="h-6 w-6" strokeWidth={2.2} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/78">{item.title}</span>
+                <span className="mt-1 block truncate font-body text-sm font-semibold text-foreground/58">{item.body}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function BookingMobileHeader() {
@@ -862,36 +886,36 @@ function DesktopOrderRail({
   ];
 
   return (
-    <aside className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
+    <aside className="relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 p-7 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.105),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_62%)]" />
       <div className="relative">
-        <p className="font-body text-xs font-black uppercase tracking-[0.16em] text-foreground/72">Your Order</p>
-        <div className="mt-4 divide-y divide-foreground/10 border-t border-foreground/10">
+        <p className="font-body text-lg font-black uppercase tracking-[0.18em] text-foreground/78">Your Order</p>
+        <div className="mt-6 divide-y divide-foreground/10 border-t border-foreground/10">
           {rows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[96px_1fr] gap-3 py-3">
-              <p className="font-body text-xs font-black text-foreground/58">{label}</p>
-              <p className="text-right font-body text-xs font-bold leading-snug text-foreground/82">{value}</p>
+            <div key={label} className="grid grid-cols-[120px_1fr] gap-3 py-4">
+              <p className="font-body text-base font-black text-foreground/66">{label}</p>
+              <p className="text-right font-body text-base font-bold leading-snug text-foreground/86">{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-3 border-t border-foreground/10 pt-4">
+        <div className="mt-5 border-t border-foreground/10 pt-6">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Subtotal</p>
-            <p className="font-body text-sm font-black text-foreground">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
+            <p className="font-body text-base font-black uppercase tracking-[0.12em] text-foreground/66">Subtotal</p>
+            <p className="font-body text-xl font-black text-foreground">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
-          <div className="mt-4">
-            <p className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/60">Reservation Deposit</p>
-            <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground">{currency(displayDueNow)}</p>
-            <p className="mt-1 font-body text-xs font-semibold text-foreground/56">Secure your booking</p>
-            {displayBalanceDue > 0 && <p className="mt-2 font-body text-[11px] font-bold text-foreground/46">Balance {currency(displayBalanceDue)} due upon completion</p>}
+          <div className="mt-6">
+            <p className="font-body text-base font-black uppercase tracking-[0.12em] text-foreground/66">Reservation Deposit</p>
+            <p className="mt-2 font-body text-[3.1rem] font-black leading-none text-foreground">{currency(displayDueNow)}</p>
+            <p className="mt-2 font-body text-base font-semibold text-foreground/66">Secure your booking</p>
+            {displayBalanceDue > 0 && <p className="mt-3 font-body text-sm font-bold text-foreground/52">Balance {currency(displayBalanceDue)} due upon completion</p>}
           </div>
         </div>
-        <div className={`mt-5 grid gap-2 ${canGoBack ? 'grid-cols-[88px_1fr]' : 'grid-cols-1'}`}>
+        <div className={`mt-7 grid gap-4 ${canGoBack ? 'grid-cols-[148px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[58px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-4 font-body text-xs font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground"
+              className="flex min-h-[70px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-4 font-body text-base font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground"
             >
               Back
             </button>
@@ -900,7 +924,7 @@ function DesktopOrderRail({
             type="button"
             onClick={onNext}
             disabled={!canGoNext || checkoutLoading}
-            className={`relative flex min-h-[58px] w-full items-center justify-center gap-4 overflow-hidden rounded-xl border px-5 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
+            className={`relative flex min-h-[70px] w-full items-center justify-center gap-5 overflow-hidden rounded-xl border px-6 font-body text-lg font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
               canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
             }`}
           >
@@ -913,11 +937,11 @@ function DesktopOrderRail({
               />
             )}
             <span>{actionLabel}</span>
-            <ArrowRight className="h-5 w-5" strokeWidth={2.6} />
+            <ArrowRight className="h-7 w-7" strokeWidth={2.6} />
           </button>
         </div>
-        <div className="mt-4 flex items-center justify-center gap-1.5 font-body text-[11px] font-semibold text-foreground/52">
-          <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
+        <div className="mt-6 flex items-center justify-center gap-2 font-body text-sm font-semibold text-foreground/56">
+          <ShieldCheck className="h-4 w-4" strokeWidth={2.2} />
           Secure booking
         </div>
       </div>
@@ -947,8 +971,8 @@ function DesktopBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto hidden w-full max-w-[1180px] overflow-hidden rounded-[1.15rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl md:block">
-      <div className="grid min-h-[610px] grid-cols-[minmax(0,1fr)_300px] gap-8 p-6">
+    <section className="mx-auto hidden w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl md:block 2xl:max-w-[1540px]">
+      <div className="grid min-h-[760px] grid-cols-[minmax(0,1fr)_minmax(380px,450px)] gap-10 p-8">
         <div className="min-w-0">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
             {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
@@ -965,7 +989,7 @@ function DesktopBookingFrame({
           )}
           <motion.div
             key={step}
-            className="relative h-[500px] min-h-0 overflow-hidden"
+            className="relative h-[620px] min-h-0 overflow-hidden"
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.16, ease: EASE }}
@@ -4042,6 +4066,9 @@ export default function BookNow() {
   ), []);
   const activeTherapyGroupData = therapyGroups.find((group) => group.key === activeTherapyGroup) || therapyGroups[0];
   const activeTherapies = activeTherapyGroupData?.items || [];
+  const desktopTherapyMenu = useMemo(() => {
+    return DESKTOP_THERAPY_MENU_KEYS.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean);
+  }, []);
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
     ? 'IV THERAPY'
     : activeTherapyGroupData?.key === 'cbd'
@@ -4212,72 +4239,89 @@ export default function BookNow() {
 
       const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
       const denseTherapyGrid = !isDoseTherapyGroup && activeTherapies.length > 6;
+      const renderTherapyCard = (item, { desktopMenu = false } = {}) => {
+        const Icon = item.icon || Droplets;
+        const active = state.productKey === item.key;
+        const copy = compactProtocolCopy(item);
+        const menuLabel = desktopMenu && item.parentProtocolKey === 'nad'
+          ? 'NAD+'
+          : desktopMenu && item.parentProtocolKey === 'cbd'
+            ? 'CBD'
+            : copy.label;
+
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => chooseProduct(item.key)}
+            aria-pressed={active}
+            className={`${panelCardClass} relative min-h-0 transition-colors ${
+              active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
+            } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : denseTherapyGrid ? 'flex flex-col items-center justify-center gap-1 px-1.5 py-1 text-center md:gap-1.5 md:px-2 md:py-2' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
+          >
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+            {active && !isDoseTherapyGroup && (
+              <span className={`${denseTherapyGrid ? 'right-1 top-1 h-5 w-5 md:right-1.5 md:top-1.5 md:h-6 md:w-6' : 'right-2 top-2 h-7 w-7'} absolute flex items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground`}>
+                <Check className={`${denseTherapyGrid ? 'h-3 w-3 md:h-3.5 md:w-3.5' : 'h-4 w-4'}`} strokeWidth={2.7} />
+              </span>
+            )}
+            <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : denseTherapyGrid ? 'h-7 w-7 md:h-16 md:w-16' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
+              <Icon className={`${denseTherapyGrid && !isDoseTherapyGroup ? 'h-4 w-4 md:h-12 md:w-12' : 'h-6 w-6'}`} strokeWidth={2.15} />
+            </span>
+            <span className={`relative min-w-0 ${isDoseTherapyGroup ? 'pr-1' : ''}`}>
+              <span className={`block break-words font-heading uppercase tracking-normal text-foreground ${
+                isDoseTherapyGroup
+                  ? 'text-[1.15rem] leading-none min-[390px]:text-[1.25rem] md:text-[1.75rem]'
+                  : denseTherapyGrid
+                    ? 'text-[0.72rem] leading-[0.9] min-[390px]:text-[0.78rem] md:text-[1.85rem] md:leading-none lg:text-[2rem]'
+                  : 'text-[1rem] leading-[0.9] min-[390px]:text-[1.08rem] md:text-[1.75rem]'
+              }`}>{menuLabel}</span>
+              {isDoseTherapyGroup && (
+                <span className="mt-0.5 block truncate font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/58">
+                  {protocolDuration(item)} · {currency(protocolPrice(item))}
+                </span>
+              )}
+              {!isDoseTherapyGroup && active && <span className={`${denseTherapyGrid ? 'mt-0.5 text-[8px] md:text-[9px]' : 'mt-1 text-[10px]'} block font-body font-black uppercase tracking-[0.08em] text-foreground/62`}>{currency(protocolPrice(item))}</span>}
+            </span>
+            {isDoseTherapyGroup && (
+              <span className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
+                active ? 'border-foreground/26 bg-foreground/[0.10] text-foreground' : 'border-foreground/14 bg-background/28 text-foreground/62'
+              }`}>
+                {active ? <Check className="h-4 w-4" strokeWidth={2.7} /> : <ArrowRight className="h-4 w-4" strokeWidth={2.4} />}
+              </span>
+            )}
+          </button>
+        );
+      };
 
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
-          <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>
+        <div className={`${denseTherapyGrid ? 'md:grid-rows-[auto_1fr_auto]' : 'md:grid-rows-[auto_1fr]'} grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:gap-4`}>
+          <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em] md:text-left`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
-          <div className={`grid min-h-0 content-start gap-2 ${
-            isDoseTherapyGroup
-              ? 'grid-cols-1 auto-rows-[4.15rem]'
-              : denseTherapyGrid
-                ? 'grid-cols-3 auto-rows-[4.65rem] overflow-hidden md:grid-cols-3 md:auto-rows-[6.15rem]'
-              : activeTherapies.length <= 4
-              ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
-              : activeTherapies.length <= 6
-                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9rem]'
-                : 'grid-cols-1 auto-rows-[5.55rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
-          }`}>
-            {activeTherapies.map((item) => {
-              const Icon = item.icon || Droplets;
-              const active = state.productKey === item.key;
-              const copy = compactProtocolCopy(item);
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => chooseProduct(item.key)}
-                  aria-pressed={active}
-                  className={`${panelCardClass} relative min-h-0 transition-colors ${
-                    active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
-                  } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : denseTherapyGrid ? 'flex flex-col items-center justify-center gap-1 px-1.5 py-1 text-center md:gap-1.5 md:px-2 md:py-2' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
-                >
-                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                  {active && !isDoseTherapyGroup && (
-                    <span className={`${denseTherapyGrid ? 'right-1 top-1 h-5 w-5 md:right-1.5 md:top-1.5 md:h-6 md:w-6' : 'right-2 top-2 h-7 w-7'} absolute flex items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground`}>
-                      <Check className={`${denseTherapyGrid ? 'h-3 w-3 md:h-3.5 md:w-3.5' : 'h-4 w-4'}`} strokeWidth={2.7} />
-                    </span>
-                  )}
-                  <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : denseTherapyGrid ? 'h-7 w-7 md:h-9 md:w-9' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
-                    <Icon className={`${denseTherapyGrid && !isDoseTherapyGroup ? 'h-4 w-4 md:h-5 md:w-5' : 'h-6 w-6'}`} strokeWidth={2.15} />
-                  </span>
-                  <span className={`relative min-w-0 ${isDoseTherapyGroup ? 'pr-1' : ''}`}>
-                    <span className={`block break-words font-heading uppercase tracking-normal text-foreground ${
-                      isDoseTherapyGroup
-                        ? 'text-[1.15rem] leading-none min-[390px]:text-[1.25rem] md:text-[1.75rem]'
-                        : denseTherapyGrid
-                          ? 'text-[0.72rem] leading-[0.9] min-[390px]:text-[0.78rem] md:text-[1.12rem] lg:text-[1.22rem]'
-                        : 'text-[1rem] leading-[0.9] min-[390px]:text-[1.08rem] md:text-[1.75rem]'
-                    }`}>{copy.label}</span>
-                    {isDoseTherapyGroup && (
-                      <span className="mt-0.5 block truncate font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/58">
-                        {protocolDuration(item)} · {currency(protocolPrice(item))}
-                      </span>
-                    )}
-                    {!isDoseTherapyGroup && active && <span className={`${denseTherapyGrid ? 'mt-0.5 text-[8px] md:text-[9px]' : 'mt-1 text-[10px]'} block font-body font-black uppercase tracking-[0.08em] text-foreground/62`}>{currency(protocolPrice(item))}</span>}
-                  </span>
-                  {isDoseTherapyGroup && (
-                    <span className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
-                      active ? 'border-foreground/26 bg-foreground/[0.10] text-foreground' : 'border-foreground/14 bg-background/28 text-foreground/62'
-                    }`}>
-                      {active ? <Check className="h-4 w-4" strokeWidth={2.7} /> : <ArrowRight className="h-4 w-4" strokeWidth={2.4} />}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          {denseTherapyGrid ? (
+            <>
+              <div className="grid min-h-0 auto-rows-[4.65rem] grid-cols-3 content-start gap-2 overflow-hidden md:hidden">
+                {activeTherapies.map((item) => renderTherapyCard(item))}
+              </div>
+              <div className="hidden min-h-0 content-start gap-4 overflow-hidden md:grid md:auto-rows-[10rem] md:grid-cols-3">
+                {desktopTherapyMenu.map((item) => renderTherapyCard(item, { desktopMenu: true }))}
+              </div>
+            </>
+          ) : (
+            <div className={`grid min-h-0 content-start gap-2 ${
+              isDoseTherapyGroup
+                ? 'grid-cols-1 auto-rows-[4.15rem]'
+                : activeTherapies.length <= 4
+                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
+                : activeTherapies.length <= 6
+                  ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9rem]'
+                  : 'grid-cols-1 auto-rows-[5.55rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
+            }`}>
+              {activeTherapies.map((item) => renderTherapyCard(item))}
+            </div>
+          )}
+          {denseTherapyGrid && <div className="hidden md:block"><TrustSpeedStrip /></div>}
         </div>
       );
     }
