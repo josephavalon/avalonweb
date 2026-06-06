@@ -659,21 +659,21 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-3 px-1 pt-1 md:mb-3">
+    <div className="relative mb-2 shrink-0 px-1 pt-0.5 md:mb-3 md:pt-1">
       <div className="relative">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex items-center justify-between gap-2.5 md:gap-3">
+          <div className="flex min-w-0 items-center gap-2 md:gap-2.5">
             <motion.span
-              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/30 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-xl"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/30 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-xl min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14"
               key={step}
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0.72, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={reduceMotion ? { duration: 0 } : CHECKOUT_MOTION}
             >
-              <CurrentIcon className="h-4 w-4" strokeWidth={2.7} />
+              <CurrentIcon className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
             </motion.span>
             <div className="min-w-0">
-              <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
+              <p className="font-heading text-[1.3rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.42rem] md:text-[1.55rem]">
                 {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
               </p>
             </div>
@@ -709,7 +709,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
         </div>
       </div>
 
-      <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
+      <div className="relative mt-2 h-2.5 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] md:mt-3 md:h-3">
         <motion.div
           className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
           initial={false}
@@ -741,7 +741,7 @@ function UniversalBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto flex h-[calc(100svh-4.35rem)] max-h-[calc(100svh-4.35rem)] w-full max-w-lg flex-col overflow-hidden px-0 pb-[6.95rem] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+    <section className="mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
         step={step}
         onStepSelect={onStepSelect}
@@ -759,38 +759,38 @@ function UniversalBookingFrame({
       )}
       <motion.div
         key={step}
-        className="relative min-h-0 flex-1 overflow-hidden p-0"
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-0 pb-1 [-webkit-overflow-scrolling:touch] md:overflow-hidden md:pb-0"
         initial={{ opacity: 1, y: 0, scale: 1 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 1 }}
         transition={{ duration: 0.16, ease: EASE }}
       >
-        <div className="relative h-full min-h-0 overflow-hidden">
+        <div className="relative h-full min-h-full">
           {children}
         </div>
       </motion.div>
-      <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0 md:pb-0">
-        <div className="mx-auto max-w-lg overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/82 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
-          <div className="grid grid-cols-[86px_minmax(0,128px)_1fr] items-center gap-2 md:flex">
+      <div className="fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),0.5rem)] z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0">
+        <div className="mx-auto max-w-lg overflow-hidden rounded-[1rem] border border-foreground/14 bg-background/82 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
+          <div className="grid grid-cols-[76px_minmax(0,114px)_1fr] items-center gap-1.5 md:flex md:gap-2">
           <button
             type="button"
             onClick={onBack}
             disabled={!canGoBack}
             aria-label="Go back"
-            className="flex min-h-[48px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[11px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+            className="flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[11px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
           >
             Back
           </button>
-          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1.5 md:min-w-[142px] md:px-2">
-            <p className="font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/62 md:text-[10px] md:tracking-[0.12em]">Reservation Deposit</p>
-            <p className="mt-0.5 font-body text-[1.35rem] font-black leading-none text-foreground md:mt-1 md:text-[1.45rem]">{dueNow}</p>
-            <p className="mt-0.5 font-body text-[10px] font-semibold text-foreground/62">Due after visit {dueAfter}</p>
+          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
+            <p className="font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[8px] md:text-[10px] md:tracking-[0.12em]">Reservation Deposit</p>
+            <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
+            <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Due after visit {dueAfter}</p>
           </div>
           <button
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
-            className={`relative flex min-h-[48px] flex-1 items-center justify-center gap-3 overflow-hidden rounded-xl border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] md:min-h-[56px] ${
+            className={`relative flex min-h-[44px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
               canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/18 bg-background/42 text-foreground/58'
             }`}
           >
@@ -803,11 +803,11 @@ function UniversalBookingFrame({
               />
             )}
             <span>{actionLabel}</span>
-            <ArrowRight className="h-5 w-5" strokeWidth={2.7} />
+            <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" strokeWidth={2.7} />
           </button>
           </div>
-          <div className="mt-1 flex items-center justify-center gap-1.5 font-body text-[10px] font-semibold text-foreground/56">
-            <ShieldCheck className="h-3 w-3" strokeWidth={2.2} />
+          <div className="mt-0.5 flex items-center justify-center gap-1.5 font-body text-[9px] font-semibold text-foreground/56 min-[390px]:text-[10px]">
+            <ShieldCheck className="h-2.5 w-2.5 min-[390px]:h-3 min-[390px]:w-3" strokeWidth={2.2} />
             Secure booking
           </div>
         </div>
@@ -1732,8 +1732,8 @@ function hasDob(value) {
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false }) {
   return (
     <div className="block">
-      <div className="flex min-h-[22px] items-center justify-between gap-2 md:min-h-[22px]">
-        <span className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-xs' : 'text-sm'}`}>{label}</span>
+      <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
+        <span className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</span>
         {actionLabel && onAction && !value && (
           <button
             type="button"
@@ -1757,8 +1757,8 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         autoComplete={autoComplete}
         inputMode={inputMode}
         autoFocus={autoFocus}
-        className={`mt-1 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:min-h-[50px] md:text-lg ${
-          compact ? 'min-h-[44px] text-base' : 'min-h-[52px] text-lg'
+        className={`mt-0.5 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-3.5 font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:px-4 md:text-lg ${
+          compact ? 'min-h-[40px] text-sm md:min-h-[44px] md:text-base' : 'min-h-[52px] text-lg'
         }`}
       />
     </div>
@@ -2512,7 +2512,7 @@ function FastReviewSurface({
   const canPay = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
 
   return (
-    <section className="mx-auto max-w-3xl scroll-mt-28 pb-28 md:pb-6">
+    <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(env(safe-area-inset-bottom,0px)+5.75rem)] md:pb-6">
       {error && (
         <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
           <p className="font-body text-sm font-black">{error}</p>
@@ -2602,8 +2602,8 @@ function FastReviewSurface({
 
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0 md:pb-0">
-        <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
+      <div className="fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),0.5rem)] z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0">
+        <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:rounded-[1.25rem]">
           <div className="hidden min-w-0 flex-1 px-4 md:block">
             <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Checkout</p>
             <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">Apple Pay, Google Pay, Link, or card</p>
@@ -2613,7 +2613,7 @@ function FastReviewSurface({
             onClick={onSubmit}
             disabled={checkoutLoading}
             aria-label="Continue to secure payment"
-            className={`relative flex min-h-[56px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`relative flex min-h-[48px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[56px] md:text-sm ${
               canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/42 text-foreground/58'
             }`}
           >
@@ -4135,12 +4135,12 @@ export default function BookNow() {
   };
 
   const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl';
-  const microLabelClass = 'font-body text-[10px] font-black uppercase tracking-[0.13em] text-foreground/58';
+  const microLabelClass = 'font-body text-[9px] font-black uppercase tracking-[0.13em] text-foreground/58 md:text-[10px]';
 
   const renderUniversalStep = () => {
     if (step === 3) {
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-2">
+        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-1.5 md:gap-2">
           <div className={`${panelCardClass} p-2`}>
             <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
             <button
@@ -4156,7 +4156,7 @@ export default function BookNow() {
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-          <div className={`${panelCardClass} p-3`}>
+          <div className={`${panelCardClass} p-2.5 md:p-3`}>
             <div className="grid gap-2">
               <TextInput
                 label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'}
@@ -4186,7 +4186,7 @@ export default function BookNow() {
           <div className="min-h-0">
             <AddressPrediction suggestion={topAddressSuggestion} onUse={chooseAddressSuggestion} compact />
             {!topAddressSuggestion && (
-              <div className={`${panelCardClass} mt-0 flex min-h-[76px] items-center gap-3 p-3`}>
+              <div className={`${panelCardClass} mt-0 flex min-h-[66px] items-center gap-2.5 p-2.5 md:min-h-[76px] md:gap-3 md:p-3`}>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground/80">
                   <MapPin className="h-5 w-5" strokeWidth={2.4} />
                 </span>
@@ -4204,9 +4204,9 @@ export default function BookNow() {
     if (step === 0) {
       if (therapyCategoryScreen) {
         return (
-          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
-            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose a therapy base</p>
-            <div className="grid min-h-0 grid-rows-3 gap-2 md:h-full md:grid-rows-3 md:gap-2.5 2xl:gap-4">
+          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-3">
+            <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:pt-1`}>Choose a therapy base</p>
+            <div className="grid min-h-0 grid-rows-3 gap-1.5 md:h-full md:grid-rows-3 md:gap-2.5 2xl:gap-4">
               {therapyGroups.map((group) => {
                 const GroupIcon = group.icon;
                 return (
@@ -4217,15 +4217,15 @@ export default function BookNow() {
                       setActiveTherapyGroup(group.key);
                       setTherapyCategoryScreen(false);
                     }}
-                    className={`${panelCardClass} grid min-h-0 grid-cols-[76px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24 md:grid-cols-[82px_1fr_28px] md:px-5 2xl:grid-cols-[112px_1fr_34px] 2xl:px-8`}
+                    className={`${panelCardClass} grid min-h-0 grid-cols-[62px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[68px_1fr_26px] min-[390px]:px-3.5 md:grid-cols-[82px_1fr_28px] md:gap-3 md:px-5 2xl:grid-cols-[112px_1fr_34px] 2xl:px-8`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground md:h-12 md:w-12 2xl:h-20 2xl:w-20">
-                      <GroupIcon className="h-8 w-8 md:h-7 md:w-7 2xl:h-12 2xl:w-12" strokeWidth={2.05} />
+                    <span className="relative flex h-11 w-11 items-center justify-center rounded-2xl text-foreground min-[390px]:h-12 min-[390px]:w-12 md:h-12 md:w-12 2xl:h-20 2xl:w-20">
+                      <GroupIcon className="h-6 w-6 min-[390px]:h-7 min-[390px]:w-7 md:h-7 md:w-7 2xl:h-12 2xl:w-12" strokeWidth={2.05} />
                     </span>
-                    <span className="relative min-w-0 border-l border-foreground/10 pl-4 md:pl-4 2xl:pl-7">
-                      <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground md:text-[1.45rem] 2xl:text-[2.35rem]">{group.label}</span>
-                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62 md:text-xs 2xl:text-base">{group.sub}</span>
+                    <span className="relative min-w-0 border-l border-foreground/10 pl-3 md:pl-4 2xl:pl-7">
+                      <span className="block font-heading text-[1.42rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem] md:text-[1.45rem] 2xl:text-[2.35rem]">{group.label}</span>
+                      <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62 md:mt-1 md:text-xs 2xl:text-base">{group.sub}</span>
                     </span>
                     <span className="relative flex justify-end text-foreground/84">
                       <ArrowRight className="h-5 w-5 2xl:h-7 2xl:w-7" strokeWidth={2.5} />
@@ -4296,13 +4296,13 @@ export default function BookNow() {
       };
 
       return (
-        <div className={`${denseTherapyGrid ? 'md:grid-rows-[auto_1fr_auto]' : 'md:grid-rows-[auto_1fr]'} grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:gap-4`}>
-          <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em] md:text-left`}>
+        <div className={`${denseTherapyGrid ? 'md:grid-rows-[auto_1fr_auto]' : 'md:grid-rows-[auto_1fr]'} grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-4`}>
+          <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:pt-1 md:text-left`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
           {denseTherapyGrid ? (
             <>
-              <div className="grid min-h-0 auto-rows-[4.65rem] grid-cols-3 content-start gap-2 overflow-hidden md:hidden">
+              <div className="grid min-h-0 auto-rows-[4.2rem] grid-cols-3 content-start gap-1.5 overflow-hidden min-[390px]:auto-rows-[4.35rem] md:hidden">
                 {activeTherapies.map((item) => renderTherapyCard(item))}
               </div>
               <div className="hidden min-h-0 content-start overflow-hidden md:grid md:auto-rows-[7.25rem] md:grid-cols-3 md:gap-2.5 [@media_(min-height:900px)]:md:auto-rows-[8.15rem] [@media_(min-height:900px)]:md:gap-3">
@@ -4310,14 +4310,14 @@ export default function BookNow() {
               </div>
             </>
           ) : (
-            <div className={`grid min-h-0 content-start gap-2 ${
+            <div className={`grid min-h-0 content-start gap-1.5 md:gap-2 ${
               isDoseTherapyGroup
-                ? 'grid-cols-1 auto-rows-[4.15rem]'
+                ? 'grid-cols-1 auto-rows-[3.85rem] min-[390px]:auto-rows-[4rem]'
                 : activeTherapies.length <= 4
-                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
+                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[8.2rem] min-[390px]:auto-rows-[8.75rem] md:auto-rows-[9.4rem]'
                 : activeTherapies.length <= 6
-                  ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9rem]'
-                  : 'grid-cols-1 auto-rows-[5.55rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
+                  ? 'grid-cols-1 md:grid-cols-2 auto-rows-[7.9rem] min-[390px]:auto-rows-[8.4rem] md:auto-rows-[9rem]'
+                  : 'grid-cols-1 auto-rows-[5rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
             }`}>
               {activeTherapies.map((item) => renderTherapyCard(item))}
             </div>
@@ -4333,23 +4333,23 @@ export default function BookNow() {
       if (!selectedAddonGroup) {
         return (
           <div className="h-full min-h-0">
-            <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:hidden">
-            <p className={`${microLabelClass} pt-1 text-center tracking-[0.22em]`}>Choose add-ons</p>
-              <div className="grid min-h-0 content-start gap-2.5 overflow-y-auto pb-2 pr-1">
+            <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:hidden">
+            <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em]`}>Choose add-ons</p>
+              <div className="grid min-h-0 content-start gap-1.5 overflow-y-auto pb-2 pr-1">
                 <button
                   type="button"
                   onClick={chooseNoAddons}
-                  className={`${panelCardClass} grid min-h-[88px] grid-cols-[58px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24 ${
+                  className={`${panelCardClass} grid min-h-[74px] grid-cols-[48px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 ${
                     state.addOnDecision && state.addOns.length === 0 ? 'border-foreground/42 bg-foreground/[0.14]' : ''
                   }`}
                 >
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                  <span className="relative flex h-11 w-11 items-center justify-center rounded-xl text-foreground">
-                    <Check className="h-6 w-6" strokeWidth={2.3} />
+                  <span className="relative flex h-9 w-9 items-center justify-center rounded-xl text-foreground">
+                    <Check className="h-5 w-5" strokeWidth={2.3} />
                   </span>
-                  <span className="relative min-w-0 border-l border-foreground/10 pl-4">
-                    <span className="block font-heading text-[1.55rem] uppercase leading-none tracking-normal text-foreground">No add-ons</span>
-                    <span className="mt-1 block font-body text-sm font-bold text-foreground/62">Fastest checkout</span>
+                  <span className="relative min-w-0 border-l border-foreground/10 pl-3">
+                    <span className="block font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground">No add-ons</span>
+                    <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">Fastest checkout</span>
                   </span>
                   <span className="relative flex justify-end text-foreground/84">
                     <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
@@ -4363,15 +4363,15 @@ export default function BookNow() {
                     key={group.key}
                     type="button"
                     onClick={() => setActiveAddonGroup(group.key)}
-                    className={`${panelCardClass} grid min-h-[104px] grid-cols-[64px_1fr_28px] items-center gap-3 px-4 text-left transition-colors hover:border-foreground/24`}
+                    className={`${panelCardClass} grid min-h-[84px] grid-cols-[52px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground">
-                      <GroupIcon className="h-9 w-9" strokeWidth={2.05} />
+                    <span className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-foreground">
+                      <GroupIcon className="h-6 w-6" strokeWidth={2.05} />
                     </span>
-                    <span className="relative min-w-0 border-l border-foreground/10 pl-4">
-                      <span className="block font-heading text-[1.7rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
-                      <span className="mt-1 block font-body text-sm font-bold text-foreground/62">
+                    <span className="relative min-w-0 border-l border-foreground/10 pl-3">
+                      <span className="block font-heading text-[1.42rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
+                      <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">
                         {selectedCount ? `${selectedCount} selected` : group.key === 'iv' ? 'Enhance your IV therapy' : 'Enhance with IM injections'}
                       </span>
                     </span>
@@ -4426,21 +4426,21 @@ export default function BookNow() {
       }
 
       return (
-        <div className="grid h-full min-h-0 content-start gap-2">
+        <div className="grid h-full min-h-0 content-start gap-1.5 md:gap-2">
           <button
             type="button"
             onClick={() => setActiveAddonGroup('')}
-            className={`${panelCardClass} flex min-h-[58px] items-center justify-between gap-3 px-3 text-left`}
+            className={`${panelCardClass} flex min-h-[48px] items-center justify-between gap-2.5 px-2.5 text-left md:min-h-[58px] md:gap-3 md:px-3`}
           >
             <span className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] md:h-10 md:w-10">
                 <ArrowLeft className="h-4 w-4" />
               </span>
-              <span className="font-heading text-[1.55rem] uppercase leading-none tracking-normal">{selectedAddonGroup.label}</span>
+              <span className="font-heading text-[1.32rem] uppercase leading-none tracking-normal md:text-[1.55rem]">{selectedAddonGroup.label}</span>
             </span>
             <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Category</span>
           </button>
-          <div className="grid min-h-0 content-start gap-2 grid-cols-2 md:grid-cols-3">
+          <div className="grid min-h-0 content-start gap-1.5 grid-cols-2 md:grid-cols-3 md:gap-2">
             {selectedAddonGroup.items.map((item) => {
               const active = state.addOns.includes(item.label);
               const Icon = item.icon || Plus;
@@ -4449,17 +4449,17 @@ export default function BookNow() {
                   key={item.label}
                   type="button"
                   onClick={() => toggleAddon(item.label)}
-                  className={`${panelCardClass} flex min-h-[86px] flex-col justify-between p-2.5 text-left transition-colors md:min-h-[96px] ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
+                  className={`${panelCardClass} flex min-h-[72px] flex-col justify-between p-2 text-left transition-colors md:min-h-[96px] md:p-2.5 ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
                 >
                   <span className="flex items-center justify-between">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] md:h-9 md:w-9">
-                      <Icon className="h-4 w-4 md:h-[18px] md:w-[18px]" strokeWidth={2.45} />
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] md:h-9 md:w-9">
+                      <Icon className="h-3.5 w-3.5 md:h-[18px] md:w-[18px]" strokeWidth={2.45} />
                     </span>
                     {active ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   </span>
                   <span>
-                    <span className="block font-heading text-[1rem] uppercase leading-none tracking-normal md:text-[1.18rem]">{item.label}</span>
-                    <span className="mt-0.5 block font-body text-sm font-black md:text-base">{currency(item.price)}</span>
+                    <span className="block font-heading text-[0.92rem] uppercase leading-none tracking-normal md:text-[1.18rem]">{item.label}</span>
+                    <span className="mt-0.5 block font-body text-xs font-black md:text-base">{currency(item.price)}</span>
                   </span>
                 </button>
               );
@@ -4471,8 +4471,8 @@ export default function BookNow() {
 
     if (step === 2) {
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
-          <div className="grid gap-2 md:grid-cols-2">
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-1.5 md:gap-2">
+          <div className="grid gap-1.5 md:grid-cols-2 md:gap-2">
             {TIME_INTENTS.map((item) => {
               const active = state.timeIntent === item.key || (item.key === 'asap' && ['today', 'soonest'].includes(state.timeIntent));
               const Icon = item.icon;
@@ -4481,24 +4481,24 @@ export default function BookNow() {
                   key={item.key}
                   type="button"
                   onClick={() => chooseTimeIntent(item.key)}
-                  className={`${panelCardClass} flex min-h-[86px] flex-col justify-between p-3 text-left ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
+                  className={`${panelCardClass} flex min-h-[72px] flex-col justify-between p-2.5 text-left md:min-h-[86px] md:p-3 ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
                 >
                   <span className="flex items-center justify-between">
                     <Icon className="h-5 w-5" strokeWidth={2.45} />
                     {active && <Check className="h-4 w-4" />}
                   </span>
-                  <span className="font-heading text-[1.9rem] uppercase leading-none tracking-normal">{item.label}</span>
+                  <span className="font-heading text-[1.55rem] uppercase leading-none tracking-normal md:text-[1.9rem]">{item.label}</span>
                 </button>
               );
             })}
           </div>
-          <div className={`${panelCardClass} grid min-h-0 grid-rows-[auto_auto_1fr] gap-3 p-3`}>
+          <div className={`${panelCardClass} grid min-h-0 grid-rows-[auto_auto_1fr] gap-2 p-2.5 md:gap-3 md:p-3`}>
             <div className="flex items-center justify-between">
               <p className={microLabelClass}>Arrival</p>
               <p className="font-body text-sm font-black text-foreground/76">{bookingTimeSummary(state)}</p>
             </div>
             <div className="grid gap-2 md:grid-cols-2">
-              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
+              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-2.5 md:p-3">
                 <span className={microLabelClass}>Date</span>
                 <select
                   aria-label="Choose date"
@@ -4514,20 +4514,20 @@ export default function BookNow() {
                       timeIntent: 'choose',
                     }));
                   }}
-                  className="mt-1 min-h-[34px] w-full bg-transparent font-body text-base font-black text-foreground outline-none [color-scheme:dark]"
+                  className="mt-0.5 min-h-[30px] w-full bg-transparent font-body text-sm font-black text-foreground outline-none [color-scheme:dark] md:mt-1 md:min-h-[34px] md:text-base"
                 >
                   {dateOptions.map((option) => (
                     <option key={option.value} value={option.value}>{option.label} · {option.day}</option>
                   ))}
                 </select>
               </label>
-              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-3">
+              <label className="block rounded-2xl border border-foreground/12 bg-foreground/[0.04] p-2.5 md:p-3">
                 <span className={microLabelClass}>Time</span>
                 <select
                   aria-label="Choose time"
                   value={state.customTime || DEFAULT_EXACT_TIME}
                   onChange={(event) => chooseAvailabilityWindow({ key: event.target.value, time: event.target.value, display: formatTimeLabel(event.target.value) })}
-                  className="mt-1 min-h-[34px] w-full bg-transparent font-body text-base font-black text-foreground outline-none [color-scheme:dark]"
+                  className="mt-0.5 min-h-[30px] w-full bg-transparent font-body text-sm font-black text-foreground outline-none [color-scheme:dark] md:mt-1 md:min-h-[34px] md:text-base"
                 >
                   {timeSlots.map((slot) => (
                     <option key={slot.key} value={slot.time}>{slot.display}</option>
@@ -4535,7 +4535,7 @@ export default function BookNow() {
                 </select>
               </label>
             </div>
-            <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-sm font-semibold leading-snug text-foreground/62">
+            <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-xs font-semibold leading-snug text-foreground/62 md:text-sm">
               Earliest available Registered Nurse window.
             </div>
           </div>
@@ -4544,30 +4544,30 @@ export default function BookNow() {
     }
 
     return (
-      <div className="grid h-full min-h-0 content-start gap-2">
-        <div className={`${panelCardClass} p-2.5`}>
+      <div className="grid h-full min-h-0 content-start gap-1.5 md:gap-2">
+        <div className={`${panelCardClass} p-2 md:p-2.5`}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className={microLabelClass}>Ready</p>
-              <p className="mt-1 truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal">{serviceLabel}</p>
+              <p className="mt-0.5 truncate font-heading text-[1.35rem] uppercase leading-none tracking-normal md:mt-1 md:text-[1.7rem]">{serviceLabel}</p>
             </div>
-            <p className="shrink-0 font-body text-[1.55rem] font-black">{currency(subtotal)}</p>
+            <p className="shrink-0 font-body text-[1.32rem] font-black md:text-[1.55rem]">{currency(subtotal)}</p>
           </div>
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-1.5">
+          <div className="mt-1.5 grid grid-cols-3 gap-1 md:mt-2 md:grid-cols-2 md:gap-1.5">
             {[
               ['Where', resolvedZip || 'ZIP'],
               ['When', bookingTimeSummary(state)],
               ['Review', state.clinicalReviewOnFile ? 'On file' : 'Needed'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-foreground/10 bg-foreground/[0.035] p-1.5">
-                <p className="font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground/52">{label}</p>
-                <p className="mt-1 truncate font-body text-xs font-black text-foreground/78">{value}</p>
+                <p className="font-body text-[8px] font-black uppercase tracking-[0.1em] text-foreground/52 md:text-[9px]">{label}</p>
+                <p className="mt-0.5 truncate font-body text-[10px] font-black text-foreground/78 md:mt-1 md:text-xs">{value}</p>
               </div>
             ))}
           </div>
         </div>
-        <div className={`${panelCardClass} grid min-h-0 content-start gap-2 p-2.5`}>
-          <div className="grid gap-2 md:grid-cols-2">
+        <div className={`${panelCardClass} grid min-h-0 content-start gap-1.5 p-2 md:gap-2 md:p-2.5`}>
+          <div className="grid grid-cols-2 gap-1.5 md:gap-2">
             <div className="col-span-2">
               <TextInput
                 label="Name"
@@ -4616,7 +4616,7 @@ export default function BookNow() {
               />
             </div>
           </div>
-          <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2 font-body text-[10px] font-semibold leading-snug text-foreground/52">
+          <p className="rounded-xl border border-foreground/10 bg-background/30 px-2.5 py-1.5 font-body text-[9px] font-semibold leading-snug text-foreground/52 md:px-3 md:py-2 md:text-[10px]">
             By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
           </p>
         </div>
@@ -4625,12 +4625,18 @@ export default function BookNow() {
   };
 
   return (
-    <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
+    <div className="app-shell relative isolate min-h-[100dvh] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
       <BookingMobileHeader />
       <div className="hidden md:block">
         <Navbar />
       </div>
-      <main className="mx-auto h-[100svh] max-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[4.65rem] md:flex md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24">
+      <main
+        className="mx-auto h-[100dvh] max-h-[100dvh] min-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
+        style={{
+          '--av-booking-mobile-header': 'calc(env(safe-area-inset-top, 0px) + 4.45rem)',
+          '--av-booking-footer-reserve': 'calc(env(safe-area-inset-bottom, 0px) + 5.75rem)',
+        }}
+      >
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
             className="mx-auto max-w-3xl"
@@ -4673,7 +4679,7 @@ export default function BookNow() {
                     stripe={stripePromise}
                     options={embeddedCheckoutOptions}
                   >
-                    <EmbeddedCheckout className="min-h-[calc(100svh-250px)]" />
+                    <EmbeddedCheckout className="min-h-[calc(100dvh-250px)]" />
                   </EmbeddedCheckoutProvider>
                 </div>
               </div>
@@ -4682,7 +4688,7 @@ export default function BookNow() {
         )}
         {!embeddedCheckoutSession && (
           <>
-            <div className="md:hidden">
+            <div className="h-full min-h-0 md:hidden">
               <UniversalBookingFrame
                 step={step}
                 total={totalLabel}
