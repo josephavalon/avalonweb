@@ -655,6 +655,65 @@ function BookingMobileHeader() {
   return null;
 }
 
+function useMobileBookingViewportLayout(deps = []) {
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
+
+    const root = document.documentElement;
+    let frame = 0;
+
+    const update = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const viewport = window.visualViewport;
+        const visualHeight = Math.max(0, Math.round(viewport?.height || window.innerHeight || 0));
+        const visualOffsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
+        const layoutHeight = Math.max(visualHeight, Math.round(window.innerHeight || visualHeight));
+        const visualBottomGap = Math.max(0, Math.round(layoutHeight - visualHeight - visualOffsetTop));
+
+        root.style.setProperty('--av-booking-visual-height', `${visualHeight}px`);
+        root.style.setProperty('--av-booking-visual-offset-top', `${visualOffsetTop}px`);
+        root.style.setProperty('--av-booking-visual-bottom-gap', `${visualBottomGap}px`);
+
+        const footer = document.querySelector('[data-av-booking-mobile-footer="true"]');
+        const footerRect = footer?.getBoundingClientRect();
+        if (footerRect?.height) {
+          root.style.setProperty('--av-booking-footer-height', `${Math.ceil(footerRect.height)}px`);
+        }
+
+        const header = Array.from(document.querySelectorAll('header, nav')).find((node) => {
+          const rect = node.getBoundingClientRect();
+          if (rect.width < 120 || rect.height < 32) return false;
+          const style = window.getComputedStyle(node);
+          return rect.bottom > 0 && rect.top < 96 && style.display !== 'none' && style.visibility !== 'hidden';
+        });
+        const headerRect = header?.getBoundingClientRect();
+        if (headerRect?.height) {
+          root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(64, headerRect.bottom + 8))}px`);
+        }
+      });
+    };
+
+    update();
+    const viewport = window.visualViewport;
+    viewport?.addEventListener('resize', update);
+    viewport?.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    window.addEventListener('av-booking-layout', update);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      viewport?.removeEventListener('resize', update);
+      viewport?.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      window.removeEventListener('av-booking-layout', update);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
+
 function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitle = STEPS[step], progressIndex = displayStepIndex }) {
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
@@ -769,7 +828,11 @@ function UniversalBookingFrame({
           {children}
         </div>
       </motion.div>
-      <div className="fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),0.5rem)] z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0">
+      <div
+        data-av-booking-mobile-footer="true"
+        className="fixed inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0"
+        style={{ bottom: 'calc(max(env(safe-area-inset-bottom, 0px), var(--av-booking-visual-bottom-gap, 0px)) + 0.5rem)' }}
+      >
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1rem] border border-foreground/14 bg-background/82 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
           <div className="grid grid-cols-[76px_minmax(0,114px)_1fr] items-center gap-1.5 md:flex md:gap-2">
           <button
@@ -2512,7 +2575,7 @@ function FastReviewSurface({
   const canPay = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
 
   return (
-    <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(env(safe-area-inset-bottom,0px)+5.75rem)] md:pb-6">
+    <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
       {error && (
         <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
           <p className="font-body text-sm font-black">{error}</p>
@@ -2602,7 +2665,11 @@ function FastReviewSurface({
 
       </div>
 
-      <div className="fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),0.5rem)] z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0">
+      <div
+        data-av-booking-mobile-footer="true"
+        className="fixed inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0"
+        style={{ bottom: 'calc(max(env(safe-area-inset-bottom, 0px), var(--av-booking-visual-bottom-gap, 0px)) + 0.5rem)' }}
+      >
         <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:rounded-[1.25rem]">
           <div className="hidden min-w-0 flex-1 px-4 md:block">
             <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Checkout</p>
@@ -4624,17 +4691,33 @@ export default function BookNow() {
     );
   };
 
+  useMobileBookingViewportLayout([
+    step,
+    progressDisplay.index,
+    progressDisplay.title,
+    therapyCategoryScreen,
+    activeTherapyGroup,
+    activeAddonGroup,
+    state.productKey,
+    state.addOns.length,
+    state.timeIntent,
+    state.address,
+    state.zip,
+    checkoutLoading,
+    embeddedCheckoutSession?.id,
+  ]);
+
   return (
-    <div className="app-shell relative isolate min-h-[100dvh] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
+    <div className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
       <BookingMobileHeader />
       <div className="hidden md:block">
         <Navbar />
       </div>
       <main
-        className="mx-auto h-[100dvh] max-h-[100dvh] min-h-[100svh] w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
+        className="mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
-          '--av-booking-mobile-header': 'calc(env(safe-area-inset-top, 0px) + 4.45rem)',
-          '--av-booking-footer-reserve': 'calc(env(safe-area-inset-bottom, 0px) + 5.75rem)',
+          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px))',
+          '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5rem) + max(env(safe-area-inset-bottom, 0px), var(--av-booking-visual-bottom-gap, 0px)) + 0.75rem)',
         }}
       >
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
