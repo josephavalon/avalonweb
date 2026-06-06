@@ -4211,6 +4211,7 @@ export default function BookNow() {
       }
 
       const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
+      const denseTherapyGrid = !isDoseTherapyGroup && activeTherapies.length > 6;
 
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3">
@@ -4220,6 +4221,8 @@ export default function BookNow() {
           <div className={`grid min-h-0 content-start gap-2 ${
             isDoseTherapyGroup
               ? 'grid-cols-1 auto-rows-[4.15rem]'
+              : denseTherapyGrid
+                ? 'grid-cols-3 auto-rows-[4.65rem] overflow-hidden md:grid-cols-3 md:auto-rows-[6.15rem]'
               : activeTherapies.length <= 4
               ? 'grid-cols-1 md:grid-cols-2 auto-rows-[9.4rem]'
               : activeTherapies.length <= 6
@@ -4238,21 +4241,23 @@ export default function BookNow() {
                   aria-pressed={active}
                   className={`${panelCardClass} relative min-h-0 transition-colors ${
                     active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
-                  } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
+                  } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : denseTherapyGrid ? 'flex flex-col items-center justify-center gap-1 px-1.5 py-1 text-center md:gap-1.5 md:px-2 md:py-2' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
                 >
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
                   {active && !isDoseTherapyGroup && (
-                    <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground">
-                      <Check className="h-4 w-4" strokeWidth={2.7} />
+                    <span className={`${denseTherapyGrid ? 'right-1 top-1 h-5 w-5 md:right-1.5 md:top-1.5 md:h-6 md:w-6' : 'right-2 top-2 h-7 w-7'} absolute flex items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground`}>
+                      <Check className={`${denseTherapyGrid ? 'h-3 w-3 md:h-3.5 md:w-3.5' : 'h-4 w-4'}`} strokeWidth={2.7} />
                     </span>
                   )}
-                  <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
-                    <Icon className="h-6 w-6" strokeWidth={2.15} />
+                  <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : denseTherapyGrid ? 'h-7 w-7 md:h-9 md:w-9' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
+                    <Icon className={`${denseTherapyGrid && !isDoseTherapyGroup ? 'h-4 w-4 md:h-5 md:w-5' : 'h-6 w-6'}`} strokeWidth={2.15} />
                   </span>
                   <span className={`relative min-w-0 ${isDoseTherapyGroup ? 'pr-1' : ''}`}>
                     <span className={`block break-words font-heading uppercase tracking-normal text-foreground ${
                       isDoseTherapyGroup
                         ? 'text-[1.15rem] leading-none min-[390px]:text-[1.25rem] md:text-[1.75rem]'
+                        : denseTherapyGrid
+                          ? 'text-[0.72rem] leading-[0.9] min-[390px]:text-[0.78rem] md:text-[1.12rem] lg:text-[1.22rem]'
                         : 'text-[1rem] leading-[0.9] min-[390px]:text-[1.08rem] md:text-[1.75rem]'
                     }`}>{copy.label}</span>
                     {isDoseTherapyGroup && (
@@ -4260,7 +4265,7 @@ export default function BookNow() {
                         {protocolDuration(item)} · {currency(protocolPrice(item))}
                       </span>
                     )}
-                    {!isDoseTherapyGroup && active && <span className="mt-1 block font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62">{currency(protocolPrice(item))}</span>}
+                    {!isDoseTherapyGroup && active && <span className={`${denseTherapyGrid ? 'mt-0.5 text-[8px] md:text-[9px]' : 'mt-1 text-[10px]'} block font-body font-black uppercase tracking-[0.08em] text-foreground/62`}>{currency(protocolPrice(item))}</span>}
                   </span>
                   {isDoseTherapyGroup && (
                     <span className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
@@ -4376,7 +4381,7 @@ export default function BookNow() {
       }
 
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
+        <div className="grid h-full min-h-0 content-start gap-2">
           <button
             type="button"
             onClick={() => setActiveAddonGroup('')}
@@ -4390,7 +4395,7 @@ export default function BookNow() {
             </span>
             <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Category</span>
           </button>
-          <div className="grid min-h-0 gap-2 md:grid-cols-2">
+          <div className="grid min-h-0 content-start gap-2 grid-cols-2 md:grid-cols-3">
             {selectedAddonGroup.items.map((item) => {
               const active = state.addOns.includes(item.label);
               const Icon = item.icon || Plus;
@@ -4399,17 +4404,17 @@ export default function BookNow() {
                   key={item.label}
                   type="button"
                   onClick={() => toggleAddon(item.label)}
-                  className={`${panelCardClass} flex min-h-0 flex-col justify-between p-3 text-left transition-colors ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
+                  className={`${panelCardClass} flex min-h-[86px] flex-col justify-between p-2.5 text-left transition-colors md:min-h-[96px] ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
                 >
                   <span className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055]">
-                      <Icon className="h-5 w-5" strokeWidth={2.45} />
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] md:h-9 md:w-9">
+                      <Icon className="h-4 w-4 md:h-[18px] md:w-[18px]" strokeWidth={2.45} />
                     </span>
                     {active ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   </span>
                   <span>
-                    <span className="block font-heading text-[1.45rem] uppercase leading-none tracking-normal">{item.label}</span>
-                    <span className="mt-1 block font-body text-lg font-black">{currency(item.price)}</span>
+                    <span className="block font-heading text-[1rem] uppercase leading-none tracking-normal md:text-[1.18rem]">{item.label}</span>
+                    <span className="mt-0.5 block font-body text-sm font-black md:text-base">{currency(item.price)}</span>
                   </span>
                 </button>
               );

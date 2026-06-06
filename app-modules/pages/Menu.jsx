@@ -8,7 +8,6 @@ import {
   Clock,
   Droplets,
   FlaskConical,
-  Syringe,
   Zap,
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
@@ -16,7 +15,8 @@ import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import UniversalCard from '@/components/ui/UniversalCard';
-import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
+import { IV_SESSIONS } from '@/config/verticals';
+import { slugify } from '@/data/products';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const HERO_GOALS = [
@@ -56,6 +56,23 @@ function bookingPathForSession(session) {
   if (session.key) params.set('protocol', session.key);
   params.set('time', 'asap');
   return `/book?${params.toString()}`;
+}
+
+const DETAIL_SLUG_BY_KEY = {
+  hydration: 'hydration-iv',
+  myers: 'myers-cocktail-iv',
+  postnight: 'post-night-out-iv',
+  immunity: 'immunity-iv',
+  energy: 'energy-iv',
+  recovery: 'recovery-iv',
+  beauty: 'beauty-iv',
+  jetlag: 'jet-lag-iv',
+};
+
+function detailPathForSession(session) {
+  if (session.key === 'nad') return '/products/nad/nad-250mg';
+  if (session.key === 'cbd') return '/products/cbd/cbd-33mg';
+  return `/products/iv-vitamins/${DETAIL_SLUG_BY_KEY[session.key] || slugify(`${session.label} IV`)}`;
 }
 
 function doseIntroFor(session) {
@@ -155,92 +172,43 @@ function GoalTile({ item, index, onOpen }) {
 }
 
 function ProtocolCard({ session, index = 0 }) {
-  const [open, setOpen] = useState(false);
   const Icon = session.icon || Droplets;
-  const pieces = includesText(session).split(' · ').filter(Boolean).slice(0, 3);
 
   return (
-    <motion.article
+    <MotionLink
+      to={detailPathForSession(session)}
       layout
       variants={premiumStaggerItem}
       transition={{ ...CARD_TRANSITION, delay: Math.min(index * 0.025, 0.12), layout: CARD_TRANSITION }}
-      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.6rem] md:p-4"
+      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/44 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.35rem] md:p-3"
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4"
-        aria-expanded={open}
-      >
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16">
-          <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.4} />
+      <span className="relative flex min-h-[72px] w-full min-w-0 items-center gap-2.5 text-left md:min-h-[84px] md:gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-12 md:w-12">
+          <Icon className="h-5 w-5 md:h-[22px] md:w-[22px]" strokeWidth={2.4} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
+              <h2 className="truncate font-heading text-[1.5rem] uppercase leading-none tracking-normal text-foreground md:text-[2rem]">
                 {session.label}
               </h2>
-              <p className="mt-1 flex items-center gap-2 font-body text-base font-bold text-foreground/78 md:text-lg">
-                <Clock className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+              <p className="mt-1 flex items-center gap-1.5 font-body text-xs font-bold text-foreground/78 md:text-sm">
+                <Clock className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
                 {session.duration || session.doses?.[0]?.duration || '45-60 min'}
               </p>
-              <p className="mt-1 font-heading text-[1.85rem] leading-none text-foreground sm:hidden">{money(priceFor(session))}</p>
+              <p className="mt-1 font-heading text-[1.35rem] leading-none text-foreground sm:hidden">{money(priceFor(session))}</p>
             </div>
             <div className="hidden shrink-0 text-right sm:block">
-              <p className="font-heading text-[2.25rem] leading-none text-foreground md:text-[2.75rem]">{money(priceFor(session))}</p>
-              <p className="font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/58">from</p>
+              <p className="font-heading text-[1.85rem] leading-none text-foreground md:text-[2.1rem]">{money(priceFor(session))}</p>
+              <p className="font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/58">from</p>
             </div>
           </div>
         </div>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={CONTROL_TRANSITION} className="relative shrink-0 text-foreground/70" aria-hidden="true">
-          <ChevronDown className="h-5 w-5" strokeWidth={2.2} />
-        </motion.span>
-      </button>
-      {open && (
-        <SmoothDisclosure open>
-          <div className="relative border-t border-foreground/8 pt-3">
-            {pieces.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {pieces.map((item) => (
-                  <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-2.5 py-1 font-body text-[11px] font-bold text-foreground/72">
-                    {item}
-                  </span>
-                ))}
-              </div>
-            )}
-            <DoseLadder session={session} />
-            <div className="mt-3">
-              <Link
-                to={bookingPathForSession(session)}
-                className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
-              >
-                Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-              </Link>
-            </div>
-          </div>
-        </SmoothDisclosure>
-      )}
-    </motion.article>
-  );
-}
-
-function CompactRow({ item, type = 'addon' }) {
-  const Icon = type === 'shot' ? (item.icon || Syringe) : Droplets;
-  return (
-    <MotionLink
-      to="/book"
-      className="flex min-h-[64px] items-center gap-3 border-b border-foreground/8 py-3 last:border-b-0"
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-foreground/12 bg-foreground/[0.055] text-foreground">
-        <Icon className="h-5 w-5" strokeWidth={2.35} />
+        <span className="relative shrink-0 text-foreground/70 transition-transform group-hover:translate-x-1" aria-hidden="true">
+          <ArrowRight className="h-5 w-5" strokeWidth={2.2} />
+        </span>
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-body text-base font-extrabold text-foreground">{item.label}</span>
-        <span className="mt-0.5 block truncate font-body text-sm font-semibold text-foreground/64">{item.desc || 'Add to visit'}</span>
-      </span>
-      <span className="shrink-0 font-heading text-2xl text-foreground">{money(item.price)}</span>
     </MotionLink>
   );
 }
@@ -358,8 +326,6 @@ export default function Menu() {
   const vitaminSessions = useMemo(() => filtered.filter((session) => !DOSE_PROTOCOL_KEYS.has(session.key)), [filtered]);
   const nadSessions = useMemo(() => filtered.filter((session) => session.key === 'nad'), [filtered]);
   const cbdSessions = useMemo(() => filtered.filter((session) => session.key === 'cbd'), [filtered]);
-  const standardAddons = IV_ADDONS.filter((item) => !item.group).slice(0, 8);
-  const shotPreview = IM_SHOTS.slice(0, 8);
   const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
   const openCategory = (item) => {
     if (!item?.section) return;
@@ -413,15 +379,6 @@ export default function Menu() {
         <section id="protocol-directory" className="mt-4 scroll-mt-44 md:mt-6">
           <Foldout title="All Protocols" icon={FlaskConical} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
             <ProtocolList id="all-protocols" sessions={filtered} includeCustom />
-          </Foldout>
-        </section>
-
-        <section className="mt-4 grid gap-2 md:mt-6 md:grid-cols-2 md:gap-3">
-          <Foldout title="IV Add-Ons" icon={Droplets}>
-            {standardAddons.map((item) => <CompactRow key={item.label} item={item} />)}
-          </Foldout>
-          <Foldout title="IM Add-Ons" icon={Syringe}>
-            {shotPreview.map((item) => <CompactRow key={item.label} item={item} type="shot" />)}
           </Foldout>
         </section>
 
