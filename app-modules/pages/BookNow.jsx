@@ -670,10 +670,12 @@ function useMobileBookingViewportLayout(deps = []) {
         const visualOffsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
         const layoutHeight = Math.max(visualHeight, Math.round(window.innerHeight || visualHeight));
         const visualBottomGap = Math.max(0, Math.round(layoutHeight - visualHeight - visualOffsetTop));
+        const visualHeightBreathing = Math.max(0, Math.min(44, Math.round((visualHeight - 660) * 0.25)));
 
         root.style.setProperty('--av-booking-visual-height', `${visualHeight}px`);
         root.style.setProperty('--av-booking-visual-offset-top', `${visualOffsetTop}px`);
         root.style.setProperty('--av-booking-visual-bottom-gap', `${visualBottomGap}px`);
+        root.style.setProperty('--av-booking-visual-breathing', `${visualHeightBreathing}px`);
 
         const footer = document.querySelector('[data-av-booking-mobile-footer="true"]');
         const footerRect = footer?.getBoundingClientRect();
@@ -852,14 +854,14 @@ function UniversalBookingFrame({
         className="absolute inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0"
         style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
-        <div className="mx-auto max-w-lg overflow-hidden rounded-[1rem] border border-foreground/14 bg-background/82 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
-          <div className="grid grid-cols-[76px_minmax(0,114px)_1fr] items-center gap-1.5 md:flex md:gap-2">
+        <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
+          <div className="grid grid-cols-[76px_minmax(0,122px)_1fr] items-center gap-2 md:flex md:gap-2">
           <button
             type="button"
             onClick={onBack}
             disabled={!canGoBack}
             aria-label="Go back"
-            className="flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[11px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[11px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
           >
             Back
           </button>
@@ -872,9 +874,14 @@ function UniversalBookingFrame({
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
-            className={`relative flex min-h-[44px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
-              canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/18 bg-background/42 text-foreground/58'
+            className={`relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
+              canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/70 bg-foreground text-background/70 md:border-foreground/18 md:bg-background/42 md:text-foreground/58'
             }`}
+            style={{
+              background: 'hsl(var(--foreground))',
+              borderColor: 'hsl(var(--foreground) / 0.82)',
+              color: '#050505',
+            }}
           >
             {checkoutLoading && (
               <motion.span
@@ -884,8 +891,8 @@ function UniversalBookingFrame({
                 transition={{ duration: 1.4, repeat: Infinity, ease: EASE }}
               />
             )}
-            <span>{actionLabel}</span>
-            <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" strokeWidth={2.7} />
+            <span style={{ color: '#050505' }}>{actionLabel}</span>
+            <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
         </div>
@@ -4731,8 +4738,8 @@ export default function BookNow() {
       <main
         className="mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
-          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px))',
-          '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 4.75rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',
+          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px) + var(--av-booking-visual-breathing, 0px))',
+          '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5.25rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',
         }}
       >
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
