@@ -719,7 +719,26 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
     <div className="relative mb-2 shrink-0 px-1 pt-0.5 md:mb-3 md:pt-1">
-      <div className="relative">
+      <div className="relative md:hidden">
+        <p className="font-heading text-[1.62rem] uppercase leading-[0.88] tracking-normal text-foreground min-[390px]:text-[1.8rem]">
+          {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+        </p>
+        <div className="relative mt-3.5 h-4">
+          <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2 bg-foreground/[0.28]" />
+          {STEPS.map((item, index) => (
+            <span
+              key={item}
+              aria-hidden="true"
+              className={`absolute top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full transition-colors ${
+                index <= progressIndex ? 'bg-foreground' : 'bg-foreground/[0.48]'
+              } ${index === 0 ? 'left-0 h-2.5 w-12 rounded-full' : 'h-3 w-3 -translate-x-1/2'}`}
+              style={index === 0 ? undefined : { left: `${(index / (STEPS.length - 1)) * 100}%` }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="relative hidden md:block">
         <div className="flex items-center justify-between gap-2.5 md:gap-3">
           <div className="flex min-w-0 items-center gap-2 md:gap-2.5">
             <motion.span
@@ -766,16 +785,16 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
             })}
           </div>
         </div>
-      </div>
 
-      <div className="relative mt-2 h-2.5 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] md:mt-3 md:h-3">
-        <motion.div
-          className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
-          initial={false}
-          animate={{ width: `${((progressIndex + 1) / STEPS.length) * 100}%` }}
-          transition={{ duration: 0.56, ease: EASE }}
-        >
-        </motion.div>
+        <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
+          <motion.div
+            className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
+            initial={false}
+            animate={{ width: `${((progressIndex + 1) / STEPS.length) * 100}%` }}
+            transition={{ duration: 0.56, ease: EASE }}
+          >
+          </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -868,10 +887,6 @@ function UniversalBookingFrame({
             <span>{actionLabel}</span>
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" strokeWidth={2.7} />
           </button>
-          </div>
-          <div className="mt-0.5 flex items-center justify-center gap-1.5 font-body text-[9px] font-semibold text-foreground/56 min-[390px]:text-[10px]">
-            <ShieldCheck className="h-2.5 w-2.5 min-[390px]:h-3 min-[390px]:w-3" strokeWidth={2.2} />
-            Secure booking
           </div>
         </div>
       </div>
@@ -3246,7 +3261,7 @@ export default function BookNow() {
   const dueNowAmount = state.visitType === 'subscription' ? activePlanPrice : groupContactRequired ? 0 : Math.min(BOOKING_DEPOSIT_AMOUNT, subtotal || 0);
   const balanceDue = state.visitType === 'subscription' ? 0 : Math.max(0, subtotal - dueNowAmount);
   const dueNowLabel = !product && step === 0 ? currency(BOOKING_DEPOSIT_AMOUNT) : state.visitType === 'subscription' ? `${currency(activePlanPrice)} ${activeSubscriptionTerm.key === 'monthly' ? 'today' : 'prepaid'}` : currency(dueNowAmount);
-  const dueAfterLabel = !product && step === 0 ? currency(200) : groupContactRequired ? 'Quote' : currency(balanceDue);
+  const dueAfterLabel = !product && step === 0 ? currency(300) : groupContactRequired ? 'Quote' : currency(balanceDue);
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
   const resolvedZip = useMemo(
@@ -4325,7 +4340,7 @@ export default function BookNow() {
             aria-pressed={active}
             className={`${panelCardClass} relative min-h-0 transition-colors ${
               active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
-            } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : denseTherapyGrid ? 'flex flex-col items-center justify-center gap-1 px-1.5 py-1 text-center md:gap-1.5 md:px-2 md:py-2' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
+            } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : denseTherapyGrid ? 'flex flex-col items-center justify-center gap-2 px-1.5 py-2 text-center md:gap-1.5 md:px-2 md:py-2' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
           >
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
             {active && !isDoseTherapyGroup && (
@@ -4333,15 +4348,15 @@ export default function BookNow() {
                 <Check className={`${denseTherapyGrid ? 'h-3 w-3 md:h-3.5 md:w-3.5' : 'h-4 w-4'}`} strokeWidth={2.7} />
               </span>
             )}
-            <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : denseTherapyGrid ? 'h-7 w-7 md:h-16 md:w-16' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
-              <Icon className={`${denseTherapyGrid && !isDoseTherapyGroup ? 'h-4 w-4 md:h-12 md:w-12' : 'h-6 w-6'}`} strokeWidth={2.15} />
+            <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : denseTherapyGrid ? 'h-10 w-10 md:h-16 md:w-16' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
+              <Icon className={`${denseTherapyGrid && !isDoseTherapyGroup ? 'h-7 w-7 md:h-12 md:w-12' : 'h-6 w-6'}`} strokeWidth={2.15} />
             </span>
             <span className={`relative min-w-0 ${isDoseTherapyGroup ? 'pr-1' : ''}`}>
               <span className={`block break-words font-heading uppercase tracking-normal text-foreground ${
                 isDoseTherapyGroup
                   ? 'text-[1.15rem] leading-none min-[390px]:text-[1.25rem] md:text-[1.75rem]'
                   : denseTherapyGrid
-                    ? 'text-[0.72rem] leading-[0.9] min-[390px]:text-[0.78rem] md:text-[1.85rem] md:leading-none lg:text-[2rem]'
+                    ? 'text-[1.02rem] leading-[0.9] min-[390px]:text-[1.1rem] md:text-[1.85rem] md:leading-none lg:text-[2rem]'
                   : 'text-[1rem] leading-[0.9] min-[390px]:text-[1.08rem] md:text-[1.75rem]'
               }`}>{menuLabel}</span>
               {isDoseTherapyGroup && (
@@ -4364,12 +4379,12 @@ export default function BookNow() {
 
       return (
         <div className={`${denseTherapyGrid ? 'md:grid-rows-[auto_1fr_auto]' : 'md:grid-rows-[auto_1fr]'} grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-4`}>
-          <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:pt-1 md:text-left`}>
+          <p className={`${microLabelClass} pt-0.5 text-left tracking-[0.22em] md:pt-1`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
           {denseTherapyGrid ? (
             <>
-              <div className="grid min-h-0 auto-rows-[4.2rem] grid-cols-3 content-start gap-1.5 overflow-hidden min-[390px]:auto-rows-[4.35rem] md:hidden">
+              <div className="grid min-h-0 auto-rows-[clamp(5.8rem,13dvh,7.1rem)] grid-cols-3 content-start gap-2 overflow-hidden md:hidden">
                 {activeTherapies.map((item) => renderTherapyCard(item))}
               </div>
               <div className="hidden min-h-0 content-start overflow-hidden md:grid md:auto-rows-[7.25rem] md:grid-cols-3 md:gap-2.5 [@media_(min-height:900px)]:md:auto-rows-[8.15rem] [@media_(min-height:900px)]:md:gap-3">
