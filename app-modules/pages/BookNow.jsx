@@ -206,7 +206,6 @@ const THERAPY_GROUPS = [
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
 ];
-const DESKTOP_THERAPY_MENU_KEYS = ['energy', 'recovery', 'jetlag', 'postnight', 'myers', 'hydration', 'immunity', 'nad-250mg', 'cbd-33mg'];
 const STACK_LAYERS = [
   { key: 'iv', label: 'IVs', status: 'Base', icon: Droplets, active: true },
   { key: 'addons', label: 'Add-ons', status: 'Step 2', icon: Plus, active: true },
@@ -4165,9 +4164,6 @@ export default function BookNow() {
   ), []);
   const activeTherapyGroupData = therapyGroups.find((group) => group.key === activeTherapyGroup) || therapyGroups[0];
   const activeTherapies = activeTherapyGroupData?.items || [];
-  const desktopTherapyMenu = useMemo(() => {
-    return DESKTOP_THERAPY_MENU_KEYS.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean);
-  }, []);
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
     ? 'IV THERAPY'
     : activeTherapyGroupData?.key === 'cbd'
@@ -4234,6 +4230,44 @@ export default function BookNow() {
 
   const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl';
   const microLabelClass = 'font-body text-[9px] font-black uppercase tracking-[0.13em] text-foreground/58 md:text-[10px]';
+  const renderStoreMenuRow = ({
+    key,
+    icon: Icon = Droplets,
+    title,
+    meta,
+    onClick,
+    active = false,
+    action = 'arrow',
+    className = '',
+    iconClassName = '',
+  }) => {
+    const ActionIcon = action === 'check' ? Check : action === 'plus' ? Plus : ArrowRight;
+    return (
+      <button
+        key={key}
+        type="button"
+        onClick={onClick}
+        aria-pressed={active}
+        className={`${panelCardClass} grid !min-h-[88px] grid-cols-[62px_1fr_30px] items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:border-foreground/24 min-[390px]:!min-h-[94px] min-[390px]:grid-cols-[68px_1fr_32px] min-[390px]:px-3.5 md:!min-h-[104px] md:grid-cols-[78px_1fr_36px] md:gap-3 md:px-4 ${active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''} ${className}`}
+      >
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+        <span className={`relative flex h-11 w-11 items-center justify-center rounded-2xl border border-foreground/8 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14 ${iconClassName}`}>
+          <Icon className="h-7 w-7 min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9" strokeWidth={2.05} />
+        </span>
+        <span className="relative min-w-0 border-l border-foreground/12 pl-3 min-[390px]:pl-4 md:pl-5">
+          <span className="block truncate font-heading text-[1.68rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.9rem] md:text-[2.15rem]">{title}</span>
+          {meta && (
+            <span className="mt-1 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm">
+              {meta}
+            </span>
+          )}
+        </span>
+        <span className="relative flex justify-end text-foreground">
+          <ActionIcon className="h-5 w-5 min-[390px]:h-6 min-[390px]:w-6" strokeWidth={2.55} />
+        </span>
+      </button>
+    );
+  };
 
   const renderUniversalStep = () => {
     if (step === 3) {
@@ -4304,122 +4338,48 @@ export default function BookNow() {
         return (
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-3">
             <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:pt-1`}>Choose a therapy base</p>
-            <div className="grid min-h-0 grid-rows-3 gap-1.5 md:h-full md:grid-rows-3 md:gap-2.5 2xl:gap-4">
-              {therapyGroups.map((group) => {
-                const GroupIcon = group.icon;
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    onClick={() => {
-                      setActiveTherapyGroup(group.key);
-                      setTherapyCategoryScreen(false);
-                    }}
-                    className={`${panelCardClass} grid min-h-0 grid-cols-[72px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[78px_1fr_26px] min-[390px]:px-3.5 md:grid-cols-[92px_1fr_28px] md:gap-3 md:px-5 2xl:grid-cols-[122px_1fr_34px] 2xl:px-8`}
-                  >
-                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground min-[390px]:h-16 min-[390px]:w-16 md:h-16 md:w-16 2xl:h-24 2xl:w-24">
-                      <GroupIcon className="h-9 w-9 min-[390px]:h-10 min-[390px]:w-10 md:h-10 md:w-10 2xl:h-16 2xl:w-16" strokeWidth={2.05} />
-                    </span>
-                    <span className="relative min-w-0 border-l border-foreground/10 pl-3 md:pl-4 2xl:pl-7">
-                      <span className="block font-heading text-[1.42rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem] md:text-[1.45rem] 2xl:text-[2.35rem]">{group.label}</span>
-                      <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62 md:mt-1 md:text-xs 2xl:text-base">{group.sub}</span>
-                    </span>
-                    <span className="relative flex justify-end text-foreground/84">
-                      <ArrowRight className="h-5 w-5 2xl:h-7 2xl:w-7" strokeWidth={2.5} />
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="grid min-h-0 content-start gap-2 overflow-hidden md:gap-3">
+              {therapyGroups.map((group) => renderStoreMenuRow({
+                key: group.key,
+                icon: group.icon,
+                title: group.label,
+                meta: group.sub,
+                onClick: () => {
+                  setActiveTherapyGroup(group.key);
+                  setTherapyCategoryScreen(false);
+                },
+              }))}
             </div>
           </div>
         );
       }
 
       const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
-      const denseTherapyGrid = !isDoseTherapyGroup && activeTherapies.length > 6;
-      const renderTherapyCard = (item, { desktopMenu = false } = {}) => {
+      const renderTherapyCard = (item) => {
         const Icon = item.icon || Droplets;
         const active = state.productKey === item.key;
         const copy = compactProtocolCopy(item);
-        const menuLabel = desktopMenu && item.parentProtocolKey === 'nad'
-          ? 'NAD+'
-          : desktopMenu && item.parentProtocolKey === 'cbd'
-            ? 'CBD'
-            : copy.label;
+        const menuLabel = copy.label;
+        const meta = `${currency(protocolPrice(item))} · ${String(protocolDuration(item)).toUpperCase()}`;
 
-        return (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => chooseTherapyMenuProduct(item.key)}
-            aria-pressed={active}
-            className={`${panelCardClass} relative min-h-0 transition-colors ${
-              active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
-            } ${isDoseTherapyGroup ? 'grid grid-cols-[42px_1fr_auto] items-center gap-3 px-3 py-2 text-left' : denseTherapyGrid ? 'flex flex-col items-center justify-center gap-2 px-1.5 py-2 text-center md:gap-1.5 md:px-2 md:py-2' : 'flex flex-col items-center justify-center gap-2 p-2 text-center'}`}
-          >
-            <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-            {active && !isDoseTherapyGroup && (
-              <span className={`${denseTherapyGrid ? 'right-1 top-1 h-5 w-5 md:right-1.5 md:top-1.5 md:h-6 md:w-6' : 'right-2 top-2 h-7 w-7'} absolute flex items-center justify-center rounded-full border border-foreground/24 bg-foreground/[0.10] text-foreground`}>
-                <Check className={`${denseTherapyGrid ? 'h-3 w-3 md:h-3.5 md:w-3.5' : 'h-4 w-4'}`} strokeWidth={2.7} />
-              </span>
-            )}
-            <span className={`${isDoseTherapyGroup ? 'h-10 w-10' : denseTherapyGrid ? 'h-10 w-10 md:h-16 md:w-16' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-xl text-foreground`}>
-              <Icon className={`${denseTherapyGrid && !isDoseTherapyGroup ? 'h-7 w-7 md:h-12 md:w-12' : 'h-6 w-6'}`} strokeWidth={2.15} />
-            </span>
-            <span className={`relative min-w-0 ${isDoseTherapyGroup ? 'pr-1' : ''}`}>
-              <span className={`block break-words font-heading uppercase tracking-normal text-foreground ${
-                isDoseTherapyGroup
-                  ? 'text-[1.15rem] leading-none min-[390px]:text-[1.25rem] md:text-[1.75rem]'
-                  : denseTherapyGrid
-                    ? 'text-[1.02rem] leading-[0.9] min-[390px]:text-[1.1rem] md:text-[1.85rem] md:leading-none lg:text-[2rem]'
-                  : 'text-[1rem] leading-[0.9] min-[390px]:text-[1.08rem] md:text-[1.75rem]'
-              }`}>{menuLabel}</span>
-              {isDoseTherapyGroup && (
-                <span className="mt-0.5 block truncate font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/58">
-                  {protocolDuration(item)} · {currency(protocolPrice(item))}
-                </span>
-              )}
-            </span>
-            {isDoseTherapyGroup && (
-              <span className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
-                active ? 'border-foreground/26 bg-foreground/[0.10] text-foreground' : 'border-foreground/14 bg-background/28 text-foreground/62'
-              }`}>
-                {active ? <Check className="h-4 w-4" strokeWidth={2.7} /> : <ArrowRight className="h-4 w-4" strokeWidth={2.4} />}
-              </span>
-            )}
-          </button>
-        );
+        return renderStoreMenuRow({
+          key: item.key,
+          icon: Icon,
+          title: menuLabel,
+          meta,
+          onClick: () => chooseTherapyMenuProduct(item.key),
+          active,
+        });
       };
 
       return (
-        <div className={`${denseTherapyGrid ? 'md:grid-rows-[auto_1fr_auto]' : 'md:grid-rows-[auto_1fr]'} grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-4`}>
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-4">
           <p className={`${microLabelClass} pt-0.5 text-left tracking-[0.22em] md:pt-1`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
-          {denseTherapyGrid ? (
-            <>
-              <div className="grid min-h-0 auto-rows-[clamp(5.8rem,16dvh,7.45rem)] grid-cols-3 content-start gap-2 overflow-hidden md:hidden">
-                {activeTherapies.map((item) => renderTherapyCard(item))}
-              </div>
-              <div className="hidden min-h-0 content-start overflow-hidden md:grid md:auto-rows-[7.25rem] md:grid-cols-3 md:gap-2.5 [@media_(min-height:900px)]:md:auto-rows-[8.15rem] [@media_(min-height:900px)]:md:gap-3">
-                {desktopTherapyMenu.map((item) => renderTherapyCard(item, { desktopMenu: true }))}
-              </div>
-            </>
-          ) : (
-            <div className={`grid min-h-0 content-start gap-1.5 md:gap-2 ${
-              isDoseTherapyGroup
-                ? 'grid-cols-1 auto-rows-[3.85rem] min-[390px]:auto-rows-[4rem]'
-                : activeTherapies.length <= 4
-                ? 'grid-cols-1 md:grid-cols-2 auto-rows-[8.2rem] min-[390px]:auto-rows-[8.75rem] md:auto-rows-[9.4rem]'
-                : activeTherapies.length <= 6
-                  ? 'grid-cols-1 md:grid-cols-2 auto-rows-[7.9rem] min-[390px]:auto-rows-[8.4rem] md:auto-rows-[9rem]'
-                  : 'grid-cols-1 auto-rows-[5rem] overflow-y-auto pr-1 md:grid-cols-2 md:auto-rows-[6.75rem]'
-            }`}>
-              {activeTherapies.map((item) => renderTherapyCard(item))}
-            </div>
-          )}
-          {denseTherapyGrid && <div className="hidden [@media_(min-height:900px)]:md:block"><TrustSpeedStrip /></div>}
+          <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1 md:grid-cols-2 md:gap-3">
+            {activeTherapies.map((item) => renderTherapyCard(item))}
+          </div>
         </div>
       );
     }
@@ -4432,90 +4392,43 @@ export default function BookNow() {
           <div className="h-full min-h-0">
             <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:hidden">
             <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em]`}>Choose add-ons</p>
-              <div className="grid min-h-0 content-start gap-1.5 overflow-y-auto pb-2 pr-1">
-                <button
-                  type="button"
-                  onClick={chooseNoAddons}
-                  className={`${panelCardClass} grid min-h-[74px] grid-cols-[48px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 ${
-                    state.addOnDecision && state.addOns.length === 0 ? 'border-foreground/42 bg-foreground/[0.14]' : ''
-                  }`}
-                >
-                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                  <span className="relative flex h-9 w-9 items-center justify-center rounded-xl text-foreground">
-                    <Check className="h-5 w-5" strokeWidth={2.3} />
-                  </span>
-                  <span className="relative min-w-0 border-l border-foreground/10 pl-3">
-                    <span className="block font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground">No add-ons</span>
-                    <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">Fastest checkout</span>
-                  </span>
-                  <span className="relative flex justify-end text-foreground/84">
-                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
-                  </span>
-                </button>
-              {addonCatalog.groups.map((group) => {
-                const GroupIcon = group.key === 'iv' ? Plus : group.icon;
-                const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    onClick={() => setActiveAddonGroup(group.key)}
-                    className={`${panelCardClass} grid min-h-[84px] grid-cols-[52px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24`}
-                  >
-                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-foreground">
-                      <GroupIcon className="h-6 w-6" strokeWidth={2.05} />
-                    </span>
-                    <span className="relative min-w-0 border-l border-foreground/10 pl-3">
-                      <span className="block font-heading text-[1.42rem] uppercase leading-none tracking-normal text-foreground">{group.label}</span>
-                      <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">
-                        {selectedCount ? `${selectedCount} selected` : group.key === 'iv' ? 'Enhance your IV therapy' : 'Enhance with IM injections'}
-                      </span>
-                    </span>
-                    <span className="relative flex justify-end text-foreground/84">
-                      <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
-                    </span>
-                  </button>
-                );
-              })}
+              <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1">
+                {renderStoreMenuRow({
+                  key: 'no-addons',
+                  icon: Check,
+                  title: 'No add-ons',
+                  meta: 'Fastest checkout',
+                  onClick: chooseNoAddons,
+                  active: state.addOnDecision && state.addOns.length === 0,
+                  action: state.addOnDecision && state.addOns.length === 0 ? 'check' : 'arrow',
+                })}
+                {addonCatalog.groups.map((group) => {
+                  const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
+                  return renderStoreMenuRow({
+                    key: group.key,
+                    icon: group.key === 'iv' ? Plus : group.icon,
+                    title: group.label,
+                    meta: selectedCount ? `${selectedCount} selected` : group.key === 'iv' ? 'Enhance your IV therapy' : 'Enhance with IM injections',
+                    onClick: () => setActiveAddonGroup(group.key),
+                  });
+                })}
               </div>
             </div>
             <div className="hidden h-full min-h-0 content-start gap-4 md:grid">
               <p className={`${microLabelClass} pt-1 tracking-[0.22em]`}>Choose your add-ons</p>
-              <div className="grid min-h-0 gap-4">
-                {addonCatalog.groups.map((group) => (
-                  <section key={group.key} className="min-h-0">
-                    <p className="mb-2 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/72">{group.label}</p>
-                    <div className="grid gap-2 md:grid-cols-2">
-                      {group.items.map((item) => {
-                        const Icon = item.icon || Plus;
-                        const active = state.addOns.includes(item.label);
-                        return (
-                          <button
-                            key={`${group.key}-${item.label}`}
-                            type="button"
-                            onClick={() => toggleAddon(item.label)}
-                            aria-pressed={active}
-                            className={`${panelCardClass} flex min-h-[82px] flex-col justify-between p-3 text-left transition-colors ${
-                              active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/32' : 'hover:border-foreground/24'
-                            }`}
-                          >
-                            <span className="flex items-center justify-between">
-                              <span className="flex h-5 w-5 items-center justify-center rounded border border-foreground/20 bg-background/32 text-foreground/82">
-                                {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.6} /> : <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />}
-                              </span>
-                              <span className="h-4 w-4 rounded border border-foreground/20 bg-background/32" />
-                            </span>
-                            <span>
-                              <span className="block font-body text-sm font-black leading-tight text-foreground">{item.label}</span>
-                              <span className="mt-1 block font-body text-xs font-bold text-foreground/64">+ {currency(item.price)}</span>
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
+              <div className="grid min-h-0 content-start gap-3 overflow-y-auto pr-1 md:grid-cols-2">
+                {addonCatalog.groups.flatMap((group) => group.items.map((item) => {
+                  const active = state.addOns.includes(item.label);
+                  return renderStoreMenuRow({
+                    key: `${group.key}-${item.label}`,
+                    icon: item.icon || Plus,
+                    title: item.label,
+                    meta: `+ ${currency(item.price)} · ${group.sub}`,
+                    onClick: () => toggleAddon(item.label),
+                    active,
+                    action: active ? 'check' : 'plus',
+                  });
+                }))}
               </div>
             </div>
           </div>
@@ -4537,29 +4450,18 @@ export default function BookNow() {
             </span>
             <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Category</span>
           </button>
-          <div className="grid min-h-0 content-start gap-1.5 grid-cols-2 md:grid-cols-3 md:gap-2">
+          <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1 md:grid-cols-2 md:gap-3">
             {selectedAddonGroup.items.map((item) => {
               const active = state.addOns.includes(item.label);
-              const Icon = item.icon || Plus;
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => toggleAddon(item.label)}
-                  className={`${panelCardClass} flex min-h-[72px] flex-col justify-between p-2 text-left transition-colors md:min-h-[96px] md:p-2.5 ${active ? 'border-foreground/42 bg-foreground/[0.14]' : ''}`}
-                >
-                  <span className="flex items-center justify-between">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] md:h-9 md:w-9">
-                      <Icon className="h-3.5 w-3.5 md:h-[18px] md:w-[18px]" strokeWidth={2.45} />
-                    </span>
-                    {active ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                  </span>
-                  <span>
-                    <span className="block font-heading text-[0.92rem] uppercase leading-none tracking-normal md:text-[1.18rem]">{item.label}</span>
-                    <span className="mt-0.5 block font-body text-xs font-black md:text-base">{currency(item.price)}</span>
-                  </span>
-                </button>
-              );
+              return renderStoreMenuRow({
+                key: item.label,
+                icon: item.icon || Plus,
+                title: item.label,
+                meta: `+ ${currency(item.price)}${item.desc ? ` · ${item.desc}` : ''}`,
+                onClick: () => toggleAddon(item.label),
+                active,
+                action: active ? 'check' : 'plus',
+              });
             })}
           </div>
         </div>
