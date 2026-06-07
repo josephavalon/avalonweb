@@ -4315,11 +4315,11 @@ export default function BookNow() {
                       setActiveTherapyGroup(group.key);
                       setTherapyCategoryScreen(false);
                     }}
-                    className={`${panelCardClass} grid min-h-0 grid-cols-[62px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[68px_1fr_26px] min-[390px]:px-3.5 md:grid-cols-[82px_1fr_28px] md:gap-3 md:px-5 2xl:grid-cols-[112px_1fr_34px] 2xl:px-8`}
+                    className={`${panelCardClass} grid min-h-0 grid-cols-[72px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[78px_1fr_26px] min-[390px]:px-3.5 md:grid-cols-[92px_1fr_28px] md:gap-3 md:px-5 2xl:grid-cols-[122px_1fr_34px] 2xl:px-8`}
                   >
                     <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-                    <span className="relative flex h-11 w-11 items-center justify-center rounded-2xl text-foreground min-[390px]:h-12 min-[390px]:w-12 md:h-12 md:w-12 2xl:h-20 2xl:w-20">
-                      <GroupIcon className="h-6 w-6 min-[390px]:h-7 min-[390px]:w-7 md:h-7 md:w-7 2xl:h-12 2xl:w-12" strokeWidth={2.05} />
+                    <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-foreground min-[390px]:h-16 min-[390px]:w-16 md:h-16 md:w-16 2xl:h-24 2xl:w-24">
+                      <GroupIcon className="h-9 w-9 min-[390px]:h-10 min-[390px]:w-10 md:h-10 md:w-10 2xl:h-16 2xl:w-16" strokeWidth={2.05} />
                     </span>
                     <span className="relative min-w-0 border-l border-foreground/10 pl-3 md:pl-4 2xl:pl-7">
                       <span className="block font-heading text-[1.42rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem] md:text-[1.45rem] 2xl:text-[2.35rem]">{group.label}</span>
