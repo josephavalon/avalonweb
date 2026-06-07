@@ -718,12 +718,12 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-2 shrink-0 px-1 pt-0.5 md:mb-3 md:pt-1">
+    <div className="relative mb-1.5 shrink-0 px-1 pt-0 md:mb-3 md:pt-1">
       <div className="relative md:hidden">
-        <p className="font-heading text-[1.62rem] uppercase leading-[0.88] tracking-normal text-foreground min-[390px]:text-[1.8rem]">
+        <p className="font-heading text-[1.42rem] uppercase leading-[0.9] tracking-normal text-foreground min-[390px]:text-[1.55rem]">
           {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
         </p>
-        <div className="relative mt-3.5 h-4">
+        <div className="relative mt-3 h-3.5">
           <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2 bg-foreground/[0.28]" />
           {STEPS.map((item, index) => (
             <span
@@ -819,7 +819,7 @@ function UniversalBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+    <section className="relative mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
         step={step}
         onStepSelect={onStepSelect}
@@ -849,8 +849,8 @@ function UniversalBookingFrame({
       </motion.div>
       <div
         data-av-booking-mobile-footer="true"
-        className="fixed inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0"
-        style={{ bottom: 'calc(max(env(safe-area-inset-bottom, 0px), var(--av-booking-visual-bottom-gap, 0px)) + 0.5rem)' }}
+        className="absolute inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0"
+        style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1rem] border border-foreground/14 bg-background/82 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
           <div className="grid grid-cols-[76px_minmax(0,114px)_1fr] items-center gap-1.5 md:flex md:gap-2">
@@ -4384,7 +4384,7 @@ export default function BookNow() {
           </p>
           {denseTherapyGrid ? (
             <>
-              <div className="grid min-h-0 auto-rows-[clamp(5.8rem,13dvh,7.1rem)] grid-cols-3 content-start gap-2 overflow-hidden md:hidden">
+              <div className="grid min-h-0 auto-rows-[clamp(5.8rem,16dvh,7.45rem)] grid-cols-3 content-start gap-2 overflow-hidden md:hidden">
                 {activeTherapies.map((item) => renderTherapyCard(item))}
               </div>
               <div className="hidden min-h-0 content-start overflow-hidden md:grid md:auto-rows-[7.25rem] md:grid-cols-3 md:gap-2.5 [@media_(min-height:900px)]:md:auto-rows-[8.15rem] [@media_(min-height:900px)]:md:gap-3">
@@ -4732,7 +4732,7 @@ export default function BookNow() {
         className="mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
           '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px))',
-          '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5rem) + max(env(safe-area-inset-bottom, 0px), var(--av-booking-visual-bottom-gap, 0px)) + 0.75rem)',
+          '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 4.75rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',
         }}
       >
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
