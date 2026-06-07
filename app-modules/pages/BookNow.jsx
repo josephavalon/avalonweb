@@ -3134,18 +3134,11 @@ export default function BookNow() {
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
   const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(true);
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
-  const [armedTherapySelectionKey, setArmedTherapySelectionKey] = useState('');
   const [activeAddonGroup, setActiveAddonGroup] = useState('');
 
   useEffect(() => {
     if (shouldResetDraft) clearBookingDraft();
   }, [shouldResetDraft]);
-
-  useEffect(() => {
-    if (step !== 0 || therapyCategoryScreen) {
-      setArmedTherapySelectionKey('');
-    }
-  }, [step, therapyCategoryScreen]);
 
   const scrollStepIntoView = (behavior = 'smooth') => {
     if (typeof window === 'undefined') return;
@@ -3541,12 +3534,9 @@ export default function BookNow() {
   };
 
   const chooseTherapyMenuProduct = (key) => {
-    if (state.productKey === key && armedTherapySelectionKey === key) {
-      next();
-      return;
-    }
-    setArmedTherapySelectionKey(key);
     chooseProduct(key);
+    setActiveAddonGroup('');
+    setStep(1);
   };
 
   const chooseCustomBase = (key) => {
@@ -4323,7 +4313,6 @@ export default function BookNow() {
                     type="button"
                     onClick={() => {
                       setActiveTherapyGroup(group.key);
-                      setArmedTherapySelectionKey('');
                       setTherapyCategoryScreen(false);
                     }}
                     className={`${panelCardClass} grid min-h-0 grid-cols-[62px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[68px_1fr_26px] min-[390px]:px-3.5 md:grid-cols-[82px_1fr_28px] md:gap-3 md:px-5 2xl:grid-cols-[112px_1fr_34px] 2xl:px-8`}
