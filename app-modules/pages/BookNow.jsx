@@ -807,6 +807,7 @@ function UniversalBookingFrame({
   total,
   dueNow,
   dueAfter,
+  showDueAfter = true,
   displayStepIndex,
   displayTitle,
   progressIndex,
@@ -868,7 +869,9 @@ function UniversalBookingFrame({
           <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
             <p className="font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[8px] md:text-[10px] md:tracking-[0.12em]">Reservation Deposit</p>
             <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
-            <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Due after visit {dueAfter}</p>
+            {showDueAfter && (
+              <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Due after visit {dueAfter}</p>
+            )}
           </div>
           <button
             type="button"
@@ -3131,11 +3134,18 @@ export default function BookNow() {
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
   const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(true);
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
+  const [armedTherapySelectionKey, setArmedTherapySelectionKey] = useState('');
   const [activeAddonGroup, setActiveAddonGroup] = useState('');
 
   useEffect(() => {
     if (shouldResetDraft) clearBookingDraft();
   }, [shouldResetDraft]);
+
+  useEffect(() => {
+    if (step !== 0 || therapyCategoryScreen) {
+      setArmedTherapySelectionKey('');
+    }
+  }, [step, therapyCategoryScreen]);
 
   const scrollStepIntoView = (behavior = 'smooth') => {
     if (typeof window === 'undefined') return;
@@ -3528,6 +3538,15 @@ export default function BookNow() {
 
   const chooseProductAndContinue = (key, overrides = {}) => {
     chooseProduct(key, overrides);
+  };
+
+  const chooseTherapyMenuProduct = (key) => {
+    if (state.productKey === key && armedTherapySelectionKey === key) {
+      next();
+      return;
+    }
+    setArmedTherapySelectionKey(key);
+    chooseProduct(key);
   };
 
   const chooseCustomBase = (key) => {
@@ -4304,6 +4323,7 @@ export default function BookNow() {
                     type="button"
                     onClick={() => {
                       setActiveTherapyGroup(group.key);
+                      setArmedTherapySelectionKey('');
                       setTherapyCategoryScreen(false);
                     }}
                     className={`${panelCardClass} grid min-h-0 grid-cols-[62px_1fr_24px] items-center gap-2.5 px-3 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[68px_1fr_26px] min-[390px]:px-3.5 md:grid-cols-[82px_1fr_28px] md:gap-3 md:px-5 2xl:grid-cols-[112px_1fr_34px] 2xl:px-8`}
@@ -4343,7 +4363,7 @@ export default function BookNow() {
           <button
             key={item.key}
             type="button"
-            onClick={() => chooseProduct(item.key)}
+            onClick={() => chooseTherapyMenuProduct(item.key)}
             aria-pressed={active}
             className={`${panelCardClass} relative min-h-0 transition-colors ${
               active ? 'border-foreground/70 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/46 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_0_34px_hsl(var(--foreground)/0.12)]' : 'hover:border-foreground/24'
@@ -4371,7 +4391,6 @@ export default function BookNow() {
                   {protocolDuration(item)} · {currency(protocolPrice(item))}
                 </span>
               )}
-              {!isDoseTherapyGroup && active && <span className={`${denseTherapyGrid ? 'mt-0.5 text-[8px] md:text-[9px]' : 'mt-1 text-[10px]'} block font-body font-black uppercase tracking-[0.08em] text-foreground/62`}>{currency(protocolPrice(item))}</span>}
             </span>
             {isDoseTherapyGroup && (
               <span className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
@@ -4799,6 +4818,7 @@ export default function BookNow() {
                 total={totalLabel}
                 dueNow={dueNowLabel}
                 dueAfter={dueAfterLabel}
+                showDueAfter={!(step === 0 && !therapyCategoryScreen)}
                 displayStepIndex={progressDisplay.index}
                 displayTitle={progressDisplay.title}
                 progressIndex={progressDisplay.index}
