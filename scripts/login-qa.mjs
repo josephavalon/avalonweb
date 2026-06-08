@@ -16,18 +16,11 @@ const VIEWPORT = {
 };
 
 const MANUAL_CASES = [
-  { label: 'admin exact', username: 'ADMIN001', password: PASSWORD, expectedPath: '/admin', expectedRole: 'admin' },
-  { label: 'admin alias with spaces', username: ' admin ', password: ` ${PASSWORD} `, expectedPath: '/admin', expectedRole: 'admin' },
-  { label: 'nurse mobile spacing', username: 'NURSE 0001', password: PASSWORD, expectedPath: '/provider/shift', expectedRole: 'provider' },
+  { label: 'client exact', username: 'CLIENT0001', password: PASSWORD, expectedPath: '/members/dashboard', expectedRole: 'client' },
+  { label: 'client alias with spaces', username: ' client ', password: ` ${PASSWORD} `, expectedPath: '/members/dashboard', expectedRole: 'client' },
 ];
 
-const SHORTCUT_CASES = [
-  { username: 'CLIENT0001', expectedPath: '/members/dashboard', expectedRole: 'client' },
-  { username: 'NURSE0001', expectedPath: '/provider/shift', expectedRole: 'provider' },
-  { username: 'NP0001', expectedPath: '/provider/role-os', expectedRole: 'np' },
-  { username: 'PHYSICIAN0001', expectedPath: '/provider/role-os', expectedRole: 'physician' },
-  { username: 'ADMIN001', expectedPath: '/admin', expectedRole: 'admin' },
-];
+const SHORTCUT_CASES = [];
 
 const CHROME_CANDIDATES = [
   process.env.CHROME_PATH,
@@ -236,8 +229,8 @@ async function openLogin(cdp) {
     return true;
   })()`);
   await waitForPageCondition(cdp, `(() => {
-    const username = document.querySelector('#username');
-    const password = document.querySelector('#password');
+    const username = document.querySelector('#client-id');
+    const password = document.querySelector('#client-password');
     const submit = document.querySelector('form button[type="submit"]');
     return Boolean(username && password && submit);
   })()`, 'login controls');
@@ -272,8 +265,8 @@ async function runManualLogin(cdp, testCase) {
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
     };
-    const ready = setValue('#username', ${JSON.stringify(testCase.username)})
-      && setValue('#password', ${JSON.stringify(testCase.password)});
+    const ready = setValue('#client-id', ${JSON.stringify(testCase.username)})
+      && setValue('#client-password', ${JSON.stringify(testCase.password)});
     const submit = document.querySelector('form button[type="submit"]');
     if (!ready || !submit) return false;
     submit.click();

@@ -266,11 +266,23 @@ export default function OurTeam() {
           >
             YOUR NURSES
           </motion.h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 items-start">
-            {NURSING_TEAM.map((nurse, i) => (
-              <NurseCard key={nurse.name} nurse={nurse} i={i} />
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.08, ease: EASE }}
+            className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8 backdrop-blur-sm"
+          >
+            <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+              Registered Nurse Roster
+            </p>
+            <h3 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide leading-none">
+              COMING SOON!
+            </h3>
+            <p className="mt-4 max-w-2xl font-body text-sm md:text-base text-foreground/65 leading-relaxed">
+              Avalon is finalizing the registered nurse roster for public display. Every visit is administered by a California-licensed registered nurse after intake and clinical review.
+            </p>
+          </motion.div>
         </div>
       </section>
 

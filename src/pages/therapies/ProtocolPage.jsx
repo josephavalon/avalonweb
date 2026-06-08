@@ -282,7 +282,6 @@ function getBestFor(protocol) {
     postnight:    'Late-night recovery support.',
     nad:       'Clinician-reviewed NAD+ support.',
     cbd:       'Held for clinical, legal, and compliance review.',
-    exosomes:  'Advanced wellness support after review.',
   };
   return map[protocol.key] || protocol.tagline;
 }

@@ -5,7 +5,7 @@ const SECTIONS = [
   {
     h: '1. Introduction',
     p: [
-      'Welcome to Avalon Vitality. These Terms of Service ("Terms") govern your access to and use of avalonvitality.co, the Avalon OS application, and any concierge clinical services Avalon provides (collectively, the "Services").',
+      'Welcome to Avalon Vitality. These Terms of Service ("Terms") govern your access to and use of avalonvitality.co and any concierge clinical services Avalon provides (collectively, the "Services").',
       'By accessing or using any of the Services, you agree to be bound by these Terms and by our Privacy Policy. If you do not agree, do not use the Services.',
     ],
   },
@@ -45,9 +45,9 @@ const SECTIONS = [
   {
     h: '7. Cancellation, refunds, and rescheduling',
     p: [
-      'Single-visit appointments may be rescheduled or cancelled at no charge up to 24 hours before the scheduled time. Cancellations within 24 hours forfeit any prepaid service fee or one subscription credit.',
+      'Single-visit appointments may be rescheduled or cancelled at no charge up to 2 hours before the scheduled time. Late cancellations under 2 hours incur a $50 fee.',
       'Subscriptions may be cancelled at any time effective at the end of the current billing period. Avalon does not provide refunds for the current billing period after the period has begun.',
-      'In the event a clinician cannot complete a scheduled service due to a clinical safety concern (for example, vital signs outside safe parameters), the visit will be rescheduled or refunded at our discretion.',
+      'If clinical review does not approve treatment after a $50 reservation deposit is paid, the $50 deposit is refunded automatically the same day.',
     ],
   },
   {
@@ -80,13 +80,13 @@ const SECTIONS = [
   {
     h: '12. Acceptable use',
     p: [
-      'You agree not to misuse the Services. Specifically, you may not (a) impersonate another person; (b) submit false medical history; (c) attempt to circumvent technical limits of the Services; (d) reverse-engineer the Avalon OS application; (e) use the Services for any unlawful purpose; or (f) interfere with or disrupt the Services.',
+      'You agree not to misuse the Services. Specifically, you may not (a) impersonate another person; (b) submit false medical history; (c) attempt to circumvent technical limits of the Services; (d) use the Services for any unlawful purpose; or (e) interfere with or disrupt the Services.',
     ],
   },
   {
     h: '13. Intellectual property',
     p: [
-      'Avalon, Avalon Vitality, Avalon OS, the Avalon logo and word marks, and all content of the Services are owned by Avalon Vitality or its licensors. Nothing in these Terms grants you any right in or to our intellectual property except a limited, revocable, non-exclusive license to use the Services as intended.',
+      'Avalon, Avalon Vitality, the Avalon logo and word marks, and all content of the Services are owned by Avalon Vitality or its licensors. Nothing in these Terms grants you any right in or to our intellectual property except a limited, revocable, non-exclusive license to use the Services as intended.',
     ],
   },
   {

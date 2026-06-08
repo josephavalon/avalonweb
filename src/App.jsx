@@ -13,7 +13,6 @@ import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
-import BookNow from './pages/BookNow';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 function RequireAuth({ children, allowedRoles }) {
@@ -54,6 +53,7 @@ function lazyRoute(loader) {
 
 import Home from './pages/Home';
 const Checkout = lazyRoute(() => import('./pages/Checkout'));
+const BookNow = lazyRoute(() => import('./pages/BookNow'));
 const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
 const MemberDashboard = lazyRoute(() => import('./pages/members/Dashboard'));
@@ -170,6 +170,44 @@ const AnalyticsRouteTracker = () => {
     captureAttribution(search);
     trackPageView({ path: `${pathname}${search}` });
   }, [pathname, search]);
+  return null;
+};
+
+const GlobalZoomState = () => {
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
+
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
+    let frame = 0;
+
+    const update = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const scale = Number(viewport?.scale || 1);
+        const zoomed = scale > 1.01;
+        root.classList.toggle('av-user-zoomed', zoomed);
+        root.style.setProperty('--av-visual-viewport-scale', scale.toFixed(3));
+      });
+    };
+
+    update();
+    viewport?.addEventListener('resize', update);
+    viewport?.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      root.classList.remove('av-user-zoomed');
+      root.style.removeProperty('--av-visual-viewport-scale');
+      viewport?.removeEventListener('resize', update);
+      viewport?.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, []);
+
   return null;
 };
 
@@ -310,6 +348,7 @@ function App() {
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <AnalyticsRouteTracker />
+          <GlobalZoomState />
           <ScrollProgress />
           <MobileShell />
           <AppRoutes />

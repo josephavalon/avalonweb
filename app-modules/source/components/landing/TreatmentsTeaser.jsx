@@ -20,7 +20,10 @@ const SPECIALTY_IVS = [
     treatments: [
       { icon: FlaskConical, label: 'NAD+ 250mg',   price: 350 },
       { icon: FlaskConical, label: 'NAD+ 500mg',   price: 500 },
+      { icon: FlaskConical, label: 'NAD+ 750mg',   price: 600 },
       { icon: FlaskConical, label: 'NAD+ 1000mg',  price: 750 },
+      { icon: FlaskConical, label: 'NAD+ 1250mg',  price: 950 },
+      { icon: FlaskConical, label: 'NAD+ 1500mg',  price: 1100 },
     ],
   },
   {
@@ -29,15 +32,6 @@ const SPECIALTY_IVS = [
     treatments: [
       { icon: Star, label: 'CBD — Low Dose',  price: 350 },
       { icon: Star, label: 'CBD — High Dose', price: 450 },
-    ],
-  },
-  {
-    label: 'Exosomes',
-    icon: Sparkles,
-    treatments: [
-      { icon: Sparkles, label: 'Exosomes 30B',  price: 800 },
-      { icon: Sparkles, label: 'Exosomes 50B',  price: 1200 },
-      { icon: Sparkles, label: 'Exosomes 90B',  price: 1800 },
     ],
   },
 ];
@@ -124,7 +118,7 @@ function SubRow({ sub }) {
                   <t.icon className="w-3 h-3 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                   <div className="min-w-0">
                     <p className="font-body text-[11px] text-foreground/80 leading-snug truncate">{t.label}</p>
-                    <p className="font-body text-[9px] text-foreground/35">From ${t.price}</p>
+                    <p className="font-body text-[9px] text-foreground/35">${t.price}{sub.label === 'NAD+' ? ' · 1-4 hr' : ''}</p>
                   </div>
                 </MotionLink>
               ))}
@@ -226,7 +220,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
                       <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
                       <div>
                         <p className="font-body text-xs text-foreground/80 leading-snug">{addon.label}</p>
-                        <p className="font-body text-[9px] text-foreground/35">From ${addon.price}</p>
+                        <p className="font-body text-[9px] text-foreground/35">${addon.price}</p>
                       </div>
                     </MotionLink>
                   ))}

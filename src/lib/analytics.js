@@ -86,6 +86,9 @@ const QUEUE_CAP = 200; // Drop oldest beyond this — prevents memory leaks.
 const LOCAL_EVENT_KEY = 'av.analytics.events';
 const LOCAL_ATTRIBUTION_KEY = 'av.analytics.attribution';
 const LOCAL_EXPERIMENT_PREFIX = 'av.experiment.';
+const FIRST_PARTY_ANALYTICS_ENABLED =
+  typeof import.meta !== 'undefined' &&
+  import.meta.env?.VITE_AVALON_ENABLE_LIVE_API === 'true';
 
 let provider = localAnalyticsProvider;
 /** @type {AnalyticsEvent[]} */
@@ -270,6 +273,7 @@ function pushBrowserDestinations(event) {
 
 function sendFirstPartyEvent(event) {
   try {
+    if (!FIRST_PARTY_ANALYTICS_ENABLED) return;
     const payload = JSON.stringify({ event });
     if (navigator.sendBeacon) {
       const blob = new Blob([payload], { type: 'application/json' });

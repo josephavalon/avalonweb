@@ -14,7 +14,11 @@ export default function AvalonStaticBackdrop() {
   if (!shouldShowBackdrop(pathname)) return null;
 
   return (
-    <div className="avalon-static-backdrop pointer-events-none fixed inset-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-background" aria-hidden="true">
+    <div
+      className="avalon-static-backdrop pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-background"
+      aria-hidden="true"
+      role="presentation"
+    >
       <img
         src="/images/avalon-static-back.jpg"
         srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"

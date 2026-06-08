@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, MessageCircle, Moon, Phone, Sun, Sunset, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
-import { applyTheme, getThemeLabel, readStoredTheme, VALID_THEMES } from '@/lib/theme';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
@@ -17,23 +16,6 @@ const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
-const THEME_ICON_LABELS = {
-  dark: 'Night',
-  daytime: 'Daytime',
-  'golden-hour': 'Golden hour',
-  warriors: 'Warriors 33',
-  pride: 'Pride rainbow',
-  july: 'USA flag',
-};
-
-function ThemeModeGlyph({ theme }) {
-  if (theme === 'daytime') return <Sun className="h-5 w-5" strokeWidth={2.1} aria-hidden="true" />;
-  if (theme === 'golden-hour') return <Sunset className="h-5 w-5" strokeWidth={2.1} aria-hidden="true" />;
-  if (theme === 'warriors') return <span className="av-theme-symbol av-theme-symbol--warriors" aria-hidden="true">33</span>;
-  if (theme === 'pride') return <span className="av-theme-symbol av-theme-symbol--pride" aria-hidden="true" />;
-  if (theme === 'july') return <span className="av-theme-symbol av-theme-symbol--usa" aria-hidden="true" />;
-  return <Moon className="h-5 w-5" strokeWidth={2.1} aria-hidden="true" />;
-}
 
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
@@ -45,7 +27,6 @@ const dashboardPathFor = (user) => {
 export default function Navbar({ showBack = false, compact = false, focusMode = false, mobileGlobal = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState(readStoredTheme);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
@@ -59,17 +40,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   useEffect(() => {
     setMobileOpen(false);
   }, [location]);
-
-  useEffect(() => {
-    const syncTheme = (event) => setTheme(event?.detail?.theme || readStoredTheme());
-    const syncStoredTheme = () => setTheme(readStoredTheme());
-    window.addEventListener('avalon-theme-change', syncTheme);
-    window.addEventListener('storage', syncStoredTheme);
-    return () => {
-      window.removeEventListener('avalon-theme-change', syncTheme);
-      window.removeEventListener('storage', syncStoredTheme);
-    };
-  }, []);
 
   useEffect(() => {
     import('@/pages/BookNow').catch((err) => {
@@ -95,18 +65,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     close();
     navigate('/login');
   };
-  const cycleTheme = () => {
-    const activeTheme = readStoredTheme();
-    const currentIndex = Math.max(0, VALID_THEMES.indexOf(activeTheme));
-    const nextTheme = VALID_THEMES[(currentIndex + 1) % VALID_THEMES.length];
-    setTheme(applyTheme(nextTheme));
-  };
 
   const logoClass = "av-logo inline-flex min-h-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
-  const themeLabel = getThemeLabel(theme);
-  const themeIconLabel = THEME_ICON_LABELS[theme] || themeLabel;
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
   const mobileLinks = [
@@ -158,19 +120,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground md:text-[27px] md:tracking-[0.28em]">AVALON</span>
             <span className="mt-1 block font-body text-[8px] uppercase leading-none tracking-[0.38em] text-foreground/60 md:text-[14px] md:tracking-[0.44em]">VITALITY</span>
           </Link>
-          {!compact && !focusMode && (
-            <>
-              <span className="h-14 w-px bg-foreground/20" aria-hidden="true" />
-              <button
-                type="button"
-                onClick={cycleTheme}
-                className="av-glass-widget av-theme-icon-button inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border p-0 text-foreground/88 transition-colors hover:text-foreground"
-                aria-label={`Avalon mode: ${themeIconLabel}. Change mode`}
-              >
-                <ThemeModeGlyph theme={theme} />
-              </button>
-            </>
-          )}
         </div>
 
         {/* Col 2 — nav links, auto width, inherently centered */}
@@ -353,23 +302,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                   );
                 })}
                 </div>
-
-                <motion.div
-                  className="relative"
-                  variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
-                >
-                  <button
-                    type="button"
-                    onClick={cycleTheme}
-                    className="av-glass-widget relative flex min-h-[58px] w-full items-center justify-between rounded-2xl border px-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
-                    aria-label={`Avalon mode: ${themeIconLabel}. Change mode`}
-                  >
-                    <span>Mode</span>
-                    <span className="av-theme-icon-button flex h-10 w-10 items-center justify-center rounded-full border border-foreground/14">
-                      <ThemeModeGlyph theme={theme} />
-                    </span>
-                  </button>
-                </motion.div>
 
                 {user && (
                   <motion.div

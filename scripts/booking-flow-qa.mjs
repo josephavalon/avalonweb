@@ -131,6 +131,18 @@ async function waitForReady(cdp) {
   throw new Error('Page did not finish loading.');
 }
 
+async function waitForAppUrl(cdp) {
+  const deadline = Date.now() + 12_000;
+  let lastHref = '';
+  while (Date.now() < deadline) {
+    const href = await evalOnPage(cdp, 'location.href');
+    lastHref = href;
+    if (href.startsWith(BASE_URL)) return;
+    await wait(160);
+  }
+  throw new Error(`App URL did not load before storage reset. Last URL: ${lastHref || 'unknown'}`);
+}
+
 async function clearAvalonStorage(cdp) {
   await evalOnPage(cdp, `(() => {
     for (const key of Object.keys(localStorage)) {
@@ -169,10 +181,17 @@ async function clickText(cdp, text) {
 async function fillByLabel(cdp, label, value) {
   const filled = await evalOnPage(cdp, `(() => {
     const wanted = ${JSON.stringify(label)}.toLowerCase();
+    const visible = (el) => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    };
     const labels = Array.from(document.querySelectorAll('label'));
-    const wrapper = labels.find((el) => (el.innerText || '').trim().toLowerCase().startsWith(wanted));
-    const input = wrapper?.querySelector('input, textarea, select') ||
+    const wrapper = labels.find((el) => visible(el) && (el.innerText || '').trim().toLowerCase().startsWith(wanted));
+    const input = (wrapper ? Array.from(wrapper.querySelectorAll('input, textarea, select')).find(visible) : null) ||
       Array.from(document.querySelectorAll('input, textarea, select')).find((el) => {
+        if (!visible(el)) return false;
         const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
         const placeholder = (el.getAttribute('placeholder') || '').trim().toLowerCase();
         return aria.startsWith(wanted) || placeholder.startsWith(wanted);
@@ -281,6 +300,7 @@ try {
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
 
   await cdp.send('Page.navigate', { url: `${BASE_URL}/book?reset=1&fresh=${Date.now()}` });
+  await waitForAppUrl(cdp);
   await waitForReady(cdp);
   await clearAvalonStorage(cdp);
   await wait(500);
@@ -292,9 +312,11 @@ try {
   await fillByLabel(cdp, 'ZIP', '94107');
   await clickText(cdp, 'Next');
   await wait(400);
-  await fillByLabel(cdp, 'Contact', 'QA Mobile Client, (415) 555-0199, qa@avalonvitality.co');
-  await fillByLabel(cdp, 'DOB', '1980-01-02');
-  await clickText(cdp, 'Pay $');
+  await fillByLabel(cdp, 'Name', 'QA Mobile Client');
+  await fillByLabel(cdp, 'Phone', '(415) 555-0199');
+  await fillByLabel(cdp, 'DOB', '01/02/1980');
+  await fillByLabel(cdp, 'Email', 'qa@avalonvitality.co');
+  await clickText(cdp, 'CONFIRM & PAY');
   const result = await waitForBookingOutcome(cdp);
 
   const failures = [];

@@ -58,7 +58,6 @@ const PROTOCOL_PARAM_ALIASES = {
   'jet-lag': 'jetlag',
   'nad-250mg': 'nad',
   'cbd-33mg': 'cbd',
-  'exosomes-30b-units': 'exosomes',
 };
 
 export function protocolFromParam(value) {

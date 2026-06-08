@@ -32,6 +32,26 @@ import { buildProductJsonLd } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+const DEFAULT_INCLUDED = [
+  'Clinical intake review',
+  'Registered nurse administration',
+  'Mobile visit at your location',
+  'Visit supplies and setup',
+];
+
+const DEFAULT_TIMELINE = [
+  { label: '0 min', value: 'Book protocol, address, and payment' },
+  { label: 'Before arrival', value: 'Clinical intake review' },
+  { label: 'Arrival', value: 'Registered nurse setup and vitals' },
+  { label: 'Treatment', value: '45-60 min unless noted' },
+];
+
+const DEFAULT_FAQ = [
+  { q: 'What is included?', a: 'Clinical intake review, registered nurse administration, mobile setup, and visit supplies are included unless noted.' },
+  { q: 'Who administers the visit?', a: 'A California-licensed registered nurse administers the visit after intake and clinical review.' },
+  { q: 'Can I book today?', a: 'Same-day requests are reviewed based on location, nurse availability, supplies, and clinical eligibility.' },
+];
+
 const IDEAL_ICONS = {
   Travel: Plane,
   Recovery: Flame,
@@ -190,9 +210,10 @@ function IdealForGrid({ items = [] }) {
 }
 
 function IncludedGrid({ items = [] }) {
+  const visibleItems = items.length ? items : DEFAULT_INCLUDED;
   return (
     <div className="grid gap-2 md:grid-cols-2">
-      {items.slice(0, 6).map((item) => (
+      {visibleItems.slice(0, 6).map((item) => (
         <div key={item} className="av-rect-card flex min-h-[88px] items-center gap-4 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-4">
           <Droplets className="h-5 w-5 shrink-0 text-foreground/62" strokeWidth={2.1} />
           <p className="font-body text-base font-black leading-tight text-foreground/78">{item}</p>
@@ -203,9 +224,10 @@ function IncludedGrid({ items = [] }) {
 }
 
 function Timeline({ items = [] }) {
+  const visibleItems = items.length ? items : DEFAULT_TIMELINE;
   return (
     <div className="av-wide-card-grid">
-      {items.slice(0, 4).map((item, index) => (
+      {visibleItems.slice(0, 4).map((item, index) => (
         <div key={item.label} className="av-rect-card relative min-h-[132px] rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.06] font-body text-xs font-black text-foreground">
             {index + 1}
@@ -219,9 +241,10 @@ function Timeline({ items = [] }) {
 }
 
 function FaqList({ items = [] }) {
+  const visibleItems = items.length ? items : DEFAULT_FAQ;
   return (
     <div>
-      {items.slice(0, 5).map((item, index) => (
+      {visibleItems.slice(0, 5).map((item, index) => (
         <FaqRow key={item.q} item={item} defaultOpen={index === 0} />
       ))}
     </div>
@@ -386,7 +409,7 @@ export default function ProductDetail() {
                 onClick={buyNow}
                 className="flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-black uppercase tracking-[0.15em] text-background transition-opacity hover:opacity-90"
               >
-                Buy Now <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
+                Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
               </button>
               <Link
                 to={bookingPath(treatment, true)}

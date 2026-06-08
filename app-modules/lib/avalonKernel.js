@@ -232,7 +232,6 @@ const PROTOCOL_NEEDS = {
   ],
   nad: [buildInventoryNeed('NAD+ 250mg', ['nad'], 1)],
   cbd: [buildInventoryNeed('CBD 33mg', ['cbd'], 1)],
-  exosomes: [buildInventoryNeed('Regenerative biologic placeholder', ['nad'], 1)],
 };
 
 export function canKernelRole(role = 'client', permission = '') {
@@ -264,7 +263,7 @@ export function buildProtocolInventoryMap(protocolKey = '') {
 
 export function buildProtocolCredentialMap(protocolKey = '') {
   const map = Object.fromEntries(IV_SESSIONS.map((session) => {
-    const advanced = ['nad', 'cbd', 'exosomes'].includes(session.key);
+    const advanced = ['nad', 'cbd'].includes(session.key);
     return [session.key, {
       rn: true,
       activeLicense: true,
@@ -279,7 +278,7 @@ export function buildProtocolCredentialMap(protocolKey = '') {
 export function buildProtocolGfeMap(protocolKey = '') {
   const map = Object.fromEntries(IV_SESSIONS.map((session) => [session.key, {
     annualRequired: true,
-    reviewLevel: ['nad', 'cbd', 'exosomes'].includes(session.key) ? 'Advanced annual GFE plus protocol approval' : 'Annual GFE',
+    reviewLevel: ['nad', 'cbd'].includes(session.key) ? 'Advanced annual GFE plus protocol approval' : 'Annual GFE',
     fallback: 'Qualiphy only if Avalon NP is not on call',
   }]));
   return protocolKey ? map[protocolKey] || map.hydration : map;
@@ -537,7 +536,7 @@ export function buildGroupIntakePlan({ booking = readLastBooking() } = {}) {
 
 export function buildFollowUpRecommendation({ booking = readLastBooking() } = {}) {
   const protocolKey = bookingProtocolKey(booking || {});
-  const days = ['nad', 'cbd', 'exosomes'].includes(protocolKey) ? 7 : 2;
+  const days = ['nad', 'cbd'].includes(protocolKey) ? 7 : 2;
   return {
     type: protocolKey === 'nad' ? 'Advanced protocol check-in' : 'Recovery check-in',
     dueInDays: days,
@@ -754,7 +753,7 @@ export function buildClientRiskFlags({ booking = readLastBooking(), profile = {}
     number(booking?.guests, 1) > 1 ? 'Group visit' : '',
     resolveGfeRequirement(booking || {}).required ? 'GFE required' : '',
     /latex/i.test(booking?.notes || profile.notes || '') ? 'Latex note' : '',
-    /nad|cbd|exosome|high dose/i.test(`${booking?.service || ''} ${(booking?.addOns || []).join(' ')}`) ? 'Advanced protocol' : '',
+    /nad|cbd|high dose/i.test(`${booking?.service || ''} ${(booking?.addOns || []).join(' ')}`) ? 'Advanced protocol' : '',
   ].filter(Boolean).map((label) => ({ label, severity: label === 'GFE required' ? 'High' : 'Review' }));
 }
 

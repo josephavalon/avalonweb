@@ -59,7 +59,12 @@ import { useAuthStore } from '@/lib/useAuthStore';
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
-const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
+let cachedStripePromise = null;
+function getStripePromise() {
+  if (!STRIPE_PUBLISHABLE_KEY) return null;
+  if (!cachedStripePromise) cachedStripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+  return cachedStripePromise;
+}
 const CARD_REVEAL = {
   hidden: { opacity: 1, y: 6, scale: 1 },
   show: (index = 0) => ({
@@ -79,6 +84,8 @@ const STEPS = ['Therapy', 'Add-ons', 'Date & Time', 'Location', 'Review'];
 const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
+const BOOKING_SESSION_KEY = 'avalon.webstore.sessionDraft';
+const CLINICAL_REVIEW_NOTICE = 'Clinical review required before service.';
 const PRIMARY_OUTCOME_KEYS = ['recover', 'perform', 'performance', 'longevity'];
 const SAFETY_FLAGS = [
   'Pregnant',
@@ -544,6 +551,46 @@ function canUseStaticPreviewFallback() {
   return localHost && ['4173', '4174'].includes(window.location.port);
 }
 
+function clampStep(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.max(0, Math.min(LAST_STEP, parsed));
+}
+
+function readStepHash() {
+  if (typeof window === 'undefined') return null;
+  const match = String(window.location.hash || '').match(/^#step-(\d+)$/);
+  return match ? clampStep(match[1]) : null;
+}
+
+function readBookingSessionDraft() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(BOOKING_SESSION_KEY) || 'null');
+    return parsed && parsed.draftVersion === BOOKING_DRAFT_VERSION ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveBookingSessionDraft(payload) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(BOOKING_SESSION_KEY, JSON.stringify({ ...payload, draftVersion: BOOKING_DRAFT_VERSION }));
+  } catch {
+    // Session restore is best effort only.
+  }
+}
+
+function clearBookingSessionDraft() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.removeItem(BOOKING_SESSION_KEY);
+  } catch {
+    // no-op
+  }
+}
+
 async function createCheckoutSession(payload) {
   const response = await fetch('/api/create-checkout-session', {
     method: 'POST',
@@ -578,6 +625,23 @@ function bookingTimeSummary(state) {
   if (state.timeIntent === 'asap' || state.timeIntent === 'today' || state.timeIntent === 'soonest') return 'ASAP';
   if (state.customDate && state.customTime) return `${formatDateShort(state.customDate)} · ${formatTimeLabel(state.customTime)}`;
   return 'Pick time';
+}
+
+function bookingDateLabel(state) {
+  if (state.timeIntent === 'asap' || state.timeIntent === 'today' || state.timeIntent === 'soonest') return formatDateShort(todayDate());
+  if (state.customDate) return formatDateShort(state.customDate);
+  return 'Not selected';
+}
+
+function bookingTimeLabel(state) {
+  if (state.timeIntent === 'asap' || state.timeIntent === 'today' || state.timeIntent === 'soonest') return 'ASAP';
+  if (state.customTime) return formatTimeLabel(state.customTime);
+  return 'Not selected';
+}
+
+function priceReceipt({ product, subtotal, groupContactRequired }) {
+  const total = groupContactRequired ? 'Quote' : currency(subtotal || 0);
+  return `Total ${total}`;
 }
 
 function formatDateShort(value) {
@@ -668,11 +732,15 @@ function useMobileBookingViewportLayout(deps = []) {
         const visualHeight = Math.max(0, Math.round(viewport?.height || window.innerHeight || 0));
         const visualOffsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
         const layoutHeight = Math.max(visualHeight, Math.round(window.innerHeight || visualHeight));
-        const visualBottomGap = Math.max(0, Math.round(layoutHeight - visualHeight - visualOffsetTop));
-        const visualHeightBreathing = Math.max(0, Math.min(44, Math.round((visualHeight - 660) * 0.25)));
+        const zoomed = Number(viewport?.scale || 1) > 1.01;
+        const effectiveHeight = zoomed ? layoutHeight : visualHeight;
+        const effectiveOffsetTop = zoomed ? 0 : visualOffsetTop;
+        const visualBottomGap = zoomed ? 0 : Math.max(0, Math.round(layoutHeight - visualHeight - visualOffsetTop));
+        const visualHeightBreathing = Math.max(0, Math.min(44, Math.round((effectiveHeight - 660) * 0.25)));
 
-        root.style.setProperty('--av-booking-visual-height', `${visualHeight}px`);
-        root.style.setProperty('--av-booking-visual-offset-top', `${visualOffsetTop}px`);
+        root.classList.toggle('av-booking-user-zoomed', zoomed);
+        root.style.setProperty('--av-booking-visual-height', `${effectiveHeight}px`);
+        root.style.setProperty('--av-booking-visual-offset-top', `${effectiveOffsetTop}px`);
         root.style.setProperty('--av-booking-visual-bottom-gap', `${visualBottomGap}px`);
         root.style.setProperty('--av-booking-visual-breathing', `${visualHeightBreathing}px`);
 
@@ -705,6 +773,7 @@ function useMobileBookingViewportLayout(deps = []) {
 
     return () => {
       window.cancelAnimationFrame(frame);
+      root.classList.remove('av-booking-user-zoomed');
       viewport?.removeEventListener('resize', update);
       viewport?.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
@@ -719,12 +788,15 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   const reduceMotion = useReducedMotion();
   const CurrentIcon = STEP_ICONS[step] || Check;
   return (
-    <div className="relative mb-1.5 shrink-0 px-1 pt-0 md:mb-3 md:pt-1">
+    <div className="relative mb-1 shrink-0 px-1 pt-0 md:mb-3 md:pt-1">
       <div className="relative md:hidden">
-        <p className="font-heading text-[1.42rem] uppercase leading-[0.9] tracking-normal text-foreground min-[390px]:text-[1.55rem]">
-          {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+        <p className="font-body text-[8px] font-black uppercase tracking-[0.28em] text-foreground/62">
+          Step {displayStepIndex + 1} of {STEPS.length}
         </p>
-        <div className="relative mt-3 h-3.5">
+        <p className="mt-0.5 font-heading text-[1.34rem] leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.48rem]">
+          {displayTitle}
+        </p>
+        <div className="relative mt-2 h-2.5">
           <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2 bg-foreground/[0.28]" />
           {STEPS.map((item, index) => (
             <span
@@ -732,7 +804,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
               aria-hidden="true"
               className={`absolute top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full transition-colors ${
                 index <= progressIndex ? 'bg-foreground' : 'bg-foreground/[0.48]'
-              } ${index === 0 ? 'left-0 h-2.5 w-12 rounded-full' : 'h-3 w-3 -translate-x-1/2'}`}
+              } ${index === 0 ? 'left-0 h-2 w-10 rounded-full' : 'h-2.5 w-2.5 -translate-x-1/2'}`}
               style={index === 0 ? undefined : { left: `${(index / (STEPS.length - 1)) * 100}%` }}
             />
           ))}
@@ -806,6 +878,7 @@ function UniversalBookingFrame({
   total,
   dueNow,
   dueAfter,
+  receiptLine,
   showDueAfter = true,
   displayStepIndex,
   displayTitle,
@@ -821,7 +894,7 @@ function UniversalBookingFrame({
   children,
 }) {
   return (
-    <section className="relative mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
+    <section data-av-booking-frame="true" className="relative mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
         step={step}
         onStepSelect={onStepSelect}
@@ -839,7 +912,8 @@ function UniversalBookingFrame({
       )}
       <motion.div
         key={step}
-        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-0 pb-1 [-webkit-overflow-scrolling:touch] md:overflow-hidden md:pb-0"
+        data-av-booking-scroll-region="true"
+        className="relative min-h-0 flex-1 overflow-hidden overscroll-contain p-0 pb-1 md:pb-0"
         initial={{ opacity: 1, y: 0, scale: 1 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 1 }}
@@ -897,6 +971,10 @@ function UniversalBookingFrame({
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
+          <p className="mt-1.5 px-1 text-center font-body text-[9px] font-black leading-tight text-foreground/58 md:text-[10px]">
+            {receiptLine ? `${receiptLine} · ` : ''}
+            {CLINICAL_REVIEW_NOTICE}
+          </p>
         </div>
       </div>
     </section>
@@ -961,8 +1039,9 @@ function DesktopOrderRail({
   const displayBalanceDue = hasTherapySelection ? balanceDue : 200;
   const selectedIvAddons = selectedAddons.filter((item) => item.type !== 'im');
   const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
-  const dateLabel = displayStepIndex >= 2 && state.timeIntent === 'choose' && state.customDate ? formatDateShort(state.customDate) : 'Not selected';
-  const timeLabel = displayStepIndex >= 2 && state.timeIntent === 'choose' && state.customTime ? formatTimeLabel(state.customTime) : 'Not selected';
+  const dateLabel = bookingDateLabel(state);
+  const timeLabel = bookingTimeLabel(state);
+  const receiptLine = priceReceipt({ product, subtotal: displaySubtotal, groupContactRequired: false });
 
   const rows = [
     ['Therapy', hasTherapySelection ? product.label : 'Not selected'],
@@ -973,36 +1052,39 @@ function DesktopOrderRail({
   ];
 
   return (
-    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl lg:p-5 2xl:p-7">
+    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl lg:p-4 2xl:p-5">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.105),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_62%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
-        <p className="font-body text-sm font-black uppercase tracking-[0.18em] text-foreground/78 2xl:text-lg">Your Order</p>
-        <div className="mt-3 divide-y divide-foreground/10 border-t border-foreground/10 2xl:mt-6">
+        <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/78 2xl:text-sm">Your Order</p>
+        <div className="mt-2 divide-y divide-foreground/10 border-t border-foreground/10 2xl:mt-3">
           {rows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[104px_1fr] gap-3 py-2.5 2xl:grid-cols-[120px_1fr] 2xl:py-4">
-              <p className="font-body text-sm font-black text-foreground/66 2xl:text-base">{label}</p>
-              <p className="text-right font-body text-sm font-bold leading-snug text-foreground/86 2xl:text-base">{value}</p>
+            <div key={label} className="grid grid-cols-[96px_1fr] gap-3 py-2 2xl:grid-cols-[108px_1fr] 2xl:py-2.5">
+              <p className="font-body text-xs font-black text-foreground/66 2xl:text-sm">{label}</p>
+              <p className="line-clamp-2 text-right font-body text-xs font-bold leading-snug text-foreground/86 2xl:text-sm">{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-3 border-t border-foreground/10 pt-4 2xl:mt-5 2xl:pt-6">
+        <div className="mt-2 border-t border-foreground/10 pt-3 2xl:mt-3 2xl:pt-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-base">Subtotal</p>
-            <p className="font-body text-lg font-black text-foreground 2xl:text-xl">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
+            <p className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-sm">Subtotal</p>
+            <p className="font-body text-base font-black text-foreground 2xl:text-lg">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
-          <div className="mt-4 2xl:mt-6">
-            <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-base">Reservation Deposit</p>
-            <p className="mt-1 font-body text-[2.35rem] font-black leading-none text-foreground 2xl:mt-2 2xl:text-[3.1rem]">{currency(displayDueNow)}</p>
-            <p className="mt-1 font-body text-sm font-semibold text-foreground/66 2xl:mt-2 2xl:text-base">Secure your booking</p>
-            {displayBalanceDue > 0 && <p className="mt-2 font-body text-xs font-bold text-foreground/52 2xl:mt-3 2xl:text-sm">Balance {hasTherapySelection ? currency(displayBalanceDue) : 'due after visit $200'}</p>}
+          <p className="mt-1.5 line-clamp-2 font-body text-[11px] font-bold leading-snug text-foreground/56 2xl:text-xs">{receiptLine}</p>
+          <div className="mt-3 2xl:mt-4">
+            <p className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-sm">Deposit</p>
+            <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground 2xl:text-[2.45rem]">{currency(displayDueNow)}</p>
+            {displayBalanceDue > 0 && <p className="mt-1.5 font-body text-xs font-bold text-foreground/52">Balance {hasTherapySelection ? currency(displayBalanceDue) : 'due after visit $200'}</p>}
           </div>
         </div>
-        <div className={`mt-auto grid gap-3 pt-4 2xl:gap-4 2xl:pt-7 ${canGoBack ? 'grid-cols-[112px_1fr] 2xl:grid-cols-[148px_1fr]' : 'grid-cols-1'}`}>
+        <p className="mt-2 rounded-xl border border-foreground/10 bg-background/34 px-3 py-2 font-body text-[10px] font-black leading-snug text-foreground/70 2xl:mt-3 2xl:text-[11px]">
+          {CLINICAL_REVIEW_NOTICE}
+        </p>
+        <div className={`mt-auto grid gap-2 pt-3 2xl:pt-4 ${canGoBack ? 'grid-cols-[96px_1fr] 2xl:grid-cols-[112px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[52px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground 2xl:min-h-[70px] 2xl:text-base"
+              className="flex min-h-[48px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-3 font-body text-xs font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground 2xl:min-h-[54px] 2xl:text-sm"
             >
               Back
             </button>
@@ -1011,7 +1093,7 @@ function DesktopOrderRail({
             type="button"
             onClick={onNext}
             disabled={!canGoNext || checkoutLoading}
-            className={`relative flex min-h-[52px] w-full items-center justify-center gap-4 overflow-hidden rounded-xl border px-5 font-body text-base font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] 2xl:min-h-[70px] 2xl:gap-5 2xl:px-6 2xl:text-lg ${
+            className={`relative flex min-h-[48px] w-full items-center justify-center gap-3 overflow-hidden rounded-xl border px-4 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] 2xl:min-h-[54px] 2xl:text-base ${
               canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
             }`}
           >
@@ -1027,7 +1109,7 @@ function DesktopOrderRail({
             <ArrowRight className="h-5 w-5 2xl:h-7 2xl:w-7" strokeWidth={2.6} />
           </button>
         </div>
-        <div className="mt-3 flex items-center justify-center gap-2 font-body text-xs font-semibold text-foreground/56 2xl:mt-6 2xl:text-sm">
+        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[11px] font-semibold text-foreground/56 2xl:text-xs">
           <ShieldCheck className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
           Secure booking
         </div>
@@ -1058,7 +1140,7 @@ function DesktopBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[760px] min-h-[520px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl md:block 2xl:max-w-[1540px]">
+    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[820px] min-h-[520px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(330px,420px)] gap-5 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:gap-7 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(380px,450px)] 2xl:gap-10 2xl:p-8">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
@@ -1076,7 +1158,7 @@ function DesktopBookingFrame({
           )}
           <motion.div
             key={step}
-            className="relative min-h-0 overflow-hidden"
+            className="relative min-h-0 overflow-y-auto overscroll-contain pr-1"
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.16, ease: EASE }}
@@ -1525,46 +1607,39 @@ function buildAddonCatalog(product) {
     .filter((item) => allowAdvanced || item.group !== 'nad')
     .map((item) => ({ ...item, type: 'addon', cartKey: `addon-${item.label}` }));
   const imShots = IM_SHOTS.map((item) => ({ ...item, type: 'im', cartKey: `im-${item.label}` }));
-  const byLabel = new Map([...ivAddons, ...imShots].map((item) => [item.label, item]));
 
-  const toChoice = ({ source, label, desc, icon }) => ({
+  const iconForAddon = (item) => {
+    const label = String(item?.label || '').toLowerCase();
+    if (item?.type === 'im') return item.icon || Syringe;
+    if (label.includes('fluid')) return Droplets;
+    if (label.includes('nad')) return BatteryCharging;
+    if (label.includes('glutathione')) return Sparkles;
+    if (label.includes('vitamin c')) return ShieldCheck;
+    if (label.includes('magnesium')) return Zap;
+    return Plus;
+  };
+
+  const toChoice = (source) => ({
     ...source,
-    label,
-    desc: desc || source.desc,
-    icon: icon || source.icon || Plus,
-    originalLabel: source.label,
+    icon: iconForAddon(source),
     cartKey: source.cartKey || `${source.type}-${source.label}`,
   });
 
-  const ivChoices = [
-    { source: byLabel.get('Extra Fluid'), label: 'Extra fluids', desc: 'More fluid', icon: Droplets },
-    { source: byLabel.get('Glutathione Push · 600mg'), label: 'Glutathione IV', desc: 'IV push', icon: ShieldCheck },
-    allowAdvanced && { source: byLabel.get('NAD+ (250mg)'), label: 'NAD+ IV', desc: 'Longer visit', icon: BatteryCharging },
-  ]
-    .filter((item) => item?.source)
-    .map(toChoice);
-
-  const imChoices = [
-    { source: byLabel.get('B12'), label: 'B12 shot', desc: 'Quick shot', icon: Zap },
-    { source: byLabel.get('MIC'), label: 'MIC shot', desc: 'Metabolic support', icon: Flame },
-    allowAdvanced && { source: byLabel.get('NAD+'), label: 'NAD+ IM', desc: 'Quick NAD+', icon: BatteryCharging },
-    { source: byLabel.get('Glutathione IM · 200mg'), label: 'Glutathione IM', desc: 'Quick antioxidant', icon: Sparkles },
-  ]
-    .filter((item) => item?.source)
-    .map(toChoice);
+  const ivChoices = ivAddons.map(toChoice);
+  const imChoices = imShots.map(toChoice);
 
   const groups = [
     {
       key: 'iv',
-      label: 'IV add-ons',
-      sub: 'IV',
+      label: 'IV Add Ons',
+      sub: `${ivChoices.length} options`,
       icon: Droplets,
       items: ivChoices,
     },
     {
       key: 'im',
-      label: 'IM add-ons',
-      sub: 'IM',
+      label: 'IM Add Ons',
+      sub: `${imChoices.length} options`,
       icon: Syringe,
       items: imChoices,
     },
@@ -3080,18 +3155,24 @@ export default function BookNow() {
   const reduceMotion = useReducedMotion();
   const shouldResetDraft = searchParams.get('reset') === '1';
   const shouldResumeDraft = searchParams.get('resume') === '1';
+  const sessionDraft = useMemo(() => shouldResetDraft ? null : readBookingSessionDraft(), [shouldResetDraft]);
+  const persistedDraft = useMemo(() => shouldResetDraft ? null : readBookingDraft(), [shouldResetDraft]);
   const initialProtocolParam = searchParams.get('protocol');
   const initialProtocolKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(initialProtocolParam) ? initialProtocolParam : '';
   const initialSubscriptionParam = searchParams.get('subscription');
   const initialSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === initialSubscriptionParam);
   const initialSubscriptionTerm = subscriptionTermForKey(searchParams.get('term'));
   const initialOutcome = initialProtocolKey ? outcomeForProtocol(initialProtocolKey) : null;
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => (
+    shouldResetDraft
+      ? 0
+      : readStepHash() ?? clampStep(sessionDraft?.step) ?? clampStep(persistedDraft?.step) ?? 0
+  ));
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
-    const draft = shouldResetDraft || !shouldResumeDraft ? {} : readBookingDraft()?.webstore || {};
-    const savedWebstoreRaw = draft.draftVersion === BOOKING_DRAFT_VERSION ? draft : {};
+    const draft = shouldResetDraft ? {} : (sessionDraft?.webstore || (shouldResumeDraft ? persistedDraft?.webstore : {}) || {});
+    const savedWebstoreRaw = draft && typeof draft === 'object' ? draft : {};
     const savedWebstoreAddress = realAddress(savedWebstoreRaw.address);
     const savedWebstore = {
       ...savedWebstoreRaw,
@@ -3129,15 +3210,45 @@ export default function BookNow() {
   });
   const [error, setError] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutMountError, setCheckoutMountError] = useState('');
+  const [checkoutRetryKey, setCheckoutRetryKey] = useState(0);
+  const [stripeClientPromise, setStripeClientPromise] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
-  const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(true);
+  const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(() => {
+    const saved = shouldResetDraft
+      ? null
+      : sessionDraft?.therapyCategoryScreen ?? (shouldResumeDraft ? persistedDraft?.therapyCategoryScreen : null);
+    if (typeof saved === 'boolean') return saved && step !== 0;
+    return false;
+  });
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
   const [activeAddonGroup, setActiveAddonGroup] = useState('');
 
   useEffect(() => {
-    if (shouldResetDraft) clearBookingDraft();
+    if (shouldResetDraft) {
+      clearBookingDraft();
+      clearBookingSessionDraft();
+    }
   }, [shouldResetDraft]);
+
+  useEffect(() => {
+    const restoreStepFromHistory = () => {
+      const nextStep = readStepHash();
+      if (nextStep === null) return;
+      setError('');
+      setStep(nextStep);
+      if (nextStep !== 0) setTherapyCategoryScreen(false);
+      if (nextStep !== 1) setActiveAddonGroup('');
+    };
+    window.addEventListener('popstate', restoreStepFromHistory);
+    window.addEventListener('hashchange', restoreStepFromHistory);
+    restoreStepFromHistory();
+    return () => {
+      window.removeEventListener('popstate', restoreStepFromHistory);
+      window.removeEventListener('hashchange', restoreStepFromHistory);
+    };
+  }, []);
 
   const scrollStepIntoView = (behavior = 'smooth') => {
     if (typeof window === 'undefined') return;
@@ -3157,6 +3268,18 @@ export default function BookNow() {
       hasMountedStepRef.current = true;
       return;
     }
+    if (typeof window !== 'undefined' && window.location.hash !== `#step-${step}`) {
+      window.history.pushState({ avalonBookingStep: step }, '', `${window.location.pathname}${window.location.search}#step-${step}`);
+    }
+    const draftPayload = {
+      webstore: { ...state, customPlanEstimate },
+      step,
+      therapyCategoryScreen,
+      subtotal,
+      updatedAt: new Date().toISOString(),
+    };
+    saveBookingDraft(draftPayload);
+    saveBookingSessionDraft(draftPayload);
     scrollStepIntoView();
   }, [step]);
 
@@ -3170,6 +3293,7 @@ export default function BookNow() {
     const selectedSubscriptionTerm = subscriptionTermForKey(subscriptionTermParam);
     const wantsSubscription = Boolean(selectedSubscriptionPlan);
     const nextOutcome = OUTCOMES.find((item) => item.key === outcomeParam);
+    const shouldStartAtFirstStep = readStepHash() === null;
     if (protocolParam && PUBLIC_BOOKING_PROTOCOL_KEYS.has(protocolParam)) {
       const inferredOutcome = nextOutcome || outcomeForProtocol(protocolParam);
       setState((current) => ({
@@ -3183,7 +3307,7 @@ export default function BookNow() {
         addOns: [],
         addOnDecision: true,
       }));
-      setStep(0);
+      if (shouldStartAtFirstStep) setStep(0);
     } else if (nextOutcome) {
       const isCustom = nextOutcome.key === 'longevity';
       const base = CUSTOM_BASE_OPTIONS.find((item) => item.key === 'advanced') || CUSTOM_BASE_OPTIONS[1];
@@ -3202,7 +3326,7 @@ export default function BookNow() {
           customBase: isCustom ? selectedBase.key : current.customBase,
         };
       });
-      setStep(0);
+      if (shouldStartAtFirstStep) setStep(0);
     } else if (wantsSubscription) {
       const fallbackProtocol = 'recovery';
       const inferredOutcome = outcomeForProtocol(fallbackProtocol);
@@ -3217,7 +3341,7 @@ export default function BookNow() {
         addOns: [],
         addOnDecision: true,
       }));
-      setStep(0);
+      if (shouldStartAtFirstStep) setStep(0);
     }
   }, [searchParams]);
 
@@ -3232,6 +3356,17 @@ export default function BookNow() {
   const product = state.productKey ? safeProtocol(getProductByKey(state.productKey)) : null;
   const serviceLabel = isCustomTreatment ? customBase.label : product?.label || 'Therapy';
   const plan = MEMBERSHIP_OPTIONS.find((item) => item.key === state.planKey) || MEMBERSHIP_OPTIONS[0];
+
+  useEffect(() => {
+    if (step === 0 || product) return;
+    setStep(0);
+    setTherapyCategoryScreen(false);
+    setActiveAddonGroup('');
+    if (typeof window !== 'undefined' && window.location.hash !== '#step-0') {
+      window.history.replaceState({ avalonBookingStep: 0 }, '', `${window.location.pathname}${window.location.search}#step-0`);
+    }
+  }, [product, step]);
+
   const compressedFlow = Boolean(searchParams.get('protocol') || searchParams.get('subscription'));
   const isReturningClient = state.clientType === 'returning';
   const clinicalReviewOnFile = Boolean(state.clinicalReviewOnFile);
@@ -3300,8 +3435,23 @@ export default function BookNow() {
   const topAddressSuggestion = addressQuery.length >= 2 ? addressSuggestions[0] : null;
 
   useEffect(() => {
-    saveBookingDraft({ webstore: { ...state, customPlanEstimate }, step, subtotal, updatedAt: new Date().toISOString() });
-  }, [state, step, subtotal, customPlanEstimate]);
+    const visibleStep = readStepHash();
+    const draftPayload = { webstore: { ...state, customPlanEstimate }, step: visibleStep ?? step, therapyCategoryScreen, subtotal, updatedAt: new Date().toISOString() };
+    saveBookingDraft(draftPayload);
+    saveBookingSessionDraft(draftPayload);
+  }, [state, step, therapyCategoryScreen, subtotal, customPlanEstimate]);
+
+  const persistBookingProgress = (nextStep = step, nextTherapyCategoryScreen = therapyCategoryScreen, nextState = state) => {
+    const draftPayload = {
+      webstore: { ...nextState, customPlanEstimate },
+      step: nextStep,
+      therapyCategoryScreen: nextTherapyCategoryScreen,
+      subtotal,
+      updatedAt: new Date().toISOString(),
+    };
+    saveBookingDraft(draftPayload);
+    saveBookingSessionDraft(draftPayload);
+  };
 
   useEffect(() => {
     if (
@@ -3434,13 +3584,18 @@ export default function BookNow() {
       outcome: key,
       protocol_key: recommendedProductKey,
     });
+    setError('');
+    setStep(0);
+    setTherapyCategoryScreen(false);
+    setActiveAddonGroup('');
+    if (recommendedProductKey) setActiveTherapyGroup(therapyGroupForKey(recommendedProductKey));
     setState((current) => {
       const existingCustomBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === current.customBase);
       const nextCustomBase = current.outcome === 'longevity' && existingCustomBase ? existingCustomBase : base;
       return {
         ...current,
         outcome: key,
-        productKey: isCustom ? nextCustomBase.productKey : recommendedProductKey,
+        productKey: isCustom ? nextCustomBase.productKey : '',
         addOns: [],
         addOnDecision: true,
         customBase: isCustom ? nextCustomBase.key : current.customBase,
@@ -3536,6 +3691,7 @@ export default function BookNow() {
     chooseProduct(key);
     setActiveAddonGroup('');
     setStep(1);
+    persistBookingProgress(1, false, { ...state, productKey: key, addOns: [], addOnDecision: true });
   };
 
   const chooseCustomBase = (key) => {
@@ -3704,6 +3860,7 @@ export default function BookNow() {
     if (step === 0 && therapyCategoryScreen) {
       setError('');
       setTherapyCategoryScreen(false);
+      persistBookingProgress(0, false);
       return;
     }
     if (step === 3 && groupContactRequired) {
@@ -3731,13 +3888,16 @@ export default function BookNow() {
       visit_type: state.visitType,
       protocol_key: state.productKey,
     });
-    setStep((current) => Math.min(current + 1, LAST_STEP));
+    const nextStep = Math.min(step + 1, LAST_STEP);
+    persistBookingProgress(nextStep, therapyCategoryScreen);
+    setStep(nextStep);
   };
 
   const back = () => {
     if (step === 0 && !therapyCategoryScreen) {
       setError('');
       setTherapyCategoryScreen(true);
+      persistBookingProgress(0, true);
       return;
     }
     if (step === 1 && activeAddonGroup) {
@@ -3745,7 +3905,9 @@ export default function BookNow() {
       setActiveAddonGroup('');
       return;
     }
-    setStep((current) => Math.max(current - 1, 0));
+    const nextStep = Math.max(step - 1, 0);
+    persistBookingProgress(nextStep, nextStep === 0 ? therapyCategoryScreen : false);
+    setStep(nextStep);
   };
 
   const goToStep = (targetStep) => {
@@ -3755,11 +3917,13 @@ export default function BookNow() {
       setTherapyCategoryScreen(targetStep === 0);
       if (targetStep !== 1) setActiveAddonGroup('');
       setStep(targetStep);
+      persistBookingProgress(targetStep, targetStep === 0);
       return;
     }
     if (targetStep === step + 1 && canAdvance()) {
       setError('');
       setStep(targetStep);
+      persistBookingProgress(targetStep, therapyCategoryScreen);
       return;
     }
     setError('Finish this step first.');
@@ -3904,7 +4068,7 @@ export default function BookNow() {
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
-      stack: ['Avalon OS', 'Acuity scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
+      stack: ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
       noThirdPartyCalls: false,
       updatedAt: new Date().toISOString(),
     });
@@ -3969,10 +4133,13 @@ export default function BookNow() {
   const openCheckout = async (localBooking, membershipOverride = null) => {
     setCheckoutLoading(true);
     setEmbeddedCheckoutSession(null);
+    setCheckoutMountError('');
     try {
-      if (!stripePromise) {
+      const nextStripePromise = getStripePromise();
+      if (!nextStripePromise) {
         throw Object.assign(new Error('Embedded checkout is not configured.'), { code: 'stripe_publishable_key_missing' });
       }
+      setStripeClientPromise(nextStripePromise);
       const session = await createCheckoutSession(checkoutPayloadFor(localBooking, membershipOverride));
       track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
         funnel: 'webstore',
@@ -3983,6 +4150,7 @@ export default function BookNow() {
 
       if (session.previewOnly) {
         clearBookingDraft();
+        clearBookingSessionDraft();
         navigate(session.url || `/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}&preapi=1`);
         return;
       }
@@ -3992,6 +4160,7 @@ export default function BookNow() {
       }
 
       clearBookingDraft();
+      clearBookingSessionDraft();
       setEmbeddedCheckoutSession({
         clientSecret: session.clientSecret,
         sessionId: session.sessionId,
@@ -4005,10 +4174,12 @@ export default function BookNow() {
     } catch (err) {
       if (err.code === 'checkout_api_unavailable' && canUseStaticPreviewFallback()) {
         clearBookingDraft();
+        clearBookingSessionDraft();
         navigate(`/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}&preapi=1`);
         return;
       }
       setCheckoutLoading(false);
+      setCheckoutMountError(err.message || 'Checkout is unavailable. Try again.');
       setError(err.message || 'Checkout is unavailable. Try again.');
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -4153,6 +4324,23 @@ export default function BookNow() {
     };
   }, [embeddedCheckoutSession?.clientSecret, embeddedCheckoutSession?.sessionId, navigate]);
 
+  useEffect(() => {
+    if (!embeddedCheckoutSession?.clientSecret) return undefined;
+    setCheckoutMountError('');
+    const timeout = window.setTimeout(() => {
+      const mounted = document.querySelector('[data-av-embedded-checkout] iframe');
+      if (mounted) return;
+      const reason = 'Payment failed to load. Refresh or text Avalon and we will finish the booking.';
+      setCheckoutMountError(reason);
+      track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+        funnel: 'webstore',
+        booking_id: embeddedCheckoutSession.bookingId,
+        reason: 'embedded_checkout_mount_timeout',
+      });
+    }, 9000);
+    return () => window.clearTimeout(timeout);
+  }, [embeddedCheckoutSession?.bookingId, embeddedCheckoutSession?.clientSecret]);
+
   const menuTherapies = useMemo(() => {
     return BOOKING_THERAPY_KEYS.map((key) => safeProtocol(getProductByKey(key))).filter(Boolean);
   }, []);
@@ -4169,6 +4357,7 @@ export default function BookNow() {
     : activeTherapyGroupData?.key === 'cbd'
       ? 'CBD IV THERAPY'
       : 'NAD+ IV THERAPY';
+  const isIvTherapyMenuStep = step === 0 && !therapyCategoryScreen && activeTherapyGroupData?.key === 'vitamin';
   const progressDisplay = {
     index: step === 0
       ? 0
@@ -4180,7 +4369,7 @@ export default function BookNow() {
             ? 3
             : 4,
     title: step === 0
-      ? (therapyCategoryScreen ? 'THERAPY BASE' : activeTherapyDisplayTitle)
+      ? (therapyCategoryScreen ? 'Therapy Base' : isIvTherapyMenuStep ? 'Choose Your IV Therapy' : activeTherapyDisplayTitle)
       : step === 1
         ? 'ADD-ONS'
       : STEPS[step].toUpperCase(),
@@ -4240,25 +4429,47 @@ export default function BookNow() {
     action = 'arrow',
     className = '',
     iconClassName = '',
+    titleClassName = '',
+    metaClassName = '',
+    compactMobile = false,
   }) => {
     const ActionIcon = action === 'check' ? Check : action === 'plus' ? Plus : ArrowRight;
+    const rowBaseClass = compactMobile
+      ? `${panelCardClass} grid !min-h-[62px] grid-cols-[34px_1fr_20px] items-center gap-1.5 px-1.5 py-1.5 text-left transition-colors hover:border-foreground/24 min-[390px]:!min-h-[64px] min-[390px]:grid-cols-[36px_1fr_22px] min-[390px]:px-2 md:!min-h-[76px] md:grid-cols-[54px_1fr_28px] md:gap-2 md:px-2.5 md:py-2`
+      : `${panelCardClass} grid !min-h-[88px] grid-cols-[62px_1fr_30px] items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:border-foreground/24 min-[390px]:!min-h-[94px] min-[390px]:grid-cols-[68px_1fr_32px] min-[390px]:px-3.5 md:!min-h-[104px] md:grid-cols-[78px_1fr_36px] md:gap-3 md:px-4`;
+    const iconBaseClass = compactMobile
+      ? 'relative flex h-8 w-8 items-center justify-center rounded-xl border border-foreground/8 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-9 min-[390px]:w-9 md:h-14 md:w-14'
+      : 'relative flex h-11 w-11 items-center justify-center rounded-2xl border border-foreground/8 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14';
+    const iconSvgClass = compactMobile
+      ? 'h-4 w-4 min-[390px]:h-4.5 min-[390px]:w-4.5 md:h-9 md:w-9'
+      : 'h-7 w-7 min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9';
+    const titleBaseClass = compactMobile
+      ? 'block truncate font-heading text-[0.95rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.02rem] md:text-[2.15rem]'
+      : 'block truncate font-heading text-[1.68rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.9rem] md:text-[2.15rem]';
+    const metaBaseClass = compactMobile
+      ? 'mt-1 block truncate font-body text-[7px] font-black uppercase tracking-[0.06em] text-foreground/70 min-[390px]:text-[7.5px] md:text-sm'
+      : 'mt-1 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm';
     return (
       <button
         key={key}
         type="button"
         onClick={onClick}
         aria-pressed={active}
-        className={`${panelCardClass} grid !min-h-[88px] grid-cols-[62px_1fr_30px] items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:border-foreground/24 min-[390px]:!min-h-[94px] min-[390px]:grid-cols-[68px_1fr_32px] min-[390px]:px-3.5 md:!min-h-[104px] md:grid-cols-[78px_1fr_36px] md:gap-3 md:px-4 ${active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''} ${className}`}
+        className={`${rowBaseClass} ${active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''} ${className}`}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-        <span className={`relative flex h-11 w-11 items-center justify-center rounded-2xl border border-foreground/8 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14 ${iconClassName}`}>
-          <Icon className="h-7 w-7 min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9" strokeWidth={2.05} />
+        <span className={`${iconBaseClass} ${iconClassName}`}>
+          <Icon className={iconSvgClass} strokeWidth={2.05} />
         </span>
         <span className="relative min-w-0 border-l border-foreground/12 pl-3 min-[390px]:pl-4 md:pl-5">
-          <span className="block truncate font-heading text-[1.68rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.9rem] md:text-[2.15rem]">{title}</span>
+          <span className={`${titleBaseClass} ${titleClassName}`}>{title}</span>
           {meta && (
-            <span className="mt-1 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm">
-              {meta}
+            <span className={`${metaBaseClass} ${metaClassName}`}>
+              {String(meta).split('\n').map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </span>
           )}
         </span>
@@ -4266,6 +4477,168 @@ export default function BookNow() {
           <ActionIcon className="h-5 w-5 min-[390px]:h-6 min-[390px]:w-6" strokeWidth={2.55} />
         </span>
       </button>
+    );
+  };
+
+  const renderIvTherapyTile = (item) => {
+    const Icon = item.icon || Droplets;
+    const active = state.productKey === item.key;
+    const copy = compactProtocolCopy(item);
+    const menuLabel = copy.label;
+
+    return (
+      <button
+        key={item.key}
+        type="button"
+        onClick={() => chooseTherapyMenuProduct(item.key)}
+        aria-pressed={active}
+        className={`${panelCardClass} relative flex min-h-0 flex-col justify-between rounded-[0.95rem] px-2 py-2 text-left transition-colors hover:border-foreground/24 md:rounded-[1.05rem] md:px-3 md:py-3 ${
+          active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
+        }`}
+      >
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+        <span className="relative flex items-center justify-between gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-foreground/8 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-9 min-[390px]:w-9 md:h-11 md:w-11">
+            <Icon className="h-4 w-4 min-[390px]:h-4.5 min-[390px]:w-4.5 md:h-5 md:w-5" strokeWidth={2.2} />
+          </span>
+          <ArrowRight className="h-4.5 w-4.5 shrink-0 text-foreground md:h-5 md:w-5" strokeWidth={2.55} />
+        </span>
+        <span className="relative min-w-0 pt-1.5 md:pt-2">
+          <span className="block truncate font-heading text-[1.05rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.18rem] md:text-[1.55rem]">
+            {menuLabel}
+          </span>
+          <span className="mt-1 block truncate font-body text-[8px] font-black uppercase tracking-[0.07em] text-foreground/70 min-[390px]:text-[9px] md:text-[11px]">
+            {currency(protocolPrice(item))}
+          </span>
+        </span>
+      </button>
+    );
+  };
+
+  const ivMobileOrder = [
+    'hydration',
+    'myers',
+    'postnight',
+    'immunity',
+    'energy',
+    'recovery',
+    'performance',
+    'jetlag',
+    'food-poisoning',
+  ];
+  const renderMobileIvTherapyRow = (item) => {
+    const Icon = item.icon || Droplets;
+    const active = state.productKey === item.key;
+    const copy = compactProtocolCopy(item);
+    const price = protocolPrice(item);
+    const selectTherapy = () => chooseTherapyMenuProduct(item.key);
+
+    return (
+      <div
+        key={item.key}
+        role="button"
+        tabIndex={0}
+        onClick={selectTherapy}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectTherapy();
+          }
+        }}
+        aria-pressed={active}
+        className={`relative h-full min-h-0 overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-black/82 px-0 py-0 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.22)] backdrop-blur-2xl transition-colors hover:border-foreground/24 ${
+          active ? 'border-foreground/58 bg-black/72 ring-1 ring-inset ring-foreground/34' : ''
+        }`}
+      >
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
+        <span className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-foreground min-[390px]:left-3.5 min-[390px]:h-10 min-[390px]:w-10">
+          <Icon className="h-[1.625rem] w-[1.625rem] min-[390px]:h-7 min-[390px]:w-7" strokeWidth={1.9} />
+        </span>
+        <span className="absolute left-[4.1rem] right-[7.15rem] top-1/2 flex min-w-0 -translate-y-1/2 items-center gap-1.5 font-heading text-[1.48rem] uppercase leading-none tracking-normal text-foreground min-[390px]:left-[4.55rem] min-[390px]:right-[7.85rem] min-[390px]:text-[1.66rem]">
+          <span className="truncate">{copy.label}</span>
+        </span>
+        <span className="absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center justify-end gap-2.5 text-foreground min-[390px]:right-4 min-[390px]:gap-3">
+          <span className="font-heading text-[1.48rem] uppercase leading-none tracking-normal min-[390px]:text-[1.66rem]">
+            {currency(price)}
+          </span>
+          <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
+        </span>
+      </div>
+    );
+  };
+
+  const renderAddonTile = (group, item) => {
+    const active = state.addOns.includes(item.label);
+    const Icon = item.icon || Plus;
+
+    return (
+      <button
+        key={`${group.key}-${item.label}`}
+        type="button"
+        onClick={() => toggleAddon(item.label)}
+        aria-pressed={active}
+        className={`${panelCardClass} relative flex min-h-[46px] flex-col justify-between rounded-[0.72rem] px-1 py-1 text-left transition-colors hover:border-foreground/24 min-[390px]:min-h-[48px] md:min-h-[58px] md:rounded-[0.85rem] md:px-1.5 md:py-1.5 ${
+          active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
+        }`}
+      >
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+        <span className="relative flex items-center justify-between gap-1">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-foreground/8 bg-foreground/[0.055] text-foreground min-[390px]:h-6 min-[390px]:w-6 md:h-7 md:w-7 md:rounded-lg">
+            <Icon className="h-3 w-3 min-[390px]:h-3.5 min-[390px]:w-3.5 md:h-4 md:w-4" strokeWidth={2.2} />
+          </span>
+          {active ? (
+            <Check className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={2.65} />
+          ) : (
+            <Plus className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={2.65} />
+          )}
+        </span>
+        <span className="relative min-w-0 pt-0.5 md:pt-1">
+          <span className="block truncate font-heading text-[0.62rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[0.68rem] md:text-[0.9rem]">
+            {item.label}
+          </span>
+          <span className="mt-0.5 block truncate font-body text-[6.5px] font-black uppercase tracking-[0.04em] text-foreground/70 md:text-[8px]">
+            + {currency(item.price)}
+          </span>
+        </span>
+      </button>
+    );
+  };
+
+  const renderAddonAccordion = (group) => {
+    const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
+    const open = activeAddonGroup === group.key;
+    const Icon = group.key === 'iv' ? Droplets : group.icon;
+
+    return (
+      <div key={group.key} className={`${panelCardClass} rounded-[1rem]`}>
+        <button
+          type="button"
+          onClick={() => setActiveAddonGroup((current) => (current === group.key ? '' : group.key))}
+          aria-expanded={open}
+          className="relative flex min-h-[42px] w-full items-center justify-between gap-2 px-2 text-left transition-colors hover:border-foreground/24 min-[390px]:min-h-[46px] md:min-h-[54px] md:px-2.5"
+        >
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+          <span className="relative flex min-w-0 items-center gap-2.5 md:gap-3">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.055] text-foreground min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9 md:rounded-xl">
+              <Icon className="h-3.5 w-3.5 md:h-4.5 md:w-4.5" strokeWidth={2.35} />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate font-heading text-[1.05rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.16rem] md:text-[1.38rem]">
+                {group.label}
+              </span>
+              <span className="mt-0.5 block truncate font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/64 min-[390px]:text-[8px] md:text-[9px]">
+                {selectedCount ? `${selectedCount} selected` : group.sub}
+              </span>
+            </span>
+          </span>
+          <ChevronDown className={`relative h-5 w-5 shrink-0 text-foreground transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.55} />
+        </button>
+        {open && (
+          <div className="grid grid-cols-4 gap-1 border-t border-foreground/8 p-1 md:gap-1.5 md:p-1.5">
+            {group.items.map((item) => renderAddonTile(group, item))}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -4355,6 +4728,10 @@ export default function BookNow() {
       }
 
       const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
+      const isVitaminTherapyGroup = activeTherapyGroupData?.key === 'vitamin';
+      const orderedMobileIvTherapies = isVitaminTherapyGroup
+        ? ivMobileOrder.map((key) => activeTherapies.find((item) => item.key === key)).filter(Boolean)
+        : [];
       const renderTherapyCard = (item) => {
         const Icon = item.icon || Droplets;
         const active = state.productKey === item.key;
@@ -4369,15 +4746,40 @@ export default function BookNow() {
           meta,
           onClick: () => chooseTherapyMenuProduct(item.key),
           active,
+          compactMobile: true,
+          className: 'md:!min-h-[76px] md:grid-cols-[54px_1fr_28px] md:gap-2 md:px-2.5 md:py-2',
+          iconClassName: 'md:h-10 md:w-10 md:[&_svg]:h-6 md:[&_svg]:w-6',
+          titleClassName: 'md:text-[1.55rem]',
+          metaClassName: 'md:text-xs',
         });
       };
+
+      if (isVitaminTherapyGroup) {
+        return (
+          <div className="grid h-full min-h-0 grid-rows-[auto_1fr_auto] gap-1 md:grid-rows-[auto_1fr] md:gap-4">
+            <p className={`${microLabelClass} pt-0 text-left tracking-[0.14em] md:pt-1 md:tracking-[0.22em]`}>
+              <span className="md:hidden">Tap a therapy to learn more and select</span>
+              <span className="hidden md:inline">Choose your {activeTherapyDisplayTitle.toLowerCase()}</span>
+            </p>
+            <div className="grid h-full min-h-0 grid-rows-9 gap-1 overflow-hidden md:hidden">
+              {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
+            </div>
+            <p className="pb-0.5 text-center font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/56 md:hidden">
+              Taxes calculated at checkout
+            </p>
+            <div className="hidden h-full min-h-0 grid-cols-3 grid-rows-3 gap-1.5 overflow-hidden pb-0 pr-0 md:grid md:gap-2">
+              {activeTherapies.map((item) => renderIvTherapyTile(item))}
+            </div>
+          </div>
+        );
+      }
 
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-4">
           <p className={`${microLabelClass} pt-0.5 text-left tracking-[0.22em] md:pt-1`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
-          <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1 md:grid-cols-2 md:gap-3">
+          <div className="grid min-h-0 grid-cols-2 content-start gap-1.5 overflow-visible pb-0 pr-0 md:gap-2">
             {activeTherapies.map((item) => renderTherapyCard(item))}
           </div>
         </div>
@@ -4385,84 +4787,24 @@ export default function BookNow() {
     }
 
     if (step === 1) {
-      const selectedAddonGroup = addonCatalog.groups.find((group) => group.key === activeAddonGroup);
-
-      if (!selectedAddonGroup) {
-        return (
-          <div className="h-full min-h-0">
-            <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:hidden">
-            <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em]`}>Choose add-ons</p>
-              <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1">
-                {renderStoreMenuRow({
-                  key: 'no-addons',
-                  icon: Check,
-                  title: 'No add-ons',
-                  meta: 'Fastest checkout',
-                  onClick: chooseNoAddons,
-                  active: state.addOnDecision && state.addOns.length === 0,
-                  action: state.addOnDecision && state.addOns.length === 0 ? 'check' : 'arrow',
-                })}
-                {addonCatalog.groups.map((group) => {
-                  const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
-                  return renderStoreMenuRow({
-                    key: group.key,
-                    icon: group.key === 'iv' ? Plus : group.icon,
-                    title: group.label,
-                    meta: selectedCount ? `${selectedCount} selected` : group.key === 'iv' ? 'Enhance your IV therapy' : 'Enhance with IM injections',
-                    onClick: () => setActiveAddonGroup(group.key),
-                  });
-                })}
-              </div>
-            </div>
-            <div className="hidden h-full min-h-0 content-start gap-4 md:grid">
-              <p className={`${microLabelClass} pt-1 tracking-[0.22em]`}>Choose your add-ons</p>
-              <div className="grid min-h-0 content-start gap-3 overflow-y-auto pr-1 md:grid-cols-2">
-                {addonCatalog.groups.flatMap((group) => group.items.map((item) => {
-                  const active = state.addOns.includes(item.label);
-                  return renderStoreMenuRow({
-                    key: `${group.key}-${item.label}`,
-                    icon: item.icon || Plus,
-                    title: item.label,
-                    meta: `+ ${currency(item.price)} · ${group.sub}`,
-                    onClick: () => toggleAddon(item.label),
-                    active,
-                    action: active ? 'check' : 'plus',
-                  });
-                }))}
-              </div>
-            </div>
-          </div>
-        );
-      }
-
       return (
-        <div className="grid h-full min-h-0 content-start gap-1.5 md:gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveAddonGroup('')}
-            className={`${panelCardClass} flex min-h-[48px] items-center justify-between gap-2.5 px-2.5 text-left md:min-h-[58px] md:gap-3 md:px-3`}
-          >
-            <span className="flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] md:h-10 md:w-10">
-                <ArrowLeft className="h-4 w-4" />
-              </span>
-              <span className="font-heading text-[1.32rem] uppercase leading-none tracking-normal md:text-[1.55rem]">{selectedAddonGroup.label}</span>
-            </span>
-            <span className="font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/62">Category</span>
-          </button>
-          <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-2 pr-1 md:grid-cols-2 md:gap-3">
-            {selectedAddonGroup.items.map((item) => {
-              const active = state.addOns.includes(item.label);
-              return renderStoreMenuRow({
-                key: item.label,
-                icon: item.icon || Plus,
-                title: item.label,
-                meta: `+ ${currency(item.price)}${item.desc ? ` · ${item.desc}` : ''}`,
-                onClick: () => toggleAddon(item.label),
-                active,
-                action: active ? 'check' : 'plus',
-              });
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-1.5 md:gap-2">
+          <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:text-left md:pt-1`}>Choose add-ons</p>
+          <div className="grid min-h-0 content-start gap-1.5 overflow-hidden pb-0 pr-0 md:gap-2">
+            {renderStoreMenuRow({
+              key: 'no-addons',
+              icon: Check,
+              title: 'No add-ons',
+              meta: '60 second checkout\nNO HIDDEN FEES',
+              onClick: chooseNoAddons,
+              active: state.addOnDecision && state.addOns.length === 0,
+              action: state.addOnDecision && state.addOns.length === 0 ? 'check' : 'arrow',
+              compactMobile: true,
+              className: '!min-h-[52px] min-[390px]:!min-h-[56px] md:!min-h-[64px]',
+              titleClassName: 'text-[1.18rem] min-[390px]:text-[1.3rem] md:text-[1.55rem]',
+              metaClassName: 'text-[8px] min-[390px]:text-[9px] md:text-[11px]',
             })}
+            {addonCatalog.groups.map((group) => renderAddonAccordion(group))}
           </div>
         </div>
       );
@@ -4640,12 +4982,13 @@ export default function BookNow() {
   ]);
 
   return (
-    <div className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
+    <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
       <BookingMobileHeader />
       <div className="hidden md:block">
         <Navbar />
       </div>
       <main
+        data-av-booking-main="true"
         className="mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
           '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px) + var(--av-booking-visual-breathing, 0px))',
@@ -4676,7 +5019,7 @@ export default function BookNow() {
                     Edit Booking
                   </button>
                 </div>
-                <div className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
+                <div data-av-embedded-checkout className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
                   <div className="border-b border-foreground/8 px-4 py-3">
                     <p className="font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/60">Secure checkout ready</p>
                     <div className="mt-2 h-px overflow-hidden bg-foreground/10">
@@ -4689,9 +5032,29 @@ export default function BookNow() {
                       />
                     </div>
                   </div>
+                  {checkoutMountError && (
+                    <div role="alert" className="m-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
+                      <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                          type="button"
+                          onClick={() => {
+                            setCheckoutMountError('');
+                            setCheckoutRetryKey((current) => current + 1);
+                          }}
+                          className="min-h-[40px] rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]"
+                        >
+                          Retry payment
+                        </button>
+                        <a href="sms:+14159807708" className="inline-flex min-h-[40px] items-center rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]">
+                          Text Avalon
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   <EmbeddedCheckoutProvider
-                    key={embeddedCheckoutSession.clientSecret}
-                    stripe={stripePromise}
+                    key={`${embeddedCheckoutSession.clientSecret}-${checkoutRetryKey}`}
+                    stripe={stripeClientPromise}
                     options={embeddedCheckoutOptions}
                   >
                     <EmbeddedCheckout className="min-h-[calc(100dvh-250px)]" />
@@ -4703,12 +5066,13 @@ export default function BookNow() {
         )}
         {!embeddedCheckoutSession && (
           <>
-            <div className="h-full min-h-0 md:hidden">
+            <div className="h-full min-h-0 lg:hidden">
               <UniversalBookingFrame
                 step={step}
                 total={totalLabel}
                 dueNow={dueNowLabel}
                 dueAfter={dueAfterLabel}
+                receiptLine={product ? priceReceipt({ product, subtotal, groupContactRequired }) : ''}
                 showDueAfter={!(step === 0 && !therapyCategoryScreen)}
                 displayStepIndex={progressDisplay.index}
                 displayTitle={progressDisplay.title}

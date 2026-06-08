@@ -72,17 +72,17 @@ function FooterDesktopGroup({ title, icon: Icon, open, onToggle, children }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-32px' }}
       transition={{ duration: 0.55, ease: EASE }}
-      className="av-glass-card relative overflow-hidden rounded-[1.35rem] border transition-colors"
+        className="av-glass-card relative overflow-hidden rounded-[1.15rem] border transition-colors"
     >
       <button
         type="button"
         onClick={onToggle}
-        className="relative flex min-h-[68px] w-full items-center justify-between gap-3 px-4 text-left transition-colors hover:bg-foreground/[0.035]"
+        className="relative flex min-h-[54px] w-full items-center justify-between gap-2.5 px-3 text-left transition-colors hover:bg-foreground/[0.035]"
         aria-expanded={open}
       >
-        <span className="flex min-w-0 items-center gap-3">
+            <span className="flex min-w-0 items-center gap-2.5">
           {Icon && (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/[0.08] bg-background/30 text-foreground/58">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/30 text-foreground/58">
               <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
             </span>
           )}
@@ -94,7 +94,7 @@ function FooterDesktopGroup({ title, icon: Icon, open, onToggle, children }) {
       </button>
       {open && (
         <SmoothDisclosure open>
-          <div className="relative grid gap-1.5 border-t border-foreground/[0.07] p-3">{children}</div>
+          <div className="relative grid gap-1 border-t border-foreground/[0.07] p-2">{children}</div>
         </SmoothDisclosure>
       )}
     </motion.div>
@@ -178,13 +178,13 @@ export default function Footer() {
   const [openDesktopGroup, setOpenDesktopGroup] = useState(null);
 
   return (
-    <footer className="px-4 pb-4 pt-6 md:pb-5 md:pt-10">
+    <footer className="px-4 pb-4 pt-6 md:pb-4 md:pt-6">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-40px' }}
         transition={{ duration: 0.65, ease: EASE }}
-        className="av-glass-card relative mx-auto max-w-6xl overflow-hidden rounded-[1.6rem] border p-3 md:p-5"
+        className="av-glass-card relative mx-auto max-w-6xl overflow-hidden rounded-[1.35rem] border p-3 md:p-4"
       >
         <div className="relative">
 
@@ -213,7 +213,7 @@ export default function Footer() {
         </div>
 
         {/* Desktop: hidden accordions */}
-        <div className="mb-4 hidden gap-3 md:grid md:grid-cols-2">
+        <div className="mb-3 hidden gap-2 md:grid md:grid-cols-4">
 
           {/* Services */}
           <FooterDesktopGroup

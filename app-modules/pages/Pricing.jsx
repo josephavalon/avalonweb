@@ -29,11 +29,12 @@ const DRIPS = [
   { name: 'Event Recovery', price: '$249' },
   { name: 'Event Performance', price: '$259' },
   { name: 'CBD Review', price: '$279-$399' },
-  { name: 'NAD+ (250mg)', price: '$399' },
-  { name: 'NAD+ (500mg)', price: '$599' },
-  { name: 'Exosomes 30B', price: '$799' },
-  { name: 'Exosomes 50B', price: '$1,200' },
-  { name: 'Exosomes 90B', price: '$1,800' },
+  { name: 'NAD+ (250mg)', price: '$350' },
+  { name: 'NAD+ (500mg)', price: '$500' },
+  { name: 'NAD+ (750mg)', price: '$600' },
+  { name: 'NAD+ (1000mg)', price: '$750' },
+  { name: 'NAD+ (1250mg)', price: '$950' },
+  { name: 'NAD+ (1500mg)', price: '$1,100' },
 ];
 
 const ADDONS = [
@@ -59,7 +60,7 @@ const TIERS = [
     ],
   },
   {
-    name: 'Inner Circle',
+    name: 'VIP',
     price: '$400/mo',
     highlight: true,
     features: [
@@ -72,12 +73,12 @@ const TIERS = [
     ],
   },
   {
-    name: 'Private Client',
+    name: 'Custom',
     price: '$800/mo',
     highlight: false,
     features: [
       '4 IV credits/month',
-      '1 credit may be NAD+ 500mg or Exosomes 30B',
+      '1 credit may be NAD+ 500mg',
       '25% off add-ons',
       'Unlimited add-ons at plan rate',
       'Dedicated nurse',

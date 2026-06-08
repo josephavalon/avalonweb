@@ -114,7 +114,7 @@ export default function Hangover() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-heading text-3xl text-accent">From $249</p>
+                  <p className="font-heading text-3xl text-accent">$249</p>
                   <p className="font-body text-[10px] text-foreground/40 tracking-[0.2em] uppercase mt-1">Per session</p>
                 </div>
               </div>

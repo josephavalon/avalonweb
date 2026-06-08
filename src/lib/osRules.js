@@ -1,4 +1,4 @@
-const HIGH_RISK_TERMS = ['nad', 'exosome', 'group', 'event', 'high dose', 'cbd'];
+const HIGH_RISK_TERMS = ['nad', 'group', 'event', 'high dose', 'cbd'];
 
 export function buildBookingTimeline({ intake = false, cleared = false, nurse = false, paid = false, enRoute = false, complete = false } = {}) {
   return [
@@ -85,4 +85,3 @@ export function matchServiceArea(input = '', zones = [], coveredZips) {
   }
   return { status: cleanZip.length === 5 ? 'not_covered' : 'unknown', label: input, window: 'Contact us to confirm', zone: null };
 }
-

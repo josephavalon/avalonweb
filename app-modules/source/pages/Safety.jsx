@@ -29,7 +29,7 @@ const TIMELINE = [
     icon: ClipboardList,
     steps: [
       'Complete a brief health intake form at booking.',
-      'An Registered Nurse reviews your history and flags any concerns.',
+      'A registered nurse reviews your history and flags any concerns.',
       'You are contacted directly if clarification is needed before arrival.',
     ],
   },
@@ -56,7 +56,7 @@ const TIMELINE = [
 const FAQS = [
   {
     q: 'How does Avalon screen for safety before a session?',
-    a: 'Every client completes a health intake form at booking. A licensed registered nurse reviews the form before the session. If any flags are identified, the Registered Nurse contacts you to discuss next steps — which may include a physician consultation before proceeding.',
+    a: 'Every client completes a health intake form at booking. A registered nurse reviews the form before the session. If any flags are identified, the registered nurse contacts you to discuss next steps — which may include a physician consultation before proceeding.',
   },
   {
     q: 'What happens if I have an adverse reaction?',

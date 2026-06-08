@@ -27,7 +27,7 @@ const HERO_GOALS = [
 ];
 
 const FEATURED_KEYS = ['hydration', 'energy', 'myers', 'recovery', 'nad', 'cbd'];
-const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set(['exosomes']);
+const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set([]);
 const DOSE_PROTOCOL_KEYS = new Set(['nad', 'cbd']);
 const PUBLIC_SESSIONS = IV_SESSIONS.filter((session) => !HIDDEN_PUBLIC_PROTOCOL_KEYS.has(session.key));
 const DEFAULT_ORDER = new Map(PUBLIC_SESSIONS.map((session, index) => [session.key, index]));

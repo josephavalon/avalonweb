@@ -244,9 +244,18 @@ async function clickAria(cdp, text) {
 async function fillByLabel(cdp, label, value) {
   const filled = await evalOnPage(cdp, `(() => {
     const wanted = ${JSON.stringify(String(label).toLowerCase())};
-    const labels = Array.from(document.querySelectorAll('label'));
-    const wrapper = labels.find((el) => (el.innerText || '').trim().toLowerCase().startsWith(wanted));
-    const input = wrapper?.querySelector('input, textarea, select');
+    const visible = (el) => {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+    };
+    const fields = Array.from(document.querySelectorAll('input, textarea, select')).filter(visible);
+    const input = fields.find((el) => {
+      const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
+      const placeholder = (el.getAttribute('placeholder') || '').trim().toLowerCase();
+      const id = el.id ? (document.querySelector(\`label[for="\${CSS.escape(el.id)}"]\`)?.innerText || '').trim().toLowerCase() : '';
+      return aria.startsWith(wanted) || placeholder.startsWith(wanted) || id.startsWith(wanted);
+    });
     if (!input) return false;
     const proto = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : input instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
     const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
@@ -311,26 +320,24 @@ async function testBookingAddOnFlow(cdp) {
   await open(cdp, '/book?reset=1', MOBILE);
   await evalOnPage(cdp, 'localStorage.clear(); sessionStorage.setItem("av.splash.seen", "1");');
   await open(cdp, '/book?reset=1', MOBILE);
-  await clickText(cdp, 'Perform');
-  await clickText(cdp, 'One-Time');
-  await waitForText(cdp, /Myers/i);
-  await clickAria(cdp, "Select Myers");
+  await waitForText(cdp, /Choose Your IV Therapy|Energy|Myers/i);
+  await clickText(cdp, 'Myers');
   await waitForText(cdp, /Add-ons/i);
+  await clickText(cdp, 'IV Add Ons');
   await clickText(cdp, 'Extra Fluid');
   await waitForText(cdp, /\$275|275/);
-  await clickText(cdp, 'Continue with 1 add-on');
-  await waitForText(cdp, /Where should we come/i);
-  await clickText(cdp, 'Office');
-  await clickText(cdp, 'Office · SoMa');
-  await clickText(cdp, 'Continue');
-  await waitForText(cdp, /When do you want us/i);
-  await clickText(cdp, 'Tomorrow');
-  await clickText(cdp, 'Continue');
+  await clickText(cdp, 'NEXT');
+  await waitForText(cdp, /Arrival|ASAP|Pick date/i);
+  await clickText(cdp, 'NEXT');
+  await waitForText(cdp, /Address|Place/i);
+  await fillByLabel(cdp, 'Address', '2100 Webster St 94115');
+  await clickText(cdp, 'NEXT');
   await fillByLabel(cdp, 'Name', 'Demo Client');
   await fillByLabel(cdp, 'Phone', '(415) 555-0144');
+  await fillByLabel(cdp, 'DOB', '01/01/1980');
   await fillByLabel(cdp, 'Email', 'demo.client@avalon.local');
-  await clickText(cdp, 'Pay $1');
-  await waitForText(cdp, /Hold received|Confirmation|Myers/i);
+  await clickText(cdp, 'CONFIRM & PAY');
+  await waitForText(cdp, /Secure checkout ready|Hold received|Confirmation|Myers/i);
   const booking = await evalOnPage(cdp, `JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null')`);
   if (booking?.protocolKey !== 'myers') throw new Error(`Booking protocol mismatch: ${booking?.protocolKey}`);
   if (!booking?.addOns?.includes('Extra Fluid')) throw new Error('Booking did not retain Extra Fluid add-on.');
@@ -344,8 +351,8 @@ async function testSubscriptionTierSwitch(cdp) {
   await clickText(cdp, 'Starter');
   await waitForText(cdp, /\$199|Start Starter/i);
   await clickText(cdp, 'VIP');
-  await waitForText(cdp, /\$899|Start VIP/i);
-  await clickText(cdp, 'Start VIP');
+  await waitForText(cdp, /\$899|VIP/i);
+  await clickText(cdp, 'NEXT');
   await waitForText(cdp, /VIP|checkout|secure|subscription/i);
   await assertHealthy(cdp, 'subscription tier switching');
   console.log('PASS interaction subscription: starter and VIP switching works.');
@@ -379,7 +386,20 @@ async function testFooterAndProductAlias(cdp) {
     return { height: Math.round(rect.height), text: element.innerText };
   })()`);
   if (footer.height > 380) throw new Error(`Footer too tall after tighten pass: ${footer.height}px.`);
-  if (!/Book|Plans|Protocols|Launches|Terms|Privacy/.test(footer.text)) throw new Error('Footer core links missing.');
+
+  const groups = [
+    { label: 'Services', expected: /Book[\s\S]*Plans[\s\S]*(IV Therapy|Protocols)[\s\S]*Launches/i },
+    { label: 'Company', expected: /Story[\s\S]*Safety[\s\S]*FAQ/i },
+    { label: 'Contact', expected: /support@avalonvitality\.co[\s\S]*\(415\) 980-7708/i },
+    { label: 'Legal', expected: /Terms[\s\S]*Privacy/i },
+  ];
+  for (const group of groups) {
+    await clickText(cdp, group.label);
+    const text = await evalOnPage(cdp, `document.querySelector('footer')?.innerText || ''`);
+    if (!group.expected.test(text)) {
+      throw new Error(`Footer ${group.label} links missing.`);
+    }
+  }
 
   await open(cdp, '/products/iv-vitamins/myers', MOBILE);
   await waitForText(cdp, /Myers/i);

@@ -41,9 +41,6 @@ const ITEM_PRICE_BY_KEY = new Map(Object.entries({
   custom_travel: 250,
   custom_advanced: 350,
   custom_cbd: 350,
-  exosomes_30: 700,
-  exosomes_50: 1200,
-  exosomes_90: 1800,
 }));
 
 const ADDON_PRICE_BY_LABEL = new Map(Object.entries({

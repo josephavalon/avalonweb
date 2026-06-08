@@ -215,7 +215,7 @@ export default function LocationPage() {
                 Recovery around {page.city}
               </h2>
               <p className="mt-5 max-w-md font-body text-sm leading-relaxed text-foreground/56">
-                These local anchors help Avalon write useful city pages instead of generic service pages. Mobile availability still depends on intake, nurse coverage, protocol eligibility, and address details.
+                Mobile availability depends on intake, nurse coverage, protocol eligibility, and address details.
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
@@ -264,12 +264,12 @@ export default function LocationPage() {
                   ))}
                 </div>
                 <p className="mt-3 font-body text-xs leading-relaxed text-foreground/48">
-                  Avalon uses neighborhood detail to make local routing, hotel support, event planning, and SEO search intent more precise.
+                  Neighborhood detail helps confirm routing, hotel support, event planning, and arrival windows.
                 </p>
               </div>
               {page.zipExamples?.length > 0 && (
                 <div>
-                  <p className="mb-3 font-body text-[9px] uppercase tracking-[0.24em] text-foreground/36">ZIP-aware coverage check</p>
+                  <p className="mb-3 font-body text-[9px] uppercase tracking-[0.24em] text-foreground/36">Coverage ZIP examples</p>
                   <div className="flex flex-wrap gap-2">
                     {page.zipExamples.map((item) => (
                       <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/52">
@@ -278,7 +278,7 @@ export default function LocationPage() {
                     ))}
                   </div>
                   <p className="mt-3 font-body text-xs leading-relaxed text-foreground/48">
-                    ZIP examples help route local availability. Final nurse coverage, ETA, and protocol eligibility are confirmed before dispatch.
+                    Enter your ZIP on the homepage or during booking for covered/not covered status and the earliest RN window.
                   </p>
                 </div>
               )}

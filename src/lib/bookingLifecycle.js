@@ -34,7 +34,7 @@ export const BOOKING_TRANSITIONS = {
 
 export const GFE_VALID_DAYS = 365;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const HIGH_REVIEW_TERMS = ['nad', 'exosome', 'cbd', 'vitamin c', 'high dose', 'group', 'event'];
+const HIGH_REVIEW_TERMS = ['nad', 'cbd', 'vitamin c', 'high dose', 'group', 'event'];
 
 export function normalizeBookingStatus(status = 'Draft') {
   return BOOKING_STATUSES.includes(status) ? status : 'Draft';

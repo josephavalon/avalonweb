@@ -57,16 +57,12 @@ export function LearnHub() {
 
           <div className="mt-12 space-y-10">
             {educationClusters.map((cluster) => {
-              const articles = educationArticles.filter((item) => item.cluster === cluster);
+              const articles = indexedEducationArticles.filter((item) => item.cluster === cluster);
+              if (!articles.length) return null;
               return (
                 <section key={cluster}>
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <h2 className="font-heading text-3xl uppercase leading-none text-foreground">{cluster}</h2>
-                    {articles.some((item) => item.noindex) && (
-                      <span className="rounded-full border border-amber-400/25 bg-amber-400/[0.06] px-3 py-1 font-body text-[9px] uppercase tracking-[0.14em] text-amber-100/70">
-                        Approval gated
-                      </span>
-                    )}
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {articles.map((item) => (
@@ -75,7 +71,7 @@ export function LearnHub() {
                         to={item.path}
                         className="group rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 transition-colors hover:border-foreground/24 hover:bg-foreground/[0.055]"
                       >
-                        <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{item.noindex ? 'Noindex' : item.cluster}</p>
+                        <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{item.cluster}</p>
                         <h3 className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{item.h1}</h3>
                         <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.description}</p>
                         <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
@@ -166,7 +162,7 @@ export default function LearnPage() {
   if (!article) return <NotFound />;
 
   const relatedPillars = article.relatedPillars.map(getPillarBySlug).filter(Boolean);
-  const sameCluster = educationArticles.filter((item) => item.cluster === article.cluster && item.slug !== article.slug).slice(0, 5);
+  const sameCluster = indexedEducationArticles.filter((item) => item.cluster === article.cluster && item.slug !== article.slug).slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

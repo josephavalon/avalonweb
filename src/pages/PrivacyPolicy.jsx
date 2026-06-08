@@ -25,7 +25,7 @@ const SECTIONS = [
       'Identifiers: full legal name, postal address, email, phone number, IP address, device identifiers, and government-issued ID where required for clinical onboarding.',
       'Medical and health information: medical history, current medications, allergies, lab results, vital signs, biomarker data, biosensor and wearable data you authorize us to import, signed clinical consent forms, intake questionnaires, and any communications with our clinical staff.',
       'Commercial information: subscription tier, services purchased, payment method tokens (we never store full card numbers — those are held by our PCI-DSS-compliant payment processor), and transaction history.',
-      'Internet and device activity: browser type, pages visited, referring URL, session duration, cookies, and similar technologies on avalonvitality.co and within Avalon OS.',
+      'Internet and device activity: browser type, pages visited, referring URL, session duration, cookies, and similar technologies on avalonvitality.co.',
       'Geolocation: city or neighborhood (precise location only if you authorize concierge in-home delivery).',
       'Inferences drawn from the above to design protocols and recommend services.',
     ],
@@ -43,7 +43,7 @@ const SECTIONS = [
     p: [
       'To provide the Services you request, including scheduling, in-home or remote consultations, prescribing where authorized by a California-licensed physician, and protocol design.',
       'To process payments, manage subscriptions including our presale cohort, and send transactional and account communications.',
-      'To improve clinical outcomes through Avalon OS, by combining outcome and biomarker data (de-identified where possible) to refine future protocols.',
+      'To improve clinical outcomes by combining outcome and biomarker data (de-identified where possible) to refine future protocols.',
       'To comply with California medical record retention requirements, federal HIPAA obligations, audits, and other legal duties.',
       'To prevent fraud, enforce our Terms of Service, and protect the rights, property, and safety of Avalon, our clients, and our staff.',
       'For internal research and product improvement using aggregated and de-identified data.',

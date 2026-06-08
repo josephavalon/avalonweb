@@ -106,7 +106,7 @@ export default function JetLag() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-heading text-3xl text-accent">From $229</p>
+                  <p className="font-heading text-3xl text-accent">$229</p>
                   <p className="font-body text-[10px] text-foreground/40 tracking-[0.2em] uppercase mt-1">Per session</p>
                 </div>
               </div>

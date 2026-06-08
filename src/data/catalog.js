@@ -152,12 +152,12 @@ export const IV_SESSIONS = [
     inside: 'NAD+ · Saline · B-Complex',
     features: ['NAD+ review', 'Longer appointment window', 'Clinician-selected dosing', 'Eligibility screening'],
     doses: [
-      { key: 'nad_250', label: '250mg', price: 350, duration: '2-3 hr', image: '/bags/nad-250.png' },
-      { key: 'nad_500', label: '500mg', price: 500, duration: '3-4 hr', image: '/bags/nad-500.png' },
-      { key: 'nad_750', label: '750mg', price: 600, duration: '3-5 hr', image: '/bags/nad-750.png' },
-      { key: 'nad_1000', label: '1000mg', price: 750, duration: '4-6 hr', image: '/bags/nad-1000.png' },
-      { key: 'nad_1250', label: '1250mg', price: 950, duration: '5-7 hr', image: '/bags/nad-1500.png' },
-      { key: 'nad_1500', label: '1500mg', price: 1100, duration: '6-8 hr', image: '/bags/nad-1500.png' },
+      { key: 'nad_250', label: '250mg', price: 350, duration: '1-4 hr', image: '/bags/nad-250.png' },
+      { key: 'nad_500', label: '500mg', price: 500, duration: '1-4 hr', image: '/bags/nad-500.png' },
+      { key: 'nad_750', label: '750mg', price: 600, duration: '1-4 hr', image: '/bags/nad-750.png' },
+      { key: 'nad_1000', label: '1000mg', price: 750, duration: '1-4 hr', image: '/bags/nad-1000.png' },
+      { key: 'nad_1250', label: '1250mg', price: 950, duration: '1-4 hr', image: '/bags/nad-1500.png' },
+      { key: 'nad_1500', label: '1500mg', price: 1100, duration: '1-4 hr', image: '/bags/nad-1500.png' },
     ],
   },
   {
@@ -172,23 +172,6 @@ export const IV_SESSIONS = [
     doses: [
       { key: 'cbd_33', label: '33mg', price: 350, duration: '45-60 min', image: '/bags/cbd-33.png' },
       { key: 'cbd_66', label: '66mg', price: 450, duration: '45-60 min', image: '/bags/cbd-66.png' },
-      { key: 'cbd_99', label: '99mg', price: 550, duration: '45-60 min', image: '/bags/cbd-99.png' },
-      { key: 'cbd_132', label: '132mg', price: 650, duration: '45-60 min', image: '/bags/cbd-132.png' },
-    ],
-  },
-  {
-    key: 'exosomes',
-    label: 'Exosomes',
-    icon: Sparkles,
-    tagline: 'Regenerative cellular signaling support.',
-    tag: 'Elite',
-    category: 'recovery',
-    inside: 'Exosomes · Saline',
-    elite: true,
-    doses: [
-      { key: 'exosomes_30', label: '30B Units', price: 700, duration: '45-60 min', image: '/bags/nad-1500.png' },
-      { key: 'exosomes_50', label: '50B Units', price: 1200, duration: '60-75 min', image: '/bags/nad-1500.png' },
-      { key: 'exosomes_90', label: '90B Units', price: 1800, duration: '60-90 min', image: '/bags/nad-1500.png' },
     ],
   },
 ];
@@ -201,9 +184,12 @@ export const IV_ADDONS = [
   { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support' },
   { label: 'CBD Review', price: 350, desc: 'Approval-gated clinical review', group: 'cbd' },
   { label: 'CBD Review Plus', price: 450, desc: 'Approval-gated clinical review', group: 'cbd' },
-  { label: 'NAD+ (250mg)', price: 350, desc: 'Clinician-reviewed NAD+ add-on · 2-3 hr infusion', group: 'nad' },
-  { label: 'NAD+ (500mg)', price: 500, desc: 'Clinician-reviewed NAD+ add-on · 3-4 hr infusion', group: 'nad' },
-  { label: 'NAD+ (1000mg)', price: 750, desc: 'Extended NAD+ protocol · 4-6 hr infusion', group: 'nad' },
+  { label: 'NAD+ (250mg)', price: 350, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
+  { label: 'NAD+ (500mg)', price: 500, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
+  { label: 'NAD+ (750mg)', price: 600, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
+  { label: 'NAD+ (1000mg)', price: 750, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
+  { label: 'NAD+ (1250mg)', price: 950, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
+  { label: 'NAD+ (1500mg)', price: 1100, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
   { label: 'Glutathione Push · 600mg', price: 60, desc: 'Antioxidant support' },
   { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support' },
   { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push' },
@@ -293,7 +279,7 @@ export const IV_CATEGORIES = [
   { key: 'beauty', label: 'Beauty', icon: Sparkles },
   { key: 'immunity', label: 'Immunity', icon: ShieldCheck },
   { key: 'travel', label: 'Travel', icon: Plane },
-  { key: 'elite', label: 'Elite', icon: Sparkles },
+  { key: 'elite', label: 'Advanced', icon: Sparkles },
 ];
 
 export const IV_GOAL_RECOMMENDATION = {
@@ -350,7 +336,7 @@ function treatmentFromDose(parent, dose) {
     benefitStatement: parent.tagline,
     benefits: parent.features,
     idealFor: idealForSession(parent),
-    included: includedSession(parent),
+    included: includedSession(parent, dose),
     timeline: defaultTimeline(dose.duration),
     faq: defaultFaq(parent),
     related: relatedForSession(parent.key),
@@ -361,9 +347,9 @@ function treatmentFromDose(parent, dose) {
 const ivVitaminKeys = new Set(['hydration', 'myers', 'recovery', 'energy', 'postnight', 'immunity', 'beauty', 'jetlag']);
 const byKey = Object.fromEntries(IV_SESSIONS.map((session) => [session.key, session]));
 
-function includedSession(session) {
-  if (session.key === 'nad') return ['NAD+', 'IV fluids', 'B-complex support'];
-  if (session.key === 'cbd') return ['Zero-THC CBD', 'IV fluids', 'Clinician-guided dose'];
+function includedSession(session, dose = null) {
+  if (session.key === 'nad') return [`NAD+ ${dose?.label || 'dose selected during booking'}`, 'IV fluids', 'B-complex support', 'Clinical intake review', 'Registered nurse administration', '1-4 hr appointment window'];
+  if (session.key === 'cbd') return [`CBD ${dose?.label || 'review dose'}`, 'IV fluids', 'Clinician-guided dose', 'Clinical intake review', 'Registered nurse administration'];
   return String(session.inside || 'IV fluids · Electrolytes · Vitamin support')
     .split(' · ')
     .map((item) => item.trim())
@@ -386,20 +372,23 @@ function idealForSession(session) {
 
 function defaultTimeline(duration = '45-60 min') {
   return [
-    { label: 'Booking', value: 'Choose protocol' },
-    { label: 'Review', value: 'Clinical intake' },
-    { label: 'Arrival', value: 'Licensed Registered Nurse' },
+    { label: '0 min', value: 'Book protocol, address, and payment' },
+    { label: 'Before arrival', value: 'Clinical intake review' },
+    { label: 'Arrival', value: 'Registered nurse setup and vitals' },
     { label: 'Treatment', value: duration },
   ];
 }
 
 function defaultFaq(session) {
+  const duration = session.key === 'nad'
+    ? 'NAD+ IV appointments are listed as 1-4 hr across all doses. Your nurse confirms pacing after clinical review.'
+    : session.duration || session.doses?.[0]?.duration || 'Most visits take 30-60 minutes after clinical clearance.';
+  const inside = includedSession(session).slice(0, 3).join(', ');
   return [
-    { q: 'How long does it take?', a: session.duration || session.doses?.[0]?.duration || 'Most visits take 30-60 minutes after clinical clearance.' },
+    { q: 'How long does it take?', a: duration },
+    { q: 'What is included?', a: `${inside}. Your protocol may be adjusted by clinical review before service.` },
     { q: 'Who administers it?', a: 'A California-licensed registered nurse after intake and clinical review.' },
     { q: 'Can I book today?', a: 'Same-day availability depends on location, nurse coverage, and clinical clearance.' },
-    { q: 'Is this medical treatment?', a: 'Avalon provides clinician-reviewed wellness services. Eligibility is confirmed before service.' },
-    { q: 'Where do you serve?', a: 'Avalon serves eligible clients across the San Francisco Bay Area.' },
   ];
 }
 
@@ -473,24 +462,12 @@ export const productsByCategory = {
         benefits: ['NAD+ review', 'B vitamins', 'Amino acid support', 'Clinician-guided dosing'],
         idealFor: ['Longevity', 'Wellness', 'Performance'],
         included: ['NAD+', 'B vitamins', 'Amino acids', 'IV fluids'],
-        timeline: defaultTimeline('3-5 hr'),
+        timeline: defaultTimeline('1-4 hr'),
         faq: defaultFaq(byKey.nad),
         related: ['nad-iv-250mg', 'myers-cocktail-iv', 'energy-iv'],
         image: '/bags/nad-750.png',
       },
     ],
-  },
-  exosomes: {
-    title: 'EXOSOMES',
-    subtitle: 'Regenerative cellular signaling support',
-    badge: 'Elite · Clinician Guided',
-    description:
-      'Exosome protocols are advanced regenerative wellness sessions reserved for clinician-guided care plans. Dose and eligibility are confirmed before treatment.',
-    heroImage: null,
-    categoryLabel: 'Exosomes',
-    backTo: '/protocols',
-    backLabel: 'Back to Protocols',
-    treatments: byKey.exosomes.doses.map((dose) => treatmentFromDose(byKey.exosomes, dose)),
   },
   'iv-vitamins': {
     title: 'IV THERAPY',

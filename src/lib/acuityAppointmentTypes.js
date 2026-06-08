@@ -32,7 +32,6 @@ const protocolAliases = {
   cbd_high: 'cbd',
   cbd_33: 'cbd',
   cbd_66: 'cbd',
-  exosomes: 'default',
 };
 
 function normalizeKey(value = '') {

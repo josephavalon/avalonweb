@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Diamond, Droplet, Home, MapPin, Plus, ShieldPlus, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Diamond, Droplet, Home, MapPin, Plus, ShieldPlus, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
@@ -12,10 +12,12 @@ const HERO_ACTIONS = [
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_PROOF_POINTS = [
-  { label: 'SF Bay Area.', icon: MapPin },
-  { label: 'Registered Nurses.', icon: ShieldPlus },
-  { label: 'At home.', icon: Home },
-  { label: '60 Second Checkout.', icon: Zap },
+  { label: 'SF Bay Area', icon: MapPin },
+  { label: 'Registered Nurses', icon: ShieldPlus },
+  { label: 'Clinical Review', icon: ShieldPlus },
+  { label: 'Your location', icon: Home },
+  { label: '60 Second Checkout', icon: Zap },
+  { label: 'No Hidden Fees', icon: BadgeDollarSign },
 ];
 
 export default function Hero() {
@@ -57,7 +59,7 @@ export default function Hero() {
           className="mt-5 grid gap-1.5 font-body text-[13px] uppercase leading-relaxed tracking-[0.16em] text-foreground md:mt-6 md:text-sm"
         >
           {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
-            <li key={label} className="flex items-center gap-3">
+            <li key={label} className="flex items-start gap-3">
               <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
               <span>{label}</span>
             </li>

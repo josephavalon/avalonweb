@@ -339,8 +339,50 @@ p, h1, h2, h3, h4, h5, h6 {
 /* Touch-action on body: allow vertical pan, block horizontal to prevent
    conflict with iOS Safari's edge-swipe navigation */
 body {
-  /* manipulation = no tap delay, allows both pan directions, no double-tap zoom */
-  touch-action: manipulation;
+  /* Explicitly preserve pinch zoom; component-level buttons still handle tap feedback. */
+  touch-action: pan-y pinch-zoom;
+}
+
+html.av-user-zoomed,
+html.av-user-zoomed body {
+  overflow-x: auto;
+  overscroll-behavior-x: auto;
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+html.av-user-zoomed section,
+html.av-user-zoomed main,
+html.av-user-zoomed footer {
+  overflow-x: visible;
+}
+
+html.av-user-zoomed [data-av-booking-shell="true"] {
+  min-height: 100svh !important;
+  overflow-x: visible !important;
+}
+
+html.av-user-zoomed [data-av-booking-main="true"] {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 100svh !important;
+  max-width: 100vw !important;
+  overflow: visible !important;
+  padding-bottom: calc(var(--av-booking-footer-height, 5.25rem) + max(env(safe-area-inset-bottom, 0px), 1rem) + 1rem) !important;
+}
+
+html.av-user-zoomed [data-av-booking-frame="true"],
+html.av-user-zoomed [data-av-booking-scroll-region="true"] {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
+  position: sticky !important;
+  bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem) !important;
+  inset-inline: auto !important;
+  margin-top: 0.5rem;
 }
 
 /* #root containment — prevent any absolute/fixed children from pushing layout. */
@@ -657,7 +699,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 .avalon-static-backdrop {
   --av-backdrop-image-opacity: 0.77;
-  --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.74) contrast(1.04);
+  --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.70) contrast(1.04);
   --av-backdrop-image-mix: normal;
   --av-hero-accent: hsl(var(--foreground));
   --av-hero-gradient: none;
@@ -699,7 +741,7 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop__veil {
-  background: hsl(0 0% 0% / 0.28);
+  background: hsl(0 0% 0% / 0.33);
 }
 
 .avalon-static-backdrop__side {
@@ -883,11 +925,11 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop {
   --av-backdrop-image-opacity: 0.94;
-  --av-backdrop-image-filter: blur(0.35px) saturate(1.08) brightness(1.10) contrast(1.06);
+  --av-backdrop-image-filter: blur(0.35px) saturate(1.08) brightness(1.045) contrast(1.06);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__veil {
-  background: hsl(var(--background) / 0.10);
+  background: hsl(var(--background) / 0.15);
 }
 
 html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride, .july) .avalon-static-backdrop__side {

@@ -12,7 +12,7 @@
     <meta name="keywords" content="mobile IV therapy San Francisco, NAD+ IV Bay Area, at-home IV drip, vitamin IV, IV hydration SF, luxury wellness Bay Area" />
     <meta name="author" content="Avalon Vitality" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <script>
+    <script type="module">
       if (location.hostname === 'snooches.avalonvitality.co') {
         document.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex, nofollow, noarchive');
       }
@@ -211,18 +211,7 @@
       </div>
       <div class="av-boot-progress" aria-hidden="true"><span></span></div>
     </div>
-    <script>
-      window.setTimeout(function () {
-        var splash = document.getElementById('av-boot-splash');
-        if (!splash) return;
-        splash.dataset.state = 'leaving';
-        window.setTimeout(function () {
-          var currentSplash = document.getElementById('av-boot-splash');
-          if (currentSplash) currentSplash.remove();
-          window.__AV_BOOT_SPLASH_REMOVED = true;
-        }, 180);
-      }, 450);
-    </script>
+    <script src="/boot-splash.js" defer></script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 

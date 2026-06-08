@@ -13,7 +13,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How does Avalon work?',
-        a: 'Book online or through our app, choose your protocol, and we dispatch a licensed nurse to your home, office, or hotel. Sessions typically take 30–90 minutes depending on the drip.',
+        a: 'Book online, choose your protocol, and we dispatch a registered nurse to your home, office, or hotel. Sessions typically take 30–90 minutes depending on the drip.',
       },
       {
         q: 'What areas do you serve?',
@@ -25,7 +25,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How quickly can a nurse arrive?',
-        a: 'Most sessions are available same-day. Plan clients receive a 90-minute arrival window. Inner Circle and Elite clients receive dedicated nurse priority scheduling.',
+        a: 'Most sessions are available same-day. Plan clients receive a 90-minute arrival window. VIP and custom plan clients receive priority scheduling.',
       },
     ],
   },
@@ -38,7 +38,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'What is NAD+ and who is it for?',
-        a: 'NAD+ (nicotinamide adenine dinucleotide) is a coenzyme found in every cell of the body, associated with cellular energy metabolism. NAD+ IV therapy is popular among individuals focused on longevity and performance. Sessions run 2–4 hours. A brief health screening is required.',
+        a: 'NAD+ (nicotinamide adenine dinucleotide) is a coenzyme found in every cell of the body, associated with cellular energy metabolism. NAD+ IV appointments run 1-4 hours across all doses and require brief health screening.',
       },
       {
         q: 'What is glutathione?',
@@ -50,7 +50,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How long does a session take?',
-        a: 'Hydration sessions run 30–45 minutes. Most drips are 45–60 minutes. NAD+ sessions are 2–4 hours. Your nurse will confirm timing when they arrive.',
+        a: 'Hydration sessions run 30-45 minutes. Most drips are 45-60 minutes. NAD+ IV appointments run 1-4 hours. Your nurse will confirm timing when they arrive.',
       },
     ],
   },
@@ -59,7 +59,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: 'Are your nurses licensed?',
-        a: 'All Avalon nurses are California-licensed registered nurses (Registered Nurses) with IV therapy certification and a minimum of two years clinical experience.',
+        a: 'All Avalon nurses are California-licensed registered nurses with IV therapy certification and a minimum of two years clinical experience.',
       },
       {
         q: 'Is there a medical director?',
@@ -71,7 +71,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Do I need a consultation first?',
-        a: 'Standard IV sessions do not require a prior consultation. NAD+, Exosomes, and CBD sessions require a brief health screening completed at booking.',
+        a: 'Standard IV sessions do not require a prior consultation. NAD+ and CBD sessions require a brief health screening completed at booking.',
       },
       {
         q: 'Is IV therapy safe?',
@@ -92,7 +92,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Can I share my subscription?',
-        a: 'Elite and Private Client plans may designate one household partner to share subscription benefits.',
+        a: 'VIP and custom plans may designate one household partner to share subscription benefits.',
       },
       {
         q: "What's the commitment?",

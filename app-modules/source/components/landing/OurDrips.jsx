@@ -17,7 +17,7 @@ const CATEGORIES = [
     icon: Droplets,
     title: 'RECOVER',
     subtitle: 'Hydration, travel, recovery',
-    price: 'From $200',
+    price: '$200',
     drips: [
       { name: 'Hydration', price: '$200' },
       { name: 'Recovery', price: '$250' },
@@ -30,12 +30,15 @@ const CATEGORIES = [
     icon: Zap,
     title: 'PERFORM',
     subtitle: 'Energy, wellness, NAD+',
-    price: 'From $250',
+    price: '$250',
     drips: [
       { name: 'Energy', price: '$250' },
       { name: 'NAD+ 250mg', price: '$350' },
       { name: 'NAD+ 500mg', price: '$500' },
-      { name: 'NAD+ 1000mg', price: '$800' },
+      { name: 'NAD+ 750mg', price: '$600' },
+      { name: 'NAD+ 1000mg', price: '$750' },
+      { name: 'NAD+ 1250mg', price: '$950' },
+      { name: 'NAD+ 1500mg', price: '$1,100' },
     ],
   },
   {
@@ -43,12 +46,10 @@ const CATEGORIES = [
     icon: Sparkles,
     title: 'ELEVATE',
     subtitle: 'Advanced options by review',
-    price: 'From $350',
+    price: '$350',
     drips: [
-      { name: 'IV CBD 33mg', price: '$250' },
-      { name: 'IV CBD 66mg', price: '$300' },
-      { name: 'IV CBD 99mg', price: '$350' },
-      { name: 'IV CBD 132mg', price: '$400' },
+      { name: 'IV CBD 33mg', price: '$350' },
+      { name: 'IV CBD 66mg', price: '$450' },
     ],
   },
 ];

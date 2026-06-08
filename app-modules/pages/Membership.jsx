@@ -1,289 +1,559 @@
-import React, { useState } from 'react';
-import { motion } from '@/components/ui/PageTransitionMotion';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check } from 'lucide-react';
+import {
+  ArrowRight,
+  BatteryCharging,
+  Calendar,
+  Check,
+  ChevronDown,
+  Droplets,
+  Minus,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Syringe,
+  Users,
+} from 'lucide-react';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
-import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
+import { SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
+import { IV_SESSIONS } from '@/config/verticals';
 
 const EASE = [0.16, 1, 0.3, 1];
-
-const fadeUp = {
-  initial: { opacity: 1, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.24, ease: EASE },
-};
-
-const tiers = SUBSCRIPTION_TIERS.map((tier) => ({ ...tier, perks: tier.benefits }));
-const SUBSCRIPTION_TERMS = [
-  { key: 'monthly', label: 'Monthly', detail: '3 mo min', multiplier: 1, discount: 0 },
-  { key: 'six-month', label: '6 months', detail: '8% off', multiplier: 6, discount: 0.08 },
-  { key: 'annual', label: '12 months', detail: '15% off', multiplier: 12, discount: 0.15 },
+const TERMS = [
+  { key: 'monthly', label: 'Monthly', detail: '3 mo min', months: 1, discount: 0 },
+  { key: 'six-month', label: '6 months', detail: '8% off', months: 6, discount: 0.08 },
+  { key: 'annual', label: '12 months', detail: '15% off', months: 12, discount: 0.15 },
 ];
 
-function termPrice(monthlyPrice, term) {
-  if (!monthlyPrice || !term) return 0;
-  return Math.max(0, Math.round(Number(monthlyPrice) * term.multiplier * (1 - term.discount)));
+const PLAN_PRESETS = {
+  starter: { sessions: 1, therapy: 'hydration', ivAddons: 1, imShots: 0, cadence: 'Monthly', rollover: true, priority: true, sharing: false, nurse: false, concierge: false },
+  pro: { sessions: 2, therapy: 'recovery', ivAddons: 2, imShots: 1, cadence: 'Every 2 weeks', rollover: true, priority: true, sharing: false, nurse: false, concierge: true },
+  vip: { sessions: 4, therapy: 'nad', ivAddons: 3, imShots: 2, cadence: 'Weekly', rollover: true, priority: true, sharing: true, nurse: true, concierge: true },
+  custom: { sessions: 4, therapy: 'custom', ivAddons: 4, imShots: 4, cadence: 'Fully custom', rollover: true, priority: true, sharing: true, nurse: true, concierge: true },
+};
+
+const CADENCES = ['Monthly', 'Every 2 weeks', 'Weekly', 'Fully custom'];
+const THERAPIES = [
+  { key: 'hydration', label: 'Hydration', icon: Droplets },
+  { key: 'myers', label: "Myers'", icon: Sparkles },
+  { key: 'recovery', label: 'Recovery', icon: ShieldCheck },
+  { key: 'energy', label: 'Energy', icon: BatteryCharging },
+  { key: 'nad', label: 'NAD+', icon: BatteryCharging },
+  { key: 'custom', label: 'Custom', icon: Sparkles },
+];
+const FEATURE_CONTROLS = [
+  { key: 'rollover', label: 'Credit rollover', icon: Calendar },
+  { key: 'priority', label: 'Priority booking', icon: ShieldCheck },
+  { key: 'sharing', label: 'Household sharing', icon: Users },
+  { key: 'nurse', label: 'Dedicated RN', icon: Syringe },
+  { key: 'concierge', label: 'Concierge planning', icon: Sparkles },
+];
+
+function currency(value) {
+  if (!Number.isFinite(Number(value)) || Number(value) <= 0) return 'Custom';
+  return `$${Math.round(Number(value)).toLocaleString()}`;
 }
 
-function planPriceLabel(tier, term) {
-  if (tier.custom || !tier.price) return 'Custom';
-  return `$${termPrice(tier.price, term).toLocaleString()}`;
+function estimateMonthly(tier, config) {
+  if (tier.custom || !tier.price) return null;
+  const sessionDelta = Math.max(0, Number(config.sessions || 0) - Number(tier.sessions || 0)) * 175;
+  const addonDelta = Math.max(0, Number(config.ivAddons || 0) - Math.max(1, Number(tier.sessions || 1))) * 25;
+  const shotDelta = Math.max(0, Number(config.imShots || 0) - Number.parseInt(tier.shotCredit, 10) || 0) * 35;
+  return Number(tier.price || 0) + sessionDelta + addonDelta + shotDelta;
 }
 
-function unitLabel(tier, term) {
-  if (tier.custom) return 'Designed with Avalon';
-  if (term.key === 'monthly') return 'Monthly - 3 mo min';
-  return `${term.label} - due today`;
+function termPrice(monthly, term) {
+  if (!monthly) return null;
+  return Math.max(0, Math.round(monthly * term.months * (1 - term.discount)));
 }
 
-function actionLabel(tier) {
-  return tier.custom ? 'Design plan' : `Start ${tier.name}`;
+function buildInitialConfig(tier) {
+  return { ...(PLAN_PRESETS[tier.key] || PLAN_PRESETS.starter) };
 }
 
-function planCommitmentCopy(tier, term) {
-  if (tier.custom) return 'Concierge plan design.';
-  if (term.key === 'monthly') return 'First month due today. 3-month minimum.';
-  return `${term.label} prepaid. ${term.detail}.`;
+function getProtocolForTherapy(key) {
+  if (key === 'custom') return 'recovery';
+  return IV_SESSIONS.some((item) => item.key === key) ? key : 'recovery';
 }
 
-function priceDurationLabel(tier, term) {
-  if (tier.custom) return 'Custom duration';
-  return term.key === 'monthly' ? 'Monthly - 3 mo min' : `${term.label} prepaid`;
-}
-
-function checkoutButtonLabel(tier, term) {
-  if (tier.custom) return 'Design - Custom';
-  return `${planPriceLabel(tier, term)} - ${term.label} - Book`;
-}
-
-function SelectCheck({ active }) {
+function StepRail() {
   return (
-    <span
-      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors duration-base ease-editorial ${
-        active ? 'border-foreground/35 bg-foreground/[0.1]' : 'border-foreground/14 bg-background/20'
-      }`}
-      aria-hidden="true"
-    >
-      {active && <Check className="h-3.5 w-3.5 text-foreground/74" strokeWidth={1.8} />}
-    </span>
+    <div className="mt-3 flex items-center gap-0">
+      {['Plan', 'Customize', 'Term', 'Book'].map((item, index) => (
+        <React.Fragment key={item}>
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-body text-[10px] font-black ${
+            index === 1 ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/34 text-foreground/62'
+          }`}>
+            {index + 1}
+          </span>
+          {index < 3 && <span className="h-px flex-1 bg-foreground/16" />}
+        </React.Fragment>
+      ))}
+    </div>
   );
 }
 
-function TierCard({ tier, active, onSelect, term }) {
+function PlanCard({ tier, active, monthly, onClick }) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(tier)}
+      onClick={onClick}
       aria-pressed={active}
-      className={`av-treatment-card group relative flex min-h-[84px] w-full flex-col items-stretch justify-between gap-2 overflow-hidden rounded-[1.05rem] border px-4 py-3 text-left transition-colors duration-base ease-editorial md:min-h-[132px] md:flex-row md:items-center md:gap-4 md:px-5 md:py-4 ${
-        active ? 'is-open' : ''
+      className={`av-treatment-card relative grid min-h-[72px] grid-cols-[1fr_auto] items-center gap-3 overflow-hidden rounded-[1rem] border px-3 py-2.5 text-left transition-colors md:min-h-[92px] md:px-4 ${
+        active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''
       }`}
     >
-      <div className="relative min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="min-w-0 font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground/76 md:text-3xl">
-            {tier.name}
-          </p>
-          {tier.badge && (
-            <span className="rounded-full border border-foreground/12 bg-background/24 px-2 py-1 font-body text-[8px] font-semibold uppercase tracking-[0.14em] text-foreground/46">
-              {tier.badge}
-            </span>
-          )}
-        </div>
-        <p className="mt-1.5 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/42 md:text-[11px]">{tier.note}</p>
-        <p className="mt-0.5 max-w-[17rem] font-body text-[11px] leading-snug text-foreground/52 md:text-xs">{tier.tagline}</p>
-      </div>
-
-      <div className="absolute right-4 top-4 md:relative md:right-auto md:top-auto md:flex md:min-w-0 md:shrink-0 md:items-center md:justify-end md:gap-3">
-        <SelectCheck active={active} />
-        <div className="hidden min-w-0 text-right md:block">
-          <p className="font-heading text-2xl leading-none text-foreground/72 md:text-3xl">{planPriceLabel(tier, term)}</p>
-          <p className="mt-1 max-w-none font-body text-[10px] uppercase leading-snug tracking-[0.12em] text-foreground/38">
-            {unitLabel(tier, term)}
-          </p>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function TermCard({ term, active, onSelect }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(term.key)}
-      aria-pressed={active}
-      className={`av-treatment-card relative flex min-h-[58px] min-w-0 w-full items-center justify-center gap-2 overflow-hidden rounded-[0.95rem] border px-2 py-2 text-center transition-colors duration-base ease-editorial md:min-h-[96px] md:justify-between md:gap-4 md:rounded-[1.05rem] md:px-4 md:py-3 md:text-left ${
-        active ? 'is-open' : ''
-      }`}
-    >
-      <div>
-        <p className="truncate font-heading text-[15px] uppercase leading-none tracking-[0.04em] text-foreground/72 md:text-xl">{term.label}</p>
-        <p className="mt-1 font-body text-[8px] uppercase tracking-[0.12em] text-foreground/40 md:text-[10px] md:tracking-[0.14em]">{term.detail}</p>
-      </div>
-      <span className="hidden md:block">
-        <SelectCheck active={active} />
+      <span className="min-w-0">
+        <span className="block truncate font-heading text-[1.7rem] uppercase leading-none text-foreground md:text-[2.2rem]">{tier.name}</span>
+        <span className="mt-1 block truncate font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/54 md:text-xs">
+          {tier.custom ? 'Every feature custom' : tier.note}
+        </span>
+      </span>
+      <span className="text-right">
+        <span className="block font-body text-lg font-black leading-none text-foreground md:text-2xl">{currency(monthly)}</span>
+        <span className="mt-1 block font-body text-[8px] font-black uppercase tracking-[0.1em] text-foreground/44 md:text-[10px]">
+          {tier.custom ? 'Design' : '/ mo'}
+        </span>
       </span>
     </button>
   );
 }
 
-function PlanSummary({ tier, term, onSelect, className = '' }) {
+function OptionButton({ active, label, icon: Icon, onClick }) {
   return (
-    <div className={`av-treatment-card overflow-hidden rounded-[1.15rem] border p-4 md:p-5 ${className}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/42">Due today</p>
-          <p className="mt-1 font-heading text-4xl uppercase leading-none text-foreground/76">{planPriceLabel(tier, term)}</p>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`av-treatment-card flex min-h-[56px] min-w-0 items-center justify-between gap-2 rounded-[0.9rem] border px-2.5 text-left transition-colors md:min-h-[62px] md:px-3 ${
+        active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''
+      }`}
+    >
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        {Icon && <Icon className="h-4 w-4 shrink-0 text-foreground/78" strokeWidth={2.35} />}
+        <span className="min-w-0 whitespace-normal font-body text-[10px] font-black uppercase leading-tight tracking-[0.03em] text-foreground/74 md:text-[11px]">{label}</span>
+      </span>
+      {active && <Check className="h-4 w-4 shrink-0" strokeWidth={2.7} />}
+    </button>
+  );
+}
+
+function Stepper({ label, value, min = 0, max = 12, onChange }) {
+  return (
+    <div className="av-treatment-card rounded-[0.95rem] border p-2.5">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="whitespace-normal font-body text-[9px] font-black uppercase leading-tight tracking-[0.03em] text-foreground/56 md:text-[10px]">{label}</p>
+          <p className="mt-1 font-body text-[1.8rem] font-black leading-none text-foreground md:text-[2rem]">{value}</p>
         </div>
-        <div className="max-w-[9.5rem] text-right">
-          <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/42">{tier.name}</p>
-          <p className="mt-1 font-body text-xs leading-snug text-foreground/54">{priceDurationLabel(tier, term)}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.1em] text-foreground/34">{planCommitmentCopy(tier, term)}</p>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onChange(Math.max(min, value - 1))}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/14 bg-background/34 text-foreground"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange(Math.min(max, value + 1))}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/14 bg-background/34 text-foreground"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
       </div>
-
-      <button
-        type="button"
-        onClick={onSelect}
-        className="mt-4 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-full border border-foreground/18 bg-foreground/[0.09] px-5 font-body text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground transition-colors duration-base ease-editorial hover:bg-foreground/[0.13]"
-      >
-        {actionLabel(tier)} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-      </button>
     </div>
+  );
+}
+
+function MobilePlansFlow({
+  tiers,
+  activeTier,
+  activeTerm,
+  activeConfig,
+  monthly,
+  dueToday,
+  configs,
+  onTier,
+  onTerm,
+  onConfig,
+  onSubmit,
+}) {
+  const [mobileStep, setMobileStep] = useState('plan');
+  const steps = [
+    { key: 'plan', label: 'Plan' },
+    { key: 'term', label: 'Term' },
+    { key: 'therapy', label: 'Therapy' },
+    { key: 'features', label: 'Features' },
+  ];
+  const activeIndex = Math.max(0, steps.findIndex((step) => step.key === mobileStep));
+  const advance = () => {
+    if (activeIndex >= steps.length - 1) onSubmit();
+    else setMobileStep(steps[activeIndex + 1].key);
+  };
+
+  const renderMobileOptions = () => {
+    if (mobileStep === 'term') {
+      return (
+        <div className="grid gap-1.5">
+          <p className="font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/48">Choose term</p>
+          {TERMS.map((term) => (
+            <button
+              key={term.key}
+              type="button"
+              onClick={() => onTerm(term.key)}
+              aria-pressed={activeTerm.key === term.key}
+              className={`av-treatment-card grid min-h-[56px] grid-cols-[1fr_auto] items-center gap-2 rounded-xl border px-3 text-left ${activeTerm.key === term.key ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''}`}
+            >
+              <span>
+                <span className="block font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/76">{term.label}</span>
+                <span className="mt-0.5 block font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/46">{term.detail}</span>
+              </span>
+              {activeTerm.key === term.key && <Check className="h-4 w-4" strokeWidth={2.7} />}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (mobileStep === 'therapy') {
+      return (
+        <div className="grid gap-1.5">
+          <p className="font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/48">Customize therapy</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {THERAPIES.map((therapy) => {
+              const Icon = therapy.icon;
+              return (
+                <button
+                  key={therapy.key}
+                  type="button"
+                  onClick={() => onConfig({ therapy: therapy.key })}
+                  className={`av-treatment-card flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 font-body text-[8px] font-black uppercase tracking-[0.06em] text-foreground/72 ${activeConfig.therapy === therapy.key ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''}`}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{therapy.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[
+              ['IV / mo', 'sessions', 1],
+              ['Add-ons', 'ivAddons', 0],
+              ['IM shots', 'imShots', 0],
+            ].map(([label, key, min]) => (
+              <div key={key} className="av-treatment-card rounded-xl border p-2">
+                <p className="truncate font-body text-[7px] font-black uppercase tracking-[0.06em] text-foreground/48">{label}</p>
+                <div className="mt-1.5 flex items-center justify-between gap-1">
+                  <button type="button" onClick={() => onConfig({ [key]: Math.max(min, activeConfig[key] - 1) })} className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/14"><Minus className="h-3 w-3" /></button>
+                  <span className="font-body text-xl font-black leading-none text-foreground">{activeConfig[key]}</span>
+                  <button type="button" onClick={() => onConfig({ [key]: Math.min(activeTier.custom ? 12 : 8, activeConfig[key] + 1) })} className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/14"><Plus className="h-3 w-3" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (mobileStep === 'features') {
+      return (
+        <div className="grid gap-1.5">
+          <p className="font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/48">Every feature</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {FEATURE_CONTROLS.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <button
+                  key={feature.key}
+                  type="button"
+                  onClick={() => onConfig({ [feature.key]: !activeConfig[feature.key] })}
+                  className={`av-treatment-card flex min-h-[48px] items-center justify-between gap-2 rounded-xl border px-2.5 text-left ${activeConfig[feature.key] ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''}`}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Icon className="h-4 w-4 shrink-0 text-foreground/76" />
+                    <span className="font-body text-[7px] font-black uppercase leading-tight tracking-[0.04em] text-foreground/70">{feature.label}</span>
+                  </span>
+                  {activeConfig[feature.key] && <Check className="h-4 w-4 shrink-0" strokeWidth={2.7} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid gap-1.5">
+        <p className="font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/48">Choose plan</p>
+        {tiers.map((tier) => (
+          <button
+            key={tier.key}
+            type="button"
+            onClick={() => onTier(tier)}
+            aria-pressed={activeTier.key === tier.key}
+            className={`av-treatment-card grid min-h-[58px] grid-cols-[1fr_auto] items-center gap-2 rounded-xl border px-3 text-left ${activeTier.key === tier.key ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''}`}
+          >
+            <span className="min-w-0">
+              <span className="block truncate font-heading text-[1.55rem] uppercase leading-none text-foreground">{tier.name}</span>
+              <span className="mt-0.5 block truncate font-body text-[8px] font-black uppercase tracking-[0.08em] text-foreground/50">{tier.custom ? 'Every feature custom' : tier.note}</span>
+            </span>
+            <span className="font-body text-lg font-black leading-none text-foreground">{currency(estimateMonthly(tier, configs[tier.key] || buildInitialConfig(tier)))}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <section className="grid h-full min-h-0 gap-1.5 overflow-hidden md:hidden">
+      <div className="av-glass-card grid min-h-0 grid-rows-[auto_auto_1fr_auto] gap-1.5 overflow-hidden rounded-[1.2rem] border bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
+        <div>
+          <p className="font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/50">{activeIndex + 1} of 4 · {steps[activeIndex].label}</p>
+          <h1 className="mt-0.5 font-heading text-[2.45rem] uppercase leading-none text-foreground">Plans</h1>
+        </div>
+
+        <div className="grid grid-cols-4 gap-1">
+          {steps.map((step, index) => (
+            <button
+              key={step.key}
+              type="button"
+              onClick={() => setMobileStep(step.key)}
+              aria-pressed={mobileStep === step.key}
+              className={`av-treatment-card min-h-[34px] rounded-lg border px-1 text-center font-body text-[7px] font-black uppercase tracking-[0.06em] ${mobileStep === step.key ? 'is-open border-foreground/46 bg-foreground/[0.12] text-foreground' : 'text-foreground/54'}`}
+            >
+              {index + 1}. {step.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="min-h-0 overflow-hidden">
+          {renderMobileOptions()}
+        </div>
+
+        <div className="av-treatment-card grid min-h-[56px] grid-cols-[1fr_auto] items-center gap-2 rounded-xl border px-3">
+          <div className="min-w-0">
+            <p className="truncate font-body text-[7px] font-black uppercase tracking-[0.12em] text-foreground/50">{activeTier.name} · {activeTerm.label} · {activeConfig.cadence}</p>
+            <p className="mt-0.5 font-body text-xl font-black leading-none text-foreground">{currency(dueToday || monthly)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={advance}
+            className="flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-[10px] font-black uppercase tracking-[0.08em] text-background"
+          >
+            {activeIndex >= steps.length - 1 ? 'Book' : 'Next'} <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
 export default function Subscription() {
   useSeo({
-    title: 'Subscriptions - Avalon Vitality',
-    description: 'Monthly IV therapy subscriptions starting from $199/mo. First month due now with a 3-month commitment. Prepay 6 or 12 months for savings.',
+    title: 'Plans - Avalon Vitality',
+    description: 'Customize Avalon monthly IV therapy plans with therapy focus, cadence, add-ons, IM shots, and concierge features.',
     path: '/subscription',
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: 'Avalon Vitality Subscriptions',
-      description: 'Monthly mobile IV therapy subscription plans with credits, rollover flexibility, and subscriber pricing across the SF Bay Area.',
-      brand: {
-        '@type': 'Brand',
-        name: 'Avalon Vitality',
-      },
-      url: 'https://www.avalonvitality.co/subscription',
-      offers: {
-        '@type': 'AggregateOffer',
-        priceCurrency: 'USD',
-        lowPrice: '199',
-        highPrice: '899',
-        offerCount: '3',
-        availability: 'https://schema.org/InStock',
-      },
-    },
   });
 
   const navigate = useNavigate();
-  const [activeTierKey, setActiveTierKey] = useState(FEATURED_SUBSCRIPTION_TIER_KEY);
+  const [activeTierKey, setActiveTierKey] = useState('pro');
   const [activeTermKey, setActiveTermKey] = useState('monthly');
-  const activeTier = tiers.find((tier) => tier.key === activeTierKey) || tiers[1];
-  const activeTerm = SUBSCRIPTION_TERMS.find((term) => term.key === activeTermKey) || SUBSCRIPTION_TERMS[0];
+  const [configs, setConfigs] = useState(() => (
+    SUBSCRIPTION_TIERS.reduce((next, tier) => {
+      next[tier.key] = buildInitialConfig(tier);
+      return next;
+    }, {})
+  ));
 
-  const switchTier = (tier) => setActiveTierKey(tier.key);
-  const selectTier = () => {
+  const activeTier = SUBSCRIPTION_TIERS.find((tier) => tier.key === activeTierKey) || SUBSCRIPTION_TIERS[1];
+  const activeTerm = TERMS.find((term) => term.key === activeTermKey) || TERMS[0];
+  const activeConfig = configs[activeTier.key] || buildInitialConfig(activeTier);
+  const monthly = useMemo(() => estimateMonthly(activeTier, activeConfig), [activeTier, activeConfig]);
+  const dueToday = termPrice(monthly, activeTerm);
+
+  const updateConfig = (patch) => {
+    setConfigs((current) => ({
+      ...current,
+      [activeTier.key]: {
+        ...(current[activeTier.key] || buildInitialConfig(activeTier)),
+        ...patch,
+      },
+    }));
+  };
+
+  const selectTier = (tier) => {
+    setActiveTierKey(tier.key);
+    setConfigs((current) => current[tier.key] ? current : { ...current, [tier.key]: buildInitialConfig(tier) });
+  };
+
+  const startPlan = () => {
     const params = new URLSearchParams({
       reset: '1',
       subscription: activeTier.key,
       term: activeTerm.key,
-      protocol: 'recovery',
+      protocol: getProtocolForTherapy(activeConfig.therapy),
       time: 'asap',
     });
     navigate(`/book?${params.toString()}`);
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-background">
+    <div className="app-shell relative isolate h-[100svh] w-full overflow-hidden bg-transparent text-foreground">
       <Navbar />
-      <main className="min-h-screen overflow-x-hidden pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[4.5rem] md:pb-16 md:pt-24">
-        <section id="subscription-plans" className="mx-auto w-full max-w-[calc(100vw-2rem)] scroll-mt-24 py-3 md:max-w-6xl md:px-8 md:py-10">
-          <motion.header className="mb-4 md:mb-8" {...fadeUp}>
-            <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">Membership</p>
-            <h1 className="mt-1.5 font-heading text-5xl uppercase leading-[0.85] text-foreground md:text-8xl">Plans</h1>
-            <div className="mt-3 flex max-w-full flex-col gap-0.5 font-body text-[11px] uppercase tracking-[0.14em] text-foreground/44 md:flex-row md:flex-wrap md:items-center md:gap-x-3 md:gap-y-1 md:text-sm">
-              <span>Choose your cadence.</span>
-              <span className="hidden h-1 w-1 rounded-full bg-foreground/24 md:block" aria-hidden="true" />
-              <span>First month due today.</span>
-              <span className="hidden h-1 w-1 rounded-full bg-foreground/24 md:block" aria-hidden="true" />
-              <span>3-month minimum.</span>
-            </div>
-          </motion.header>
-
-          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.72fr)] md:gap-5">
-            <motion.div className="min-w-0 space-y-2.5" {...fadeUp}>
-              {tiers.map((tier) => (
-                <TierCard
+      <main className="mx-auto h-[100svh] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden pb-[max(env(safe-area-inset-bottom),0.65rem)] pt-[5.25rem] md:max-w-[1540px] md:px-4 md:pb-3 md:pt-24">
+        <MobilePlansFlow
+          tiers={SUBSCRIPTION_TIERS}
+          activeTier={activeTier}
+          activeTerm={activeTerm}
+          activeConfig={activeConfig}
+          monthly={monthly}
+          dueToday={dueToday}
+          configs={configs}
+          onTier={selectTier}
+          onTerm={setActiveTermKey}
+          onConfig={updateConfig}
+          onSubmit={startPlan}
+        />
+        <section className="mx-auto hidden h-[calc(100svh-7rem)] min-h-0 gap-3 md:grid md:grid-cols-[minmax(300px,420px)_minmax(0,1fr)_minmax(320px,420px)] md:gap-4">
+          <motion.aside
+            initial={{ opacity: 1, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, ease: EASE }}
+            className="av-glass-card relative overflow-hidden rounded-[1.2rem] border bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4"
+          >
+            <p className="font-body text-[9px] font-black uppercase tracking-[0.2em] text-foreground/48">1 of 4 · Plans</p>
+            <h1 className="mt-2 font-heading text-[3.8rem] uppercase leading-[0.82] text-foreground md:text-[5.4rem]">Plans</h1>
+            <StepRail />
+            <div className="mt-4 grid gap-2">
+              {SUBSCRIPTION_TIERS.map((tier) => (
+                <PlanCard
                   key={tier.key}
                   tier={tier}
                   active={activeTier.key === tier.key}
-                  onSelect={switchTier}
-                  term={activeTerm}
+                  monthly={estimateMonthly(tier, configs[tier.key] || buildInitialConfig(tier))}
+                  onClick={() => selectTier(tier)}
                 />
               ))}
-            </motion.div>
+            </div>
+          </motion.aside>
 
-            <motion.aside className="w-full max-w-full min-w-0 space-y-2.5 md:sticky md:top-24 md:w-auto md:max-w-none md:self-start" {...fadeUp}>
-              <div className="av-treatment-card overflow-hidden rounded-[1.05rem] border px-4 py-3 md:hidden">
-                <label htmlFor="mobile-membership-duration" className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">
-                  Price / duration
-                </label>
-                <select
-                  id="mobile-membership-duration"
-                  value={activeTerm.key}
-                  onChange={(event) => setActiveTermKey(event.target.value)}
-                  className="mt-1 min-h-[40px] w-full appearance-none bg-transparent font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground/76 outline-none"
-                >
-                  {SUBSCRIPTION_TERMS.map((term) => (
-                    <option key={term.key} value={term.key} className="bg-background text-foreground">
-                      {activeTier.custom ? `${term.label} - ${term.detail}` : `${planPriceLabel(activeTier, term)} - ${term.label} - ${term.detail}`}
-                    </option>
+          <motion.section
+            initial={{ opacity: 1, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, ease: EASE, delay: 0.03 }}
+            className="av-glass-card relative min-h-0 overflow-y-auto rounded-[1.2rem] border bg-background/50 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-body text-[9px] font-black uppercase tracking-[0.2em] text-foreground/48">2 of 4 · Customize</p>
+                <h2 className="mt-2 font-heading text-[2.8rem] uppercase leading-none text-foreground md:text-[4rem]">{activeTier.name}</h2>
+              </div>
+              <span className="rounded-full border border-foreground/12 bg-background/34 px-3 py-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/64">
+                {activeTier.custom ? 'Every feature' : 'Editable'}
+              </span>
+            </div>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="grid gap-2">
+                <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">Cadence</p>
+                <div className="grid grid-cols-1 gap-1.5 2xl:grid-cols-2">
+                  {CADENCES.map((cadence) => (
+                    <OptionButton
+                      key={cadence}
+                      label={cadence}
+                      icon={Calendar}
+                      active={activeConfig.cadence === cadence}
+                      onClick={() => updateConfig({ cadence })}
+                    />
                   ))}
-                </select>
+                </div>
               </div>
 
-              <div className="hidden md:block md:space-y-2">
-                {SUBSCRIPTION_TERMS.map((term) => (
-                  <TermCard
-                    key={term.key}
-                    term={term}
-                    active={activeTerm.key === term.key}
-                    onSelect={setActiveTermKey}
+              <div className="grid gap-2">
+                <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">IV focus</p>
+                <div className="grid grid-cols-1 gap-1.5 2xl:grid-cols-2">
+                  {THERAPIES.map((therapy) => (
+                    <OptionButton
+                      key={therapy.key}
+                      label={therapy.label}
+                      icon={therapy.icon}
+                      active={activeConfig.therapy === therapy.key}
+                      onClick={() => updateConfig({ therapy: therapy.key })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-2 md:grid-cols-1 2xl:grid-cols-3">
+              <Stepper label="IV sessions" value={activeConfig.sessions} min={1} max={activeTier.custom ? 12 : 8} onChange={(sessions) => updateConfig({ sessions })} />
+              <Stepper label="IV add-ons" value={activeConfig.ivAddons} min={0} max={activeTier.custom ? 12 : 8} onChange={(ivAddons) => updateConfig({ ivAddons })} />
+              <Stepper label="IM shots" value={activeConfig.imShots} min={0} max={activeTier.custom ? 12 : 8} onChange={(imShots) => updateConfig({ imShots })} />
+            </div>
+
+            <div className="mt-3">
+              <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">Plan features</p>
+              <div className="mt-2 grid grid-cols-1 gap-1.5 2xl:grid-cols-5">
+                {FEATURE_CONTROLS.map((feature) => (
+                  <OptionButton
+                    key={feature.key}
+                    label={feature.label}
+                    icon={feature.icon}
+                    active={Boolean(activeConfig[feature.key])}
+                    onClick={() => updateConfig({ [feature.key]: !activeConfig[feature.key] })}
                   />
                 ))}
               </div>
-              <PlanSummary tier={activeTier} term={activeTerm} onSelect={selectTier} className="hidden md:block" />
-            </motion.aside>
-          </div>
+            </div>
+          </motion.section>
+
+          <motion.aside
+            initial={{ opacity: 1, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, ease: EASE, delay: 0.06 }}
+            className="av-glass-card relative overflow-hidden rounded-[1.2rem] border bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4"
+          >
+            <p className="font-body text-[9px] font-black uppercase tracking-[0.2em] text-foreground/48">3 of 4 · Term</p>
+            <div className="mt-3 grid gap-2">
+              {TERMS.map((term) => (
+                <OptionButton
+                  key={term.key}
+                  label={`${term.label} · ${term.detail}`}
+                  icon={ChevronDown}
+                  active={activeTerm.key === term.key}
+                  onClick={() => setActiveTermKey(term.key)}
+                />
+              ))}
+            </div>
+
+            <div className="mt-4 rounded-[1rem] border border-foreground/12 bg-background/36 p-3">
+              <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">Due today</p>
+              <p className="mt-2 font-body text-[2.4rem] font-black leading-none text-foreground">{currency(dueToday || monthly)}</p>
+              <p className="mt-2 font-body text-sm font-bold leading-snug text-foreground/62">
+                {activeTier.custom ? 'Final pricing is designed with Avalon.' : `${currency(monthly)} monthly estimate.`}
+              </p>
+              <div className="mt-3 grid gap-2 font-body text-xs font-bold text-foreground/66">
+                <span>{activeConfig.sessions} IV sessions / mo</span>
+                <span>{activeConfig.ivAddons} IV add-ons / mo</span>
+                <span>{activeConfig.imShots} IM shots / mo</span>
+                <span>{activeConfig.cadence}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={startPlan}
+              className="mt-3 hidden min-h-[58px] w-full items-center justify-center gap-3 rounded-xl border border-foreground/82 bg-foreground px-5 font-body text-sm font-black uppercase tracking-[0.08em] text-background md:flex"
+            >
+              {activeTier.custom ? 'Build custom plan' : 'Start plan'} <ArrowRight className="h-5 w-5" />
+            </button>
+          </motion.aside>
         </section>
       </main>
-      <Footer />
-
-      <motion.div
-        className="pointer-events-none fixed inset-x-0 z-40 px-2 pt-1 md:hidden"
-        style={{ bottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.38, ease: EASE, delay: 0.08 }}
-      >
-        <div className="av-treatment-card pointer-events-auto rounded-[1.1rem] border p-1.5">
-          <div className="flex min-h-[52px] items-center gap-2">
-            <button
-              onClick={selectTier}
-              className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-full border border-foreground/18 bg-foreground/[0.09] px-4 font-body text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground"
-            >
-              {checkoutButtonLabel(activeTier, activeTerm)} <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 }

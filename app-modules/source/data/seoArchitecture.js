@@ -579,7 +579,9 @@ const expandedLocationDefinitions = bayAreaCitySearchCoverage
   }))
   .filter((location) => !existingLocationSlugs.has(location.slug));
 
-const allLocationDefinitions = [...locationDefinitions, ...expandedLocationDefinitions].map((location) => {
+const publicLocationDefinitions = locationDefinitions.slice(0, 10);
+
+const allLocationDefinitions = publicLocationDefinitions.map((location) => {
   const thingsToDo = location.thingsToDo?.length ? location.thingsToDo : buildDefaultThingsToDo(location);
   return {
     ...location,
@@ -866,9 +868,9 @@ export const publicStaticRoutes = [
   },
   {
     path: '/platform',
-    title: 'Avalon OS Platform | Avalon Vitality',
-    description: 'Avalon OS is the pre-API operating layer for mobile recovery operations, routing, inventory, communication, and clinical handoffs.',
-    h1: 'Avalon OS Platform',
+    title: 'Avalon Platform Coming Soon | Avalon Vitality',
+    description: 'Avalon is preparing a client platform for approved care planning and appointment coordination.',
+    h1: 'Avalon Platform Coming Soon',
     priority: '0.5',
     changefreq: 'monthly',
   },

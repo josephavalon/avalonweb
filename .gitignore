@@ -41,3 +41,4 @@ deploy-to-vercel.command
 # Local QA / browser automation artifacts
 .codex-audit/
 tmp/
+.gstack/
