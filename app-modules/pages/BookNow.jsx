@@ -983,7 +983,7 @@ function UniversalBookingFrame({
 
 function DesktopStepRail({ displayStepIndex = 0 }) {
   return (
-    <div className="mt-4 flex max-w-xl items-center">
+    <div className="mt-3 flex max-w-lg items-center">
       {STEPS.map((item, index) => {
         const active = index === displayStepIndex;
         const complete = index < displayStepIndex;
@@ -993,21 +993,21 @@ function DesktopStepRail({ displayStepIndex = 0 }) {
             <span
               aria-label={`Go to ${item}`}
               aria-current={active ? 'step' : undefined}
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-body text-xs font-black transition-colors ${
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-body text-[10px] font-black transition-colors ${
                 active
-                  ? 'border-foreground bg-foreground text-background shadow-[0_0_26px_hsl(var(--foreground)/0.24)]'
+                  ? 'border-foreground bg-foreground text-background shadow-[0_0_20px_hsl(var(--foreground)/0.18)]'
                   : complete
-                    ? 'border-foreground/34 bg-foreground/12 text-foreground'
+                    ? 'border-foreground/30 bg-foreground/10 text-foreground'
                     : reachable
-                      ? 'border-foreground/24 bg-background/34 text-foreground/66'
-                      : 'border-foreground/14 bg-background/24 text-foreground/36'
+                      ? 'border-foreground/20 bg-background/28 text-foreground/58'
+                      : 'border-foreground/12 bg-background/18 text-foreground/32'
               }`}
             >
               {index + 1}
             </span>
             {index < STEPS.length - 1 && (
-              <span className="mx-0 h-px flex-1 bg-foreground/16">
-                <span className={`block h-full bg-foreground/70 ${index < displayStepIndex ? 'w-full' : 'w-0'}`} />
+              <span className="mx-0 h-px flex-1 bg-foreground/12">
+                <span className={`block h-full bg-foreground/52 ${index < displayStepIndex ? 'w-full' : 'w-0'}`} />
               </span>
             )}
           </React.Fragment>
@@ -1052,39 +1052,39 @@ function DesktopOrderRail({
   ];
 
   return (
-    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl lg:p-4 2xl:p-5">
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.105),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_62%)]" />
+    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.15rem] border border-foreground/10 bg-background/48 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_70px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl lg:p-3 2xl:p-3.5">
+      <span className="pointer-events-none absolute inset-0 bg-foreground/[0.025]" />
       <div className="relative flex h-full min-h-0 flex-col">
-        <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/78 2xl:text-sm">Your Order</p>
-        <div className="mt-2 divide-y divide-foreground/10 border-t border-foreground/10 2xl:mt-3">
+        <p className="font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/70 2xl:text-xs">Your order</p>
+        <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[96px_1fr] gap-3 py-2 2xl:grid-cols-[108px_1fr] 2xl:py-2.5">
-              <p className="font-body text-xs font-black text-foreground/66 2xl:text-sm">{label}</p>
-              <p className="line-clamp-2 text-right font-body text-xs font-bold leading-snug text-foreground/86 2xl:text-sm">{value}</p>
+            <div key={label} className="grid grid-cols-[82px_1fr] gap-2 py-1.5 2xl:grid-cols-[92px_1fr]">
+              <p className="font-body text-[11px] font-black text-foreground/60 2xl:text-xs">{label}</p>
+              <p className="line-clamp-1 text-right font-body text-[11px] font-bold leading-snug text-foreground/84 2xl:text-xs">{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-2 border-t border-foreground/10 pt-3 2xl:mt-3 2xl:pt-4">
+        <div className="mt-2 border-t border-foreground/8 pt-2.5">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-sm">Subtotal</p>
-            <p className="font-body text-base font-black text-foreground 2xl:text-lg">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
+            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/60 2xl:text-xs">Subtotal</p>
+            <p className="font-body text-sm font-black text-foreground 2xl:text-base">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
-          <p className="mt-1.5 line-clamp-2 font-body text-[11px] font-bold leading-snug text-foreground/56 2xl:text-xs">{receiptLine}</p>
-          <div className="mt-3 2xl:mt-4">
-            <p className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-sm">Deposit</p>
-            <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground 2xl:text-[2.45rem]">{currency(displayDueNow)}</p>
-            {displayBalanceDue > 0 && <p className="mt-1.5 font-body text-xs font-bold text-foreground/52">Balance {hasTherapySelection ? currency(displayBalanceDue) : 'due after visit $200'}</p>}
+          <p className="mt-1 line-clamp-1 font-body text-[10px] font-bold leading-snug text-foreground/50 2xl:text-[11px]">{receiptLine}</p>
+          <div className="mt-2.5">
+            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/60 2xl:text-xs">Deposit</p>
+            <p className="mt-0.5 font-body text-[1.72rem] font-black leading-none text-foreground 2xl:text-[2rem]">{currency(displayDueNow)}</p>
+            {displayBalanceDue > 0 && <p className="mt-1 font-body text-[11px] font-bold text-foreground/50">Balance {hasTherapySelection ? currency(displayBalanceDue) : 'due after visit $200'}</p>}
           </div>
         </div>
-        <p className="mt-2 rounded-xl border border-foreground/10 bg-background/34 px-3 py-2 font-body text-[10px] font-black leading-snug text-foreground/70 2xl:mt-3 2xl:text-[11px]">
+        <p className="mt-2 rounded-lg border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[9px] font-black leading-snug text-foreground/64 2xl:text-[10px]">
           {CLINICAL_REVIEW_NOTICE}
         </p>
-        <div className={`mt-auto grid gap-2 pt-3 2xl:pt-4 ${canGoBack ? 'grid-cols-[96px_1fr] 2xl:grid-cols-[112px_1fr]' : 'grid-cols-1'}`}>
+        <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[82px_1fr] 2xl:grid-cols-[92px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[48px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-3 font-body text-xs font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground 2xl:min-h-[54px] 2xl:text-sm"
+              className="flex min-h-[42px] items-center justify-center rounded-lg border border-foreground/12 bg-background/28 px-2 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/28 hover:text-foreground"
             >
               Back
             </button>
@@ -1093,7 +1093,7 @@ function DesktopOrderRail({
             type="button"
             onClick={onNext}
             disabled={!canGoNext || checkoutLoading}
-            className={`relative flex min-h-[48px] w-full items-center justify-center gap-3 overflow-hidden rounded-xl border px-4 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] 2xl:min-h-[54px] 2xl:text-base ${
+            className={`relative flex min-h-[42px] w-full items-center justify-center gap-2 overflow-hidden rounded-lg border px-3 font-body text-xs font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] ${
               canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
             }`}
           >
@@ -1106,11 +1106,11 @@ function DesktopOrderRail({
               />
             )}
             <span>{actionLabel}</span>
-            <ArrowRight className="h-5 w-5 2xl:h-7 2xl:w-7" strokeWidth={2.6} />
+            <ArrowRight className="h-4.5 w-4.5" strokeWidth={2.6} />
           </button>
         </div>
-        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[11px] font-semibold text-foreground/56 2xl:text-xs">
-          <ShieldCheck className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
+        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[10px] font-semibold text-foreground/50">
+          <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
           Secure booking
         </div>
       </div>
@@ -1140,14 +1140,14 @@ function DesktopBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[820px] min-h-[520px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
-      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(330px,420px)] gap-5 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:gap-7 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(380px,450px)] 2xl:gap-10 2xl:p-8">
+    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[820px] min-h-[520px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/16 bg-background/84 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_30px_110px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
+      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(280px,330px)] gap-6 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:gap-8 lg:p-6 2xl:grid-cols-[minmax(0,1fr)_minmax(315px,360px)] 2xl:gap-10 2xl:p-8">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
-          <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
-            {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+          <h1 className="font-body text-base font-black tracking-[0.04em] text-foreground/86 2xl:text-lg">
+            Step {displayStepIndex + 1} of {STEPS.length} · {displayTitle}
           </h1>
           <DesktopStepRail displayStepIndex={displayStepIndex} />
-          <div className="my-3 h-px bg-foreground/10 2xl:my-5" />
+          <div className="my-4 h-px bg-foreground/8 2xl:my-5" />
           {error && (
             <div role="alert" className="mb-4 flex min-h-[42px] items-center justify-between gap-3 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
               <p className="font-body text-sm font-black">{error}</p>
@@ -4369,10 +4369,10 @@ export default function BookNow() {
             ? 3
             : 4,
     title: step === 0
-      ? (therapyCategoryScreen ? 'Therapy Base' : isIvTherapyMenuStep ? 'Choose Your IV Therapy' : activeTherapyDisplayTitle)
+      ? (therapyCategoryScreen ? 'Therapy base' : isIvTherapyMenuStep ? 'Choose your therapy' : activeTherapyDisplayTitle)
       : step === 1
-        ? 'ADD-ONS'
-      : STEPS[step].toUpperCase(),
+        ? 'Add-ons'
+      : STEPS[step],
   };
   const canGoBack = step > 0 || (step === 0 && !therapyCategoryScreen);
 
@@ -4492,7 +4492,7 @@ export default function BookNow() {
         type="button"
         onClick={() => chooseTherapyMenuProduct(item.key)}
         aria-pressed={active}
-        className={`${panelCardClass} relative flex min-h-0 flex-col justify-between rounded-[0.95rem] px-2 py-2 text-left transition-colors hover:border-foreground/24 md:rounded-[1.05rem] md:px-3 md:py-3 ${
+        className={`${panelCardClass} relative flex min-h-[104px] flex-col justify-between rounded-[0.95rem] px-2 py-2 text-left transition-colors hover:border-foreground/24 md:min-h-[118px] md:rounded-[1.05rem] md:px-3 md:py-3 ${
           active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
@@ -4546,19 +4546,19 @@ export default function BookNow() {
           }
         }}
         aria-pressed={active}
-        className={`relative h-full min-h-0 overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-black/82 px-0 py-0 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.22)] backdrop-blur-2xl transition-colors hover:border-foreground/24 ${
+        className={`relative !min-h-[72px] overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-black/84 px-0 py-0 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.20)] backdrop-blur-2xl transition-colors hover:border-foreground/24 min-[390px]:!min-h-[78px] ${
           active ? 'border-foreground/58 bg-black/72 ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
-        <span className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-foreground min-[390px]:left-3.5 min-[390px]:h-10 min-[390px]:w-10">
-          <Icon className="h-[1.625rem] w-[1.625rem] min-[390px]:h-7 min-[390px]:w-7" strokeWidth={1.9} />
+        <span className="pointer-events-none absolute inset-0 bg-foreground/[0.025]" />
+        <span className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-foreground/8 bg-foreground/[0.055] text-foreground min-[390px]:left-3.5 min-[390px]:h-12 min-[390px]:w-12">
+          <Icon className="h-7 w-7 min-[390px]:h-8 min-[390px]:w-8" strokeWidth={1.9} />
         </span>
-        <span className="absolute left-[4.1rem] right-[7.15rem] top-1/2 flex min-w-0 -translate-y-1/2 items-center gap-1.5 font-heading text-[1.48rem] uppercase leading-none tracking-normal text-foreground min-[390px]:left-[4.55rem] min-[390px]:right-[7.85rem] min-[390px]:text-[1.66rem]">
+        <span className="absolute left-[4.65rem] right-[7.5rem] top-1/2 flex min-w-0 -translate-y-1/2 items-center gap-1.5 font-heading text-[1.62rem] uppercase leading-none tracking-normal text-foreground min-[390px]:left-[5.1rem] min-[390px]:right-[8.1rem] min-[390px]:text-[1.82rem]">
           <span className="truncate">{copy.label}</span>
         </span>
         <span className="absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center justify-end gap-2.5 text-foreground min-[390px]:right-4 min-[390px]:gap-3">
-          <span className="font-heading text-[1.48rem] uppercase leading-none tracking-normal min-[390px]:text-[1.66rem]">
+          <span className="font-heading text-[1.62rem] uppercase leading-none tracking-normal min-[390px]:text-[1.82rem]">
             {currency(price)}
           </span>
           <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
@@ -4577,14 +4577,14 @@ export default function BookNow() {
         type="button"
         onClick={() => toggleAddon(item.label)}
         aria-pressed={active}
-        className={`${panelCardClass} relative flex min-h-[46px] flex-col justify-between rounded-[0.72rem] px-1 py-1 text-left transition-colors hover:border-foreground/24 min-[390px]:min-h-[48px] md:min-h-[58px] md:rounded-[0.85rem] md:px-1.5 md:py-1.5 ${
+        className={`${panelCardClass} relative flex !min-h-[54px] flex-col justify-between rounded-[0.8rem] px-1.5 py-1.5 text-left transition-colors hover:border-foreground/24 min-[390px]:!min-h-[58px] md:!min-h-[72px] md:rounded-[0.95rem] md:px-2 md:py-2 ${
           active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
         <span className="relative flex items-center justify-between gap-1">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-foreground/8 bg-foreground/[0.055] text-foreground min-[390px]:h-6 min-[390px]:w-6 md:h-7 md:w-7 md:rounded-lg">
-            <Icon className="h-3 w-3 min-[390px]:h-3.5 min-[390px]:w-3.5 md:h-4 md:w-4" strokeWidth={2.2} />
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-foreground/8 bg-foreground/[0.055] text-foreground min-[390px]:h-7 min-[390px]:w-7 md:h-9 md:w-9 md:rounded-lg">
+            <Icon className="h-3.5 w-3.5 min-[390px]:h-4 min-[390px]:w-4 md:h-5 md:w-5" strokeWidth={2.2} />
           </span>
           {active ? (
             <Check className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={2.65} />
@@ -4593,10 +4593,10 @@ export default function BookNow() {
           )}
         </span>
         <span className="relative min-w-0 pt-0.5 md:pt-1">
-          <span className="block truncate font-heading text-[0.62rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[0.68rem] md:text-[0.9rem]">
+          <span className="block truncate font-heading text-[0.78rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[0.86rem] md:text-[1.08rem]">
             {item.label}
           </span>
-          <span className="mt-0.5 block truncate font-body text-[6.5px] font-black uppercase tracking-[0.04em] text-foreground/70 md:text-[8px]">
+          <span className="mt-0.5 block truncate font-body text-[7.5px] font-black uppercase tracking-[0.04em] text-foreground/70 md:text-[9px]">
             + {currency(item.price)}
           </span>
         </span>
@@ -4610,31 +4610,31 @@ export default function BookNow() {
     const Icon = group.key === 'iv' ? Droplets : group.icon;
 
     return (
-      <div key={group.key} className={`${panelCardClass} rounded-[1rem]`}>
+      <div key={group.key} className={`${panelCardClass} rounded-[1.05rem]`}>
         <button
           type="button"
           onClick={() => setActiveAddonGroup((current) => (current === group.key ? '' : group.key))}
           aria-expanded={open}
-          className="relative flex min-h-[42px] w-full items-center justify-between gap-2 px-2 text-left transition-colors hover:border-foreground/24 min-[390px]:min-h-[46px] md:min-h-[54px] md:px-2.5"
+          className="relative grid !min-h-[68px] w-full grid-cols-[54px_1fr_34px] items-center gap-2 px-3 py-2 text-left transition-colors hover:border-foreground/24 min-[390px]:grid-cols-[58px_1fr_38px] min-[390px]:px-3.5 md:!min-h-[82px] md:grid-cols-[68px_1fr_42px] md:gap-3 md:px-4"
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          <span className="relative flex min-w-0 items-center gap-2.5 md:gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.055] text-foreground min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9 md:rounded-xl">
-              <Icon className="h-3.5 w-3.5 md:h-4.5 md:w-4.5" strokeWidth={2.35} />
+          <span className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14 md:rounded-2xl">
+            <Icon className="h-7 w-7 min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9" strokeWidth={2.05} />
+          </span>
+          <span className="relative min-w-0 border-l border-foreground/12 pl-3 min-[390px]:pl-4 md:pl-5">
+            <span className="block truncate font-heading text-[1.5rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.68rem] md:text-[2rem]">
+              {group.label}
             </span>
-            <span className="min-w-0">
-              <span className="block truncate font-heading text-[1.05rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.16rem] md:text-[1.38rem]">
-                {group.label}
-              </span>
-              <span className="mt-0.5 block truncate font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/64 min-[390px]:text-[8px] md:text-[9px]">
-                {selectedCount ? `${selectedCount} selected` : group.sub}
-              </span>
+            <span className="mt-1 block truncate font-body text-[9px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-[10px] md:text-xs">
+              {selectedCount ? `${selectedCount} selected` : `${group.items.length} options`}
             </span>
           </span>
-          <ChevronDown className={`relative h-5 w-5 shrink-0 text-foreground transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.55} />
+          <span className="relative flex justify-end text-foreground">
+            <ChevronDown className={`h-7 w-7 shrink-0 transition-transform min-[390px]:h-8 min-[390px]:w-8 ${open ? 'rotate-180' : ''}`} strokeWidth={2.25} />
+          </span>
         </button>
         {open && (
-          <div className="grid grid-cols-4 gap-1 border-t border-foreground/8 p-1 md:gap-1.5 md:p-1.5">
+          <div className="grid grid-cols-2 gap-1.5 border-t border-foreground/8 p-1.5 md:grid-cols-3 md:gap-2 md:p-2">
             {group.items.map((item) => renderAddonTile(group, item))}
           </div>
         )}
@@ -4761,13 +4761,13 @@ export default function BookNow() {
               <span className="md:hidden">Tap a therapy to learn more and select</span>
               <span className="hidden md:inline">Choose your {activeTherapyDisplayTitle.toLowerCase()}</span>
             </p>
-            <div className="grid h-full min-h-0 grid-rows-9 gap-1 overflow-hidden md:hidden">
+            <div className="grid min-h-0 content-start gap-2 overflow-y-auto pb-1 pr-0.5 md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
             </div>
             <p className="pb-0.5 text-center font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/56 md:hidden">
               Taxes calculated at checkout
             </p>
-            <div className="hidden h-full min-h-0 grid-cols-3 grid-rows-3 gap-1.5 overflow-hidden pb-0 pr-0 md:grid md:gap-2">
+            <div className="hidden min-h-0 grid-cols-2 content-start gap-2 overflow-y-auto pb-1 pr-1 md:grid">
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
             </div>
           </div>
@@ -4795,14 +4795,15 @@ export default function BookNow() {
               key: 'no-addons',
               icon: Check,
               title: 'No add-ons',
-              meta: '60 second checkout\nNO HIDDEN FEES',
+              meta: 'Skip extras',
               onClick: chooseNoAddons,
               active: state.addOnDecision && state.addOns.length === 0,
               action: state.addOnDecision && state.addOns.length === 0 ? 'check' : 'arrow',
               compactMobile: true,
-              className: '!min-h-[52px] min-[390px]:!min-h-[56px] md:!min-h-[64px]',
-              titleClassName: 'text-[1.18rem] min-[390px]:text-[1.3rem] md:text-[1.55rem]',
-              metaClassName: 'text-[8px] min-[390px]:text-[9px] md:text-[11px]',
+              className: '!min-h-[62px] !grid-cols-[54px_1fr_34px] !gap-2 !px-3 !py-2 min-[390px]:!min-h-[68px] min-[390px]:!grid-cols-[58px_1fr_38px] min-[390px]:!px-3.5 md:!min-h-[82px] md:!grid-cols-[68px_1fr_42px] md:!gap-3 md:!px-4',
+              iconClassName: '!h-11 !w-11 min-[390px]:!h-12 min-[390px]:!w-12 md:!h-14 md:!w-14 md:!rounded-2xl [&_svg]:!h-7 [&_svg]:!w-7 min-[390px]:[&_svg]:!h-8 min-[390px]:[&_svg]:!w-8 md:[&_svg]:!h-9 md:[&_svg]:!w-9',
+              titleClassName: '!text-[1.5rem] min-[390px]:!text-[1.68rem] md:!text-[2rem]',
+              metaClassName: '!text-[9px] min-[390px]:!text-[10px] md:!text-xs',
             })}
             {addonCatalog.groups.map((group) => renderAddonAccordion(group))}
           </div>

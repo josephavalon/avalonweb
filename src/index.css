@@ -698,8 +698,8 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.77;
-  --av-backdrop-image-filter: blur(1px) saturate(0.76) brightness(0.70) contrast(1.04);
+  --av-backdrop-image-opacity: 0.62;
+  --av-backdrop-image-filter: blur(1.8px) saturate(0.70) brightness(0.52) contrast(1.02);
   --av-backdrop-image-mix: normal;
   --av-hero-accent: hsl(var(--foreground));
   --av-hero-gradient: none;
