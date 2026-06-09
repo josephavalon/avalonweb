@@ -1601,7 +1601,7 @@ body,
 /* ===== Touch target minimum: 44px for WCAG 2.5.5 compliance ===== */
 /* hover:none targets true touch devices (phones, tablets). */
 @media (hover: none) {
-  button, a, [role="button"] {
+  button, a, [role="button"], select {
     min-height: 44px !important;
   }
 }
