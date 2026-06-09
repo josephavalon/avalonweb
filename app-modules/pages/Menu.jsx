@@ -14,17 +14,9 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
-import UniversalCard from '@/components/ui/UniversalCard';
 import { IV_SESSIONS } from '@/config/verticals';
 import { slugify } from '@/data/products';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
-
-const HERO_GOALS = [
-  { key: 'vitamins', label: 'IV Therapy', icon: Droplets, href: '#iv-vitamins', section: 'vitamins' },
-  { key: 'nad', label: 'IV NAD+', icon: BatteryCharging, href: '#iv-nad', section: 'nad' },
-  { key: 'cbd', label: 'CBD IV Therapy', icon: Zap, href: '#iv-cbd', section: 'cbd' },
-  { key: 'all', label: 'All Protocols', icon: FlaskConical, href: '#protocol-directory', section: 'all' },
-];
 
 const FEATURED_KEYS = ['hydration', 'energy', 'myers', 'recovery', 'nad', 'cbd'];
 const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set([]);
@@ -139,36 +131,6 @@ function sortSessions(sessions) {
     const bFeatured = FEATURED_ORDER.has(b.key) ? FEATURED_ORDER.get(b.key) : 100 + (DEFAULT_ORDER.get(b.key) || 0);
     return aFeatured - bFeatured;
   });
-}
-
-function GoalTile({ item, index, onOpen }) {
-  const Icon = item.icon;
-  const content = (
-    <UniversalCard
-      as={motion.span}
-      initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 0.7, delay: 0.16 + index * 0.08, ease: EASE }}
-      icon={Icon}
-      title={item.label}
-      size="compact"
-      className="min-h-[120px] md:min-h-[150px]"
-    />
-  );
-
-  if (item.href.startsWith('#')) {
-    return (
-      <button type="button" onClick={() => onOpen(item)} className="block w-full text-left">
-        {content}
-      </button>
-    );
-  }
-
-  return (
-    <MotionLink to={item.href} whileTap={premiumTap} className="block">
-      {content}
-    </MotionLink>
-  );
 }
 
 function ProtocolCard({ session, index = 0 }) {
@@ -297,7 +259,7 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
 }
 
 export default function Menu() {
-  const [openSections, setOpenSections] = useState({});
+  const [openSections, setOpenSections] = useState({ vitamins: true });
 
   useSeo({
     title: 'Mobile IV Therapy Bay Area — Avalon Vitality',
@@ -327,13 +289,6 @@ export default function Menu() {
   const nadSessions = useMemo(() => filtered.filter((session) => session.key === 'nad'), [filtered]);
   const cbdSessions = useMemo(() => filtered.filter((session) => session.key === 'cbd'), [filtered]);
   const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
-  const openCategory = (item) => {
-    if (!item?.section) return;
-    setOpenSections((current) => ({ ...current, [item.section]: true }));
-    window.setTimeout(() => {
-      document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 80);
-  };
 
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
@@ -349,12 +304,6 @@ export default function Menu() {
             <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
               IV Therapy
             </h1>
-          </div>
-
-          <div className="av-wide-card-grid mt-5 min-w-0 md:mt-10">
-            {HERO_GOALS.map((item, index) => (
-              <GoalTile key={item.key} item={item} index={index} onOpen={openCategory} />
-            ))}
           </div>
         </section>
 
