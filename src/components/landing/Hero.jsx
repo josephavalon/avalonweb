@@ -1,20 +1,20 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Diamond, Droplet, Home, MapPin, Plus, ShieldPlus, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, Home, MapPin, ShieldPlus, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
-  { to: BOOK_URL, label: 'Book', icon: Plus, preload: () => import('@/pages/BookNow') },
+  { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'IV Therapy', icon: Droplet },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },
   { label: 'Registered Nurses', icon: ShieldPlus },
-  { label: 'Same Day Service', icon: ShieldPlus },
+  { label: 'Same Day Service', icon: Clock },
   { label: 'Your location', icon: Home },
   { label: '60 Second Checkout', icon: Zap },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
