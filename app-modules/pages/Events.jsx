@@ -22,11 +22,8 @@ export default function Events() {
           transition={{ duration: 0.5, ease: EASE }}
           className="w-full"
         >
-          <p className="mb-4 font-body text-[10px] font-black uppercase tracking-[0.28em] text-foreground/56 md:text-xs">
-            Launches
-          </p>
-          <h1 className="max-w-4xl font-heading text-[5.5rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-[10rem]">
-            COMING SOON!
+          <h1 className="max-w-4xl font-heading text-[5.5rem] leading-[0.82] tracking-normal text-foreground md:text-[10rem]">
+            Coming soon
           </h1>
         </motion.section>
       </main>

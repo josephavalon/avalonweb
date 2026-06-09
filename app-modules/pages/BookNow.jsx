@@ -913,7 +913,7 @@ function UniversalBookingFrame({
       <motion.div
         key={step}
         data-av-booking-scroll-region="true"
-        className="relative min-h-0 flex-1 overflow-hidden overscroll-contain p-0 pb-1 md:pb-0"
+        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-0 pb-1 md:pb-0"
         initial={{ opacity: 1, y: 0, scale: 1 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 1 }}
@@ -1052,39 +1052,39 @@ function DesktopOrderRail({
   ];
 
   return (
-    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_28px_96px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl lg:p-4 2xl:p-5">
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.105),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_62%)]" />
+    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_72px_hsl(var(--foreground)/0.11)] backdrop-blur-2xl 2xl:p-3">
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
-        <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/78 2xl:text-sm">Your Order</p>
-        <div className="mt-2 divide-y divide-foreground/10 border-t border-foreground/10 2xl:mt-3">
+        <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Order</p>
+        <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[96px_1fr] gap-3 py-2 2xl:grid-cols-[108px_1fr] 2xl:py-2.5">
-              <p className="font-body text-xs font-black text-foreground/66 2xl:text-sm">{label}</p>
-              <p className="line-clamp-2 text-right font-body text-xs font-bold leading-snug text-foreground/86 2xl:text-sm">{value}</p>
+            <div key={label} className="grid grid-cols-[74px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[82px_minmax(0,1fr)] 2xl:py-2">
+              <p className="font-body text-[10px] font-black text-foreground/58 2xl:text-[11px]">{label}</p>
+              <p className="min-w-0 break-words text-right font-body text-[10px] font-bold leading-snug text-foreground/82 2xl:text-[11px]">{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-2 border-t border-foreground/10 pt-3 2xl:mt-3 2xl:pt-4">
+        <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-sm">Subtotal</p>
-            <p className="font-body text-base font-black text-foreground 2xl:text-lg">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
+            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Subtotal</p>
+            <p className="font-body text-sm font-black text-foreground 2xl:text-base">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
-          <p className="mt-1.5 line-clamp-2 font-body text-[11px] font-bold leading-snug text-foreground/56 2xl:text-xs">{receiptLine}</p>
-          <div className="mt-3 2xl:mt-4">
-            <p className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground/66 2xl:text-sm">Deposit</p>
-            <p className="mt-1 font-body text-[2rem] font-black leading-none text-foreground 2xl:text-[2.45rem]">{currency(displayDueNow)}</p>
-            {displayBalanceDue > 0 && <p className="mt-1.5 font-body text-xs font-bold text-foreground/52">Balance {hasTherapySelection ? currency(displayBalanceDue) : 'due after visit $200'}</p>}
+          <p className="mt-1 max-w-full break-words font-body text-[10px] font-bold leading-snug text-foreground/54 2xl:text-[11px]">{receiptLine}</p>
+          <div className="mt-2.5 2xl:mt-3">
+            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit</p>
+            <p className="mt-1 font-body text-[1.85rem] font-black leading-none text-foreground 2xl:text-[2.15rem]">{currency(displayDueNow)}</p>
+            {displayBalanceDue > 0 && <p className="mt-1 font-body text-[11px] font-bold text-foreground/52 2xl:text-xs">Balance {currency(displayBalanceDue)}</p>}
           </div>
         </div>
-        <p className="mt-2 rounded-xl border border-foreground/10 bg-background/34 px-3 py-2 font-body text-[10px] font-black leading-snug text-foreground/70 2xl:mt-3 2xl:text-[11px]">
+        <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[9px] font-black leading-snug text-foreground/64 2xl:text-[10px]">
           {CLINICAL_REVIEW_NOTICE}
         </p>
-        <div className={`mt-auto grid gap-2 pt-3 2xl:pt-4 ${canGoBack ? 'grid-cols-[96px_1fr] 2xl:grid-cols-[112px_1fr]' : 'grid-cols-1'}`}>
+        <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[72px_1fr] 2xl:grid-cols-[84px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[48px] items-center justify-center rounded-xl border border-foreground/14 bg-background/34 px-3 font-body text-xs font-black uppercase tracking-[0.08em] text-foreground/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/30 hover:text-foreground 2xl:min-h-[54px] 2xl:text-sm"
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/30 px-2.5 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
             >
               Back
             </button>
@@ -1093,7 +1093,7 @@ function DesktopOrderRail({
             type="button"
             onClick={onNext}
             disabled={!canGoNext || checkoutLoading}
-            className={`relative flex min-h-[48px] w-full items-center justify-center gap-3 overflow-hidden rounded-xl border px-4 font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] 2xl:min-h-[54px] 2xl:text-base ${
+            className={`relative flex min-h-[44px] w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] transition-transform active:scale-[0.985] 2xl:min-h-[50px] 2xl:text-sm ${
               canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
             }`}
           >
@@ -1106,10 +1106,10 @@ function DesktopOrderRail({
               />
             )}
             <span>{actionLabel}</span>
-            <ArrowRight className="h-5 w-5 2xl:h-7 2xl:w-7" strokeWidth={2.6} />
+            <ArrowRight className="h-5 w-5 2xl:h-6 2xl:w-6" strokeWidth={2.6} />
           </button>
         </div>
-        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[11px] font-semibold text-foreground/56 2xl:text-xs">
+        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[10px] font-semibold text-foreground/50 2xl:text-[11px]">
           <ShieldCheck className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
           Secure booking
         </div>
@@ -1141,7 +1141,7 @@ function DesktopBookingFrame({
 }) {
   return (
     <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[820px] min-h-[520px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
-      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(330px,420px)] gap-5 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:gap-7 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(380px,450px)] 2xl:gap-10 2xl:p-8">
+      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(280px,340px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(290px,350px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(310px,370px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
             {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
@@ -3678,7 +3678,7 @@ export default function BookNow() {
       ...current,
       productKey: key,
       addOns: [],
-      addOnDecision: true,
+      addOnDecision: false,
       ...overrides,
     }));
   };
@@ -3689,9 +3689,10 @@ export default function BookNow() {
 
   const chooseTherapyMenuProduct = (key) => {
     chooseProduct(key);
+    const nextStep = 1;
     setActiveAddonGroup('');
-    setStep(1);
-    persistBookingProgress(1, false, { ...state, productKey: key, addOns: [], addOnDecision: true });
+    setStep(nextStep);
+    persistBookingProgress(nextStep, false, { ...state, productKey: key, addOns: [], addOnDecision: false });
   };
 
   const chooseCustomBase = (key) => {
@@ -3850,7 +3851,7 @@ export default function BookNow() {
     if (step === 0 && isCustomTreatment) return Boolean(state.productKey && state.customBase);
     if (step === 0 && therapyCategoryScreen) return true;
     if (step === 0) return Boolean(state.productKey);
-    if (step === 1) return true;
+    if (step === 1) return Boolean(state.addOnDecision);
     if (step === 2) return Boolean(state.timeIntent !== 'choose' || (state.customDate && state.customTime));
     if (step === 3) return Boolean(state.address.trim() && resolvedZip.length === 5);
     return true;
@@ -4369,7 +4370,7 @@ export default function BookNow() {
             ? 3
             : 4,
     title: step === 0
-      ? (therapyCategoryScreen ? 'Therapy Base' : isIvTherapyMenuStep ? 'Choose Your IV Therapy' : activeTherapyDisplayTitle)
+      ? (therapyCategoryScreen ? 'Therapy Base' : 'Therapy')
       : step === 1
         ? 'ADD-ONS'
       : STEPS[step].toUpperCase(),
@@ -4417,8 +4418,9 @@ export default function BookNow() {
     setValue('contactLine', formatContactLine(next));
   };
 
-  const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl';
-  const microLabelClass = 'font-body text-[9px] font-black uppercase tracking-[0.13em] text-foreground/58 md:text-[10px]';
+  const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/14 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl';
+  const expandedPanelCardClass = panelCardClass.replace('overflow-hidden', 'overflow-visible');
+  const microLabelClass = 'font-body text-[10px] font-black uppercase tracking-[0.10em] text-foreground/70 md:text-[11px]';
   const renderStoreMenuRow = ({
     key,
     icon: Icon = Droplets,
@@ -4485,6 +4487,10 @@ export default function BookNow() {
     const active = state.productKey === item.key;
     const copy = compactProtocolCopy(item);
     const menuLabel = copy.label;
+    const longLabel = menuLabel.length > 11;
+    const titleSizeClass = longLabel
+      ? 'md:text-[1.02rem] xl:text-[1.08rem] 2xl:text-[1.16rem]'
+      : 'md:text-[1.12rem] xl:text-[1.2rem] 2xl:text-[1.32rem]';
 
     return (
       <button
@@ -4492,25 +4498,23 @@ export default function BookNow() {
         type="button"
         onClick={() => chooseTherapyMenuProduct(item.key)}
         aria-pressed={active}
-        className={`${panelCardClass} relative flex min-h-0 flex-col justify-between rounded-[0.95rem] px-2 py-2 text-left transition-colors hover:border-foreground/24 md:rounded-[1.05rem] md:px-3 md:py-3 ${
+        className={`${panelCardClass} relative grid min-h-[78px] grid-cols-[42px_minmax(0,1fr)_auto_22px] items-center gap-2.5 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 md:min-h-[104px] md:grid-cols-[52px_minmax(0,1fr)_auto_26px] md:rounded-[1.05rem] md:px-4 md:py-3 ${
           active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-        <span className="relative flex items-center justify-between gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-foreground/8 bg-foreground/[0.055] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] min-[390px]:h-9 min-[390px]:w-9 md:h-11 md:w-11">
-            <Icon className="h-4 w-4 min-[390px]:h-4.5 min-[390px]:w-4.5 md:h-5 md:w-5" strokeWidth={2.2} />
-          </span>
-          <ArrowRight className="h-4.5 w-4.5 shrink-0 text-foreground md:h-5 md:w-5" strokeWidth={2.55} />
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.06] text-foreground shadow-[0_18px_45px_hsl(var(--foreground)/0.08)] md:h-12 md:w-12">
+          <Icon className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.15} />
         </span>
-        <span className="relative min-w-0 pt-1.5 md:pt-2">
-          <span className="block truncate font-heading text-[1.05rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.18rem] md:text-[1.55rem]">
+        <span className="relative min-w-0 pr-1">
+          <span className={`line-clamp-2 block break-words [overflow-wrap:anywhere] font-heading text-[1.05rem] uppercase leading-[0.95] tracking-normal text-foreground ${titleSizeClass}`}>
             {menuLabel}
           </span>
-          <span className="mt-1 block truncate font-body text-[8px] font-black uppercase tracking-[0.07em] text-foreground/70 min-[390px]:text-[9px] md:text-[11px]">
-            {currency(protocolPrice(item))}
-          </span>
         </span>
+        <span className="relative whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.18rem] xl:text-[1.3rem] 2xl:text-[1.42rem]">
+          {currency(protocolPrice(item))}
+        </span>
+        <ArrowRight className="relative h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.45} />
       </button>
     );
   };
@@ -4532,6 +4536,7 @@ export default function BookNow() {
     const copy = compactProtocolCopy(item);
     const price = protocolPrice(item);
     const selectTherapy = () => chooseTherapyMenuProduct(item.key);
+    const longLabel = copy.label.length > 12;
 
     return (
       <div
@@ -4546,21 +4551,21 @@ export default function BookNow() {
           }
         }}
         aria-pressed={active}
-        className={`relative h-full min-h-0 overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-black/82 px-0 py-0 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.22)] backdrop-blur-2xl transition-colors hover:border-foreground/24 ${
+        className={`relative grid h-full min-h-[58px] grid-cols-[2.45rem_minmax(0,1fr)_auto_1.65rem] items-center gap-2 overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-black/82 px-3 py-1.5 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.22)] backdrop-blur-2xl transition-colors hover:border-foreground/24 min-[390px]:min-h-[62px] min-[390px]:grid-cols-[2.7rem_minmax(0,1fr)_auto_1.8rem] min-[390px]:gap-2.5 min-[390px]:px-3.5 ${
           active ? 'border-foreground/58 bg-black/72 ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
-        <span className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-foreground min-[390px]:left-3.5 min-[390px]:h-10 min-[390px]:w-10">
+        <span className="relative flex h-9 w-9 items-center justify-center text-foreground min-[390px]:h-10 min-[390px]:w-10">
           <Icon className="h-[1.625rem] w-[1.625rem] min-[390px]:h-7 min-[390px]:w-7" strokeWidth={1.9} />
         </span>
-        <span className="absolute left-[4.1rem] right-[7.15rem] top-1/2 flex min-w-0 -translate-y-1/2 items-center gap-1.5 font-heading text-[1.48rem] uppercase leading-none tracking-normal text-foreground min-[390px]:left-[4.55rem] min-[390px]:right-[7.85rem] min-[390px]:text-[1.66rem]">
-          <span className="truncate">{copy.label}</span>
+        <span className={`relative min-w-0 font-heading uppercase leading-[0.92] tracking-normal text-foreground ${longLabel ? 'text-[1.06rem] min-[390px]:text-[1.18rem]' : 'text-[1.22rem] min-[390px]:text-[1.36rem]'}`}>
+          <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
         </span>
-        <span className="absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center justify-end gap-2.5 text-foreground min-[390px]:right-4 min-[390px]:gap-3">
-          <span className="font-heading text-[1.48rem] uppercase leading-none tracking-normal min-[390px]:text-[1.66rem]">
-            {currency(price)}
-          </span>
+        <span className="relative whitespace-nowrap font-heading text-[1.22rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+          {currency(price)}
+        </span>
+        <span className="relative flex justify-end">
           <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
         </span>
       </div>
@@ -4570,6 +4575,10 @@ export default function BookNow() {
   const renderAddonTile = (group, item) => {
     const active = state.addOns.includes(item.label);
     const Icon = item.icon || Plus;
+    const longLabel = item.label.length > 16;
+    const titleSizeClass = longLabel
+      ? 'md:text-[1.02rem] xl:text-[1.1rem] 2xl:text-[1.18rem]'
+      : 'md:text-[1.12rem] xl:text-[1.2rem] 2xl:text-[1.32rem]';
 
     return (
       <button
@@ -4577,29 +4586,27 @@ export default function BookNow() {
         type="button"
         onClick={() => toggleAddon(item.label)}
         aria-pressed={active}
-        className={`${panelCardClass} relative flex min-h-[46px] flex-col justify-between rounded-[0.72rem] px-1 py-1 text-left transition-colors hover:border-foreground/24 min-[390px]:min-h-[48px] md:min-h-[58px] md:rounded-[0.85rem] md:px-1.5 md:py-1.5 ${
+        className={`${panelCardClass} relative grid min-h-[78px] grid-cols-[42px_minmax(0,1fr)_auto_26px] items-center gap-2.5 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 min-[390px]:min-h-[82px] md:min-h-[104px] md:grid-cols-[52px_minmax(0,1fr)_auto_28px] md:rounded-[1.05rem] md:px-4 md:py-3 ${
           active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-        <span className="relative flex items-center justify-between gap-1">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-foreground/8 bg-foreground/[0.055] text-foreground min-[390px]:h-6 min-[390px]:w-6 md:h-7 md:w-7 md:rounded-lg">
-            <Icon className="h-3 w-3 min-[390px]:h-3.5 min-[390px]:w-3.5 md:h-4 md:w-4" strokeWidth={2.2} />
-          </span>
-          {active ? (
-            <Check className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={2.65} />
-          ) : (
-            <Plus className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={2.65} />
-          )}
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.06] text-foreground md:h-12 md:w-12">
+          <Icon className="h-5 w-5 md:h-7 md:w-7" strokeWidth={2.2} />
         </span>
-        <span className="relative min-w-0 pt-0.5 md:pt-1">
-          <span className="block truncate font-heading text-[0.62rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[0.68rem] md:text-[0.9rem]">
+        <span className="relative min-w-0 pr-1">
+          <span className={`line-clamp-2 block break-words [overflow-wrap:anywhere] font-heading text-[1.12rem] uppercase leading-[0.96] tracking-normal text-foreground min-[390px]:text-[1.24rem] ${titleSizeClass}`}>
             {item.label}
           </span>
-          <span className="mt-0.5 block truncate font-body text-[6.5px] font-black uppercase tracking-[0.04em] text-foreground/70 md:text-[8px]">
-            + {currency(item.price)}
-          </span>
         </span>
+        <span className="relative whitespace-nowrap font-heading text-[1.12rem] leading-none text-foreground/92 min-[390px]:text-[1.24rem] md:text-[1.18rem] xl:text-[1.26rem]">
+          + {currency(item.price)}
+        </span>
+        {active ? (
+          <Check className="relative h-6 w-6 shrink-0 justify-self-end text-foreground md:h-7 md:w-7" strokeWidth={2.65} />
+        ) : (
+          <Plus className="relative h-6 w-6 shrink-0 justify-self-end text-foreground md:h-7 md:w-7" strokeWidth={2.65} />
+        )}
       </button>
     );
   };
@@ -4610,23 +4617,23 @@ export default function BookNow() {
     const Icon = group.key === 'iv' ? Droplets : group.icon;
 
     return (
-      <div key={group.key} className={`${panelCardClass} rounded-[1rem]`}>
+      <div key={group.key} className={`${open ? expandedPanelCardClass : panelCardClass} rounded-[1rem]`}>
         <button
           type="button"
           onClick={() => setActiveAddonGroup((current) => (current === group.key ? '' : group.key))}
           aria-expanded={open}
-          className="relative flex min-h-[42px] w-full items-center justify-between gap-2 px-2 text-left transition-colors hover:border-foreground/24 min-[390px]:min-h-[46px] md:min-h-[54px] md:px-2.5"
+          className="relative flex !min-h-[82px] w-full items-center justify-between gap-2 px-2.5 text-left transition-colors hover:border-foreground/28 min-[390px]:!min-h-[86px] md:!min-h-[104px] md:px-4"
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
           <span className="relative flex min-w-0 items-center gap-2.5 md:gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.055] text-foreground min-[390px]:h-8 min-[390px]:w-8 md:h-9 md:w-9 md:rounded-xl">
-              <Icon className="h-3.5 w-3.5 md:h-4.5 md:w-4.5" strokeWidth={2.35} />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.06] text-foreground min-[390px]:h-11 min-[390px]:w-11 md:h-12 md:w-12">
+              <Icon className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.35} />
             </span>
             <span className="min-w-0">
-              <span className="block truncate font-heading text-[1.05rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.16rem] md:text-[1.38rem]">
+              <span className="block truncate font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.48rem] md:text-[1.85rem]">
                 {group.label}
               </span>
-              <span className="mt-0.5 block truncate font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/64 min-[390px]:text-[8px] md:text-[9px]">
+              <span className="mt-0.5 block truncate font-body text-[9px] font-black uppercase tracking-[0.07em] text-foreground/70 md:text-[10px]">
                 {selectedCount ? `${selectedCount} selected` : group.sub}
               </span>
             </span>
@@ -4634,7 +4641,7 @@ export default function BookNow() {
           <ChevronDown className={`relative h-5 w-5 shrink-0 text-foreground transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.55} />
         </button>
         {open && (
-          <div className="grid grid-cols-4 gap-1 border-t border-foreground/8 p-1 md:gap-1.5 md:p-1.5">
+          <div className="grid grid-cols-1 gap-1.5 border-t border-foreground/8 p-1.5 min-[430px]:grid-cols-2 md:grid-cols-2 md:gap-2 md:p-2 2xl:grid-cols-3">
             {group.items.map((item) => renderAddonTile(group, item))}
           </div>
         )}
@@ -4756,17 +4763,10 @@ export default function BookNow() {
 
       if (isVitaminTherapyGroup) {
         return (
-          <div className="grid h-full min-h-0 grid-rows-[auto_1fr_auto] gap-1 md:grid-rows-[auto_1fr] md:gap-4">
-            <p className={`${microLabelClass} pt-0 text-left tracking-[0.14em] md:pt-1 md:tracking-[0.22em]`}>
-              <span className="md:hidden">Tap a therapy to learn more and select</span>
-              <span className="hidden md:inline">Choose your {activeTherapyDisplayTitle.toLowerCase()}</span>
-            </p>
+          <div className="grid h-full min-h-0 grid-rows-[1fr_auto] gap-1 md:grid-rows-[1fr] md:gap-4">
             <div className="grid h-full min-h-0 grid-rows-9 gap-1 overflow-hidden md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
             </div>
-            <p className="pb-0.5 text-center font-body text-[8px] font-black uppercase tracking-[0.18em] text-foreground/56 md:hidden">
-              Taxes calculated at checkout
-            </p>
             <div className="hidden h-full min-h-0 grid-cols-3 grid-rows-3 gap-1.5 overflow-hidden pb-0 pr-0 md:grid md:gap-2">
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
             </div>
@@ -4789,18 +4789,18 @@ export default function BookNow() {
     if (step === 1) {
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-1.5 md:gap-2">
-          <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:text-left md:pt-1`}>Choose add-ons</p>
-          <div className="grid min-h-0 content-start gap-1.5 overflow-hidden pb-0 pr-0 md:gap-2">
+          <span className="sr-only">Choose add-ons</span>
+          <div className="grid content-start gap-1.5 overflow-visible pb-[calc(var(--av-booking-footer-height,5.25rem)+1rem)] pr-0 md:gap-2 md:pb-4">
             {renderStoreMenuRow({
               key: 'no-addons',
               icon: Check,
               title: 'No add-ons',
-              meta: '60 second checkout\nNO HIDDEN FEES',
+              meta: '',
               onClick: chooseNoAddons,
               active: state.addOnDecision && state.addOns.length === 0,
               action: state.addOnDecision && state.addOns.length === 0 ? 'check' : 'arrow',
               compactMobile: true,
-              className: '!min-h-[52px] min-[390px]:!min-h-[56px] md:!min-h-[64px]',
+              className: '!min-h-[86px] min-[390px]:!min-h-[92px] md:!min-h-[96px]',
               titleClassName: 'text-[1.18rem] min-[390px]:text-[1.3rem] md:text-[1.55rem]',
               metaClassName: 'text-[8px] min-[390px]:text-[9px] md:text-[11px]',
             })}
@@ -4875,9 +4875,6 @@ export default function BookNow() {
                   ))}
                 </select>
               </label>
-            </div>
-            <div className="flex min-h-0 items-center rounded-2xl border border-foreground/10 bg-background/30 px-3 font-body text-xs font-semibold leading-snug text-foreground/62 md:text-sm">
-              Earliest available Registered Nurse window.
             </div>
           </div>
         </div>
@@ -4983,13 +4980,14 @@ export default function BookNow() {
 
   return (
     <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
+      <span aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-black/30 backdrop-blur-[1px] md:bg-black/42 md:backdrop-blur-[1.5px]" />
       <BookingMobileHeader />
-      <div className="hidden md:block">
+      <div className="relative z-10 hidden md:block">
         <Navbar />
       </div>
       <main
         data-av-booking-main="true"
-        className="mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
+        className="relative z-10 mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
           '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px) + var(--av-booking-visual-breathing, 0px))',
           '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5.25rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',

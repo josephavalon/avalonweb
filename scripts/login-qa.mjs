@@ -66,7 +66,7 @@ async function findChrome() {
 }
 
 async function waitForChrome() {
-  const deadline = Date.now() + 10_000;
+  const deadline = Date.now() + Number(process.env.CHROME_READY_TIMEOUT_MS || 30_000);
   while (Date.now() < deadline) {
     try {
       await requestJson(`http://127.0.0.1:${PORT}/json/version`);

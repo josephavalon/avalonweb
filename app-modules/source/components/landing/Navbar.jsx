@@ -25,16 +25,23 @@ const dashboardPathFor = (user) => {
 };
 
 export default function Navbar({ showBack = false, compact = false, focusMode = false, mobileGlobal = false }) {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopViewport, setDesktopViewport] = useState(() => (
+    typeof window !== 'undefined'
+      ? window.matchMedia('(min-width: 768px)').matches
+      : false
+  ));
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (typeof window === 'undefined') return undefined;
+    const query = window.matchMedia('(min-width: 768px)');
+    const update = () => setDesktopViewport(query.matches);
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
   }, []);
 
   useEffect(() => {
@@ -71,6 +78,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
+  const navVisible = mobileGlobal ? !desktopViewport : desktopViewport;
   const mobileLinks = [
     ...mainLinks,
     { to: BOOK_URL, label: 'Book', primary: true },
@@ -81,6 +89,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
   return (
     <motion.nav
+      aria-hidden={!navVisible}
+      inert={!navVisible ? '' : undefined}
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
@@ -90,15 +100,11 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
-    } ${
-      scrolled
-        ? ''
-        : ''
-    }`}>
+      }`}>
       {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
       <div
         className={`av-glass-menu hidden rounded-3xl border md:grid items-center px-8 transition-all duration-500 ease-editorial ${
-        compact ? 'h-12 px-4' : scrolled ? 'h-14' : 'h-16'
+        compact ? 'h-12 px-4' : 'h-16'
         }`}
         style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
       >
@@ -135,7 +141,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                     active ? 'text-foreground' : 'text-foreground/62 hover:text-foreground'
                   }`}
                 >
-                  <span className={`absolute inset-x-0 bottom-1 h-px transition-opacity ${active ? 'bg-foreground/64 opacity-100' : 'bg-foreground/32 opacity-0'}`} />
                   <span className="relative z-10">{link.label}</span>
                 </Link>
               );
@@ -169,9 +174,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}
-            className="av-glass-widget inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-center font-body text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-foreground/66 transition-colors hover:text-foreground"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2.5 text-center font-body text-[11px] font-black uppercase leading-none tracking-[0.22em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
           >
-            Book
+            Book Now
             <ArrowLeft className="h-3.5 w-3.5 rotate-180" strokeWidth={2.2} />
           </PremiumButton>}
         </div>

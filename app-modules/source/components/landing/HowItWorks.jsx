@@ -48,8 +48,8 @@ function StepCard({ step, index, open, onToggle }) {
             <span className="font-body text-[10px] tracking-[0.2em] text-white">{step.n}</span>
           </div>
           <div className="min-w-0 text-left">
-            <p className="font-heading text-xl tracking-[0.08em] text-white uppercase leading-none">{step.title}</p>
-            <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.16em] text-white">{step.preview}</p>
+            <p className="font-heading text-2xl tracking-normal text-white leading-none">{step.title}</p>
+            <p className="mt-1 truncate font-body text-[11px] font-semibold tracking-[0.04em] text-white/76">{step.preview}</p>
           </div>
         </div>
         <motion.div
@@ -87,8 +87,8 @@ export default function HowItWorks() {
           transition={{ duration: 0.95, ease: EASE }}
           className="mb-6 md:mb-10"
         >
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
-            HOW IT WORKS
+          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92]">
+            How it works
           </h2>
         </motion.div>
 

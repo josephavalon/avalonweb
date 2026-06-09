@@ -97,7 +97,7 @@ class CdpClient {
 }
 
 async function waitForChrome() {
-  const deadline = Date.now() + 10_000;
+  const deadline = Date.now() + Number(process.env.CHROME_READY_TIMEOUT_MS || 30_000);
   while (Date.now() < deadline) {
     try {
       await requestJson(`http://127.0.0.1:${PORT}/json/version`);
@@ -306,6 +306,8 @@ try {
   await wait(500);
 
   await clickText(cdp, 'Recovery');
+  await clickText(cdp, 'Next');
+  await clickText(cdp, 'No Add-Ons');
   await clickText(cdp, 'Next');
   await clickText(cdp, 'Next');
   await fillByLabel(cdp, 'Address', '188 King St, San Francisco');

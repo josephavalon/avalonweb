@@ -127,13 +127,13 @@ function OptionButton({ active, label, icon: Icon, onClick }) {
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`av-treatment-card flex min-h-[56px] min-w-0 items-center justify-between gap-2 rounded-[0.9rem] border px-2.5 text-left transition-colors md:min-h-[62px] md:px-3 ${
+      className={`av-treatment-card flex min-h-[62px] min-w-0 items-center justify-between gap-2.5 rounded-[0.9rem] border px-3 text-left transition-colors md:min-h-[68px] md:px-3.5 ${
         active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : ''
       }`}
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">
         {Icon && <Icon className="h-4 w-4 shrink-0 text-foreground/78" strokeWidth={2.35} />}
-        <span className="min-w-0 whitespace-normal font-body text-[10px] font-black uppercase leading-tight tracking-[0.03em] text-foreground/74 md:text-[11px]">{label}</span>
+        <span className="min-w-0 whitespace-normal font-body text-[11px] font-black leading-tight tracking-[0.01em] text-foreground/82 md:text-xs">{label}</span>
       </span>
       {active && <Check className="h-4 w-4 shrink-0" strokeWidth={2.7} />}
     </button>
@@ -142,10 +142,10 @@ function OptionButton({ active, label, icon: Icon, onClick }) {
 
 function Stepper({ label, value, min = 0, max = 12, onChange }) {
   return (
-    <div className="av-treatment-card rounded-[0.95rem] border p-2.5">
+    <div className="av-treatment-card rounded-[0.95rem] border p-3">
       <div className="flex min-w-0 items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="whitespace-normal font-body text-[9px] font-black uppercase leading-tight tracking-[0.03em] text-foreground/56 md:text-[10px]">{label}</p>
+          <p className="whitespace-normal font-body text-[11px] font-black leading-tight tracking-[0.01em] text-foreground/72 md:text-xs">{label}</p>
           <p className="mt-1 font-body text-[1.8rem] font-black leading-none text-foreground md:text-[2rem]">{value}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -418,7 +418,7 @@ export default function Subscription() {
           onConfig={updateConfig}
           onSubmit={startPlan}
         />
-        <section className="mx-auto hidden h-[calc(100svh-7rem)] min-h-0 gap-3 md:grid md:grid-cols-[minmax(300px,420px)_minmax(0,1fr)_minmax(320px,420px)] md:gap-4">
+        <section className="mx-auto hidden h-[calc(100svh-7rem)] min-h-0 gap-3 md:grid md:grid-cols-[minmax(280px,370px)_minmax(0,1fr)_minmax(280px,370px)] md:gap-4">
           <motion.aside
             initial={{ opacity: 1, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -459,8 +459,8 @@ export default function Subscription() {
 
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
-                <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">Cadence</p>
-                <div className="grid grid-cols-1 gap-1.5 2xl:grid-cols-2">
+                <p className="font-body text-xs font-black text-foreground/68">Cadence</p>
+                <div className="grid grid-cols-1 gap-1.5">
                   {CADENCES.map((cadence) => (
                     <OptionButton
                       key={cadence}
@@ -474,8 +474,8 @@ export default function Subscription() {
               </div>
 
               <div className="grid gap-2">
-                <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">IV focus</p>
-                <div className="grid grid-cols-1 gap-1.5 2xl:grid-cols-2">
+                <p className="font-body text-xs font-black text-foreground/68">IV focus</p>
+                <div className="grid grid-cols-1 gap-1.5">
                   {THERAPIES.map((therapy) => (
                     <OptionButton
                       key={therapy.key}
@@ -489,15 +489,15 @@ export default function Subscription() {
               </div>
             </div>
 
-            <div className="mt-3 grid gap-2 md:grid-cols-1 2xl:grid-cols-3">
+            <div className="mt-3 grid gap-2 md:grid-cols-1 xl:grid-cols-3">
               <Stepper label="IV sessions" value={activeConfig.sessions} min={1} max={activeTier.custom ? 12 : 8} onChange={(sessions) => updateConfig({ sessions })} />
               <Stepper label="IV add-ons" value={activeConfig.ivAddons} min={0} max={activeTier.custom ? 12 : 8} onChange={(ivAddons) => updateConfig({ ivAddons })} />
               <Stepper label="IM shots" value={activeConfig.imShots} min={0} max={activeTier.custom ? 12 : 8} onChange={(imShots) => updateConfig({ imShots })} />
             </div>
 
             <div className="mt-3">
-              <p className="font-body text-[9px] font-black uppercase tracking-[0.18em] text-foreground/48">Plan features</p>
-              <div className="mt-2 grid grid-cols-1 gap-1.5 2xl:grid-cols-5">
+              <p className="font-body text-xs font-black text-foreground/68">Plan features</p>
+              <div className="mt-2 grid grid-cols-1 gap-1.5 xl:grid-cols-2">
                 {FEATURE_CONTROLS.map((feature) => (
                   <OptionButton
                     key={feature.key}
