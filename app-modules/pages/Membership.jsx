@@ -121,7 +121,7 @@ function StepHeader({ index, title, sub }) {
   );
 }
 
-function SelectRow({ label, sub, active, onClick }) {
+function SelectRow({ label, sub, price, active, onClick }) {
   return (
     <button
       type="button"
@@ -131,11 +131,14 @@ function SelectRow({ label, sub, active, onClick }) {
         active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : 'hover:border-foreground/24'
       }`}
     >
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1">
         <span className="block truncate font-body text-sm font-black text-foreground">{label}</span>
         {sub && <span className="mt-0.5 block truncate font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/50">{sub}</span>}
       </span>
-      {active && <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.7} />}
+      <span className="flex shrink-0 items-center gap-2">
+        {price && <span className="whitespace-nowrap font-body text-sm font-black text-foreground">{price}</span>}
+        {active && <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.7} />}
+      </span>
     </button>
   );
 }
@@ -183,7 +186,7 @@ function StepOften({ sessions, onSessions }) {
         <SelectRow
           key={n}
           label={`${n} ${n === 1 ? 'session' : 'sessions'} / month`}
-          sub={`from ${money(VITAMIN_IV_PRICE * n)} / mo`}
+          price={`from ${money(VITAMIN_IV_PRICE * n)}/mo`}
           active={sessions === n}
           onClick={() => onSessions(n)}
         />

@@ -13,6 +13,7 @@ import {
   ChevronDown,
   CreditCard,
   Droplets,
+  Dumbbell,
   Flame,
   Home,
   Hotel,
@@ -29,6 +30,7 @@ import {
   ShieldCheck,
   Sparkles,
   Syringe,
+  Thermometer,
   User,
   UserPlus,
   Users,
@@ -500,9 +502,9 @@ function getBookingTherapyByKey(key) {
     immunity: { source: 'immunity', label: 'Immunity' },
     energy: { source: 'energy', label: 'Energy' },
     recovery: { source: 'recovery', label: 'Recovery' },
-    performance: { source: 'energy', label: 'Performance', tagline: 'Performance-focused hydration support.' },
+    performance: { source: 'energy', label: 'Performance', tagline: 'Performance-focused hydration support.', icon: Dumbbell },
     jetlag: { source: 'jetlag', label: 'Jet Lag' },
-    'food-poisoning': { source: 'recovery', label: 'Food Poisoning', tagline: 'Hydration support after GI distress.' },
+    'food-poisoning': { source: 'recovery', label: 'Food Poisoning', tagline: 'Hydration support after GI distress.', icon: Thermometer },
   };
 
   if (key?.startsWith('cbd-')) return buildDoseProduct('cbd', key, `CBD ${key.replace('cbd-', '').toUpperCase()}`);
@@ -518,6 +520,7 @@ function getBookingTherapyByKey(key) {
     label: override.label,
     tabLabel: override.label,
     tagline: override.tagline || source.tagline,
+    icon: override.icon || source.icon,
     parentProtocolKey: source.key,
   };
 }
