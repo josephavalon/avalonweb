@@ -65,7 +65,9 @@ function stripeLineItems(items = [], membership = null, checkoutChargeItems = nu
       ? { interval: 'year' }
       : membership.billing === 'six-month'
         ? { interval: 'month', interval_count: 6 }
-        : { interval: 'month' };
+        : membership.billing === 'three-month'
+          ? { interval: 'month', interval_count: 3 }
+          : { interval: 'month' };
     lineItems.push({
       quantity: 1,
       price_data: {

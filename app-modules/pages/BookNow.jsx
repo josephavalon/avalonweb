@@ -302,6 +302,7 @@ const CLIENT_TYPES = [
 const BOOKING_DEPOSIT_AMOUNT = 50;
 const SUBSCRIPTION_TERMS = [
   { key: 'monthly', label: 'Monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
+  { key: 'three-month', label: '3 months', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
   { key: 'six-month', label: '6 months', months: 6, discount: 0.08, billing: 'six-month' },
   { key: 'annual', label: '12 months', months: 12, discount: 0.15, billing: 'annual' },
 ];
