@@ -63,7 +63,7 @@ const CATEGORIES = [
     icon: Sparkles,
     blurb: 'Advanced, clinician-reviewed',
     gated: true,
-    options: (NAD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `NAD+ ${d.label}`, note: money(d.price), protocol: 'nad' })),
+    options: (NAD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `NAD+ ${d.label}`, note: `${money(d.price)} / session`, price: d.price, protocol: 'nad' })),
   },
   {
     key: 'cbd',
@@ -71,7 +71,7 @@ const CATEGORIES = [
     icon: Leaf,
     blurb: 'Approval-gated category',
     gated: true,
-    options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, note: money(d.price), protocol: 'cbd' })),
+    options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, note: `${money(d.price)} / session`, price: d.price, protocol: 'cbd' })),
   },
 ];
 
@@ -247,7 +247,7 @@ function StepTherapy({ category, therapyKey, onTherapy }) {
     <div className="grid gap-2">
       {category.gated && (
         <p className="rounded-lg border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 font-body text-[11px] font-bold leading-snug text-amber-100">
-          Clinician-reviewed. Final dosing is confirmed at your consult.
+          Priced per dose · clinician-reviewed. Final dosing and billing are confirmed at your consult.
         </p>
       )}
       {category.options.map((opt) => (
@@ -287,27 +287,33 @@ function StepAddons({ ivQty, imQty, onIv, onIm }) {
   );
 }
 
-function StepReview({ tier, ivs, category, therapyLabel, lineItems, monthly, term, onTerm, upfrontTotal, perMonth, onStart }) {
+function StepReview({ tier, sessions, ivs, category, therapyLabel, therapyPrice, lineItems, monthly, term, onTerm, upfrontTotal, perMonth, onStart }) {
   return (
     <div className="flex flex-col lg:h-full lg:min-h-0">
       <div className="pr-0.5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">Plan summary</p>
         <dl className="mt-2 grid gap-1.5 font-body text-[13px]">
-          <div className="flex items-baseline justify-between gap-3 border-b border-foreground/10 pb-1.5">
+          <div className="flex items-baseline justify-between gap-3">
             <dt className="font-bold text-foreground/64">Plan</dt>
-            <dd className="text-right font-black text-foreground">{tier.name} · {money(tier.price)}/mo</dd>
+            <dd className="text-right font-black text-foreground">{tier.name} · {sessions} {sessions === 1 ? 'session' : 'sessions'}/mo</dd>
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="font-bold text-foreground/64">{tier.sessions} {tier.sessions === 1 ? 'session' : 'sessions'} / mo</dt>
-            <dd className="text-right font-bold text-foreground/72">{ivs} IV / session</dd>
+            <dt className="font-bold text-foreground/64">Therapy</dt>
+            <dd className="text-right font-bold text-foreground/72">{therapyLabel || '—'}</dd>
           </div>
+          {therapyPrice != null && (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="font-bold text-foreground/64">Per dose</dt>
+              <dd className="text-right font-bold text-foreground/72">{money(therapyPrice)} × {sessions}</dd>
+            </div>
+          )}
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="font-bold text-foreground/64">Base therapy</dt>
-            <dd className="text-right font-bold text-foreground/72">{therapyLabel || '—'}{category?.gated ? ' · review' : ''}</dd>
+            <dt className="font-bold text-foreground/64">IVs / session</dt>
+            <dd className="text-right font-bold text-foreground/72">× {ivs}</dd>
           </div>
           {lineItems.length > 0 && (
             <div className="mt-1 border-t border-foreground/10 pt-1.5">
-              <p className="mb-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/40">Add-ons</p>
+              <p className="mb-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/40">Add-ons (20% subscriber rate)</p>
               {lineItems.map((li) => (
                 <div key={li.key} className="flex items-baseline justify-between gap-3">
                   <dt className="truncate font-bold text-foreground/64">{li.qty}× {li.label}</dt>
@@ -316,6 +322,10 @@ function StepReview({ tier, ivs, category, therapyLabel, lineItems, monthly, ter
               ))}
             </div>
           )}
+          <div className="mt-1 flex items-baseline justify-between gap-3 border-t border-foreground/10 pt-1.5">
+            <dt className="font-black text-foreground">Monthly</dt>
+            <dd className="text-right font-black text-foreground">{money(monthly)}</dd>
+          </div>
         </dl>
 
         <div className="mt-3">
@@ -416,10 +426,14 @@ export default function Subscription() {
     return items;
   }, [ivQty, imQty]);
 
-  const monthly = useMemo(
-    () => Number(tier.price || 0) + lineItems.reduce((sum, li) => sum + li.price * li.qty, 0),
-    [tier, lineItems],
-  );
+  const addOnsTotal = lineItems.reduce((sum, li) => sum + li.price * li.qty, 0);
+  const sessions = tier.sessions || 1;
+  // IV Vitamins use the bundled tier price; NAD+/CBD are priced per dose x sessions
+  // (the $199-899 tiers are vitamin-IV only). More IVs per session multiplies the
+  // therapy cost. Add-ons are flat monthly at the 20% subscriber rate.
+  const therapyPrice = category.gated ? Number(therapyOption?.price || 0) : null;
+  const baseMonthly = category.gated ? therapyPrice * sessions : Number(tier.price || 0);
+  const monthly = baseMonthly * ivs + addOnsTotal;
   const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
   const perMonth = Math.round(upfrontTotal / term.months);
 
@@ -450,9 +464,11 @@ export default function Subscription() {
     review: (
       <StepReview
         tier={tier}
+        sessions={sessions}
         ivs={ivs}
         category={category}
         therapyLabel={therapyOption?.label}
+        therapyPrice={therapyPrice}
         lineItems={lineItems}
         monthly={monthly}
         term={term}
