@@ -212,7 +212,7 @@ function ProtocolList({ id, sessions, includeCustom = false }) {
         initial="hidden"
         animate="show"
         variants={premiumListContainer(0.04, 0.05)}
-        className="relative grid gap-2 py-3 md:grid-cols-2 md:gap-3 md:py-4"
+        className="relative grid grid-cols-1 gap-2 py-3 md:gap-3 md:py-4"
       >
         <AnimatePresence mode="popLayout">
           {sessions.map((session, index) => (

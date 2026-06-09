@@ -4804,7 +4804,7 @@ export default function BookNow() {
             <div className="grid h-full min-h-0 grid-rows-9 gap-1 overflow-hidden md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
             </div>
-            <div className="hidden h-full min-h-0 grid-cols-2 content-start gap-1.5 overflow-y-auto pb-2 pr-1 md:grid md:gap-2">
+            <div className="hidden h-full min-h-0 grid-cols-1 content-start gap-1.5 overflow-y-auto pb-2 pr-1 md:grid md:gap-2">
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
             </div>
           </div>
@@ -4816,7 +4816,7 @@ export default function BookNow() {
           <p className={`${microLabelClass} pt-0.5 text-left tracking-[0.22em] md:pt-1`}>
             {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
           </p>
-          <div className="grid min-h-0 grid-cols-2 content-start gap-1.5 overflow-visible pb-0 pr-0 md:gap-2">
+          <div className="grid min-h-0 grid-cols-1 content-start gap-1.5 overflow-visible pb-0 pr-0 md:gap-2">
             {activeTherapies.map((item) => renderTherapyCard(item))}
           </div>
         </div>
