@@ -32,7 +32,6 @@ The "60 Second Checkout / No Hidden Fees" promise is a **contract**, not marketi
 
 ### 2. Safety earns the booking
 Clinical credibility is the permission to be fast. It must be visible without slowing anyone down.
-- Lead with **RN-administered · clinical review · registered nurses** — present on hero, booking, and confirmation.
 - **No dark patterns.** Transparent pricing: deposit ($50) and balance shown before commit; no hidden fees; no fake scarcity.
 - Honest medical framing for dose-gated/approval-gated protocols (NAD+, CBD): say "clinical review required," never hide it.
 - Destructive or irreversible actions (cancel, reschedule) get a confirm or an undo window.
