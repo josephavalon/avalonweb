@@ -335,12 +335,43 @@ function normalizeTypedStreet(value) {
     .trim();
 }
 
+function collapseRepeatedAddress(value) {
+  const text = normalizeTypedStreet(value);
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  const midpoint = Math.floor(text.length / 2);
+  if (
+    midpoint >= 6 &&
+    text.length % 2 === 0 &&
+    lower.slice(0, midpoint).trim() === lower.slice(midpoint).trim()
+  ) {
+    return normalizeTypedStreet(text.slice(0, midpoint));
+  }
+  const tokens = text.split(' ').filter(Boolean);
+  const tokenMidpoint = Math.floor(tokens.length / 2);
+  if (
+    tokenMidpoint >= 2 &&
+    tokens.length % 2 === 0 &&
+    tokens.slice(0, tokenMidpoint).join(' ').toLowerCase() === tokens.slice(tokenMidpoint).join(' ').toLowerCase()
+  ) {
+    return normalizeTypedStreet(tokens.slice(0, tokenMidpoint).join(' '));
+  }
+  return text;
+}
+
+function cleanBookingAddress(value) {
+  return collapseRepeatedAddress(value)
+    .replace(/\s+,/g, ',')
+    .replace(/,+/g, ',')
+    .trim();
+}
+
 function buildTypedAddressSuggestion(address, zip, locationType = 'home') {
-  const typed = normalizeTypedStreet(address);
+  const typed = cleanBookingAddress(address);
   if (typed.length < 3) return null;
   if (!/\d/.test(typed)) return null;
   const inferredZip = extractZip(typed);
-  const typedAddress = normalizeTypedStreet(typed.replace(/\b\d{5}(?:-\d{4})?\b/g, ''));
+  const typedAddress = cleanBookingAddress(typed.replace(/\b\d{5}(?:-\d{4})?\b/g, ''));
   const completedAddress = /,\s*[A-Za-z]/.test(typedAddress)
     ? typedAddress
     : `${typedAddress}, San Francisco, CA`;
@@ -406,7 +437,7 @@ function realValue(value) {
 }
 
 function realAddress(value) {
-  const text = realValue(value);
+  const text = cleanBookingAddress(realValue(value));
   if (!text || /address pending|client address|2100\s+webster/i.test(text)) return '';
   return text;
 }
@@ -1052,13 +1083,13 @@ function DesktopOrderRail({
   ];
 
   return (
-    <aside className="relative h-full min-h-0 overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_72px_hsl(var(--foreground)/0.11)] backdrop-blur-2xl 2xl:p-3">
+    <aside className="relative h-full min-h-0 overflow-x-hidden overflow-y-auto rounded-[1.25rem] border border-foreground/10 bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_72px_hsl(var(--foreground)/0.11)] backdrop-blur-2xl 2xl:p-3">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
         <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Order</p>
         <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[74px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[82px_minmax(0,1fr)] 2xl:py-2">
+            <div key={label} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[76px_minmax(0,1fr)] 2xl:py-2">
               <p className="font-body text-[10px] font-black text-foreground/58 2xl:text-[11px]">{label}</p>
               <p className="min-w-0 break-words text-right font-body text-[10px] font-bold leading-snug text-foreground/82 2xl:text-[11px]">{value}</p>
             </div>
@@ -1079,7 +1110,7 @@ function DesktopOrderRail({
         <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[9px] font-black leading-snug text-foreground/64 2xl:text-[10px]">
           {CLINICAL_REVIEW_NOTICE}
         </p>
-        <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[72px_1fr] 2xl:grid-cols-[84px_1fr]' : 'grid-cols-1'}`}>
+        <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[70px_1fr] 2xl:grid-cols-[76px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
               type="button"
@@ -1140,8 +1171,8 @@ function DesktopBookingFrame({
   children,
 }) {
   return (
-    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[820px] min-h-[520px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
-      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(280px,340px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(290px,350px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(310px,370px)] 2xl:gap-6 2xl:p-6">
+    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[860px] min-h-[540px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
+      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(248px,300px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,310px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
             {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
@@ -1158,7 +1189,7 @@ function DesktopBookingFrame({
           )}
           <motion.div
             key={step}
-            className="relative min-h-0 overflow-y-auto overscroll-contain pr-1"
+            className="relative min-h-0 overflow-y-auto overscroll-contain pb-2 pr-1"
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.16, ease: EASE }}
@@ -2426,7 +2457,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
             label="Name"
             value={state.name}
             onChange={(value) => updateContactField('name', value)}
-            placeholder="Alex Morgan"
+            placeholder="Full name"
             autoComplete="name"
             actionLabel={hasSavedContact ? 'Saved' : ''}
             onAction={useSavedContact}
@@ -2438,7 +2469,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
           label="Phone"
           value={state.phone}
           onChange={(value) => updateContactField('phone', value)}
-          placeholder="(415) 555-0123"
+          placeholder="Phone number"
           autoComplete="tel"
           inputMode="tel"
           type="tel"
@@ -2460,7 +2491,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
             label="Email"
             value={state.email}
             onChange={(value) => updateContactField('email', value)}
-            placeholder="you@example.com"
+            placeholder="Email"
             autoComplete="email"
             inputMode="email"
             type="email"
@@ -2561,7 +2592,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
               label="Name"
               value={state.name}
               onChange={(value) => updateContactField('name', value)}
-              placeholder="Alex Morgan"
+              placeholder="Full name"
               autoComplete="name"
               actionLabel={hasSavedContact ? 'Saved' : ''}
               onAction={useSavedContact}
@@ -2573,7 +2604,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
             label="Phone"
             value={state.phone}
             onChange={(value) => updateContactField('phone', value)}
-            placeholder="(415) 555-0123"
+            placeholder="Phone number"
             autoComplete="tel"
             inputMode="tel"
             type="tel"
@@ -2595,7 +2626,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
               label="Email"
               value={state.email}
               onChange={(value) => updateContactField('email', value)}
-              placeholder="you@example.com"
+              placeholder="Email"
               autoComplete="email"
               inputMode="email"
               type="email"
@@ -3125,24 +3156,26 @@ export default function BookNow() {
   const lastBooking = useMemo(() => readLastBooking(), []);
   const savedContactProfile = useMemo(() => {
     const savedContact = lastBooking?.contact || {};
+    const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
     return {
-      name: realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || fallback.name || '',
-      email: realValue(savedContact.email) || realValue(clientProfile.email) || fallback.email || '',
-      phone: realValue(savedContact.phone) || realValue(clientProfile.phone) || fallback.phone || '',
-      dob: realValue(savedContact.dob) || realValue(clientProfile.dob) || '',
-      emergencyContact: realValue(savedContact.emergencyContact) || realValue(clientProfile.emergencyContact) || '',
+      name: realValue(savedContact.name) || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || '',
+      email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || '',
+      phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || '',
+      dob: realValue(savedContact.dob) || realValue(profileSource.dob) || '',
+      emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '',
     };
   }, [clientProfile, lastBooking, signedInClient]);
   const savedVisitAddress = useMemo(() => {
+    const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
-    const address = realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress) || realAddress(fallback.address);
+    const address = realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
     if (!address) return null;
     return {
       label: 'Saved address',
       address,
-      zip: realValue(lastBooking?.zip) || realValue(clientProfile.zip) || fallback.zip || '',
-      locationType: lastBooking?.locationType || clientProfile.locationType || fallback.locationType || 'home',
+      zip: realValue(lastBooking?.zip) || realValue(profileSource.zip) || fallback.zip || '',
+      locationType: lastBooking?.locationType || profileSource.locationType || fallback.locationType || 'home',
     };
   }, [clientProfile, lastBooking, signedInClient]);
   const profileGfe = useMemo(() => resolveGfeRequirement({
@@ -3181,23 +3214,24 @@ export default function BookNow() {
     };
     const savedProductKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(savedWebstore.productKey) ? savedWebstore.productKey : '';
     const savedContact = shouldResetDraft ? {} : lastBooking?.contact || {};
+    const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
     const savedAddress = shouldResetDraft
       ? realAddress(fallback.address)
-      : savedWebstoreAddress || realAddress(lastBooking?.address) || realAddress(clientProfile.defaultAddress) || realAddress(fallback.address);
+      : savedWebstoreAddress || realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
     const returningClient = signedInClient;
     return {
       ...defaultState,
       clientType: returningClient ? 'returning' : 'new',
       clinicalReviewOnFile: returningClient && !profileGfe.required,
       address: savedAddress || defaultState.address,
-      zip: savedAddress ? realValue(lastBooking?.zip) || realValue(clientProfile.zip) || fallback.zip || defaultState.zip : defaultState.zip,
+      zip: savedAddress ? realValue(lastBooking?.zip) || realValue(profileSource.zip) || fallback.zip || defaultState.zip : defaultState.zip,
       locationType: lastBooking?.locationType || fallback.locationType || defaultState.locationType,
-      name: realValue(savedContact.name) || realValue([clientProfile.firstName, clientProfile.lastName].filter(Boolean).join(' ')) || fallback.name || defaultState.name,
-      email: realValue(savedContact.email) || realValue(clientProfile.email) || fallback.email || defaultState.email,
-      phone: realValue(savedContact.phone) || realValue(clientProfile.phone) || fallback.phone || defaultState.phone,
-      dob: realValue(savedContact.dob) || realValue(clientProfile.dob) || defaultState.dob,
-      emergencyContact: realValue(savedContact.emergencyContact) || realValue(clientProfile.emergencyContact) || defaultState.emergencyContact,
+      name: realValue(savedContact.name) || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || defaultState.name,
+      email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || defaultState.email,
+      phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || defaultState.phone,
+      dob: realValue(savedContact.dob) || realValue(profileSource.dob) || defaultState.dob,
+      emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || defaultState.emergencyContact,
       ...savedWebstore,
       outcome: initialOutcome?.key || savedWebstore.outcome || defaultState.outcome,
       productKey: initialProtocolKey || (shouldResumeDraft ? savedProductKey : '') || defaultState.productKey,
@@ -3501,10 +3535,11 @@ export default function BookNow() {
 
   const setAddressValue = (value) => {
     setError('');
-    const nextZip = extractZip(value);
+    const cleanAddress = cleanBookingAddress(value);
+    const nextZip = extractZip(cleanAddress);
     setState((current) => ({
       ...current,
-      address: value,
+      address: cleanAddress,
       zip: nextZip || current.zip,
     }));
   };
@@ -3538,7 +3573,7 @@ export default function BookNow() {
       baseSubtotal,
       requestedGuests: guestCount,
       locationType: state.locationType,
-      address: state.address,
+      address: cleanBookingAddress(state.address),
       zip: state.zip,
       eventType: state.eventType,
       time: bookingTimeSummary(state),
@@ -3725,11 +3760,13 @@ export default function BookNow() {
   };
 
   const chooseAddressSuggestion = (item) => {
-    const nextZip = item.zip || extractZip(item.address) || state.zip;
+    if (!item) return;
+    const cleanAddress = cleanBookingAddress(item.address);
+    const nextZip = item.zip || extractZip(cleanAddress) || state.zip;
     setError('');
     setState((current) => ({
       ...current,
-      address: item.address,
+      address: cleanAddress,
       zip: nextZip || current.zip,
       locationType: item.locationType,
     }));
@@ -4489,8 +4526,8 @@ export default function BookNow() {
     const menuLabel = copy.label;
     const longLabel = menuLabel.length > 11;
     const titleSizeClass = longLabel
-      ? 'md:text-[1.02rem] xl:text-[1.08rem] 2xl:text-[1.16rem]'
-      : 'md:text-[1.12rem] xl:text-[1.2rem] 2xl:text-[1.32rem]';
+      ? 'md:text-[1.02rem] xl:text-[1.12rem] 2xl:text-[1.2rem]'
+      : 'md:text-[1.14rem] xl:text-[1.26rem] 2xl:text-[1.36rem]';
 
     return (
       <button
@@ -4498,7 +4535,7 @@ export default function BookNow() {
         type="button"
         onClick={() => chooseTherapyMenuProduct(item.key)}
         aria-pressed={active}
-        className={`${panelCardClass} relative grid min-h-[78px] grid-cols-[42px_minmax(0,1fr)_auto_22px] items-center gap-2.5 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 md:min-h-[104px] md:grid-cols-[52px_minmax(0,1fr)_auto_26px] md:rounded-[1.05rem] md:px-4 md:py-3 ${
+        className={`${panelCardClass} relative grid min-h-[78px] grid-cols-[42px_minmax(0,1fr)_auto_22px] items-center gap-2.5 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 md:min-h-[108px] md:grid-cols-[52px_minmax(0,1fr)_72px_26px] md:rounded-[1.05rem] md:px-4 md:py-3 xl:grid-cols-[52px_minmax(0,1fr)_80px_26px] ${
           active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
@@ -4511,7 +4548,7 @@ export default function BookNow() {
             {menuLabel}
           </span>
         </span>
-        <span className="relative whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.18rem] xl:text-[1.3rem] 2xl:text-[1.42rem]">
+        <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.16rem] xl:text-[1.24rem] 2xl:text-[1.34rem]">
           {currency(protocolPrice(item))}
         </span>
         <ArrowRight className="relative h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.45} />
@@ -4577,8 +4614,8 @@ export default function BookNow() {
     const Icon = item.icon || Plus;
     const longLabel = item.label.length > 16;
     const titleSizeClass = longLabel
-      ? 'md:text-[1.02rem] xl:text-[1.1rem] 2xl:text-[1.18rem]'
-      : 'md:text-[1.12rem] xl:text-[1.2rem] 2xl:text-[1.32rem]';
+      ? 'md:text-[1rem] xl:text-[1.08rem] 2xl:text-[1.14rem]'
+      : 'md:text-[1.08rem] xl:text-[1.16rem] 2xl:text-[1.24rem]';
 
     return (
       <button
@@ -4586,7 +4623,7 @@ export default function BookNow() {
         type="button"
         onClick={() => toggleAddon(item.label)}
         aria-pressed={active}
-        className={`${panelCardClass} relative grid min-h-[78px] grid-cols-[42px_minmax(0,1fr)_auto_26px] items-center gap-2.5 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 min-[390px]:min-h-[82px] md:min-h-[104px] md:grid-cols-[52px_minmax(0,1fr)_auto_28px] md:rounded-[1.05rem] md:px-4 md:py-3 ${
+        className={`${panelCardClass} relative grid min-h-[78px] grid-cols-[42px_minmax(0,1fr)_auto_26px] items-center gap-2.5 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 min-[390px]:min-h-[82px] md:min-h-[104px] md:grid-cols-[52px_minmax(0,1fr)_76px_28px] md:rounded-[1.05rem] md:px-4 md:py-3 xl:grid-cols-[52px_minmax(0,1fr)_86px_28px] ${
           active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
         }`}
       >
@@ -4599,7 +4636,7 @@ export default function BookNow() {
             {item.label}
           </span>
         </span>
-        <span className="relative whitespace-nowrap font-heading text-[1.12rem] leading-none text-foreground/92 min-[390px]:text-[1.24rem] md:text-[1.18rem] xl:text-[1.26rem]">
+        <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.12rem] leading-none text-foreground/92 min-[390px]:text-[1.24rem] md:text-[1.08rem] xl:text-[1.16rem]">
           + {currency(item.price)}
         </span>
         {active ? (
@@ -4641,7 +4678,7 @@ export default function BookNow() {
           <ChevronDown className={`relative h-5 w-5 shrink-0 text-foreground transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.55} />
         </button>
         {open && (
-          <div className="grid grid-cols-1 gap-1.5 border-t border-foreground/8 p-1.5 min-[430px]:grid-cols-2 md:grid-cols-2 md:gap-2 md:p-2 2xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-1.5 border-t border-foreground/8 p-1.5 min-[430px]:grid-cols-2 md:grid-cols-2 md:gap-2 md:p-2">
             {group.items.map((item) => renderAddonTile(group, item))}
           </div>
         )}
@@ -4767,7 +4804,7 @@ export default function BookNow() {
             <div className="grid h-full min-h-0 grid-rows-9 gap-1 overflow-hidden md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
             </div>
-            <div className="hidden h-full min-h-0 grid-cols-3 grid-rows-3 gap-1.5 overflow-hidden pb-0 pr-0 md:grid md:gap-2">
+            <div className="hidden h-full min-h-0 grid-cols-2 content-start gap-1.5 overflow-y-auto pb-2 pr-1 md:grid md:gap-2">
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
             </div>
           </div>
@@ -4911,7 +4948,7 @@ export default function BookNow() {
                 label="Name"
                 value={state.name}
                 onChange={(value) => updateInlineContactField('name', value)}
-                placeholder="Alex Morgan"
+                placeholder="Full name"
                 autoComplete="name"
                 compact
                 actionLabel={hasSavedContactProfile ? 'Saved' : ''}
@@ -4923,7 +4960,7 @@ export default function BookNow() {
               label="Phone"
               value={state.phone}
               onChange={(value) => updateInlineContactField('phone', value)}
-              placeholder="(415) 555-0123"
+              placeholder="Phone number"
               autoComplete="tel"
               inputMode="tel"
               type="tel"
@@ -4945,7 +4982,7 @@ export default function BookNow() {
                 label="Email"
                 value={state.email}
                 onChange={(value) => updateInlineContactField('email', value)}
-                placeholder="you@example.com"
+                placeholder="Email"
                 autoComplete="email"
                 inputMode="email"
                 type="email"

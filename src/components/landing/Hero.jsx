@@ -14,7 +14,7 @@ const HERO_ACTIONS = [
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },
   { label: 'Registered Nurses', icon: ShieldPlus },
-  { label: 'Clinical Review', icon: ShieldPlus },
+  { label: 'Same Day Service', icon: ShieldPlus },
   { label: 'Your location', icon: Home },
   { label: '60 Second Checkout', icon: Zap },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
