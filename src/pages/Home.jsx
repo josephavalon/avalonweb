@@ -22,19 +22,23 @@ export default function Home() {
 
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent">
-      <Navbar />
+      <header>
+        <Navbar />
+      </header>
 
       {/* ── ATF — fills viewport ── */}
-      <Hero />
+      <main>
+        <Hero />
 
-      {/* ── Below fold — per-card whileInView animations handle entrance ── */}
-      <div className="relative z-10">
-        <Suspense fallback={null}>
-          <HowItWorks />
-          <TreatmentsTeaser />
-          <MembershipSection />
-        </Suspense>
-      </div>
+        {/* ── Below fold — per-card whileInView animations handle entrance ── */}
+        <div className="relative z-10">
+          <Suspense fallback={null}>
+            <HowItWorks />
+            <TreatmentsTeaser />
+            <MembershipSection />
+          </Suspense>
+        </div>
+      </main>
       <div className="pb-24 md:pb-0">
         <Suspense fallback={null}>
           <Footer />
