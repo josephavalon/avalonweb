@@ -36,9 +36,6 @@ const TERMS = [
   { key: 'annual', label: '12 months', months: 12, discount: 0.15 },
 ];
 
-// Sessions/month maps to a subscription key only for the /book handoff prefill.
-const SUBSCRIPTION_KEY_BY_SESSIONS = { 1: 'starter', 2: 'pro', 3: 'pro', 4: 'vip' };
-
 const money = (value) => `$${Math.round(Number(value || 0)).toLocaleString()}`;
 
 function slug(value) {
@@ -436,9 +433,11 @@ export default function Subscription() {
   const perMonth = Math.round(upfrontTotal / term.months);
 
   const startPlan = () => {
+    // Bill the builder's computed monthly via the custom-price checkout path.
     const params = new URLSearchParams({
       reset: '1',
-      subscription: SUBSCRIPTION_KEY_BY_SESSIONS[sessions] || 'pro',
+      subscription: 'custom',
+      price: String(Math.round(monthly)),
       term: term.key,
       protocol: therapyOption?.protocol || 'recovery',
       ivs: String(ivs),
