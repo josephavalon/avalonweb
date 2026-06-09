@@ -1550,6 +1550,24 @@ body,
   overflow-x: clip;
 }
 
+/* ===== Mobile readability floor — no text below 12px on phones =====
+   The UI uses ~1,800 text-[7..11px] micro-labels; on a phone they're hard to
+   read. Raise every sub-12px text utility to 12px at <=767px so nothing on
+   mobile is squint-text. Desktop keeps its denser scale. (DESIGN.md: nothing
+   under 12px on mobile.) */
+@media (max-width: 767px) {
+  .text-\[7px\],
+  .text-\[8px\],
+  .text-\[9px\],
+  .text-\[10px\],
+  .text-\[11px\],
+  .text-caption,
+  .text-micro,
+  .text-eyebrow {
+    font-size: 12px !important;
+  }
+}
+
 @media (max-width: 767px), (pointer: coarse) {
   button,
   input,

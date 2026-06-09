@@ -1923,7 +1923,7 @@ function hasDob(value) {
   return Boolean(date) && !Number.isNaN(date.getTime()) && date < new Date();
 }
 
-function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false }) {
+function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
   return (
     <div className="block">
       <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
@@ -1942,6 +1942,8 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
       </div>
       <input
         aria-label={label}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         type={type}
         required={required}
         value={value}
@@ -2708,7 +2710,7 @@ function FastReviewSurface({
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
       {error && (
-        <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+        <div role="alert" id="booking-visit-error" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
           <p className="font-body text-sm font-black">{error}</p>
           <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.08em]">
             Text us
@@ -2768,6 +2770,8 @@ function FastReviewSurface({
               autoFocus={!state.address}
               actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
               onAction={() => onAddressSuggestion(savedVisitAddress)}
+              invalid={Boolean(error) && !state.address.trim()}
+              describedBy={error ? 'booking-visit-error' : undefined}
               required
             />
             <AddressPrediction suggestion={topAddressSuggestion} onUse={onAddressSuggestion} compact />
