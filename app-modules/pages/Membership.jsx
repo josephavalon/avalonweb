@@ -146,11 +146,12 @@ function Stepper({ label, value, min = 0, max = 12, onChange }) {
       <div className="flex min-w-0 items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="whitespace-normal font-body text-[11px] font-black leading-tight tracking-[0.01em] text-foreground/72 md:text-xs">{label}</p>
-          <p className="mt-1 font-body text-[1.8rem] font-black leading-none text-foreground md:text-[2rem]">{value}</p>
+          <p className="mt-1 font-body text-[1.8rem] font-black leading-none text-foreground md:text-[2rem]" aria-live="polite" aria-atomic="true"><span className="sr-only">{label}: </span>{value}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
+            aria-label={`Decrease ${label}`}
             onClick={() => onChange(Math.max(min, value - 1))}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/14 bg-background/34 text-foreground"
           >
@@ -158,6 +159,7 @@ function Stepper({ label, value, min = 0, max = 12, onChange }) {
           </button>
           <button
             type="button"
+            aria-label={`Increase ${label}`}
             onClick={() => onChange(Math.min(max, value + 1))}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/14 bg-background/34 text-foreground"
           >
@@ -248,9 +250,9 @@ function MobilePlansFlow({
               <div key={key} className="av-treatment-card rounded-xl border p-2">
                 <p className="truncate font-body text-[7px] font-black uppercase tracking-[0.06em] text-foreground/48">{label}</p>
                 <div className="mt-1.5 flex items-center justify-between gap-1">
-                  <button type="button" onClick={() => onConfig({ [key]: Math.max(min, activeConfig[key] - 1) })} className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/14"><Minus className="h-3 w-3" /></button>
-                  <span className="font-body text-xl font-black leading-none text-foreground">{activeConfig[key]}</span>
-                  <button type="button" onClick={() => onConfig({ [key]: Math.min(activeTier.custom ? 12 : 8, activeConfig[key] + 1) })} className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/14"><Plus className="h-3 w-3" /></button>
+                  <button type="button" aria-label={`Decrease ${label}`} onClick={() => onConfig({ [key]: Math.max(min, activeConfig[key] - 1) })} className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/14"><Minus className="h-3 w-3" /></button>
+                  <span className="font-body text-xl font-black leading-none text-foreground" aria-live="polite" aria-atomic="true"><span className="sr-only">{label}: </span>{activeConfig[key]}</span>
+                  <button type="button" aria-label={`Increase ${label}`} onClick={() => onConfig({ [key]: Math.min(activeTier.custom ? 12 : 8, activeConfig[key] + 1) })} className="flex h-7 w-7 items-center justify-center rounded-full border border-foreground/14"><Plus className="h-3 w-3" /></button>
                 </div>
               </div>
             ))}
