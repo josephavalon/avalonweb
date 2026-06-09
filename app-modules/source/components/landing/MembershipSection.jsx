@@ -8,22 +8,22 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const MotionLink = motion.create(Link);
 
+// Per-IV pricing so the home teaser matches the /subscription builder
+// ($250 per vitamin IV x sessions/month). Avoids showing stale tier prices.
+const VITAMIN_IV_PRICE = 250;
 const TIERS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
   ...tier,
-  price: `$${tier.price.toLocaleString()}`,
+  price: `$${(tier.sessions * VITAMIN_IV_PRICE).toLocaleString()}`,
   href: '/subscription',
 }));
 
 function planDetails(tier) {
   const details = [
     `${tier.sessions} visit${tier.sessions === 1 ? '' : 's'} per month`,
-    `${tier.discount} off add-ons`,
+    'Any therapy · add-ons a la carte',
+    'Save up to 15% paying upfront',
     'Priority booking window',
   ];
-
-  if (tier.shotCredit && tier.shotCredit !== 'None') {
-    details.splice(2, 0, `${tier.shotCredit} IM injection of your choice`);
-  }
 
   if (tier.key === 'vip') {
     details.push('Dedicated registered nurse');
@@ -59,6 +59,7 @@ function TierRow({ tier, index, open, onToggle }) {
 
         <div className="flex shrink-0 items-center gap-3 text-right">
           <div>
+            <span className="block font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">From</span>
             <span className="font-heading text-2xl leading-none tracking-wide text-foreground/72">{tier.price}</span>
             {tier.unit && <span className="ml-0.5 font-body text-[10px] text-foreground/32">{tier.unit}</span>}
           </div>
