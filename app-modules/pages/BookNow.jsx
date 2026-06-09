@@ -1806,7 +1806,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                 </span>
               </button>
               <SmoothDisclosure open={open}>
-                <div className="relative grid grid-cols-2 gap-1.5 border-t border-foreground/8 pt-2.5 sm:grid-cols-1 md:grid-cols-2">
+                <div className="relative grid grid-cols-1 gap-1.5 border-t border-foreground/8 pt-2.5">
                   {group.items.map((item) => {
                     const active = state.addOns.includes(item.label);
                     const Icon = item.icon || Plus;
@@ -1815,24 +1815,24 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                         key={`${group.key}-${item.label}`}
                         type="button"
                         onClick={() => onToggle(item.label)}
-                        className={`relative flex min-h-[96px] flex-col justify-between overflow-hidden rounded-[0.875rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+                        className={`relative flex min-h-[60px] items-center justify-between gap-3 overflow-hidden rounded-[0.875rem] border px-3.5 py-2.5 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
                           active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/48 text-foreground hover:border-foreground/24'
                         }`}
                       >
                         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
-                        <span className="relative flex items-center justify-between gap-2">
+                        <span className="relative flex min-w-0 items-center gap-3">
                           <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
                             active ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/12 bg-foreground/[0.05]'
                           }`}>
                             <Icon className="h-4.5 w-4.5" strokeWidth={2.45} />
                           </span>
-                          {active ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.7} /> : <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />}
-                        </span>
-                        <span className="relative mt-2 min-w-0">
                           <span className="block truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal md:text-[1.6rem]">{item.label}</span>
-                          <span className={`mt-0.5 block truncate font-body text-base font-black ${active ? 'text-foreground/80' : 'text-foreground/72'}`}>
+                        </span>
+                        <span className="relative flex shrink-0 items-center gap-2.5">
+                          <span className={`font-body text-base font-black ${active ? 'text-foreground/80' : 'text-foreground/72'}`}>
                             {currency(item.price)}
                           </span>
+                          {active ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.7} /> : <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />}
                         </span>
                       </button>
                     );
@@ -4678,7 +4678,7 @@ export default function BookNow() {
           <ChevronDown className={`relative h-5 w-5 shrink-0 text-foreground transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.55} />
         </button>
         {open && (
-          <div className="grid grid-cols-1 gap-1.5 border-t border-foreground/8 p-1.5 min-[430px]:grid-cols-2 md:grid-cols-2 md:gap-2 md:p-2">
+          <div className="grid grid-cols-1 gap-1.5 border-t border-foreground/8 p-1.5 md:gap-2 md:p-2">
             {group.items.map((item) => renderAddonTile(group, item))}
           </div>
         )}
