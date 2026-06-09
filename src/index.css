@@ -540,7 +540,12 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
 .av-page-stage {
   opacity: 1;
   transform-origin: 50% 0;
-  will-change: opacity, transform, filter;
+  /* will-change must NOT include transform/filter: those make this element a
+     containing block for position:fixed descendants, which un-pins the fixed
+     Navbar (it's rendered inside the page, inside this PageTransition stage).
+     The nav then scrolls away and its links become unclickable after scroll.
+     opacity-only is safe (no containing block) and still hints the fade. */
+  will-change: opacity;
 }
 
 .av-page-stage-concierge {
