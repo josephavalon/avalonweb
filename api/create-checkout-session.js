@@ -261,6 +261,14 @@ export default async function handler(req, res) {
 
     const sessionParams = {
       mode: sessionMode,
+      // Card only. This surfaces the Apple Pay + Google Pay express buttons
+      // (once the Apple Pay domain is verified and the wallets are enabled in
+      // the Stripe Dashboard) and DISABLES Stripe Link. Without this, Checkout
+      // falls back to the dashboard's automatic methods, and because we pass
+      // customer_email below, Link auto-prompts a "Confirm it's you" OTP that
+      // hijacks the payment UI before any wallet renders.
+      // TODO: add 'amazon_pay' here once it is activated in the Stripe Dashboard.
+      payment_method_types: ['card'],
       customer_email: contact.email,
       line_items,
       allow_promotion_codes: true,
