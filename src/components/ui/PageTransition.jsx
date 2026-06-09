@@ -8,25 +8,27 @@ function transitionKind(from, to) {
   return 'standard';
 }
 
+// NOTE: do NOT animate `filter` here. A non-`none` filter (even blur(0px))
+// makes .av-page-stage a containing block for position:fixed descendants,
+// which un-pins the fixed Navbar so it scrolls away and its links die after
+// scroll. The blur(0px) was a visual no-op anyway. Keep opacity/transform only.
 const stageMotion = {
   initial: (kind) => {
     if (kind === 'booking-entry') {
-      return { opacity: 1, y: 6, scale: 1, filter: 'blur(0px)' };
+      return { opacity: 1, y: 6, scale: 1 };
     }
-    return { opacity: 1, y: 0, filter: 'blur(0px)' };
+    return { opacity: 1, y: 0 };
   },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
     transition: { duration: 0.32, ease: EASE },
   },
   exit: (kind) => ({
     opacity: 1,
     y: kind === 'booking-entry' ? -6 : -8,
     scale: 1,
-    filter: 'blur(0px)',
     transition: { duration: 0.16, ease: EASE },
   }),
 };
