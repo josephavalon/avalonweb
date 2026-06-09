@@ -14,35 +14,36 @@ import {
 import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
-import { SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
 
 const EASE = [0.16, 1, 0.3, 1];
 
-// ── Pricing model (confirmed with the user) ──────────────────────────────
-// Tier-anchored: the monthly base is the real plan-tier price (web store).
-// The chosen therapy is INCLUDED. Add-ons are added a-la-carte at the 20%-off
-// subscriber rate. Upfront payment for 3 / 6 / 12 months earns a discount.
-// NOTE: NAD+ / CBD therapies are included at the tier price here (no premium
-// upcharge) and flagged clinician-reviewed — revisit if they should upcharge.
-const SUBSCRIBER_RATE = 0.8; // 20% off add-ons for subscribers (catalog.js)
-const subscriber = (price) => Math.round(Number(price || 0) * SUBSCRIBER_RATE);
-const money = (value) => `$${Math.round(Number(value || 0)).toLocaleString()}`;
+// ── Pricing model (confirmed with the owner) ──────────────────────────────
+// Per-IV base pricing, no fixed tiers:
+//   - Vitamin IV = $250 each.
+//   - NAD+ / CBD  = the selected dose price (starts at $350).
+//   monthly = perIvPrice x IVs-per-session x sessions-per-month + add-ons.
+// Discount is by time commitment: pay upfront for 3 / 6 / 12 months.
+// Add-ons use full catalog price; the time discount applies to the whole plan.
+const VITAMIN_IV_PRICE = 250;
+const SESSION_OPTIONS = [1, 2, 3, 4];
 
-function slug(value) {
-  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
-// Upfront terms. 6mo (-8%) and 12mo (-15%) come from the web store; the store
-// has no 3-month rate, so 3mo (-5%) is a default — change the discount below.
+// Upfront terms. 6mo (-8%) and 12mo (-15%) come from the web store; 3mo (-5%)
+// is the owner-approved default. Change a discount in one place here.
 const TERMS = [
   { key: 'three-month', label: '3 months', months: 3, discount: 0.05 },
   { key: 'six-month', label: '6 months', months: 6, discount: 0.08 },
   { key: 'annual', label: '12 months', months: 12, discount: 0.15 },
 ];
 
-// "How often" = the real plan tiers, framed by sessions/month (web store prices).
-const PLAN_TIERS = SUBSCRIPTION_TIERS.filter((tier) => !tier.custom);
+// Sessions/month maps to a subscription key only for the /book handoff prefill.
+const SUBSCRIPTION_KEY_BY_SESSIONS = { 1: 'starter', 2: 'pro', 3: 'pro', 4: 'vip' };
+
+const money = (value) => `$${Math.round(Number(value || 0)).toLocaleString()}`;
+
+function slug(value) {
+  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
 
 // Therapy categories for steps 3-4.
 const IV_VITAMINS = IV_SESSIONS.filter((session) => !session.doses);
@@ -54,32 +55,33 @@ const CATEGORIES = [
     key: 'iv-vitamins',
     label: 'IV Vitamins',
     icon: Droplets,
-    blurb: 'Core hydration & vitamin drips',
-    options: IV_VITAMINS.map((s) => ({ key: s.key, label: s.label, note: s.tag, protocol: s.key })),
+    blurb: `$${VITAMIN_IV_PRICE} per IV`,
+    // Vitamin therapies are a flat $250/IV regardless of which one.
+    options: IV_VITAMINS.map((s) => ({ key: s.key, label: s.label, note: s.tag, price: VITAMIN_IV_PRICE, protocol: s.key })),
   },
   {
     key: 'nad',
     label: 'NAD+',
     icon: Sparkles,
-    blurb: 'Advanced, clinician-reviewed',
+    blurb: 'From $350 per dose',
     gated: true,
-    options: (NAD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `NAD+ ${d.label}`, note: `${money(d.price)} / session`, price: d.price, protocol: 'nad' })),
+    options: (NAD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `NAD+ ${d.label}`, note: `${money(d.price)} / IV`, price: d.price, protocol: 'nad' })),
   },
   {
     key: 'cbd',
     label: 'CBD IV',
     icon: Leaf,
-    blurb: 'Approval-gated category',
+    blurb: 'From $350 per dose',
     gated: true,
-    options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, note: `${money(d.price)} / session`, price: d.price, protocol: 'cbd' })),
+    options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, note: `${money(d.price)} / IV`, price: d.price, protocol: 'cbd' })),
   },
 ];
 
-// Add-ons priced at the subscriber rate. Skip therapy-level NAD+/CBD add-on rows.
+// Add-ons at full catalog price (the time discount applies to the whole plan).
 const IV_ADDON_ITEMS = IV_ADDONS
   .filter((a) => !a.group)
-  .map((a) => ({ key: slug(a.label), label: a.label, price: subscriber(a.price), max: 4 }));
-const IM_ADDON_ITEMS = IM_SHOTS.map((a) => ({ key: slug(a.label), label: a.label, price: subscriber(a.price), max: a.max || 4 }));
+  .map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: 4 }));
+const IM_ADDON_ITEMS = IM_SHOTS.map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: a.max || 4 }));
 
 const STEPS = [
   { key: 'often', label: 'How often' },
@@ -177,16 +179,16 @@ function QtyStepper({ label, price, value, max, onChange }) {
 
 // ── Step bodies (shared between desktop columns and mobile screens) ─────────
 
-function StepOften({ tierKey, onTier }) {
+function StepOften({ sessions, onSessions }) {
   return (
     <div className="grid gap-2">
-      {PLAN_TIERS.map((tier) => (
+      {SESSION_OPTIONS.map((n) => (
         <SelectRow
-          key={tier.key}
-          label={`${tier.sessions} ${tier.sessions === 1 ? 'session' : 'sessions'} / month`}
-          sub={`${money(tier.price)} / mo · ${tier.name}`}
-          active={tierKey === tier.key}
-          onClick={() => onTier(tier.key)}
+          key={n}
+          label={`${n} ${n === 1 ? 'session' : 'sessions'} / month`}
+          sub={`from ${money(VITAMIN_IV_PRICE * n)} / mo`}
+          active={sessions === n}
+          onClick={() => onSessions(n)}
         />
       ))}
       <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Sessions roll over 30 days. Cancel or pause anytime.</p>
@@ -201,11 +203,12 @@ function StepIvs({ ivs, onIvs }) {
         <SelectRow
           key={n}
           label={`${n} IV ${n === 1 ? 'bag' : 'bags'} / session`}
+          sub={n === 1 ? null : `${n}× the per-IV price`}
           active={ivs === n}
           onClick={() => onIvs(n)}
         />
       ))}
-      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">How many drips per visit. Your nurse confirms what's clinically appropriate.</p>
+      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">More IVs per visit, more value. Your nurse confirms what's clinically appropriate.</p>
     </div>
   );
 }
@@ -282,38 +285,36 @@ function StepAddons({ ivQty, imQty, onIv, onIm }) {
           ))}
         </div>
       </div>
-      <p className="font-body text-[11px] font-semibold leading-snug text-foreground/46">Add-ons billed monthly at the 20% subscriber rate.</p>
+      <p className="font-body text-[11px] font-semibold leading-snug text-foreground/46">Add-ons billed monthly. Your time-commitment discount applies to the whole plan.</p>
     </div>
   );
 }
 
-function StepReview({ tier, sessions, ivs, category, therapyLabel, therapyPrice, lineItems, monthly, term, onTerm, upfrontTotal, perMonth, onStart }) {
+function StepReview({ sessions, ivs, category, therapyLabel, perIvPrice, baseMonthly, lineItems, monthly, term, onTerm, upfrontTotal, perMonth, onStart }) {
   return (
     <div className="flex flex-col lg:h-full lg:min-h-0">
       <div className="pr-0.5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">Plan summary</p>
         <dl className="mt-2 grid gap-1.5 font-body text-[13px]">
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="font-bold text-foreground/64">Plan</dt>
-            <dd className="text-right font-black text-foreground">{tier.name} · {sessions} {sessions === 1 ? 'session' : 'sessions'}/mo</dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-3">
             <dt className="font-bold text-foreground/64">Therapy</dt>
-            <dd className="text-right font-bold text-foreground/72">{therapyLabel || '—'}</dd>
+            <dd className="text-right font-black text-foreground">{therapyLabel || '—'}</dd>
           </div>
-          {therapyPrice != null && (
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="font-bold text-foreground/64">Per dose</dt>
-              <dd className="text-right font-bold text-foreground/72">{money(therapyPrice)} × {sessions}</dd>
-            </div>
-          )}
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="font-bold text-foreground/64">IVs / session</dt>
-            <dd className="text-right font-bold text-foreground/72">× {ivs}</dd>
+            <dt className="font-bold text-foreground/64">Per IV{category?.gated ? ' (dose)' : ''}</dt>
+            <dd className="text-right font-bold text-foreground/72">{money(perIvPrice)}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="font-bold text-foreground/64">IVs × sessions</dt>
+            <dd className="text-right font-bold text-foreground/72">{ivs} × {sessions} / mo</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3 border-t border-foreground/10 pt-1.5">
+            <dt className="font-bold text-foreground/64">Therapy / mo</dt>
+            <dd className="text-right font-bold text-foreground/72">{money(baseMonthly)}</dd>
           </div>
           {lineItems.length > 0 && (
             <div className="mt-1 border-t border-foreground/10 pt-1.5">
-              <p className="mb-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/40">Add-ons (20% subscriber rate)</p>
+              <p className="mb-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/40">Add-ons</p>
               {lineItems.map((li) => (
                 <div key={li.key} className="flex items-baseline justify-between gap-3">
                   <dt className="truncate font-bold text-foreground/64">{li.qty}× {li.label}</dt>
@@ -390,7 +391,7 @@ export default function Subscription() {
   });
 
   const navigate = useNavigate();
-  const [tierKey, setTierKey] = useState('pro');
+  const [sessions, setSessions] = useState(2);
   const [ivs, setIvs] = useState(1);
   const [categoryKey, setCategoryKey] = useState('iv-vitamins');
   const [therapyKey, setTherapyKey] = useState('hydration');
@@ -399,7 +400,6 @@ export default function Subscription() {
   const [termKey, setTermKey] = useState('three-month');
   const [mobileStep, setMobileStep] = useState(0);
 
-  const tier = PLAN_TIERS.find((t) => t.key === tierKey) || PLAN_TIERS[0];
   const term = TERMS.find((t) => t.key === termKey) || TERMS[0];
   const category = CATEGORIES.find((c) => c.key === categoryKey) || CATEGORIES[0];
   const therapyOption = category.options.find((o) => o.key === therapyKey) || category.options[0];
@@ -426,30 +426,29 @@ export default function Subscription() {
     return items;
   }, [ivQty, imQty]);
 
+  // Per-IV pricing: vitamin = $250, NAD+/CBD = dose price. Multiplied by IVs/session
+  // and sessions/month. Add-ons are flat monthly. Time commitment discounts the plan.
+  const perIvPrice = Number(therapyOption?.price || VITAMIN_IV_PRICE);
+  const baseMonthly = perIvPrice * ivs * sessions;
   const addOnsTotal = lineItems.reduce((sum, li) => sum + li.price * li.qty, 0);
-  const sessions = tier.sessions || 1;
-  // IV Vitamins use the bundled tier price; NAD+/CBD are priced per dose x sessions
-  // (the $199-899 tiers are vitamin-IV only). More IVs per session multiplies the
-  // therapy cost. Add-ons are flat monthly at the 20% subscriber rate.
-  const therapyPrice = category.gated ? Number(therapyOption?.price || 0) : null;
-  const baseMonthly = category.gated ? therapyPrice * sessions : Number(tier.price || 0);
-  const monthly = baseMonthly * ivs + addOnsTotal;
+  const monthly = baseMonthly + addOnsTotal;
   const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
   const perMonth = Math.round(upfrontTotal / term.months);
 
   const startPlan = () => {
     const params = new URLSearchParams({
       reset: '1',
-      subscription: tier.key,
+      subscription: SUBSCRIPTION_KEY_BY_SESSIONS[sessions] || 'pro',
       term: term.key,
       protocol: therapyOption?.protocol || 'recovery',
+      ivs: String(ivs),
       time: 'asap',
     });
     navigate(`/book?${params.toString()}`);
   };
 
   const stepBodies = {
-    often: <StepOften tierKey={tierKey} onTier={setTierKey} />,
+    often: <StepOften sessions={sessions} onSessions={setSessions} />,
     ivs: <StepIvs ivs={ivs} onIvs={setIvs} />,
     category: <StepCategory categoryKey={categoryKey} onCategory={selectCategory} />,
     therapy: <StepTherapy category={category} therapyKey={therapyKey} onTherapy={setTherapyKey} />,
@@ -463,12 +462,12 @@ export default function Subscription() {
     ),
     review: (
       <StepReview
-        tier={tier}
         sessions={sessions}
         ivs={ivs}
         category={category}
         therapyLabel={therapyOption?.label}
-        therapyPrice={therapyPrice}
+        perIvPrice={perIvPrice}
+        baseMonthly={baseMonthly}
         lineItems={lineItems}
         monthly={monthly}
         term={term}
@@ -488,7 +487,7 @@ export default function Subscription() {
       <main id="plans-builder" className="mx-auto w-full max-w-[calc(100vw-1.5rem)] px-0 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:max-w-[1600px] md:px-4 md:pb-6 md:pt-24">
         <div className="mb-3 px-3 md:mb-4 md:px-0">
           <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Build your plan</h1>
-          <p className="mt-1 font-body text-sm font-semibold text-foreground/56">Six quick steps. Real pricing. Pay monthly or save by paying upfront.</p>
+          <p className="mt-1 font-body text-sm font-semibold text-foreground/56">Six quick steps. Real per-IV pricing. Pay upfront for 3, 6, or 12 months to save.</p>
         </div>
 
         {/* ── Desktop: six columns side by side ── */}
