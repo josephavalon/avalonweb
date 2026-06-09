@@ -77,6 +77,8 @@ const MEMBERSHIP_PRICE_BY_NAME = new Map(Object.entries({
 
 const MEMBERSHIP_TERMS = {
   monthly: { key: 'monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
+  'three month': { key: 'three-month', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
+  'three-month': { key: 'three-month', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
   'six month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
   'six-month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
   annual: { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },

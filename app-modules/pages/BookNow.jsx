@@ -302,6 +302,7 @@ const CLIENT_TYPES = [
 const BOOKING_DEPOSIT_AMOUNT = 50;
 const SUBSCRIPTION_TERMS = [
   { key: 'monthly', label: 'Monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
+  { key: 'three-month', label: '3 months', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
   { key: 'six-month', label: '6 months', months: 6, discount: 0.08, billing: 'six-month' },
   { key: 'annual', label: '12 months', months: 12, discount: 0.15, billing: 'annual' },
 ];
@@ -3430,7 +3431,13 @@ export default function BookNow() {
   const baseSubtotal = (product ? protocolPrice(product) : 0) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
   const customPlanSessions = Math.max(1, Number(state.customPlanSessions || 2));
   const customPlanEstimate = Math.max(150, baseSubtotal || protocolPrice(product) || 250) * customPlanSessions;
-  const activePlanMonthlyPrice = plan.custom ? customPlanEstimate : Number(plan.price || 0);
+  // Plans builder handoff: /book?subscription=custom&price=<monthly> bills the
+  // builder's computed per-IV monthly via the custom-price path (server clamps
+  // the term total to <= $10k). Falls back to the in-flow estimate if absent.
+  const builderMonthly = Number(searchParams.get('price')) || 0;
+  const activePlanMonthlyPrice = plan.custom
+    ? (builderMonthly > 0 ? builderMonthly : customPlanEstimate)
+    : Number(plan.price || 0);
   const activeSubscriptionTerm = subscriptionTermForKey(state.subscriptionTerm);
   const activePlanPrice = subscriptionTermPrice(activePlanMonthlyPrice, activeSubscriptionTerm.key);
   const activePlanSessions = plan.custom ? customPlanSessions : Number(plan.sessions || 0);
