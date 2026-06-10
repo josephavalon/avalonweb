@@ -1,17 +1,20 @@
-// Lightweight auth store — no external dependency.
-// Swap signIn/signOut for Firebase, Supabase, or a JWT endpoint.
-// The user shape and hook API stay the same — nothing else needs to change.
+// Auth store — real Supabase Auth in production, demo roster as a local fallback.
+// When VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set (`hasSupabase`), this
+// uses Supabase Auth (email magic-link now; phone/passkey layered on next).
+// Without them it keeps the original demo behavior, so local/dev is unchanged.
+// The user shape + hook API stay stable, so RequireAuth and every route keep working.
 
-import React, { useState, useCallback, createContext, useContext } from 'react';
+import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import { appendActivity } from './localOs';
 import { seedDemoState } from './platformOps';
 import { isDemoAuthAllowed, PRE_API_SECURITY_MODE } from './preApiSecurity';
+import { supabase, hasSupabase } from './supabase';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
-// ── Demo accounts (replace with real auth before production) ──────────────
+// ── Demo accounts (local fallback only — used when Supabase is not configured) ──
 const DEMO_USERS = {
   'ADMIN':        { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
   'ADMIN001':     { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
@@ -34,6 +37,17 @@ const DEMO_USERS = {
 };
 const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
 // ─────────────────────────────────────────────────────────────────────────
+
+const ROLE_REDIRECT = {
+  admin: '/admin',
+  client: '/members/dashboard',
+  provider: '/provider/role-os',
+  np: '/provider/role-os',
+  physician: '/provider/role-os',
+};
+function redirectForRole(role) {
+  return ROLE_REDIRECT[role] || '/members/dashboard';
+}
 
 function normalizeLoginIdentifier(value = '') {
   return String(value).trim().replace(/\s+/g, '').toUpperCase();
@@ -63,53 +77,104 @@ function writeSession(user) {
 function createSessionId() {
   const cryptoApi = globalThis.crypto;
   if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
-
   if (cryptoApi?.getRandomValues) {
     const values = cryptoApi.getRandomValues(new Uint32Array(2));
     const token = Array.from(values, (value) => value.toString(36)).join('');
     return `session-${Date.now()}-${token}`;
   }
-
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// Build the app's user object from a Supabase session user. Role comes from
+// public.profiles.role (default 'client'); admins are set there directly.
+async function buildSupabaseUser(authUser) {
+  if (!authUser) return null;
+  let role = 'client';
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', authUser.id)
+      .maybeSingle();
+    if (data?.role) role = data.role;
+  } catch { /* RLS/no row → default to client */ }
+  const meta = authUser.user_metadata || {};
+  const name = meta.name || meta.full_name || authUser.email || authUser.phone || 'Member';
+  return {
+    id: authUser.id,
+    email: authUser.email || '',
+    phone: authUser.phone || '',
+    name,
+    role,
+    redirect: redirectForRole(role),
+    authMode: 'supabase',
+    lastActiveAt: new Date().toISOString(),
+  };
+}
+
 export function AuthStoreProvider({ children }) {
-  const [user, setUser]       = useState(() => readSession());
-  const [loading, setLoading] = useState(false);
+  const [user, setUser]       = useState(() => (hasSupabase ? null : readSession()));
+  const [loading, setLoading] = useState(hasSupabase);
   const [error, setError]     = useState(null);
 
-  const signIn = useCallback(async ({ email, password }) => {
-    setLoading(true);
-    setError(null);
+  // Resolve + track the Supabase session (no-op in demo mode).
+  useEffect(() => {
+    if (!hasSupabase) return undefined;
+    let active = true;
+    supabase.auth.getSession()
+      .then(async ({ data }) => {
+        const u = await buildSupabaseUser(data?.session?.user || null);
+        if (active) { setUser(u); setLoading(false); }
+      })
+      .catch(() => { if (active) setLoading(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const u = await buildSupabaseUser(session?.user || null);
+      if (active) setUser(u);
+    });
+    return () => { active = false; listener?.subscription?.unsubscribe?.(); };
+  }, []);
+
+  // Email magic-link (Supabase). Returns { ok, pending }; the user clicks the
+  // emailed link, lands back on /login, and onAuthStateChange sets the session.
+  const signInWithEmail = useCallback(async (email) => {
+    if (!hasSupabase) return { ok: false, error: 'Sign-in is not configured yet.' };
+    setLoading(true); setError(null);
     try {
-      await new Promise((r) => setTimeout(r, 600)); // simulate network
+      const { error: err } = await supabase.auth.signInWithOtp({
+        email: String(email || '').trim(),
+        options: { emailRedirectTo: `${window.location.origin}/login` },
+      });
+      if (err) throw err;
+      return { ok: true, pending: true, message: 'Check your email for a secure sign-in link.' };
+    } catch (err) {
+      const msg = err.message || 'Could not send the sign-in link.';
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
 
-      if (!isDemoAuthAllowed()) {
-        throw new Error('Local demo auth is disabled outside Avalon simulation mode.');
-      }
-      if (!DEMO_PASSWORD) {
-        throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
-      }
+  // Back-compat entry point: Supabase mode routes an email to a magic link
+  // (passwordless); demo mode runs the original roster check.
+  const signIn = useCallback(async ({ email, password } = {}) => {
+    if (hasSupabase) return signInWithEmail(email);
 
-      // Match against demo roster (case-insensitive username)
+    setLoading(true); setError(null);
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      if (!isDemoAuthAllowed()) throw new Error('Local demo auth is disabled outside Avalon simulation mode.');
+      if (!DEMO_PASSWORD) throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
       const submittedUsername = normalizeLoginIdentifier(email);
-      const usernameKey = Object.keys(DEMO_USERS).find(
-        (k) => normalizeLoginIdentifier(k) === submittedUsername
-      );
-
-      if (!usernameKey || String(password || '').trim() !== DEMO_PASSWORD) {
-        throw new Error('Invalid username or password.');
-      }
-
+      const usernameKey = Object.keys(DEMO_USERS).find((k) => normalizeLoginIdentifier(k) === submittedUsername);
+      if (!usernameKey || String(password || '').trim() !== DEMO_PASSWORD) throw new Error('Invalid username or password.');
       const profile = DEMO_USERS[usernameKey];
       if (profile.status === 'suspended') throw new Error('Account suspended. Contact support at hello@avalonvitality.co');
       if (profile.status === 'archived') throw new Error('This account is no longer active.');
       const sessionUser = {
-        id:       createSessionId(),
+        id: createSessionId(),
         username: usernameKey,
         canonicalUsername: profile.canonical || usernameKey,
-        name:     profile.name,
-        role:     profile.role,
+        name: profile.name,
+        role: profile.role,
         redirect: profile.redirect,
         seededAt: new Date().toISOString(),
         lastActiveAt: new Date().toISOString(),
@@ -118,7 +183,6 @@ export function AuthStoreProvider({ children }) {
         mfa: 'placeholder',
         securityWall: 'pre-api-hard-wall',
       };
-
       seedDemoState(profile.canonical || usernameKey);
       setUser(sessionUser);
       writeSession(sessionUser);
@@ -128,31 +192,34 @@ export function AuthStoreProvider({ children }) {
       const msg = err.message || 'Sign in failed.';
       setError(msg);
       return { ok: false, error: msg };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    } finally { setLoading(false); }
+  }, [signInWithEmail]);
 
   const requestPasswordReset = useCallback(async () => {
     setLoading(true);
     try {
-      throw new Error('Password reset is not connected yet. Use admin-assisted account recovery until Supabase Auth is live.');
+      throw new Error('Passwordless sign-in is used — request a fresh email link instead.');
     } catch (err) {
       return { ok: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, []);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
     if (user) appendActivity('Signed out', { role: user.role, username: user.username });
+    if (hasSupabase) { try { await supabase.auth.signOut(); } catch { /* ignore */ } }
     setUser(null);
-    writeSession(null);
+    if (!hasSupabase) writeSession(null);
   }, [user]);
 
   return React.createElement(
     AuthStoreContext.Provider,
-    { value: { user, loading, error, signIn, signOut, requestPasswordReset } },
+    {
+      value: {
+        user, loading, error,
+        signIn, signInWithEmail, signOut, requestPasswordReset,
+        authBackend: hasSupabase ? 'supabase' : 'demo',
+      },
+    },
     children
   );
 }
