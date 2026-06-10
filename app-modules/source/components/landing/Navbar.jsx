@@ -123,8 +123,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           <Link to="/" onClick={handleLogoClick} className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}>
-            <span className="block font-heading text-[17px] leading-none tracking-[0.22em] text-foreground md:text-[27px] md:tracking-[0.28em]">AVALON</span>
-            <span className="mt-1 block font-body text-[8px] uppercase leading-none tracking-[0.38em] text-foreground/60 md:text-[14px] md:tracking-[0.44em]">VITALITY</span>
+            <span className="block font-heading text-[24px] leading-none tracking-[0.08em] text-foreground md:text-[34px] md:tracking-[0.1em]">AV</span>
           </Link>
         </div>
 
@@ -198,8 +197,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           <Link to="/" onClick={handleLogoClick} className={logoClass}>
-            <span className="font-heading text-[17px] leading-none tracking-[0.22em] text-foreground">AVALON</span>
-            <span className="mt-1 font-body text-[7px] uppercase leading-none tracking-[0.38em] text-foreground/60">VITALITY</span>
+            <span className="font-heading text-[22px] leading-none tracking-[0.08em] text-foreground">AV</span>
           </Link>
         </div>
         <div className="absolute right-2 top-1/2 flex -translate-y-1/2 shrink-0 items-center gap-0.5">
