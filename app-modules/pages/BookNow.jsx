@@ -14,7 +14,7 @@ import {
   CreditCard,
   Droplets,
   Dumbbell,
-  Flame,
+  Heart,
   Home,
   Hotel,
   Leaf,
@@ -28,6 +28,7 @@ import {
   Plane,
   Plus,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Syringe,
   Thermometer,
@@ -109,7 +110,7 @@ const OUTCOMES = [
 		    key: 'recover',
 		    label: 'Recovery',
 		    sub: 'Bounce back.',
-		    icon: Droplets,
+		    icon: Heart,
 		    productKeys: ['recovery', 'postnight', 'hydration'],
 		  },
 		  {
@@ -123,7 +124,7 @@ const OUTCOMES = [
 		    key: 'performance',
 		    label: 'Performance',
 		    sub: 'Output.',
-		    icon: Flame,
+		    icon: Dumbbell,
 		    productKeys: ['myers', 'energy', 'nad'],
 		  },
 		  {
@@ -165,7 +166,7 @@ const OUTCOMES = [
 		    key: 'longevity',
 		    label: 'Custom',
 		    sub: 'Build yours.',
-		    icon: Moon,
+		    icon: SlidersHorizontal,
 		    productKeys: ['nad', 'cbd', 'myers'],
 		  },
 	];
