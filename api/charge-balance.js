@@ -61,14 +61,42 @@ export default async function handler(req, res) {
   if (!amount || amount < 50) {
     return res.status(400).json({ error: 'No balance due to charge', code: 'no_balance' });
   }
-  if (!appt.stripe_customer_id || !appt.stripe_payment_method_id) {
-    return res.status(409).json({ error: 'No saved card on file', code: 'no_card_on_file' });
+  if (!appt.stripe_customer_id) {
+    return res.status(409).json({ error: 'No customer on file', code: 'no_customer' });
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const currency = appt.currency || 'usd';
   const baseUrl = (process.env.PUBLIC_SITE_URL || '').replace(/\/$/, '');
   const metadata = { kind: 'balance', acuityAppointmentId: String(acuityAppointmentId) };
+
+  const createBalanceLink = () => stripe.checkout.sessions.create({
+    mode: 'payment',
+    customer: appt.stripe_customer_id,
+    line_items: [{
+      quantity: 1,
+      price_data: { currency, unit_amount: amount, product_data: { name: 'Avalon visit — remaining balance' } },
+    }],
+    payment_intent_data: { metadata },
+    success_url: `${baseUrl}/booking/confirmation?balance=paid`,
+    cancel_url: `${baseUrl}/booking/confirmation?balance=pending`,
+  });
+
+  // Explicit "send a payment link" mode — no saved card needed; the customer
+  // enters one on Stripe's hosted page. (The off-session charge below also
+  // falls back to this same link on SCA / card errors.)
+  if ((req.body?.mode || 'charge') === 'link') {
+    try {
+      const session = await createBalanceLink();
+      return res.status(200).json({ ok: true, mode: 'link', url: session.url, amount });
+    } catch (linkErr) {
+      return res.status(502).json({ error: linkErr.message });
+    }
+  }
+
+  if (!appt.stripe_payment_method_id) {
+    return res.status(409).json({ error: 'No saved card on file', code: 'no_card_on_file' });
+  }
 
   try {
     const pi = await stripe.paymentIntents.create({
@@ -96,21 +124,7 @@ export default async function handler(req, res) {
     // SCA / card error → hand the client a Stripe-hosted link to finish.
     if (err.code === 'authentication_required' || err.type === 'StripeCardError') {
       try {
-        const session = await stripe.checkout.sessions.create({
-          mode: 'payment',
-          customer: appt.stripe_customer_id,
-          line_items: [{
-            quantity: 1,
-            price_data: {
-              currency,
-              unit_amount: amount,
-              product_data: { name: 'Avalon visit — remaining balance' },
-            },
-          }],
-          payment_intent_data: { metadata },
-          success_url: `${baseUrl}/booking/confirmation?balance=paid`,
-          cancel_url: `${baseUrl}/booking/confirmation?balance=pending`,
-        });
+        const session = await createBalanceLink();
         return res.status(200).json({ ok: false, requiresAction: true, url: session.url, reason: err.code || 'card_error' });
       } catch (linkErr) {
         return res.status(502).json({ error: linkErr.message });
