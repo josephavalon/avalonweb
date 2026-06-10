@@ -104,6 +104,7 @@ const ProductDetail = lazyRoute(() => import('./pages/products/ProductDetail'));
 const Menu = lazyRoute(() => import('./pages/Menu'));
 const BookingConfirmation = lazyRoute(() => import('./pages/BookingConfirmation'));
 const Subscription = lazyRoute(() => import('./pages/Membership'));
+const PlanCheckout = lazyRoute(() => import('./pages/PlanCheckout'));
 const Corporate = lazyRoute(() => import('./pages/Corporate'));
 const EventsPage = lazyRoute(() => import('./pages/Events'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
@@ -246,6 +247,7 @@ function AppRoutes() {
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/membership" element={<Navigate to="/subscription" replace />} />
             <Route path="/subscription" element={<Subscription />} />
+            <Route path="/plan" element={<PlanCheckout />} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
