@@ -7,6 +7,8 @@ import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
   createSchedulingAppointmentWithFallback,
+  claimSchedulingCreation,
+  readAcuityAppointmentId,
   syncCheckoutAttioPerson,
 } from '../_checkout-fulfillment.js';
 
@@ -101,9 +103,9 @@ async function persistVerifyFulfillment({ appointment, session, paymentIntentId,
     stripe_deposit_payment_intent: paymentIntentId || null,
     deposit_paid_at: now,
     payment_status: Number(session.metadata?.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
-    status: appointmentId ? 'scheduled' : 'payment_received',
-    acuity_appointment_id: appointmentId || undefined,
-    reconciliation_status: failed ? 'action_required' : appointmentId ? 'ok' : 'pending',
+    status: fulfillment.deferred ? undefined : appointmentId ? 'scheduled' : 'payment_received',
+    acuity_appointment_id: fulfillment.deferred ? undefined : appointmentId || undefined,
+    reconciliation_status: fulfillment.deferred ? undefined : failed ? 'action_required' : appointmentId ? 'ok' : 'pending',
     attio_person_id: attioPersonId || undefined,
     attio_synced_at: attioPersonId ? now : undefined,
     external_payload: buildExternalPayload(appointment.external_payload || {}, {
@@ -142,56 +144,73 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
   let attioPersonId = null;
   const checkout = appointment ? checkoutPayloadFromRecord(appointment) : checkoutPayloadFromStripeMetadata(session.metadata || {});
 
+  let schedulingDeferred = false;
   if (!acuityAppointmentId) {
-    metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
-      fulfillmentStatus: 'acuity_creating',
-    });
-
-    try {
-      const acuityAppointment = await createSchedulingAppointmentWithFallback({
-        appointment: checkout.appointment || {},
-        contact: checkout.contact || {},
-        items: checkout.items || [],
-        membership: checkout.membership || null,
-        amounts: checkout.amounts || {},
-        req: null,
-      });
-      if (acuityAppointment?.id) {
-        acuityAppointmentId = String(acuityAppointment.id);
+    const db = await getSupabaseServiceClient();
+    const wonSchedulingClaim = await claimSchedulingCreation(db, appointment?.id);
+    if (!wonSchedulingClaim) {
+      // The Stripe webhook (or another poll) is already creating this Acuity
+      // appointment. Re-read for its id; if it isn't persisted yet, defer so we
+      // never double-book and don't overwrite the winner's record.
+      const existingId = await readAcuityAppointmentId(db, appointment?.id);
+      if (existingId) {
+        acuityAppointmentId = existingId;
         fulfillmentStatus = 'acuity_created';
-        metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
-          acuityAppointmentId,
-          fulfillmentStatus,
-          fulfillmentError: '',
-        });
+      } else {
+        schedulingDeferred = true;
+        fulfillmentStatus = 'pending';
+      }
+    } else {
+      metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+        fulfillmentStatus: 'acuity_creating',
+      });
 
-        if (checkout.contact?.email) {
-          try {
-            attioPersonId = await syncCheckoutAttioPerson({
-              contact: checkout.contact,
-              primaryService: checkout.primaryService || session.metadata?.service || 'Avalon Visit',
-              appointment: checkout.appointment || {},
-              items: checkout.items || [],
-              membership: checkout.membership || null,
-              amounts: checkout.amounts || {},
-            });
-          } catch (err) {
-            console.warn('[checkout/verify] Attio sync failed:', err.message);
+      try {
+        const acuityAppointment = await createSchedulingAppointmentWithFallback({
+          appointment: checkout.appointment || {},
+          contact: checkout.contact || {},
+          items: checkout.items || [],
+          membership: checkout.membership || null,
+          amounts: checkout.amounts || {},
+          req: null,
+        });
+        if (acuityAppointment?.id) {
+          acuityAppointmentId = String(acuityAppointment.id);
+          fulfillmentStatus = 'acuity_created';
+          metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+            acuityAppointmentId,
+            fulfillmentStatus,
+            fulfillmentError: '',
+          });
+
+          if (checkout.contact?.email) {
+            try {
+              attioPersonId = await syncCheckoutAttioPerson({
+                contact: checkout.contact,
+                primaryService: checkout.primaryService || session.metadata?.service || 'Avalon Visit',
+                appointment: checkout.appointment || {},
+                items: checkout.items || [],
+                membership: checkout.membership || null,
+                amounts: checkout.amounts || {},
+              });
+            } catch (err) {
+              console.warn('[checkout/verify] Attio sync failed:', err.message);
+            }
           }
         }
+      } catch (err) {
+        fulfillmentStatus = 'acuity_failed';
+        fulfillmentError = err.message || 'Acuity appointment creation failed';
+        metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+          fulfillmentStatus,
+          fulfillmentError: fulfillmentError.slice(0, 480),
+        });
+        console.error('[checkout/verify] Acuity fulfillment failed:', err.message, err.body || '');
       }
-    } catch (err) {
-      fulfillmentStatus = 'acuity_failed';
-      fulfillmentError = err.message || 'Acuity appointment creation failed';
-      metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
-        fulfillmentStatus,
-        fulfillmentError: fulfillmentError.slice(0, 480),
-      });
-      console.error('[checkout/verify] Acuity fulfillment failed:', err.message, err.body || '');
     }
   }
 
-  if (paymentIntentId && metadata.opsPaymentEmailSent !== 'true') {
+  if (!schedulingDeferred && paymentIntentId && metadata.opsPaymentEmailSent !== 'true') {
     try {
       await sendPaymentReceivedEmail({
         checkout,
@@ -214,6 +233,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
     fulfillmentError,
     attioPersonId,
     paymentIntentMetadata: metadata,
+    deferred: schedulingDeferred,
   };
 }
 

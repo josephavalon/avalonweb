@@ -7,6 +7,8 @@ import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
   createSchedulingAppointmentWithFallback,
+  claimSchedulingCreation,
+  readAcuityAppointmentId,
   syncCheckoutAttioPerson,
 } from '../../_checkout-fulfillment.js';
 
@@ -124,34 +126,49 @@ async function handleCheckoutCompleted(stripe, db, session) {
   let fulfillmentError = null;
   const checkout = record ? checkoutPayloadFromRecord(record) : checkoutPayloadFromStripeMetadata(md);
 
+  let schedulingDeferred = false;
   if (!acuityAppointment?.id) {
-    try {
-      acuityAppointment = await createSchedulingAppointmentWithFallback({
-        appointment: checkout.appointment || {},
-        contact: checkout.contact || {},
-        items: checkout.items || [],
-        membership: checkout.membership || null,
-        amounts: checkout.amounts || {},
-        req: null,
-      });
-    } catch (err) {
-      fulfillmentError = err;
-      console.error('[stripe/webhook] Acuity fulfillment failed:', err.message, err.body || '');
-    }
-
-    if (acuityAppointment?.id && checkout.contact?.email) {
+    const wonSchedulingClaim = await claimSchedulingCreation(db, record?.id);
+    if (!wonSchedulingClaim) {
+      // Another path (the client return-page, or a concurrent delivery) is
+      // already creating this Acuity appointment. Re-read for its id; if it
+      // isn't persisted yet, defer — never create a duplicate, and don't
+      // overwrite the winner's scheduling fields below.
+      const existingId = await readAcuityAppointmentId(db, record?.id);
+      if (existingId) {
+        acuityAppointment = { id: existingId, alreadyCreated: true };
+      } else {
+        schedulingDeferred = true;
+      }
+    } else {
       try {
-        attioPersonId = await syncCheckoutAttioPerson({
-          contact: checkout.contact,
-          primaryService: checkout.primaryService || md.service || 'Avalon Visit',
+        acuityAppointment = await createSchedulingAppointmentWithFallback({
           appointment: checkout.appointment || {},
+          contact: checkout.contact || {},
           items: checkout.items || [],
           membership: checkout.membership || null,
           amounts: checkout.amounts || {},
+          req: null,
         });
-        attioSynced = true;
       } catch (err) {
-        console.warn('[stripe/webhook] Attio sync failed:', err.message);
+        fulfillmentError = err;
+        console.error('[stripe/webhook] Acuity fulfillment failed:', err.message, err.body || '');
+      }
+
+      if (acuityAppointment?.id && checkout.contact?.email) {
+        try {
+          attioPersonId = await syncCheckoutAttioPerson({
+            contact: checkout.contact,
+            primaryService: checkout.primaryService || md.service || 'Avalon Visit',
+            appointment: checkout.appointment || {},
+            items: checkout.items || [],
+            membership: checkout.membership || null,
+            amounts: checkout.amounts || {},
+          });
+          attioSynced = true;
+        } catch (err) {
+          console.warn('[stripe/webhook] Attio sync failed:', err.message);
+        }
       }
     }
   }
@@ -172,7 +189,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
     });
   }
 
-  if (paymentIntentId && paymentIntent?.metadata?.opsPaymentEmailSent !== 'true') {
+  if (!schedulingDeferred && paymentIntentId && paymentIntent?.metadata?.opsPaymentEmailSent !== 'true') {
     try {
       await sendPaymentReceivedEmail({
         checkout,
@@ -207,9 +224,9 @@ async function handleCheckoutCompleted(stripe, db, session) {
     stripe_payment_method_id:     paymentMethodId,
     deposit_paid_at:              now,
     payment_status:               Number(md.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
-    status:                       acuityAppointment?.id ? 'scheduled' : 'payment_received',
-    acuity_appointment_id:         acuityAppointment?.id ? String(acuityAppointment.id) : null,
-    reconciliation_status:         fulfillmentError ? 'action_required' : 'ok',
+    status:                       schedulingDeferred ? undefined : acuityAppointment?.id ? 'scheduled' : 'payment_received',
+    acuity_appointment_id:         schedulingDeferred ? undefined : acuityAppointment?.id ? String(acuityAppointment.id) : null,
+    reconciliation_status:         schedulingDeferred ? undefined : fulfillmentError ? 'action_required' : 'ok',
     attio_person_id:               attioPersonId || undefined,
     attio_synced_at:               attioSynced ? now : undefined,
     balance_due_cents:            md.balanceDueCents != null ? Number(md.balanceDueCents) : null,

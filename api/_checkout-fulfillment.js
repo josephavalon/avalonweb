@@ -258,6 +258,49 @@ export async function createSchedulingAppointmentWithFallback({ appointment, con
   }
 }
 
+// ── Double-booking guard ─────────────────────────────────────────────────────
+// The Stripe webhook AND the client return-page (checkout/verify) both create
+// the Acuity appointment after payment. Without a lock they can race and create
+// TWO appointments — double-booking a nurse. claimSchedulingCreation() is an
+// atomic, time-expiring claim on the appointments row: only the path that flips
+// `scheduling_lock_at` (from null or stale) wins the right to create. The TTL
+// makes it crash-safe — if a winner dies mid-fulfillment the lock expires and a
+// later webhook retry re-claims. It is best-effort: with no DB, or before the
+// `scheduling_lock_at` column exists (pre-migration), it returns true so we fall
+// back to the prior behaviour rather than ever blocking a real booking.
+const SCHEDULING_LOCK_TTL_MS = 120000;
+
+export async function claimSchedulingCreation(db, recordId) {
+  if (!db || !recordId) return true;
+  const staleBefore = new Date(Date.now() - SCHEDULING_LOCK_TTL_MS).toISOString();
+  try {
+    const { data, error } = await db.from('appointments')
+      .update({ scheduling_lock_at: new Date().toISOString() })
+      .eq('id', recordId)
+      .is('acuity_appointment_id', null)
+      .or(`scheduling_lock_at.is.null,scheduling_lock_at.lt.${staleBefore}`)
+      .select('id')
+      .maybeSingle();
+    if (error) return true; // column missing / transient — never block fulfillment
+    return Boolean(data);   // a returned row means this path won the claim
+  } catch {
+    return true;
+  }
+}
+
+export async function readAcuityAppointmentId(db, recordId) {
+  if (!db || !recordId) return null;
+  try {
+    const { data } = await db.from('appointments')
+      .select('acuity_appointment_id')
+      .eq('id', recordId)
+      .maybeSingle();
+    return data?.acuity_appointment_id || null;
+  } catch {
+    return null;
+  }
+}
+
 export function buildCheckoutPayload({
   contact = {},
   appointment = {},
