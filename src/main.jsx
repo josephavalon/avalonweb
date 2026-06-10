@@ -4,13 +4,23 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
-import { applyTheme } from '@/lib/theme'
+import { applyTheme, THEME_KEY } from '@/lib/theme'
 
 function applyStoredTheme() {
   try {
+    // Reverse to the light (daytime) default: one-time flip for visitors whose
+    // stored preference predates it. The theme switcher still works afterward.
+    if (!window.localStorage.getItem('avalon.theme.light-default')) {
+      window.localStorage.setItem(THEME_KEY, 'daytime');
+      window.localStorage.setItem('avalon.theme.light-default', '1');
+    }
+  } catch {
+    /* storage unavailable in private windows; the default theme still applies */
+  }
+  try {
     applyTheme();
   } catch (err) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add('daytime');
     if (import.meta.env?.DEV) console.warn('[theme-boot]', err);
   }
 }
