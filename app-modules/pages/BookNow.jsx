@@ -3921,7 +3921,7 @@ export default function BookNow() {
       return;
     }
     if (!canAdvance()) {
-      const reason = step === 0 ? 'Choose therapy.' : step === 2 ? 'Choose date and time.' : step === 3 ? 'Add address and ZIP.' : 'Finish this step.';
+      const reason = step === 0 ? 'Choose therapy.' : step === 1 ? 'Choose add-ons or tap No add-ons.' : step === 2 ? 'Choose date and time.' : step === 3 ? 'Add address and ZIP.' : 'Finish this step.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
