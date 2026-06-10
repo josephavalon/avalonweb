@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
@@ -15,6 +15,7 @@ const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },
   { label: 'Registered Nurses', icon: ShieldPlus },
   { label: 'Same Day Service', icon: Clock },
+  { label: '60 Second Checkout', icon: Zap },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
 ];
 
