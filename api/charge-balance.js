@@ -13,6 +13,7 @@
 
 import Stripe from 'stripe';
 import { requireInternalAccess } from './_lib/pre-api-guard.js';
+import { collectBalance } from './_lib/balance-core.js';
 
 let _supabase = null;
 async function getSupabase() {
@@ -66,70 +67,19 @@ export default async function handler(req, res) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const currency = appt.currency || 'usd';
   const baseUrl = (process.env.PUBLIC_SITE_URL || '').replace(/\/$/, '');
-  const metadata = { kind: 'balance', acuityAppointmentId: String(acuityAppointmentId) };
+  const mode = (req.body?.mode || 'charge') === 'link' ? 'link' : 'charge';
 
-  const createBalanceLink = () => stripe.checkout.sessions.create({
-    mode: 'payment',
-    customer: appt.stripe_customer_id,
-    line_items: [{
-      quantity: 1,
-      price_data: { currency, unit_amount: amount, product_data: { name: 'Avalon visit — remaining balance' } },
-    }],
-    payment_intent_data: { metadata },
-    success_url: `${baseUrl}/booking/confirmation?balance=paid`,
-    cancel_url: `${baseUrl}/booking/confirmation?balance=pending`,
+  // Shared with /api/admin/collect-balance so both paths charge identically.
+  const result = await collectBalance({
+    stripe,
+    db,
+    appt,
+    amount,
+    mode,
+    currency: appt.currency || 'usd',
+    baseUrl,
+    acuityAppointmentId,
   });
-
-  // Explicit "send a payment link" mode — no saved card needed; the customer
-  // enters one on Stripe's hosted page. (The off-session charge below also
-  // falls back to this same link on SCA / card errors.)
-  if ((req.body?.mode || 'charge') === 'link') {
-    try {
-      const session = await createBalanceLink();
-      return res.status(200).json({ ok: true, mode: 'link', url: session.url, amount });
-    } catch (linkErr) {
-      return res.status(502).json({ error: linkErr.message });
-    }
-  }
-
-  if (!appt.stripe_payment_method_id) {
-    return res.status(409).json({ error: 'No saved card on file', code: 'no_card_on_file' });
-  }
-
-  try {
-    const pi = await stripe.paymentIntents.create({
-      amount,
-      currency,
-      customer: appt.stripe_customer_id,
-      payment_method: appt.stripe_payment_method_id,
-      off_session: true,
-      confirm: true,
-      metadata,
-    }, {
-      idempotencyKey: `balance:${appt.id}:${amount}`,
-    });
-
-    const now = new Date().toISOString();
-    await db.from('appointments').update({
-      stripe_balance_payment_intent: pi.id,
-      balance_paid_at: now,
-      payment_status: 'paid_in_full',
-      updated_at: now,
-    }).eq('id', appt.id);
-
-    return res.status(200).json({ ok: true, status: pi.status, paymentIntentId: pi.id, amount });
-  } catch (err) {
-    // SCA / card error → hand the client a Stripe-hosted link to finish.
-    if (err.code === 'authentication_required' || err.type === 'StripeCardError') {
-      try {
-        const session = await createBalanceLink();
-        return res.status(200).json({ ok: false, requiresAction: true, url: session.url, reason: err.code || 'card_error' });
-      } catch (linkErr) {
-        return res.status(502).json({ error: linkErr.message });
-      }
-    }
-    return res.status(err.statusCode || 500).json({ error: err.message });
-  }
+  return res.status(result.httpStatus).json(result.json);
 }
