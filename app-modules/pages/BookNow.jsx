@@ -3263,7 +3263,13 @@ export default function BookNow() {
       ? null
       : sessionDraft?.therapyCategoryScreen ?? (shouldResumeDraft ? persistedDraft?.therapyCategoryScreen : null);
     if (typeof saved === 'boolean') return saved && step !== 0;
-    return false;
+    // Fresh entry: open step 0 on the therapy base category chooser (vitamin /
+    // CBD / NAD+), unless a deep link already pre-selected a therapy, outcome,
+    // or subscription (e.g. the Plans builder handoff).
+    const deepLinked = Boolean(
+      searchParams.get('protocol') || searchParams.get('outcome') || searchParams.get('subscription')
+    );
+    return step === 0 && !deepLinked;
   });
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
   const [activeAddonGroup, setActiveAddonGroup] = useState('');
