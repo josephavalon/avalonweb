@@ -1,58 +1,35 @@
-const CACHE_NAME = 'avalon-shell-v2';
-const SHELL_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.png?v=2',
-  '/images/avalon-hero-new.jpg',
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(SHELL_ASSETS))
-      .then(() => self.skipWaiting())
-      .catch(() => self.skipWaiting())
-  );
+// Self-destruct kill-switch.
+//
+// The previous cache-first service worker served mismatched/stale bundles after
+// deploys, causing "Failed to fetch dynamically imported module" crashes. This
+// replacement takes over from any already-installed worker (browsers re-check
+// /sw.js on navigation), wipes all caches, unregisters itself, and reloads open
+// tabs so they load fresh from the network. After it runs once there is no
+// active service worker.
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    } catch (err) {
+      /* ignore */
+    }
+    try {
+      await self.registration.unregister();
+    } catch (err) {
+      /* ignore */
+    }
+    try {
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach((client) => client.navigate(client.url));
+    } catch (err) {
+      /* ignore */
+    }
+  })());
 });
 
-self.addEventListener('fetch', (event) => {
-  const request = event.request;
-  if (request.method !== 'GET') return;
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/')) return;
-
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy));
-          return response;
-        })
-        .catch(() => caches.match('/index.html'))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then((cached) => (
-      cached || fetch(request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      })
-    ))
-  );
-});
+// No fetch handler — every request goes straight to the network.

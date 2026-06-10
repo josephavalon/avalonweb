@@ -37,16 +37,28 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 )
 
-const isLocalPreview = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-
-if ('serviceWorker' in navigator && isLocalPreview) {
+// A cache-first service worker was serving mismatched bundles after deploys,
+// causing "Failed to fetch dynamically imported module" crashes. Unregister any
+// existing worker and drop its caches, and do NOT register a new one.
+// public/sw.js is now a self-destruct kill-switch so already-installed workers
+// clean themselves up on their next update check too.
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations?.().then((registrations) => {
     registrations.forEach((registration) => registration.unregister());
   }).catch(() => {});
+  if (window.caches?.keys) {
+    caches.keys().then((keys) => keys.forEach((key) => caches.delete(key))).catch(() => {});
+  }
 }
 
-if ('serviceWorker' in navigator && import.meta.env?.PROD && !isLocalPreview) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }, { once: true });
-}
+// Safety net for future deploys: if a lazy-loaded chunk fails to fetch (an old
+// tab after chunk hashes rotated), reload once to pull the current build.
+window.addEventListener('vite:preloadError', () => {
+  try {
+    if (sessionStorage.getItem('av-chunk-reload')) return;
+    sessionStorage.setItem('av-chunk-reload', '1');
+  } catch {
+    /* sessionStorage unavailable; fall through to a single reload attempt */
+  }
+  window.location.reload();
+});
