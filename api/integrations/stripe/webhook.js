@@ -341,6 +341,24 @@ export default async function handler(req, res) {
 
     const db = await getSupabaseServiceClient();
 
+    // Idempotency: Stripe redelivers an event (same id) on timeout / non-2xx. We
+    // record an event as processed only on success (below), so a failed first
+    // attempt is NOT recorded and still reprocesses correctly on redelivery.
+    if (db) {
+      try {
+        const { data: seenEvent } = await db.from('integration_events')
+          .select('id, status')
+          .eq('provider', 'stripe')
+          .eq('idempotency_key', event.id)
+          .maybeSingle();
+        if (seenEvent?.status === 'processed') {
+          return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
+        }
+      } catch (err) {
+        console.warn('[stripe/webhook] idempotency check skipped:', err.message);
+      }
+    }
+
     let result = { action: 'store_for_audit' };
     switch (event.type) {
       case 'checkout.session.completed':
@@ -362,6 +380,28 @@ export default async function handler(req, res) {
         break;
       default:
         result = { action: 'store_for_audit' };
+    }
+
+    // Record successful processing so a redelivery of this event short-circuits
+    // the idempotency check above. Best-effort — never blocks the 200 ack.
+    if (db) {
+      try {
+        await db.from('integration_events').insert({
+          provider: 'stripe',
+          event_type: event.type,
+          external_event_id: event.id,
+          idempotency_key: event.id,
+          payload_hash: event.id,
+          signature_valid: true,
+          status: 'processed',
+          processed_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        // Unique violation = a concurrent duplicate already recorded it; ignore.
+        if (!/duplicate|unique|23505/i.test(err.message || '')) {
+          console.warn('[stripe/webhook] event idempotency record failed:', err.message);
+        }
+      }
     }
 
     return res.status(200).json({
