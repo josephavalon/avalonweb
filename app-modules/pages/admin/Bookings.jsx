@@ -14,6 +14,8 @@ import {
 import AdminLayout from '@/layouts/AdminLayout';
 import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import { patientToAppointmentPreview } from '@/lib/clientIntakeStore';
+import { useAuthStore } from '@/lib/useAuthStore';
+import LiveAdminBookings from './LiveBookings';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
@@ -237,7 +239,7 @@ function ApptRow({ appt, defaultOpen = false }) {
 }
 
 /* ─── Main ───────────────────────────────────────────────────── */
-export default function AdminBookings() {
+function AdminBookings() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -389,4 +391,11 @@ export default function AdminBookings() {
       </div>
     </AdminLayout>
   );
+}
+
+// Supabase mode → live, payments-backed bookings (with balance collection).
+// Demo mode → the Acuity-backed preview table above.
+export default function AdminBookingsRoute() {
+  const { authBackend } = useAuthStore();
+  return authBackend === 'supabase' ? <LiveAdminBookings /> : <AdminBookings />;
 }
