@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -16,7 +16,29 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { readLastBooking } from '@/lib/localOs';
 import { readVisitPrep, saveVisitPrep } from '@/lib/platformOps';
+import { apiGet } from '@/lib/apiClient';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
+
+function formatWhen(startsAt) {
+  if (!startsAt) return '';
+  const date = new Date(startsAt);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function money(value) {
+  if (value == null) return '$0';
+  return `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: value % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+}
+
+const PAYMENT_LABEL = {
+  paid_in_full: 'Paid',
+  deposit_paid: 'Deposit paid',
+  pending: 'Pending',
+};
+function paymentLabel(status) {
+  return PAYMENT_LABEL[status] || (status ? status.replace(/_/g, ' ') : 'Pending');
+}
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -99,14 +121,187 @@ function PrepItem({ item, onToggle }) {
   );
 }
 
-export default function MemberDashboard() {
+// Live dashboard — real visits from /api/me/appointments (Supabase mode).
+function LiveClientDashboard() {
+  const { user, signOut } = useAuthStore();
+  const navigate = useNavigate();
+  const [state, setState] = useState({ loading: true, error: '', visits: [] });
+
+  useEffect(() => {
+    let active = true;
+    apiGet('/api/me/appointments')
+      .then((data) => {
+        if (active) setState({ loading: false, error: '', visits: Array.isArray(data?.appointments) ? data.appointments : [] });
+      })
+      .catch((err) => {
+        if (active) setState({ loading: false, error: err.message || 'Could not load your visits.', visits: [] });
+      });
+    return () => { active = false; };
+  }, []);
+
+  const handleSignOut = () => { signOut(); navigate('/login', { replace: true }); };
+
+  const { loading, error, visits } = state;
+  const now = Date.now();
+  const upcoming = visits
+    .filter((v) => v.startsAt && new Date(v.startsAt).getTime() >= now)
+    .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
+  const primary = upcoming[0] || visits[0] || null;
+  const balanceTotal = visits.reduce((sum, v) => sum + (v.balanceDue || 0), 0);
+  const hasPlan = visits.some((v) => v.isMembership);
+  const clientName = (user?.name || 'Client').split(' ')[0];
+
+  return (
+    <main className="min-h-dvh pb-[calc(7.5rem+env(safe-area-inset-bottom))] font-body" style={{ background: BG, color: TEXT }}>
+      <header className="sticky top-0 z-40 border-b border-foreground/[0.08] bg-background/86 px-4 py-3 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+          <Link to="/" className="font-heading text-2xl tracking-[0.2em]">AV</Link>
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Client</p>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{ background: CARD, border: `1px solid ${BORDER}`, color: MUTED }}
+            aria-label="Sign out"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.7} />
+          </button>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-5xl px-4 pt-5 md:px-8 md:pt-8">
+        <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr] md:gap-6">
+          <div className="rounded-[30px] p-5 md:p-7" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <Pill>{loading ? 'Loading' : `${visits.length} ${visits.length === 1 ? 'Visit' : 'Visits'}`}</Pill>
+              <Sparkles className="h-5 w-5" style={{ color: ACCENT }} strokeWidth={1.5} />
+            </div>
+            <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>Avalon</p>
+            <h1 className="mt-3 max-w-sm font-heading text-6xl uppercase leading-[0.88] md:text-7xl">
+              {clientName}.<br />Ready.
+            </h1>
+            <p className="mt-4 max-w-sm font-body text-sm leading-relaxed" style={{ color: MUTED }}>
+              Book, prep, and message the care team without hunting through a portal.
+            </p>
+            <div className="mt-6 grid gap-2">
+              <Action to="/book" icon={Calendar} label="Book" primary />
+              <Action href="sms:+14159807708" icon={MessageCircle} label="Message" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-[30px] p-5 md:p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>
+                    {primary && upcoming.length ? 'Next Visit' : 'Visit Status'}
+                  </p>
+                  <h2 className="mt-3 truncate font-heading text-4xl uppercase leading-none md:text-5xl">
+                    {primary ? primary.service : (loading ? 'Loading…' : 'No visits yet')}
+                  </h2>
+                </div>
+                {primary ? <Pill>{paymentLabel(primary.paymentStatus)}</Pill> : null}
+              </div>
+              <div className="mt-5 grid gap-2">
+                <div className="flex min-h-[46px] items-center gap-3 rounded-2xl px-3" style={{ background: CARD_STRONG }}>
+                  <Calendar className="h-4 w-4 shrink-0" style={{ color: DIM }} strokeWidth={1.7} />
+                  <span className="truncate text-sm" style={{ color: MUTED }}>
+                    {primary && formatWhen(primary.startsAt) ? formatWhen(primary.startsAt) : 'Book your next visit'}
+                  </span>
+                </div>
+                <div className="flex min-h-[46px] items-center gap-3 rounded-2xl px-3" style={{ background: CARD_STRONG }}>
+                  <CreditCard className="h-4 w-4 shrink-0" style={{ color: DIM }} strokeWidth={1.7} />
+                  <span className="truncate text-sm" style={{ color: MUTED }}>
+                    {primary && primary.balanceDue ? `${money(primary.balanceDue)} balance — collected at your visit` : 'Paid'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: Calendar, label: 'Visits', value: loading ? '—' : String(visits.length) },
+                { icon: CreditCard, label: 'Balance', value: money(balanceTotal) },
+                { icon: Sparkles, label: 'Plan', value: hasPlan ? 'Active' : '—' },
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="rounded-2xl p-3 text-center" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                  <Icon className="mx-auto h-4 w-4" style={{ color: ACCENT }} strokeWidth={1.6} />
+                  <p className="mt-3 truncate font-heading text-2xl uppercase leading-none">{value}</p>
+                  <p className="mt-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_0.9fr]">
+          <section className="rounded-[28px] p-4 md:p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>Your</p>
+                <h2 className="mt-1 font-heading text-3xl uppercase leading-none">Visits</h2>
+              </div>
+              <Pill>{visits.length}</Pill>
+            </div>
+            {error ? (
+              <p className="rounded-2xl px-3 py-3 font-body text-sm" style={{ background: CARD_STRONG, color: MUTED }}>{error}</p>
+            ) : loading ? (
+              <p className="rounded-2xl px-3 py-3 font-body text-sm" style={{ background: CARD_STRONG, color: MUTED }}>Loading your visits…</p>
+            ) : visits.length === 0 ? (
+              <div className="rounded-2xl px-3 py-5 text-center" style={{ background: CARD_STRONG }}>
+                <p className="font-body text-sm" style={{ color: MUTED }}>No visits yet. Your booked visits will appear here.</p>
+                <Link to="/book" className="mt-3 inline-flex items-center gap-2 font-body text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: ACCENT }}>
+                  Book your first visit <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {visits.map((v) => (
+                  <div key={v.id} className="flex items-center justify-between gap-3 rounded-2xl px-3 py-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+                    <div className="min-w-0">
+                      <p className="truncate font-body text-sm font-semibold">{v.service}</p>
+                      <p className="truncate font-body text-xs" style={{ color: DIM }}>{formatWhen(v.startsAt) || 'Date to be confirmed'}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-body text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: MUTED }}>{paymentLabel(v.paymentStatus)}</p>
+                      {v.balanceDue ? <p className="font-body text-xs" style={{ color: DIM }}>{money(v.balanceDue)} due</p> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-[28px] p-4 md:p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+            <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>Fast Actions</p>
+            <div className="mt-4 grid gap-2">
+              <Action to="/members/account" icon={UserRound} label="Profile" />
+              <Action to="/subscription" icon={Sparkles} label="Plan" />
+              <Action to="/members/messages" icon={MessageCircle} label="Inbox" />
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <MemberBottomNav />
+    </main>
+  );
+}
+
+function MemberDashboard() {
   useSeo({
     title: 'Client Dashboard - Avalon Vitality',
     description: 'Simple Avalon client dashboard for booking, visit status, prep, and care-team contact.',
     path: '/members/dashboard',
     robots: 'noindex, nofollow',
   });
+  const { authBackend } = useAuthStore();
+  return authBackend === 'supabase' ? <LiveClientDashboard /> : <DemoClientDashboard />;
+}
 
+export default MemberDashboard;
+
+function DemoClientDashboard() {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
   const booking = readLastBooking();
