@@ -469,17 +469,15 @@ export default function Subscription() {
   const addOnCount = lineItems.reduce((sum, li) => sum + li.qty, 0);
 
   const startPlan = () => {
-    // Bill the builder's computed monthly via the custom-price checkout path.
+    // Plans use their OWN checkout (/plan → subscription mode + membership Acuity
+    // type), intentionally NOT the one-time 5-step /book flow.
     const params = new URLSearchParams({
-      reset: '1',
-      subscription: 'custom',
       price: String(Math.round(monthly)),
       term: term.key,
       protocol: therapyOption?.protocol || 'recovery',
-      ivs: String(ivs),
-      time: 'asap',
+      sessions: String(sessions),
     });
-    navigate(`/book?${params.toString()}`);
+    navigate(`/plan?${params.toString()}`);
   };
 
   const stepKey = STEPS[step].key;
