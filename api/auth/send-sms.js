@@ -31,26 +31,46 @@ function verifySignature(rawBody, headers, secret) {
   const id = headers['webhook-id'];
   const timestamp = headers['webhook-timestamp'];
   const sigHeader = headers['webhook-signature'];
-  if (!id || !timestamp || !sigHeader) return false;
+  if (!id || !timestamp || !sigHeader) {
+    console.warn('[send-sms] missing webhook headers', { hasId: !!id, hasTs: !!timestamp, hasSig: !!sigHeader });
+    return false;
+  }
 
   const ts = parseInt(timestamp, 10);
   const now = Math.floor(Date.now() / 1000);
-  if (!Number.isFinite(ts) || Math.abs(now - ts) > 300) return false; // 5-min replay window
+  if (!Number.isFinite(ts) || Math.abs(now - ts) > 300) {
+    console.warn('[send-sms] timestamp out of tolerance', { ts, now, delta: now - ts });
+    return false;
+  }
 
-  const base64Secret = String(secret).replace(/^v1,/, '').replace(/^whsec_/, '');
+  // Secret is "v1,whsec_<base64>"; the signing key is the base64-decoded part after whsec_.
+  const base64Secret = String(secret).trim().replace(/^v1,/, '').replace(/^whsec_/, '');
   let key;
-  try { key = Buffer.from(base64Secret, 'base64'); } catch { return false; }
+  try { key = Buffer.from(base64Secret, 'base64'); } catch { console.warn('[send-sms] bad secret base64'); return false; }
 
   const signedContent = `${id}.${timestamp}.${rawBody.toString('utf8')}`;
-  const expected = crypto.createHmac('sha256', key).update(signedContent).digest('base64');
+  const expected = crypto.createHmac('sha256', key).update(signedContent).digest(); // raw bytes
 
-  // Header is space-separated "version,signature" pairs (e.g. "v1,abc v1,def").
-  const provided = sigHeader.split(' ').map((part) => part.split(',')[1]).filter(Boolean);
-  const expectedBuf = Buffer.from(expected);
-  return provided.some((sig) => {
-    const sigBuf = Buffer.from(sig);
-    return sigBuf.length === expectedBuf.length && crypto.timingSafeEqual(sigBuf, expectedBuf);
+  // webhook-signature is space-separated "v1,<base64sig>" pairs. Compare DECODED
+  // bytes so base64 padding / url-safe differences don't cause false mismatches.
+  const decode = (b64) => {
+    try { return Buffer.from(b64.replace(/-/g, '+').replace(/_/g, '/'), 'base64'); } catch { return null; }
+  };
+  const sigs = sigHeader.split(' ').map((part) => (part.includes(',') ? part.slice(part.indexOf(',') + 1) : part));
+  const ok = sigs.some((s) => {
+    const buf = decode(s);
+    return buf && buf.length === expected.length && crypto.timingSafeEqual(buf, expected);
   });
+  if (!ok) {
+    console.warn('[send-sms] signature mismatch', {
+      secretPrefix: String(secret).slice(0, 8),
+      keyLen: key.length,
+      bodyLen: rawBody.length,
+      expectedLen: expected.length,
+      providedLens: sigs.map((s) => { const b = decode(s); return b ? b.length : -1; }),
+    });
+  }
+  return ok;
 }
 
 function hookError(res, httpCode, message) {
