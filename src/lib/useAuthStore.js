@@ -153,6 +153,69 @@ export function AuthStoreProvider({ children }) {
     } finally { setLoading(false); }
   }, []);
 
+  // Phone OTP (Supabase). signInWithPhone texts a code (delivered via the Quo
+  // Send-SMS auth hook); verifyPhoneOtp checks it and onAuthStateChange sets
+  // the session.
+  const signInWithPhone = useCallback(async (phone) => {
+    if (!hasSupabase) return { ok: false, error: 'Phone sign-in is not configured yet.' };
+    setLoading(true); setError(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithOtp({ phone: String(phone || '').trim() });
+      if (err) throw err;
+      return { ok: true, pending: true, message: 'We texted you a 6-digit code.' };
+    } catch (err) {
+      const msg = err.message || 'Could not send the code.';
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
+
+  const verifyPhoneOtp = useCallback(async (phone, token) => {
+    if (!hasSupabase) return { ok: false, error: 'Phone sign-in is not configured yet.' };
+    setLoading(true); setError(null);
+    try {
+      const { error: err } = await supabase.auth.verifyOtp({
+        phone: String(phone || '').trim(),
+        token: String(token || '').trim(),
+        type: 'sms',
+      });
+      if (err) throw err;
+      return { ok: true }; // onAuthStateChange sets the user
+    } catch (err) {
+      const msg = err.message || 'That code was not valid.';
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
+
+  // Passkey / WebAuthn (Supabase native). signInWithPasskey is a passwordless
+  // returning-user sign-in; registerPasskey enrolls one for the current session.
+  const signInWithPasskey = useCallback(async () => {
+    if (!hasSupabase) return { ok: false, error: 'Passkey sign-in is not configured yet.' };
+    setLoading(true); setError(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithPasskey();
+      if (err) throw err;
+      return { ok: true }; // onAuthStateChange sets the user
+    } catch (err) {
+      const msg = err.message || 'Passkey sign-in failed.';
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
+
+  const registerPasskey = useCallback(async () => {
+    if (!hasSupabase) return { ok: false, error: 'Passkeys are not configured yet.' };
+    setError(null);
+    try {
+      const { error: err } = await supabase.auth.registerPasskey();
+      if (err) throw err;
+      return { ok: true, message: 'Passkey added — use it to sign in next time.' };
+    } catch (err) {
+      return { ok: false, error: err.message || 'Could not add a passkey.' };
+    }
+  }, []);
+
   // Back-compat entry point: Supabase mode routes an email to a magic link
   // (passwordless); demo mode runs the original roster check.
   const signIn = useCallback(async ({ email, password } = {}) => {
@@ -216,7 +279,9 @@ export function AuthStoreProvider({ children }) {
     {
       value: {
         user, loading, error,
-        signIn, signInWithEmail, signOut, requestPasswordReset,
+        signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp,
+        signInWithPasskey, registerPasskey,
+        signOut, requestPasswordReset,
         authBackend: hasSupabase ? 'supabase' : 'demo',
       },
     },
