@@ -49,7 +49,7 @@ export default function Hero() {
         </p>
 
         <h1
-          className="font-heading text-display-xl text-foreground uppercase max-w-3xl"
+          className="font-heading text-[clamp(4rem,11vw,10rem)] leading-[0.88] tracking-[0.02em] text-foreground uppercase max-w-3xl"
         >
           Recovery<br />On Demand
         </h1>
