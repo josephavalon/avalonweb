@@ -217,7 +217,7 @@ export async function createSchedulingAppointment({ appointment, contact, items,
     }
   }
 
-  return acuityFetch('/appointments', {
+  const first = await acuityFetch('/appointments', {
     method: 'POST',
     body: JSON.stringify({
       appointmentTypeID,
@@ -231,6 +231,84 @@ export async function createSchedulingAppointment({ appointment, contact, items,
       fields: requiredSchedulingFields(appointmentForAcuity, items, appointmentTypeID),
     }),
   });
+
+  // Memberships recur: book the SAME day/time monthly for the committed term.
+  // Capped at 6 inline to keep the payment webhook fast/safe (annual gets a
+  // 6-month runway; extending it is a fast-follow that needs a scheduled job).
+  // Best-effort — a month that can't be booked is logged + skipped, never
+  // blocking the sale. Changes go through admin.
+  if (membership && first?.id) {
+    const months = Math.min(monthsForMembershipTerm(membership.billing), 6);
+    if (months > 1) {
+      await bookMonthlyRecurrences({
+        baseDatetime: first.datetime || appointmentForAcuity.acuityDatetime,
+        months,
+        appointmentTypeID,
+        contact,
+        appointment: appointmentForAcuity,
+        items,
+        membership,
+        amounts,
+        req,
+      });
+    }
+  }
+
+  return first;
+}
+
+function monthsForMembershipTerm(billing) {
+  switch (billing) {
+    case 'annual': return 12;
+    case 'six-month': return 6;
+    case 'three-month': return 3;
+    default: return 3; // monthly (ongoing) — 3-month rolling horizon
+  }
+}
+
+function addMonthsToDatetime(iso, monthsToAdd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2}:\d{2})(.*)$/.exec(String(iso || ''));
+  if (!m) return null;
+  let year = Number(m[1]);
+  let month = Number(m[2]) - 1 + monthsToAdd; // 0-based
+  const day = Number(m[3]);
+  const time = m[4];
+  const offset = m[5] || '';
+  year += Math.floor(month / 12);
+  month = ((month % 12) + 12) % 12;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dd = String(Math.min(day, daysInMonth)).padStart(2, '0');
+  const mm = String(month + 1).padStart(2, '0');
+  return `${year}-${mm}-${dd}T${time}${offset}`;
+}
+
+async function bookMonthlyRecurrences({ baseDatetime, months, appointmentTypeID, contact, appointment, items, membership, amounts, req }) {
+  const created = [];
+  for (let i = 1; i < months; i += 1) {
+    const datetime = addMonthsToDatetime(baseDatetime, i);
+    if (!datetime) continue;
+    try {
+      const appt = await acuityFetch('/appointments', {
+        method: 'POST',
+        body: JSON.stringify({
+          appointmentTypeID,
+          datetime,
+          firstName: contact.firstName,
+          lastName: contact.lastName || '',
+          email: contact.email,
+          phone: contact.phone || '',
+          timezone: appointment.acuityTimezone || TZ,
+          notes: appointmentNotes({ appointment, items, membership, amounts, req }),
+          fields: requiredSchedulingFields(appointment, items, appointmentTypeID),
+        }),
+      });
+      if (appt?.id) created.push(appt.id);
+    } catch (err) {
+      console.warn(`[fulfillment] membership recurrence month ${i} failed:`, err.message);
+    }
+  }
+  if (created.length) console.log(`[fulfillment] booked ${created.length} recurring membership appointment(s)`);
+  return created;
 }
 
 export async function createSchedulingAppointmentWithFallback({ appointment, contact, items, membership, amounts, req }) {
