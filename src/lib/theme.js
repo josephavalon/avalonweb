@@ -1,5 +1,5 @@
 export const THEME_KEY = 'avalon.theme';
-export const DEFAULT_THEME = 'daytime';
+export const DEFAULT_THEME = 'dark';
 
 export const THEME_CLASSES = [
   'dark',

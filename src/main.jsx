@@ -8,11 +8,11 @@ import { applyTheme, THEME_KEY } from '@/lib/theme'
 
 function applyStoredTheme() {
   try {
-    // Reverse to the light (daytime) default: one-time flip for visitors whose
-    // stored preference predates it. The theme switcher still works afterward.
-    if (!window.localStorage.getItem('avalon.theme.light-default')) {
-      window.localStorage.setItem(THEME_KEY, 'daytime');
-      window.localStorage.setItem('avalon.theme.light-default', '1');
+    // Revert to the dark default: one-time flip back for anyone the short-lived
+    // light default migrated to daytime. The theme switcher still works after.
+    if (!window.localStorage.getItem('avalon.theme.dark-restore')) {
+      window.localStorage.setItem(THEME_KEY, 'dark');
+      window.localStorage.setItem('avalon.theme.dark-restore', '1');
     }
   } catch {
     /* storage unavailable in private windows; the default theme still applies */
@@ -20,7 +20,7 @@ function applyStoredTheme() {
   try {
     applyTheme();
   } catch (err) {
-    document.documentElement.classList.add('daytime');
+    document.documentElement.classList.add('dark');
     if (import.meta.env?.DEV) console.warn('[theme-boot]', err);
   }
 }
