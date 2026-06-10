@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, ArrowRight, Eye, EyeOff, LockKeyhole, MailCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight, Eye, EyeOff, Fingerprint, LockKeyhole, Mail, MailCheck, Smartphone } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
@@ -52,6 +52,24 @@ function ErrorBanner({ message }) {
   );
 }
 
+function SubmitButton({ loading, idle, busy }) {
+  return (
+    <motion.button
+      type="submit"
+      disabled={loading}
+      whileTap={{ scale: 0.985 }}
+      className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
+    >
+      <span>{loading ? busy : idle}</span>
+      {loading ? (
+        <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
+      ) : (
+        <ArrowRight className="h-5 w-5" strokeWidth={2} />
+      )}
+    </motion.button>
+  );
+}
+
 export default function Login() {
   useSeo({
     title: 'Client Sign In - Avalon Vitality',
@@ -61,13 +79,21 @@ export default function Login() {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, signIn, signInWithEmail, authBackend, loading, error } = useAuthStore();
+  const {
+    user, signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp, signInWithPasskey,
+    authBackend, loading, error,
+  } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
+  const [method, setMethod] = useState('email'); // 'email' | 'phone'
   const [clientId, setClientId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldError, setFieldError] = useState('');
   const [linkSent, setLinkSent] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
 
   useEffect(() => {
     try {
@@ -116,6 +142,32 @@ export default function Login() {
     if (result.ok && result.user) navigate(destinationFor(result.user), { replace: true });
   };
 
+  // Phone OTP: first submit sends the code, second submit verifies it.
+  const handlePhone = async (event) => {
+    event.preventDefault();
+    setFieldError('');
+    if (!otpSent) {
+      if (!phone.trim()) { setFieldError('Enter your phone number.'); return; }
+      const result = await signInWithPhone(phone.trim());
+      if (result.ok) setOtpSent(true);
+      else setFieldError(result.error || 'Could not send the code.');
+      return;
+    }
+    if (!otp.trim()) { setFieldError('Enter the 6-digit code we texted you.'); return; }
+    const result = await verifyPhoneOtp(phone.trim(), otp.trim());
+    if (!result.ok) setFieldError(result.error || 'That code was not valid.');
+    // success → the user effect redirects
+  };
+
+  const handlePasskey = async () => {
+    setFieldError('');
+    setPasskeyBusy(true);
+    const result = await signInWithPasskey();
+    setPasskeyBusy(false);
+    if (!result.ok) setFieldError(result.error || 'Passkey sign-in failed.');
+    // success → the user effect redirects
+  };
+
   const displayError = fieldError || error;
 
   return (
@@ -142,7 +194,7 @@ export default function Login() {
             </h1>
             {supabaseMode && (
               <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
-                Enter your email and we'll send a secure sign-in link — no password to remember.
+                Passwordless sign-in — a magic link, a text code, or your passkey.
               </p>
             )}
           </div>
@@ -163,60 +215,123 @@ export default function Login() {
                 Use a different email
               </button>
             </div>
+          ) : supabaseMode ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-1 rounded-full border border-foreground/[0.12] bg-foreground/[0.04] p-1">
+                {[['email', 'Email', Mail], ['phone', 'Phone', Smartphone]].map(([key, label, Icon]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => { setMethod(key); setFieldError(''); }}
+                    className={`flex min-h-[44px] items-center justify-center gap-2 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-colors ${method === key ? 'bg-foreground text-background' : 'text-foreground/55 hover:text-foreground'}`}
+                  >
+                    <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {method === 'email' ? (
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                  <Field
+                    id="client-id"
+                    label="Email"
+                    type="email"
+                    value={clientId}
+                    onChange={(event) => { setClientId(event.target.value); setFieldError(''); }}
+                    autoComplete="email"
+                    placeholder="you@email.com"
+                  />
+                  <ErrorBanner message={displayError} />
+                  <SubmitButton loading={loading} idle="Email Me A Link" busy="Sending Link" />
+                </form>
+              ) : (
+                <form onSubmit={handlePhone} className="space-y-4" noValidate>
+                  <Field
+                    id="client-phone"
+                    label="Phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => { setPhone(event.target.value); setFieldError(''); }}
+                    autoComplete="tel"
+                    placeholder="+1 (415) 555-0199"
+                  />
+                  {otpSent && (
+                    <Field
+                      id="client-otp"
+                      label="6-Digit Code"
+                      type="text"
+                      value={otp}
+                      onChange={(event) => { setOtp(event.target.value); setFieldError(''); }}
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                    />
+                  )}
+                  <ErrorBanner message={displayError} />
+                  <SubmitButton loading={loading} idle={otpSent ? 'Verify & Sign In' : 'Text Me A Code'} busy={otpSent ? 'Verifying' : 'Sending Code'} />
+                  {otpSent && (
+                    <button
+                      type="button"
+                      onClick={() => { setOtpSent(false); setOtp(''); setFieldError(''); }}
+                      className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
+                    >
+                      Use a different number
+                    </button>
+                  )}
+                </form>
+              )}
+
+              <div className="flex items-center gap-3 py-0.5">
+                <span className="h-px flex-1 bg-foreground/10" />
+                <span className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/40">or</span>
+                <span className="h-px flex-1 bg-foreground/10" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePasskey}
+                disabled={passkeyBusy}
+                className="flex min-h-[54px] w-full items-center justify-center gap-2.5 rounded-full border border-foreground/[0.16] bg-foreground/[0.04] font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:bg-foreground/[0.08] disabled:cursor-wait disabled:opacity-50"
+              >
+                {passkeyBusy ? (
+                  <span className="h-4 w-4 rounded-full border-2 border-foreground/25 border-t-foreground animate-spin" />
+                ) : (
+                  <Fingerprint className="h-4 w-4" strokeWidth={2} />
+                )}
+                Sign in with a passkey
+              </button>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <Field
                 id="client-id"
-                label={supabaseMode ? 'Email' : 'Client ID or Email'}
-                type={supabaseMode ? 'email' : 'text'}
+                label="Client ID or Email"
+                type="text"
                 value={clientId}
-                onChange={(event) => {
-                  setClientId(event.target.value);
-                  setFieldError('');
-                }}
-                autoComplete={supabaseMode ? 'email' : 'username'}
-                placeholder={supabaseMode ? 'you@email.com' : 'CLIENT0001'}
+                onChange={(event) => { setClientId(event.target.value); setFieldError(''); }}
+                autoComplete="username"
+                placeholder="CLIENT0001"
               />
-
-              {!supabaseMode && (
-                <Field
-                  id="client-password"
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(event) => {
-                    setPassword(event.target.value);
-                    setFieldError('');
-                  }}
-                  autoComplete="current-password"
-                  placeholder="Password"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((value) => !value)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
-                  </button>
-                </Field>
-              )}
-
-              <ErrorBanner message={displayError} />
-
-              <motion.button
-                type="submit"
-                disabled={loading}
-                whileTap={{ scale: 0.985 }}
-                className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
+              <Field
+                id="client-password"
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(event) => { setPassword(event.target.value); setFieldError(''); }}
+                autoComplete="current-password"
+                placeholder="Password"
               >
-                <span>{loading ? (supabaseMode ? 'Sending Link' : 'Signing In') : (supabaseMode ? 'Email Me A Link' : 'Sign In')}</span>
-                {loading ? (
-                  <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
-                ) : (
-                  <ArrowRight className="h-5 w-5" strokeWidth={2} />
-                )}
-              </motion.button>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
+                </button>
+              </Field>
+              <ErrorBanner message={displayError} />
+              <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
             </form>
           )}
 

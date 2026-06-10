@@ -5,6 +5,7 @@ import {
   Calendar,
   Check,
   CreditCard,
+  Fingerprint,
   LogOut,
   MapPin,
   MessageCircle,
@@ -123,9 +124,18 @@ function PrepItem({ item, onToggle }) {
 
 // Live dashboard — real visits from /api/me/appointments (Supabase mode).
 function LiveClientDashboard() {
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, registerPasskey } = useAuthStore();
   const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, error: '', visits: [] });
+  const [passkeyMsg, setPasskeyMsg] = useState(null);
+
+  const addPasskey = async () => {
+    setPasskeyMsg({ tone: 'busy', text: 'Follow your device prompt to add a passkey…' });
+    const result = await registerPasskey();
+    setPasskeyMsg(result.ok
+      ? { tone: 'ok', text: result.message || 'Passkey added — use it to sign in next time.' }
+      : { tone: 'err', text: result.error || 'Could not add a passkey.' });
+  };
 
   useEffect(() => {
     let active = true;
@@ -278,7 +288,27 @@ function LiveClientDashboard() {
               <Action to="/members/account" icon={UserRound} label="Profile" />
               <Action to="/subscription" icon={Sparkles} label="Plan" />
               <Action to="/members/messages" icon={MessageCircle} label="Inbox" />
+              <button
+                type="button"
+                onClick={addPasskey}
+                className="flex min-h-[58px] items-center justify-between rounded-2xl px-4 font-body text-[11px] font-bold uppercase tracking-[0.18em] transition-transform active:scale-[0.98]"
+                style={{ background: CARD, color: TEXT, border: `1px solid ${BORDER}` }}
+              >
+                <span className="flex items-center gap-2.5">
+                  <Fingerprint className="h-4 w-4" strokeWidth={1.8} />
+                  Add A Passkey
+                </span>
+                <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+              </button>
             </div>
+            {passkeyMsg && (
+              <p
+                className="mt-3 font-body text-xs leading-relaxed"
+                style={{ color: passkeyMsg.tone === 'err' ? 'hsl(0 70% 62%)' : passkeyMsg.tone === 'ok' ? ACCENT : MUTED }}
+              >
+                {passkeyMsg.text}
+              </p>
+            )}
           </section>
         </div>
       </section>
