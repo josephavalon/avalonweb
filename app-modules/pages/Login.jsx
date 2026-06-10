@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react';
+import { AlertCircle, ArrowRight, Eye, EyeOff, LockKeyhole, MailCheck } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
@@ -61,11 +61,13 @@ export default function Login() {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, loading, error } = useAuthStore();
+  const { user, signIn, signInWithEmail, authBackend, loading, error } = useAuthStore();
+  const supabaseMode = authBackend === 'supabase';
   const [clientId, setClientId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldError, setFieldError] = useState('');
+  const [linkSent, setLinkSent] = useState('');
 
   useEffect(() => {
     try {
@@ -75,28 +77,43 @@ export default function Login() {
     }
   }, []);
 
-  const destinationFor = (user) => {
+  const destinationFor = (sessionUser) => {
     const requested = searchParams.get('redirect');
     const localPath = requested && requested.startsWith('/') && !requested.startsWith('//') ? requested : '';
-    if (localPath && user?.role === 'client') return localPath;
-    return user?.redirect || '/members/dashboard';
+    if (localPath && sessionUser?.role === 'client') return localPath;
+    return sessionUser?.redirect || '/members/dashboard';
   };
+
+  // Once a session exists, leave the login page. Covers both the magic-link
+  // return (Supabase sets the session async) and demo sign-in.
+  useEffect(() => {
+    if (user) navigate(destinationFor(user), { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFieldError('');
+    setLinkSent('');
 
     if (!clientId.trim()) {
-      setFieldError('Enter your client ID or email.');
+      setFieldError(supabaseMode ? 'Enter your email address.' : 'Enter your client ID or email.');
       return;
     }
+
+    if (supabaseMode) {
+      const result = await signInWithEmail(clientId.trim());
+      if (result.ok) setLinkSent(clientId.trim());
+      else setFieldError(result.error || 'Could not send the sign-in link.');
+      return;
+    }
+
     if (!password) {
       setFieldError('Enter your password.');
       return;
     }
-
     const result = await signIn({ email: clientId.trim(), password });
-    if (result.ok) navigate(destinationFor(result.user), { replace: true });
+    if (result.ok && result.user) navigate(destinationFor(result.user), { replace: true });
   };
 
   const displayError = fieldError || error;
@@ -123,59 +140,85 @@ export default function Login() {
             <h1 className="font-heading text-[3.15rem] uppercase leading-[0.86] tracking-tight text-foreground sm:text-[4rem]">
               Client<br />Sign In
             </h1>
+            {supabaseMode && (
+              <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
+                Enter your email and we'll send a secure sign-in link — no password to remember.
+              </p>
+            )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <Field
-              id="client-id"
-              label="Client ID or Email"
-              value={clientId}
-              onChange={(event) => {
-                setClientId(event.target.value);
-                setFieldError('');
-              }}
-              autoComplete="username"
-              placeholder="CLIENT0001"
-            />
-
-            <Field
-              id="client-password"
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setFieldError('');
-              }}
-              autoComplete="current-password"
-              placeholder="Password"
-            >
+          {linkSent ? (
+            <div className="space-y-5">
+              <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
+                <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
+                <p className="font-body text-sm font-medium leading-relaxed">
+                  Check your inbox — we sent a secure sign-in link to <span className="font-bold">{linkSent}</span>. Open it on this device to finish signing in.
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+                onClick={() => { setLinkSent(''); setClientId(''); }}
+                className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
               >
-                {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
+                Use a different email
               </button>
-            </Field>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <Field
+                id="client-id"
+                label={supabaseMode ? 'Email' : 'Client ID or Email'}
+                type={supabaseMode ? 'email' : 'text'}
+                value={clientId}
+                onChange={(event) => {
+                  setClientId(event.target.value);
+                  setFieldError('');
+                }}
+                autoComplete={supabaseMode ? 'email' : 'username'}
+                placeholder={supabaseMode ? 'you@email.com' : 'CLIENT0001'}
+              />
 
-            <ErrorBanner message={displayError} />
-
-            <motion.button
-              type="submit"
-              disabled={loading}
-              whileTap={{ scale: 0.985 }}
-              className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
-            >
-              <span>{loading ? 'Signing In' : 'Sign In'}</span>
-              {loading ? (
-                <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
-              ) : (
-                <ArrowRight className="h-5 w-5" strokeWidth={2} />
+              {!supabaseMode && (
+                <Field
+                  id="client-password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setFieldError('');
+                  }}
+                  autoComplete="current-password"
+                  placeholder="Password"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
+                  </button>
+                </Field>
               )}
-            </motion.button>
-          </form>
+
+              <ErrorBanner message={displayError} />
+
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileTap={{ scale: 0.985 }}
+                className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
+              >
+                <span>{loading ? (supabaseMode ? 'Sending Link' : 'Signing In') : (supabaseMode ? 'Email Me A Link' : 'Sign In')}</span>
+                {loading ? (
+                  <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
+                ) : (
+                  <ArrowRight className="h-5 w-5" strokeWidth={2} />
+                )}
+              </motion.button>
+            </form>
+          )}
 
           <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5">
             <Link
