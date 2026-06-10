@@ -299,7 +299,16 @@ export default async function handler(req, res) {
     if (sessionMode === 'payment') {
       sessionParams.payment_intent_data = {
         receipt_email: contact.email,
+        // When a balance is owed after the $50 deposit, save the card off-session
+        // so a nurse/admin can collect the remainder after the appointment
+        // (api/charge-balance.js). Stripe requires a customer for off-session reuse.
+        ...(Number(balanceDueCents) > 0
+          ? { setup_future_usage: 'off_session' }
+          : {}),
       };
+      if (Number(balanceDueCents) > 0) {
+        sessionParams.customer_creation = 'always';
+      }
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams, {
