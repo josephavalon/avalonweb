@@ -135,6 +135,7 @@ function sortSessions(sessions) {
 
 function ProtocolCard({ session, index = 0 }) {
   const Icon = session.icon || Droplets;
+  const bagSrc = session.image || session.doses?.[0]?.image;
 
   return (
     <MotionLink
@@ -142,12 +143,16 @@ function ProtocolCard({ session, index = 0 }) {
       layout
       variants={premiumStaggerItem}
       transition={{ ...CARD_TRANSITION, delay: Math.min(index * 0.025, 0.12), layout: CARD_TRANSITION }}
-      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/44 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.35rem] md:p-3"
+      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/85 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/92 md:rounded-[1.35rem] md:p-3"
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.08),transparent_38%)]" />
       <span className="relative flex min-h-[72px] w-full min-w-0 items-center gap-2.5 text-left md:min-h-[84px] md:gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-12 md:w-12">
-          <Icon className="h-5 w-5 md:h-[22px] md:w-[22px]" strokeWidth={2.4} />
+        <div className="flex h-[3.5rem] w-11 shrink-0 items-center justify-center md:h-[4rem] md:w-12">
+          {bagSrc ? (
+            <img src={bagSrc} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]" />
+          ) : (
+            <Icon className="h-5 w-5 text-foreground md:h-[22px] md:w-[22px]" strokeWidth={2.4} />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start justify-between gap-3">
@@ -180,7 +185,7 @@ function CustomProtocolRow() {
     <MotionLink
       to="/custom?mode=subscription"
       whileTap={premiumTap}
-      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/56 md:rounded-[1.6rem] md:p-4"
+      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/85 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/92 md:rounded-[1.6rem] md:p-4"
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       <span className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4">
@@ -231,8 +236,8 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
   const toggle = onToggle || (() => setLocalOpen((value) => !value));
 
   return (
-    <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
+    <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.08),transparent_38%)]" />
       <button
         type="button"
         onClick={toggle}
