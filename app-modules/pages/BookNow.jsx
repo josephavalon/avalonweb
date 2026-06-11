@@ -4716,10 +4716,7 @@ export default function BookNow() {
   const renderAddonTile = (group, item) => {
     const active = state.addOns.includes(item.label);
     const Icon = item.icon || Plus;
-    const longLabel = item.label.length > 16;
-    const titleSizeClass = longLabel
-      ? 'md:text-[1rem] xl:text-[1.08rem] 2xl:text-[1.14rem]'
-      : 'md:text-[1.08rem] xl:text-[1.16rem] 2xl:text-[1.24rem]';
+    const titleSizeClass = 'md:text-[1.08rem] xl:text-[1.16rem] 2xl:text-[1.24rem]';
 
     return (
       <button
