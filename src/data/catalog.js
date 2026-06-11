@@ -123,8 +123,7 @@ export const IV_SESSIONS = [
     duration: '45-60 min',
     inside: 'Magnesium · Calcium · Vitamins B1 B2 B3 B5 B6 · Vitamin C · Saline',
     features: ['Magnesium', 'B-complex vitamins', 'Calcium', 'Vitamin C'],
-    image: '/bags/myers-cocktail-cutout.png',
-    transparentMedia: true,
+    image: '/bags/myers.png',
     motionVideo: null,
     desc: 'A classic IV formula featuring B-complex, Vitamin C, magnesium, calcium, and zinc.',
   },
@@ -139,7 +138,7 @@ export const IV_SESSIONS = [
     duration: '45-60 min',
     inside: 'Saline · Nausea support when clinically appropriate · B-Complex · Glutathione · Electrolytes',
     features: ['Hydration support', 'B vitamins', 'Glutathione support', 'Electrolytes'],
-    image: '/bags/recovery.png',
+    image: '/bags/night-out.png',
     desc: 'Saline, B vitamins, and glutathione - a well-known combination for rehydration.',
   },
   {
@@ -156,7 +155,7 @@ export const IV_SESSIONS = [
       { key: 'nad_500', label: '500mg', price: 500, duration: '1-4 hr', image: '/bags/nad-500.png' },
       { key: 'nad_750', label: '750mg', price: 600, duration: '1-4 hr', image: '/bags/nad-750.png' },
       { key: 'nad_1000', label: '1000mg', price: 750, duration: '1-4 hr', image: '/bags/nad-1000.png' },
-      { key: 'nad_1250', label: '1250mg', price: 950, duration: '1-4 hr', image: '/bags/nad-1500.png' },
+      { key: 'nad_1250', label: '1250mg', price: 950, duration: '1-4 hr', image: '/bags/nad-1250.png' },
       { key: 'nad_1500', label: '1500mg', price: 1100, duration: '1-4 hr', image: '/bags/nad-1500.png' },
     ],
   },
@@ -172,6 +171,8 @@ export const IV_SESSIONS = [
     doses: [
       { key: 'cbd_33', label: '33mg', price: 350, duration: '45-60 min', image: '/bags/cbd-33.png' },
       { key: 'cbd_66', label: '66mg', price: 450, duration: '45-60 min', image: '/bags/cbd-66.png' },
+      { key: 'cbd_99', label: '99mg', price: 550, duration: '45-60 min', image: '/bags/cbd-99.png' },
+      { key: 'cbd_132', label: '132mg', price: 650, duration: '45-60 min', image: '/bags/cbd-132.png' },
     ],
   },
 ];
@@ -500,6 +501,7 @@ export const productsByCategory = {
       namedSession(byKey.energy, 'Performance IV', {
         desc: 'B vitamins, magnesium, taurine, Vitamin C, and hydration support for performance-focused routines.',
         benefitStatement: 'Nutrient support before or after high-output performance.',
+        image: '/bags/performance.png',
         idealFor: ['Performance', 'Corporate', 'Recovery'],
         related: ['energy-iv', 'recovery-iv', 'nad-iv-250mg'],
       }),
