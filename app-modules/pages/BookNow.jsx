@@ -4626,10 +4626,7 @@ export default function BookNow() {
     const active = state.productKey === item.key;
     const copy = compactProtocolCopy(item);
     const menuLabel = copy.label;
-    const longLabel = menuLabel.length > 11;
-    const titleSizeClass = longLabel
-      ? 'md:text-[1.02rem] xl:text-[1.12rem] 2xl:text-[1.2rem]'
-      : 'md:text-[1.14rem] xl:text-[1.26rem] 2xl:text-[1.36rem]';
+    const titleSizeClass = 'md:text-[1.14rem] xl:text-[1.26rem] 2xl:text-[1.36rem]';
 
     return (
       <button
@@ -4684,7 +4681,6 @@ export default function BookNow() {
     const copy = compactProtocolCopy(item);
     const price = protocolPrice(item);
     const selectTherapy = () => chooseTherapyMenuProduct(item.key);
-    const longLabel = copy.label.length > 12;
 
     return (
       <button
@@ -4704,7 +4700,7 @@ export default function BookNow() {
             <Icon className="h-7 w-7 text-foreground min-[390px]:h-8 min-[390px]:w-8" strokeWidth={1.9} />
           )}
         </span>
-        <span className={`relative min-w-0 font-heading uppercase leading-[0.92] tracking-normal text-foreground ${longLabel ? 'text-[1.06rem] min-[390px]:text-[1.18rem]' : 'text-[1.22rem] min-[390px]:text-[1.36rem]'}`}>
+        <span className="relative min-w-0 font-heading text-[1.22rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.36rem]">
           <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
         </span>
         <span className="relative whitespace-nowrap font-heading text-[1.22rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.36rem]">
