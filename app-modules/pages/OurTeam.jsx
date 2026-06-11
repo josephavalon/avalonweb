@@ -276,8 +276,8 @@ export default function OurTeam() {
             <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
               Registered Nurse Roster
             </p>
-            <h3 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide leading-none">
-              COMING SOON!
+            <h3 className="font-heading text-2xl md:text-3xl text-foreground/55 tracking-wide leading-none">
+              Coming soon
             </h3>
             <p className="mt-4 max-w-2xl font-body text-sm md:text-base text-foreground/65 leading-relaxed">
               Avalon is finalizing the registered nurse roster for public display. Every visit is administered by a California-licensed registered nurse after intake and clinical review.

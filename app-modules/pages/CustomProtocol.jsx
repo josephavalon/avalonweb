@@ -105,7 +105,7 @@ function OneTimeNote() {
 
 function TreatmentRow({ icon: Icon, title, tag, fromPrice, active, onToggle, children }) {
   return (
-    <motion.div layout className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
+    <motion.div layout className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/80 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       <div className="flex items-start gap-4 p-4">
         <button
@@ -393,7 +393,7 @@ export default function CustomProtocol() {
               </TreatmentRow>
 
               {/* ── IM Shots ── */}
-              <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/44 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
+              <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/80 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
                 <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
                 <div className="mb-1 flex items-center gap-2">
                   <Syringe className="h-4 w-4 text-foreground/65" strokeWidth={1.5} />

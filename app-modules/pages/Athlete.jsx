@@ -149,7 +149,7 @@ export default function Athlete() {
                       {protocol.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="font-body text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border border-foreground/[0.1] text-foreground/40"
+                          className="font-body text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border border-foreground/[0.22] text-foreground/55"
                         >
                           {tag}
                         </span>
