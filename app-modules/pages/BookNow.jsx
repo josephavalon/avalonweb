@@ -5160,7 +5160,11 @@ export default function BookNow() {
     <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
       <span aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-black/30 backdrop-blur-[1px] md:bg-black/42 md:backdrop-blur-[1.5px]" />
       <BookingMobileHeader />
-      <div className="relative z-10 hidden md:block">
+      {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
+          a z-10 stacking context, and the booking <main> below (also z-10, later
+          sibling) then paints over the navbar — killing every nav click. Keep this
+          wrapper position-static so the fixed nav resolves in .app-shell (isolate). */}
+      <div className="hidden md:block">
         <Navbar />
       </div>
       <main
