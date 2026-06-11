@@ -30,8 +30,10 @@ const SPECIALTY_IVS = [
     label: 'CBD',
     icon: Star,
     treatments: [
-      { icon: Star, img: '/bags/cbd-33.png', label: 'CBD — Low Dose',  price: 350 },
-      { icon: Star, img: '/bags/cbd-66.png', label: 'CBD — High Dose', price: 450 },
+      { icon: Star, img: '/bags/cbd-33.png',  label: 'CBD 33mg',  price: 350 },
+      { icon: Star, img: '/bags/cbd-66.png',  label: 'CBD 66mg',  price: 450 },
+      { icon: Star, img: '/bags/cbd-99.png',  label: 'CBD 99mg',  price: 550 },
+      { icon: Star, img: '/bags/cbd-132.png', label: 'CBD 132mg', price: 650 },
     ],
   },
 ];
