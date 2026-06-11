@@ -266,7 +266,22 @@ function renderRouteHtml(page, kind = 'page') {
   html = ensureHeadTag(html, /<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeHtml(description)}" />`);
   html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => `<script id="static-jsonld" type="application/ld+json">${jsonLd}</script>`);
   html = html.replace(/<div id="root"><\/div>/, `<div id="root">${fallbackHtml(page)}\n    </div>`);
+  html = makeCssNonBlocking(html);
   return html;
+}
+
+// Convert Vite's render-blocking main stylesheet into a non-blocking load so the
+// inline-styled prerender (above) paints immediately (fast FCP/LCP). The sheet is
+// preloaded at high priority, applied via the media="print" → onload swap, with a
+// <noscript> fallback for no-JS clients.
+function makeCssNonBlocking(html) {
+  return html.replace(
+    /<link rel="stylesheet"((?:\s+crossorigin)?)\s+href="(\/assets\/[^"]+\.css)"\s*\/?>/g,
+    (_m, cross, href) =>
+      `<link rel="preload" as="style"${cross} href="${href}">` +
+      `<link rel="stylesheet"${cross} href="${href}" media="print" onload="this.media='all';this.onload=null;">` +
+      `<noscript><link rel="stylesheet"${cross} href="${href}"></noscript>`,
+  );
 }
 
 function writeRoute(page, kind) {

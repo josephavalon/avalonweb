@@ -20,12 +20,9 @@ const HERO_PROOF_POINTS = [
 ];
 
 export default function Hero() {
-  React.useEffect(() => {
-    const preload = () => import('@/pages/BookNow');
-    const timer = window.setTimeout(preload, 450);
-    return () => window.clearTimeout(timer);
-  }, []);
-
+  // Booking chunk is prefetched on hover/focus of the Book action (intent-based,
+  // see onPointerEnter/onFocus below) rather than eagerly on load, to keep the
+  // homepage critical path lean.
   return (
     <section
       className="hero-root relative flex flex-col overflow-hidden"

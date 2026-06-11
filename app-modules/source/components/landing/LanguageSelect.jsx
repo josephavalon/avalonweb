@@ -226,7 +226,7 @@ export default function LanguageSelect() {
       <motion.button
         onClick={() => setOpen((v) => !v)}
         whileTap={{ scale: 0.97, transition: { duration: 0.22, ease: EASE } }}
-        aria-label="Select language"
+        aria-label={`Select language (${currentLang.native})`}
         aria-expanded={open}
         data-current-language={current}
         className="flex min-h-11 items-center gap-1.5 rounded-full border border-foreground/[0.12] px-3 py-2 font-body text-[10px] uppercase tracking-[0.15em] text-foreground/45 transition-colors duration-200 hover:border-foreground/25 hover:text-foreground"

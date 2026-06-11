@@ -44,10 +44,18 @@
     <meta name="twitter:image" content="https://www.avalonvitality.co/og-homepage.jpg?v=20260527" />
     <meta name="twitter:image:alt" content="Avalon Vitality — Mobile IV Therapy" />
 
-    <!-- Fonts — self-hosted to remove third-party render dependency -->
-    <link rel="preload" href="/fonts/inter-400.ttf" as="font" type="font/ttf" crossorigin />
-    <link rel="preload" href="/fonts/bebas-neue-400.ttf" as="font" type="font/ttf" crossorigin />
-    <link rel="stylesheet" href="/fonts/avalon-fonts.css" />
+    <!-- Fonts — self-hosted, subset WOFF2 (see scripts/optimize-fonts.mjs).
+         Above-the-fold faces are preloaded; @font-face is inlined so there is no
+         render-blocking stylesheet fetch. -->
+    <link rel="preload" href="/fonts/bebas-neue-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/bebas-neue-400.woff2') format('woff2');}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/inter-400.woff2') format('woff2');}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/inter-500.woff2') format('woff2');}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/inter-600.woff2') format('woff2');}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/inter-700.woff2') format('woff2');}
+    </style>
 
     <!-- Structured Data: LocalBusiness -->
     <script type="application/ld+json">
@@ -95,7 +103,34 @@
     <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
-    <script src="/theme-bootstrap.js?v=20260528"></script>
+    <!-- Theme bootstrap, inlined to avoid a render-blocking external request.
+         Mirror of public/theme-bootstrap.js (kept for cache-busted reuse if needed). -->
+    <script>(function () {
+      window.__AV_BOOT_STARTED_AT = Date.now();
+      document.documentElement.classList.add('av-js');
+      var VALID = ['dark', 'light'];
+      try {
+        var stored = window.localStorage.getItem('avalon.theme');
+        var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
+        var cl = document.documentElement.classList;
+        cl.remove('dark', 'golden', 'dubs');
+        if (theme !== 'light') cl.add(theme);
+        var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
+        var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
+        var skipOnce = window.sessionStorage.getItem('av.skipSplashOnce') === '1';
+        var seenInTab = String(window.name || '').indexOf(nameFlag) !== -1;
+        if (seenInSession || skipOnce || seenInTab) {
+          window.sessionStorage.removeItem('av.skipSplashOnce');
+          cl.add('av-skip-boot');
+          window.__AV_BOOT_SKIP_SPLASH = true;
+        } else {
+          window.sessionStorage.setItem('av.bootSplashSeen', '1');
+          window.name = window.name ? window.name + ' ' + nameFlag : nameFlag;
+        }
+      } catch (e) {
+        window.__AV_THEME_BOOTSTRAP_ERROR = true;
+      }
+    })();</script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
          These rules apply the correct background immediately from the theme class that
@@ -144,17 +179,15 @@
         animation: avBootPulse 900ms cubic-bezier(0.16, 1, 0.3, 1) 1;
         transform-origin: 50% 50%;
       }
-      .av-boot-mark {
-        margin: 0;
-        padding-left: 0.32em;
-        font-family: "Bebas Neue", Impact, sans-serif;
-        font-size: clamp(5.25rem, 17vw, 11rem);
-        line-height: 0.82;
-        letter-spacing: 0.32em;
+      .av-boot-logo {
+        display: block;
+        height: clamp(6.5rem, 21vw, 12.5rem);
+        width: auto;
+        color: #f4f4f1;
         user-select: none;
       }
       .av-boot-wordmark {
-        margin: 0.75rem 0 0;
+        margin: 1.1rem 0 0;
         font-family: "Inter", Arial, sans-serif;
         font-size: 10px;
         letter-spacing: 0.42em;
@@ -206,7 +239,7 @@
   <body>
     <div id="av-boot-splash" class="av-boot-splash" role="status" aria-live="polite" aria-label="Loading Avalon Vitality">
       <div class="av-boot-lockup">
-        <p class="av-boot-mark">AV</p>
+        <svg class="av-boot-logo" viewBox="0 0 346 535" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M 166.509 13.223 C 157.220 34.353, 137.150 75.148, 125.960 95.647 C 111.969 121.278, 96.997 146.556, 69.486 191 C 26.731 260.068, 13.377 286.284, 5.489 316.636 C 2.689 327.410, 0 349.668, 0 362.068 C 0 371.209, 1.644 387.451, 3.327 394.951 L 4.500 400.174 87.943 269.026 C 133.837 196.895, 171.696 137.688, 172.075 137.454 C 172.617 137.118, 211.154 196.924, 274.718 296.750 C 276.557 299.637, 278.385 301.977, 278.781 301.949 C 279.849 301.873, 311 252.405, 311 250.784 C 311 249.179, 292.272 217.639, 269.859 181.500 C 225.700 110.294, 200.765 64.141, 177.995 11.462 C 175.627 5.983, 173.387 1.150, 173.017 0.723 C 172.648 0.295, 169.719 5.920, 166.509 13.223 M 303.858 299.785 C 294.154 315.028, 261.906 365.575, 232.195 412.112 C 202.485 458.648, 176.879 498.807, 175.294 501.353 L 172.413 505.983 119.456 423.003 C 90.330 377.365, 66.275 340.031, 66 340.040 C 65.725 340.048, 53.472 359.425, 38.771 383.099 L 12.041 426.142 16.978 436.453 C 40.773 486.157, 87.818 522.016, 142.500 532.128 C 159.496 535.272, 185.504 535.272, 202.500 532.128 C 256.668 522.111, 302.440 487.907, 326.459 439.500 C 330.007 432.350, 334.289 422.501, 335.975 417.612 C 348.676 380.793, 347.712 334.467, 333.464 296.949 C 329.357 286.132, 322.912 271.989, 322.111 272.035 C 321.775 272.054, 313.561 284.541, 303.858 299.785"/></svg>
         <p class="av-boot-wordmark">AVALON VITALITY</p>
       </div>
       <div class="av-boot-progress" aria-hidden="true"><span></span></div>

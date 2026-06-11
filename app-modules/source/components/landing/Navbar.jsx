@@ -49,9 +49,22 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   }, [location]);
 
   useEffect(() => {
-    import('@/pages/BookNow').catch((err) => {
-      if (import.meta.env?.DEV) console.warn('[book-route-preload]', err);
-    });
+    if (typeof window === 'undefined') return undefined;
+    // Prefetch the booking chunk during idle time so it never competes with the
+    // initial critical path (FCP/LCP). Stripe.js is NOT pulled in by this — BookNow
+    // imports `@stripe/stripe-js/pure`, which defers the Stripe script until checkout.
+    const prefetch = () => {
+      import('@/pages/BookNow').catch((err) => {
+        if (import.meta.env?.DEV) console.warn('[book-route-preload]', err);
+      });
+    };
+    const ric = window.requestIdleCallback;
+    if (typeof ric === 'function') {
+      const id = ric(prefetch, { timeout: 3000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const timer = window.setTimeout(prefetch, 2000);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleLogoClick = (e) => {
@@ -86,6 +99,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   ];
 
   if (mobileGlobal && internalToolRoute) return null;
+  if (mobileGlobal && desktopViewport) return null;
+  if (!mobileGlobal && !desktopViewport) return null;
 
   return (
     <motion.nav

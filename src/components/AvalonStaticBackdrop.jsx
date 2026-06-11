@@ -19,15 +19,27 @@ export default function AvalonStaticBackdrop() {
       aria-hidden="true"
       role="presentation"
     >
-      <img
-        src="/images/avalon-static-back.jpg"
-        srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
-        sizes="100vw"
-        alt=""
-        className="avalon-static-backdrop__image absolute inset-0 h-full w-full object-cover [object-position:86%_52%] md:[object-position:74%_52%]"
-        loading="eager"
-        fetchPriority="high"
-      />
+      <picture>
+        <source
+          type="image/avif"
+          srcSet="/images/avalon-static-back-512.avif 512w, /images/avalon-static-back-1024.avif 1024w, /images/avalon-static-back.avif 1536w"
+          sizes="100vw"
+        />
+        <source
+          type="image/webp"
+          srcSet="/images/avalon-static-back-512.webp 512w, /images/avalon-static-back-1024.webp 1024w, /images/avalon-static-back.webp 1536w"
+          sizes="100vw"
+        />
+        <img
+          src="/images/avalon-static-back.jpg"
+          srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
+          sizes="100vw"
+          alt=""
+          className="avalon-static-backdrop__image absolute inset-0 h-full w-full object-cover [object-position:86%_52%] md:[object-position:74%_52%]"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </picture>
       <div className="avalon-static-backdrop__veil absolute inset-0" />
       <div className="avalon-static-backdrop__side absolute inset-0" />
       <div className="avalon-static-backdrop__bottom absolute inset-x-0 bottom-0 h-[78svh]" />
