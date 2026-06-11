@@ -82,7 +82,7 @@ function FooterDesktopGroup({ title, icon: Icon, open, onToggle, children }) {
       >
             <span className="flex min-w-0 items-center gap-2.5">
           {Icon && (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/30 text-foreground/58">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/80 text-foreground/58">
               <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
             </span>
           )}
@@ -140,11 +140,11 @@ function FooterGroup({ group, open, onToggle }) {
         <div className="grid grid-cols-2 gap-x-2 gap-y-2 border-t border-foreground/[0.07] px-4 py-3">
           {group.type === 'contact' ? (
             <>
-              <a href="mailto:support@avalonvitality.co" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl border border-foreground/[0.07] bg-background/30 px-3 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-foreground/[0.055] hover:text-foreground">
+              <a href="mailto:support@avalonvitality.co" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl border border-foreground/[0.07] bg-background/80 px-3 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-foreground/[0.055] hover:text-foreground">
                 <Mail className="w-3.5 h-3.5 shrink-0" />
                 support@avalonvitality.co
               </a>
-              <a href="tel:+14159807708" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl border border-foreground/[0.07] bg-background/30 px-3 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-foreground/[0.055] hover:text-foreground">
+              <a href="tel:+14159807708" className="col-span-2 flex min-h-[44px] items-center gap-2 rounded-xl border border-foreground/[0.07] bg-background/80 px-3 py-1.5 font-body text-xs text-foreground/70 transition-colors hover:bg-foreground/[0.055] hover:text-foreground">
                 <Phone className="w-3.5 h-3.5 shrink-0" />
                 (415) 980-7708
               </a>
@@ -161,7 +161,7 @@ function FooterGroup({ group, open, onToggle }) {
             <Link
               key={l.label}
               to={l.to}
-              className="flex min-h-[44px] items-center justify-between rounded-xl border border-foreground/[0.07] bg-background/30 px-3 py-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors duration-base ease-editorial hover:bg-foreground/[0.055] hover:text-foreground"
+              className="flex min-h-[44px] items-center justify-between rounded-xl border border-foreground/[0.07] bg-background/80 px-3 py-1.5 font-body text-xs leading-tight text-foreground/70 transition-colors duration-base ease-editorial hover:bg-foreground/[0.055] hover:text-foreground"
             >
               <span>{l.label}</span>
               <ArrowRight className="h-3.5 w-3.5 opacity-45" strokeWidth={1.9} />
@@ -254,11 +254,11 @@ export default function Footer() {
               <FooterContactLink href="tel:+14159807708" icon={Phone}>
                 (415) 980-7708
               </FooterContactLink>
-              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/24 px-3 font-body text-[11px] leading-none text-foreground/50">
+              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/80 px-3 font-body text-[11px] leading-none text-foreground/50">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
                 8AM-8PM
               </div>
-              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/24 px-3 font-body text-[11px] leading-none text-foreground/50">
+              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/80 px-3 font-body text-[11px] leading-none text-foreground/50">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
                 SF Bay Area
               </div>

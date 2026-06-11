@@ -86,7 +86,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
-              className="av-motion-rail hidden rounded-2xl border border-foreground/[0.10] bg-background/58 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl lg:sticky lg:top-24 lg:block"
+              className="av-motion-rail hidden rounded-2xl border border-foreground/[0.10] bg-background/82 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl lg:sticky lg:top-24 lg:block"
             >
               <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/35">On this page</p>
               <div className="grid grid-cols-1 gap-1.5">
@@ -126,7 +126,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-10%' }}
                   transition={{ duration: 0.5, delay: 0.04 + i * 0.015, ease: EASE }}
-                  className="av-glass-sweep relative scroll-mt-28 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-background/58 p-5 shadow-[0_18px_70px_hsl(var(--foreground)/0.045)] backdrop-blur-xl md:p-6"
+                  className="av-glass-sweep relative scroll-mt-28 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-background/82 p-5 shadow-[0_18px_70px_hsl(var(--foreground)/0.045)] backdrop-blur-xl md:p-6"
                 >
                   <h2 className="mb-4 font-heading text-2xl uppercase leading-none tracking-tight text-foreground md:text-3xl">
                     {s.h}

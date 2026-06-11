@@ -4797,7 +4797,7 @@ export default function BookNow() {
               type="button"
               onClick={useCurrentLocation}
               disabled={locationLoading}
-              className="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/44 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]"
+              className="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/72 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]"
             >
               <span className="flex items-center gap-2">
                 <Navigation className="h-4 w-4" strokeWidth={2.4} />
@@ -5470,7 +5470,7 @@ export default function BookNow() {
                         type="button"
                         onClick={useCurrentLocation}
                         disabled={locationLoading}
-                        className="mb-2 flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/44 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl md:mb-2 md:min-h-[46px] md:rounded-xl md:px-3 md:text-xs"
+                        className="mb-2 flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/72 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl md:mb-2 md:min-h-[46px] md:rounded-xl md:px-3 md:text-xs"
                       >
                         <span className="flex items-center gap-2">
                           <Navigation className="h-4 w-4" strokeWidth={2.4} />

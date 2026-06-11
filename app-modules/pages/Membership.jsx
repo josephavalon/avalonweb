@@ -205,7 +205,7 @@ function StepSessions({ sessions, onSessions }) {
           onClick={() => onSessions(n)}
         />
       ))}
-      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Each session is one IV visit at your home or office. Sessions roll over 30 days; cancel or pause anytime.</p>
+      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Each session is one IV visit at your home or office. Sessions roll over while your plan is active. 3-month minimum, then pause or cancel anytime.</p>
     </div>
   );
 }
@@ -311,7 +311,7 @@ function StepTerm({ monthly, termKey, onTerm }) {
                 {!isMonthly && <span className="rounded-full bg-foreground/16 px-2 py-0.5 font-body text-[10px] font-black uppercase tracking-[0.04em] text-foreground">Save {Math.round(t.discount * 100)}%</span>}
               </span>
               <span className="mt-0.5 block font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/52">
-                {isMonthly ? 'Billed monthly · 3-month minimum' : `${money(eff)}/mo effective · charged once today`}
+                {isMonthly ? 'Billed monthly · 3-month minimum, then flexible' : `${money(eff)}/mo effective · charged once today`}
               </span>
             </span>
             <span className="flex shrink-0 items-center gap-2">
@@ -324,7 +324,7 @@ function StepTerm({ monthly, termKey, onTerm }) {
           </button>
         );
       })}
-      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Upfront terms are charged once today, then renew at the same term. Monthly bills every month with a 3-month minimum.</p>
+      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Monthly has a 3-month minimum. After that, pause or cancel anytime. Upfront terms charge once today, then renew at the same term.</p>
     </div>
   );
 }
@@ -358,7 +358,7 @@ function StepReview({ sessions, category, therapyLabel, perIvPrice, baseMonthly,
 
       <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-foreground/12 bg-background/40 px-3 py-2">
         <span className="font-body text-xs font-bold text-foreground/64">Billing</span>
-        <span className="text-right font-body text-xs font-black text-foreground">{isMonthly ? 'Monthly · 3-mo minimum' : `${term.label} upfront · save ${Math.round(term.discount * 100)}%`}</span>
+        <span className="text-right font-body text-xs font-black text-foreground">{isMonthly ? 'Monthly · 3-mo minimum, then flexible' : `${term.label} upfront · save ${Math.round(term.discount * 100)}%`}</span>
       </div>
 
       <div className="mt-3 rounded-[1rem] border border-foreground/12 bg-background/40 p-3.5">
@@ -370,6 +370,9 @@ function StepReview({ sessions, category, therapyLabel, perIvPrice, baseMonthly,
           {isMonthly
             ? `${money(monthly)}/mo · billed monthly · pause or cancel anytime after 3 months`
             : `${term.months} months upfront · ${money(perMonth)}/mo effective · renews at ${term.label}`}
+        </p>
+        <p className="mt-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] px-3 py-2 font-body text-[11px] font-bold leading-snug text-foreground/58">
+          Licensed RN visits. Intake and clinical review happen before treatment.
         </p>
         <button
           type="button"
@@ -401,7 +404,7 @@ function Progress({ step }) {
 
 function SummaryBar({ therapyLabel, sessions, addOnCount, monthly }) {
   return (
-    <div className="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/55 px-3.5 py-2.5 backdrop-blur-xl">
+    <div className="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
       <p className="min-w-0 truncate font-body text-[12px] font-bold text-foreground/64">
         {therapyLabel} · {sessions}×/mo{addOnCount > 0 ? ` · +${addOnCount} add-on${addOnCount > 1 ? 's' : ''}` : ''}
       </p>
@@ -532,7 +535,7 @@ export default function Subscription() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, ease: EASE }}
-            className="av-glass-card rounded-[1.3rem] border bg-background/52 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
+            className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
           >
             <StepHeader index={step} title={STEP_TITLES[stepKey]} sub={STEP_SUBS[stepKey]} />
             <div className="mt-4 md:mt-5">{bodies[stepKey]}</div>

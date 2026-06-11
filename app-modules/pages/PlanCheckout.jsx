@@ -185,7 +185,7 @@ export default function PlanCheckout() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="av-glass-card mb-36 rounded-[1.3rem] border bg-background/52 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-40 md:p-6"
+          className="av-glass-card mb-36 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-40 md:p-6"
         >
           {/* Schedule */}
           <p className="flex items-center gap-2 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">
@@ -242,7 +242,7 @@ export default function PlanCheckout() {
         {error && <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 font-body text-sm font-semibold text-red-200" role="alert">{error}</p>}
 
         <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3">
-          <div className="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/55 px-3.5 py-2.5 backdrop-blur-xl">
+          <div className="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
             <span className="font-body text-[12px] font-bold text-foreground/64">Due today · renews {renews}</span>
             <span className="font-body text-sm font-black text-foreground">{money(dueToday)}</span>
           </div>
@@ -254,7 +254,7 @@ export default function PlanCheckout() {
           >
             {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Start membership · {money(dueToday)} <ArrowRight className="h-4 w-4" /></>)}
           </button>
-          <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Secure checkout · clinical review before treatment · cancel or change with our team</p>
+          <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Secure checkout · licensed RN visit · clinical review before treatment · 3-month minimum, then pause or cancel</p>
         </div>
       </main>
     </div>
