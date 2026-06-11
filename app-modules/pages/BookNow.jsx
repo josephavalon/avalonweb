@@ -14,6 +14,7 @@ import {
   Calendar,
   Check,
   ChevronDown,
+  ChevronRight,
   CreditCard,
   Droplets,
   Dumbbell,
@@ -219,6 +220,8 @@ const THERAPY_GROUPS = [
     key: 'vitamin',
     label: 'IV Therapy',
     sub: '9 therapies',
+    desc: 'Hydration, recovery, energy, and immunity drips.',
+    duration: '60 min',
     icon: Droplets,
     keys: ['hydration', 'myers', 'postnight', 'immunity', 'energy', 'recovery', 'performance', 'jetlag', 'food-poisoning'],
   },
@@ -226,6 +229,8 @@ const THERAPY_GROUPS = [
     key: 'cbd',
     label: 'CBD IV Therapy',
     sub: '4 therapies',
+    desc: 'Calm-focused infusions with CBD support.',
+    duration: '60 min',
     icon: Leaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-99mg', 'cbd-132mg'],
   },
@@ -233,6 +238,9 @@ const THERAPY_GROUPS = [
     key: 'nad',
     label: 'NAD+ IV Therapy',
     sub: '6 therapies',
+    desc: 'Cellular energy and longevity protocols.',
+    duration: '1–4 hr',
+    badge: 'Most booked',
     icon: BatteryCharging,
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
@@ -4853,19 +4861,57 @@ export default function BookNow() {
     if (step === 0) {
       if (therapyCategoryScreen) {
         return (
-          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-3">
-            <p className={`${microLabelClass} pt-0.5 text-center tracking-[0.22em] md:pt-1`}>Choose a therapy base</p>
-            <div className="grid min-h-0 content-start gap-2 overflow-hidden md:gap-3">
-              {therapyGroups.map((group) => renderStoreMenuRow({
-                key: group.key,
-                icon: group.icon,
-                title: group.label,
-                meta: group.sub,
-                onClick: () => {
-                  setActiveTherapyGroup(group.key);
-                  setTherapyCategoryScreen(false);
-                },
-              }))}
+          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:gap-4">
+            <div>
+              <div className="mb-2 flex items-center gap-2.5">
+                <span className="h-px w-6 bg-foreground/45" />
+                <span className="font-body text-[9px] font-bold uppercase tracking-[0.26em] text-foreground/70">Book a visit</span>
+              </div>
+              <h2 className="font-heading text-[1.95rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[2.5rem]">Choose your base</h2>
+              <p className="mt-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground/52 md:text-xs">Next — pick your therapy</p>
+            </div>
+            <div className="grid min-h-0 content-start gap-2.5 overflow-y-auto pb-1 md:gap-3">
+              {therapyGroups.map((group, groupIndex) => {
+                const Icon = group.icon || Droplets;
+                const count = group.keys?.length || group.items?.length || 0;
+                const fromPrice = group.items?.length ? currency(Math.min(...group.items.map((item) => protocolPrice(item)))) : null;
+                return (
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => {
+                      setActiveTherapyGroup(group.key);
+                      setTherapyCategoryScreen(false);
+                    }}
+                    className={`${panelCardClass} relative flex items-center gap-3.5 rounded-[1.05rem] px-3.5 py-3.5 text-left transition-colors hover:border-foreground/32 md:gap-4 md:px-4 md:py-4 ${groupIndex === 0 ? 'border-foreground/40' : ''}`}
+                  >
+                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
+                    <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/22 bg-foreground/[0.09] text-foreground md:h-12 md:w-12">
+                      <Icon className="h-5 w-5 md:h-[1.35rem] md:w-[1.35rem]" strokeWidth={1.9} />
+                    </span>
+                    <span className="relative min-w-0 flex-1">
+                      <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                        <span className="font-heading text-[1.2rem] uppercase leading-none tracking-normal text-foreground md:text-[1.34rem]">{group.label}</span>
+                        <span className="hidden font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/52 md:inline">{count} therapies</span>
+                        {group.badge && (
+                          <span className="rounded-full border border-foreground/28 bg-foreground/[0.12] px-2 py-0.5 font-body text-[8px] font-black uppercase tracking-[0.1em] text-foreground/82">{group.badge}</span>
+                        )}
+                      </span>
+                      <span className="mt-1 block font-body text-[11px] font-medium text-foreground/56 md:hidden">{count} therapies · From {fromPrice} · {group.duration}</span>
+                      <span className="mt-1.5 hidden font-body text-[12px] leading-snug text-foreground/58 md:block">{group.desc}</span>
+                    </span>
+                    <span className="relative hidden shrink-0 text-right md:block">
+                      <span className="block font-body text-[13px] font-semibold text-foreground">From {fromPrice}</span>
+                      <span className="mt-0.5 block font-body text-[10px] text-foreground/52">{group.duration}</span>
+                    </span>
+                    <ArrowRight className="relative hidden h-5 w-5 shrink-0 text-foreground md:block" strokeWidth={2.1} />
+                    <ChevronRight className="relative h-5 w-5 shrink-0 text-foreground/65 md:hidden" strokeWidth={2.1} />
+                  </button>
+                );
+              })}
+              <p className="mt-1 flex items-center justify-center gap-1.5 text-center font-body text-[10px] font-medium text-foreground/45">
+                <ShieldCheck className="h-3 w-3 shrink-0" strokeWidth={1.9} /> Secure booking · Free reschedule up to 24h · Clinical review required
+              </p>
             </div>
           </div>
         );
