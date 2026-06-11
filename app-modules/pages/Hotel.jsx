@@ -42,7 +42,7 @@ export default function Hotel() {
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
           >
-            <p className="mb-3 font-body text-[10px] font-black uppercase tracking-[0.28em] text-foreground/45">
+            <p className="mb-3 font-body text-[10px] font-black uppercase tracking-[0.28em] text-foreground/62">
               Hotel concierge IV
             </p>
             <h1 className="font-heading text-[clamp(4rem,18vw,7.8rem)] uppercase leading-[0.82] tracking-normal text-foreground md:text-[8.5rem]">
@@ -62,7 +62,7 @@ export default function Hotel() {
               <PremiumButton
                 as="a"
                 href="mailto:concierge@avalonvitality.co"
-                className="inline-flex min-h-[58px] items-center justify-center rounded-full border border-foreground/18 bg-background/40 px-8 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground backdrop-blur-xl"
+                className="inline-flex min-h-[58px] items-center justify-center rounded-full border border-foreground/18 bg-background/82 px-8 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground backdrop-blur-xl"
               >
                 Concierge
               </PremiumButton>
@@ -78,15 +78,15 @@ export default function Hotel() {
               <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2">
                 {status.map(({ icon: Icon, value, label }) => (
                   <div key={label} className="rounded-[1.2rem] border border-foreground/10 bg-foreground/[0.045] p-3">
-                    <Icon className="h-4 w-4 text-foreground/45" strokeWidth={1.8} />
+                    <Icon className="h-4 w-4 text-foreground/62" strokeWidth={1.8} />
                     <p className="mt-4 font-heading text-[2.15rem] uppercase leading-none text-foreground md:text-[2.65rem]">{value}</p>
-                    <p className="mt-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/45">{label}</p>
+                    <p className="mt-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/62">{label}</p>
                   </div>
                 ))}
               </div>
               <div className="relative mt-3 grid gap-2">
                 {steps.map((step) => (
-                  <div key={step.value} className="flex min-h-[64px] items-center gap-3 rounded-[1.2rem] border border-foreground/10 bg-background/32 px-4">
+                  <div key={step.value} className="flex min-h-[64px] items-center gap-3 rounded-[1.2rem] border border-foreground/10 bg-background/82 px-4">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.06] font-heading text-2xl text-foreground">
                       {step.value}
                     </span>
@@ -101,7 +101,7 @@ export default function Hotel() {
         <Reveal as="section" className="mx-auto mt-6 grid max-w-6xl gap-3 md:grid-cols-[0.9fr_1.1fr]">
           <GlassCard tone="soft" radius="1.55rem" className="p-5">
             <div className="relative flex items-center gap-3">
-              <BedDouble className="h-5 w-5 text-foreground/45" strokeWidth={1.8} />
+              <BedDouble className="h-5 w-5 text-foreground/62" strokeWidth={1.8} />
               <h2 className="font-heading text-[2.8rem] uppercase leading-none text-foreground">Best For</h2>
             </div>
             <div className="relative mt-4 flex flex-wrap gap-2">
@@ -115,7 +115,7 @@ export default function Hotel() {
 
           <GlassCard tone="soft" radius="1.55rem" className="p-5">
             <div className="relative flex items-center gap-3">
-              <ConciergeBell className="h-5 w-5 text-foreground/45" strokeWidth={1.8} />
+              <ConciergeBell className="h-5 w-5 text-foreground/62" strokeWidth={1.8} />
               <h2 className="font-heading text-[2.8rem] uppercase leading-none text-foreground">Coverage</h2>
             </div>
             <p className="relative mt-3 font-body text-sm font-semibold leading-relaxed text-foreground/60">

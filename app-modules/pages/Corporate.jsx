@@ -84,7 +84,7 @@ export default function Corporate() {
               </div>
               <div className="relative mt-3 grid gap-2">
                 {plan.map((step) => (
-                  <div key={step.value} className="flex min-h-[64px] items-center gap-3 rounded-[1.2rem] border border-foreground/10 bg-background/32 px-4">
+                  <div key={step.value} className="flex min-h-[64px] items-center gap-3 rounded-[1.2rem] border border-foreground/10 bg-background/82 px-4">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.06] font-heading text-2xl text-foreground">
                       {step.value}
                     </span>

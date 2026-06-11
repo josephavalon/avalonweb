@@ -124,20 +124,20 @@ function AlertCard({ alert, onAck, onResolve }) {
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {alert.actionLabel ? (
-          <span className="rounded-full bg-background/35 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/58">
+          <span className="rounded-full bg-background/82 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/58">
             {alert.actionLabel}
           </span>
         ) : null}
         {alert.requiresAck ? (
-          <span className="rounded-full bg-background/35 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/58">
+          <span className="rounded-full bg-background/82 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.14em] text-foreground/58">
             Ack required
           </span>
         ) : null}
-        <span className="inline-flex items-center gap-1 rounded-full bg-background/30 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/45">
+        <span className="inline-flex items-center gap-1 rounded-full bg-background/82 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/45">
           <Clock className="h-3 w-3" strokeWidth={1.7} />
           {formatTime(alert.updatedAt || alert.createdAt)}
         </span>
-        <span className="rounded-full bg-background/30 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/45">
+        <span className="rounded-full bg-background/82 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/45">
           {normalizeLabel(alert.status || 'open')}
         </span>
       </div>
@@ -147,7 +147,7 @@ function AlertCard({ alert, onAck, onResolve }) {
           <button
             type="button"
             onClick={() => onAck(alert.id)}
-            className="inline-flex min-h-[38px] flex-1 items-center justify-center gap-2 rounded-xl border border-foreground/12 bg-background/45 px-3 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/72 transition-all hover:bg-foreground/10 active:scale-[0.98]"
+            className="inline-flex min-h-[38px] flex-1 items-center justify-center gap-2 rounded-xl border border-foreground/12 bg-background/82 px-3 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/72 transition-all hover:bg-foreground/10 active:scale-[0.98]"
           >
             <Check className="h-3.5 w-3.5" strokeWidth={1.8} />
             {isAck ? 'Acked' : 'Ack'}
@@ -235,7 +235,7 @@ function MessageList({ role, channels = [], opsMessages, supportThread, onSend }
       ) : null}
 
       <div className={isClient ? 'lg:col-span-2' : ''}>
-        <div className="min-h-[330px] rounded-2xl border border-foreground/10 bg-background/42 p-3 backdrop-blur-2xl">
+        <div className="min-h-[330px] rounded-2xl border border-foreground/10 bg-background/82 p-3 backdrop-blur-2xl">
           <div className="space-y-2">
             <AnimatePresence initial={false}>
               {activeMessages.slice(0, 12).map((message) => (
@@ -296,7 +296,7 @@ function MessageList({ role, channels = [], opsMessages, supportThread, onSend }
 
 function AcuityBoundaryPanel() {
   return (
-    <div className="rounded-2xl border border-foreground/10 bg-background/42 p-4 backdrop-blur-2xl">
+    <div className="rounded-2xl border border-foreground/10 bg-background/82 p-4 backdrop-blur-2xl">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/42">Boundary</p>
@@ -332,14 +332,14 @@ function ChannelBoard({ channels }) {
                 <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/38">{channel.owner}</p>
                 <h3 className="mt-1 font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground">{channel.label}</h3>
               </div>
-              <span className="rounded-full border border-foreground/10 bg-background/35 px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/45">
+              <span className="rounded-full border border-foreground/10 bg-background/82 px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/45">
                 {channel.status}
               </span>
             </div>
             <p className="mt-3 font-body text-[11px] leading-relaxed text-foreground/52">{channel.scope}</p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {channel.channels.map((item) => (
-                <span key={`${channel.id}-${item}`} className="rounded-full bg-background/35 px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.12em] text-foreground/42">
+                <span key={`${channel.id}-${item}`} className="rounded-full bg-background/82 px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.12em] text-foreground/42">
                   {item === 'sms' ? 'text' : item === 'chat' ? 'comms' : item.replace('_', ' ')}
                 </span>
               ))}
@@ -410,12 +410,12 @@ function BroadcastComposer({ channels, templates, onSend }) {
             <input
               value={audience}
               onChange={(event) => setAudience(event.target.value)}
-              className="min-h-[44px] rounded-xl border border-foreground/10 bg-background/48 px-3 font-body text-[12px] text-foreground outline-none"
+              className="min-h-[44px] rounded-xl border border-foreground/10 bg-background/82 px-3 font-body text-[12px] text-foreground outline-none"
             />
             <button
               type="button"
               onClick={() => setRequiresAck((value) => !value)}
-              className="flex min-h-[42px] items-center justify-between rounded-xl border border-foreground/10 bg-background/38 px-3 text-left font-body text-[11px] uppercase tracking-[0.14em] text-foreground/58"
+              className="flex min-h-[42px] items-center justify-between rounded-xl border border-foreground/10 bg-background/82 px-3 text-left font-body text-[11px] uppercase tracking-[0.14em] text-foreground/58"
             >
               Require ack
               <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[9px]">{requiresAck ? 'On' : 'Off'}</span>
@@ -424,7 +424,7 @@ function BroadcastComposer({ channels, templates, onSend }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-foreground/10 bg-background/42 p-4 backdrop-blur-2xl">
+      <div className="rounded-2xl border border-foreground/10 bg-background/82 p-4 backdrop-blur-2xl">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="font-body text-[9px] uppercase tracking-[0.2em] text-foreground/42">Broadcast Composer</p>
@@ -461,7 +461,7 @@ function BroadcastComposer({ channels, templates, onSend }) {
 
 function EscalationRail({ escalations, onRun }) {
   return (
-    <div className="mb-4 rounded-2xl border border-foreground/10 bg-background/36 p-3 backdrop-blur-2xl">
+    <div className="mb-4 rounded-2xl border border-foreground/10 bg-background/82 p-3 backdrop-blur-2xl">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-foreground/42" strokeWidth={1.7} />
@@ -491,7 +491,7 @@ function AppointmentTimeline({ timeline }) {
   return (
     <div className="grid gap-3 lg:grid-cols-[0.34fr_0.66fr]">
       <AcuityBoundaryPanel />
-      <div className="rounded-2xl border border-foreground/10 bg-background/42 p-4 backdrop-blur-2xl">
+      <div className="rounded-2xl border border-foreground/10 bg-background/82 p-4 backdrop-blur-2xl">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <p className="font-body text-[9px] uppercase tracking-[0.2em] text-foreground/42">Appointment log</p>
@@ -561,7 +561,7 @@ function Announcements({ announcements, role, userId, onRead, onPublish }) {
                 <button
                   type="button"
                   onClick={() => onRead(item.id)}
-                  className="mt-4 inline-flex min-h-[36px] items-center justify-center rounded-xl border border-foreground/12 bg-background/38 px-3 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/64"
+                  className="mt-4 inline-flex min-h-[36px] items-center justify-center rounded-xl border border-foreground/12 bg-background/82 px-3 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/64"
                 >
                   Mark read
                 </button>
@@ -585,14 +585,14 @@ function Announcements({ announcements, role, userId, onRead, onPublish }) {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Title"
-              className="min-h-[44px] w-full rounded-xl border border-foreground/10 bg-background/48 px-3 font-body text-[13px] text-foreground outline-none placeholder:text-foreground/32"
+              className="min-h-[44px] w-full rounded-xl border border-foreground/10 bg-background/82 px-3 font-body text-[13px] text-foreground outline-none placeholder:text-foreground/32"
             />
             <textarea
               value={body}
               onChange={(event) => setBody(event.target.value)}
               placeholder="Short update..."
               rows={4}
-              className="w-full resize-none rounded-xl border border-foreground/10 bg-background/48 px-3 py-3 font-body text-[13px] text-foreground outline-none placeholder:text-foreground/32"
+              className="w-full resize-none rounded-xl border border-foreground/10 bg-background/82 px-3 py-3 font-body text-[13px] text-foreground outline-none placeholder:text-foreground/32"
             />
             <div className="grid grid-cols-2 gap-2">
               <select
@@ -708,7 +708,7 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2 overflow-x-auto rounded-full border border-foreground/10 bg-background/36 p-1">
+      <div className="mb-4 flex gap-2 overflow-x-auto rounded-full border border-foreground/10 bg-background/82 p-1">
         {visibleTabs.map((tab) => (
           <TabButton
             key={tab.id}
