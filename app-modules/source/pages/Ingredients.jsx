@@ -174,7 +174,7 @@ export default function Ingredients() {
                 className={`min-h-10 font-body text-xs tracking-[0.15em] uppercase px-4 py-2 rounded-full border transition-colors duration-200 ${
                   activeCategory === null
                     ? 'border-accent text-accent bg-accent/10'
-                    : 'border-foreground/[0.12] text-foreground/50 hover:border-foreground/30 hover:text-foreground/80'
+                    : 'border-foreground/[0.2] text-foreground/55 hover:border-foreground/40 hover:text-foreground/80'
                 }`}
               >
                 All
@@ -186,7 +186,7 @@ export default function Ingredients() {
                   className={`min-h-10 font-body text-xs tracking-[0.15em] uppercase px-4 py-2 rounded-full border transition-colors duration-200 ${
                     activeCategory === cat.label
                       ? 'border-accent text-accent bg-accent/10'
-                      : 'border-foreground/[0.12] text-foreground/50 hover:border-foreground/30 hover:text-foreground/80'
+                      : 'border-foreground/[0.2] text-foreground/55 hover:border-foreground/40 hover:text-foreground/80'
                   }`}
                 >
                   {cat.label}

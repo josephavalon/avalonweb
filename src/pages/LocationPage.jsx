@@ -91,7 +91,7 @@ export function LocationsHub() {
                   {item.thingsToDo?.slice(0, 2).join(' · ')}
                 </p>
                 <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
-                  Open market <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                  Explore neighborhoods <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                 </span>
               </Link>
             ))}

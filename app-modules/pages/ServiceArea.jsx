@@ -244,7 +244,7 @@ function RegionAccordion({ zone, defaultOpen = false }) {
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-foreground/[0.02] transition-colors"
+        className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-foreground/[0.05] transition-colors"
       >
         <div>
           <p className="font-heading text-xl md:text-2xl text-foreground tracking-wide uppercase">{zone.region}</p>
