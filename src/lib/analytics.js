@@ -88,7 +88,7 @@ const LOCAL_ATTRIBUTION_KEY = 'av.analytics.attribution';
 const LOCAL_EXPERIMENT_PREFIX = 'av.experiment.';
 const FIRST_PARTY_ANALYTICS_ENABLED =
   typeof import.meta !== 'undefined' &&
-  import.meta.env?.VITE_AVALON_ENABLE_LIVE_API === 'true';
+  import.meta.env?.VITE_AVALON_ENABLE_FIRST_PARTY_ANALYTICS === 'true';
 
 let provider = localAnalyticsProvider;
 /** @type {AnalyticsEvent[]} */
