@@ -56,9 +56,15 @@ const Checkout = lazyRoute(() => import('./pages/Checkout'));
 const BookNow = lazyRoute(() => import('./pages/BookNow'));
 const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
+const Signup = lazyRoute(() => import('./pages/Signup'));
+const AdminLogin = lazyRoute(() => import('./pages/AdminLogin'));
 const MemberDashboard = lazyRoute(() => import('./pages/members/Dashboard'));
 const MemberAccount = lazyRoute(() => import('./pages/members/Account'));
 const MemberMessages = lazyRoute(() => import('./pages/members/Messages'));
+const MemberBookings = lazyRoute(() => import('./pages/members/Bookings'));
+const MemberMemberships = lazyRoute(() => import('./pages/members/Memberships'));
+const MemberBilling = lazyRoute(() => import('./pages/members/Billing'));
+const MemberDocuments = lazyRoute(() => import('./pages/members/Documents'));
 const ProviderAccounting = lazyRoute(() => import('./pages/provider/Accounting'));
 const ProviderAppointments = lazyRoute(() => import('./pages/provider/Appointments'));
 const ProviderClients = lazyRoute(() => import('./pages/provider/Clients'));
@@ -280,10 +286,18 @@ function AppRoutes() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot" element={<Login />} />
+            <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
             <Route path="/members/messages" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMessages /></RequireAuth>} />
+            <Route path="/members/bookings" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBookings /></RequireAuth>} />
+            <Route path="/members/memberships" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMemberships /></RequireAuth>} />
+            <Route path="/members/billing" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBilling /></RequireAuth>} />
+            <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
             <Route path="/provider" element={<Navigate to="/login" replace />} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['provider', 'np', 'physician', 'admin']}><NurseDashboard /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['provider', 'np', 'physician', 'admin']}><ProviderAppointments /></RequireAuth>} />

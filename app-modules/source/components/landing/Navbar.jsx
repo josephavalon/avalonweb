@@ -95,7 +95,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const mobileLinks = [
     ...mainLinks,
     { to: BOOK_URL, label: 'Book', primary: true },
-    ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : []),
+    ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
   ];
 
   if (mobileGlobal && internalToolRoute) return null;
@@ -185,6 +185,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           {!compact && !focusMode && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
+          {!compact && !focusMode && !user && <Link to="/login" className={linkClass}>Sign In</Link>}
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}

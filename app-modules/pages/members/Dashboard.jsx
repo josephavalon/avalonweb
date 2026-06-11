@@ -19,6 +19,7 @@ import { readLastBooking } from '@/lib/localOs';
 import { readVisitPrep, saveVisitPrep } from '@/lib/platformOps';
 import { apiGet } from '@/lib/apiClient';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
+import MemberSectionNav from './MemberSectionNav.jsx';
 
 function formatWhen(startsAt) {
   if (!startsAt) return '';
@@ -179,7 +180,11 @@ function LiveClientDashboard() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-4 pt-5 md:px-8 md:pt-8">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-5 md:px-8 md:pt-8">
+        <MemberSectionNav />
+      </div>
+
+      <section className="mx-auto max-w-5xl px-4 pt-5 md:px-8 md:pt-6">
         <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr] md:gap-6">
           <div className="rounded-[30px] p-5 md:p-7" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
             <div className="mb-6 flex items-center justify-between gap-3">
@@ -369,7 +374,11 @@ function DemoClientDashboard() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-4 pt-5 md:px-8 md:pt-8">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-5 md:px-8 md:pt-8">
+        <MemberSectionNav />
+      </div>
+
+      <section className="mx-auto max-w-5xl px-4 pt-5 md:px-8 md:pt-6">
         <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr] md:gap-6">
           <div className="rounded-[30px] p-5 md:p-7" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
             <div className="mb-6 flex items-center justify-between gap-3">

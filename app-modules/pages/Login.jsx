@@ -337,18 +337,33 @@ export default function Login() {
 
           <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5">
             <Link
+              to="/signup"
+              className="flex min-h-[54px] items-center justify-between rounded-2xl border border-foreground/[0.12] bg-background/35 px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
+            >
+              <span>Create Account</span>
+              <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            </Link>
+            <Link
               to="/book"
               className="flex min-h-[54px] items-center justify-between rounded-2xl border border-foreground/[0.12] bg-background/35 px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
             >
               <span>Book A Visit</span>
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </Link>
-            <a
-              href="mailto:support@avalonvitality.co"
-              className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
-            >
-              Need help signing in?
-            </a>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              <Link
+                to="/forgot"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+              >
+                Forgot? Email me a link
+              </Link>
+              <a
+                href="mailto:support@avalonvitality.co"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+              >
+                Need help?
+              </a>
+            </div>
           </div>
         </section>
       </main>

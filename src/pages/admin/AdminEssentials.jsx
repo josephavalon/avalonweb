@@ -13,6 +13,8 @@ import {
   Ticket,
   UserRound,
   Users,
+  Route,
+  Activity,
 } from 'lucide-react';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
@@ -165,12 +167,13 @@ export default function AdminEssentials() {
                 triggerClassName="flex min-h-[74px] items-center justify-between rounded-[22px] border border-foreground bg-foreground px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-background transition-transform active:scale-[0.985]"
                 onCreated={() => setQuickPatients(readQuickPatients(3))}
               />
-              <ActionLink to="/admin/bookings" icon={ClipboardList} label="Visits" detail="Queue and closeout" primary />
-              <ActionLink to="/admin/events" icon={Ticket} label="Events" detail="Guest roster" />
-              <ActionLink to="/admin/client-heat-map" icon={Flame} label="Heat Map" detail="Ideal clients by SF neighborhood" />
-              <ActionLink to="/admin/inventory" icon={Package} label="Stock" detail="Kits and inventory" />
-              <ActionLink to="/admin/communications" icon={MessageCircle} label="Comms" detail="Staff and client alerts" />
-              <ActionLink to="/admin/credentials" icon={ShieldCheck} label="Safety" detail="Credentials and gates" />
+              <ActionLink to="/admin/bookings" icon={CalendarCheck} label="Scheduling" detail="Visit queue and closeout" primary />
+              <ActionLink to="/admin/dispatch" icon={Route} label="Dispatch" detail="Nurse routing and ETAs" />
+              <ActionLink to="/admin/inventory" icon={Package} label="Inventory" detail="Kits and stock levels" />
+              <ActionLink to="/admin/crm" icon={Users} label="CRM" detail="Clients, leads, history" />
+              <ActionLink to="/admin/client-heat-map" icon={Activity} label="Analytics" detail="Heat map and metrics" />
+              <ActionLink to="/admin/field" icon={ShieldCheck} label="Operations" detail="Field, credentials, training" />
+              <ActionLink to="/admin/communications" icon={MessageCircle} label="Avalon OS" detail="Comms, events, signals" />
             </div>
           </div>
 

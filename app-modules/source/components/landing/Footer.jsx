@@ -284,7 +284,15 @@ export default function Footer() {
             <p className="font-body text-[10px] text-foreground/58 leading-tight">
               © 2026 Avalon Vitality. All rights reserved.
             </p>
-            <LanguageSelect />
+            <div className="flex items-center gap-4">
+              <Link
+                to="/admin/login"
+                className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/40 transition-colors hover:text-foreground/72"
+              >
+                Admin
+              </Link>
+              <LanguageSelect />
+            </div>
           </div>
           <p className="font-body text-[10px] text-foreground/58 leading-tight">
             California wellness support only. Not emergency care or medical advice.

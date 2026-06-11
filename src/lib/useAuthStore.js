@@ -153,6 +153,34 @@ export function AuthStoreProvider({ children }) {
     } finally { setLoading(false); }
   }, []);
 
+  // New-account signup. Supabase sends a confirmation email; once the user
+  // clicks the link, onAuthStateChange fires and the public.profiles row is
+  // populated by migration 007's handle_new_user trigger.
+  const signUpWithEmail = useCallback(async ({ email, fullName, phone } = {}) => {
+    if (!hasSupabase) return { ok: false, error: 'Sign-up is not configured yet.' };
+    setLoading(true); setError(null);
+    try {
+      const cleanEmail = String(email || '').trim();
+      const cleanPhone = String(phone || '').trim();
+      const cleanName  = String(fullName || '').trim();
+      const { error: err } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password: createSessionId(),
+        phone: cleanPhone || undefined,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+          data: cleanName ? { full_name: cleanName } : undefined,
+        },
+      });
+      if (err) throw err;
+      return { ok: true, pending: true, message: 'Check your email to confirm and finish signing in.' };
+    } catch (err) {
+      const msg = err.message || 'Could not create your account.';
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
+
   // Phone OTP (Supabase). signInWithPhone texts a code (delivered via the Quo
   // Send-SMS auth hook); verifyPhoneOtp checks it and onAuthStateChange sets
   // the session.
@@ -258,14 +286,11 @@ export function AuthStoreProvider({ children }) {
     } finally { setLoading(false); }
   }, [signInWithEmail]);
 
-  const requestPasswordReset = useCallback(async () => {
-    setLoading(true);
-    try {
-      throw new Error('Passwordless sign-in is used — request a fresh email link instead.');
-    } catch (err) {
-      return { ok: false, error: err.message };
-    } finally { setLoading(false); }
-  }, []);
+  // "Forgot password" under a passwordless model is just sending a fresh
+  // magic-link to the email on file — same flow as sign-in.
+  const requestPasswordReset = useCallback(async (email) => {
+    return signInWithEmail(email);
+  }, [signInWithEmail]);
 
   const signOut = useCallback(async () => {
     if (user) appendActivity('Signed out', { role: user.role, username: user.username });
@@ -279,7 +304,7 @@ export function AuthStoreProvider({ children }) {
     {
       value: {
         user, loading, error,
-        signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp,
+        signIn, signInWithEmail, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
         signInWithPasskey, registerPasskey,
         signOut, requestPasswordReset,
         authBackend: hasSupabase ? 'supabase' : 'demo',
