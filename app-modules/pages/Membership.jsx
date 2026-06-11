@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Check,
+  ChevronDown,
   ChevronRight,
   Droplets,
   Leaf,
@@ -80,6 +81,33 @@ const IV_ADDON_ITEMS = IV_ADDONS
   .filter((a) => !a.group)
   .map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: 4 }));
 const IM_ADDON_ITEMS = IM_SHOTS.map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: a.max || 4 }));
+
+// Collapse dose variants ("Vitamin C IV Push · 5g / 10g / 15g") into one row
+// with a strength dropdown; singletons stay as their own stepper. Preserves
+// catalog order — a family appears where its first variant does.
+function buildAddonRows(items) {
+  const rows = [];
+  const familyAt = new Map();
+  for (const item of items) {
+    const sep = item.label.indexOf('·');
+    if (sep === -1) {
+      rows.push({ type: 'single', item });
+      continue;
+    }
+    const family = item.label.slice(0, sep).trim();
+    const variant = item.label.slice(sep + 1).trim();
+    const entry = { ...item, variant };
+    if (familyAt.has(family)) {
+      rows[familyAt.get(family)].variants.push(entry);
+    } else {
+      familyAt.set(family, rows.length);
+      rows.push({ type: 'family', family, variants: [entry] });
+    }
+  }
+  return rows;
+}
+const IV_ADDON_ROWS = buildAddonRows(IV_ADDON_ITEMS);
+const IM_ADDON_ROWS = buildAddonRows(IM_ADDON_ITEMS);
 
 // Six single-decision screens. One screen, one question, one decision.
 const STEPS = [
@@ -163,29 +191,76 @@ function QtyStepper({ label, price, value, max, onChange }) {
         <p className="truncate font-body text-[13px] font-black text-foreground md:text-sm">{label}</p>
         <p className="mt-0.5 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50">{money(price)} / mo</p>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <button
-          type="button"
-          aria-label={`Decrease ${label}`}
-          disabled={value <= 0}
-          onClick={() => onChange(Math.max(0, value - 1))}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/16 bg-background/40 text-foreground disabled:opacity-40"
-        >
-          <Minus className="h-3.5 w-3.5" />
-        </button>
-        <span className="w-5 text-center font-body text-base font-black text-foreground" aria-live="polite" aria-atomic="true">
-          <span className="sr-only">{label}: </span>{value}
-        </span>
-        <button
-          type="button"
-          aria-label={`Increase ${label}`}
-          disabled={value >= max}
-          onClick={() => onChange(Math.min(max, value + 1))}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/16 bg-background/40 text-foreground disabled:opacity-40"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
+      <Stepper label={label} value={value} max={max} onChange={onChange} />
+    </div>
+  );
+}
+
+function Stepper({ label, value, max, onChange }) {
+  return (
+    <div className="flex shrink-0 items-center gap-1.5">
+      <button
+        type="button"
+        aria-label={`Decrease ${label}`}
+        disabled={value <= 0}
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/16 bg-background/40 text-foreground disabled:opacity-40"
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </button>
+      <span className="w-5 text-center font-body text-base font-black text-foreground" aria-live="polite" aria-atomic="true">
+        <span className="sr-only">{label}: </span>{value}
+      </span>
+      <button
+        type="button"
+        aria-label={`Increase ${label}`}
+        disabled={value >= max}
+        onClick={() => onChange(Math.min(max, value + 1))}
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/16 bg-background/40 text-foreground disabled:opacity-40"
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+// A dose-variant family: pick the strength from a dropdown, then set quantity.
+// The qty is tracked per variant (so multiple strengths can be added), but the
+// stepper shows the selected one. Other strengths with a qty surface as a hint.
+function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
+  const initial = variants.find((v) => (qtyMap[v.key] || 0) > 0) || variants[0];
+  const [selKey, setSelKey] = useState(initial.key);
+  const sel = variants.find((v) => v.key === selKey) || variants[0];
+  const value = qtyMap[sel.key] || 0;
+  const otherActive = variants.filter((v) => v.key !== sel.key && (qtyMap[v.key] || 0) > 0);
+  return (
+    <div className="av-treatment-card flex items-center justify-between gap-2 rounded-xl border p-2.5 md:p-3">
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-body text-[13px] font-black text-foreground md:text-sm">{family}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <div className="relative">
+            <select
+              value={selKey}
+              onChange={(e) => setSelKey(e.target.value)}
+              aria-label={`${family} strength`}
+              className="appearance-none rounded-lg border border-foreground/18 bg-background/60 py-1 pl-2.5 pr-7 font-body text-[12px] font-bold text-foreground focus:border-foreground/40 focus:outline-none"
+            >
+              {variants.map((v) => (
+                <option key={v.key} value={v.key} className="bg-background text-foreground">
+                  {v.variant} · {money(v.price)}/mo
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/50" />
+          </div>
+          {otherActive.length > 0 && (
+            <span className="font-body text-[10px] font-bold uppercase tracking-[0.04em] text-foreground/44">
+              + {otherActive.map((v) => `${v.variant}×${qtyMap[v.key]}`).join(', ')}
+            </span>
+          )}
+        </div>
       </div>
+      <Stepper label={`${family} ${sel.variant}`} value={value} max={sel.max} onChange={(v) => onQty(sel.key, v)} />
     </div>
   );
 }
@@ -263,24 +338,37 @@ function StepTherapy({ category, therapyKey, onTherapy }) {
   );
 }
 
+function AddonRows({ rows, qtyMap, onQty }) {
+  return (
+    <div className="grid gap-1.5">
+      {rows.map((row) =>
+        row.type === 'family' ? (
+          <AddonFamilyRow key={row.family} family={row.family} variants={row.variants} qtyMap={qtyMap} onQty={onQty} />
+        ) : (
+          <QtyStepper
+            key={row.item.key}
+            label={row.item.label}
+            price={row.item.price}
+            value={qtyMap[row.item.key] || 0}
+            max={row.item.max}
+            onChange={(v) => onQty(row.item.key, v)}
+          />
+        )
+      )}
+    </div>
+  );
+}
+
 function StepAddons({ ivQty, imQty, onIv, onIm }) {
   return (
     <div className="grid gap-3">
       <div>
         <p className="mb-1.5 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">IV add-ons</p>
-        <div className="grid gap-1.5">
-          {IV_ADDON_ITEMS.map((item) => (
-            <QtyStepper key={item.key} label={item.label} price={item.price} value={ivQty[item.key] || 0} max={item.max} onChange={(v) => onIv(item.key, v)} />
-          ))}
-        </div>
+        <AddonRows rows={IV_ADDON_ROWS} qtyMap={ivQty} onQty={onIv} />
       </div>
       <div>
         <p className="mb-1.5 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">IM shots</p>
-        <div className="grid gap-1.5">
-          {IM_ADDON_ITEMS.map((item) => (
-            <QtyStepper key={item.key} label={item.label} price={item.price} value={imQty[item.key] || 0} max={item.max} onChange={(v) => onIm(item.key, v)} />
-          ))}
-        </div>
+        <AddonRows rows={IM_ADDON_ROWS} qtyMap={imQty} onQty={onIm} />
       </div>
       <p className="font-body text-[11px] font-semibold leading-snug text-foreground/46">Add-ons billed monthly. Your time-commitment discount applies to the whole plan.</p>
     </div>
