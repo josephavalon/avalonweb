@@ -103,10 +103,10 @@ export default function Apply() {
 
   const inputClass = (name) => {
     const hasError = touched[name] && fieldErrors[name];
-    return `w-full bg-transparent border rounded-full px-6 py-4 font-body text-sm text-foreground placeholder:text-muted-foreground/75 focus:outline-none transition-colors ${
+    return `w-full bg-foreground/[0.05] border rounded-full px-6 py-4 font-body text-sm text-foreground placeholder:text-muted-foreground/75 focus:outline-none transition-colors ${
       hasError
         ? 'border-destructive/70 focus:border-destructive'
-        : 'border-foreground/20 focus:border-foreground/50'
+        : 'border-foreground/35 focus:border-foreground/60'
     }`;
   };
 
@@ -234,7 +234,7 @@ export default function Apply() {
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
                         locationType === loc.id
                           ? 'bg-foreground text-background border-foreground'
-                          : 'border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground/80'
+                          : 'border-foreground/35 text-foreground/65 hover:border-foreground/40 hover:text-foreground/80'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -261,7 +261,7 @@ export default function Apply() {
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-body text-xs tracking-[0.12em] border transition-all duration-200 ${
                         timing === opt.id
                           ? 'bg-foreground text-background border-foreground'
-                          : 'border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground/80'
+                          : 'border-foreground/35 text-foreground/65 hover:border-foreground/40 hover:text-foreground/80'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />

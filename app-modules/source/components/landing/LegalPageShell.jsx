@@ -52,7 +52,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
               </div>
               <div className="md:text-right">
                 {lastUpdated && (
-                  <p className="font-body text-[11px] uppercase tracking-[0.22em] text-foreground/35">
+                  <p className="font-body text-[11px] uppercase tracking-[0.22em] text-foreground/48">
                     Last updated
                   </p>
                 )}
@@ -74,7 +74,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
               {intro && intro.length > 1 && (
                 <div className="mt-4 hidden space-y-3 md:block">
                   {intro.slice(1).map((p, i) => (
-                    <p key={i} className="font-body text-sm leading-relaxed text-foreground/58 md:text-base">{p}</p>
+                    <p key={i} className="font-body text-sm leading-relaxed text-foreground/72 md:text-base">{p}</p>
                   ))}
                 </div>
               )}
@@ -88,7 +88,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
               transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
               className="av-motion-rail hidden rounded-2xl border border-foreground/[0.10] bg-background/82 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl lg:sticky lg:top-24 lg:block"
             >
-              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/35">On this page</p>
+              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/48">On this page</p>
               <div className="grid grid-cols-1 gap-1.5">
                 {sections.slice(0, 10).map((s) => (
                   <motion.a
@@ -96,7 +96,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
                     href={`#${slugify(s.h)}`}
                     whileHover={{ x: 3 }}
                     transition={{ duration: 0.3, ease: EASE }}
-                    className="flex min-h-11 items-center rounded-lg px-3 py-2 font-body text-xs leading-tight text-foreground/58 transition-colors hover:bg-foreground/[0.04] hover:text-foreground"
+                    className="flex min-h-11 items-center rounded-lg px-3 py-2 font-body text-xs leading-tight text-foreground/72 transition-colors hover:bg-foreground/[0.04] hover:text-foreground"
                   >
                     {s.h.replace(/^\d+\.\s*/, '')}
                   </motion.a>
@@ -105,10 +105,10 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
 
               {related.length > 0 && (
                 <div className="mt-5 border-t border-foreground/[0.08] pt-4">
-                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/35">Related</p>
+                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.3em] text-foreground/48">Related</p>
                   <div className="grid gap-1.5">
                     {related.map((r) => (
-                      <Link key={r.to} to={r.to} className="flex min-h-11 items-center rounded-lg px-3 py-2 font-body text-xs text-foreground/58 transition-colors hover:bg-foreground/[0.04] hover:text-foreground">
+                      <Link key={r.to} to={r.to} className="flex min-h-11 items-center rounded-lg px-3 py-2 font-body text-xs text-foreground/72 transition-colors hover:bg-foreground/[0.04] hover:text-foreground">
                         {r.label}
                       </Link>
                     ))}
@@ -158,7 +158,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
                     <Link
                       key={r.to}
                       to={r.to}
-                      className="inline-flex min-h-11 items-center rounded-full border border-foreground/[0.10] px-4 py-2 font-body text-[10px] uppercase tracking-[0.2em] text-foreground/55 transition-colors hover:border-foreground/25 hover:text-foreground"
+                      className="inline-flex min-h-11 items-center rounded-full border border-foreground/[0.10] px-4 py-2 font-body text-[10px] uppercase tracking-[0.2em] text-foreground/68 transition-colors hover:border-foreground/25 hover:text-foreground"
                     >
                       {r.label}
                     </Link>

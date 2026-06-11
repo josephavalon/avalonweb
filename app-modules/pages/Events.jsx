@@ -1,4 +1,6 @@
 import { motion } from '@/components/ui/PageTransitionMotion';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
@@ -25,6 +27,15 @@ export default function Events() {
           <h1 className="max-w-4xl font-heading text-[5.5rem] leading-[0.82] tracking-normal text-foreground md:text-[10rem]">
             Coming soon
           </h1>
+          <p className="mt-6 max-w-xl font-body text-base leading-relaxed text-foreground/60 md:text-lg">
+            Avalon launches, pop-ups, and events are coming to the Bay Area. Book a mobile IV visit in the meantime — we come to you.
+          </p>
+          <Link
+            to="/book"
+            className="mt-8 inline-flex min-h-[3rem] items-center gap-2 rounded-full bg-foreground px-7 font-body text-xs font-black uppercase tracking-[0.14em] text-background transition-opacity hover:opacity-90"
+          >
+            Book a visit <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          </Link>
         </motion.section>
       </main>
 

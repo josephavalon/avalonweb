@@ -254,11 +254,11 @@ export default function Footer() {
               <FooterContactLink href="tel:+14159807708" icon={Phone}>
                 (415) 980-7708
               </FooterContactLink>
-              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/80 px-3 font-body text-[11px] leading-none text-foreground/50">
+              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/80 px-3 font-body text-[11px] leading-none text-foreground/64">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
                 8AM-8PM
               </div>
-              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/80 px-3 font-body text-[11px] leading-none text-foreground/50">
+              <div className="avalon-footer-link flex min-h-11 items-center gap-2 rounded-2xl border border-foreground/[0.055] bg-background/80 px-3 font-body text-[11px] leading-none text-foreground/64">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
                 SF Bay Area
               </div>
@@ -281,12 +281,12 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-foreground/[0.07] pt-2 md:pt-2 space-y-1 md:space-y-0.5">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <p className="font-body text-[10px] text-foreground/45 leading-tight">
+            <p className="font-body text-[10px] text-foreground/58 leading-tight">
               © 2026 Avalon Vitality. All rights reserved.
             </p>
             <LanguageSelect />
           </div>
-          <p className="font-body text-[10px] text-foreground/45 leading-tight">
+          <p className="font-body text-[10px] text-foreground/58 leading-tight">
             California wellness support only. Not emergency care or medical advice.
           </p>
         </div>
