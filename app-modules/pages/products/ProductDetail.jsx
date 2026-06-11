@@ -1,23 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
-  BatteryCharging,
-  BriefcaseBusiness,
-  Calendar,
+  ChevronRight,
   CheckCircle2,
   Clock,
   Droplets,
-  Flame,
-  Hotel,
+  Hexagon,
   MapPin,
-  Moon,
-  Plane,
+  Pill,
   ShieldCheck,
   Sparkles,
-  UserRoundCheck,
+  UserRound,
   Zap,
 } from 'lucide-react';
 
@@ -27,41 +23,17 @@ import { useCart } from '@/context/CartContext';
 import { getProduct, productsByCategory, slugify } from '@/data/products';
 import { useSeo } from '@/lib/seo';
 import { appendActivity } from '@/lib/localOs';
-import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { buildProductJsonLd } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
+const HERO_PHOTO = '/images/avalon-static-back.jpg';
 
-const DEFAULT_INCLUDED = [
-  'Clinical intake review',
-  'Registered nurse administration',
-  'Mobile visit at your location',
-  'Visit supplies and setup',
+const DESIGN_TIMELINE = [
+  { label: '5 MIN', value: 'Arrival & check-in — we get you settled' },
+  { label: '10 MIN', value: 'Setup — IV placed, therapy prepared' },
+  { label: '45 MIN', value: 'Infusion — relax while we take care of you' },
+  { label: '60 MIN', value: 'Complete — you get back to life' },
 ];
-
-const DEFAULT_TIMELINE = [
-  { label: '0 min', value: 'Book protocol, address, and payment' },
-  { label: 'Before arrival', value: 'Clinical intake review' },
-  { label: 'Arrival', value: 'Registered nurse setup and vitals' },
-  { label: 'Treatment', value: '45-60 min unless noted' },
-];
-
-const DEFAULT_FAQ = [
-  { q: 'What is included?', a: 'Clinical intake review, registered nurse administration, mobile setup, and visit supplies are included unless noted.' },
-  { q: 'Who administers the visit?', a: 'A California-licensed registered nurse administers the visit after intake and clinical review.' },
-  { q: 'Can I book today?', a: 'Same-day requests are reviewed based on location, nurse availability, supplies, and clinical eligibility.' },
-];
-
-const IDEAL_ICONS = {
-  Travel: Plane,
-  Recovery: Flame,
-  Performance: Zap,
-  Wellness: Sparkles,
-  Nightlife: Moon,
-  Corporate: BriefcaseBusiness,
-  Longevity: BatteryCharging,
-  'Clinical Review': ShieldCheck,
-};
 
 function priceNumber(value) {
   const number = Number(String(value || '').replace(/[^0-9.]/g, ''));
@@ -72,198 +44,13 @@ function productPrice(product) {
   return product.oneTime || product.price || '$250';
 }
 
-function ProductMedia({ product, compact = false }) {
-  const reduceMotion = useReducedMotion();
-  const { image, motionVideo, name } = product;
-  const transparentMedia = product.transparentMedia || image?.includes('-cutout.');
-  const mediaPadding = compact ? 'p-0' : (transparentMedia ? 'p-2' : 'p-4');
-
-  if (motionVideo) {
-    return (
-      <video
-        src={motionVideo}
-        poster={image}
-        autoPlay
-        muted
-        loop
-        playsInline
-        className={`h-full w-full object-contain ${mediaPadding}`}
-        aria-label={name}
-      />
-    );
-  }
-
-  return image ? (
-    <motion.img
-      src={image}
-      alt={name}
-      className={`h-full w-full object-contain drop-shadow-[0_22px_42px_rgba(0,0,0,0.24)] ${mediaPadding} ${compact && !transparentMedia ? 'scale-[1.22]' : ''}`}
-      initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8, scale: 0.992 }}
-      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.72, ease: EASE }}
-    />
-  ) : (
-    <div className="flex h-full items-center justify-center px-8 text-center">
-      <div>
-        <p className="font-heading text-4xl tracking-[0.12em] text-foreground">AVALON</p>
-        <p className="font-body text-[10px] tracking-[0.48em] text-foreground/40">VITALITY</p>
-        <p className="mt-8 font-body text-xs uppercase tracking-[0.24em] text-foreground/45">{name}</p>
-      </div>
-    </div>
-  );
-}
-
-function GlassPanel({ children, className = '' }) {
-  return (
-    <div className={`av-glass-card relative overflow-hidden rounded-[1.45rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_24px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl ${className}`}>
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_0%,hsl(var(--foreground)/0.11),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_56%,hsl(var(--foreground)/0.026))]" />
-      <div className="relative">{children}</div>
-    </div>
-  );
-}
-
-function ProductBag({ product }) {
-  return (
-    <GlassPanel className="hidden aspect-[0.82] min-h-[30rem] p-5 md:block">
-      <div className="h-full overflow-hidden rounded-[1.15rem] border border-foreground/10 bg-foreground/90">
-        <div className="pointer-events-none absolute inset-x-5 top-5 z-10 h-1/3 rounded-t-[1.15rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.42),transparent)]" />
-        <ProductMedia product={product} />
-      </div>
-    </GlassPanel>
-  );
-}
-
-function TrustItem({ icon: Icon, title }) {
-  return (
-    <div className="flex min-w-0 items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.045] px-3 py-2">
-      <Icon className="h-4 w-4 shrink-0 text-foreground/64" strokeWidth={1.8} />
-      <p className="truncate font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/72">{title}</p>
-    </div>
-  );
-}
-
-function SectionTitle({ label, title }) {
-  return (
-    <div className="mb-3 md:mb-5">
-      <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/42">{label}</p>
-      <h2 className="mt-1 font-heading text-[2.65rem] uppercase leading-none tracking-normal text-foreground md:text-[4rem]">{title}</h2>
-    </div>
-  );
-}
-
-function CollapsibleSection({ label, title, children, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <GlassPanel className="mt-3 md:mt-4">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="relative flex min-h-[68px] w-full items-center justify-between gap-4 px-4 text-left md:min-h-[78px] md:px-5"
-        aria-expanded={open}
-      >
-        <span className="min-w-0">
-          <span className="block font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/42">{label}</span>
-          <span className="mt-1 block font-heading text-[2.35rem] uppercase leading-none tracking-normal text-foreground md:text-[3.25rem]">{title}</span>
-        </span>
-        <ArrowRight className={`h-4 w-4 shrink-0 text-foreground/52 transition-transform ${open ? 'rotate-90' : ''}`} strokeWidth={2.2} />
-      </button>
-      {open && (
-        <SmoothDisclosure open>
-          <div className="border-t border-foreground/8 p-3 md:p-5">{children}</div>
-        </SmoothDisclosure>
-      )}
-    </GlassPanel>
-  );
-}
-
-function BenefitGrid({ items = [] }) {
-  return (
-    <div className="av-wide-card-grid">
-      {items.slice(0, 4).map((item) => (
-        <GlassPanel key={item} className="av-rect-card min-h-[120px] p-4 md:min-h-[150px] md:p-5">
-          <div className="flex h-full items-center gap-4">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-foreground/70" strokeWidth={2.2} />
-            <p className="font-heading text-[2.25rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[2.75rem]">{item}</p>
-          </div>
-        </GlassPanel>
-      ))}
-    </div>
-  );
-}
-
-function IdealForGrid({ items = [] }) {
-  return (
-    <div className="av-wide-card-grid">
-      {items.slice(0, 6).map((item) => {
-        const Icon = IDEAL_ICONS[item] || Sparkles;
-        return (
-          <GlassPanel key={item} className="av-rect-card min-h-[120px] p-4 md:min-h-[150px]">
-            <div className="flex h-full items-center gap-4">
-              <Icon className="h-5 w-5 shrink-0 text-foreground/72" strokeWidth={2.2} />
-              <p className="font-heading text-[2.25rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[2.75rem]">{item}</p>
-            </div>
-          </GlassPanel>
-        );
-      })}
-    </div>
-  );
-}
-
-function IncludedGrid({ items = [] }) {
-  const visibleItems = items.length ? items : DEFAULT_INCLUDED;
-  return (
-    <div className="grid gap-2 md:grid-cols-2">
-      {visibleItems.slice(0, 6).map((item) => (
-        <div key={item} className="av-rect-card flex min-h-[88px] items-center gap-4 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-4">
-          <Droplets className="h-5 w-5 shrink-0 text-foreground/62" strokeWidth={2.1} />
-          <p className="font-body text-base font-black leading-tight text-foreground/78">{item}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Timeline({ items = [] }) {
-  const visibleItems = items.length ? items : DEFAULT_TIMELINE;
-  return (
-    <div className="av-wide-card-grid">
-      {visibleItems.slice(0, 4).map((item, index) => (
-        <div key={item.label} className="av-rect-card relative min-h-[132px] rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-4">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.06] font-body text-xs font-black text-foreground">
-            {index + 1}
-          </span>
-          <p className="mt-4 font-heading text-[1.75rem] uppercase leading-none text-foreground">{item.label}</p>
-          <p className="mt-1 font-body text-sm font-bold text-foreground/62">{item.value}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FaqList({ items = [] }) {
-  const visibleItems = items.length ? items : DEFAULT_FAQ;
-  return (
-    <div>
-      {visibleItems.slice(0, 5).map((item, index) => (
-        <FaqRow key={item.q} item={item} defaultOpen={index === 0} />
-      ))}
-    </div>
-  );
-}
-
-function FaqRow({ item, defaultOpen = false }) {
-  const [open, setOpen] = React.useState(defaultOpen);
-  return (
-    <div className="border-t border-foreground/8 first:border-t-0">
-      <button type="button" onClick={() => setOpen((value) => !value)} className="flex min-h-[58px] w-full items-center justify-between gap-4 py-3 text-left" aria-expanded={open}>
-        <span className="font-body text-sm font-black text-foreground">{item.q}</span>
-        <ArrowRight className={`h-4 w-4 shrink-0 text-foreground/48 transition-transform ${open ? 'rotate-90' : ''}`} strokeWidth={2.1} />
-      </button>
-      <SmoothDisclosure open={open}>
-        <p className="pb-4 font-body text-sm font-semibold leading-relaxed text-foreground/58">{item.a}</p>
-      </SmoothDisclosure>
-    </div>
-  );
+function ingredientIcon(name) {
+  const n = name.toLowerCase();
+  if (/(saline|hydrat|water|fluid|electrolyt)/.test(n)) return n.includes('electro') ? Zap : Droplets;
+  if (/(b-?complex|b12|b1|vitamin b|amino|taurine)/.test(n)) return Pill;
+  if (/(vitamin c|zinc|glutathione|biotin|antioxidant|selenium)/.test(n)) return Sparkles;
+  if (/(magnes|calcium|mineral|trace|nad)/.test(n)) return Hexagon;
+  return Droplets;
 }
 
 function allProductLinks() {
@@ -301,10 +88,32 @@ function bookingPath(product, subscription = false) {
   return query ? `/book?${query}` : '/book';
 }
 
+function Bag({ src, alt, className = '' }) {
+  if (!src) {
+    return (
+      <div className={`flex items-center justify-center rounded-xl border border-white/20 bg-white/[0.04] ${className}`}>
+        <Droplets className="h-1/3 w-1/3 text-white/70" strokeWidth={1.6} />
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} loading="lazy" className={`object-contain ${className}`} />;
+}
+
+function Card({ children, className = '' }) {
+  return (
+    <div className={`rounded-[18px] border border-white/[0.08] bg-[#0f0f0f] ${className}`}>{children}</div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return <p className="mb-3.5 font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/72 md:text-[13px]">{children}</p>;
+}
+
 export default function ProductDetail() {
   const { category, slug } = useParams();
   const match = getProduct(category, slug);
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
   const { clearItems, addItem } = useCart();
 
   const price = useMemo(() => productPrice(match?.treatment || {}), [match]);
@@ -335,6 +144,12 @@ export default function ProductDetail() {
   const { category: cat, treatment } = match;
   const currentSlug = slugify(treatment.name);
   const related = relatedProducts(treatment, category, currentSlug);
+  const baseIncluded = (treatment.included || []).map((s) => s.replace(/\s*\(.*?\)\s*/g, ' ').trim()).filter(Boolean);
+  const ingredients = baseIncluded.slice(0, 4);
+  const included = [...baseIncluded, 'Nurse visit', 'Clinical review'].slice(0, 6);
+  const timeline = DESIGN_TIMELINE;
+  const duration = (treatment.duration || '60 min').replace(/\s*min$/i, ' MIN').toUpperCase();
+
   const buyNow = () => {
     clearItems();
     addItem({
@@ -347,139 +162,172 @@ export default function ProductDetail() {
     navigate(bookingPath(treatment));
   };
 
+  const chip = (Icon, label) => (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.32] px-3 py-1.5 font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-white/85 md:px-3.5 md:py-2 md:text-[11px]">
+      <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={1.9} /> {label}
+    </span>
+  );
+
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-32 pt-24 md:max-w-7xl md:px-8 md:pb-20 md:pt-28">
+      <main className="mx-auto w-full max-w-6xl px-2.5 pb-28 pt-[4.5rem] md:px-6 md:pb-16 md:pt-28 2xl:max-w-7xl">
         <Link
           to={cat.backTo || '/protocols'}
-          className="mb-5 inline-flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/46 transition-colors hover:text-foreground"
+          className="mb-3 ml-1 inline-flex items-center gap-2 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/55 transition-colors hover:text-foreground md:mb-4"
         >
-          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.1} />
-          {cat.backLabel || 'Back to Protocols'}
+          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.1} /> {cat.backLabel || 'Back to IV Therapy'}
         </Link>
 
-        <section className="grid gap-5 md:grid-cols-[0.86fr_1fr] md:gap-10 lg:gap-14">
-          <ProductBag product={treatment} />
-
+        {/* HERO — photo + dark overlay */}
+        <section className="relative overflow-hidden rounded-[18px] border border-white/10">
+          <img src={HERO_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover [object-position:74%_50%]" />
+          <div aria-hidden className="absolute inset-0 bg-black/62 md:bg-black/58" />
           <motion.div
-            initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.9, ease: EASE }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE }}
+            className="relative grid items-center gap-4 p-4 md:grid-cols-[180px_minmax(0,1fr)] md:gap-7 md:p-7"
           >
-            <GlassPanel className="p-3 md:hidden">
-              <div className="min-w-0">
-                <h1 className="font-heading text-[2.9rem] uppercase leading-[0.84] tracking-normal text-foreground">{treatment.name}</h1>
-                <p className="mt-3 font-body text-sm font-semibold leading-snug text-foreground/64">{treatment.benefitStatement || treatment.desc}</p>
-                <p className="mt-4 font-heading text-3xl text-foreground">{price}</p>
+            <div className="flex items-center gap-4 md:block">
+              <Bag src={treatment.image} alt={treatment.name} className="h-[104px] w-[72px] shrink-0 drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)] md:mx-auto md:h-auto md:w-[170px]" />
+              <div className="min-w-0 md:hidden">
+                <h1 className="font-body text-[26px] font-medium uppercase leading-[1.04] tracking-[0.01em] text-white">{treatment.name}</h1>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-body text-[30px] font-medium leading-none text-white">{price}</span>
+                  <span className="font-body text-[11px] text-white/70">per visit</span>
+                </div>
               </div>
-              <div className="mt-4 grid gap-2">
+            </div>
+
+            <div className="min-w-0">
+              <h1 className="hidden font-body text-[34px] font-medium uppercase leading-[1.02] tracking-[0.01em] text-white md:block md:text-[50px] lg:text-[56px]">{treatment.name}</h1>
+              <p className="mt-2.5 font-body text-[13px] leading-relaxed text-white/85 md:mt-3.5 md:max-w-xl md:text-[17px]">{treatment.desc || treatment.benefitStatement}</p>
+              <div className="mt-3 hidden items-baseline gap-3 md:flex">
+                <span className="font-body text-[38px] font-medium leading-none text-white md:text-[52px]">{price}</span>
+                <span className="font-body text-sm text-white/70">per visit</span>
+              </div>
+
+              <div className="mt-3.5 flex flex-wrap gap-2">
+                {chip(UserRound, 'Nurse comes to you')}
+                {chip(Clock, duration)}
+                {chip(MapPin, 'Bay Area')}
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={buyNow}
-                  className="flex min-h-[3.35rem] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.14em] text-background"
+                  className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-xl bg-white px-8 font-body text-xs font-semibold uppercase tracking-[0.08em] text-black transition-opacity hover:opacity-90 md:min-h-[3.4rem] md:text-sm"
                 >
-                  Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                  Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </button>
                 <Link
                   to={bookingPath(treatment, true)}
-                  className="flex min-h-[2.75rem] items-center justify-center rounded-full border border-foreground/14 bg-background/34 px-3 text-center font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/72"
+                  className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-black/40 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-black/55 md:min-h-[3.4rem] md:text-sm"
                 >
-                  Monthly plan
+                  Subscribe &amp; Save 15%
                 </Link>
               </div>
-            </GlassPanel>
 
-            <div className="hidden md:block">
-              <h1 className="font-heading text-6xl uppercase leading-[0.86] tracking-normal text-foreground lg:text-8xl">{treatment.name}</h1>
-              <p className="mt-5 max-w-2xl font-body text-xl font-semibold leading-snug text-foreground/66">{treatment.benefitStatement || treatment.desc}</p>
-              <p className="mt-7 font-heading text-4xl text-foreground">{price}</p>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2 md:mt-7">
-              <TrustItem icon={MapPin} title="Bay Area mobile" />
-              <TrustItem icon={UserRoundCheck} title="Licensed Registered Nurse" />
-              <TrustItem icon={ShieldCheck} title="Clinical review" />
-            </div>
-
-            <div className="mt-5 hidden grid-cols-2 gap-3 md:grid">
-              <button
-                type="button"
-                onClick={buyNow}
-                className="flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-black uppercase tracking-[0.15em] text-background transition-opacity hover:opacity-90"
-              >
-                Book <ArrowRight className="h-4 w-4" strokeWidth={2.35} />
-              </button>
-              <Link
-                to={bookingPath(treatment, true)}
-                className="flex min-h-[58px] items-center justify-center gap-2 rounded-full border border-foreground/18 bg-foreground/[0.12] px-6 font-body text-xs font-black uppercase tracking-[0.15em] text-foreground backdrop-blur-2xl transition-colors hover:bg-foreground/[0.18]"
-              >
-                Subscribe & Save
-              </Link>
-            </div>
-
-            <GlassPanel className="mt-5 p-4 md:mt-7 md:p-5">
-              <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/42">What It Is</p>
-              <p className="mt-3 font-body text-base font-semibold leading-relaxed text-foreground/68 md:text-lg">
-                {treatment.desc || cat.description}
+              <p className="mt-3 flex items-center gap-1.5 font-body text-[11px] text-white/72">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={1.9} /> All treatments administered by licensed registered nurses
               </p>
-            </GlassPanel>
+            </div>
           </motion.div>
         </section>
 
-        <section className="mt-6 md:mt-10">
-          <SectionTitle label="Benefits" title="Fast Scan" />
-          <BenefitGrid items={treatment.benefits || []} />
-        </section>
+        {/* INGREDIENTS ROW */}
+        {ingredients.length > 0 && (
+          <Card className="mt-3 grid grid-cols-2 divide-x divide-white/[0.08] overflow-hidden sm:grid-cols-4">
+            {ingredients.slice(0, 4).map((ing, i) => {
+              const Icon = ingredientIcon(ing);
+              return (
+                <div key={ing} className={`px-2 py-4 text-center md:py-6 ${i >= 2 ? 'border-t border-white/[0.08] sm:border-t-0' : ''}`}>
+                  <Icon className="mx-auto h-5 w-5 text-foreground md:h-6 md:w-6" strokeWidth={1.8} />
+                  <p className="mt-2 font-body text-[11px] font-medium uppercase tracking-[0.1em] text-foreground/78 md:mt-2.5 md:text-[13px]">{ing}</p>
+                </div>
+              );
+            })}
+          </Card>
+        )}
 
-        <section className="mt-6 md:mt-10">
-          <SectionTitle label="Ideal For" title="Use Case" />
-          <IdealForGrid items={treatment.idealFor || []} />
-        </section>
-
-        <section className="mt-6 grid gap-3 md:mt-10 md:grid-cols-2">
-          <CollapsibleSection label="Included" title="Inside">
-            <IncludedGrid items={treatment.included || []} />
-          </CollapsibleSection>
-          <CollapsibleSection label="Experience" title="Timeline">
-            <Timeline items={treatment.timeline || []} />
-          </CollapsibleSection>
-        </section>
-
-        <CollapsibleSection label="Related" title="Therapies">
-          <div className="grid gap-2 md:grid-cols-2 md:gap-3">
-            {related.map((item) => (
-              <Link key={item.path} to={item.path} className="group block">
-                <GlassPanel className="min-h-[118px] p-4 transition-colors group-hover:border-foreground/24 group-hover:bg-background/54">
-                  <p className="font-heading text-[2.2rem] uppercase leading-none text-foreground">{item.product.name}</p>
-                  <p className="mt-3 font-body text-sm font-bold text-foreground/60">{productPrice(item.product)}</p>
-                </GlassPanel>
-              </Link>
-            ))}
+        {/* INCLUDED + TIMELINE */}
+        <Card className="mt-3 p-5 md:grid md:grid-cols-[1fr_1.15fr] md:gap-7 md:p-7">
+          <div>
+            <SectionLabel>Included Inside</SectionLabel>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 md:gap-y-3.5">
+              {included.map((item) => (
+                <span key={item} className="flex items-center gap-2 font-body text-[13px] text-foreground/88 md:text-[15px]">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-foreground md:h-[18px] md:w-[18px]" strokeWidth={2} /> {item}
+                </span>
+              ))}
+            </div>
           </div>
-        </CollapsibleSection>
+          <div className="mt-6 border-t border-white/[0.08] pt-5 md:mt-0 md:border-l md:border-t-0 md:pl-7 md:pt-0">
+            <SectionLabel>Experience Timeline</SectionLabel>
+            <ol className="relative">
+              {timeline.slice(0, 4).map((step, index, arr) => (
+                <li key={step.label} className="grid grid-cols-[14px_52px_1fr] gap-x-2.5 md:grid-cols-[16px_64px_1fr] md:gap-x-3.5">
+                  <div className="flex flex-col items-center">
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-foreground" />
+                    {index < arr.length - 1 && <span className="my-0.5 w-px flex-1 bg-foreground/20" />}
+                  </div>
+                  <span className="pb-3.5 font-body text-xs font-semibold text-foreground md:text-sm">{step.label}</span>
+                  <span className="pb-3.5 font-body text-xs leading-snug text-foreground/65 md:text-sm">{step.value}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Card>
 
-        <CollapsibleSection label="FAQ" title="Need To Know">
-          <FaqList items={treatment.faq || []} />
-        </CollapsibleSection>
+        {/* RELATED */}
+        {related.length > 0 && (
+          <Card className="mt-3 p-5">
+            <SectionLabel>Related Therapies</SectionLabel>
+            <div className="grid gap-2.5 md:grid-cols-3">
+              {related.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#161616] p-3 transition-colors hover:border-white/24 md:flex-col md:items-center md:gap-3 md:p-5 md:text-center"
+                >
+                  <Bag src={item.product.image} alt={item.product.name} className="h-9 w-7 shrink-0 md:h-[84px] md:w-[60px]" />
+                  <span className="min-w-0 flex-1 truncate font-body text-[11px] font-medium uppercase tracking-[0.06em] text-foreground/88 md:flex-none md:text-[13px]">{item.product.name}</span>
+                  <span className="font-body text-[13px] font-medium text-foreground md:text-base">{productPrice(item.product)}</span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-foreground/45 md:hidden" strokeWidth={2.2} />
+                </Link>
+              ))}
+            </div>
+            <Link
+              to="/protocols"
+              className="mt-3.5 flex items-center justify-center gap-2 rounded-xl border border-white/[0.22] py-2.5 font-body text-[11px] font-medium uppercase tracking-[0.1em] text-foreground/85 transition-colors hover:border-white/40"
+            >
+              View All Therapies <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.1} />
+            </Link>
+          </Card>
+        )}
 
-        <p className="mx-auto mt-8 max-w-3xl text-center font-body text-[10px] leading-relaxed text-foreground/34">
-          Educational content only. Avalon Vitality provides wellness and recovery support and does not diagnose,
-          treat, cure, or prevent disease. Services are subject to intake, consent, and clinical approval.
+        <p className="mx-auto mt-6 max-w-2xl px-4 text-center font-body text-[10px] leading-relaxed text-foreground/38">
+          Educational content only. Avalon Vitality provides wellness and recovery support and does not diagnose, treat,
+          cure, or prevent disease. Services are subject to intake, consent, and clinical approval.
         </p>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/86 px-3 pb-[calc(env(safe-area-inset-bottom)+0.65rem)] pt-2.5 shadow-[0_-18px_45px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:hidden">
-        <div className="mx-auto grid max-w-lg gap-2">
-          <button
-            type="button"
-            onClick={buyNow}
-            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-full bg-foreground px-4 font-body text-[12px] font-black uppercase tracking-[0.15em] text-background"
-          >
-            Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-          </button>
+      {/* MOBILE STICKY BOOK BAR */}
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-white/12 bg-[#0a0a0a]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-3 backdrop-blur-xl md:hidden">
+        <div className="min-w-0">
+          <p className="font-body text-[15px] font-medium leading-none text-foreground">{price}</p>
+          <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.06em] text-foreground/60">{treatment.name} · {duration}</p>
         </div>
+        <button
+          type="button"
+          onClick={buyNow}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-body text-xs font-semibold uppercase tracking-[0.08em] text-black"
+        >
+          Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+        </button>
       </div>
 
       <Footer />
