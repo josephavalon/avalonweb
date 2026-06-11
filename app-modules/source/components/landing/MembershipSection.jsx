@@ -77,7 +77,7 @@ function TierRow({ tier, index, open, onToggle }) {
         <div className="border-t border-foreground/[0.08] px-5 pb-4 pt-1">
           <div className="grid gap-2 md:grid-cols-2">
             {planDetails(tier).map((detail) => (
-              <div key={detail} className="flex min-h-[38px] items-center gap-2 rounded-xl border border-foreground/[0.07] bg-background/22 px-3">
+              <div key={detail} className="flex min-h-[38px] items-center gap-2 rounded-xl border border-foreground/[0.07] bg-background/80 px-3">
                 <Check className="h-3.5 w-3.5 shrink-0 text-foreground/54" strokeWidth={1.9} />
                 <span className="font-body text-[11px] leading-snug text-foreground/58">{detail}</span>
               </div>
@@ -139,7 +139,7 @@ export default function MembershipSection() {
         </div>
 
         <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">
-          3-month minimum
+          3-month minimum · then pause or cancel
         </p>
 
       </div>

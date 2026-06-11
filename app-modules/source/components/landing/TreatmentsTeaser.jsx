@@ -18,20 +18,20 @@ const SPECIALTY_IVS = [
     label: 'NAD+',
     icon: FlaskConical,
     treatments: [
-      { icon: FlaskConical, label: 'NAD+ 250mg',   price: 350 },
-      { icon: FlaskConical, label: 'NAD+ 500mg',   price: 500 },
-      { icon: FlaskConical, label: 'NAD+ 750mg',   price: 600 },
-      { icon: FlaskConical, label: 'NAD+ 1000mg',  price: 750 },
-      { icon: FlaskConical, label: 'NAD+ 1250mg',  price: 950 },
-      { icon: FlaskConical, label: 'NAD+ 1500mg',  price: 1100 },
+      { icon: FlaskConical, img: '/bags/nad-250.png',  label: 'NAD+ 250mg',   price: 350 },
+      { icon: FlaskConical, img: '/bags/nad-500.png',  label: 'NAD+ 500mg',   price: 500 },
+      { icon: FlaskConical, img: '/bags/nad-750.png',  label: 'NAD+ 750mg',   price: 600 },
+      { icon: FlaskConical, img: '/bags/nad-1000.png', label: 'NAD+ 1000mg',  price: 750 },
+      { icon: FlaskConical, img: '/bags/nad-1250.png', label: 'NAD+ 1250mg',  price: 950 },
+      { icon: FlaskConical, img: '/bags/nad-1500.png', label: 'NAD+ 1500mg',  price: 1100 },
     ],
   },
   {
     label: 'CBD',
     icon: Star,
     treatments: [
-      { icon: Star, label: 'CBD — Low Dose',  price: 350 },
-      { icon: Star, label: 'CBD — High Dose', price: 450 },
+      { icon: Star, img: '/bags/cbd-33.png', label: 'CBD — Low Dose',  price: 350 },
+      { icon: Star, img: '/bags/cbd-66.png', label: 'CBD — High Dose', price: 450 },
     ],
   },
 ];
@@ -43,10 +43,10 @@ const TOP_CATEGORIES = [
     icon: Droplets,
     type: 'flat-treatments',
     data: [
-      { icon: Droplets,    label: 'Hydration IV',  price: 200 },
-      { icon: Zap,         label: 'Energy IV',     price: 250 },
-      { icon: ShieldCheck, label: 'Immunity IV',   price: 250 },
-      { icon: Sparkles,    label: 'Beauty IV',     price: 250 },
+      { icon: Droplets,    img: '/bags/dehydration.png', label: 'Hydration IV',  price: 200 },
+      { icon: Zap,         img: '/bags/energy.png',      label: 'Energy IV',     price: 250 },
+      { icon: ShieldCheck, img: '/bags/immunity.png',    label: 'Immunity IV',   price: 250 },
+      { icon: Sparkles,    img: '/bags/beauty.png',      label: 'Beauty IV',     price: 250 },
       { icon: Star,        label: 'Custom Visit',  price: 150 },
     ],
   },
@@ -56,9 +56,9 @@ const TOP_CATEGORIES = [
     icon: Zap,
     type: 'flat-treatments',
     data: [
-      { icon: Zap,         label: 'Energy IV',     price: 250 },
-      { icon: FlaskConical, label: "Myers' Cocktail", price: 250 },
-      { icon: ShieldCheck, label: 'Immunity IV',   price: 250 },
+      { icon: Zap,         img: '/bags/energy.png',   label: 'Energy IV',     price: 250 },
+      { icon: FlaskConical, img: '/bags/myers.png',   label: "Myers' Cocktail", price: 250 },
+      { icon: ShieldCheck, img: '/bags/immunity.png', label: 'Immunity IV',   price: 250 },
     ],
   },
   {
@@ -115,7 +115,11 @@ function SubRow({ sub }) {
                   variants={premiumListItem}
                   className="av-treatment-chip group flex min-h-[72px] items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-base ease-editorial"
                 >
-                  <t.icon className="w-3 h-3 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
+                  {t.img ? (
+                    <img src={t.img} alt="" loading="lazy" className="h-11 w-8 shrink-0 object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
+                  ) : (
+                    <t.icon className="w-3 h-3 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
+                  )}
                   <div className="min-w-0">
                     <p className="font-body text-[11px] text-foreground/80 leading-snug truncate">{t.label}</p>
                     <p className="font-body text-[9px] text-foreground/35">${t.price}{sub.label === 'NAD+' ? ' · 1-4 hr' : ''}</p>
@@ -217,7 +221,11 @@ function CategoryRow({ cat, index, open, onToggle }) {
                       variants={premiumListItem}
                       className="av-treatment-chip group flex min-h-[76px] items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-base ease-editorial"
                     >
-                      <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
+                      {addon.img ? (
+                        <img src={addon.img} alt="" loading="lazy" className="h-12 w-9 shrink-0 object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
+                      ) : (
+                        <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
+                      )}
                       <div>
                         <p className="font-body text-xs text-foreground/80 leading-snug">{addon.label}</p>
                         <p className="font-body text-[9px] text-foreground/35">${addon.price}</p>
