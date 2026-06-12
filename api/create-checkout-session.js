@@ -24,8 +24,82 @@ function dollarsToCents(value) {
 
 const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS);
 
+const CHECKOUT_INPUT_LIMITS = {
+  name: 80,
+  email: 254,
+  phone: 40,
+  dob: 20,
+  emergencyContact: 160,
+  localBookingId: 80,
+  reference: 80,
+  acuityDatetime: 40,
+  acuityTimezone: 64,
+  acuityTypeId: 32,
+  timeLabel: 80,
+  address: 240,
+  zip: 16,
+  locationType: 80,
+  orderType: 80,
+  paymentType: 80,
+  visitType: 80,
+  clientType: 80,
+  notes: 1000,
+  booleanFlag: 16,
+};
+
 function httpError(message, status = 500, code = 'server_error') {
   return Object.assign(new Error(message), { status, code });
+}
+
+function boundedString(value, max) {
+  const raw = String(value ?? '').trim();
+  if (raw.length > max) {
+    return { value: raw.slice(0, max), tooLong: true };
+  }
+  return { value: raw, tooLong: false };
+}
+
+function boundedField(source, key, max, errors, targetKey = key) {
+  const { value, tooLong } = boundedString(source?.[key], max);
+  if (tooLong) errors.push(targetKey);
+  return value;
+}
+
+function sanitizeCheckoutInputFields({ contact = {}, appointment = {} } = {}) {
+  const tooLong = [];
+  const safeContact = {
+    ...contact,
+    name: boundedField(contact, 'name', CHECKOUT_INPUT_LIMITS.name, tooLong, 'contact.name'),
+    firstName: boundedField(contact, 'firstName', CHECKOUT_INPUT_LIMITS.name, tooLong, 'contact.firstName'),
+    lastName: boundedField(contact, 'lastName', CHECKOUT_INPUT_LIMITS.name, tooLong, 'contact.lastName'),
+    email: boundedField(contact, 'email', CHECKOUT_INPUT_LIMITS.email, tooLong, 'contact.email'),
+    phone: boundedField(contact, 'phone', CHECKOUT_INPUT_LIMITS.phone, tooLong, 'contact.phone'),
+    dob: boundedField(contact, 'dob', CHECKOUT_INPUT_LIMITS.dob, tooLong, 'contact.dob'),
+    emergencyContact: boundedField(contact, 'emergencyContact', CHECKOUT_INPUT_LIMITS.emergencyContact, tooLong, 'contact.emergencyContact'),
+    clientType: boundedField(contact, 'clientType', CHECKOUT_INPUT_LIMITS.clientType, tooLong, 'contact.clientType'),
+  };
+  const safeAppointment = {
+    ...appointment,
+    localBookingId: boundedField(appointment, 'localBookingId', CHECKOUT_INPUT_LIMITS.localBookingId, tooLong, 'appointment.localBookingId'),
+    reference: boundedField(appointment, 'reference', CHECKOUT_INPUT_LIMITS.reference, tooLong, 'appointment.reference'),
+    acuityDatetime: boundedField(appointment, 'acuityDatetime', CHECKOUT_INPUT_LIMITS.acuityDatetime, tooLong, 'appointment.acuityDatetime'),
+    acuityTimezone: boundedField(appointment, 'acuityTimezone', CHECKOUT_INPUT_LIMITS.acuityTimezone, tooLong, 'appointment.acuityTimezone'),
+    acuityTypeId: boundedField(appointment, 'acuityTypeId', CHECKOUT_INPUT_LIMITS.acuityTypeId, tooLong, 'appointment.acuityTypeId'),
+    timeLabel: boundedField(appointment, 'timeLabel', CHECKOUT_INPUT_LIMITS.timeLabel, tooLong, 'appointment.timeLabel'),
+    address: boundedField(appointment, 'address', CHECKOUT_INPUT_LIMITS.address, tooLong, 'appointment.address'),
+    zip: boundedField(appointment, 'zip', CHECKOUT_INPUT_LIMITS.zip, tooLong, 'appointment.zip'),
+    locationType: boundedField(appointment, 'locationType', CHECKOUT_INPUT_LIMITS.locationType, tooLong, 'appointment.locationType'),
+    orderType: boundedField(appointment, 'orderType', CHECKOUT_INPUT_LIMITS.orderType, tooLong, 'appointment.orderType'),
+    paymentType: boundedField(appointment, 'paymentType', CHECKOUT_INPUT_LIMITS.paymentType, tooLong, 'appointment.paymentType'),
+    visitType: boundedField(appointment, 'visitType', CHECKOUT_INPUT_LIMITS.visitType, tooLong, 'appointment.visitType'),
+    clientType: boundedField(appointment, 'clientType', CHECKOUT_INPUT_LIMITS.clientType, tooLong, 'appointment.clientType'),
+    notes: boundedField(appointment, 'notes', CHECKOUT_INPUT_LIMITS.notes, tooLong, 'appointment.notes'),
+    dob: boundedField(appointment, 'dob', CHECKOUT_INPUT_LIMITS.dob, tooLong, 'appointment.dob'),
+    emergencyContact: boundedField(appointment, 'emergencyContact', CHECKOUT_INPUT_LIMITS.emergencyContact, tooLong, 'appointment.emergencyContact'),
+    clinicalReviewOnFile: boundedField(appointment, 'clinicalReviewOnFile', CHECKOUT_INPUT_LIMITS.booleanFlag, tooLong, 'appointment.clinicalReviewOnFile'),
+    gfeRequired: boundedField(appointment, 'gfeRequired', CHECKOUT_INPUT_LIMITS.booleanFlag, tooLong, 'appointment.gfeRequired'),
+  };
+  return { contact: safeContact, appointment: safeAppointment, tooLong };
 }
 
 function assertSafeLiveBaseUrl(baseUrl) {
@@ -147,11 +221,24 @@ export default async function handler(req, res) {
     mode = 'payment',
     items: rawItems = [],
     membership: rawMembership = null,
-    contact = {},
-    appointment = {},
+    contact: rawContact = {},
+    appointment: rawAppointment = {},
     paymentMethod = 'card',
     checkoutUiMode = 'hosted',
   } = req.body || {};
+
+  const {
+    contact,
+    appointment,
+    tooLong: checkoutFieldsTooLong,
+  } = sanitizeCheckoutInputFields({ contact: rawContact, appointment: rawAppointment });
+  if (checkoutFieldsTooLong.length) {
+    return res.status(400).json({
+      error: 'Checkout fields are too long.',
+      code: 'checkout_input_too_long',
+      fields: checkoutFieldsTooLong.slice(0, 12),
+    });
+  }
 
   if (!hasValidCheckoutContact(contact)) {
     return res.status(400).json({

@@ -30,6 +30,7 @@ const authStoreSource = readFileSync(new URL('../src/lib/useAuthStore.js', impor
 const loginQaSource = readFileSync(new URL('./login-qa.mjs', import.meta.url), 'utf8');
 const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.meta.url), 'utf8');
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
+const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
@@ -125,6 +126,10 @@ assert(isAdultCheckoutDob('01/01/1990'), 'Adult DOB should pass checkout validat
 assert(!isAdultCheckoutDob('2999-01-01'), 'Future DOB should fail checkout validation');
 assert(!isAdultCheckoutDob(new Date().toISOString().slice(0, 10)), 'Under-18 DOB should fail checkout validation');
 assert(hasValidCheckoutContact({ firstName: 'Ava', email: 'ava@example.com', phone: '4155551212' }), 'Complete contact should pass checkout validation');
+assert(createCheckoutSource.includes('CHECKOUT_INPUT_LIMITS'), 'Checkout route must declare server-side input length caps');
+assert(createCheckoutSource.includes('sanitizeCheckoutInputFields'), 'Checkout route must sanitize contact and appointment fields before fulfillment');
+assert(createCheckoutSource.includes('checkout_input_too_long'), 'Checkout route must reject oversized intake fields');
+assert(createCheckoutSource.includes('appointment.notes') && createCheckoutSource.includes('CHECKOUT_INPUT_LIMITS.notes'), 'Checkout route must cap appointment notes');
 assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin balance collection must reject over-balance overrides');
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
