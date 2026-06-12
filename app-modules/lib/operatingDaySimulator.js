@@ -491,6 +491,9 @@ function buildFailureProof() {
     'appointment_drift',
     'payroll_sync_failed',
     'finance_sync_failed',
+    'crm_sync_failed',
+    'operations_email_failed',
+    'customer_email_failed',
   ]);
 
   return WIRE_TOMORROW_FAILURE_MATRIX.map((row) => ({

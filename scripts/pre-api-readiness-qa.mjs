@@ -120,7 +120,7 @@ assert.equal(snapshot.score, 100, 'Pre-API wire readiness must score 100 when al
 assert.equal(snapshot.complete, true, 'Pre-API wire readiness must have zero open local gaps.');
 assert.equal(snapshot.open.length, 0, 'Pre-API wire readiness cannot hide open local gaps.');
 assert.equal(snapshot.integrations.count, 10);
-assert.equal(snapshot.failures.count, 11);
+assert.equal(snapshot.failures.count, RECONCILIATION_CASE_TYPES.length);
 assert.equal(snapshot.roles.count, 5);
 assert.equal(snapshot.states.complete, true);
 assert.equal(snapshot.uiTruth.complete, true);

@@ -101,6 +101,7 @@ function RecentRow({ service, when, status }) {
 // Shared dashboard body — "Two-Up Rail" layout: next-visit card with the bag
 // image + a Balance / Plan / Visits rail, Book + Message, then Recent visits.
 function DashboardBody({ primary, balanceLabel, planLabel, visitsCount, recent, emptyText, onSignOut, footer }) {
+  const visitStatus = primary ? 'Confirming after clinical review' : 'No visit scheduled';
   return (
     <main className="min-h-dvh pb-[calc(7.5rem+env(safe-area-inset-bottom))] font-body" style={{ background: BG, color: TEXT }}>
       <header className="sticky top-0 z-40 border-b border-foreground/[0.08] bg-background/86 px-4 py-3 backdrop-blur-2xl">
@@ -160,6 +161,11 @@ function DashboardBody({ primary, balanceLabel, planLabel, visitsCount, recent, 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Action to="/book" icon={Calendar} label="Book" primary />
           <Action to="/members/messages" icon={MessageCircle} label="Message" />
+        </div>
+
+        <div className="mt-3 rounded-2xl px-4 py-3.5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Visit Status</p>
+          <p className="mt-1 font-body text-sm font-semibold leading-snug" style={{ color: MUTED }}>{visitStatus}</p>
         </div>
 
         {/* Recent visits */}

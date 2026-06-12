@@ -169,6 +169,9 @@ export const WIRE_TOMORROW_FAILURE_MATRIX = [
   ['appointment_drift', 'Appointment changed in Acuity but Avalon state is stale.', 'ops_manager', 'action', ['appointment', 'booking', 'client_message']],
   ['payroll_sync_failed', 'Gusto payroll sync fails after visit closeout.', 'finance', 'action', ['visit', 'payroll', 'provider']],
   ['finance_sync_failed', 'Mercury or QuickBooks finance sync fails.', 'finance', 'action', ['payment', 'banking', 'accounting']],
+  ['crm_sync_failed', 'Attio CRM sync fails after paid booking fulfillment.', 'ops_manager', 'action', ['booking', 'crm_profile']],
+  ['operations_email_failed', 'Operations alert email fails after a paid fulfillment exception.', 'ops_manager', 'action', ['booking', 'ops_alert']],
+  ['customer_email_failed', 'Customer-safe confirmation or pending email fails after payment.', 'support', 'action', ['booking', 'client_message']],
 ].map(([caseType, trigger, ownerRole, severity, affectedObjects]) => ({
   caseType,
   trigger,
