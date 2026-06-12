@@ -23,7 +23,7 @@ export default function MemberSubPage({ eyebrow, title, description, ctaLabel, c
   const isExternal = ctaTo && (ctaTo.startsWith('http') || ctaTo.startsWith('mailto:'));
 
   return (
-    <main className="min-h-dvh bg-background pb-[calc(7.5rem+env(safe-area-inset-bottom))] font-body text-foreground">
+    <main className="av-page-surface min-h-dvh pb-[calc(7.5rem+env(safe-area-inset-bottom))] font-body text-foreground">
       <header className="sticky top-0 z-40 border-b border-foreground/[0.08] bg-background/86 px-4 py-3 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           <Link to="/members/dashboard" className="inline-flex items-center gap-2 font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/72 transition-colors hover:text-foreground">

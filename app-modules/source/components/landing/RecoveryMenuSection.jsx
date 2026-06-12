@@ -12,7 +12,7 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 const EASE = [0.16, 1, 0.3, 1];
 
 const SESSIONS = [
-  { key: 'hydration', label: 'Hydration', price: 200, icon: Droplets, tagline: 'Hydration and electrolyte support.', tag: 'Essential', category: 'recovery', duration: '30–45 min', inside: 'Saline (500–1000ml) · Electrolytes · B-Complex · Trace minerals' },
+  { key: 'hydration', label: 'Hydration', price: 200, icon: Droplets, tagline: 'Hydration and electrolyte support.', tag: 'Essential', category: 'recovery', duration: '30–45 min', inside: 'Saline (1000ml) · Electrolytes · B-Complex · Trace minerals' },
   { key: 'energy',    label: 'Energy',    price: 250, icon: Zap,       tagline: 'Energy and nutrient support.',       tag: 'Performance',    category: 'energy',    duration: '45–60 min', inside: 'Saline · Vitamin B12 · B-Complex · Magnesium · Taurine · Vitamin C' },
   { key: 'immunity',  label: 'Immunity',  price: 250, icon: ShieldCheck,tagline: 'Vitamin and mineral support.',             tag: 'Bestseller',     category: 'immunity',  duration: '45–60 min', inside: 'High-dose Vitamin C · Zinc · Selenium · Glutathione · Saline' },
   { key: 'beauty',    label: 'Beauty',    price: 250, icon: Sparkles,   tagline: 'Glow from within.',                           tag: 'Glow Favorite',  category: 'beauty',    duration: '45–60 min', inside: 'Glutathione · Biotin · Vitamin C · B-Complex · Collagen support nutrients · Saline' },
@@ -64,6 +64,27 @@ const TABS = [
   { key: 'packages', label: 'Packages' },
 ];
 
+function sessionWhatItDoes(session = {}) {
+  const copy = {
+    hydration: 'Supports hydration and electrolyte replenishment during a wellness visit.',
+    recovery: 'Supports hydration and nutrient replenishment after training, travel, or long schedules.',
+    energy: 'Supports nutrient and hydration needs during high-output or busy days.',
+    myers: 'Supports general wellness with a clinician-reviewed blend of vitamins and minerals.',
+    immunity: 'Supports routine wellness with vitamin and mineral hydration support.',
+    beauty: 'Supports cosmetic wellness routines with hydration and antioxidant nutrient support.',
+    postnight: 'Supports rehydration after late nights, subject to clinical review.',
+    jetlag: 'Supports hydration needs around travel and schedule changes.',
+  };
+  return copy[session.key] || session.tagline || 'Supports a clinician-reviewed wellness visit.';
+}
+
+function sessionIngredients(session = {}) {
+  return String(session.inside || '')
+    .split(' · ')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function CheckoutSheet({ cart, onRemove, onClose }) {
   const total = cart.reduce((s, i) => s + i.price, 0);
   return (
@@ -78,7 +99,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
     >
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
+        className="av-modal-scrim fixed inset-0 -z-10"
         onClick={onClose}
       />
       <div className="av-glass-card relative flex flex-col overflow-hidden rounded-t-3xl border-t">
@@ -151,6 +172,7 @@ export default function RecoveryMenuSection() {
   const baseTotal     = session.price + selIM.reduce((s, x) => s + x.price, 0) + selIV.reduce((s, x) => s + x.price, 0);
   const visitTotal    = baseTotal * groupCount;
   const imTotal       = selIM.reduce((s, x) => s + x.price, 0);
+  const sessionIngredientList = sessionIngredients(session);
 
   const filteredSessions = ivCategory === 'all' ? SESSIONS : SESSIONS.filter((s) => s.category === ivCategory);
 
@@ -268,12 +290,20 @@ export default function RecoveryMenuSection() {
               </button>
               <SmoothDisclosure open={insideOpen}>
                 <div className="px-4 pt-2 pb-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] space-y-2">
-                      <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Formulated with</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {session.inside.split(' · ').map((ing) => (
-                          <span key={ing} className="font-body text-[10px] text-foreground/70 bg-foreground/[0.06] border border-foreground/[0.08] px-2.5 py-1 rounded-full">{ing}</span>
-                        ))}
+                      <div>
+                        <p className="mb-1 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
+                        <p className="font-body text-[12px] font-semibold leading-snug text-foreground/74">{sessionWhatItDoes(session)}</p>
                       </div>
+                      {sessionIngredientList.length > 0 && (
+                        <div>
+                          <p className="mb-1.5 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {sessionIngredientList.map((ing) => (
+                              <span key={ing} className="font-body text-[10px] text-foreground/70 bg-foreground/[0.06] border border-foreground/[0.08] px-2.5 py-1 rounded-full">{ing}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <p className="font-body text-[10px] text-foreground/30 pt-1">For educational purposes only. Formulation may vary based on clinical assessment.</p>
                 </div>
               </SmoothDisclosure>

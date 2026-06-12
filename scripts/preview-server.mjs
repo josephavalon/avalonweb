@@ -89,7 +89,7 @@ function withCrawlerMeta(htmlBuffer, {
 
 function unavailableBody(label, detail) {
   return `
-      <div id="seo-prerender" style="min-height:100vh;background:#0a0a0a;color:#f4f4f1;font-family:Inter,Arial,sans-serif;padding:48px 24px;">
+      <div id="seo-prerender" style="min-height:100vh;background-color:#2a2521;background-image:linear-gradient(90deg,rgba(42,37,33,.84),rgba(42,37,33,.52) 45%,rgba(42,37,33,.22)),url('/images/avalon-static-back-512.webp');background-size:cover;background-position:86% 52%;color:#f4f4f1;font-family:Inter,Arial,sans-serif;padding:48px 24px;">
         <main style="max-width:760px;margin:0 auto;">
           <p style="font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(244,244,241,.52);margin:0 0 18px;">Avalon Vitality</p>
           <h1 style="font-family:Arial,sans-serif;font-size:clamp(42px,10vw,82px);line-height:.9;text-transform:uppercase;margin:0 0 24px;">${label}</h1>

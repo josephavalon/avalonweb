@@ -48,7 +48,7 @@ export default function ProtocolPage() {
 
   if (!protocol) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="av-page-surface min-h-screen flex flex-col items-center justify-center gap-4">
         <Navbar />
         <p className="font-heading text-3xl text-foreground uppercase">Protocol not found</p>
         <Link to="/book" className="font-body text-sm text-foreground/60 underline">Back to booking</Link>
@@ -62,7 +62,7 @@ export default function ProtocolPage() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-background pt-24 pb-32">
+      <div className="av-page-surface min-h-screen pt-24 pb-32">
         <div className="mx-auto max-w-4xl px-5 md:px-10">
 
           {/* Back */}

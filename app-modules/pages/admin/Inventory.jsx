@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useInventoryData } from '@/hooks/useInventoryData';
 import { useDropzone } from 'react-dropzone';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 
 const INVENTORY_CLINICAL_NOTE = 'Inventory records support operations only. Clinical use follows approved protocols.';
 import {
@@ -89,7 +89,7 @@ function AddFolderModal({ folders, onClose, onSave }) {
   const COLORS = ['hsl(var(--chart-1))','hsl(var(--chart-2))','hsl(var(--success))','hsl(var(--warning))','hsl(var(--destructive))','hsl(var(--chart-3))','hsl(var(--accent))','hsl(var(--muted-foreground))'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Add folder" onClick={onClose}>
+    <div className="av-modal-scrim fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Add folder" onClick={onClose}>
       <motion.div initial={{ scale:0.96, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ scale:0.96, opacity:0 }} transition={{ ease:EASE, duration:0.2 }}
         className="w-80 rounded-2xl border border-foreground/10 bg-card p-6 shadow-2xl"
         onClick={e => e.stopPropagation()}
@@ -248,7 +248,7 @@ function AddItemModal({ folders, onClose, onSave, onShowAll }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="av-modal-scrim fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 8 }} transition={{ ease: EASE, duration: 0.2 }}
@@ -378,7 +378,7 @@ function PhotoDropzone({ photos = [], onChange }) {
                   Primary
                 </span>
               )}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-background/62 opacity-0 transition-opacity group-hover:opacity-100">
                 {!p.isPrimary && (
                   <button onClick={() => setPrimary(p.id)}
                     className="rounded px-2 py-0.5 font-body text-[9px] font-semibold text-white bg-white/20 hover:bg-white/30">
@@ -1211,7 +1211,7 @@ function TagEditModal({ tag, onClose, onSave }) {
   const [name,  setName]  = useState(tag?.name  || '');
   const [color, setColor] = useState(tag?.color || TAG_COLORS[0]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="av-modal-scrim fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }} transition={{ ease: EASE, duration: 0.2 }}
@@ -1965,7 +1965,7 @@ function SettingsView({ settings = {}, onSave, customFieldDefs = [], onAddFieldD
 function MoveFolderModal({ folders, selectedCount, onClose, onMove }) {
   const [destId, setDestId] = useState('');
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="av-modal-scrim fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }} transition={{ ease: EASE, duration: 0.2 }}
@@ -2107,7 +2107,7 @@ function CSVImportModal({ folders, onClose, onImport }) {
   const btnCls   = 'rounded-xl bg-foreground px-4 py-2 font-body text-xs font-semibold text-background transition-colors hover:bg-foreground/90 disabled:opacity-40';
 
   return (
-    <motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    <motion.div className="av-modal-scrim fixed inset-0 z-[100] flex items-center justify-center"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.div className="mx-4 w-full max-w-xl rounded-2xl border border-foreground/[0.12] bg-card shadow-2xl"
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
@@ -2416,7 +2416,7 @@ export default function AdminInventory() {
   // ── Loading skeleton ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <AdminLayout>
+      <AdminShell title="Inventory">
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="flex h-10 w-10 animate-spin items-center justify-center rounded-xl border-2 border-foreground/10 border-t-foreground/60" />
@@ -2425,12 +2425,12 @@ export default function AdminInventory() {
             </p>
           </div>
         </div>
-      </AdminLayout>
+      </AdminShell>
     );
   }
 
   return (
-    <AdminLayout fullBleed>
+    <AdminShell title="Inventory" fullBleed>
     <div className="flex flex-col md:flex-row md:flex-1 md:overflow-hidden relative bg-background text-foreground">
       <h1 className="sr-only">Inventory</h1>
 
@@ -2747,6 +2747,6 @@ export default function AdminInventory() {
         </div>
       )}
     </div>
-    </AdminLayout>
+    </AdminShell>
   );
 }

@@ -438,7 +438,7 @@ export default function Login() {
   const { eyebrow, heading } = TAB_TITLES[tab];
 
   return (
-    <div className="relative min-h-screen min-h-dvh overflow-x-hidden bg-background px-4 py-5 text-foreground md:px-8 md:py-8">
+    <div className="av-page-surface relative min-h-screen min-h-dvh overflow-x-hidden px-4 py-5 text-foreground md:px-8 md:py-8">
       <main className="relative mx-auto grid min-h-[calc(100vh-2.5rem)] min-h-[calc(100dvh-2.5rem)] w-full max-w-6xl items-center gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
         <motion.section
           initial={false}

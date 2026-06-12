@@ -39,10 +39,10 @@ export function Reveal({
     <Tag
       className={className}
       initial={{
-        opacity: 1,
-        y: 0,
+        opacity: 0,
+        y,
         ...(scale !== 1 ? { scale } : {}),
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
         ...(blur ? { filter: 'blur(8px)' } : {}),
       }}
       whileInView={{
@@ -108,10 +108,10 @@ export function RevealItem({
       className={className}
       variants={{
         hidden:  {
-          opacity: 1,
-          y: 0,
+          opacity: 0,
+          y,
           ...(scale !== 1 ? { scale } : {}),
-          pointerEvents: 'auto',
+          pointerEvents: 'none',
           ...(blur ? { filter: 'blur(5px)' } : {}),
         },
         visible: {

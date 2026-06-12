@@ -43,7 +43,7 @@ export default function CheckoutSuccess() {
   const isSubscription = type === 'subscription' || type === 'membership';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
       <div className="max-w-md mx-auto px-4 pt-32 pb-20 text-center">
         <motion.div

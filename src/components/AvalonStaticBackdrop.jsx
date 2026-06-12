@@ -1,21 +1,30 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-const HIDDEN_PREFIXES = ['/admin', '/provider'];
+const HIDDEN_PREFIXES = [];
 const HIDDEN_PATHS = [];
+
+// Staff/operations surfaces are data-dense; the ambient photo must be heavily
+// blurred and darkened there so glass panels stay readable, not see-through.
+const OPS_PREFIXES = ['/admin', '/provider'];
 
 function shouldShowBackdrop(pathname) {
   if (HIDDEN_PATHS.includes(pathname)) return false;
   return !HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function isOpsSurface(pathname) {
+  return OPS_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 export default function AvalonStaticBackdrop() {
   const { pathname } = useLocation();
   if (!shouldShowBackdrop(pathname)) return null;
+  const opsMode = isOpsSurface(pathname);
 
   return (
     <div
-      className="avalon-static-backdrop pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-background"
+      className={`avalon-static-backdrop pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-background${opsMode ? ' avalon-static-backdrop--ops' : ''}`}
       aria-hidden="true"
       role="presentation"
     >

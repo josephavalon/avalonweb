@@ -43,7 +43,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="av-modal-scrim absolute inset-0" onClick={onClose} />
       <motion.div
         className="av-glass-card relative w-full overflow-hidden rounded-t-3xl border md:max-w-md md:rounded-3xl max-h-[90vh] overflow-y-auto"
         initial={{ y: 60, opacity: 0 }}

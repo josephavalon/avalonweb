@@ -6,6 +6,7 @@ import { EASE, premiumTap } from '@/lib/motion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import AvalonMark from '@/components/AvalonMark';
 
 const mainLinks = [
   { to: '/protocols', label: 'IV Therapy' },
@@ -138,7 +139,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           <Link to="/" onClick={handleLogoClick} className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}>
-            <span className="block font-heading text-[24px] leading-none tracking-[0.08em] text-foreground md:text-[34px] md:tracking-[0.1em]">AV</span>
+            <AvalonMark className="h-[30px] w-[19px] text-foreground md:h-[40px] md:w-[26px]" />
           </Link>
         </div>
 
@@ -163,8 +164,11 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         )}
 
         {/* Col 3 — account link + booking CTA, right-aligned */}
-        <div className="flex h-full items-center justify-end gap-4">
-          {!compact && !focusMode && (
+        <div className="flex h-full items-center justify-end gap-3">
+          {/* Quick-dial icons are for prospects; hiding them when signed in keeps
+              the logged-in nav (Sign Out + Dashboard + Book) from overflowing into
+              the centered links. */}
+          {!compact && !focusMode && !user && (
             <div className="flex items-center gap-1.5" aria-label="Contact Avalon">
               <a href={PHONE_URL} className={contactActionClass} aria-label={`Call Avalon ${PHONE_DISPLAY}`} title={`Call ${PHONE_DISPLAY}`}>
                 <Phone className="h-4 w-4" strokeWidth={2} />
@@ -213,7 +217,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           <Link to="/" onClick={handleLogoClick} className={logoClass}>
-            <span className="font-heading text-[22px] leading-none tracking-[0.08em] text-foreground">AV</span>
+            <AvalonMark className="h-[28px] w-[18px] text-foreground" />
           </Link>
         </div>
         <div className="absolute right-2 top-1/2 flex -translate-y-1/2 shrink-0 items-center gap-0.5">

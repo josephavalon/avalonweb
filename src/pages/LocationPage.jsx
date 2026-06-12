@@ -51,7 +51,7 @@ export function LocationsHub() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
       <main className="px-5 pb-16 pt-32 md:px-12 lg:px-20">
         <div className="mx-auto max-w-6xl">
@@ -167,7 +167,7 @@ export default function LocationPage() {
   const relatedPillars = page.relatedPillars.map(getPillarBySlug).filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
       <main className="pt-28">
         <section className="px-5 pb-14 pt-10 md:px-12 md:pb-20 lg:px-20">

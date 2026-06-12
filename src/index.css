@@ -49,14 +49,14 @@
   }
 
   .dark {
-    --background: 0 0% 4%;
+    --background: 28 12% 13%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 7%;
+    --card: 28 12% 16%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 7%;
+    --popover: 28 12% 16%;
     --popover-foreground: 0 0% 100%;
     --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 4%;
+    --primary-foreground: 28 12% 13%;
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 80%;
     --muted: 0 0% 10%;
@@ -73,10 +73,10 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --sidebar-background: 0 0% 4%;
+    --sidebar-background: 28 12% 13%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-primary-foreground: 28 12% 13%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 14%;
@@ -200,14 +200,14 @@
   }
 
   .pride {
-    --background: 0 0% 4%;
+    --background: 28 12% 13%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 7%;
+    --card: 28 12% 16%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 7%;
+    --popover: 28 12% 16%;
     --popover-foreground: 0 0% 100%;
     --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 4%;
+    --primary-foreground: 28 12% 13%;
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 10%;
@@ -219,10 +219,10 @@
     --border: 292 54% 36%;
     --input: 0 0% 14%;
     --ring: 292 76% 62%;
-    --sidebar-background: 0 0% 4%;
+    --sidebar-background: 28 12% 13%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-primary-foreground: 28 12% 13%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 292 54% 36%;
@@ -235,14 +235,14 @@
   }
 
   .july {
-    --background: 0 0% 4%;
+    --background: 28 12% 13%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 7%;
+    --card: 28 12% 16%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 7%;
+    --popover: 28 12% 16%;
     --popover-foreground: 0 0% 100%;
     --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 4%;
+    --primary-foreground: 28 12% 13%;
     --secondary: 220 48% 18%;
     --secondary-foreground: 0 0% 100%;
     --muted: 220 36% 16%;
@@ -254,10 +254,10 @@
     --border: 220 74% 34%;
     --input: 220 36% 16%;
     --ring: 0 78% 56%;
-    --sidebar-background: 0 0% 4%;
+    --sidebar-background: 28 12% 13%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-primary-foreground: 28 12% 13%;
     --sidebar-accent: 220 48% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 74% 34%;
@@ -296,6 +296,25 @@ html, body {
      determine the scroll root and freezes vertical scroll on first load.
      clip achieves the same visual result without establishing a scroll context. */
   overflow-x: clip;
+}
+
+#root,
+#main-content,
+.av-page-stage {
+  background: transparent;
+}
+
+.av-page-surface,
+.min-h-screen.bg-background,
+.min-h-dvh.bg-background,
+.app-shell.bg-background {
+  background: transparent !important;
+}
+
+.av-modal-scrim {
+  background:
+    linear-gradient(180deg, hsl(var(--background) / 0.70), hsl(var(--background) / 0.58));
+  backdrop-filter: blur(10px);
 }
 
 /* iOS tap highlight removal — prevents flash on scroll-tap */
@@ -465,7 +484,7 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
    which erases the primary/secondary/tertiary hierarchy a premium dark UI
    needs. These two tiers run AFTER the flatten rules (same 0,0,0 :where
    specificity, later source order, so they win) and soften the mid/low
-   opacity levels to AA-safe greys on the ~#0a0a0a ground:
+   opacity levels to AA-safe greys on the night backdrop:
      secondary ≈ rgba(255,255,255,0.72) → ~8.7:1
      tertiary  ≈ rgba(255,255,255,0.56) → ~6.0:1
    Headings and any level not listed stay hard white (safe default). */
@@ -513,6 +532,24 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
 )::placeholder {
   color: #fff !important;
   opacity: 1 !important;
+}
+
+.av-hero-action-primary {
+  background: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+}
+
+.av-hero-action-primary:hover {
+  background: hsl(var(--foreground) / 0.9) !important;
+}
+
+.av-hero-action-primary :where(span, svg) {
+  color: hsl(var(--background)) !important;
+}
+
+.av-hero-action-primary svg {
+  stroke: hsl(var(--background)) !important;
 }
 
 #root, .app-shell {
@@ -734,8 +771,8 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop {
-  --av-backdrop-image-opacity: 0.9;
-  --av-backdrop-image-filter: blur(1px) saturate(1.08) brightness(0.9) contrast(1.02);
+  --av-backdrop-image-opacity: 1;
+  --av-backdrop-image-filter: saturate(1.08) contrast(1.02);
   --av-backdrop-image-mix: normal;
   --av-hero-accent: hsl(var(--foreground));
   --av-hero-gradient: none;
@@ -746,6 +783,21 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
   opacity: var(--av-backdrop-image-opacity);
   filter: var(--av-backdrop-image-filter);
   mix-blend-mode: var(--av-backdrop-image-mix);
+}
+
+/* Operations/admin surfaces: heavily blur + darken the ambient photo and lay a
+   near-opaque dark veil over it so data-dense glass panels read cleanly instead
+   of fighting a sharp background image. */
+.avalon-static-backdrop--ops .avalon-static-backdrop__image {
+  /* Set directly (not via the themed --av-backdrop-image-* vars) so this wins
+     over per-theme overrides regardless of the active theme. */
+  opacity: 0.2 !important;
+  filter: blur(40px) saturate(1.02) brightness(0.5) !important;
+  transform: scale(1.14); /* hide blur-bleed at the edges */
+}
+
+.avalon-static-backdrop--ops .avalon-static-backdrop__veil {
+  background: hsl(var(--background) / 0.84);
 }
 
 .avalon-static-backdrop::before,
@@ -777,19 +829,19 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop__veil {
-  background: hsl(0 0% 0% / 0.16);
+  background: transparent;
 }
 
 .avalon-static-backdrop__side {
-  background: linear-gradient(90deg, hsl(0 0% 0% / 0.8) 0%, hsl(0 0% 0% / 0.5) 34%, hsl(0 0% 0% / 0.12) 64%, transparent 100%);
+  background: linear-gradient(90deg, hsl(var(--background) / 0.8) 0%, hsl(var(--background) / 0.5) 34%, hsl(var(--background) / 0.12) 64%, transparent 100%);
 }
 
 .avalon-static-backdrop__bottom {
-  background: linear-gradient(0deg, hsl(0 0% 0%) 0%, hsl(0 0% 0% / 0.82) 28%, hsl(0 0% 0% / 0.10) 72%, transparent 100%);
+  background: linear-gradient(0deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.82) 28%, hsl(var(--background) / 0.10) 72%, transparent 100%);
 }
 
 .avalon-static-backdrop__top {
-  background: linear-gradient(180deg, hsl(0 0% 0% / 0.46), hsl(0 0% 0% / 0.18), transparent);
+  background: linear-gradient(180deg, hsl(var(--background) / 0.46), hsl(var(--background) / 0.18), transparent);
 }
 
 .daytime .avalon-static-backdrop,
@@ -910,19 +962,19 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 .pride .avalon-static-backdrop__veil {
   background:
     linear-gradient(135deg, rgba(255, 0, 24, 0.08), rgba(255, 165, 44, 0.06) 18%, rgba(255, 255, 65, 0.05) 36%, rgba(0, 128, 24, 0.06) 54%, rgba(0, 0, 249, 0.08) 72%, rgba(134, 0, 125, 0.10)),
-    hsl(0 0% 0% / 0.30);
+    hsl(var(--background) / 0.30);
 }
 
 .pride .avalon-static-backdrop__side {
-  background: linear-gradient(90deg, hsl(0 0% 0% / 0.86) 0%, rgba(0, 0, 0, 0.48) 36%, rgba(189, 76, 255, 0.10) 68%, transparent 100%);
+  background: linear-gradient(90deg, hsl(var(--background) / 0.86) 0%, hsl(var(--background) / 0.48) 36%, rgba(189, 76, 255, 0.10) 68%, transparent 100%);
 }
 
 .pride .avalon-static-backdrop__bottom {
-  background: linear-gradient(0deg, hsl(0 0% 0% / 0.88), hsl(0 0% 0% / 0.36), transparent 72%);
+  background: linear-gradient(0deg, hsl(var(--background) / 0.88), hsl(var(--background) / 0.36), transparent 72%);
 }
 
 .pride .avalon-static-backdrop__top {
-  background: linear-gradient(180deg, hsl(0 0% 0% / 0.58), hsl(var(--accent) / 0.10), transparent);
+  background: linear-gradient(180deg, hsl(var(--background) / 0.58), hsl(var(--accent) / 0.10), transparent);
 }
 
 .july .avalon-static-backdrop {

@@ -17,7 +17,7 @@ import {
   ShieldAlert,
   Square,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { REQUESTS } from '@/fixtures/commandMockData';
@@ -341,7 +341,7 @@ export default function FieldControl() {
   };
 
   return (
-    <AdminLayout>
+    <AdminShell title="Field">
       <PageShell
         eyebrow="ETA · route · closeout"
         title="Field Control"
@@ -474,6 +474,6 @@ export default function FieldControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

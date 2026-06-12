@@ -5,19 +5,9 @@ import App from '@/App.jsx'
 import '@/index.css'
 import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
 import { initErrorTelemetry } from '@/lib/errorTelemetry'
-import { applyTheme, THEME_KEY } from '@/lib/theme'
+import { applyTheme } from '@/lib/theme'
 
 function applyStoredTheme() {
-  try {
-    // Revert to the dark default: one-time flip back for anyone the short-lived
-    // light default migrated to daytime. The theme switcher still works after.
-    if (!window.localStorage.getItem('avalon.theme.dark-restore')) {
-      window.localStorage.setItem(THEME_KEY, 'dark');
-      window.localStorage.setItem('avalon.theme.dark-restore', '1');
-    }
-  } catch {
-    /* storage unavailable in private windows; the default theme still applies */
-  }
   try {
     applyTheme();
   } catch (err) {

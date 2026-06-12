@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import AvalonMark from '@/components/AvalonMark';
 import {
   Activity,
   CalendarCheck,
@@ -119,7 +120,7 @@ function NavGroup({ item, pathname, onNavigate }) {
   );
 }
 
-export default function AdminShell({ title = 'Dashboard', actions, children }) {
+export default function AdminShell({ title = 'Dashboard', actions, children, fullBleed = false }) {
   const { signOut } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -132,7 +133,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children }) {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-4 py-5">
         <Link to="/" className="flex items-baseline gap-2">
-          <span className="font-heading text-2xl tracking-[0.18em] text-foreground">AV</span>
+          <AvalonMark className="h-[22px] w-[14px] text-foreground" />
           <span className="font-body text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/40">Admin</span>
         </Link>
         <button type="button" onClick={() => setDrawer(false)} className="text-foreground/50 md:hidden" aria-label="Close menu">
@@ -155,7 +156,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children }) {
   );
 
   return (
-    <div className="flex min-h-dvh bg-background font-body text-foreground">
+    <div className={`av-page-surface flex min-h-dvh font-body text-foreground${fullBleed ? ' md:h-dvh md:min-h-0 md:overflow-hidden' : ''}`}>
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 border-r border-foreground/[0.08] bg-foreground/[0.02] md:block">
         {Sidebar}
@@ -164,7 +165,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children }) {
       {/* Mobile drawer */}
       {drawer && (
         <>
-          <button type="button" className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setDrawer(false)} aria-label="Close menu" />
+          <button type="button" className="av-modal-scrim fixed inset-0 z-40 md:hidden" onClick={() => setDrawer(false)} aria-label="Close menu" />
           <aside
             role="dialog"
             aria-modal="true"
@@ -187,10 +188,13 @@ export default function AdminShell({ title = 'Dashboard', actions, children }) {
           </div>
           <div className="flex items-center gap-3">
             {actions}
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.05] font-heading text-sm tracking-[0.1em] text-foreground/80">AV</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.05] text-foreground/80"><AvalonMark className="h-[15px] w-[10px]" /></span>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 md:px-7 md:py-7">{children}</main>
+        <main className={fullBleed
+          ? 'flex min-h-0 flex-1 flex-col md:overflow-hidden'
+          : 'mx-auto w-full max-w-6xl flex-1 px-4 py-5 md:px-7 md:py-7'}
+        >{children}</main>
       </div>
     </div>
   );

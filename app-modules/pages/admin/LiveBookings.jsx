@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -33,8 +33,27 @@ function fmtWhen(iso) {
   return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
-const PAYMENT_LABEL = { paid_in_full: 'Paid', deposit_paid: 'Deposit paid', pending: 'Pending' };
+const PAYMENT_LABEL = { paid_in_full: 'Paid', partial_payment: 'Partial', deposit_paid: 'Deposit paid', pending: 'Pending' };
 const paymentLabel = (status) => PAYMENT_LABEL[status] || (status ? status.replace(/_/g, ' ') : 'Pending');
+
+const APPOINTMENT_LABEL = {
+  single: 'One-time',
+  payment: 'One-time',
+  event: 'Event',
+  subscription: 'Subscription',
+};
+
+const PAYMENT_TYPE_LABEL = {
+  one_time_deposit: '$50 upfront',
+  event_half_upfront: '50% upfront',
+  subscription_first_month: 'First month paid',
+};
+
+function titleize(value = '') {
+  return String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 function StatusPill({ status }) {
   const paid = status === 'paid_in_full';
@@ -75,6 +94,8 @@ function ActionResult({ result }) {
 function BookingRow({ booking, busy, result, onCharge, onLink }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
+  const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
+  const paymentTypeLabel = PAYMENT_TYPE_LABEL[booking.paymentType] || titleize(booking.paymentType || '');
 
   return (
     <div className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
@@ -90,13 +111,30 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
           <p className="mt-1.5 truncate font-body text-sm" style={{ color: MUTED }}>{booking.service}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-xs" style={{ color: DIM }}>
             <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" strokeWidth={1.7} />{fmtWhen(booking.startsAt)}</span>
+            <span>{appointmentLabel}</span>
             {booking.customerEmail ? <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" strokeWidth={1.7} />{booking.customerEmail}</span> : null}
             {booking.customerPhone ? <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" strokeWidth={1.7} />{booking.customerPhone}</span> : null}
+            {booking.address ? <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" strokeWidth={1.7} />{booking.address}</span> : null}
           </div>
         </div>
         <div className="text-right">
           <p className="font-heading text-2xl uppercase leading-none">{collectable ? money(booking.balanceDue) : money(0)}</p>
           <p className="mt-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Balance Due</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 border-t pt-3 sm:grid-cols-3" style={{ borderColor: BORDER }}>
+        <div>
+          <p className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Visit Total</p>
+          <p className="mt-1 font-body text-sm font-semibold">{money(booking.visitSubtotal || 0)}</p>
+        </div>
+        <div>
+          <p className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Paid Upfront</p>
+          <p className="mt-1 font-body text-sm font-semibold">{money(booking.depositAmount || 0)}</p>
+        </div>
+        <div>
+          <p className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Payment Rule</p>
+          <p className="mt-1 font-body text-sm font-semibold">{paymentTypeLabel || 'Standard'}</p>
         </div>
       </div>
 

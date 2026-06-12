@@ -72,7 +72,7 @@ function CheckoutSheet({ cart, onRemove, onClose }) {
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
+        className="av-modal-scrim fixed inset-0 -z-10"
         onClick={onClose}
       />
       <div className="av-glass-card relative flex flex-col overflow-hidden rounded-t-3xl border-t">

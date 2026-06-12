@@ -37,7 +37,7 @@ export default class ErrorBoundary extends React.Component {
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div className="min-h-[100svh] bg-background text-foreground flex items-center justify-center px-4">
+      <div className="av-page-surface min-h-[100svh] text-foreground flex items-center justify-center px-4">
         <div className="max-w-md text-center">
           <p className="font-body text-[10px] tracking-[0.35em] text-accent uppercase mb-6">
             Something went wrong

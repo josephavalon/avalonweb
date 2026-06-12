@@ -17,7 +17,7 @@ export default function B2BThankYou() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
       <main className="px-5 pb-20 pt-28 md:px-10 md:pb-28 md:pt-36">
         <motion.section

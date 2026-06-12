@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AvalonMark from '@/components/AvalonMark';
 import {
   ArrowRight,
   CalendarClock,
@@ -135,7 +136,7 @@ export default function NurseDashboard() {
     <main className="min-h-dvh pb-[calc(7.5rem+env(safe-area-inset-bottom))] font-body" style={{ background: BG, color: TEXT }}>
       <header className="sticky top-0 z-40 border-b border-foreground/[0.08] bg-background/86 px-4 py-3 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-          <Link to="/" className="font-heading text-2xl tracking-[0.2em]">AV</Link>
+          <Link to="/" className="inline-flex items-center"><AvalonMark className="h-[22px] w-[14px] text-foreground" /></Link>
           <div className="min-w-0 text-center">
             <p className="truncate font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Nurse</p>
             <p className="truncate text-xs" style={{ color: MUTED }}>{nurseName}</p>

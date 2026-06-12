@@ -12,7 +12,7 @@ export default function IVVitaminsCategory() {
   const cat = productsByCategory['iv-vitamins'];
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       {/* Hero */}

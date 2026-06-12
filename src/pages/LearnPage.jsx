@@ -44,7 +44,7 @@ export function LearnHub() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
       <main className="px-5 pb-16 pt-32 md:px-12 lg:px-20">
         <div className="mx-auto max-w-6xl">
@@ -165,7 +165,7 @@ export default function LearnPage() {
   const sameCluster = indexedEducationArticles.filter((item) => item.cluster === article.cluster && item.slug !== article.slug).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
       <main className="pt-28">
         <article>

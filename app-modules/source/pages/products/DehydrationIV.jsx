@@ -28,7 +28,7 @@ export default function DehydrationIV() {
   ];
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       {/* Hero Section */}

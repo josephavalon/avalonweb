@@ -33,7 +33,7 @@ export default function LegalPageShell({ title, lastUpdated, intro, sections = [
   });
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       <section className="px-4 pb-10 pt-24 md:px-10 md:pb-16 md:pt-32">

@@ -1,7 +1,7 @@
 export default function RouteFallback() {
   return (
     <div
-      className="flex min-h-[100svh] flex-col items-center justify-center bg-background px-4 py-6"
+      className="av-page-surface flex min-h-[100svh] flex-col items-center justify-center px-4 py-6"
       role="status"
       aria-live="polite"
       aria-label="Loading Avalon Vitality"

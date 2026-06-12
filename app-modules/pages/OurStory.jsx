@@ -42,7 +42,7 @@ export default function OurStory() {
     path: '/our-story',
   });
   return (
-    <div className="bg-background min-h-screen">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       {/* Hero */}

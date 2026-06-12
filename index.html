@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <script src="/scroll-restore.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0A0A0A" />
+    <meta name="theme-color" content="#2A2521" />
 
     <!-- Primary -->
     <title>Avalon Vitality — Mobile IV Therapy in the SF Bay Area</title>
@@ -19,6 +19,7 @@
     </script>
 
     <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
     <link rel="icon" type="image/png" href="/favicon.png?v=2" />
     <link rel="shortcut icon" type="image/png" href="/favicon.png?v=2" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -100,23 +101,55 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Avalon" />
     <!-- theme-color for light vs dark OS preference -->
-    <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#2A2521" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
-    <!-- Theme bootstrap: external + deferred so parsing is not blocked. The
-         default dark class and anti-FOUC CSS below still protect first paint. -->
-    <script src="/theme-bootstrap.js" defer></script>
+    <!-- Theme + boot bootstrap: INLINE and BLOCKING on purpose. It must set
+         `av-js` (hides the #seo-prerender snapshot) and `av-skip-boot` (hides the
+         boot splash on repeat views) BEFORE the first paint. Deferring it left a
+         paint window where the stale prerender / old splash flashed on refresh. -->
+    <script>
+      (function () {
+        window.__AV_BOOT_STARTED_AT = Date.now();
+        document.documentElement.classList.add('av-js');
+        var VALID = ['dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs'];
+        try {
+          var stored = window.localStorage.getItem('avalon.theme');
+          var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
+          if (theme === 'light') theme = 'daytime';
+          if (theme === 'golden') theme = 'golden-hour';
+          if (theme === 'dubs') theme = 'warriors';
+          var cl = document.documentElement.classList;
+          cl.remove('dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
+          cl.add(theme);
+          var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
+          var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
+          var skipOnce = window.sessionStorage.getItem('av.skipSplashOnce') === '1';
+          var seenInTab = String(window.name || '').indexOf(nameFlag) !== -1;
+          if (seenInSession || skipOnce || seenInTab) {
+            window.sessionStorage.removeItem('av.skipSplashOnce');
+            cl.add('av-skip-boot');
+            window.__AV_BOOT_SKIP_SPLASH = true;
+          } else {
+            window.sessionStorage.setItem('av.bootSplashSeen', '1');
+            window.name = window.name ? window.name + ' ' + nameFlag : nameFlag;
+          }
+        } catch (e) {
+          window.__AV_THEME_BOOTSTRAP_ERROR = true;
+        }
+      })();
+    </script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
          These rules apply the correct background immediately from the theme class that
          the script above already wrote to <html>, before a single pixel paints. -->
     <style>
       html, body { background-color: hsl(0,0%,96%); }
-      html.dark, html.dark body { background-color: #0a0a0a; }
-      html.golden, html.golden body { background-color: hsl(28,35%,12%); }
+      html.dark, html.dark body { background-color: #2a2521; }
+      html.golden, html.golden body { background-color: hsl(28,35%,16%); }
       html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
-      #root { min-height: 100dvh; background: inherit; }
-      #root:empty { min-height: 100dvh; background: #0a0a0a; }
+      #root { min-height: 100dvh; background: transparent; }
+      #root:empty { min-height: 100dvh; background: transparent; }
       html.av-js #seo-prerender {
         display: none !important;
         visibility: hidden !important;
@@ -129,7 +162,15 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: #0a0a0a;
+        background-color: #2a2521;
+        background-image:
+          linear-gradient(90deg, rgba(42, 37, 33, 0.84), rgba(42, 37, 33, 0.52) 45%, rgba(42, 37, 33, 0.22)),
+          image-set(
+            url("/images/avalon-static-back-512.webp") type("image/webp"),
+            url("/images/avalon-static-back-512.jpg") type("image/jpeg")
+          );
+        background-size: cover;
+        background-position: 86% 52%;
         color: #f4f4f1;
         opacity: 1;
         transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1), visibility 160ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -147,6 +188,8 @@
         pointer-events: none;
       }
       .av-boot-lockup {
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -172,6 +215,7 @@
       }
       .av-boot-progress {
         position: absolute;
+        z-index: 1;
         left: 0;
         right: 0;
         bottom: 0;

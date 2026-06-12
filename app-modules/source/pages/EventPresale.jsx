@@ -83,14 +83,14 @@ export default function EventPresale() {
 
   if (!selectedEvent) {
     return (
-      <main className="min-h-screen bg-background px-5 py-8 text-foreground">
+      <main className="av-page-surface min-h-screen px-5 py-8 text-foreground">
         <p className="font-body text-sm text-foreground/60">No launch presales are configured yet.</p>
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
 
       <main className="px-4 pb-20 pt-28 md:px-8 md:pb-24 md:pt-36">

@@ -55,7 +55,7 @@ const PROTOCOL_STEPS = [
 export default function MedicalDirection() {
   useSeo({ title: 'Medical Direction — Avalon Vitality', description: 'Avalon Vitality operates under licensed physician medical direction for all IV therapy protocols.', path: '/medical-direction' });
   return (
-    <div className="bg-background min-h-screen w-full">
+    <div className="av-page-surface min-h-screen w-full">
       <Navbar />
       <main className="pt-24 md:pt-28">
 

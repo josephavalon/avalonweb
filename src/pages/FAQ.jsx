@@ -33,7 +33,7 @@ export default function FAQPage() {
   });
 
   return (
-    <div className="app-shell bg-background min-h-screen w-full">
+    <div className="app-shell av-page-surface min-h-screen w-full">
       <Navbar />
       <main className="pt-24 md:pt-28">
         <FAQ />

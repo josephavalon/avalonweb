@@ -127,7 +127,7 @@ export default function Apply() {
   if (submitted) {
     const queuePosition = Math.floor(Math.random() * 150 + 75);
     return (
-      <div className="bg-background min-h-screen flex flex-col">
+      <div className="av-page-surface min-h-screen flex flex-col">
         <Navbar />
         <section className="flex-1 flex items-start justify-center px-4 pt-32 md:pt-40 pb-16">
           <motion.div
@@ -171,7 +171,7 @@ export default function Apply() {
   }
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       {/* Hero */}

@@ -33,7 +33,7 @@ export default function Hotel() {
   });
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div className="av-page-surface min-h-screen w-full">
       <Navbar />
       <main className="px-5 pb-16 pt-24 md:px-12 md:pt-28 lg:px-20">
         <section className="mx-auto grid min-h-[calc(100svh-7rem)] max-w-6xl items-center gap-5 md:grid-cols-[0.95fr_1.05fr] md:gap-8">

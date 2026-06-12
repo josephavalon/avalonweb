@@ -2,10 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  ArrowLeft,
   Check,
   ChevronDown,
-  ChevronRight,
   Droplets,
   Leaf,
   Minus,
@@ -60,7 +58,7 @@ const CATEGORIES = [
   },
   {
     key: 'nad',
-    label: 'NAD+',
+    label: 'IV NAD+',
     icon: Sparkles,
     blurb: 'From $350 per dose',
     gated: true,
@@ -68,7 +66,7 @@ const CATEGORIES = [
   },
   {
     key: 'cbd',
-    label: 'CBD IV',
+    label: 'IV CBD',
     icon: Leaf,
     blurb: 'From $350 per dose',
     gated: true,
@@ -109,58 +107,24 @@ function buildAddonRows(items) {
 const IV_ADDON_ROWS = buildAddonRows(IV_ADDON_ITEMS);
 const IM_ADDON_ROWS = buildAddonRows(IM_ADDON_ITEMS);
 
-// Six single-decision screens. One screen, one question, one decision.
-const STEPS = [
-  { key: 'sessions', label: 'Sessions' },
-  { key: 'category', label: 'Category' },
-  { key: 'therapy', label: 'Therapy' },
-  { key: 'addons', label: 'Add-ons' },
-  { key: 'term', label: 'Billing' },
-  { key: 'review', label: 'Review' },
-];
-
+// Section titles + subs for the one-screen builder. One screen, every decision.
 const STEP_TITLES = {
   sessions: 'How many sessions?',
   category: 'Therapy category',
   therapy: 'Choose your therapy',
   addons: 'Add-ons',
   term: 'Billing term',
-  review: 'Review & checkout',
 };
 
 const STEP_SUBS = {
   sessions: 'How many IV visits each month.',
   category: 'Pick your therapy family.',
   therapy: 'Your primary IV for every session.',
-  addons: 'Optional — boost any session, or continue to skip.',
+  addons: 'Optional — boost any session.',
   term: 'Pay monthly, or commit upfront to save.',
-  review: 'Confirm your plan and start.',
 };
 
 // ── Shared bits ───────────────────────────────────────────────────────────
-
-function StepHeader({ index, title, sub }) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foreground/24 font-heading text-[15px] leading-none text-foreground md:h-9 md:w-9 md:text-[18px]">
-        {index + 1}
-      </span>
-      <div className="min-w-0">
-        <h2 className="font-heading text-[1.7rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[2.1rem]">{title}</h2>
-        {sub && <p className="mt-1 font-body text-xs font-semibold leading-snug text-foreground/56 md:text-sm">{sub}</p>}
-      </div>
-    </div>
-  );
-}
-
-function SummaryRow({ dt, dd, bold, border }) {
-  return (
-    <div className={`flex items-baseline justify-between gap-3 ${border ? 'border-t border-foreground/10 pt-1.5' : ''}`}>
-      <dt className="font-bold text-foreground/64">{dt}</dt>
-      <dd className={`text-right ${bold ? 'font-black text-foreground' : 'font-bold text-foreground/72'}`}>{dd}</dd>
-    </div>
-  );
-}
 
 function SelectRow({ label, sub, price, active, onClick }) {
   return (
@@ -280,27 +244,83 @@ function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
 
 // ── Step bodies ───────────────────────────────────────────────────────────
 
-function StepSessions({ sessions, onSessions }) {
+// One-screen session picker: a horizontal segmented pill row (1×–4×) instead of
+// a vertical wizard list. Big tappable cells, active = filled glass + check.
+function SessionSegment({ sessions, onSessions }) {
   return (
-    <div className="grid gap-2">
-      {SESSION_OPTIONS.map((n) => (
-        <SelectRow
-          key={n}
-          label={`${n} ${n === 1 ? 'session' : 'sessions'} / month`}
-          sub={`${n} IV ${n === 1 ? 'visit' : 'visits'} a month`}
-          price={`from ${money(VITAMIN_IV_PRICE * n)}/mo`}
-          active={sessions === n}
-          onClick={() => onSessions(n)}
-        />
-      ))}
+    <div>
+      <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
+        {SESSION_OPTIONS.map((n) => {
+          const active = sessions === n;
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onSessions(n)}
+              aria-pressed={active}
+              aria-label={`${n} ${n === 1 ? 'session' : 'sessions'} per month`}
+              className={`relative flex min-h-[58px] flex-col items-center justify-center gap-0.5 rounded-xl border px-2 text-center transition-colors md:min-h-[64px] ${
+                active
+                  ? 'border-foreground/46 bg-foreground/[0.12] text-foreground'
+                  : 'border-transparent text-foreground/72 hover:bg-foreground/[0.05] hover:text-foreground'
+              }`}
+            >
+              <span className="font-heading text-[1.7rem] leading-none md:text-[2rem]">{n}×</span>
+              <span className="font-body text-[10px] font-bold uppercase tracking-[0.08em] text-foreground/52">/ month</span>
+              {active && <Check className="absolute right-1.5 top-1.5 h-3.5 w-3.5 text-foreground" strokeWidth={2.7} />}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2.5 font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/64">
+        From {money(VITAMIN_IV_PRICE * sessions)}/mo · {sessions} IV {sessions === 1 ? 'visit' : 'visits'} a month
+      </p>
       <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Each session is one IV visit at your home or office. Sessions roll over while your plan is active. 3-month minimum, then pause or cancel anytime.</p>
     </div>
   );
 }
 
-function StepCategory({ categoryKey, onCategory }) {
+// A compact section block on the one-screen builder. Dividers separate decisions.
+function Section({ title, sub, children, first }) {
   return (
-    <div className="grid gap-2">
+    <section className={first ? '' : 'mt-5 border-t border-foreground/10 pt-5 md:mt-6 md:pt-6'}>
+      <div className="mb-3">
+        <h2 className="font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.8rem]">{title}</h2>
+        {sub && <p className="mt-0.5 font-body text-xs font-semibold leading-snug text-foreground/56">{sub}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Sticky mobile CTA: live price + Start plan, replaces the old Continue/Back bar.
+function MobileStartBar({ therapyLabel, sessions, addOnCount, monthly, onStart }) {
+  return (
+    <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-foreground/10 bg-background/92 px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 backdrop-blur-xl md:hidden">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate font-body text-[12px] font-bold text-foreground/64">
+          {therapyLabel} · {sessions}×/mo{addOnCount > 0 ? ` · +${addOnCount} add-on${addOnCount > 1 ? 's' : ''}` : ''}
+        </p>
+        <p className="shrink-0 font-body text-sm font-black text-foreground" aria-live="polite">
+          {money(monthly)}<span className="text-foreground/50">/mo</span>
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onStart}
+        className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
+      >
+        Start plan <ArrowRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+// Compact category switch — a 3-up segmented toggle that sits inside the single
+// "Choose your therapy" block (replaces the old full-height category cards).
+function CategoryToggle({ categoryKey, onCategory }) {
+  return (
+    <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
       {CATEGORIES.map((cat) => {
         const Icon = cat.icon;
         const active = categoryKey === cat.key;
@@ -310,18 +330,14 @@ function StepCategory({ categoryKey, onCategory }) {
             type="button"
             onClick={() => onCategory(cat.key)}
             aria-pressed={active}
-            className={`av-treatment-card flex min-h-[64px] w-full items-center gap-3 rounded-xl border px-3.5 text-left transition-colors md:min-h-[72px] md:px-4 ${
-              active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : 'hover:border-foreground/24'
+            className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-center transition-colors ${
+              active
+                ? 'border-foreground/46 bg-foreground/[0.12] text-foreground'
+                : 'border-transparent text-foreground/72 hover:bg-foreground/[0.05] hover:text-foreground'
             }`}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/16 bg-background/40 text-foreground/82">
-              <Icon className="h-5 w-5" strokeWidth={2.2} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-body text-sm font-black text-foreground md:text-base">{cat.label}</span>
-              <span className="mt-0.5 block truncate font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50">{cat.options.length} options · {cat.blurb}</span>
-            </span>
-            {active ? <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.7} /> : <ChevronRight className="h-4 w-4 shrink-0 text-foreground/40" />}
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={2.2} />
+            <span className="font-body text-[12px] font-black uppercase tracking-[0.03em]">{cat.label}</span>
           </button>
         );
       })}
@@ -431,92 +447,6 @@ function StepTerm({ monthly, termKey, onTerm }) {
   );
 }
 
-function StepReview({ sessions, category, therapyLabel, perIvPrice, baseMonthly, lineItems, monthly, term, upfrontTotal, perMonth, onStart }) {
-  const isMonthly = term.key === 'monthly';
-  return (
-    <div className="flex flex-col">
-      <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">Plan summary</p>
-      <dl className="mt-2 grid gap-1.5 font-body text-[13px] md:text-sm">
-        <SummaryRow dt="Therapy" dd={therapyLabel || '—'} bold />
-        <SummaryRow dt={`Per IV${category?.gated ? ' (dose)' : ''}`} dd={money(perIvPrice)} />
-        <SummaryRow dt="Sessions" dd={`${sessions} / month`} />
-        <SummaryRow dt="Therapy / mo" dd={money(baseMonthly)} border />
-        {lineItems.length > 0 && (
-          <div className="mt-1 border-t border-foreground/10 pt-1.5">
-            <p className="mb-1 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/40">Add-ons</p>
-            {lineItems.map((li) => (
-              <div key={li.key} className="flex items-baseline justify-between gap-3">
-                <dt className="truncate font-bold text-foreground/64">{li.qty}× {li.label}</dt>
-                <dd className="shrink-0 text-right font-bold text-foreground/72">{money(li.price * li.qty)}</dd>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="mt-1 flex items-baseline justify-between gap-3 border-t border-foreground/10 pt-1.5">
-          <dt className="font-black text-foreground">Monthly</dt>
-          <dd className="text-right font-black text-foreground">{money(monthly)}</dd>
-        </div>
-      </dl>
-
-      <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-foreground/12 bg-background/40 px-3 py-2">
-        <span className="font-body text-xs font-bold text-foreground/64">Billing</span>
-        <span className="text-right font-body text-xs font-black text-foreground">{isMonthly ? 'Monthly · 3-mo minimum, then flexible' : `${term.label} upfront · save ${Math.round(term.discount * 100)}%`}</span>
-      </div>
-
-      <div className="mt-3 rounded-[1rem] border border-foreground/12 bg-background/40 p-3.5">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/48">Due today</p>
-          <p className="font-heading text-[2.1rem] leading-none text-foreground">{money(isMonthly ? monthly : upfrontTotal)}</p>
-        </div>
-        <p className="mt-1.5 font-body text-xs font-bold leading-snug text-foreground/60">
-          {isMonthly
-            ? `${money(monthly)}/mo · billed monthly · pause or cancel anytime after 3 months`
-            : `${term.months} months upfront · ${money(perMonth)}/mo effective · renews at ${term.label}`}
-        </p>
-        <p className="mt-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] px-3 py-2 font-body text-[11px] font-bold leading-snug text-foreground/58">
-          Licensed RN visits. Intake and clinical review happen before treatment.
-        </p>
-        <button
-          type="button"
-          onClick={onStart}
-          className="mt-3 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
-        >
-          Start plan <ArrowRight className="h-4 w-4" />
-        </button>
-        <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Clinical review before treatment · Secure checkout</p>
-      </div>
-    </div>
-  );
-}
-
-function Progress({ step }) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5" aria-hidden="true">
-        {STEPS.map((s, i) => (
-          <span key={s.key} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? 'bg-foreground' : 'bg-foreground/16'}`} />
-        ))}
-      </div>
-      <p className="mt-2 text-center font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/52" aria-live="polite">
-        Step {step + 1} of {STEPS.length} · {STEP_TITLES[STEPS[step].key]}
-      </p>
-    </div>
-  );
-}
-
-function SummaryBar({ therapyLabel, sessions, addOnCount, monthly }) {
-  return (
-    <div className="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
-      <p className="min-w-0 truncate font-body text-[12px] font-bold text-foreground/64">
-        {therapyLabel} · {sessions}×/mo{addOnCount > 0 ? ` · +${addOnCount} add-on${addOnCount > 1 ? 's' : ''}` : ''}
-      </p>
-      <p className="shrink-0 font-body text-sm font-black text-foreground" aria-live="polite">
-        {money(monthly)}<span className="text-foreground/50">/mo</span>
-      </p>
-    </div>
-  );
-}
-
 function RailLine({ label, value, muted }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
@@ -532,7 +462,7 @@ function RailLine({ label, value, muted }) {
 // The persistent "Your Plan" rail — mirrors the one-time-visit store's order
 // rail (dark glass aside) but adopts the builder's live summary: bag, monthly
 // price, what's included, and the upfront savings.
-function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItems, monthly, term, perMonth, upfrontTotal, onStart, isLast }) {
+function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItems, monthly, term, perMonth, upfrontTotal, onStart, showStart = true }) {
   const isMonthly = term.key === 'monthly';
   const bag = therapyOption?.image || '/bags/dehydration.png';
   const saving = Math.round(monthly * term.months - upfrontTotal);
@@ -580,17 +510,23 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
         </div>
       )}
 
-      {isLast ? (
-        <button
-          type="button"
-          onClick={onStart}
-          className="mx-4 mb-4 mt-4 flex min-h-[52px] w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
-        >
-          Start plan <ArrowRight className="h-4 w-4" />
-        </button>
-      ) : (
-        <p className="px-4 pb-4 pt-3 font-body text-[11px] font-semibold leading-snug text-foreground/44">Cancel or pause anytime after the 3-month minimum.</p>
-      )}
+      <div className="px-4 pb-4 pt-4">
+        {showStart && (
+          <button
+            type="button"
+            onClick={onStart}
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
+          >
+            Start plan <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
+        <p className={`text-center font-body text-[11px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2.5' : ''}`}>
+          Licensed RN visits · clinical review before treatment
+        </p>
+        <p className="mt-1 text-center font-body text-[11px] font-semibold leading-snug text-foreground/44">
+          Cancel or pause anytime after the 3-month minimum.
+        </p>
+      </div>
     </div>
   );
 }
@@ -611,7 +547,6 @@ export default function Subscription() {
   const [ivQty, setIvQty] = useState({});
   const [imQty, setImQty] = useState({});
   const [termKey, setTermKey] = useState('monthly');
-  const [step, setStep] = useState(0);
 
   const ivs = 1; // One IV per session.
   const term = TERMS.find((t) => t.key === termKey) || TERMS[0];
@@ -663,38 +598,20 @@ export default function Subscription() {
     navigate(`/plan?${params.toString()}`);
   };
 
-  const stepKey = STEPS[step].key;
-  const isLast = stepKey === 'review';
-
-  const bodies = {
-    sessions: <StepSessions sessions={sessions} onSessions={setSessions} />,
-    category: <StepCategory categoryKey={categoryKey} onCategory={selectCategory} />,
-    therapy: <StepTherapy category={category} therapyKey={therapyKey} onTherapy={setTherapyKey} />,
-    addons: (
-      <StepAddons
-        ivQty={ivQty}
-        imQty={imQty}
-        onIv={(key, v) => setIvQty((c) => ({ ...c, [key]: v }))}
-        onIm={(key, v) => setImQty((c) => ({ ...c, [key]: v }))}
-      />
-    ),
-    term: <StepTerm monthly={monthly} termKey={termKey} onTerm={setTermKey} />,
-    review: (
-      <StepReview
-        sessions={sessions}
-        category={category}
-        therapyLabel={therapyOption?.label}
-        perIvPrice={perIvPrice}
-        baseMonthly={baseMonthly}
-        lineItems={lineItems}
-        monthly={monthly}
-        term={term}
-        upfrontTotal={upfrontTotal}
-        perMonth={perMonth}
-        onStart={startPlan}
-      />
-    ),
-  };
+  const rail = (
+    <PlanRail
+      therapyOption={therapyOption}
+      therapyLabel={therapyOption?.label}
+      sessions={sessions}
+      baseMonthly={baseMonthly}
+      lineItems={lineItems}
+      monthly={monthly}
+      term={term}
+      perMonth={perMonth}
+      upfrontTotal={upfrontTotal}
+      onStart={startPlan}
+    />
+  );
 
   return (
     <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
@@ -704,73 +621,93 @@ export default function Subscription() {
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-28">
         <div className="mb-4 text-center md:mb-7 md:text-left">
           <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Build your plan</h1>
-          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/56 md:text-base">One choice at a time. Real per-IV pricing. Cancel or pause anytime.</p>
+          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/56 md:text-base">Real per-IV pricing. Cancel or pause anytime.</p>
         </div>
 
         <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
-          {/* Left — the builder */}
+          {/* Left — the one-screen builder: every decision stacked as a section */}
           <div className="flex flex-1 flex-col">
-            <Progress step={step} />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
+            >
+              <Section title={STEP_TITLES.sessions} sub={STEP_SUBS.sessions} first>
+                <SessionSegment sessions={sessions} onSessions={setSessions} />
+              </Section>
 
-            <div className="mt-3 flex-1">
-              <motion.section
-                key={stepKey}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.28, ease: EASE }}
-                className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
-              >
-                <StepHeader index={step} title={STEP_TITLES[stepKey]} sub={STEP_SUBS[stepKey]} />
-                <div className="mt-4 md:mt-5">{bodies[stepKey]}</div>
-              </motion.section>
-            </div>
-
-            {/* Nav controls — sticky on mobile, static under the card on desktop */}
-            <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 md:static md:mx-0 md:bg-none md:px-0 md:pb-0 md:pt-4">
-              {!isLast && (
-                <div className="md:hidden">
-                  <SummaryBar therapyLabel={therapyOption?.label} sessions={sessions} addOnCount={addOnCount} monthly={monthly} />
+              <Section title={STEP_TITLES.therapy} sub={STEP_SUBS.therapy}>
+                <CategoryToggle categoryKey={categoryKey} onCategory={selectCategory} />
+                <div className="mt-2.5">
+                  <StepTherapy category={category} therapyKey={therapyKey} onTherapy={setTherapyKey} />
                 </div>
-              )}
-              <div className="flex items-center gap-2.5">
-                {step > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setStep((s) => Math.max(0, s - 1))}
-                    className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-foreground/16 bg-background/50 px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground transition-colors hover:border-foreground/30"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                )}
-                {!isLast && (
-                  <button
-                    type="button"
-                    onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-                    className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
-                  >
-                    {stepKey === 'term' ? 'Review plan' : 'Continue'} <ArrowRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+              </Section>
+
+              <Section title={STEP_TITLES.addons} sub={STEP_SUBS.addons}>
+                <details className="group av-treatment-card rounded-xl border px-3.5 py-3">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-body text-sm font-black text-foreground [&::-webkit-details-marker]:hidden">
+                    <span>{addOnCount > 0 ? `${addOnCount} add-on${addOnCount > 1 ? 's' : ''} added` : 'Add a boost'}</span>
+                    <Plus className="h-4 w-4 shrink-0 text-foreground/60 transition-transform group-open:rotate-45" />
+                  </summary>
+                  <div className="mt-3">
+                    <StepAddons
+                      ivQty={ivQty}
+                      imQty={imQty}
+                      onIv={(key, v) => setIvQty((c) => ({ ...c, [key]: v }))}
+                      onIm={(key, v) => setImQty((c) => ({ ...c, [key]: v }))}
+                    />
+                  </div>
+                </details>
+              </Section>
+
+              <Section title={STEP_TITLES.term} sub={STEP_SUBS.term}>
+                <details className="group av-treatment-card rounded-xl border px-3.5 py-3">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                    <span className="min-w-0">
+                      <span className="block font-body text-sm font-black text-foreground">
+                        {term.key === 'monthly' ? 'Monthly billing' : `${term.label} upfront`}
+                      </span>
+                      <span className="mt-0.5 block font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/52">
+                        {term.key === 'monthly' ? 'Save up to 15% by paying upfront' : `Save ${Math.round(term.discount * 100)}% · ${money(upfrontTotal)} today`}
+                      </span>
+                    </span>
+                    <Plus className="h-4 w-4 shrink-0 text-foreground/60 transition-transform group-open:rotate-45" />
+                  </summary>
+                  <div className="mt-3">
+                    <StepTerm monthly={monthly} termKey={termKey} onTerm={setTermKey} />
+                  </div>
+                </details>
+              </Section>
+            </motion.div>
+
+            {/* Mobile: full plan rail (info only), then a sticky price + Start plan bar */}
+            <div className="mt-5 md:hidden">
+              <PlanRail
+                therapyOption={therapyOption}
+                therapyLabel={therapyOption?.label}
+                sessions={sessions}
+                baseMonthly={baseMonthly}
+                lineItems={lineItems}
+                monthly={monthly}
+                term={term}
+                perMonth={perMonth}
+                upfrontTotal={upfrontTotal}
+                onStart={startPlan}
+                showStart={false}
+              />
             </div>
+            <MobileStartBar
+              therapyLabel={therapyOption?.label}
+              sessions={sessions}
+              addOnCount={addOnCount}
+              monthly={monthly}
+              onStart={startPlan}
+            />
           </div>
 
           {/* Right — the persistent "Your Plan" rail (desktop only) */}
-          <aside className="hidden md:block md:sticky md:top-28">
-            <PlanRail
-              therapyOption={therapyOption}
-              therapyLabel={therapyOption?.label}
-              sessions={sessions}
-              baseMonthly={baseMonthly}
-              lineItems={lineItems}
-              monthly={monthly}
-              term={term}
-              perMonth={perMonth}
-              upfrontTotal={upfrontTotal}
-              onStart={startPlan}
-              isLast={isLast}
-            />
-          </aside>
+          <aside className="hidden md:sticky md:top-28 md:block">{rail}</aside>
         </div>
       </main>
     </div>

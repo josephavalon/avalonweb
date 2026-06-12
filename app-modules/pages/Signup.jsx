@@ -88,7 +88,7 @@ export default function Signup() {
   const displayError = fieldError || error;
 
   return (
-    <div className="relative min-h-screen min-h-dvh overflow-hidden bg-background px-4 py-4 text-foreground md:px-8 md:py-8">
+    <div className="av-page-surface relative min-h-screen min-h-dvh overflow-hidden px-4 py-4 text-foreground md:px-8 md:py-8">
       <div className="pointer-events-none fixed inset-0 opacity-70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--foreground)/0.10),transparent_30%),linear-gradient(180deg,hsl(var(--foreground)/0.035),transparent_42%)]" />
       </div>

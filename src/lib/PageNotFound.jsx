@@ -5,7 +5,7 @@ export default function PageNotFound() {
   const pageName = location.pathname.replace(/^\//, '') || 'this page';
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-background text-foreground">
+    <div className="av-page-surface min-h-screen flex items-center justify-center px-6 text-foreground">
       <div className="max-w-md w-full text-center space-y-8">
         <div className="space-y-3">
           <p className="font-body text-[11px] tracking-[0.32em] uppercase text-muted-foreground">

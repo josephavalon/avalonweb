@@ -14,7 +14,6 @@ import {
   Calendar,
   Check,
   ChevronDown,
-  ChevronRight,
   CreditCard,
   Droplets,
   Dumbbell,
@@ -238,16 +237,16 @@ const THERAPY_GROUPS = [
   },
   {
     key: 'cbd',
-    label: 'CBD IV Therapy',
+    label: 'IV CBD Therapy',
     sub: '5 therapies',
-    desc: 'Calm-focused infusions with CBD support.',
+    desc: 'Calm infusion with zero THC.',
     duration: '60 min',
     icon: Leaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-vitality', 'cbd-99mg', 'cbd-132mg'],
   },
   {
     key: 'nad',
-    label: 'NAD+ IV Therapy',
+    label: 'IV NAD+ Therapy',
     sub: '7 therapies',
     desc: 'Cellular energy and longevity protocols.',
     duration: '1–4 hr',
@@ -276,8 +275,8 @@ const CUSTOM_BASE_OPTIONS = [
   { key: 'beauty', label: 'Glow IV', productKey: 'beauty', icon: Sparkles },
   { key: 'postnight', label: 'Post-Night-Out IV', productKey: 'postnight', icon: Moon },
   { key: 'travel', label: 'Travel IV', productKey: 'jetlag', icon: Plane },
-  { key: 'advanced', label: 'NAD+ IV', productKey: 'nad', icon: BatteryCharging },
-  { key: 'cbd', label: 'CBD IV', productKey: 'cbd', icon: Leaf, badge: 'Review' },
+  { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: BatteryCharging },
+  { key: 'cbd', label: 'IV CBD', productKey: 'cbd', icon: Leaf, badge: 'Review' },
 ];
 
 const CUSTOM_SUBSCRIPTION_VISITS = [
@@ -1088,7 +1087,7 @@ function UniversalBookingFrame({
 
 function DesktopStepRail({ displayStepIndex = 0 }) {
   return (
-    <div className="mt-4 flex max-w-xl items-center">
+    <div className="mt-4 flex w-full items-center">
       {STEPS.map((item, index) => {
         const active = index === displayStepIndex;
         const complete = index < displayStepIndex;
@@ -3331,19 +3330,11 @@ export default function BookNow() {
   const [stripeClientPromise, setStripeClientPromise] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [embeddedCheckoutSession, setEmbeddedCheckoutSession] = useState(null);
-  const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(() => {
-    const saved = shouldResetDraft
-      ? null
-      : sessionDraft?.therapyCategoryScreen ?? (shouldResumeDraft ? persistedDraft?.therapyCategoryScreen : null);
-    if (typeof saved === 'boolean') return saved && step !== 0;
-    // Fresh entry: open step 0 on the therapy base category chooser (vitamin /
-    // CBD / NAD+), unless a deep link already pre-selected a therapy, outcome,
-    // or subscription (e.g. the Plans builder handoff).
-    const deepLinked = Boolean(
-      searchParams.get('protocol') || searchParams.get('outcome') || searchParams.get('subscription')
-    );
-    return step === 0 && !deepLinked;
-  });
+  // Base category + therapy now live on one screen (a category toggle above the
+  // therapy list), so this legacy "show the base chooser first" sub-screen is
+  // always off. Kept as a constant so the draft/nav plumbing that references it
+  // still resolves cleanly.
+  const [therapyCategoryScreen, setTherapyCategoryScreen] = useState(false);
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
   const [activeAddonGroup, setActiveAddonGroup] = useState('');
   // Which therapy row has its "what's inside" ingredients/benefits panel open.
@@ -3355,6 +3346,15 @@ export default function BookNow() {
       clearBookingSessionDraft();
     }
   }, [shouldResetDraft]);
+
+  // Keep the step-0 category toggle in sync with the selected therapy. Tapping a
+  // therapy already snaps it (chooseProduct), but deep links — the Plans → Book
+  // handoff and ?protocol= — set the therapy directly, so sync here too. Safe:
+  // browsing the toggle changes activeTherapyGroup only, not productKey, so this
+  // effect won't override a browse.
+  useEffect(() => {
+    if (state.productKey) setActiveTherapyGroup(therapyGroupForKey(state.productKey));
+  }, [state.productKey]);
 
   useEffect(() => {
     const restoreStepFromHistory = () => {
@@ -4013,12 +4013,6 @@ export default function BookNow() {
   };
 
   const next = () => {
-    if (step === 0 && therapyCategoryScreen) {
-      setError('');
-      setTherapyCategoryScreen(false);
-      persistBookingProgress(0, false);
-      return;
-    }
     if (!canAdvance()) {
       const reason = step === 0
         ? 'Choose therapy.'
@@ -4060,12 +4054,6 @@ export default function BookNow() {
   };
 
   const back = () => {
-    if (step === 0 && !therapyCategoryScreen) {
-      setError('');
-      setTherapyCategoryScreen(true);
-      persistBookingProgress(0, true);
-      return;
-    }
     if (step === 1 && activeAddonGroup) {
       setError('');
       setActiveAddonGroup('');
@@ -4080,10 +4068,9 @@ export default function BookNow() {
     if (targetStep === step) return;
     if (targetStep < step) {
       setError('');
-      setTherapyCategoryScreen(targetStep === 0);
       if (targetStep !== 1) setActiveAddonGroup('');
       setStep(targetStep);
-      persistBookingProgress(targetStep, targetStep === 0);
+      persistBookingProgress(targetStep, false);
       return;
     }
     if (targetStep === step + 1 && canAdvance()) {
@@ -4535,8 +4522,8 @@ export default function BookNow() {
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
     ? 'IV THERAPY'
     : activeTherapyGroupData?.key === 'cbd'
-      ? 'CBD IV THERAPY'
-      : 'NAD+ IV THERAPY';
+      ? 'IV CBD THERAPY'
+      : 'IV NAD+ THERAPY';
   const isIvTherapyMenuStep = step === 0 && !therapyCategoryScreen && activeTherapyGroupData?.key === 'vitamin';
   const progressDisplay = {
     index: step === 0
@@ -4554,7 +4541,7 @@ export default function BookNow() {
         ? 'ADD-ONS'
       : STEPS[step].toUpperCase(),
   };
-  const canGoBack = step > 0 || (step === 0 && !therapyCategoryScreen);
+  const canGoBack = step > 0;
 
   const compactAddons = useMemo(() => addonCatalog.all.slice(0, 4), [addonCatalog]);
 
@@ -4783,7 +4770,7 @@ export default function BookNow() {
     return (
       <div
         key={item.key}
-        className={`relative shrink-0 overflow-hidden rounded-[1.15rem] border bg-black/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.28)] backdrop-blur-2xl transition-colors ${
+        className={`relative shrink-0 overflow-hidden rounded-[1.15rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(var(--background)/0.28)] backdrop-blur-2xl transition-colors ${
           active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
         }`}
       >
@@ -4792,7 +4779,7 @@ export default function BookNow() {
           onClick={selectTherapy}
           aria-pressed={active}
           className={`relative grid min-h-[100px] w-full grid-cols-[4.25rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-2 text-left transition-colors min-[390px]:min-h-[108px] min-[390px]:grid-cols-[4.75rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
-            active ? 'bg-black/72' : 'hover:bg-foreground/[0.03]'
+            active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
@@ -4963,76 +4950,47 @@ export default function BookNow() {
     }
 
     if (step === 0) {
-      if (therapyCategoryScreen) {
-        return (
-          <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-3 md:gap-4">
-            <div>
-              <div className="mb-2 flex items-center gap-2.5">
-                <span className="h-px w-6 bg-foreground/45" />
-                <span className="font-body text-[9px] font-bold uppercase tracking-[0.26em] text-foreground/70">Book a visit</span>
-              </div>
-              <h2 className="font-heading text-[1.95rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[2.5rem]">Choose your base</h2>
-              <p className="mt-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground/52 md:text-xs">Next — pick your therapy</p>
-            </div>
-            <div className="grid min-h-0 content-start gap-2.5 overflow-y-auto pb-1 md:gap-3">
-              {therapyGroups.map((group, groupIndex) => {
-                const Icon = group.icon || Droplets;
-                const count = group.keys?.length || group.items?.length || 0;
-                const fromPrice = group.items?.length ? currency(Math.min(...group.items.map((item) => protocolPrice(item)))) : null;
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    onClick={() => {
-                      setActiveTherapyGroup(group.key);
-                      setTherapyCategoryScreen(false);
-                    }}
-                    className={`${panelCardClass} relative flex items-center gap-3.5 rounded-[1.05rem] px-3.5 py-3.5 text-left transition-colors hover:border-foreground/32 md:gap-4 md:px-4 md:py-4 ${groupIndex === 0 ? 'border-foreground/40' : ''}`}
-                  >
-                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
-                    <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/22 bg-foreground/[0.09] text-foreground md:h-12 md:w-12">
-                      <Icon className="h-5 w-5 md:h-[1.35rem] md:w-[1.35rem]" strokeWidth={1.9} />
-                    </span>
-                    <span className="relative min-w-0 flex-1">
-                      <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                        <span className="font-heading text-[1.2rem] uppercase leading-none tracking-normal text-foreground md:text-[1.34rem]">{group.label}</span>
-                        <span className="hidden font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/52 md:inline">{count} therapies</span>
-                        {group.badge && (
-                          <span className="rounded-full border border-foreground/28 bg-foreground/[0.12] px-2 py-0.5 font-body text-[8px] font-black uppercase tracking-[0.1em] text-foreground/82">{group.badge}</span>
-                        )}
-                      </span>
-                      <span className="mt-1 block font-body text-[11px] font-medium text-foreground/56 md:hidden">{count} therapies · From {fromPrice} · {group.duration}</span>
-                      <span className="mt-1.5 hidden font-body text-[12px] leading-snug text-foreground/58 md:block">{group.desc}</span>
-                    </span>
-                    <span className="relative hidden shrink-0 text-right md:block">
-                      <span className="block font-body text-[13px] font-semibold text-foreground">From {fromPrice}</span>
-                      <span className="mt-0.5 block font-body text-[10px] text-foreground/52">{group.duration}</span>
-                    </span>
-                    <ArrowRight className="relative hidden h-5 w-5 shrink-0 text-foreground md:block" strokeWidth={2.1} />
-                    <ChevronRight className="relative h-5 w-5 shrink-0 text-foreground/65 md:hidden" strokeWidth={2.1} />
-                  </button>
-                );
-              })}
-              <p className="mt-1 flex items-center justify-center gap-1.5 text-center font-body text-[10px] font-medium text-foreground/45">
-                <ShieldCheck className="h-3 w-3 shrink-0" strokeWidth={1.9} /> Secure booking · Free reschedule up to 24h · Clinical review required
-              </p>
-            </div>
-          </div>
-        );
-      }
-
       const isVitaminTherapyGroup = activeTherapyGroupData?.key === 'vitamin';
       const orderedMobileIvTherapies = isVitaminTherapyGroup
         ? ivMobileOrder.map((key) => activeTherapies.find((item) => item.key === key)).filter(Boolean)
         : activeTherapies;
 
+      // Merged base + therapy: a compact category toggle (replaces the old
+      // "Choose your base" screen) sits above the therapy list and swaps it
+      // inline — no separate screen to click through.
+      const categoryShortLabels = { vitamin: 'IV Vitamins', cbd: 'IV CBD', nad: 'IV NAD+' };
+
       return (
-        <div className="grid h-full min-h-0 grid-rows-[1fr_auto] gap-1 md:grid-rows-[1fr] md:gap-4">
-          <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
-            {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5 md:gap-3">
+          <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
+            {therapyGroups.map((group) => {
+              const Icon = group.icon || Droplets;
+              const active = activeTherapyGroup === group.key;
+              return (
+                <button
+                  key={group.key}
+                  type="button"
+                  onClick={() => { setError(''); setActiveTherapyGroup(group.key); }}
+                  aria-pressed={active}
+                  className={`flex min-h-[46px] items-center justify-center gap-1.5 rounded-xl border px-1.5 text-center transition-colors ${
+                    active
+                      ? 'border-foreground/46 bg-foreground/[0.12] text-foreground'
+                      : 'border-transparent text-foreground/72 hover:bg-foreground/[0.05] hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  <span className="font-body text-[11px] font-black uppercase tracking-[0.03em] md:text-[12px]">{categoryShortLabels[group.key] || group.label}</span>
+                </button>
+              );
+            })}
           </div>
-          <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
-            {activeTherapies.map((item) => renderIvTherapyTile(item))}
+          <div className="grid min-h-0 grid-rows-[1fr]">
+            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
+              {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
+            </div>
+            <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
+              {activeTherapies.map((item) => renderIvTherapyTile(item))}
+            </div>
           </div>
         </div>
       );
@@ -5232,7 +5190,7 @@ export default function BookNow() {
 
   return (
     <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
-      <span aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-black/30 backdrop-blur-[1px] md:bg-black/42 md:backdrop-blur-[1.5px]" />
+      <span aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-background/32 backdrop-blur-[1px] md:bg-background/44 md:backdrop-blur-[1.5px]" />
       <BookingMobileHeader />
       {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
           a z-10 stacking context, and the booking <main> below (also z-10, later

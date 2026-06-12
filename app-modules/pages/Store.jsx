@@ -153,7 +153,7 @@ export default function Store() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
 
       <main className="mx-auto max-w-lg px-4 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-24">

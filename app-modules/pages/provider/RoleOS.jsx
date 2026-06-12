@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import AvalonMark from '@/components/AvalonMark';
 import {
   ArrowRight,
   BookOpenCheck,
@@ -109,7 +110,7 @@ export default function RoleOS() {
       <header className="sticky top-0 z-40 border-b border-foreground/[0.08] bg-background/88 px-4 py-3 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-3">
-            <span className="font-heading text-2xl tracking-[0.18em]">AV</span>
+            <AvalonMark className="h-[22px] w-[14px] text-foreground" />
             <span className="hidden font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/42 sm:inline">Tools</span>
           </Link>
           <div className="text-center">

@@ -300,7 +300,7 @@ function NewConversationModal({ onClose, onCreated, myRole }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-4 md:pb-0" role="dialog" aria-modal="true" aria-label="New message">
+    <div className="av-modal-scrim fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 md:items-center md:pb-0" role="dialog" aria-modal="true" aria-label="New message">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}

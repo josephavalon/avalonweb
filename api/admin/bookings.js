@@ -18,6 +18,7 @@ function dollarsFromCents(cents) {
 
 function shapeBooking(row) {
   const payload = row.external_payload || {};
+  const appointment = payload.appointment || {};
   const contact = payload.contact || {};
   const name = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
   return {
@@ -25,6 +26,10 @@ function shapeBooking(row) {
     status: row.status,
     startsAt: row.starts_at,
     service: payload.primaryService || row.protocol_key || 'Avalon Visit',
+    appointmentType: appointment.orderType || (payload.membership ? 'subscription' : 'single'),
+    paymentType: appointment.paymentType || payload.amounts?.depositType || '',
+    address: appointment.address || '',
+    locationType: appointment.locationType || '',
     isMembership: !!payload.membership,
     customerName: name || '—',
     customerEmail: contact.email || '',

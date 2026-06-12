@@ -128,7 +128,7 @@ export default function ProductDetail() {
 
   if (!match) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="av-page-surface min-h-screen">
         <Navbar />
         <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 text-center">
           <h1 className="font-heading text-5xl uppercase leading-none text-foreground">Product missing</h1>
@@ -183,7 +183,7 @@ export default function ProductDetail() {
         {/* HERO — photo + dark overlay */}
         <section className="relative overflow-hidden rounded-[18px] border border-white/10">
           <img src={HERO_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover [object-position:74%_50%]" />
-          <div aria-hidden className="absolute inset-0 bg-black/62 md:bg-black/58" />
+          <div aria-hidden className="absolute inset-0 bg-background/62 md:bg-background/58" />
           <motion.div
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -225,7 +225,7 @@ export default function ProductDetail() {
                 </button>
                 <Link
                   to={bookingPath(treatment, true)}
-                  className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-black/40 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-black/55 md:min-h-[3.4rem] md:text-sm"
+                  className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-background/42 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-background/58 md:min-h-[3.4rem] md:text-sm"
                 >
                   Subscribe &amp; Save 15%
                 </Link>
@@ -316,7 +316,7 @@ export default function ProductDetail() {
       </main>
 
       {/* MOBILE STICKY BOOK BAR */}
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-white/12 bg-[#0a0a0a]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-3 backdrop-blur-xl md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-white/12 bg-background/92 px-4 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-3 backdrop-blur-xl md:hidden">
         <div className="min-w-0">
           <p className="font-body text-[15px] font-medium leading-none text-foreground">{price}</p>
           <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.06em] text-foreground/60">{treatment.name} · {duration}</p>

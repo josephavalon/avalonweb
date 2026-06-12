@@ -441,7 +441,7 @@ export default function BookingConfirmation() {
         ? 'A nurse will text shortly.'
         : 'Review comes next.';
   return (
-    <div className="min-h-screen bg-background">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       <div className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-24 space-y-5">

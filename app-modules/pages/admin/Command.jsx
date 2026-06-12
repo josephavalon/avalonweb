@@ -1,6 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate } from 'react-router-dom';
+import AvalonMark from '@/components/AvalonMark';
 const MessagingPanel = lazy(() => import('@/components/messaging/MessagingPanel'));
 import { useAuthStore } from '@/lib/useAuthStore';
 import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
@@ -668,7 +669,7 @@ function VisitDetailSheet({ req, onClose, onUpdate }) {
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10"
+        className="av-modal-scrim fixed inset-0 -z-10"
         onClick={onClose}
       />
 
@@ -5602,7 +5603,7 @@ function MoreMenuSheet({ onClose, onNav, onSignOut }) {
     >
       <motion.div
         initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm -z-10"
+        className="av-modal-scrim fixed inset-0 -z-10"
         onClick={onClose}
       />
       <div className="flex justify-center pt-3 pb-1">
@@ -5798,7 +5799,7 @@ export default function Command() {
               )}
               {/* AV logo — mobile only; desktop shows it in sidebar */}
               <Link to="/" className="md:hidden">
-                <span className="block font-heading text-2xl leading-none tracking-[0.2em] text-foreground">AV</span>
+                <AvalonMark className="h-[22px] w-[14px] text-foreground" />
                 <p className="font-body text-[10px] tracking-[0.12em] uppercase text-foreground/40 mt-0.5">{TODAY_LABEL}</p>
               </Link>
               <div className="hidden md:block">

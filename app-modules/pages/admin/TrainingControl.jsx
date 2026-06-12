@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { NURSES } from '@/fixtures/commandMockData';
 import {
@@ -199,7 +199,7 @@ export default function TrainingControl() {
   };
 
   return (
-    <AdminLayout>
+    <AdminShell title="Training">
       <PageShell
         eyebrow="protocols · competency · readiness"
         title="Training Control"
@@ -303,6 +303,6 @@ export default function TrainingControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

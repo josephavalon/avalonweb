@@ -15,7 +15,7 @@ import {
   Stethoscope,
   UserCheck,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { NURSES, REQUESTS } from '@/fixtures/commandMockData';
@@ -395,7 +395,7 @@ export default function CredentialControl() {
   };
 
   return (
-    <AdminLayout>
+    <AdminShell title="Credentials">
       <PageShell
         eyebrow="Nurseys · scope · shift gate"
         title="Credential Control"
@@ -526,6 +526,6 @@ export default function CredentialControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

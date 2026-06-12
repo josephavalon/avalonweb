@@ -11,7 +11,7 @@ export default function Partners() {
     path: '/partners',
   });
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="av-page-surface min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 pt-24 md:pt-28">
         <B2BSection />

@@ -59,14 +59,14 @@ const TOP_CATEGORIES = [
   },
   {
     key: 'cbd',
-    label: 'CBD',
+    label: 'IV CBD',
     icon: Star,
     type: 'flat-treatments',
     data: (SPECIALTY_IVS.find((s) => s.label === 'CBD') || {}).treatments || [],
   },
   {
     key: 'nad',
-    label: 'NAD+',
+    label: 'IV NAD+',
     icon: FlaskConical,
     type: 'flat-treatments',
     data: (SPECIALTY_IVS.find((s) => s.label === 'NAD+') || {}).treatments || [],
@@ -125,7 +125,7 @@ function SubRow({ sub }) {
                   )}
                   <div className="min-w-0">
                     <p className="font-body text-[11px] text-foreground/80 leading-snug truncate">{t.label}</p>
-                    <p className="font-body text-[9px] text-foreground/35">${t.price}{sub.label === 'NAD+' ? ' · 1-4 hr' : ''}</p>
+                    <p className="font-body text-[9px] text-foreground/35">${t.price}{sub.label === 'IV NAD+' ? ' · 1-4 hr' : ''}</p>
                   </div>
                 </MotionLink>
               ))}

@@ -654,7 +654,7 @@ export default function Clients() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-background px-3 py-4 sm:px-5 lg:p-8">
+      <div className="av-page-surface min-h-screen px-3 py-4 sm:px-5 lg:p-8">
 
         {/* Header */}
         <motion.div

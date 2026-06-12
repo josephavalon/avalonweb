@@ -107,7 +107,7 @@ export default function SeoPillarPage() {
   const relatedPillars = indexedServicePillars.filter((item) => item.slug !== page.slug).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
       <Navbar />
       <main className="pt-28">
         <section className="px-5 pb-16 pt-10 md:px-12 md:pb-24 lg:px-20">

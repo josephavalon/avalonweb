@@ -289,7 +289,7 @@ export default function ServiceArea() {
   });
 
   return (
-    <div className="bg-background min-h-screen w-full">
+    <div className="av-page-surface min-h-screen w-full">
       <Navbar />
       <main className="pt-24 md:pt-28">
 

@@ -20,7 +20,7 @@ export default function ServicePageLayout({
 }) {
   const imgClass = heroImgClassName || 'w-full h-full object-cover opacity-40';
   return (
-    <div className="bg-background min-h-screen">
+    <div className="av-page-surface min-h-screen">
       <Navbar />
 
       {/* Hero */}

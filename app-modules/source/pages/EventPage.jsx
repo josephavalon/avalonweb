@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
+import AvalonMark from '@/components/AvalonMark';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowLeft, Calendar, MapPin, Shield, Users, Ticket } from 'lucide-react';
 import Navbar from '../../../src/components/landing/Navbar';
@@ -39,7 +40,7 @@ export default function EventPage() {
 
   if (!event) {
     return (
-      <div className="bg-background min-h-screen flex flex-col">
+      <div className="av-page-surface min-h-screen flex flex-col">
         <Navbar />
         <section className="flex-1 flex items-center justify-center px-6 py-24">
           <div className="max-w-xl text-center">
@@ -57,7 +58,7 @@ export default function EventPage() {
   const cover = event.cover || '/backgrounds/iv-vitamins-hero.webp';
 
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="av-page-surface min-h-screen flex flex-col">
       <Navbar />
 
       <section className="pt-28 md:pt-36 pb-12 md:pb-20 px-5 md:px-10">
@@ -107,7 +108,7 @@ export default function EventPage() {
                 <p className="font-body text-xs tracking-[0.35em] text-foreground/42 uppercase mb-5">Hosted by</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full border border-foreground/[0.12] bg-foreground/[0.05] backdrop-blur-md flex items-center justify-center">
-                    <span className="font-heading text-sm text-foreground tracking-widest">AV</span>
+                    <AvalonMark className="h-[14px] w-[9px] text-foreground" />
                   </div>
                   <div>
                     <p className="font-heading text-xl text-foreground tracking-wide leading-tight">{event.hostName || 'Avalon Vitality'}</p>

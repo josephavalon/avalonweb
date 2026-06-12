@@ -324,7 +324,7 @@ export default function Menu() {
             </Foldout>
           </div>
           <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="CBD IV Therapy" icon={Zap} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+            <Foldout title="IV CBD Therapy" icon={Zap} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
               <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} />
             </Foldout>
           </div>

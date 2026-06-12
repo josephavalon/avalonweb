@@ -10,7 +10,7 @@ export default function Platform() {
     path: '/platform',
   });
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="av-page-surface min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 px-5 pt-32 md:px-12 md:pt-40">
         <section className="mx-auto max-w-5xl rounded-3xl border border-foreground/10 bg-foreground/[0.03] p-6 md:p-10">

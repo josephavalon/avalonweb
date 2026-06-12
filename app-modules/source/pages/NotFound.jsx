@@ -14,7 +14,7 @@ export default function NotFound() {
   });
 
   return (
-    <div className="bg-background min-h-screen w-full flex flex-col">
+    <div className="av-page-surface min-h-screen w-full flex flex-col">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-5 py-24">
         <div className="text-center max-w-lg mx-auto">

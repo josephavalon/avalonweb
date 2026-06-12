@@ -19,7 +19,7 @@ export default function PageShell({ eyebrow, title, subtitle, action, children }
   }, [title]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="av-page-surface min-h-screen text-foreground">
 
       {/* ── Page header ───────────────────────────────────────── */}
       <div className="av-motion-rail mb-5 flex flex-col gap-4 rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 px-5 py-5 shadow-[0_24px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 duration-reveal md:flex-row md:items-start md:justify-between md:px-6 md:py-6">

@@ -1116,7 +1116,7 @@ export default function Checkout() {
 
   if (!hasCheckoutSelection) {
     return (
-      <div className="relative isolate min-h-screen overflow-hidden bg-background text-foreground">
+      <div className="av-page-surface relative isolate min-h-screen overflow-hidden text-foreground">
         <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-foreground/[0.08] via-transparent to-transparent" />
         <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-80 bg-gradient-to-t from-foreground/[0.04] via-transparent to-transparent" />
         <Navbar />
@@ -1161,7 +1161,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="av-page-surface relative isolate min-h-screen overflow-hidden text-foreground">
       <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-foreground/[0.08] via-transparent to-transparent" />
       <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-80 bg-gradient-to-t from-foreground/[0.04] via-transparent to-transparent" />
       <Navbar />
