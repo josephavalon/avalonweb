@@ -1,6 +1,12 @@
 import { spawn, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, '..');
 const BASE_URL = process.env.RELEASE_QA_BASE_URL || 'http://localhost:4173';
 const PREVIEW_PORT = Number(new URL(BASE_URL).port || 4173);
 const DEBUG_PORT_BASE = Number(process.env.RELEASE_QA_DEBUG_PORT_BASE || (20_000 + (process.pid % 10_000)));
@@ -70,7 +76,61 @@ function browserQaEnv(overrides = {}) {
   return { ...process.env, ...BROWSER_QA_DEBUG_ENV, ...overrides };
 }
 
+async function stopProcess(processRef) {
+  if (!processRef || processRef.killed) return;
+  processRef.kill();
+  await Promise.race([
+    new Promise((resolve) => processRef.once('exit', resolve)),
+    new Promise((resolve) => setTimeout(resolve, 1800)),
+  ]);
+}
+
+function createPreviewSnapshot() {
+  const sourceDist = path.join(repoRoot, 'dist');
+  if (!fs.existsSync(path.join(sourceDist, 'index.html'))) {
+    throw new Error('dist/index.html missing after build; cannot start release preview.');
+  }
+  const snapshotRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'avalon-release-preview-'));
+  const scriptsDir = path.join(snapshotRoot, 'scripts');
+  fs.mkdirSync(scriptsDir, { recursive: true });
+  fs.cpSync(sourceDist, path.join(snapshotRoot, 'dist'), { recursive: true });
+  fs.copyFileSync(path.join(repoRoot, 'scripts', 'preview-server.mjs'), path.join(scriptsDir, 'preview-server.mjs'));
+  return snapshotRoot;
+}
+
+async function startPreview() {
+  if (!previewSnapshotRoot) throw new Error('Release preview snapshot was not created.');
+  stopPort(PREVIEW_PORT);
+  const processRef = spawn('node', ['scripts/preview-server.mjs', '--host', '127.0.0.1', '--port', String(PREVIEW_PORT)], {
+    cwd: previewSnapshotRoot,
+    stdio: 'inherit',
+  });
+  const startup = await Promise.race([
+    waitFor(BASE_URL).then((ready) => (ready ? 'ready' : 'timeout')),
+    new Promise((resolve) => processRef.once('exit', (code) => resolve(`exited ${code ?? 'unknown'}`))),
+  ]);
+  if (startup !== 'ready') {
+    await stopProcess(processRef);
+    throw new Error(`Preview did not become ready at ${BASE_URL}: ${startup}`);
+  }
+  return processRef;
+}
+
+async function runBrowserQa(scriptName, envOverrides) {
+  console.log(`\nStarting fresh local preview on ${BASE_URL}`);
+  preview = await startPreview();
+  try {
+    await run('npm', ['run', scriptName], {
+      env: browserQaEnv(envOverrides),
+    });
+  } finally {
+    await stopProcess(preview);
+    preview = null;
+  }
+}
+
 let preview;
+let previewSnapshotRoot;
 
 try {
   await run('npm', ['run', 'lint']);
@@ -83,6 +143,7 @@ try {
   await run('npm', ['run', 'test:privacy']);
   await run('npm', ['run', 'test:security']);
   await run('npm', ['run', 'build']);
+  previewSnapshotRoot = createPreviewSnapshot();
   await run('npm', ['run', 'test:performance']);
   await run('npm', ['run', 'test:smoke']);
   await run('npm', ['run', 'test:lifecycle']);
@@ -90,37 +151,16 @@ try {
   await run('npm', ['run', 'test:preapi']);
   await run('npm', ['run', 'test:day']);
 
-  console.log(`\nStarting fresh local preview on ${BASE_URL}`);
-  stopPort(PREVIEW_PORT);
-  preview = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', String(PREVIEW_PORT)], {
-    stdio: 'inherit',
-  });
-  const ready = await waitFor(BASE_URL);
-  if (!ready) throw new Error(`Preview did not become ready at ${BASE_URL}`);
-
-  await run('npm', ['run', 'test:booking'], {
-    env: browserQaEnv({ BOOKING_QA_BASE_URL: BASE_URL }),
-  });
-  await run('npm', ['run', 'test:login'], {
-    env: browserQaEnv({ LOGIN_QA_BASE_URL: BASE_URL }),
-  });
-  await run('npm', ['run', 'test:interaction'], {
-    env: browserQaEnv({ INTERACTION_QA_BASE_URL: BASE_URL }),
-  });
-  await run('npm', ['run', 'test:mobile'], {
-    env: browserQaEnv({ MOBILE_QA_BASE_URL: BASE_URL }),
-  });
-  await run('npm', ['run', 'test:stability'], {
-    env: browserQaEnv({ STABILITY_QA_BASE_URL: BASE_URL }),
-  });
-  await run('npm', ['run', 'test:visual'], {
-    env: browserQaEnv({ VISUAL_QA_BASE_URL: BASE_URL }),
-  });
-  await run('npm', ['run', 'test:translate'], {
-    env: browserQaEnv({ TRANSLATE_QA_BASE_URL: BASE_URL }),
-  });
+  await runBrowserQa('test:booking', { BOOKING_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:login', { LOGIN_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:interaction', { INTERACTION_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:mobile', { MOBILE_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:stability', { STABILITY_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:visual', { VISUAL_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:translate', { TRANSLATE_QA_BASE_URL: BASE_URL });
 
   console.log('\nRelease QA passed. Local no-API build is clear.');
 } finally {
-  if (preview && !preview.killed) preview.kill();
+  await stopProcess(preview);
+  if (previewSnapshotRoot) fs.rmSync(previewSnapshotRoot, { recursive: true, force: true, maxRetries: 3, retryDelay: 150 });
 }
