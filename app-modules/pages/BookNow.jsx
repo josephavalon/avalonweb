@@ -66,6 +66,11 @@ import {
   ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS,
   calculateLaunchPayment,
 } from '@/lib/paymentRules';
+import {
+  isAdultCheckoutDob,
+  isValidCheckoutEmail,
+  isValidCheckoutPhone,
+} from '@/lib/checkoutValidation';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
@@ -1987,8 +1992,16 @@ function hasFullName(value) {
 }
 
 function hasDob(value) {
-  const date = parseDob(value);
-  return Boolean(date) && !Number.isNaN(date.getTime()) && date < new Date();
+  return isAdultCheckoutDob(value);
+}
+
+function hasValidContactFields(state = {}) {
+  return Boolean(
+    hasFullName(state.name) &&
+    hasDob(state.dob) &&
+    isValidCheckoutEmail(state.email) &&
+    isValidCheckoutPhone(state.phone)
+  );
 }
 
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
@@ -2441,7 +2454,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
 }
 
 function ContactConfirmCard({ state, onChange, savedContact }) {
-  const hasContact = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10);
+  const hasContact = hasValidContactFields(state);
   const [editing, setEditing] = useState(!hasContact);
   const hasSavedContact = Boolean(savedContact?.name || savedContact?.email || savedContact?.phone);
 
@@ -2754,7 +2767,7 @@ function FastReviewSurface({
   onSubmit,
 }) {
   const Icon = product?.icon || Droplets;
-  const canPay = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
+  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
 
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
@@ -4209,7 +4222,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasFullName(state.name) && hasDob(state.dob) && state.email.includes('@') && state.phone.replace(/\D/g, '').length >= 10 && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
+  const canSubmit = Boolean(hasValidContactFields(state) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     clearItems();

@@ -305,6 +305,7 @@ try {
   await clearAvalonStorage(cdp);
   await wait(500);
 
+  await clickText(cdp, '9 therapies');
   await clickText(cdp, 'Recovery');
   await clickText(cdp, 'Next');
   await clickText(cdp, 'No Add-Ons');
@@ -330,7 +331,7 @@ try {
   if (!result.hasEmbeddedCheckout && !staticFallback) failures.push('Embedded checkout did not open.');
   if (!result.bookingId && staticFallback) failures.push('No local booking was saved.');
   if (staticFallback && !/Pending|Required|Cleared/i.test(result.gfe || '')) failures.push('GFE state missing.');
-  if (staticFallback && !/250|paid/i.test(result.payment || '')) failures.push('Payment state missing.');
+  if (staticFallback && !/50|due today|paid/i.test(result.payment || '')) failures.push('Payment state missing.');
   if (staticFallback && !result.contact?.dob) failures.push('DOB missing from saved booking.');
   if (!result.hasHandoff && staticFallback) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);

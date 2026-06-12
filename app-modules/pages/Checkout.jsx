@@ -18,13 +18,10 @@ import { orchestrateOrderHandoff } from '@/lib/platformOps';
 import { readBookingDraft, readLastBooking, readLocal } from '@/lib/localOs';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
+import { hasValidCheckoutContact } from '@/lib/checkoutValidation';
 
 function hasCompleteContact(contact = {}) {
-  return Boolean(
-    contact.firstName &&
-    contact.email?.includes('@') &&
-    String(contact.phone || '').replace(/\D/g, '').length >= 10
-  );
+  return hasValidCheckoutContact(contact);
 }
 
 function splitFullName(value = '') {

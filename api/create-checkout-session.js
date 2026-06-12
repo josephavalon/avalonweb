@@ -8,12 +8,21 @@ import {
   buildPendingAppointmentRecord,
   buildStripeCheckoutMetadata,
 } from './_checkout-fulfillment.js';
+import {
+  ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS,
+  calculateLaunchPayment,
+} from '../src/lib/paymentRules.js';
+import {
+  hasValidCheckoutContact,
+  isAdultCheckoutDob,
+  normalizeCheckoutEmail,
+} from '../src/lib/checkoutValidation.js';
 
 function dollarsToCents(value) {
   return Math.max(0, Math.round(Number(value || 0) * 100));
 }
 
-const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || 50);
+const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS);
 
 function httpError(message, status = 500, code = 'server_error') {
   return Object.assign(new Error(message), { status, code });
@@ -144,9 +153,13 @@ export default async function handler(req, res) {
     checkoutUiMode = 'hosted',
   } = req.body || {};
 
-  if (!contact.firstName || !contact.email) {
-    return res.status(400).json({ error: 'First name and email are required' });
+  if (!hasValidCheckoutContact(contact)) {
+    return res.status(400).json({
+      error: 'Valid first name, email, and phone are required',
+      code: 'contact_invalid',
+    });
   }
+  contact.email = normalizeCheckoutEmail(contact.email);
 
   let pendingRecordId = null;
   try {
@@ -194,17 +207,41 @@ export default async function handler(req, res) {
         code: 'appointment_time_missing',
       });
     }
+    if (hasVisitItems && !isAdultCheckoutDob(appointment.dob || contact.dob || '')) {
+      return res.status(400).json({
+        error: 'Valid adult birthdate is required before checkout',
+        code: 'dob_invalid',
+      });
+    }
 
     const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';
     const visitSubtotalCents = dollarsToCents(visitSubtotal);
     const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
-    const requestedDepositCents = dollarsToCents(appointment.depositAmount || 0);
+    const appointmentOrderType = appointment.orderType || appointment.paymentType || '';
+    const guestCount = Number(appointment.guests || 1);
+    const isGroupVisit = /event/i.test(`${appointmentOrderType} ${appointment.locationType || ''}`) || guestCount > 1;
+    const launchPayment = calculateLaunchPayment({
+      subtotal: visitSubtotal,
+      visitType: membership ? 'subscription' : appointment.visitType || '',
+      orderType: membership ? 'subscription' : appointmentOrderType,
+      subscriptionPrice: membership?.price || 0,
+      isGroupVisit,
+      hasKnownPrice: visitSubtotal > 0,
+    });
+    const fallbackDepositCents = hasVisitItems ? Math.min(BOOKING_DEPOSIT_CENTS, visitSubtotalCents) : 0;
     const depositCents = membership
       ? dollarsToCents(membership.price)
       : hasVisitItems
-        ? Math.min(requestedDepositCents || BOOKING_DEPOSIT_CENTS, visitSubtotalCents)
+        ? dollarsToCents((launchPayment.depositAmount ?? (fallbackDepositCents / 100)))
         : 0;
     const balanceDueCents = membership ? 0 : Math.max(0, visitSubtotalCents - depositCents);
+    const normalizedAppointment = {
+      ...appointment,
+      orderType: membership ? 'subscription' : (isGroupVisit ? 'event' : appointment.orderType || 'single'),
+      paymentType: membership ? 'subscription_first_month' : launchPayment.paymentType,
+      depositAmount: depositCents / 100,
+      balanceDue: balanceDueCents / 100,
+    };
     const checkoutChargeItems = membership ? [] : [{
       key: 'booking-deposit',
       cartKey: 'booking-deposit',
@@ -220,7 +257,7 @@ export default async function handler(req, res) {
 
     const checkoutPayload = buildCheckoutPayload({
       contact,
-      appointment,
+      appointment: normalizedAppointment,
       items,
       membership,
       paymentMethod,
@@ -243,14 +280,16 @@ export default async function handler(req, res) {
 
       if (pendingError || !pendingRecord?.id) {
         console.warn(
-          '[create-checkout-session] Supabase appointment record unavailable; continuing with Stripe metadata fulfillment:',
+          '[create-checkout-session] Supabase appointment record unavailable; refusing live checkout without a safe fulfillment record:',
           pendingError?.message || 'missing appointment id'
         );
+        throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
       } else {
         pendingRecordId = pendingRecord.id;
       }
     } else {
-      console.warn('[create-checkout-session] Supabase is not configured; using Stripe metadata fulfillment fallback.');
+      console.warn('[create-checkout-session] Supabase is not configured; refusing live checkout without a safe fulfillment record.');
+      throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
     }
 
     const embeddedCheckout = checkoutUiMode === 'embedded';
@@ -276,7 +315,7 @@ export default async function handler(req, res) {
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,
         contact,
-        appointment,
+        appointment: normalizedAppointment,
         items,
         membership,
         paymentMethod,
@@ -315,7 +354,7 @@ export default async function handler(req, res) {
       idempotencyKey: checkoutIdempotencyKey({
         mode: sessionMode,
         contact,
-        appointment,
+        appointment: normalizedAppointment,
         items,
         membership,
       }),

@@ -1,4 +1,4 @@
-const ITEM_PRICE_BY_KEY = new Map(Object.entries({
+export const ITEM_PRICE_BY_KEY = new Map(Object.entries({
   hydration: 150,
   energy: 250,
   immunity: 250,
@@ -14,23 +14,25 @@ const ITEM_PRICE_BY_KEY = new Map(Object.entries({
   nad_250mg: 350,
   nad_500: 500,
   nad_500mg: 500,
-  nad_750: 600,
-  nad_750mg: 600,
-  nad_1000: 750,
-  nad_1000mg: 750,
-  nad_1250: 950,
-  nad_1250mg: 950,
-  nad_1500: 1100,
-  nad_1500mg: 1100,
-  cbd: 350,
-  cbd_33: 350,
-  cbd_33mg: 350,
-  cbd_66: 450,
-  cbd_66mg: 450,
-  cbd_99: 550,
-  cbd_99mg: 550,
-  cbd_132: 650,
-  cbd_132mg: 650,
+  nad_750: 650,
+  nad_750mg: 650,
+  nad_vitality: 700,
+  nad_1000: 800,
+  nad_1000mg: 800,
+  nad_1250: 1000,
+  nad_1250mg: 1000,
+  nad_1500: 1200,
+  nad_1500mg: 1200,
+  cbd: 250,
+  cbd_33: 250,
+  cbd_33mg: 250,
+  cbd_66: 300,
+  cbd_66mg: 300,
+  cbd_vitality: 350,
+  cbd_99: 350,
+  cbd_99mg: 350,
+  cbd_132: 450,
+  cbd_132mg: 450,
   custom_hydration: 150,
   custom_recovery: 250,
   custom_energy: 250,
@@ -43,7 +45,7 @@ const ITEM_PRICE_BY_KEY = new Map(Object.entries({
   custom_cbd: 350,
 }));
 
-const ADDON_PRICE_BY_LABEL = new Map(Object.entries({
+export const ADDON_PRICE_BY_LABEL = new Map(Object.entries({
   'extra fluid': 25,
   'extra ingredients': 30,
   'vitamin c iv push 5g': 45,
@@ -53,7 +55,10 @@ const ADDON_PRICE_BY_LABEL = new Map(Object.entries({
   'cbd review plus': 450,
   'nad 250mg': 350,
   'nad 500mg': 500,
-  'nad 1000mg': 750,
+  'nad 750mg': 650,
+  'nad 1000mg': 800,
+  'nad 1250mg': 1000,
+  'nad 1500mg': 1200,
   'glutathione push 600mg': 60,
   'glutathione push 1200mg': 100,
   'glutathione push 1800mg': 140,
@@ -67,7 +72,7 @@ const ADDON_PRICE_BY_LABEL = new Map(Object.entries({
   'vitamin c im 1000mg': 45,
 }));
 
-const MEMBERSHIP_PRICE_BY_NAME = new Map(Object.entries({
+export const MEMBERSHIP_PRICE_BY_NAME = new Map(Object.entries({
   starter: 199,
   pro: 389,
   premium: 400,
@@ -106,24 +111,25 @@ function normalizeKey(value = '') {
 }
 
 function priceForItem(item = {}) {
+  const itemType = String(item.type || '').toLowerCase();
   const key = normalizeKey(item.key || item.cartKey || '');
   if (ITEM_PRICE_BY_KEY.has(key)) return ITEM_PRICE_BY_KEY.get(key);
 
   const label = normalize(item.label || item.name || '');
-  if (ADDON_PRICE_BY_LABEL.has(label)) return ADDON_PRICE_BY_LABEL.get(label);
+  if (itemType !== 'iv' && ADDON_PRICE_BY_LABEL.has(label)) return ADDON_PRICE_BY_LABEL.get(label);
 
-  if (label.includes('nad') && label.includes('1000')) return 750;
-  if (label.includes('nad') && label.includes('1500')) return 1100;
-  if (label.includes('nad') && label.includes('1250')) return 950;
-  if (label.includes('nad') && label.includes('750')) return 600;
+  if (label.includes('nad') && label.includes('1000')) return 800;
+  if (label.includes('nad') && label.includes('1500')) return 1200;
+  if (label.includes('nad') && label.includes('1250')) return 1000;
+  if (label.includes('nad') && label.includes('750')) return 650;
   if (label.includes('nad') && label.includes('500')) return 500;
   if (label.includes('nad') && label.includes('250')) return 350;
   if (label.includes('cbd') && label.includes('review plus')) return 450;
   if (label.includes('cbd') && label.includes('132')) return 650;
-  if (label.includes('cbd') && label.includes('99')) return 550;
-  if (label.includes('cbd') && label.includes('66')) return 450;
-  if (label.includes('cbd') && label.includes('33')) return 350;
-  if (label.includes('cbd')) return 350;
+  if (label.includes('cbd') && label.includes('99')) return 350;
+  if (label.includes('cbd') && label.includes('66')) return 300;
+  if (label.includes('cbd') && label.includes('33')) return 250;
+  if (label.includes('cbd')) return 250;
 
   return null;
 }
