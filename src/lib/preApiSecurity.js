@@ -27,12 +27,12 @@ export function isBetaSimulationHost(host = currentHost()) {
 }
 
 export function isLiveApiArmed() {
-  const env = import.meta.env || {};
+  const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
   return env.VITE_AVALON_ENABLE_LIVE_API === 'true';
 }
 
 export function isDemoAuthAllowed() {
-  const env = import.meta.env || {};
+  const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
   if (env.VITE_AVALON_DEMO_AUTH === 'false') return false;
   return !isLiveApiArmed() && (isLocalSimulationHost() || isBetaSimulationHost());
 }

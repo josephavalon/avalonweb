@@ -6,7 +6,10 @@ import { spawn } from 'node:child_process';
 
 const BASE_URL = (process.env.INTERACTION_QA_BASE_URL || 'http://localhost:4173').replace(/\/$/, '');
 const PORT = Number(process.env.INTERACTION_QA_DEBUG_PORT || 9351);
-const PASSWORD = process.env.INTERACTION_QA_PASSWORD || 'JonJones1986';
+const PASSWORD = process.env.INTERACTION_QA_PASSWORD || '';
+if (!PASSWORD) {
+  throw new Error('INTERACTION_QA_PASSWORD is required for demo interaction QA.');
+}
 
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 3, mobile: true };
 const DESKTOP = { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false };
@@ -320,7 +323,9 @@ async function testBookingAddOnFlow(cdp) {
   await open(cdp, '/book?reset=1', MOBILE);
   await evalOnPage(cdp, 'localStorage.clear(); sessionStorage.setItem("av.splash.seen", "1");');
   await open(cdp, '/book?reset=1', MOBILE);
-  await waitForText(cdp, /Choose Your IV Therapy|Energy|Myers/i);
+  await waitForText(cdp, /Choose Your Base|IV Therapy|9 therapies/i);
+  await clickText(cdp, '9 therapies');
+  await waitForText(cdp, /Energy|Myers|Hydration/i);
   await clickText(cdp, 'Myers');
   await waitForText(cdp, /Add-ons/i);
   await clickText(cdp, 'IV Add Ons');
@@ -348,14 +353,24 @@ async function testBookingAddOnFlow(cdp) {
 
 async function testSubscriptionTierSwitch(cdp) {
   await open(cdp, '/subscription', MOBILE);
-  await clickText(cdp, 'Starter');
-  await waitForText(cdp, /\$199|Start Starter/i);
-  await clickText(cdp, 'VIP');
-  await waitForText(cdp, /\$899|VIP/i);
-  await clickText(cdp, 'NEXT');
-  await waitForText(cdp, /VIP|checkout|secure|subscription/i);
-  await assertHealthy(cdp, 'subscription tier switching');
-  console.log('PASS interaction subscription: starter and VIP switching works.');
+  await waitForText(cdp, /Build your plan|How many sessions|Your plan/i);
+  await clickText(cdp, '3×');
+  await waitForText(cdp, /3 IV visits|3× \/ month/i);
+  await clickText(cdp, 'NAD+');
+  await waitForText(cdp, /NAD\+ 1000mg|\$800 \/ IV/i);
+  await clickText(cdp, 'NAD+ 1000mg');
+  await waitForText(cdp, /\$2,400|NAD\+ 1000mg/i);
+  await clickText(cdp, '6 months upfront');
+  await waitForText(cdp, /\$13,248|Save 8%|due today/i);
+  await clickText(cdp, 'Start plan');
+  await waitForText(cdp, /Secure checkout|Confirm your plan|Avalon plan/i);
+  const location = await evalOnPage(cdp, `window.location.pathname + window.location.search`);
+  if (!location.startsWith('/plan?')) throw new Error(`Subscription CTA did not route to /plan: ${location}`);
+  if (!location.includes('protocol=nad') || !location.includes('sessions=3') || !location.includes('price=2400') || !location.includes('term=six-month')) {
+    throw new Error(`Subscription CTA params are stale or incomplete: ${location}`);
+  }
+  await assertHealthy(cdp, 'subscription plan builder');
+  console.log('PASS interaction subscription: plan builder routes NAD+ 1000mg 3x/month to checkout.');
 }
 
 async function testRolePortals(cdp) {
@@ -439,11 +454,6 @@ try {
   await testSubscriptionTierSwitch(cdp);
   await testRolePortals(cdp);
   await testFooterAndProductAlias(cdp);
-
-  // Password is intentionally referenced so the test fails loudly if the beta credential changes.
-  if (PASSWORD !== 'JonJones1986' && !process.env.INTERACTION_QA_PASSWORD) {
-    throw new Error('Unexpected beta demo password default.');
-  }
 
   console.log('Interaction QA passed: critical pre-API clicks are functional.');
 } finally {

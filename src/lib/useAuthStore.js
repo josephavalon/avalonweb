@@ -35,11 +35,9 @@ const DEMO_USERS = {
   'PHYSICIAN001': { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
   'PHYSICIAN0001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
 };
-// Beta/demo passcode. Primarily from VITE_AVALON_DEMO_PASSWORD; falls back to the
-// known beta passcode so the simulation logins (CLIENT001 / ADMIN001) work on
-// snooches + localhost without extra build config. isDemoAuthAllowed() still
-// gates this to beta/local hosts only, so it is inert on the production domain.
-const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
+// Beta/demo passcode. It must be supplied per environment and is still gated to
+// beta/local hosts by isDemoAuthAllowed().
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
 // ─────────────────────────────────────────────────────────────────────────
 
 const ROLE_REDIRECT = {

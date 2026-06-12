@@ -6,7 +6,10 @@ import { spawn } from 'node:child_process';
 
 const BASE_URL = (process.env.LOGIN_QA_BASE_URL || 'http://localhost:4173').replace(/\/$/, '');
 const PORT = Number(process.env.LOGIN_QA_DEBUG_PORT || 9348);
-const PASSWORD = process.env.LOGIN_QA_PASSWORD || 'JonJones1986';
+const PASSWORD = process.env.LOGIN_QA_PASSWORD || '';
+if (!PASSWORD) {
+  throw new Error('LOGIN_QA_PASSWORD is required for demo login QA.');
+}
 
 const VIEWPORT = {
   width: 390,
@@ -18,6 +21,10 @@ const VIEWPORT = {
 const MANUAL_CASES = [
   { label: 'client exact', username: 'CLIENT0001', password: PASSWORD, expectedPath: '/members/dashboard', expectedRole: 'client' },
   { label: 'client alias with spaces', username: ' client ', password: ` ${PASSWORD} `, expectedPath: '/members/dashboard', expectedRole: 'client' },
+];
+
+const ADMIN_CASES = [
+  { label: 'admin exact', username: 'ADMIN001', password: PASSWORD, expectedPath: '/admin', expectedRole: 'admin' },
 ];
 
 const SHORTCUT_CASES = [];
@@ -236,6 +243,31 @@ async function openLogin(cdp) {
   })()`, 'login controls');
 }
 
+async function openAdminLogin(cdp) {
+  cdp.consoleIssues = [];
+  await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
+  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
+  await cdp.send('Runtime.evaluate', {
+    expression: `location.href = ${JSON.stringify(`${BASE_URL}/admin/login`)}; true;`,
+    returnByValue: true,
+  });
+  await waitForReady(cdp);
+  await wait(350);
+  await evalOnPage(cdp, `(() => {
+    try {
+      sessionStorage.clear();
+      localStorage.setItem('cookieConsent', 'allowed');
+    } catch {}
+    return true;
+  })()`);
+  await waitForPageCondition(cdp, `(() => {
+    const username = document.querySelector('#admin-id');
+    const password = document.querySelector('#admin-password');
+    const submit = document.querySelector('form button[type="submit"]');
+    return Boolean(username && password && submit);
+  })()`, 'admin login controls');
+}
+
 async function waitForPath(cdp, expectedPath) {
   const deadline = Date.now() + 8_000;
   while (Date.now() < deadline) {
@@ -302,6 +334,35 @@ async function runShortcutLogin(cdp, testCase) {
   console.log(`PASS login shortcut: ${testCase.username}`);
 }
 
+async function runAdminLogin(cdp, testCase) {
+  await openAdminLogin(cdp);
+  const ok = await evalOnPage(cdp, `(() => {
+    const setValue = (selector, value) => {
+      const el = document.querySelector(selector);
+      if (!el) return false;
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      setter.call(el, value);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    };
+    const ready = setValue('#admin-id', ${JSON.stringify(testCase.username)})
+      && setValue('#admin-password', ${JSON.stringify(testCase.password)});
+    const submit = document.querySelector('form button[type="submit"]');
+    if (!ready || !submit) return false;
+    submit.click();
+    return true;
+  })()`);
+  if (!ok) throw new Error(`Could not submit admin login for ${testCase.label}.`);
+
+  const state = await waitForPath(cdp, testCase.expectedPath);
+  if (state.session?.role !== testCase.expectedRole) {
+    throw new Error(`${testCase.label} produced role ${state.session?.role || 'none'}, expected ${testCase.expectedRole}.`);
+  }
+  if (cdp.consoleIssues.length) throw new Error(`${testCase.label} console issue: ${cdp.consoleIssues[0]}`);
+  console.log(`PASS login admin: ${testCase.label}`);
+}
+
 let chrome;
 let profileDir;
 let cdp;
@@ -326,13 +387,18 @@ try {
     cdp = await createPageClient();
     await runManualLogin(cdp, testCase);
   }
+  for (const testCase of ADMIN_CASES) {
+    await closePageClient(cdp);
+    cdp = await createPageClient();
+    await runAdminLogin(cdp, testCase);
+  }
   for (const testCase of SHORTCUT_CASES) {
     await closePageClient(cdp);
     cdp = await createPageClient();
     await runShortcutLogin(cdp, testCase);
   }
 
-  console.log(`Login QA passed ${MANUAL_CASES.length + SHORTCUT_CASES.length} mobile beta login checks.`);
+  console.log(`Login QA passed ${MANUAL_CASES.length + ADMIN_CASES.length + SHORTCUT_CASES.length} mobile beta login checks.`);
 } finally {
   await closePageClient(cdp);
   await stopChrome(chrome);

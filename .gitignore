@@ -43,3 +43,4 @@ deploy-to-vercel.command
 .codex-audit/
 tmp/
 .gstack/
+.env*
