@@ -19,6 +19,7 @@ const VIEWPORT = {
 const MANUAL_CASES = [
   { label: 'client exact', username: 'CLIENT0001', password: PASSWORD, expectedPath: '/members/dashboard', expectedRole: 'client' },
   { label: 'client alias with spaces', username: ' client ', password: ` ${PASSWORD} `, expectedPath: '/members/dashboard', expectedRole: 'client' },
+  { label: 'nurse exact', username: 'NURSE001', password: PASSWORD, expectedPath: '/provider/shift', expectedRole: 'nurse' },
 ];
 
 const ADMIN_CASES = [

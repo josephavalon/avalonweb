@@ -158,5 +158,10 @@ const oldDemoPassword = ['Jon', 'Jones', '1986'].join('');
 for (const [label, source] of Object.entries({ authStoreSource, loginQaSource, interactionQaSource })) {
   assert(!source.includes(oldDemoPassword), `Hardcoded demo password remains in ${label}`);
 }
+assert(authStoreSource.includes("role: 'nurse'"), 'Demo roster must include the launch nurse role');
+for (const retiredRole of ["role: 'np'", "role: 'physician'", 'NP001', 'MD001', 'PHYSICIAN001']) {
+  assert(!authStoreSource.includes(retiredRole), `Retired prescriber demo role remains in auth store: ${retiredRole}`);
+}
+assert(loginQaSource.includes("expectedRole: 'nurse'"), 'Login QA must cover the launch nurse role');
 
 console.log('Smoke tests passed.');

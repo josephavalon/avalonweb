@@ -1,7 +1,7 @@
 # Auth setup — running on local
 
-Avalon ships with **Client Login** and **Admin Login**, plus a reserved
-`/provider/*` surface for future **Nurse Login**. This page covers what to do
+Avalon ships with **Client Login**, **Admin Login**, and a launch **Nurse**
+demo role that reaches the `/provider/*` surface. This page covers what to do
 once on a fresh machine.
 
 ## 1. Environment
@@ -70,17 +70,18 @@ Then verify:
 | `/admin/login` | Admin-only email magic-link                         |
 | `/members/*`   | Bookings, Memberships, Billing, Profile, Documents  |
 | `/admin`       | 7 sections (Avalon OS, Dispatch, Inventory, Scheduling, CRM, Analytics, Operations) |
+| `/provider/*`  | Nurse operations surfaces for the launch nurse role |
 
 Phone OTP needs the Supabase auth hook (`/api/auth/send-sms.js`) wired in;
 on local without that, stick to email magic-link.
 
-## 6. Nurse drop-in (future)
+## 6. Nurse launch role
 
-`/provider/*` routes already exist and are role-gated to
-`provider | np | physician | admin`. To turn on Nurse Login later:
+`/provider/*` routes already exist and are role-gated to `nurse | admin`.
+The local demo roster includes `NURSE001`; production nurse users should have
+`public.profiles.role = 'nurse'`.
 
-1. Add `/nurse/login` (copy of `AdminLogin.jsx`, gate on `role === 'provider'`).
-2. Promote provider rows from the existing `public.invitations` workflow
-   in migration `003_healthcare_os_core.sql`.
+Prescriber-specific `np` / `physician` roles remain in the database policy
+helpers for future clinical workflows, but they are not launch login roles.
 
 No structural change needed.

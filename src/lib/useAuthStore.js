@@ -22,18 +22,9 @@ const DEMO_USERS = {
   'CLIENT':       { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
   'CLIENT001':    { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
   'CLIENT0001':   { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
-  'NURSE':        { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
-  'NURSE001':     { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
-  'NURSE0001':    { role: 'provider',  name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
-  'NP':           { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
-  'NP001':        { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
-  'NP0001':       { role: 'np',        name: 'Mobile GFE NP',     redirect: '/provider/role-os',  status: 'active', canonical: 'NP001' },
-  'MD':           { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
-  'MD001':        { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
-  'MD0001':       { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'MD001' },
-  'PHYSICIAN':    { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
-  'PHYSICIAN001': { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
-  'PHYSICIAN0001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
+  'NURSE':        { role: 'nurse',     name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
+  'NURSE001':     { role: 'nurse',     name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
+  'NURSE0001':    { role: 'nurse',     name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
 };
 // Beta/demo passcode. It must be supplied per environment and is still gated to
 // beta/local hosts by isDemoAuthAllowed().
@@ -43,9 +34,7 @@ const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
 const ROLE_REDIRECT = {
   admin: '/admin',
   client: '/members/dashboard',
-  provider: '/provider/role-os',
-  np: '/provider/role-os',
-  physician: '/provider/role-os',
+  nurse: '/provider/shift',
 };
 function redirectForRole(role) {
   return ROLE_REDIRECT[role] || '/members/dashboard';
