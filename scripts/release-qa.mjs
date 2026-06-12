@@ -3,6 +3,16 @@ import http from 'node:http';
 
 const BASE_URL = process.env.RELEASE_QA_BASE_URL || 'http://localhost:4173';
 const PREVIEW_PORT = Number(new URL(BASE_URL).port || 4173);
+const DEBUG_PORT_BASE = Number(process.env.RELEASE_QA_DEBUG_PORT_BASE || (20_000 + (process.pid % 10_000)));
+const BROWSER_QA_DEBUG_ENV = {
+  BOOKING_QA_DEBUG_PORT: String(DEBUG_PORT_BASE),
+  LOGIN_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 1),
+  INTERACTION_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 2),
+  MOBILE_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 3),
+  STABILITY_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 4),
+  VISUAL_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 5),
+  TRANSLATE_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 6),
+};
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -56,6 +66,10 @@ function stopPort(port) {
   }
 }
 
+function browserQaEnv(overrides = {}) {
+  return { ...process.env, ...BROWSER_QA_DEBUG_ENV, ...overrides };
+}
+
 let preview;
 
 try {
@@ -85,25 +99,25 @@ try {
   if (!ready) throw new Error(`Preview did not become ready at ${BASE_URL}`);
 
   await run('npm', ['run', 'test:booking'], {
-    env: { ...process.env, BOOKING_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ BOOKING_QA_BASE_URL: BASE_URL }),
   });
   await run('npm', ['run', 'test:login'], {
-    env: { ...process.env, LOGIN_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ LOGIN_QA_BASE_URL: BASE_URL }),
   });
   await run('npm', ['run', 'test:interaction'], {
-    env: { ...process.env, INTERACTION_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ INTERACTION_QA_BASE_URL: BASE_URL }),
   });
   await run('npm', ['run', 'test:mobile'], {
-    env: { ...process.env, MOBILE_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ MOBILE_QA_BASE_URL: BASE_URL }),
   });
   await run('npm', ['run', 'test:stability'], {
-    env: { ...process.env, STABILITY_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ STABILITY_QA_BASE_URL: BASE_URL }),
   });
   await run('npm', ['run', 'test:visual'], {
-    env: { ...process.env, VISUAL_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ VISUAL_QA_BASE_URL: BASE_URL }),
   });
   await run('npm', ['run', 'test:translate'], {
-    env: { ...process.env, TRANSLATE_QA_BASE_URL: BASE_URL },
+    env: browserQaEnv({ TRANSLATE_QA_BASE_URL: BASE_URL }),
   });
 
   console.log('\nRelease QA passed. Local no-API build is clear.');
