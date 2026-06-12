@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import crypto from 'crypto';
 import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
 import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
+import { resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
 import {
   buildCheckoutPayload,
@@ -49,6 +50,19 @@ const CHECKOUT_INPUT_LIMITS = {
 
 function httpError(message, status = 500, code = 'server_error') {
   return Object.assign(new Error(message), { status, code });
+}
+
+async function resolveCheckoutSchedulingTypeId({ appointment = {}, items = [], membership = null } = {}) {
+  const explicitId = Number(appointment.acuityTypeId);
+  if (explicitId) return explicitId;
+
+  const envId = resolveAppointmentTypeId(items, membership);
+  if (envId) return envId;
+
+  const liveId = await resolveAppointmentTypeIdFromLive(items, membership);
+  if (liveId) return liveId;
+
+  throw httpError('Scheduling is not configured for this treatment. Please contact Avalon to book.', 400, 'appointment_type_unavailable');
 }
 
 function boundedString(value, max) {
@@ -299,6 +313,19 @@ export default async function handler(req, res) {
         error: 'Valid adult birthdate is required before checkout',
         code: 'dob_invalid',
       });
+    }
+    if (hasVisitItems) {
+      try {
+        const appointmentTypeId = await resolveCheckoutSchedulingTypeId({ appointment, items, membership });
+        appointment.acuityTypeId = String(appointmentTypeId);
+      } catch (err) {
+        console.warn('[create-checkout-session] scheduling type unavailable:', err?.code || err?.message || 'unknown_error');
+        const publicMessage = 'Scheduling is not configured for this treatment. Please contact Avalon to book.';
+        return res.status(err?.status || 503).json({
+          error: publicMessage,
+          code: err?.code || 'appointment_type_unavailable',
+        });
+      }
     }
 
     const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';

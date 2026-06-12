@@ -41,6 +41,7 @@ const sendSmsSource = readFileSync(new URL('../api/auth/send-sms.js', import.met
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
 const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
+const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
@@ -132,6 +133,9 @@ assert(createCheckoutSource.includes('CHECKOUT_INPUT_LIMITS'), 'Checkout route m
 assert(createCheckoutSource.includes('sanitizeCheckoutInputFields'), 'Checkout route must sanitize contact and appointment fields before fulfillment');
 assert(createCheckoutSource.includes('checkout_input_too_long'), 'Checkout route must reject oversized intake fields');
 assert(createCheckoutSource.includes('appointment.notes') && createCheckoutSource.includes('CHECKOUT_INPUT_LIMITS.notes'), 'Checkout route must cap appointment notes');
+assert(createCheckoutSource.includes('resolveCheckoutSchedulingTypeId'), 'Checkout route must preflight scheduling type before Stripe checkout');
+assert(createCheckoutSource.includes('appointment_type_unavailable'), 'Checkout route must reject unmapped scheduling types before payment');
+assert(createCheckoutSource.includes('appointment.acuityTypeId = String(appointmentTypeId)'), 'Checkout route must carry the resolved scheduling type into fulfillment');
 assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin balance collection must reject over-balance overrides');
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
@@ -166,6 +170,8 @@ assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId)
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
 assert(acuityWebhookSource.includes('duplicate event hash drift'), 'Acuity webhook must retain payload hash as an integrity signal');
+assert(acuitySource.includes('no explicit appointment type match found'), 'Acuity live type resolver must not silently choose an unrelated type');
+assert(!acuitySource.includes('using first active Acuity type'), 'Acuity live type resolver must not fall back to the first active type');
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_MAX_BODY_BYTES'), 'Stripe webhook must enforce a raw body size limit');
 assert(stripeWebhookSource.includes('webhook_body_too_large'), 'Stripe webhook must reject oversized raw bodies explicitly');
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS'), 'Stripe webhook must enforce a processing timeout');

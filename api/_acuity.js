@@ -135,8 +135,8 @@ export async function resolveAppointmentTypeIdFromLive(cartItems = [], membershi
   const ivFallback = types.find((type) => /\biv\b|hydration|vitamin|drip/.test(appointmentTypeText(type)));
   if (ivFallback?.id) return Number(ivFallback.id);
 
-  console.warn('[acuity] no explicit appointment type match; using first active Acuity type');
-  return Number(types[0]?.id || 0);
+  console.warn('[acuity] no explicit appointment type match found');
+  return 0;
 }
 
 /**
