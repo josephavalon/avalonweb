@@ -252,14 +252,16 @@ async function auditRoute(cdp, route, viewport) {
   await waitForReady(cdp);
   await wait(650);
 
-  const result = await cdp.send('Runtime.evaluate', {
-    returnByValue: true,
-    expression: `(() => {
+  let result;
+  try {
+    result = await cdp.send('Runtime.evaluate', {
+      returnByValue: true,
+      expression: `(() => {
       const viewportWidth = window.innerWidth;
       const doc = document.documentElement;
       const body = document.body;
       const scrollWidth = Math.max(doc.scrollWidth, body ? body.scrollWidth : 0);
-      const text = (body?.innerText || '').replace(/\\s+/g, ' ').trim();
+      const text = (body?.textContent || '').replace(/\\s+/g, ' ').trim();
       const hiddenTags = new Set(['SCRIPT', 'STYLE', 'META', 'LINK', 'TITLE']);
       const isClipped = (el, rect) => {
         let parent = el.parentElement;
@@ -295,47 +297,43 @@ async function auditRoute(cdp, route, viewport) {
           style.visibility !== 'hidden' &&
           style.opacity !== '0';
       };
-      const labelFor = (el) => (el.getAttribute('aria-label') || el.innerText || el.textContent || el.tagName || '')
+      const labelFor = (el) => (el.getAttribute('aria-label') || el.textContent || el.tagName || '')
         .replace(/\\s+/g, ' ')
         .trim()
         .slice(0, 80);
       const classFor = (el) => typeof el.className === 'string' ? el.className.slice(0, 120) : '';
-      const offenders = Array.from(body?.querySelectorAll('*') || [])
-        .map((el) => {
+      const offenders = [];
+      for (const el of Array.from(body?.querySelectorAll('*') || [])) {
+        if (offenders.length >= 12) break;
+        const rect = el.getBoundingClientRect();
+        if (!isVisible(el, rect)) continue;
+        if (rect.left < -2 || rect.right > viewportWidth + 2) {
+          offenders.push({
+            tag: el.tagName.toLowerCase(),
+            label: labelFor(el),
+            className: classFor(el),
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+            width: Math.round(rect.width),
+          });
+        }
+      }
+      const smallTargets = [];
+      for (const el of Array.from(document.querySelectorAll('button, a[href], input, select, textarea, [role="button"]'))) {
+        if (smallTargets.length >= 12) break;
           const rect = el.getBoundingClientRect();
-          if (!isVisible(el, rect)) return null;
-          if (rect.left < -2 || rect.right > viewportWidth + 2) {
-            return {
-              tag: el.tagName.toLowerCase(),
-              label: labelFor(el),
-              className: classFor(el),
-              left: Math.round(rect.left),
-              right: Math.round(rect.right),
-              width: Math.round(rect.width),
-            };
-          }
-          return null;
-        })
-        .filter(Boolean)
-        .slice(0, 12);
-      const smallTargets = Array.from(document.querySelectorAll('button, a[href], input, select, textarea, [role="button"]'))
-        .map((el) => {
-          const rect = el.getBoundingClientRect();
-          if (!isVisible(el, rect) || el.disabled || el.getAttribute('aria-hidden') === 'true') return null;
+          if (!isVisible(el, rect) || el.disabled || el.getAttribute('aria-hidden') === 'true') continue;
           const style = window.getComputedStyle(el);
-          if (style.pointerEvents === 'none') return null;
+          if (style.pointerEvents === 'none') continue;
           if (rect.width < 40 || rect.height < 40) {
-            return {
+            smallTargets.push({
               tag: el.tagName.toLowerCase(),
               label: labelFor(el),
               width: Math.round(rect.width),
               height: Math.round(rect.height),
-            };
+            });
           }
-          return null;
-        })
-        .filter(Boolean)
-        .slice(0, 12);
+      }
       return {
         title: document.title,
         url: location.href,
@@ -347,7 +345,10 @@ async function auditRoute(cdp, route, viewport) {
         smallTargets,
       };
     })()`,
-  });
+    });
+  } catch (error) {
+    throw new Error(`Mobile QA route audit failed for ${route} @${viewport.width}: ${error.message}`);
+  }
 
   return {
     route,
