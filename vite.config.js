@@ -112,9 +112,24 @@ function swcJsxTransformPlugin() {
   };
 }
 
+function redactLiveDemoPasswordPlugin(isLiveApiEnabled) {
+  return {
+    name: 'avalon-redact-live-demo-password',
+    apply: 'build',
+    renderChunk(code) {
+      if (!isLiveApiEnabled) return null;
+      const next = code
+        .replace(/VITE_AVALON_DEMO_PASSWORD:"[^"]*"/g, 'VITE_AVALON_DEMO_PASSWORD:""')
+        .replace(/JonJones1986/g, '');
+      return next === code ? null : { code: next, map: null };
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
+  const liveApiEnabled = process.env.VITE_AVALON_ENABLE_LIVE_API === 'true';
   const fixtureAliases = mode === 'development'
     ? [
         { find: /^@\/fixtures\/adminMockData$/, replacement: path.resolve(import.meta.dirname, './src/data/adminMockData.js') },
@@ -137,6 +152,7 @@ export default defineConfig(({ mode }) => {
     swcJsxTransformPlugin(),
     react(),
     localApiPlugin(),
+    redactLiveDemoPasswordPlugin(liveApiEnabled),
   ],
   optimizeDeps: {
     include: [
