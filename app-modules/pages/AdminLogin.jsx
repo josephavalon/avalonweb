@@ -36,9 +36,11 @@ export default function AdminLogin() {
   });
 
   const navigate = useNavigate();
-  const { user, signInWithEmail, signOut, authBackend, loading, error } = useAuthStore();
+  const { user, signIn, signInWithEmail, signOut, authBackend, loading, error } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
   const [email, setEmail] = useState('');
+  const [adminId, setAdminId] = useState('');
+  const [password, setPassword] = useState('');
   const [fieldError, setFieldError] = useState('');
   const [linkSent, setLinkSent] = useState('');
 
@@ -61,7 +63,11 @@ export default function AdminLogin() {
     setFieldError('');
     setLinkSent('');
     if (!supabaseMode) {
-      setFieldError('Admin sign-in requires Supabase keys. Use the demo /login for now.');
+      // Beta/demo: operator ID + passcode against the local roster. The role
+      // routing below (admin -> /admin, else bounced) handles the result.
+      if (!adminId.trim() || !password.trim()) { setFieldError('Enter your operator ID and passcode.'); return; }
+      const demoResult = await signIn({ email: adminId.trim(), password });
+      if (!demoResult.ok) setFieldError(demoResult.error || 'Invalid operator ID or passcode.');
       return;
     }
     if (!email.trim()) { setFieldError('Enter your admin email.'); return; }
@@ -95,11 +101,59 @@ export default function AdminLogin() {
               Admin<br />Sign In
             </h1>
             <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
-              Operations-only. We email a secure sign-in link.
+              {supabaseMode ? 'Operations-only. We email a secure sign-in link.' : 'Operations-only. Beta access uses your operator ID and passcode.'}
             </p>
           </div>
 
-          {linkSent ? (
+          {!supabaseMode ? (
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <div className="space-y-2">
+                <label htmlFor="admin-id" className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">
+                  Operator ID
+                </label>
+                <input
+                  id="admin-id"
+                  type="text"
+                  value={adminId}
+                  onChange={(e) => { setAdminId(e.target.value); setFieldError(''); }}
+                  autoComplete="username"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="ADMIN001"
+                  className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 py-4 font-body text-[17px] font-semibold uppercase tracking-[0.06em] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="admin-password" className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">
+                  Passcode
+                </label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setFieldError(''); }}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 py-4 font-body text-[17px] font-semibold text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07]"
+                />
+              </div>
+              <ErrorBanner message={displayError} />
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileTap={{ scale: 0.985 }}
+                className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
+              >
+                <span>{loading ? 'Signing In' : 'Enter Operations'}</span>
+                {loading ? (
+                  <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
+                ) : (
+                  <ArrowRight className="h-5 w-5" strokeWidth={2} />
+                )}
+              </motion.button>
+            </form>
+          ) : linkSent ? (
             <div className="space-y-5">
               <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
                 <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />

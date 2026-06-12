@@ -35,7 +35,11 @@ const DEMO_USERS = {
   'PHYSICIAN001': { role: 'physician', name: 'Medical Director',  redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
   'PHYSICIAN0001': { role: 'physician', name: 'Medical Director', redirect: '/provider/role-os',  status: 'active', canonical: 'PHYSICIAN001' },
 };
-const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
+// Beta/demo passcode. Primarily from VITE_AVALON_DEMO_PASSWORD; falls back to the
+// known beta passcode so the simulation logins (CLIENT001 / ADMIN001) work on
+// snooches + localhost without extra build config. isDemoAuthAllowed() still
+// gates this to beta/local hosts only, so it is inert on the production domain.
+const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || 'JonJones1986';
 // ─────────────────────────────────────────────────────────────────────────
 
 const ROLE_REDIRECT = {
@@ -247,7 +251,13 @@ export function AuthStoreProvider({ children }) {
   // Back-compat entry point: Supabase mode routes an email to a magic link
   // (passwordless); demo mode runs the original roster check.
   const signIn = useCallback(async ({ email, password } = {}) => {
-    if (hasSupabase) return signInWithEmail(email);
+    // Demo-roster accounts (CLIENT001 / ADMIN001 …) stay usable on beta/local even
+    // when Supabase is configured — a simulation backdoor gated by isDemoAuthAllowed().
+    // Anything that isn't a known roster ID falls through to Supabase magic-link.
+    const identifier = normalizeLoginIdentifier(email);
+    const isDemoAccount = isDemoAuthAllowed()
+      && Object.keys(DEMO_USERS).some((k) => normalizeLoginIdentifier(k) === identifier);
+    if (hasSupabase && !isDemoAccount) return signInWithEmail(email);
 
     setLoading(true); setError(null);
     try {
