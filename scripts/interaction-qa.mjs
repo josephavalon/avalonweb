@@ -292,7 +292,7 @@ async function assertHealthy(cdp, label) {
 function session(role) {
   const map = {
     admin: ['ADMIN001', 'Admin', '/admin'],
-    provider: ['NURSE001', 'Stephanie R.', '/provider/shift'],
+    nurse: ['NURSE001', 'Stephanie R.', '/provider/shift'],
     client: ['CLIENT001', 'Sarah', '/members/dashboard'],
   };
   const [username, name, redirect] = map[role];
@@ -301,7 +301,7 @@ function session(role) {
     username,
     canonicalUsername: username,
     name,
-    role: role === 'provider' ? 'provider' : role,
+    role,
     redirect,
     seededAt: new Date().toISOString(),
     lastActiveAt: new Date().toISOString(),
@@ -374,8 +374,8 @@ async function testRolePortals(cdp) {
   const checks = [
     { role: 'client', route: '/members/dashboard', expected: /dashboard|protocol|visit|message/i },
     { role: 'client', route: '/members/messages', expected: /message|care|support/i },
-    { role: 'provider', route: '/provider/shift', expected: /shift|eta|client|route/i },
-    { role: 'provider', route: '/provider/clients', expected: /client roster|clients/i },
+    { role: 'nurse', route: '/provider/shift', expected: /shift|eta|client|route/i },
+    { role: 'nurse', route: '/provider/clients', expected: /client roster|clients/i },
     { role: 'admin', route: '/admin', expected: /admin|today|command|requests/i },
     { role: 'admin', route: '/admin/bookings', expected: /booking|visit|request|command/i },
     { role: 'admin', route: '/admin/inventory', expected: /inventory|stock|kit/i },
