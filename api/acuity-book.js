@@ -69,7 +69,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(appointment);
   } catch (err) {
-    console.error('[scheduling-book]', err.message, err.body);
+    console.error('[scheduling-book]', err.message || 'unknown_error');
     return res.status(err.status || 500).json({ error: err.message });
   }
 }

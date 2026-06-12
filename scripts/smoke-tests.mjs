@@ -34,6 +34,9 @@ const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-bal
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
+const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
+const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
+const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -124,6 +127,9 @@ assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin ba
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
 assert(chargeBalanceSource.includes('writeAuditEvent'), 'Internal balance charge must write audit events');
+assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
+assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
+assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');
 for (const code of ['missing_appointment_lookup', 'appointment_not_found', 'already_paid']) {
   assert(adminCollectBalanceSource.includes(code), `Admin balance collection must audit ${code} attempts`);
   assert(chargeBalanceSource.includes(code), `Internal balance charge must audit ${code} attempts`);
@@ -134,6 +140,14 @@ assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId)
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
 assert(acuityWebhookSource.includes('duplicate event hash drift'), 'Acuity webhook must retain payload hash as an integrity signal');
+for (const [label, source] of Object.entries({
+  checkoutVerifySource,
+  stripeWebhookSource,
+  acuityBookSource,
+  eventPresaleSource,
+})) {
+  assert(!source.includes('err.body'), `PHI-sensitive vendor error logging must not print raw response bodies: ${label}`);
+}
 
 const telemetryEvent = sanitizeErrorTelemetryEvent({
   message: 'Failed for jane@example.com at 415-555-1212 DOB 1980-01-01',

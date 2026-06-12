@@ -229,7 +229,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
           fulfillmentStatus,
           fulfillmentError: fulfillmentError.slice(0, 480),
         });
-        console.error('[checkout/verify] Acuity fulfillment failed:', err.message, err.body || '');
+        console.error('[checkout/verify] Acuity fulfillment failed:', err.message || 'unknown_error');
       }
     }
   }

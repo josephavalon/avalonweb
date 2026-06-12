@@ -174,7 +174,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         });
       } catch (err) {
         fulfillmentError = err;
-        console.error('[stripe/webhook] Acuity fulfillment failed:', err.message, err.body || '');
+        console.error('[stripe/webhook] Acuity fulfillment failed:', err.message || 'unknown_error');
       }
 
       if (acuityAppointment?.id && checkout.contact?.email) {

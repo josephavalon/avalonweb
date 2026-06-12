@@ -95,7 +95,7 @@ export default async function handler(req, res) {
       response.scheduleStatus = 'created';
       response.scheduleId = appointment?.id;
     } catch (err) {
-      console.error('[event-presale]', err.message, err.body);
+      console.error('[event-presale]', err.message || 'unknown_error');
       response.scheduleStatus = 'needs_manual_review';
       response.scheduleError = err.message;
       return res.status(202).json(response);
