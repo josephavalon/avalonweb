@@ -287,7 +287,7 @@ export default function Footer() {
             <div className="flex items-center gap-4">
               <Link
                 to="/admin/login"
-                className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/40 transition-colors hover:text-foreground/72"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center font-body text-[9px] uppercase tracking-[0.22em] text-foreground/40 transition-colors hover:text-foreground/72"
               >
                 Admin
               </Link>
