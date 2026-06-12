@@ -64,7 +64,7 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[22rem] md:max-w-[22rem] md:shrink-0 md:grid-cols-1 md:gap-3"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -76,18 +76,18 @@ export default function Hero() {
                 onFocus={action.preload}
                 whileHover={premiumHover}
                 whileTap={premiumTap}
-                className="av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:px-5"
+                className="av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6"
               >
-                <span className="relative flex min-w-0 flex-1 items-center gap-3">
-                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-                    <Icon className="h-4.5 w-4.5 text-foreground" strokeWidth={1.8} />
+                <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
+                  <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl">
+                    <Icon className="h-4.5 w-4.5 text-foreground md:h-6 md:w-6" strokeWidth={1.8} />
                   </span>
-                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-foreground">
+                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-foreground md:text-2xl lg:text-[1.7rem]">
                     {action.label}
                   </span>
                 </span>
                 <span className="relative shrink-0 text-foreground transition-transform group-hover:translate-x-1">
-                  <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
                 </span>
               </MotionLink>
             );
