@@ -27,6 +27,7 @@
     "test:navfix": "node scripts/fixed-nav-regression-qa.mjs",
     "test:paymentmethods": "node scripts/checkout-payment-methods-qa.mjs",
     "test:analytics": "node scripts/analytics-qa.mjs",
+    "test:revenue-matrix": "node scripts/revenue-matrix-qa.mjs",
     "test:scorecard": "npm run test:performance && npm run test:accessibility && npm run test:code-quality && npm run test:design-system && npm run test:analytics",
     "test:compliance": "node scripts/compliance-copy-qa.mjs",
     "test:privacy": "node scripts/privacy-qa.mjs",
