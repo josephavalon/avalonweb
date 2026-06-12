@@ -22,13 +22,55 @@ export const config = {
   },
 };
 
-function readRawBody(req) {
+const STRIPE_WEBHOOK_MAX_BODY_BYTES = Number.parseInt(process.env.STRIPE_WEBHOOK_MAX_BODY_BYTES || String(512 * 1024), 10);
+const STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS = Number.parseInt(process.env.STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS || '10000', 10);
+
+function httpError(message, status, code) {
+  return Object.assign(new Error(message), { status, code });
+}
+
+function readRawBody(req, maxBytes = STRIPE_WEBHOOK_MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
+    let total = 0;
+    let settled = false;
+    req.on('data', (chunk) => {
+      if (settled) return;
+      const buffer = Buffer.from(chunk);
+      total += buffer.length;
+      if (total > maxBytes) {
+        settled = true;
+        reject(httpError('Stripe webhook payload too large', 413, 'webhook_body_too_large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(buffer);
+    });
+    req.on('end', () => {
+      if (settled) return;
+      settled = true;
+      resolve(Buffer.concat(chunks));
+    });
+    req.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    });
   });
+}
+
+function timeoutError(label) {
+  return Object.assign(new Error(`${label} timed out`), { code: 'stripe_webhook_timeout' });
+}
+
+function withTimeout(promise, label, ms = STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(timeoutError(label)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 // Canonical record is public.appointments. Resolve by Acuity id, then Stripe session.
@@ -309,7 +351,6 @@ async function handleCheckoutCompleted(stripe, db, session) {
       error: fulfillmentError ? {
         message: fulfillmentError.message,
         status: fulfillmentError.status || null,
-        body: fulfillmentError.body || null,
       } : null,
     }),
     updated_at:                   now,
@@ -400,12 +441,13 @@ export default async function handler(req, res) {
   }
 
   let event = null;
+  let db = null;
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const rawBody = await readRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
 
-    const db = await getSupabaseServiceClient();
+    db = await getSupabaseServiceClient();
 
     // Idempotency: Stripe redelivers an event (same id) on timeout / non-2xx. We
     // record an event as processed only on success (below), so a failed first
@@ -428,10 +470,13 @@ export default async function handler(req, res) {
     let result = { action: 'store_for_audit' };
     switch (event.type) {
       case 'checkout.session.completed':
-        result = await handleCheckoutCompleted(
-          stripe,
-          db,
-          await stripe.checkout.sessions.retrieve(event.data.object.id)
+        result = await withTimeout(
+          (async () => handleCheckoutCompleted(
+            stripe,
+            db,
+            await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id), 'stripe checkout session retrieve')
+          ))(),
+          'stripe checkout fulfillment'
         );
         break;
       case 'payment_intent.succeeded':
@@ -481,7 +526,19 @@ export default async function handler(req, res) {
   } catch (err) {
     // Before verification → 400 (Stripe should resend). After → 200 to avoid retry storms.
     if (!event) {
-      return res.status(400).json({ error: err.message || 'Invalid Stripe webhook' });
+      return res.status(err.status || 400).json({ error: err.message || 'Invalid Stripe webhook', code: err.code || 'stripe_webhook_invalid' });
+    }
+    if (err.code === 'stripe_webhook_timeout') {
+      await insertOperationalFailureCase(db, {
+        caseType: 'webhook_missed',
+        provider: 'stripe',
+        externalReference: event.id,
+        payload: {
+          stripeEventType: event.type,
+          error: err.message,
+        },
+      });
+      return res.status(200).json({ received: true, persisted: Boolean(db), timeout: true, error: err.message });
     }
     console.error('[stripe/webhook] processing error:', err.message);
     return res.status(200).json({ received: true, persisted: false, error: err.message });

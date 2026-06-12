@@ -144,6 +144,11 @@ assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId)
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
 assert(acuityWebhookSource.includes('duplicate event hash drift'), 'Acuity webhook must retain payload hash as an integrity signal');
+assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_MAX_BODY_BYTES'), 'Stripe webhook must enforce a raw body size limit');
+assert(stripeWebhookSource.includes('webhook_body_too_large'), 'Stripe webhook must reject oversized raw bodies explicitly');
+assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS'), 'Stripe webhook must enforce a processing timeout');
+assert(stripeWebhookSource.includes("caseType: 'webhook_missed'"), 'Stripe webhook timeout must create a reconciliation case');
+assert(!stripeWebhookSource.includes('fulfillmentError.body'), 'Stripe webhook must not persist raw fulfillment response bodies');
 for (const [label, source] of Object.entries({
   checkoutVerifySource,
   stripeWebhookSource,
