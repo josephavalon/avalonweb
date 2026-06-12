@@ -9,6 +9,21 @@ import { applyTheme } from '@/lib/theme';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+export function safeLoginRedirectPath(requested) {
+  const value = String(requested || '').trim();
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '';
+  try {
+    const url = new URL(value, 'https://avalon.local');
+    if (url.origin !== 'https://avalon.local') return '';
+    const decodedPath = decodeURIComponent(url.pathname);
+    if (!decodedPath.startsWith('/') || decodedPath.startsWith('//')) return '';
+    if (decodedPath.includes(':') || decodedPath.includes('\\') || /[\u0000-\u001f\u007f]/.test(decodedPath)) return '';
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return '';
+  }
+}
+
 const DEMO_SHORTCUTS = [
   { username: 'CLIENT0001', label: 'Client', detail: 'booking, prep, support', icon: UserRound },
   { username: 'NURSE0001', label: 'Nurse', detail: 'shift, route, chart', icon: Stethoscope },
@@ -189,8 +204,7 @@ function SignInTab({ onSwitchTab }) {
   }, []);
 
   const destinationFor = (user) => {
-    const requested = searchParams.get('redirect');
-    const localPath = requested && requested.startsWith('/') && !requested.startsWith('//') ? requested : '';
+    const localPath = safeLoginRedirectPath(searchParams.get('redirect'));
     if (localPath && user?.role === 'client') return localPath;
     return user?.redirect || '/members/dashboard';
   };

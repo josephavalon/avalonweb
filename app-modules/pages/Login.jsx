@@ -8,6 +8,21 @@ import { applyTheme } from '@/lib/theme';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+export function safeLoginRedirectPath(requested) {
+  const value = String(requested || '').trim();
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '';
+  try {
+    const url = new URL(value, 'https://avalon.local');
+    if (url.origin !== 'https://avalon.local') return '';
+    const decodedPath = decodeURIComponent(url.pathname);
+    if (!decodedPath.startsWith('/') || decodedPath.startsWith('//')) return '';
+    if (decodedPath.includes(':') || decodedPath.includes('\\') || /[\u0000-\u001f\u007f]/.test(decodedPath)) return '';
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return '';
+  }
+}
+
 function Field({ id, label, type = 'text', value, onChange, placeholder, autoComplete, children }) {
   return (
     <div className="space-y-2">
@@ -105,8 +120,7 @@ export default function Login() {
   }, []);
 
   const destinationFor = (sessionUser) => {
-    const requested = searchParams.get('redirect');
-    const localPath = requested && requested.startsWith('/') && !requested.startsWith('//') ? requested : '';
+    const localPath = safeLoginRedirectPath(searchParams.get('redirect'));
     if (localPath && sessionUser?.role === 'client') return localPath;
     return sessionUser?.redirect || '/members/dashboard';
   };

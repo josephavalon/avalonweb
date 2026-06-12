@@ -36,6 +36,7 @@ const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-bal
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
+const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
 const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
@@ -152,6 +153,10 @@ assert(orderLookupSource.includes('contact_verification_required'), 'Order looku
 assert(orderLookupSource.includes('!phoneMatch || !emailMatch'), 'Order lookup must require phone and email to match');
 assert(orderLookupSource.includes('input_too_long'), 'Order lookup must cap input field lengths');
 assert(manageOrderSource.includes('id="order-email"') && manageOrderSource.includes('id="order-phone"'), 'Manage order form must collect both email and phone');
+assert(loginPageSource.includes('safeLoginRedirectPath'), 'Login page must sanitize redirect parameters through one helper');
+assert(loginPageSource.includes("new URL(value, 'https://avalon.local')"), 'Login redirect sanitizer must parse redirects as local URLs');
+assert(loginPageSource.includes("url.origin !== 'https://avalon.local'"), 'Login redirect sanitizer must reject external origins');
+assert(loginPageSource.includes('decodedPath.includes(\':\')'), 'Login redirect sanitizer must reject scheme-like paths');
 assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId))"), 'Acuity webhook must dedupe by appointment id');
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
