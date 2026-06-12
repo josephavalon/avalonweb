@@ -11,6 +11,7 @@ import {
 } from '../src/data/catalog.js';
 import { ADDON_PRICE_BY_LABEL, ITEM_PRICE_BY_KEY } from '../api/_lib/catalog-pricing.js';
 import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
+import { buildPersonValues } from '../api/_attio.js';
 import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
 import { createAppointmentSummaryToken, verifyAppointmentSummaryToken } from '../api/_lib/summary-token.js';
 import {
@@ -42,6 +43,7 @@ const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/web
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
 const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
 const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
+const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
@@ -115,6 +117,40 @@ for (const key of ['customerName', 'customerEmail', 'firstName', 'lastName', 'ph
 assert(metadata.appointmentRecordId === 'appt_123', 'Stripe metadata must retain appointmentRecordId');
 assert(metadata.balanceDueCents === '75000', 'Stripe metadata must retain amount fields');
 
+const attioValues = buildPersonValues({
+  firstName: 'Jane',
+  lastName: 'Patient',
+  email: 'jane@example.com',
+  phone: '4155551212',
+  source: 'Avalon Booking',
+  lifecycleStage: 'Booked',
+  city: 'San Francisco',
+  planInterest: 'Membership',
+  visitCount: 2,
+  service: 'NAD+',
+  bookingId: 'apt_123',
+  bookingReference: 'AV-123',
+  dob: '1980-01-01',
+  emergencyContact: 'Emergency Person',
+  address: '123 Health St',
+  zip: '94107',
+  appointmentTime: 'June 12 at 2pm',
+  itemLabels: 'NAD+ (1000mg)',
+  clinicalReviewOnFile: true,
+  gfeRequired: true,
+  membership: 'Recovery',
+  depositPaid: '$50.00',
+  balanceDue: '$750.00',
+  paymentStatus: 'Partial payment; balance due at visit',
+});
+const attioDescription = attioValues.description || '';
+for (const leaked of ['DOB:', 'Emergency contact:', 'Address:', 'ZIP:', 'Requested time:', 'Items:', 'Clinical review', 'GFE required', 'Requested:', 'Booking ID:', 'Payment status:', '1980-01-01', '123 Health St', 'NAD+']) {
+  assert(!attioDescription.includes(leaked), `Attio CRM payload leaked PHI/intake detail: ${leaked}`);
+}
+for (const expected of ['Source: Avalon Booking', 'Lifecycle: Booked', 'City: San Francisco', 'Plan interest: Membership', 'Visit count: 2']) {
+  assert(attioDescription.includes(expected), `Attio CRM payload dropped safe operational field: ${expected}`);
+}
+
 process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET = 'smoke-summary-secret';
 const summaryToken = createAppointmentSummaryToken({ sessionId: 'cs_test_123', appointmentRecordId: 'appt_123', appointmentId: 'acuity_123' });
 assert(verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_test_123', appointmentRecordId: 'appt_123' }), 'Summary token should verify');
@@ -184,6 +220,7 @@ assert(stripeWebhookSource.includes('webhook_body_too_large'), 'Stripe webhook m
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS'), 'Stripe webhook must enforce a processing timeout');
 assert(stripeWebhookSource.includes("caseType: 'webhook_missed'"), 'Stripe webhook timeout must create a reconciliation case');
 assert(!stripeWebhookSource.includes('fulfillmentError.body'), 'Stripe webhook must not persist raw fulfillment response bodies');
+assert(attioSource.includes('crmSafeDescription'), 'Attio CRM payload must use an explicit safe description allowlist');
 for (const [label, source] of Object.entries({
   checkoutVerifySource,
   stripeWebhookSource,

@@ -534,36 +534,14 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
 
 export async function syncCheckoutAttioPerson({
   contact = {},
-  primaryService = 'Avalon Visit',
-  appointment = {},
-  items = [],
-  membership = null,
-  amounts = {},
 } = {}) {
   const response = await upsertAttioPerson({
     firstName: contact.firstName,
     lastName: contact.lastName,
     email: contact.email,
     phone: contact.phone,
-    dob: appointment.dob || contact.dob,
-    emergencyContact: appointment.emergencyContact || contact.emergencyContact,
     source: 'Avalon Booking',
     lifecycleStage: 'Booked',
-    service: primaryService,
-    bookingId: appointment.localBookingId,
-    bookingReference: appointment.reference,
-    address: appointment.address,
-    zip: appointment.zip,
-    locationType: appointment.locationType,
-    appointmentTime: appointment.timeLabel || appointment.acuityDatetime,
-    clientType: appointment.clientType || contact.clientType,
-    clinicalReviewOnFile: appointment.clinicalReviewOnFile,
-    gfeRequired: appointment.gfeRequired,
-    itemLabels: items.map((item) => item.label || item.key).filter(Boolean).join(', '),
-    membership: membership?.name || '',
-    depositPaid: dollarsFromCents(amounts.depositAmountCents || 0),
-    balanceDue: dollarsFromCents(amounts.balanceDueCents || 0),
-    paymentStatus: Number(amounts.balanceDueCents || 0) > 0 ? 'Partial payment; balance due at visit' : 'Paid in full',
   });
 
   return response?.data?.id || response?.id || null;

@@ -77,6 +77,16 @@ function normalizePhone(phone) {
   return String(phone).trim();
 }
 
+function crmSafeDescription(client = {}) {
+  return [
+    client.source ? `Source: ${client.source}` : null,
+    client.lifecycleStage ? `Lifecycle: ${client.lifecycleStage}` : null,
+    client.city ? `City: ${client.city}` : null,
+    client.planInterest ? `Plan interest: ${client.planInterest}` : null,
+    client.visitCount != null ? `Visit count: ${client.visitCount}` : null,
+  ].filter(Boolean).join('\n');
+}
+
 export function buildPersonValues(client = {}) {
   const fullName = client.name || [client.firstName, client.lastName].filter(Boolean).join(' ');
   const parsedName = splitName(fullName);
@@ -93,29 +103,7 @@ export function buildPersonValues(client = {}) {
   const phone = normalizePhone(client.phone);
   if (phone) values.phone_numbers = [{ original_phone_number: phone, country_code: 'US' }];
 
-  const description = [
-    client.source ? `Source: ${client.source}` : null,
-    client.lifecycleStage ? `Lifecycle: ${client.lifecycleStage}` : null,
-    client.service ? `Requested: ${client.service}` : null,
-    client.planInterest ? `Plan interest: ${client.planInterest}` : null,
-    client.visitCount != null ? `Visit count: ${client.visitCount}` : null,
-    client.bookingId ? `Booking ID: ${client.bookingId}` : null,
-    client.bookingReference ? `Booking reference: ${client.bookingReference}` : null,
-    client.dob ? `DOB: ${client.dob}` : null,
-    client.emergencyContact ? `Emergency contact: ${client.emergencyContact}` : null,
-    client.appointmentTime ? `Requested time: ${client.appointmentTime}` : null,
-    client.locationType ? `Location type: ${client.locationType}` : null,
-    client.address ? `Address: ${client.address}` : null,
-    client.zip ? `ZIP: ${client.zip}` : null,
-    client.clientType ? `Client type: ${client.clientType}` : null,
-    client.itemLabels ? `Items: ${client.itemLabels}` : null,
-    client.membership ? `Membership: ${client.membership}` : null,
-    client.depositPaid ? `Paid online: ${client.depositPaid}` : null,
-    client.balanceDue ? `Balance due: ${client.balanceDue}` : null,
-    client.paymentStatus ? `Payment status: ${client.paymentStatus}` : null,
-    client.gfeRequired != null && client.gfeRequired !== '' ? `GFE required: ${client.gfeRequired}` : null,
-    client.clinicalReviewOnFile != null && client.clinicalReviewOnFile !== '' ? `Clinical review on file: ${client.clinicalReviewOnFile}` : null,
-  ].filter(Boolean).join('\n');
+  const description = crmSafeDescription(client);
 
   if (description) values.description = description;
   return values;
