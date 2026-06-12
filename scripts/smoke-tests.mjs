@@ -253,6 +253,12 @@ const oldDemoPassword = ['Jon', 'Jones', '1986'].join('');
 for (const [label, source] of Object.entries({ authStoreSource, loginQaSource, interactionQaSource })) {
   assert(!source.includes(oldDemoPassword), `Hardcoded demo password remains in ${label}`);
 }
+for (const [label, source] of Object.entries({ authStoreSource, interactionQaSource })) {
+  assert(!source.includes("mfa: 'placeholder'"), `Ambiguous MFA placeholder remains in ${label}`);
+  assert(source.includes('not_required_demo_local'), `Demo MFA state must be explicit in ${label}`);
+}
+assert(authStoreSource.includes('function supabaseMfaState'), 'Supabase auth must record MFA enforcement state explicitly');
+assert(authStoreSource.includes("status: verified ? 'verified' : 'not_enforced'"), 'Supabase MFA state must not imply enforcement by default');
 assert(authStoreSource.includes("role: 'nurse'"), 'Demo roster must include the launch nurse role');
 for (const retiredRole of ["role: 'np'", "role: 'physician'", 'NP001', 'MD001', 'PHYSICIAN001']) {
   assert(!authStoreSource.includes(retiredRole), `Retired prescriber demo role remains in auth store: ${retiredRole}`);

@@ -222,6 +222,10 @@ async function openLogin(cdp) {
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
   await cdp.send('Runtime.evaluate', {
+    expression: `try { sessionStorage.clear(); localStorage.setItem('cookieConsent', 'allowed'); } catch {} true;`,
+    returnByValue: true,
+  });
+  await cdp.send('Runtime.evaluate', {
     expression: `location.href = ${JSON.stringify(`${BASE_URL}/login`)}; true;`,
     returnByValue: true,
   });
@@ -246,6 +250,10 @@ async function openAdminLogin(cdp) {
   cdp.consoleIssues = [];
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
+  await cdp.send('Runtime.evaluate', {
+    expression: `try { sessionStorage.clear(); localStorage.setItem('cookieConsent', 'allowed'); } catch {} true;`,
+    returnByValue: true,
+  });
   await cdp.send('Runtime.evaluate', {
     expression: `location.href = ${JSON.stringify(`${BASE_URL}/admin/login`)}; true;`,
     returnByValue: true,

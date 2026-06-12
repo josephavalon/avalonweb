@@ -44,6 +44,32 @@ function normalizeLoginIdentifier(value = '') {
   return String(value).trim().replace(/\s+/g, '').toUpperCase();
 }
 
+function demoMfaState() {
+  return {
+    status: 'not_required_demo_local',
+    required: false,
+    verified: true,
+    method: 'demo_password',
+    reason: 'Demo auth is host-gated and disabled in production live API mode.',
+  };
+}
+
+function supabaseMfaState(authUser = {}) {
+  const aal = String(authUser?.aal || authUser?.app_metadata?.aal || '').toLowerCase();
+  const amr = Array.isArray(authUser?.amr) ? authUser.amr : [];
+  const methodNames = amr.map((entry) => String(entry?.method || entry || '').toLowerCase());
+  const verified = aal === 'aal2' || methodNames.some((method) => ['mfa', 'totp', 'webauthn', 'phone'].includes(method));
+  return {
+    status: verified ? 'verified' : 'not_enforced',
+    required: false,
+    verified,
+    method: verified ? 'supabase_session_factor' : 'passwordless_or_sso',
+    reason: verified
+      ? 'Supabase session reports a second authentication factor.'
+      : 'Supabase MFA enforcement is a production configuration decision tracked as a go-live user action.',
+  };
+}
+
 function readSession() {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
@@ -99,6 +125,7 @@ async function buildSupabaseUser(authUser) {
     role,
     redirect: redirectForRole(role),
     authMode: 'supabase',
+    mfa: supabaseMfaState(authUser),
     lastActiveAt: new Date().toISOString(),
   };
 }
@@ -288,7 +315,7 @@ export function AuthStoreProvider({ children }) {
         lastActiveAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
         authMode: PRE_API_SECURITY_MODE.mode,
-        mfa: 'placeholder',
+        mfa: demoMfaState(),
         securityWall: 'pre-api-hard-wall',
       };
       seedDemoState(profile.canonical || usernameKey);

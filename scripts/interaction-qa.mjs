@@ -12,6 +12,16 @@ const PASSWORD = requireDemoPassword('INTERACTION_QA_PASSWORD', 'demo interactio
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 3, mobile: true };
 const DESKTOP = { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false };
 
+function demoMfaState() {
+  return {
+    status: 'not_required_demo_local',
+    required: false,
+    verified: true,
+    method: 'demo_password',
+    reason: 'Demo auth is host-gated and disabled in production live API mode.',
+  };
+}
+
 const CHROME_CANDIDATES = [
   process.env.CHROME_PATH,
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -307,7 +317,7 @@ function session(role) {
     lastActiveAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
     authMode: 'pre-api-hard-wall',
-    mfa: 'placeholder',
+    mfa: demoMfaState(),
     securityWall: 'pre-api-hard-wall',
   };
 }
