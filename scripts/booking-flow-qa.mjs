@@ -178,6 +178,19 @@ async function clickText(cdp, text) {
   await wait(700);
 }
 
+async function clickAnyText(cdp, labels) {
+  const failures = [];
+  for (const label of labels) {
+    try {
+      await clickText(cdp, label);
+      return label;
+    } catch (error) {
+      failures.push(`${label}: ${error.message}`);
+    }
+  }
+  throw new Error(`Could not click any of: ${labels.join(', ')}.\n${failures.join('\n')}`);
+}
+
 async function fillByLabel(cdp, label, value) {
   const filled = await evalOnPage(cdp, `(() => {
     const wanted = ${JSON.stringify(label)}.toLowerCase();
@@ -305,8 +318,7 @@ try {
   await clearAvalonStorage(cdp);
   await wait(500);
 
-  await clickText(cdp, '9 therapies');
-  await clickText(cdp, 'Recovery');
+  await clickAnyText(cdp, ['Recovery', 'Hydration']);
   await clickText(cdp, 'Next');
   await clickText(cdp, 'No Add-Ons');
   await clickText(cdp, 'Next');
