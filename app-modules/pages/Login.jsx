@@ -80,7 +80,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    user, signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp, signInWithPasskey,
+    user, signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp, signInWithPasskey, signInWithOAuth,
     authBackend, loading, error,
   } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
@@ -94,6 +94,7 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [oauthBusy, setOauthBusy] = useState('');
 
   useEffect(() => {
     try {
@@ -166,6 +167,14 @@ export default function Login() {
     setPasskeyBusy(false);
     if (!result.ok) setFieldError(result.error || 'Passkey sign-in failed.');
     // success → the user effect redirects
+  };
+
+  const handleOAuth = async (provider) => {
+    setFieldError('');
+    setOauthBusy(provider);
+    const result = await signInWithOAuth(provider);
+    // On success Supabase redirects to the provider; on failure, surface it.
+    if (!result.ok) { setOauthBusy(''); setFieldError(result.error || 'Could not start social sign-in.'); }
   };
 
   const displayError = fieldError || error;
@@ -300,6 +309,39 @@ export default function Login() {
                 )}
                 Sign in with a passkey
               </button>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleOAuth('google')}
+                  disabled={!!oauthBusy}
+                  className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full border border-foreground/[0.16] bg-foreground/[0.04] font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-foreground/[0.08] disabled:cursor-wait disabled:opacity-50"
+                >
+                  {oauthBusy === 'google' ? (
+                    <span className="h-4 w-4 rounded-full border-2 border-foreground/25 border-t-foreground animate-spin" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1S8.7 5.9 12 5.9c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.3 14.6 2.4 12 2.4 6.9 2.4 2.8 6.5 2.8 11.6S6.9 20.8 12 20.8c5.3 0 8.8-3.7 8.8-8.9 0-.6-.06-1-.15-1.5H12z" />
+                    </svg>
+                  )}
+                  Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOAuth('apple')}
+                  disabled={!!oauthBusy}
+                  className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full border border-foreground/[0.16] bg-foreground/[0.04] font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-foreground/[0.08] disabled:cursor-wait disabled:opacity-50"
+                >
+                  {oauthBusy === 'apple' ? (
+                    <span className="h-4 w-4 rounded-full border-2 border-foreground/25 border-t-foreground animate-spin" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-foreground" aria-hidden="true">
+                      <path d="M16.4 12.8c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.15-2.8.85-3.5.85-.72 0-1.85-.83-3.05-.8-1.57.02-3 .9-3.82 2.3-1.63 2.83-.42 7 1.16 9.3.77 1.12 1.69 2.38 2.9 2.34 1.16-.05 1.6-.75 3-.75s1.8.75 3.03.72c1.25-.02 2.04-1.14 2.8-2.27.88-1.3 1.24-2.56 1.26-2.62-.03-.01-2.42-.93-2.45-3.68zM14.2 5.9c.64-.78 1.07-1.86.95-2.94-.92.04-2.04.61-2.7 1.39-.59.69-1.11 1.79-.97 2.85 1.03.08 2.08-.52 2.72-1.3z" />
+                    </svg>
+                  )}
+                  Apple
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>

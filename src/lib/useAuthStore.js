@@ -248,6 +248,26 @@ export function AuthStoreProvider({ children }) {
     }
   }, []);
 
+  // Social sign-in (Google / Apple) via Supabase OAuth. Redirects to the
+  // provider and back to /login, where onAuthStateChange sets the session.
+  // Enable the provider in Supabase → Auth → Providers for it to work.
+  const signInWithOAuth = useCallback(async (provider) => {
+    if (!hasSupabase) return { ok: false, error: 'Social sign-in is not configured yet.' };
+    setError(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/login` },
+      });
+      if (err) throw err;
+      return { ok: true, pending: true };
+    } catch (err) {
+      const msg = err.message || `Could not sign in with ${provider}.`;
+      setError(msg);
+      return { ok: false, error: msg };
+    }
+  }, []);
+
   // Back-compat entry point: Supabase mode routes an email to a magic link
   // (passwordless); demo mode runs the original roster check.
   const signIn = useCallback(async ({ email, password } = {}) => {
@@ -315,7 +335,7 @@ export function AuthStoreProvider({ children }) {
       value: {
         user, loading, error,
         signIn, signInWithEmail, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
-        signInWithPasskey, registerPasskey,
+        signInWithPasskey, registerPasskey, signInWithOAuth,
         signOut, requestPasswordReset,
         authBackend: hasSupabase ? 'supabase' : 'demo',
       },
