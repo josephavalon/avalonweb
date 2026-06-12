@@ -18,6 +18,7 @@ import {
   isValidCheckoutEmail,
   isValidCheckoutPhone,
 } from '../src/lib/checkoutValidation.js';
+import { sanitizeErrorTelemetryEvent } from '../src/lib/errorTelemetry.js';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -125,6 +126,25 @@ for (const code of ['missing_appointment_lookup', 'appointment_not_found', 'alre
   assert(adminCollectBalanceSource.includes(code), `Admin balance collection must audit ${code} attempts`);
   assert(chargeBalanceSource.includes(code), `Internal balance charge must audit ${code} attempts`);
 }
+
+const telemetryEvent = sanitizeErrorTelemetryEvent({
+  message: 'Failed for jane@example.com at 415-555-1212 DOB 1980-01-01',
+  user: { id: 'user_123', email: 'jane@example.com' },
+  request: {
+    url: 'https://avalon.example/booking/confirmation?session_id=cs_test&email=jane@example.com',
+    headers: { authorization: 'Bearer secret', cookie: 'av.session=secret' },
+    data: { address: '123 Health St', phone: '4155551212' },
+  },
+  extra: {
+    contactEmail: 'jane@example.com',
+    notes: 'client prefers back door',
+  },
+});
+const telemetryJson = JSON.stringify(telemetryEvent);
+for (const leaked of ['jane@example.com', '415-555-1212', '4155551212', '1980-01-01', '123 Health St', 'client prefers back door', 'session_id=']) {
+  assert(!telemetryJson.includes(leaked), `Error telemetry scrubber leaked PHI/query data: ${leaked}`);
+}
+assert(telemetryJson.includes('[redacted]'), 'Error telemetry scrubber should mark sensitive fields redacted');
 
 const oldDemoPassword = ['Jon', 'Jones', '1986'].join('');
 for (const [label, source] of Object.entries({ authStoreSource, loginQaSource, interactionQaSource })) {

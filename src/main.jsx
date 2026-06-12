@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
+import { initErrorTelemetry } from '@/lib/errorTelemetry'
 import { applyTheme, THEME_KEY } from '@/lib/theme'
 
 function applyStoredTheme() {
@@ -26,6 +27,7 @@ function applyStoredTheme() {
 }
 
 applyStoredTheme();
+initErrorTelemetry();
 captureAttribution();
 getExperimentVariant('booking_entry_v1', ['protocol-first', 'fast-hold']);
 

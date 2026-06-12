@@ -1,11 +1,12 @@
 import React from 'react';
+import { captureRenderError, sanitizeErrorForLocalLog } from '@/lib/errorTelemetry';
 
 /**
  * Top-level error boundary. Catches render errors anywhere inside the app
  * and replaces them with a calm fallback so users never see a white screen.
  *
- * Intentionally minimal: no state logging service wired yet. When Sentry is
- * added post-launch, pipe componentDidCatch into Sentry.captureException.
+ * Error telemetry no-ops unless VITE_SENTRY_DSN is configured. Events are
+ * scrubbed in src/lib/errorTelemetry.js before they leave the browser.
  */
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -18,15 +19,13 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
+    const safeError = sanitizeErrorForLocalLog(error, info);
     if (typeof window !== 'undefined') {
-      window.__AVALON_LAST_RENDER_ERROR__ = {
-        message: error?.message || String(error),
-        stack: error?.stack || null,
-        componentStack: info?.componentStack || null,
-      };
+      window.__AVALON_LAST_RENDER_ERROR__ = safeError;
     }
+    captureRenderError(error, info);
     // eslint-disable-next-line no-console
-    console.error('[Avalon] Render error:', error, info);
+    console.error('[Avalon] Render error:', safeError);
   }
 
   handleReload = () => {
