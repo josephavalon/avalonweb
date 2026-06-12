@@ -504,6 +504,30 @@ function protocolDuration(protocol) {
   return protocol?.duration || protocol?.doses?.[0]?.duration || '45-60 min';
 }
 
+function therapyWhatItDoes(protocol = {}) {
+  const key = protocol.parentProtocolKey || protocol.key || '';
+  const copy = {
+    hydration: 'Supports hydration and electrolyte replenishment during a wellness visit.',
+    recovery: 'Supports hydration and nutrient replenishment after training, travel, or long schedules.',
+    energy: 'Supports nutrient and hydration needs during high-output or busy days.',
+    myers: 'Supports general wellness with a clinician-reviewed blend of vitamins and minerals.',
+    immunity: 'Supports routine wellness with vitamin and mineral hydration support.',
+    beauty: 'Supports cosmetic wellness routines with hydration and antioxidant nutrient support.',
+    postnight: 'Supports rehydration after late nights, subject to clinical review.',
+    jetlag: 'Supports hydration needs around travel and schedule changes.',
+    nad: 'Supports a clinician-reviewed NAD+ wellness appointment with selected dosing.',
+    cbd: 'Provides approval-gated CBD IV information after clinical and legal review.',
+  };
+  return copy[key] || protocol.benefitStatement || protocol.tagline || 'Supports a clinician-reviewed wellness visit.';
+}
+
+function therapyIngredients(protocol = {}) {
+  return String(protocol.inside || '')
+    .split(' · ')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function getCatalogProductByKey(key) {
   return IV_SESSIONS.find((item) => item.key === key) || null;
 }
@@ -4624,11 +4648,12 @@ export default function BookNow() {
     );
   };
 
-  // Tap-to-reveal "what's inside" — ingredients + benefits, inline, so people
-  // can judge a therapy without leaving the booking flow (works on touch where
-  // hover doesn't). Rendered inside each therapy card's shell.
+  // Tap-to-reveal therapy details inline so people can judge a therapy without
+  // leaving the booking flow. Copy stays FDA-safe: wellness support, not claims.
   const renderTherapyDetails = (item) => {
-    const hasInfo = Boolean(item.inside || (item.features && item.features.length));
+    const ingredients = therapyIngredients(item);
+    const whatItDoes = therapyWhatItDoes(item);
+    const hasInfo = Boolean(whatItDoes || ingredients.length || (item.features && item.features.length));
     if (!hasInfo) return null;
     const expanded = expandedTherapy === item.key;
     return (
@@ -4646,13 +4671,23 @@ export default function BookNow() {
         <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
             <div className="space-y-2.5 border-t border-foreground/10 px-3.5 py-3 text-left">
-              {item.inside && (
+              {whatItDoes && (
                 <div>
-                  <p className="mb-1 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">Inside</p>
-                  <p className="font-body text-[12px] font-semibold leading-snug text-foreground/74">{item.inside}</p>
+                  <p className="mb-1 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
+                  <p className="font-body text-[12px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
                 </div>
               )}
-              {item.features && item.features.length > 0 && (
+              {ingredients.length > 0 && (
+                <div>
+                  <p className="mb-1.5 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ingredients.map((ingredient) => (
+                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{ingredient}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {ingredients.length === 0 && item.features && item.features.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {item.features.map((f) => (
                     <span key={f} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{f}</span>
@@ -4786,9 +4821,15 @@ export default function BookNow() {
         }`}
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.06] text-foreground md:h-12 md:w-12">
-          <Icon className="h-5 w-5 md:h-7 md:w-7" strokeWidth={2.2} />
-        </span>
+        {item.img ? (
+          <span className="relative flex h-[3.4rem] w-full shrink-0 items-center justify-center md:h-[4.2rem]">
+            <img src={item.img} alt="" loading="lazy" className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
+          </span>
+        ) : (
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.06] text-foreground md:h-12 md:w-12">
+            <Icon className="h-5 w-5 md:h-7 md:w-7" strokeWidth={2.2} />
+          </span>
+        )}
         <span className="relative min-w-0 pr-1">
           <span className={`line-clamp-2 block break-words [overflow-wrap:anywhere] font-heading text-[1.12rem] uppercase leading-[0.96] tracking-normal text-foreground min-[390px]:text-[1.24rem] ${titleSizeClass}`}>
             {item.label}

@@ -79,8 +79,8 @@ const CATEGORIES = [
 // Add-ons at full catalog price (the time discount applies to the whole plan).
 const IV_ADDON_ITEMS = IV_ADDONS
   .filter((a) => !a.group)
-  .map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: 4 }));
-const IM_ADDON_ITEMS = IM_SHOTS.map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: a.max || 4 }));
+  .map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: 4, img: a.img }));
+const IM_ADDON_ITEMS = IM_SHOTS.map((a) => ({ key: slug(a.label), label: a.label, price: a.price, max: a.max || 4, img: a.img }));
 
 // Collapse dose variants ("Vitamin C IV Push · 5g / 10g / 15g") into one row
 // with a strength dropdown; singletons stay as their own stepper. Preserves
@@ -184,12 +184,24 @@ function SelectRow({ label, sub, price, active, onClick }) {
   );
 }
 
-function QtyStepper({ label, price, value, max, onChange }) {
+function AddonThumb({ img }) {
+  if (!img) return null;
+  return (
+    <span className="flex h-12 w-9 shrink-0 items-center justify-center">
+      <img src={img} alt="" loading="lazy" className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
+    </span>
+  );
+}
+
+function QtyStepper({ label, price, value, max, onChange, img }) {
   return (
     <div className="av-treatment-card flex items-center justify-between gap-2 rounded-xl border p-2.5 md:p-3">
-      <div className="min-w-0">
-        <p className="truncate font-body text-[13px] font-black text-foreground md:text-sm">{label}</p>
-        <p className="mt-0.5 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50">{money(price)} / mo</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <AddonThumb img={img} />
+        <div className="min-w-0">
+          <p className="truncate font-body text-[13px] font-black text-foreground md:text-sm">{label}</p>
+          <p className="mt-0.5 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50">{money(price)} / mo</p>
+        </div>
       </div>
       <Stepper label={label} value={value} max={max} onChange={onChange} />
     </div>
@@ -235,6 +247,7 @@ function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
   const otherActive = variants.filter((v) => v.key !== sel.key && (qtyMap[v.key] || 0) > 0);
   return (
     <div className="av-treatment-card flex items-center justify-between gap-2 rounded-xl border p-2.5 md:p-3">
+      <AddonThumb img={variants[0]?.img} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-body text-[13px] font-black text-foreground md:text-sm">{family}</p>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -351,6 +364,7 @@ function AddonRows({ rows, qtyMap, onQty }) {
             price={row.item.price}
             value={qtyMap[row.item.key] || 0}
             max={row.item.max}
+            img={row.item.img}
             onChange={(v) => onQty(row.item.key, v)}
           />
         )

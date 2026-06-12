@@ -35,7 +35,7 @@ export const IV_SESSIONS = [
     tag: 'Essential',
     category: 'recovery',
     duration: '30-45 min',
-    inside: 'Saline (500-1000ml) · Electrolytes · B-Complex · Trace minerals',
+    inside: 'Saline (1000ml) · Electrolytes · B-Complex · Trace minerals',
     features: ['Hydration support', 'Electrolyte balance', 'Nutrient support', 'Overall wellness'],
     image: '/bags/dehydration.png',
     desc: 'Saline, electrolytes, B-complex, and trace minerals for hydration support.',
@@ -180,11 +180,11 @@ export const IV_SESSIONS = [
 ];
 
 export const IV_ADDONS = [
-  { label: 'Extra Fluid', price: 25, desc: 'Additional 500ml saline' },
-  { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals, and amino support' },
-  { label: 'Vitamin C IV Push · 5g', price: 45, desc: 'Entry high-dose antioxidant support' },
-  { label: 'Vitamin C IV Push · 10g', price: 85, desc: 'Higher-dose vitamin C support' },
-  { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support' },
+  { label: 'Extra Fluid', price: 25, desc: 'Additional 500ml saline', img: '/addons/extra-fluid.png' },
+  { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals, and amino support', img: '/addons/extra-ingredients.png' },
+  { label: 'Vitamin C IV Push · 5g', price: 45, desc: 'Entry high-dose antioxidant support', img: '/addons/vitamin-c.png' },
+  { label: 'Vitamin C IV Push · 10g', price: 85, desc: 'Higher-dose vitamin C support', img: '/addons/vitamin-c.png' },
+  { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support', img: '/addons/vitamin-c.png' },
   { label: 'CBD Review', price: 350, desc: 'Approval-gated clinical review', group: 'cbd' },
   { label: 'CBD Review Plus', price: 450, desc: 'Approval-gated clinical review', group: 'cbd' },
   { label: 'NAD+ (250mg)', price: 350, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
@@ -193,22 +193,22 @@ export const IV_ADDONS = [
   { label: 'NAD+ (1000mg)', price: 750, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
   { label: 'NAD+ (1250mg)', price: 950, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
   { label: 'NAD+ (1500mg)', price: 1100, desc: 'Clinician-reviewed NAD+ add-on · 1-4 hr infusion', group: 'nad' },
-  { label: 'Glutathione Push · 600mg', price: 60, desc: 'Antioxidant support' },
-  { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support' },
-  { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push' },
-  { label: 'Magnesium Support', price: 30, desc: 'Magnesium support' },
+  { label: 'Glutathione Push · 600mg', price: 60, desc: 'Antioxidant support', img: '/addons/glutathione.png' },
+  { label: 'Glutathione Push · 1200mg', price: 100, desc: 'Elevated antioxidant + glow support', img: '/addons/glutathione.png' },
+  { label: 'Glutathione Push · 1800mg', price: 140, desc: 'Maximum antioxidant push', img: '/addons/glutathione.png' },
+  { label: 'Magnesium Support', price: 30, desc: 'Magnesium support', img: '/addons/magnesium.png' },
 ];
 
 export const IM_SHOTS = [
-  { label: 'B12', price: 40, max: 5, icon: Zap, desc: 'Energy + metabolism support' },
-  { label: 'MIC', price: 50, icon: Flame, desc: 'Metabolism support' },
-  { label: 'NAD+', price: 80, icon: BatteryCharging, desc: 'Clinician-reviewed NAD+ support' },
-  { label: 'Glutathione IM · 200mg', price: 50, max: 5, icon: Sparkles, desc: 'Antioxidant + skin clarity' },
-  { label: 'Glutathione IM · 400mg', price: 80, max: 5, icon: Sparkles, desc: 'Higher-dose antioxidant support' },
-  { label: 'Vitamin C IM · 500mg', price: 30, icon: Shield, desc: 'Immune + antioxidant support' },
-  { label: 'Vitamin C IM · 1000mg', price: 45, icon: Shield, desc: 'Higher-dose vitamin C support' },
-  { label: 'Vitamin D', price: 35, icon: Zap, desc: 'Vitamin D support' },
-  { label: 'Biotin', price: 35, icon: Sparkles, desc: 'Hair, skin & nail support' },
+  { label: 'B12', price: 40, max: 5, icon: Zap, desc: 'Energy + metabolism support', img: '/addons/b12.png' },
+  { label: 'MIC', price: 50, icon: Flame, desc: 'Metabolism support', img: '/addons/mic.png' },
+  { label: 'NAD+', price: 80, icon: BatteryCharging, desc: 'Clinician-reviewed NAD+ support', img: '/addons/nad.png' },
+  { label: 'Glutathione IM · 200mg', price: 50, max: 5, icon: Sparkles, desc: 'Antioxidant + skin clarity', img: '/addons/glutathione.png' },
+  { label: 'Glutathione IM · 400mg', price: 80, max: 5, icon: Sparkles, desc: 'Higher-dose antioxidant support', img: '/addons/glutathione.png' },
+  { label: 'Vitamin C IM · 500mg', price: 30, icon: Shield, desc: 'Immune + antioxidant support', img: '/addons/vitamin-c.png' },
+  { label: 'Vitamin C IM · 1000mg', price: 45, icon: Shield, desc: 'Higher-dose vitamin C support', img: '/addons/vitamin-c.png' },
+  { label: 'Vitamin D', price: 35, icon: Zap, desc: 'Vitamin D support', img: '/addons/vitamin-d.png' },
+  { label: 'Biotin', price: 35, icon: Sparkles, desc: 'Hair, skin & nail support', img: '/addons/biotin.png' },
 ];
 
 export const PACKAGES = [
