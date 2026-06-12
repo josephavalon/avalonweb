@@ -54,6 +54,11 @@ export function tagMatches(file, tagName) {
   const out = [];
   let match;
   while ((match = pattern.exec(text))) {
+    const lineStart = text.lastIndexOf('\n', match.index) + 1;
+    const linePrefix = text.slice(lineStart, match.index);
+    const lastBlockOpen = text.lastIndexOf('/*', match.index);
+    const lastBlockClose = text.lastIndexOf('*/', match.index);
+    if (linePrefix.includes('//') || lastBlockOpen > lastBlockClose) continue;
     const before = text.slice(0, match.index);
     out.push({
       file,
