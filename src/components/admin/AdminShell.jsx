@@ -165,7 +165,14 @@ export default function AdminShell({ title = 'Dashboard', actions, children }) {
       {drawer && (
         <>
           <button type="button" className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setDrawer(false)} aria-label="Close menu" />
-          <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r border-foreground/[0.08] bg-background md:hidden">{Sidebar}</aside>
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Admin navigation menu"
+            className="fixed inset-y-0 left-0 z-50 w-64 border-r border-foreground/[0.08] bg-background md:hidden"
+          >
+            {Sidebar}
+          </aside>
         </>
       )}
 
