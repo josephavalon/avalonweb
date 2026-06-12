@@ -31,10 +31,10 @@ const DRIPS = [
   { name: 'CBD Review', price: '$279-$399' },
   { name: 'NAD+ (250mg)', price: '$350' },
   { name: 'NAD+ (500mg)', price: '$500' },
-  { name: 'NAD+ (750mg)', price: '$600' },
-  { name: 'NAD+ (1000mg)', price: '$750' },
-  { name: 'NAD+ (1250mg)', price: '$950' },
-  { name: 'NAD+ (1500mg)', price: '$1,100' },
+  { name: 'NAD+ (750mg)', price: '$650' },
+  { name: 'NAD+ (1000mg)', price: '$800' },
+  { name: 'NAD+ (1250mg)', price: '$1,000' },
+  { name: 'NAD+ (1500mg)', price: '$1,200' },
 ];
 
 const ADDONS = [
