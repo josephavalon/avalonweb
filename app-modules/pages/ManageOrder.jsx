@@ -29,7 +29,8 @@ export default function ManageOrder() {
 
   const [searchParams] = useSearchParams();
   const [orderNumber, setOrderNumber] = useState(() => (searchParams.get('ref') || '').toUpperCase());
-  const [contact, setContact] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [order, setOrder] = useState(null);
@@ -40,13 +41,13 @@ export default function ManageOrder() {
     setOrder(null);
     const code = orderNumber.trim().toUpperCase();
     if (!/^AV-[0-9A-Z]{6}$/.test(code)) { setError('Enter a valid order number, like AV-7K4M2Q.'); return; }
-    if (!contact.trim()) { setError('Enter the phone or email on your booking.'); return; }
+    if (!email.trim() || !phone.trim()) { setError('Enter both the email and phone on your booking.'); return; }
     setLoading(true);
     try {
       const res = await fetch('/api/order-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNumber: code, contact: contact.trim() }),
+        body: JSON.stringify({ orderNumber: code, email: email.trim(), phone: phone.trim() }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Could not find that order.'); return; }
@@ -81,7 +82,7 @@ export default function ManageOrder() {
           </div>
 
           <form onSubmit={lookup} className="av-glass-card rounded-[1.3rem] border bg-background/82 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-6">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-2">
                 <label htmlFor="order-number" className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">Order number</label>
                 <input
@@ -96,12 +97,29 @@ export default function ManageOrder() {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="order-contact" className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">Phone or email</label>
+                <label htmlFor="order-email" className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">Email</label>
                 <input
-                  id="order-contact"
-                  value={contact}
-                  onChange={(e) => { setContact(e.target.value); setError(''); }}
+                  id="order-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  placeholder="you@email.com"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="min-h-[54px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-4 font-body text-base font-semibold text-foreground outline-none transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="order-phone" className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">Phone</label>
+                <input
+                  id="order-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => { setPhone(e.target.value); setError(''); }}
                   placeholder="(415) 555-0199"
+                  autoComplete="tel"
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}

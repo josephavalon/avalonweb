@@ -34,6 +34,7 @@ const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', i
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
+const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
 const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
@@ -140,6 +141,12 @@ for (const code of ['missing_appointment_lookup', 'appointment_not_found', 'alre
 }
 assert(orderLookupSource.includes("key: `order-lookup:${clientIp(req)}`"), 'Order lookup must rate-limit by requester IP');
 assert(orderLookupSource.includes('status(429)'), 'Order lookup must reject rate-limited probes');
+assert(orderLookupSource.includes('15 * 60 * 1000'), 'Order lookup rate-limit window must be 15 minutes');
+assert(orderLookupSource.includes('max: 5'), 'Order lookup rate-limit max must be 5 attempts per window');
+assert(orderLookupSource.includes('contact_verification_required'), 'Order lookup must require both contact factors');
+assert(orderLookupSource.includes('!phoneMatch || !emailMatch'), 'Order lookup must require phone and email to match');
+assert(orderLookupSource.includes('input_too_long'), 'Order lookup must cap input field lengths');
+assert(manageOrderSource.includes('id="order-email"') && manageOrderSource.includes('id="order-phone"'), 'Manage order form must collect both email and phone');
 assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId))"), 'Acuity webhook must dedupe by appointment id');
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');

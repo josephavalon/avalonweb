@@ -1,11 +1,12 @@
 /**
  * POST /api/order-lookup — redeem a post-checkout order number.
  *
- * Body: { orderNumber: "AV-7K4M2Q", contact: "<phone or email on the booking>" }
+ * Body: { orderNumber: "AV-7K4M2Q", email: "client@example.com", phone: "4155550199" }
  *
- * The order number alone is not enough — we require a matching phone/email so a
- * leaked code can't expose someone's booking. Returns the visit status, schedule,
- * and any balance still due. Powers the public /order "manage your order" page.
+ * The order number alone is not enough — require both email and phone on the
+ * booking so a leaked code plus one guessed contact field cannot expose details.
+ * Returns visit status, schedule, and any balance still due. Powers the public
+ * /order "manage your order" page.
  */
 
 import { getSupabaseServiceClient } from './_supabase-server.js';
@@ -29,9 +30,20 @@ const normalizePhone = (v) => String(v || '').replace(/\D/g, '').slice(-10);
 const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
 
 const RATE_LIMIT = {
-  windowMs: 60 * 1000,
-  max: 8,
+  windowMs: 15 * 60 * 1000,
+  max: 5,
 };
+
+const MAX_LEN = {
+  orderNumber: 16,
+  email: 254,
+  phone: 40,
+};
+
+function boundedString(value, max) {
+  const raw = String(value || '').trim();
+  return { value: raw, tooLong: raw.length > max };
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -50,14 +62,22 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
-  const code = String(body.orderNumber || '').trim().toUpperCase();
-  const verifier = String(body.contact || '').trim();
+  const orderInput = boundedString(body.orderNumber, MAX_LEN.orderNumber);
+  const emailInput = boundedString(body.email, MAX_LEN.email);
+  const phoneInput = boundedString(body.phone, MAX_LEN.phone);
+  if (orderInput.tooLong || emailInput.tooLong || phoneInput.tooLong) {
+    return res.status(400).json({ error: 'Order lookup fields are too long.', code: 'input_too_long' });
+  }
+
+  const code = orderInput.value.toUpperCase();
+  const email = normalizeEmail(emailInput.value);
+  const phone = normalizePhone(phoneInput.value);
 
   if (!/^AV-[0-9A-Z]{6}$/.test(code)) {
     return res.status(400).json({ error: 'Enter a valid order number, like AV-7K4M2Q.' });
   }
-  if (!verifier) {
-    return res.status(400).json({ error: 'Enter the phone or email on your booking.' });
+  if (!email || !phone) {
+    return res.status(400).json({ error: 'Enter both the email and phone on your booking.', code: 'contact_verification_required' });
   }
 
   const db = await getSupabaseServiceClient();
@@ -82,10 +102,10 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: 'No order found with that number.' });
   }
 
-  const phoneMatch = normalizePhone(verifier) && normalizePhone(verifier) === normalizePhone(record.customer_phone);
-  const emailMatch = normalizeEmail(verifier) && normalizeEmail(verifier) === normalizeEmail(record.customer_email);
-  if (!phoneMatch && !emailMatch) {
-    return res.status(403).json({ error: 'That phone or email does not match this order.' });
+  const phoneMatch = phone === normalizePhone(record.customer_phone);
+  const emailMatch = email === normalizeEmail(record.customer_email);
+  if (!phoneMatch || !emailMatch) {
+    return res.status(403).json({ error: 'Those details do not match this order.' });
   }
 
   return res.status(200).json({
