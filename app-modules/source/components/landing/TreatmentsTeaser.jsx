@@ -53,7 +53,8 @@ const TOP_CATEGORIES = [
       { icon: Sparkles,     img: '/bags/beauty.png',      label: 'Beauty IV',       price: 250 },
       { icon: FlaskConical, img: '/bags/myers.png',       label: "Myers' Cocktail", price: 250 },
       { icon: Droplets,     img: '/bags/recovery.png',    label: 'Recovery IV',     price: 250 },
-      { icon: Star,         label: 'Custom Visit',        price: 150 },
+      { icon: Sparkles,     img: '/bags/jet-lag.png',     label: 'Travel IV',       price: 250 },
+      { icon: Droplets,     img: '/bags/night-out.png',   label: 'Night Out IV',    price: 250 },
     ],
   },
   {
@@ -221,17 +222,20 @@ function CategoryRow({ cat, index, open, onToggle }) {
                       key={addon.label}
                       to="/book"
                       variants={premiumListItem}
-                      className="av-treatment-chip group flex min-h-[76px] items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-base ease-editorial"
+                      className="av-treatment-chip group grid min-h-[88px] grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl border px-3.5 py-2.5 transition-all duration-base ease-editorial"
                     >
                       {addon.img ? (
-                        <img src={addon.img} alt="" loading="lazy" className="h-12 w-9 shrink-0 object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
+                        <img src={addon.img} alt="" loading="lazy" className="h-[4.5rem] w-14 shrink-0 object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)]" />
                       ) : (
-                        <addon.icon className="w-3.5 h-3.5 text-foreground/30 group-hover:text-accent transition-colors shrink-0" strokeWidth={1.5} />
+                        <span className="flex h-[4.5rem] w-14 items-center justify-center">
+                          <addon.icon className="h-6 w-6 text-foreground/45 shrink-0" strokeWidth={1.6} />
+                        </span>
                       )}
-                      <div>
-                        <p className="font-body text-xs text-foreground/80 leading-snug">{addon.label}</p>
-                        <p className="font-body text-[9px] text-foreground/35">${addon.price}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-heading text-[1.15rem] uppercase leading-none tracking-[0.04em] text-foreground">{addon.label}</p>
+                        <p className="mt-1 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/50">From ${addon.price}</p>
                       </div>
+                      <ArrowRight className="h-5 w-5 shrink-0 text-foreground/35 transition-transform duration-base ease-editorial group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
                     </MotionLink>
                   ))}
                 </div>
