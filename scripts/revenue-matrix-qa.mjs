@@ -28,12 +28,14 @@ const UAS = {
 };
 
 const MATRIX = [
-  { id: 'desktop-chrome', label: 'Desktop Chrome', viewport: { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, ua: UAS.desktopChrome, assumedShare: 0.34 },
+  { id: 'desktop-chrome', label: 'Desktop Chrome', engine: 'chrome', viewport: { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, ua: UAS.desktopChrome, assumedShare: 0.30 },
+  { id: 'desktop-webkit', label: 'Desktop Safari/WebKit', engine: 'webkit', viewport: { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, ua: UAS.iphoneSafari.replace('iPhone; CPU iPhone OS 18_5 like Mac OS X', 'Macintosh; Intel Mac OS X 10_15_7').replace(' Mobile/15E148', ''), assumedShare: 0.08 },
   { id: 'android-chrome', label: 'Android Chrome', viewport: { width: 412, height: 915, deviceScaleFactor: 3, mobile: true }, ua: UAS.androidChrome, assumedShare: 0.16 },
-  { id: 'iphone-safari-ua', label: 'iPhone Safari UA on Chrome engine', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.iphoneSafari, assumedShare: 0.24, limitation: 'Chrome engine only; Playwright WebKit/Safari remains a separate external lane.' },
+  { id: 'iphone-webkit', label: 'iPhone Safari/WebKit', engine: 'webkit', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.iphoneSafari, assumedShare: 0.24 },
+  { id: 'iphone-safari-ua', label: 'iPhone Safari UA on Chrome engine', engine: 'chrome', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.iphoneSafari, assumedShare: 0.04, limitation: 'Chrome engine UA sanity check; WebKit proof comes from iphone-webkit.' },
   { id: 'instagram-webview', label: 'Instagram in-app webview UA', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.instagram, assumedShare: 0.12 },
-  { id: 'tiktok-webview', label: 'TikTok in-app webview UA', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.tiktok, assumedShare: 0.07 },
-  { id: 'facebook-webview', label: 'Facebook in-app webview UA', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.facebook, assumedShare: 0.07 },
+  { id: 'tiktok-webview', label: 'TikTok in-app webview UA', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.tiktok, assumedShare: 0.06 },
+  { id: 'facebook-webview', label: 'Facebook in-app webview UA', viewport: { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }, ua: UAS.facebook, assumedShare: 0.06 },
 ];
 
 function selectedMatrix() {
@@ -328,7 +330,7 @@ function riskEstimate(env) {
   return Math.round(monthlySessions * env.assumedShare * conversionRate * averageOrderValue);
 }
 
-async function runEnvironment(chromePath, env, index) {
+async function runCdpEnvironment(chromePath, env, index) {
   const port = PORT_BASE + index;
   let chrome;
   let profileDir;
@@ -418,7 +420,222 @@ async function runEnvironment(chromePath, env, index) {
   }
 }
 
-const chromePath = await findChrome();
+async function loadWebKit() {
+  try {
+    const playwright = await import('playwright');
+    return playwright.webkit;
+  } catch (error) {
+    throw new Error(`Playwright WebKit is required for Safari revenue matrix lanes. Run npm install and npx playwright install webkit. ${error.message}`);
+  }
+}
+
+async function playwrightClickText(page, text) {
+  const found = await page.evaluate((wantedText) => {
+    const wanted = String(wantedText || '').toLowerCase();
+    const visible = (el) => {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    };
+    const candidates = Array.from(document.querySelectorAll('main button, main a[href], main [role="button"], .fixed button, footer button'));
+    const matches = candidates.filter((el) => visible(el) && (el.innerText || el.textContent || '').trim().toLowerCase().includes(wanted));
+    const target = matches.at(-1);
+    if (!target) return false;
+    target.scrollIntoView({ block: 'center', inline: 'center' });
+    target.click();
+    return true;
+  }, text);
+  if (!found) {
+    const controls = await page.evaluate(() => Array.from(document.querySelectorAll('button, a[href]')).map((el) => (el.innerText || el.textContent || '').trim()).filter(Boolean).slice(0, 28));
+    throw new Error(`Could not click "${text}". Visible controls: ${controls.join(' | ')}`);
+  }
+  await page.waitForTimeout(650);
+}
+
+async function playwrightClickAnyText(page, labels) {
+  const failures = [];
+  for (const label of labels) {
+    try {
+      await playwrightClickText(page, label);
+      return label;
+    } catch (error) {
+      failures.push(`${label}: ${error.message}`);
+    }
+  }
+  throw new Error(`Could not click any of ${labels.join(', ')}.\n${failures.join('\n')}`);
+}
+
+async function playwrightFillByLabel(page, label, value) {
+  const filled = await page.evaluate(({ label: wantedLabel, value: nextValue }) => {
+    const wanted = String(wantedLabel || '').toLowerCase();
+    const visible = (el) => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    };
+    const fields = Array.from(document.querySelectorAll('input, textarea, select')).filter(visible);
+    const input = fields.find((el) => {
+      const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
+      const placeholder = (el.getAttribute('placeholder') || '').trim().toLowerCase();
+      const ownLabel = el.id ? (document.querySelector(`label[for="${CSS.escape(el.id)}"]`)?.innerText || '').trim().toLowerCase() : '';
+      const wrapperLabel = (el.closest('label')?.innerText || '').trim().toLowerCase();
+      return aria.startsWith(wanted) || placeholder.startsWith(wanted) || ownLabel.startsWith(wanted) || wrapperLabel.startsWith(wanted);
+    });
+    if (!input) return false;
+    input.focus();
+    const proto = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : input instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    setter ? setter.call(input, nextValue) : input.value = nextValue;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }, { label, value });
+  if (!filled) throw new Error(`Could not fill "${label}".`);
+  await page.waitForTimeout(120);
+}
+
+async function playwrightAssertStickyBookBar(page, env) {
+  const result = await page.evaluate(() => {
+    const controls = Array.from(document.querySelectorAll('button, a[href], [role="button"]'));
+    const target = controls.find((el) => {
+      const text = (el.innerText || el.textContent || '').trim();
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return /next|continue|confirm|checkout|pay/i.test(text) &&
+        rect.width >= 40 &&
+        rect.height >= 40 &&
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight &&
+        style.display !== 'none' &&
+        style.visibility !== 'hidden' &&
+        style.pointerEvents !== 'none';
+    });
+    return target ? { ok: true, text: (target.innerText || target.textContent || '').trim(), width: Math.round(target.getBoundingClientRect().width), height: Math.round(target.getBoundingClientRect().height) } : { ok: false };
+  });
+  if (!result.ok) throw new Error(`${env.id}: no visible tappable revenue CTA found.`);
+  return result;
+}
+
+async function playwrightRevenueOutcome(page) {
+  return page.evaluate(() => {
+    const booking = JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null');
+    const handoff = JSON.parse(localStorage.getItem('av.local.webstore.latestHandoff') || 'null');
+    const analytics = JSON.parse(localStorage.getItem('av.analytics.events') || '[]');
+    const stripeFrame = Array.from(document.querySelectorAll('iframe')).find((frame) => /stripe|checkout/i.test(frame.src || ''));
+    return {
+      path: location.pathname,
+      body: document.body.innerText || '',
+      hasEmbeddedCheckout: Boolean(stripeFrame),
+      stripeFrameSrc: stripeFrame?.src || '',
+      bookingId: booking?.id || '',
+      service: booking?.service || '',
+      orderType: booking?.orderType || '',
+      hasHandoff: Boolean(handoff?.bookingId),
+      analyticsNames: analytics.map((event) => event.name),
+      scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+      width: window.innerWidth,
+    };
+  });
+}
+
+async function waitForPlaywrightRevenueOutcome(page) {
+  const deadline = Date.now() + DEFAULT_TIMEOUT_MS;
+  let result = null;
+  while (Date.now() < deadline) {
+    result = await playwrightRevenueOutcome(page);
+    if (result.hasEmbeddedCheckout || result.path === '/booking/confirmation') return result;
+    await page.waitForTimeout(250);
+  }
+  return result;
+}
+
+function validateRevenueOutcome(outcome, runtimeIssues = []) {
+  const failures = [];
+  const materialRuntimeIssues = runtimeIssues.filter((issue) => !isIgnorableRuntimeIssue(issue));
+  const staticFallback = outcome?.path === '/booking/confirmation';
+  if (!outcome?.hasEmbeddedCheckout && !staticFallback) failures.push(`payment step not reached; path=${outcome?.path || 'unknown'}`);
+  if (outcome?.hasEmbeddedCheckout && !/stripe|checkout/i.test(outcome.stripeFrameSrc || '')) failures.push('Stripe iframe source missing.');
+  if (staticFallback && !/Hold received|Pay the hold|Review comes next|Confirmation/i.test(outcome.body || '')) failures.push('local payment fallback confirmation copy missing.');
+  if (staticFallback && !outcome.bookingId) failures.push('local fallback did not persist booking id.');
+  if (staticFallback && !outcome.hasHandoff) failures.push('local fallback did not persist checkout handoff marker.');
+  if ((outcome?.scrollWidth || 0) - (outcome?.width || 0) > 2) failures.push(`horizontal overflow ${(outcome.scrollWidth || 0) - (outcome.width || 0)}px`);
+  for (const required of ['step_viewed', 'step_completed', 'checkout_started']) {
+    if (!outcome?.analyticsNames?.includes(required)) failures.push(`missing analytics event ${required}`);
+  }
+  if (materialRuntimeIssues.length) failures.push(`runtime issues: ${materialRuntimeIssues.slice(0, 4).join(' | ')}`);
+  return failures;
+}
+
+function isIgnorableRuntimeIssue(issue = '') {
+  return /Failed to load resource: the server responded with a status of 405/i.test(String(issue));
+}
+
+async function runWebKitEnvironment(webkit, env) {
+  let browser;
+  try {
+    browser = await webkit.launch({ headless: true });
+    const context = await browser.newContext({
+      viewport: { width: env.viewport.width, height: env.viewport.height },
+      deviceScaleFactor: env.viewport.deviceScaleFactor,
+      isMobile: env.viewport.mobile,
+      hasTouch: env.viewport.mobile,
+      userAgent: env.ua,
+      locale: 'en-US',
+    });
+    const page = await context.newPage();
+    const runtimeIssues = [];
+    page.on('console', (message) => {
+      if (['error', 'warning'].includes(message.type())) runtimeIssues.push(message.text());
+    });
+    page.on('pageerror', (error) => runtimeIssues.push(error.message));
+    page.on('requestfailed', (request) => {
+      const failure = request.failure()?.errorText || 'request failed';
+      const url = request.url();
+      if (!/ERR_ABORTED|favicon|chrome-extension/i.test(`${failure} ${url}`)) runtimeIssues.push(`${failure} ${url}`);
+    });
+
+    await page.goto(`${BASE_URL}/?utm_source=revenue_matrix&utm_medium=qa&utm_campaign=${env.id}`, { waitUntil: 'load', timeout: DEFAULT_TIMEOUT_MS });
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+      localStorage.setItem('cookieConsent', 'allowed');
+      sessionStorage.setItem('av.splash.seen', '1');
+    });
+    await page.goto(`${BASE_URL}/book?reset=1&matrix=${encodeURIComponent(env.id)}`, { waitUntil: 'load', timeout: DEFAULT_TIMEOUT_MS });
+    await page.waitForTimeout(500);
+    await playwrightClickAnyText(page, ['Recovery', 'Hydration']);
+    await playwrightAssertStickyBookBar(page, env);
+    await playwrightClickText(page, 'Next');
+    await playwrightClickText(page, 'No Add-Ons');
+    await playwrightAssertStickyBookBar(page, env);
+    await playwrightClickText(page, 'Next');
+    await playwrightClickText(page, 'Next');
+    await playwrightFillByLabel(page, 'Address', '188 King St, San Francisco');
+    await playwrightFillByLabel(page, 'ZIP', '94107');
+    await playwrightAssertStickyBookBar(page, env);
+    await playwrightClickText(page, 'Next');
+    await playwrightFillByLabel(page, 'Name', 'Revenue Matrix QA');
+    await playwrightFillByLabel(page, 'Phone', '(415) 555-0199');
+    await playwrightFillByLabel(page, 'DOB', '01/02/1980');
+    await playwrightFillByLabel(page, 'Email', `qa+${env.id}@avalonvitality.co`);
+    await playwrightAssertStickyBookBar(page, env);
+    await playwrightClickText(page, 'CONFIRM & PAY');
+    const outcome = await waitForPlaywrightRevenueOutcome(page);
+    const failures = validateRevenueOutcome(outcome, runtimeIssues);
+    const result = { env, outcome, risk: riskEstimate(env), failures };
+    if (failures.length) throw Object.assign(new Error(failures.join('; ')), { result });
+    await context.close();
+    return result;
+  } finally {
+    await browser?.close();
+  }
+}
+
+const needsChrome = selectedMatrix().some((env) => (env.engine || 'chrome') === 'chrome');
+const needsWebKit = selectedMatrix().some((env) => env.engine === 'webkit');
+const chromePath = needsChrome ? await findChrome() : null;
+const webkit = needsWebKit ? await loadWebKit() : null;
 const environments = selectedMatrix();
 if (!environments.length) throw new Error('No revenue matrix environments selected.');
 
@@ -426,7 +643,9 @@ const results = [];
 const failures = [];
 for (const [index, env] of environments.entries()) {
   try {
-    const result = await runEnvironment(chromePath, env, index);
+    const result = env.engine === 'webkit'
+      ? await runWebKitEnvironment(webkit, env)
+      : await runCdpEnvironment(chromePath, env, index);
     results.push(result);
     const mode = result.outcome.hasEmbeddedCheckout ? 'embedded checkout' : 'local checkout fallback';
     const note = env.limitation ? ` (${env.limitation})` : '';
@@ -438,7 +657,7 @@ for (const [index, env] of environments.entries()) {
   }
 }
 
-console.log('Revenue matrix coverage note: WebKit/Safari-engine execution is not proven by this Chrome/CDP harness. Add Playwright WebKit or a Safari-backed lane before claiming final Track I completion.');
+console.log('Revenue matrix coverage note: WebKit lanes use Playwright WebKit. Real-device Safari and real social app webviews remain staging/post-deploy verification targets.');
 
 if (failures.length) {
   throw new Error(`Revenue matrix failed ${failures.length}/${environments.length} environment(s).`);
