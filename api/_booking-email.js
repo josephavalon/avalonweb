@@ -70,3 +70,36 @@ export async function sendPaymentReceivedEmail({
   }
   return { sent: true, id: result?.data?.id || result?.id || null };
 }
+
+export async function sendCustomerPaymentPendingEmail({
+  checkout = {},
+} = {}) {
+  if (!process.env.RESEND_API_KEY) return { skipped: true, reason: 'resend_not_configured' };
+
+  const contact = checkout.contact || {};
+  const to = String(contact.email || '').trim();
+  if (!to) return { skipped: true, reason: 'missing_customer_email' };
+
+  const customerName = contact.firstName || String(contact.name || '').trim().split(/\s+/)[0] || 'there';
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#0a0a0a;">
+      <h2 style="font-size:22px;margin:0 0 16px;">Payment received</h2>
+      <p>Hi ${escapeHtml(customerName)},</p>
+      <p>Your payment was received. We are confirming your appointment details and an Avalon registered nurse will follow up shortly.</p>
+      <p>If anything changes, reply to this email and our team will help.</p>
+    </div>
+  `;
+
+  const result = await resend.emails.send({
+    from: FROM_INTERNAL,
+    to,
+    subject: 'Avalon payment received - appointment being confirmed',
+    html,
+  });
+
+  if (result?.error) {
+    throw Object.assign(new Error(result.error.message || 'Customer payment email failed'), { body: result.error });
+  }
+  return { sent: true, id: result?.data?.id || result?.id || null };
+}

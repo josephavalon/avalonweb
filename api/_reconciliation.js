@@ -10,6 +10,9 @@ export const RECONCILIATION_CASE_TYPES = [
   'appointment_drift',
   'payroll_sync_failed',
   'finance_sync_failed',
+  'crm_sync_failed',
+  'operations_email_failed',
+  'customer_email_failed',
 ];
 
 export const RECONCILIATION_CASE_DEFAULTS = {
@@ -68,6 +71,21 @@ export const RECONCILIATION_CASE_DEFAULTS = {
     owner_role: 'finance',
     required_action: 'Hold finance close until Mercury, QuickBooks, and Avalon ledgers agree.',
   },
+  crm_sync_failed: {
+    severity: 'action',
+    owner_role: 'ops_manager',
+    required_action: 'Retry CRM sync and confirm the appointment record has current contact context.',
+  },
+  operations_email_failed: {
+    severity: 'action',
+    owner_role: 'ops_manager',
+    required_action: 'Confirm operations was notified through a fallback channel and retry email delivery.',
+  },
+  customer_email_failed: {
+    severity: 'action',
+    owner_role: 'ops_manager',
+    required_action: 'Contact the customer through a fallback channel and retry email delivery.',
+  },
 };
 
 export function buildReconciliationCase({
@@ -97,6 +115,33 @@ export function buildReconciliationCase({
       local_contract: 'pre-api-reconciliation-v1',
     },
   };
+}
+
+export async function insertReconciliationCaseOnce(db, caseRow = {}) {
+  if (!db || !caseRow.case_type) return { skipped: true };
+  try {
+    let query = db.from('reconciliation_cases')
+      .select('id')
+      .eq('case_type', caseRow.case_type)
+      .eq('provider', caseRow.provider || 'avalon');
+    if (caseRow.external_reference == null) {
+      query = query.is('external_reference', null);
+    } else {
+      query = query.eq('external_reference', caseRow.external_reference);
+    }
+    const { data: existing } = await query.maybeSingle();
+    if (existing?.id) return { duplicate: true, id: existing.id };
+
+    const { data, error } = await db.from('reconciliation_cases')
+      .insert(caseRow)
+      .select('id')
+      .maybeSingle();
+    if (error) throw error;
+    return { inserted: true, id: data?.id || null };
+  } catch (err) {
+    console.warn('[reconciliation] insert failed:', err.message);
+    return { error: err.message };
+  }
 }
 
 export function reconciliationTypeForStripeEvent(event = {}) {

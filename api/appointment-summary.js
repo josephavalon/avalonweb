@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 import { getAppointment } from './_acuity.js';
 import { isLiveApiEnabled, localAppointment } from './_lib/pre-api-guard.js';
+import { getAuthedUser } from './_lib/supabase-auth.js';
+import { verifyAppointmentSummaryToken } from './_lib/summary-token.js';
 import { getSupabaseServiceClient } from './_supabase-server.js';
 import {
   checkoutPayloadFromRecord,
@@ -75,6 +77,35 @@ function appointmentFromAcuity(appointment, fallback = {}) {
   };
 }
 
+function summaryToken(req) {
+  return String(
+    req.query?.summary_token
+    || req.headers?.['x-appointment-summary-token']
+    || ''
+  ).trim();
+}
+
+function checkoutEmail(checkout = {}) {
+  return String(checkout.contact?.email || '').trim().toLowerCase();
+}
+
+function canReadIdentifiableSummary({ req, authed, session, record, checkout, acuityId }) {
+  if (verifyAppointmentSummaryToken(summaryToken(req), {
+    sessionId: session.id,
+    appointmentRecordId: record?.id || session.metadata?.appointmentRecordId || '',
+    appointmentId: acuityId || '',
+  })) {
+    return true;
+  }
+
+  if (!authed) return false;
+  if (['admin', 'provider', 'np', 'physician', 'nurse'].includes(String(authed.role || '').toLowerCase())) {
+    return true;
+  }
+  const email = String(authed.email || '').trim().toLowerCase();
+  return Boolean(email && email === checkoutEmail(checkout));
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -114,6 +145,15 @@ export default async function handler(req, res) {
       || session.metadata?.acuityAppointmentId
       || paymentIntent?.metadata?.acuityAppointmentId
       || '';
+
+    const authed = await getAuthedUser(req);
+    if (!canReadIdentifiableSummary({ req, authed, session, record, checkout, acuityId })) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(401).json({
+        error: 'Appointment summary authorization required',
+        code: 'summary_auth_required',
+      });
+    }
 
     let summary = appointmentFromCheckout({ checkout, record, session, acuityId });
     if (acuityId) {

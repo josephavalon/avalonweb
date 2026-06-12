@@ -1,8 +1,9 @@
 import Stripe from 'stripe';
 import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
-import { sendPaymentReceivedEmail } from '../_booking-email.js';
-import { buildReconciliationCase } from '../_reconciliation.js';
+import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../_booking-email.js';
+import { buildReconciliationCase, insertReconciliationCaseOnce } from '../_reconciliation.js';
+import { createAppointmentSummaryToken } from '../_lib/summary-token.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
@@ -63,19 +64,10 @@ async function insertAcuityFailureCase(db, { appointment, session, error }) {
   if (!db || !appointment?.id) return;
   try {
     const tenantId = await getDefaultTenantId(db);
-    const externalReference = session.id;
-    const { data: existing } = await db.from('reconciliation_cases')
-      .select('id')
-      .eq('case_type', 'stripe_succeeded_acuity_failed')
-      .eq('provider', 'stripe')
-      .eq('external_reference', externalReference)
-      .maybeSingle();
-    if (existing?.id) return;
-
-    await db.from('reconciliation_cases').insert(buildReconciliationCase({
+    await insertReconciliationCaseOnce(db, buildReconciliationCase({
       caseType: 'stripe_succeeded_acuity_failed',
       provider: 'stripe',
-      externalReference,
+      externalReference: session.id,
       tenantId,
       payload: {
         appointmentRecordId: appointment.id,
@@ -87,6 +79,28 @@ async function insertAcuityFailureCase(db, { appointment, session, error }) {
   } catch (err) {
     console.warn('[checkout/verify] reconciliation insert failed:', err.message);
   }
+}
+
+async function insertOperationalFailureCase(db, { caseType, provider = 'avalon', externalReference, tenantId, payload = {} }) {
+  if (!db || !caseType) return;
+  await insertReconciliationCaseOnce(db, buildReconciliationCase({
+    caseType,
+    provider,
+    externalReference,
+    tenantId: tenantId || await getDefaultTenantId(db),
+    payload,
+  }));
+}
+
+async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 1000) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const existingId = await readAcuityAppointmentId(db, recordId);
+    if (existingId) return existingId;
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return null;
 }
 
 async function persistVerifyFulfillment({ appointment, session, paymentIntentId, fulfillment, attioPersonId }) {
@@ -152,7 +166,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
       // The Stripe webhook (or another poll) is already creating this Acuity
       // appointment. Re-read for its id; if it isn't persisted yet, defer so we
       // never double-book and don't overwrite the winner's record.
-      const existingId = await readAcuityAppointmentId(db, appointment?.id);
+      const existingId = await pollAcuityAppointmentId(db, appointment?.id);
       if (existingId) {
         acuityAppointmentId = existingId;
         fulfillmentStatus = 'acuity_created';
@@ -195,6 +209,16 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
               });
             } catch (err) {
               console.warn('[checkout/verify] Attio sync failed:', err.message);
+              await insertOperationalFailureCase(db, {
+                caseType: 'crm_sync_failed',
+                provider: 'attio',
+                externalReference: session.id,
+                payload: {
+                  appointmentRecordId: appointment?.id || null,
+                  stripeSessionId: session.id,
+                  error: err.message || 'Attio sync failed',
+                },
+              });
             }
           }
         }
@@ -224,6 +248,37 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
       });
     } catch (err) {
       console.warn('[checkout/verify] payment email failed:', err.message);
+      await insertOperationalFailureCase(await getSupabaseServiceClient(), {
+        caseType: 'operations_email_failed',
+        provider: 'resend',
+        externalReference: session.id,
+        payload: {
+          appointmentRecordId: appointment?.id || null,
+          stripeSessionId: session.id,
+          error: err.message || 'Payment operations email failed',
+        },
+      });
+    }
+  }
+
+  if (fulfillmentStatus === 'acuity_failed' && paymentIntentId && metadata.customerPaymentPendingEmailSent !== 'true') {
+    try {
+      await sendCustomerPaymentPendingEmail({ checkout });
+      metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+        customerPaymentPendingEmailSent: 'true',
+      });
+    } catch (err) {
+      console.warn('[checkout/verify] customer pending email failed:', err.message);
+      await insertOperationalFailureCase(await getSupabaseServiceClient(), {
+        caseType: 'customer_email_failed',
+        provider: 'resend',
+        externalReference: session.id,
+        payload: {
+          appointmentRecordId: appointment?.id || null,
+          stripeSessionId: session.id,
+          error: err.message || 'Customer pending email failed',
+        },
+      });
     }
   }
 
@@ -303,12 +358,16 @@ export default async function handler(req, res) {
       status: session.status,
       paymentStatus: session.payment_status,
       mode: session.mode,
-      customerEmail: session.customer_details?.email || session.customer_email || '',
       appointmentId: fulfillment.appointmentId,
       appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || null,
       fulfillmentStatus: fulfillment.fulfillmentStatus || null,
       pendingFulfillment: paid && !fulfillment.appointmentId && fulfillment.fulfillmentStatus !== 'acuity_failed',
       fulfillmentError: fulfillment.fulfillmentError || null,
+      summaryToken: paid ? createAppointmentSummaryToken({
+        sessionId: session.id,
+        appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || '',
+        appointmentId: fulfillment.appointmentId || '',
+      }) : '',
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({

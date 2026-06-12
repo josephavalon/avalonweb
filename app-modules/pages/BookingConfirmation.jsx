@@ -206,6 +206,7 @@ export default function BookingConfirmation() {
   const [apptError, setApptError] = useState(null);
   const [fulfillmentPending, setFulfillmentPending] = useState(Boolean(sessionId && !initialAppointmentId));
   const [verification, setVerification] = useState(null);
+  const [summaryToken, setSummaryToken] = useState('');
   const [calendarError, setCalendarError] = useState('');
   const [resolvedAddress, setResolvedAddress] = useState('');
   const apptLoading = !paymentSuccess && (verifyLoading || appointmentLoading);
@@ -228,6 +229,7 @@ export default function BookingConfirmation() {
       });
       const data = await res.json();
       setVerification(data);
+      if (data.summaryToken) setSummaryToken(data.summaryToken);
       if (res.ok && data.paid) {
         if (data.appointmentId) {
           setAppointmentId(String(data.appointmentId));
@@ -275,6 +277,7 @@ export default function BookingConfirmation() {
           const data = await res.json();
           if (!cancelled && res.ok && data.paid) {
             setVerification(data);
+            if (data.summaryToken) setSummaryToken(data.summaryToken);
             if (data.appointmentId) {
               setAppointmentId(String(data.appointmentId));
               setFulfillmentPending(false);
@@ -309,13 +312,18 @@ export default function BookingConfirmation() {
 
   useEffect(() => {
     if (!appointmentId && !sessionId) return;
+    if (sessionId && !summaryToken) return;
     let cancelled = false;
     (async () => {
       setAppointmentLoading(true);
       try {
-        const query = sessionId
-          ? `session_id=${encodeURIComponent(sessionId)}`
-          : `appointment=${encodeURIComponent(appointmentId)}`;
+        const query = new URLSearchParams();
+        if (sessionId) {
+          query.set('session_id', sessionId);
+          query.set('summary_token', summaryToken);
+        } else {
+          query.set('appointment', appointmentId);
+        }
         const res = await fetch(`/api/appointment-summary?${query}`);
         const data = await res.json();
         if (!cancelled) {
@@ -329,7 +337,7 @@ export default function BookingConfirmation() {
       }
     })();
     return () => { cancelled = true; };
-  }, [appointmentId, sessionId]);
+  }, [appointmentId, sessionId, summaryToken]);
 
   useEffect(() => {
     const coords = currentLocationCoordinates(localBooking?.address);

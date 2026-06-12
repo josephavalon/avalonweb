@@ -1,8 +1,12 @@
 import Stripe from 'stripe';
-import { reconciliationTypeForStripeEvent } from '../../_reconciliation.js';
+import {
+  buildReconciliationCase,
+  insertReconciliationCaseOnce,
+  reconciliationTypeForStripeEvent,
+} from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
-import { sendPaymentReceivedEmail } from '../../_booking-email.js';
+import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
@@ -49,11 +53,29 @@ async function findAppointmentRecord(db, { acuityId, sessionId, appointmentRecor
 }
 
 async function insertReconciliationCase(db, caseRow) {
-  try {
-    await db.from('reconciliation_cases').insert(caseRow);
-  } catch (err) {
-    console.warn('[stripe/webhook] reconciliation insert failed:', err.message);
+  await insertReconciliationCaseOnce(db, caseRow);
+}
+
+async function insertOperationalFailureCase(db, { caseType, provider = 'avalon', externalReference, tenantId, payload = {} }) {
+  if (!db || !caseType) return;
+  await insertReconciliationCaseOnce(db, buildReconciliationCase({
+    caseType,
+    provider,
+    externalReference,
+    tenantId: tenantId || await getDefaultTenantId(db),
+    payload,
+  }));
+}
+
+async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 1000) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const existingId = await readAcuityAppointmentId(db, recordId);
+    if (existingId) return existingId;
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
   }
+  return null;
 }
 
 function buildExternalPayload(existingPayload = {}, patch = {}) {
@@ -134,7 +156,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
       // already creating this Acuity appointment. Re-read for its id; if it
       // isn't persisted yet, defer — never create a duplicate, and don't
       // overwrite the winner's scheduling fields below.
-      const existingId = await readAcuityAppointmentId(db, record?.id);
+      const existingId = await pollAcuityAppointmentId(db, record?.id);
       if (existingId) {
         acuityAppointment = { id: existingId, alreadyCreated: true };
       } else {
@@ -168,6 +190,17 @@ async function handleCheckoutCompleted(stripe, db, session) {
           attioSynced = true;
         } catch (err) {
           console.warn('[stripe/webhook] Attio sync failed:', err.message);
+          await insertOperationalFailureCase(db, {
+            caseType: 'crm_sync_failed',
+            provider: 'attio',
+            externalReference: session.id,
+            tenantId,
+            payload: {
+              appointmentRecordId: record?.id || null,
+              stripeSessionId: session.id,
+              error: err.message || 'Attio sync failed',
+            },
+          });
         }
       }
     }
@@ -213,6 +246,42 @@ async function handleCheckoutCompleted(stripe, db, session) {
       });
     } catch (err) {
       console.warn('[stripe/webhook] payment email failed:', err.message);
+      await insertOperationalFailureCase(db, {
+        caseType: 'operations_email_failed',
+        provider: 'resend',
+        externalReference: session.id,
+        tenantId,
+        payload: {
+          appointmentRecordId: record?.id || null,
+          stripeSessionId: session.id,
+          error: err.message || 'Payment operations email failed',
+        },
+      });
+    }
+  }
+
+  if (fulfillmentError && paymentIntentId && paymentIntent?.metadata?.customerPaymentPendingEmailSent !== 'true') {
+    try {
+      await sendCustomerPaymentPendingEmail({ checkout });
+      await stripe.paymentIntents.update(paymentIntentId, {
+        metadata: {
+          ...(paymentIntent?.metadata || {}),
+          customerPaymentPendingEmailSent: 'true',
+        },
+      });
+    } catch (err) {
+      console.warn('[stripe/webhook] customer pending email failed:', err.message);
+      await insertOperationalFailureCase(db, {
+        caseType: 'customer_email_failed',
+        provider: 'resend',
+        externalReference: session.id,
+        tenantId,
+        payload: {
+          appointmentRecordId: record?.id || null,
+          stripeSessionId: session.id,
+          error: err.message || 'Customer pending email failed',
+        },
+      });
     }
   }
 
@@ -250,20 +319,17 @@ async function handleCheckoutCompleted(stripe, db, session) {
   if (db && record?.id) {
     await db.from('appointments').update(patch).eq('id', record.id);
     if (fulfillmentError) {
-      await insertReconciliationCase(db, {
-        tenant_id: tenantId,
-        case_type: 'stripe_succeeded_acuity_failed',
+      await insertReconciliationCase(db, buildReconciliationCase({
+        caseType: 'stripe_succeeded_acuity_failed',
         provider: 'stripe',
-        external_reference: session.id,
-        severity: 'critical',
-        owner_role: 'ops_manager',
+        externalReference: session.id,
+        tenantId,
         payload: {
-          required_action: 'Create or recover the scheduling appointment before dispatch.',
-          local_contract: 'stripe_paid_then_acuity_attio_v1',
           appointmentRecordId: record.id,
           error: fulfillmentError.message,
+          local_contract: 'stripe_paid_then_acuity_attio_v1',
         },
-      });
+      }));
     }
     return {
       action: fulfillmentError ? 'deposit_paid_acuity_failed' : 'deposit_paid_acuity_created',
