@@ -47,7 +47,7 @@ export const RECONCILIATION_CASE_DEFAULTS = {
     required_action: 'Replay provider event and compare local state against vendor state.',
   },
   webhook_duplicate: {
-    severity: 'monitor',
+    severity: 'watch',
     owner_role: 'engineering',
     required_action: 'Deduplicate by provider idempotency key and preserve audit visibility.',
   },

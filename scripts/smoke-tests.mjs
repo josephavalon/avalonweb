@@ -12,6 +12,7 @@ import {
 import { ADDON_PRICE_BY_LABEL, ITEM_PRICE_BY_KEY } from '../api/_lib/catalog-pricing.js';
 import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
 import { buildPersonValues } from '../api/_attio.js';
+import { RECONCILIATION_CASE_DEFAULTS, RECONCILIATION_CASE_TYPES } from '../api/_reconciliation.js';
 import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
 import { createAppointmentSummaryToken, verifyAppointmentSummaryToken } from '../api/_lib/summary-token.js';
 import {
@@ -47,6 +48,7 @@ const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), '
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
+const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -209,6 +211,23 @@ assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API buil
 assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
 assert(privateAuthTriggerMigrationSource.includes('drop function if exists public.handle_new_user()'), 'Auth profile trigger migration must remove the public security definer function');
 assert(privateAuthTriggerMigrationSource.includes('revoke execute on function app_private.handle_new_user() from authenticated'), 'Private auth trigger must not be directly executable by authenticated API roles');
+for (const caseType of RECONCILIATION_CASE_TYPES) {
+  assert(clinicalRlsMigrationSource.includes(`'${caseType}'`), `Reconciliation case type missing from DB constraint migration: ${caseType}`);
+}
+for (const [caseType, defaults] of Object.entries(RECONCILIATION_CASE_DEFAULTS)) {
+  assert(['watch', 'action', 'critical'].includes(defaults.severity), `Reconciliation severity must match DB constraint vocabulary: ${caseType}`);
+}
+for (const invariant of [
+  'app_private.is_assigned_provider',
+  'app_private.is_operator_or_clinical_authority',
+  'appointments party assigned or authority read',
+  'visits party assigned or authority read',
+  'medical escalations assigned or authority read',
+  'reconciliation authority or assigned appointment read',
+]) {
+  assert(clinicalRlsMigrationSource.includes(invariant), `Clinical RLS migration missing invariant: ${invariant}`);
+}
+assert(!clinicalRlsMigrationSource.includes('app_private.is_staff()'), 'Clinical RLS tightening must not use broad staff access for PHI-bearing reads');
 assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId))"), 'Acuity webhook must dedupe by appointment id');
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
