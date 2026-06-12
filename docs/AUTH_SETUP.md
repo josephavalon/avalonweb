@@ -19,13 +19,23 @@ VITE_SUPABASE_ANON_KEY=eyJ...
 Without these keys, the auth store falls back to the local demo roster
 (see `src/lib/useAuthStore.js`).
 
-## 2. Apply the auth → profiles trigger
+## 2. Apply Supabase migrations
 
-Run `supabase/migrations/007_auth_profile_trigger.sql` against the project
-(SQL editor in the Supabase dashboard, or `supabase db push`). It creates
-the `handle_new_user()` trigger so every signup gets a `public.profiles`
-row with `role='client'`, `status='active'`, and the `avalon-vitality`
-tenant.
+Run the Supabase migrations in order through
+`supabase/migrations/011_launch_messaging_roles.sql` against the project
+(SQL editor in the Supabase dashboard, or `supabase db push`).
+
+The auth-critical pieces are:
+
+- `007_auth_profile_trigger.sql` creates the signup profile trigger so every
+  signup gets a `public.profiles` row with `role='client'`, `status='active'`,
+  and the `avalon-vitality` tenant.
+- `009_private_auth_profile_trigger.sql` moves that trigger function into the
+  private schema.
+- `010_tighten_clinical_rls_and_reconciliation_cases.sql` tightens clinical
+  RLS and aligns reconciliation case constraints.
+- `011_launch_messaging_roles.sql` aligns messaging RLS with the ADMIN /
+  CLIENT / NURSE launch model.
 
 ## 3. Promote your first admin
 

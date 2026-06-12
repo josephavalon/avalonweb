@@ -270,16 +270,16 @@ function NewConversationModal({ onClose, onCreated, myRole }) {
     (async () => {
       const targetRoles =
         myRole === 'client'
-          ? ['admin', 'provider']
+          ? ['admin', 'nurse']
           : myRole === 'admin'
-          ? ['client', 'provider', 'nurse', 'staff']
+          ? ['client', 'nurse']
           : ['admin', 'client'];
 
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, role, email')
+        .select('id, full_name, role')
         .in('role', targetRoles)
-        .order('display_name');
+        .order('full_name');
 
       setUsers(data ?? []);
     })();
@@ -332,9 +332,9 @@ function NewConversationModal({ onClose, onCreated, myRole }) {
                       : 'hover:bg-foreground/[0.04]'
                   }`}
                 >
-                  <Avatar name={u.display_name || u.email} role={u.role} size="sm" />
+                  <Avatar name={u.full_name || u.role} role={u.role} size="sm" />
                   <div>
-                    <p className="font-body text-xs text-foreground">{u.display_name || u.email}</p>
+                    <p className="font-body text-xs text-foreground">{u.full_name || u.role}</p>
                     <p className="font-body text-[9px] text-foreground/40 uppercase tracking-[0.1em]">{u.role}</p>
                   </div>
                 </button>

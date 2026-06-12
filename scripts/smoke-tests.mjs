@@ -39,6 +39,8 @@ const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', imp
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
+const messagingPanelSource = readFileSync(new URL('../src/components/messaging/MessagingPanel.jsx', import.meta.url), 'utf8');
+const useMessagesSource = readFileSync(new URL('../src/hooks/useMessages.js', import.meta.url), 'utf8');
 const sendSmsSource = readFileSync(new URL('../api/auth/send-sms.js', import.meta.url), 'utf8');
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
@@ -49,6 +51,7 @@ const eventPresaleSource = readFileSync(new URL('../api/integrations/events/pres
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
+const launchMessagingMigrationSource = readFileSync(new URL('../supabase/migrations/011_launch_messaging_roles.sql', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -211,6 +214,15 @@ assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API buil
 assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
 assert(privateAuthTriggerMigrationSource.includes('drop function if exists public.handle_new_user()'), 'Auth profile trigger migration must remove the public security definer function');
 assert(privateAuthTriggerMigrationSource.includes('revoke execute on function app_private.handle_new_user() from authenticated'), 'Private auth trigger must not be directly executable by authenticated API roles');
+assert(launchMessagingMigrationSource.includes("app_private.profile_role() in ('admin', 'client', 'nurse', 'rn')"), 'Messaging RLS must allow launch client/admin/nurse conversation creation');
+assert(launchMessagingMigrationSource.includes("app_private.profile_role() = 'client'"), 'Messaging RLS must support client-started support conversations');
+assert(launchMessagingMigrationSource.includes("role in ('admin', 'nurse', 'rn')"), 'Messaging support directory must target launch nurse/admin roles');
+assert(!launchMessagingMigrationSource.includes("'provider'"), 'Messaging launch RLS must not depend on the retired provider role');
+assert(messagingPanelSource.includes("? ['admin', 'nurse']"), 'Client message picker must target launch support roles');
+assert(messagingPanelSource.includes("? ['client', 'nurse']"), 'Admin message picker must target client/nurse launch roles');
+assert(messagingPanelSource.includes(".select('id, full_name, role')"), 'Message picker must avoid selecting support emails for the contact directory');
+assert(!messagingPanelSource.includes("['admin', 'provider']"), 'Message picker must not target retired provider contacts');
+assert(!useMessagesSource.includes('admin/provider'), 'Messaging hook copy must not describe retired provider-only behavior');
 for (const caseType of RECONCILIATION_CASE_TYPES) {
   assert(clinicalRlsMigrationSource.includes(`'${caseType}'`), `Reconciliation case type missing from DB constraint migration: ${caseType}`);
 }

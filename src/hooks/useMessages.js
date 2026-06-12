@@ -6,7 +6,7 @@
  *   messages       — messages for the active conversation
  *   sendMessage    — post a new message
  *   markRead       — update last_read_at for the current user
- *   startConversation — create a new direct conversation (admin/provider only)
+ *   startConversation — create a new direct conversation (client/admin/nurse)
  *   unreadCount    — total unread across all conversations
  */
 
