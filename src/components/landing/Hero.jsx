@@ -28,7 +28,7 @@ export default function Hero() {
       className="hero-root relative flex flex-col overflow-hidden"
       style={{ position: 'relative' }}
     >
-      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:pt-32">
+      <div className="relative z-10 flex flex-col flex-1 px-5 md:px-12 pt-24 md:justify-center md:pt-20">
 
         {/* Mobile: keep the revenue action inside the first viewport. */}
         <div className="h-[11svh] shrink-0 md:hidden" />
@@ -98,7 +98,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="pb-10 md:pb-0 md:flex-1" />
+        <div className="pb-10 md:pb-0" />
 
       </div>
     </section>
