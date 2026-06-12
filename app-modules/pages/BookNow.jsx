@@ -62,6 +62,10 @@ import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { useAuthStore } from '@/lib/useAuthStore';
+import {
+  ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS,
+  calculateLaunchPayment,
+} from '@/lib/paymentRules';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
@@ -333,7 +337,7 @@ const CLIENT_TYPES = [
   { key: 'returning', label: 'Return', sub: 'Use saved info.', icon: Check },
 ];
 
-const BOOKING_DEPOSIT_AMOUNT = 50;
+const BOOKING_DEPOSIT_AMOUNT = ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS;
 const SUBSCRIPTION_TERMS = [
   { key: 'monthly', label: 'Monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
   { key: 'three-month', label: '3 months', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
@@ -1045,7 +1049,7 @@ function UniversalBookingFrame({
           )}
           <p className="mt-1 px-1 text-center font-body text-[9px] font-black leading-tight text-foreground/58 md:text-[10px]">
             {receiptLine ? `${receiptLine} · ` : ''}
-            Licensed RN visit · {CLINICAL_REVIEW_NOTICE}
+            {CLINICAL_REVIEW_NOTICE}
           </p>
         </div>
       </div>
@@ -2248,7 +2252,7 @@ function LocationTypeDropdown({ value, onChange }) {
   );
 }
 
-function RetentionChoice({ state, plan, term, termPrice, monthlyPrice, customSessions, customEstimate, serviceLabel, onType, onPlan, onTerm, onCustomSessions }) {
+function RetentionChoice({ state, plan, monthlyPrice, customSessions, customEstimate, serviceLabel, onType, onPlan, onCustomSessions }) {
   const [openPlans, setOpenPlans] = useState(false);
   const choices = [
     { key: 'one-time', label: 'One visit', value: 'Full checkout', icon: Calendar },
@@ -2285,7 +2289,7 @@ function RetentionChoice({ state, plan, term, termPrice, monthlyPrice, customSes
             <div className="min-w-0">
               <p className="font-body text-sm font-extrabold text-foreground/76">Plan</p>
               <p className="mt-1 truncate font-heading text-3xl uppercase leading-none text-foreground">
-                {plan.label} · {term.key === 'monthly' ? `${currency(monthlyPrice)}/mo` : `${currency(termPrice)} today`}
+                {plan.label} · {currency(monthlyPrice)} today
               </p>
             </div>
             <button
@@ -2319,28 +2323,9 @@ function RetentionChoice({ state, plan, term, termPrice, monthlyPrice, customSes
               })}
             </div>
           </SmoothDisclosure>
-          <div className="mt-3 grid gap-2 md:grid-cols-2">
-            {SUBSCRIPTION_TERMS.map((item) => {
-              const active = state.subscriptionTerm === item.key;
-              const price = subscriptionTermPrice(monthlyPrice, item.key);
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => onTerm(item.key)}
-                  className={`min-h-[58px] rounded-2xl border px-2 text-left transition-colors ${
-                    active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/10 text-foreground/64 hover:border-foreground/24'
-                  }`}
-                >
-                  <span className="block truncate font-body text-[10px] font-black uppercase tracking-[0.08em]">{item.label}</span>
-                  <span className="mt-1 block font-body text-xs font-black">{item.key === 'monthly' ? `${currency(monthlyPrice)}/mo` : currency(price)}</span>
-                  <span className="mt-0.5 block truncate font-body text-[9px] font-bold uppercase tracking-[0.08em] text-foreground/48">
-                    {item.key === 'monthly' ? '3 mo min' : `${Math.round(item.discount * 100)}% off`}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <p className="mt-3 rounded-2xl border border-foreground/10 bg-foreground/[0.035] px-3 py-2 font-body text-xs font-bold leading-relaxed text-foreground/62">
+            First month is charged today. Future plan changes are handled with Avalon admin.
+          </p>
           {plan.custom && (
             <CustomSubscriptionBuilder
 	              sessions={customSessions}
@@ -3324,6 +3309,8 @@ export default function BookNow() {
   });
   const [activeTherapyGroup, setActiveTherapyGroup] = useState(() => therapyGroupForKey(defaultState.productKey));
   const [activeAddonGroup, setActiveAddonGroup] = useState('');
+  // Which therapy row has its "what's inside" ingredients/benefits panel open.
+  const [expandedTherapy, setExpandedTherapy] = useState(null);
 
   useEffect(() => {
     if (shouldResetDraft) {
@@ -3512,8 +3499,8 @@ export default function BookNow() {
   const activePlanMonthlyPrice = plan.custom
     ? (builderMonthly > 0 ? builderMonthly : customPlanEstimate)
     : Number(plan.price || 0);
-  const activeSubscriptionTerm = subscriptionTermForKey(state.subscriptionTerm);
-  const activePlanPrice = subscriptionTermPrice(activePlanMonthlyPrice, activeSubscriptionTerm.key);
+  const activeSubscriptionTerm = subscriptionTermForKey('monthly');
+  const activePlanPrice = activePlanMonthlyPrice;
   const activePlanSessions = plan.custom ? customPlanSessions : Number(plan.sessions || 0);
   const isGroupVisit = state.who === 'group' || state.visitType === 'event';
   const guestCount = isGroupVisit ? Math.max(2, Number(state.guests || 2)) : 1;
@@ -3521,9 +3508,17 @@ export default function BookNow() {
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
   const totalLabel = !product ? 'Select' : groupContactRequired ? 'Contact' : currency(subtotal);
-  const dueNowAmount = state.visitType === 'subscription' ? activePlanPrice : groupContactRequired ? 0 : Math.min(BOOKING_DEPOSIT_AMOUNT, subtotal || 0);
-  const balanceDue = state.visitType === 'subscription' ? 0 : Math.max(0, subtotal - dueNowAmount);
-  const dueNowLabel = !product && step === 0 ? currency(BOOKING_DEPOSIT_AMOUNT) : state.visitType === 'subscription' ? `${currency(activePlanPrice)} ${activeSubscriptionTerm.key === 'monthly' ? 'today' : 'prepaid'}` : currency(dueNowAmount);
+  const launchPayment = calculateLaunchPayment({
+    subtotal,
+    visitType: state.visitType,
+    orderType: isGroupVisit ? 'event' : visitType.orderType,
+    subscriptionPrice: activePlanPrice,
+    isGroupVisit,
+    hasKnownPrice: !groupContactRequired,
+  });
+  const dueNowAmount = launchPayment.depositAmount;
+  const balanceDue = launchPayment.balanceDue;
+  const dueNowLabel = !product && step === 0 ? currency(BOOKING_DEPOSIT_AMOUNT) : state.visitType === 'subscription' ? `${currency(activePlanPrice)} today` : currency(dueNowAmount);
   const dueAfterLabel = !product && step === 0 ? currency(300) : groupContactRequired ? 'Quote' : currency(balanceDue);
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
@@ -4143,6 +4138,8 @@ export default function BookNow() {
       subtotal,
       depositAmount: dueNowAmount,
       balanceDue,
+      paymentType: launchPayment.paymentType,
+      paymentStatus: launchPayment.paymentStatus,
       payment: `${currency(dueNowAmount)} due today · ${currency(balanceDue)} after visit`,
       status: 'Payment received',
       holdType: 'paid',
@@ -4167,7 +4164,7 @@ export default function BookNow() {
       manualReview: true,
 	      clientType: state.clientType,
 	      customTreatment,
-	      subscription: state.visitType === 'subscription' ? { ...plan, frequency: activeSubscriptionTerm.key, term: activeSubscriptionTerm, monthlyPrice: activePlanMonthlyPrice, price: activePlanPrice, preferredOutcome: outcome.label, preferredProtocol: serviceLabel, customTreatment } : null,
+	      subscription: state.visitType === 'subscription' ? { ...plan, frequency: 'monthly', term: activeSubscriptionTerm, monthlyPrice: activePlanMonthlyPrice, price: activePlanPrice, preferredOutcome: outcome.label, preferredProtocol: serviceLabel, customTreatment } : null,
       event: isGroupVisit ? { type: state.eventType, guestCount: guests, gfeTiming: 'Before launch' } : null,
       lifecycleWarnings: [
         clinicalReviewClaimedOnFile
@@ -4227,10 +4224,10 @@ export default function BookNow() {
       membership: membershipOverride || (localBooking.subscription ? {
         key: localBooking.subscription.key,
         name: localBooking.subscription.label || localBooking.subscription.name || plan.label,
-        billing: activeSubscriptionTerm.billing,
+        billing: 'monthly',
         price: localBooking.subscription.price || activePlanPrice,
-        term: activeSubscriptionTerm.key,
-        commitmentMonths: activeSubscriptionTerm.commitmentMonths || activeSubscriptionTerm.months,
+        term: 'monthly',
+        commitmentMonths: 1,
       } : null),
       contact: {
         name: localBooking.contact?.name || state.name.trim(),
@@ -4257,6 +4254,9 @@ export default function BookNow() {
         gfeRequired: localBooking.gfeRequired,
         depositAmount: localBooking.depositAmount,
         balanceDue: localBooking.balanceDue,
+        paymentType: localBooking.paymentType,
+        orderType: localBooking.orderType,
+        visitType: state.visitType,
         clientType: localBooking.clientType,
         dob: localBooking.dob || localBooking.contact?.dob || state.dob,
         emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || state.emergencyContact.trim(),
@@ -4366,9 +4366,9 @@ export default function BookNow() {
       const subscriptionPlan = {
 	        key: plan.key,
 	        name: plan.label,
-	        billing: activeSubscriptionTerm.billing,
-	        term: activeSubscriptionTerm.key,
-	        commitmentMonths: activeSubscriptionTerm.commitmentMonths || activeSubscriptionTerm.months,
+	        billing: 'monthly',
+	        term: 'monthly',
+	        commitmentMonths: 1,
 	        monthlyPrice: activePlanMonthlyPrice,
 	        price: activePlanPrice,
 		        ivCount: activePlanSessions,
@@ -4448,7 +4448,8 @@ export default function BookNow() {
       protocol_key: localBooking.protocolKey,
       addon_count: localBooking.addOns?.length || 0,
       subtotal,
-      amount_due: subtotal,
+      amount_due: dueNowAmount,
+      balance_due: balanceDue,
       gfe_required: localBooking.gfeRequired,
     });
 
@@ -4623,6 +4624,48 @@ export default function BookNow() {
     );
   };
 
+  // Tap-to-reveal "what's inside" — ingredients + benefits, inline, so people
+  // can judge a therapy without leaving the booking flow (works on touch where
+  // hover doesn't). Rendered inside each therapy card's shell.
+  const renderTherapyDetails = (item) => {
+    const hasInfo = Boolean(item.inside || (item.features && item.features.length));
+    if (!hasInfo) return null;
+    const expanded = expandedTherapy === item.key;
+    return (
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setExpandedTherapy(expanded ? null : item.key)}
+          aria-expanded={expanded}
+          aria-label={`${expanded ? 'Hide' : "Show what's inside"} ${item.label || item.tabLabel || 'this therapy'}`}
+          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-2 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[11px]"
+        >
+          {expanded ? 'Hide details' : "What's inside"}
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+        </button>
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+          <div className="overflow-hidden">
+            <div className="space-y-2.5 border-t border-foreground/10 px-3.5 py-3 text-left">
+              {item.inside && (
+                <div>
+                  <p className="mb-1 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">Inside</p>
+                  <p className="font-body text-[12px] font-semibold leading-snug text-foreground/74">{item.inside}</p>
+                </div>
+              )}
+              {item.features && item.features.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {item.features.map((f) => (
+                    <span key={f} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{f}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderIvTherapyTile = (item) => {
     const Icon = item.icon || Droplets;
     const active = state.productKey === item.key;
@@ -4631,38 +4674,43 @@ export default function BookNow() {
     const titleSizeClass = 'md:text-[1.14rem] xl:text-[1.26rem] 2xl:text-[1.36rem]';
 
     return (
-      <button
+      <div
         key={item.key}
-        type="button"
-        onClick={() => chooseTherapyMenuProduct(item.key)}
-        aria-pressed={active}
-        className={`${panelCardClass} relative grid min-h-[104px] shrink-0 grid-cols-[72px_minmax(0,1fr)_auto_22px] items-center gap-3 rounded-[0.95rem] px-2.5 py-2 text-left transition-colors hover:border-foreground/28 md:min-h-[120px] md:grid-cols-[88px_minmax(0,1fr)_72px_26px] md:rounded-[1.05rem] md:px-4 md:py-3 xl:grid-cols-[88px_minmax(0,1fr)_80px_26px] ${
-          active ? 'border-foreground/58 bg-foreground/[0.14] ring-1 ring-inset ring-foreground/34' : ''
-        }`}
+        className={`${panelCardClass} shrink-0 transition-colors ${active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'hover:border-foreground/28'}`}
       >
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-        <span className="relative flex h-[5.5rem] w-[4.5rem] shrink-0 items-center justify-center md:h-[6rem] md:w-20">
-          {item.image ? (
-            <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
-          ) : (
-            <Icon className="h-6 w-6 text-foreground md:h-7 md:w-7" strokeWidth={2.15} />
-          )}
-        </span>
-        <span className="relative min-w-0 pr-1">
-          <span className={`line-clamp-2 block break-words [overflow-wrap:anywhere] font-heading text-[1.05rem] uppercase leading-[0.95] tracking-normal text-foreground ${titleSizeClass}`}>
-            {menuLabel}
+        <button
+          type="button"
+          onClick={() => chooseTherapyMenuProduct(item.key)}
+          aria-pressed={active}
+          className={`relative grid min-h-[104px] w-full grid-cols-[72px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-2 text-left transition-colors md:min-h-[120px] md:grid-cols-[88px_minmax(0,1fr)_72px_26px] md:px-4 md:py-3 xl:grid-cols-[88px_minmax(0,1fr)_80px_26px] ${
+            active ? 'bg-foreground/[0.14]' : 'hover:bg-foreground/[0.03]'
+          }`}
+        >
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+          <span className="relative flex h-[5.5rem] w-[4.5rem] shrink-0 items-center justify-center md:h-[6rem] md:w-20">
+            {item.image ? (
+              <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
+            ) : (
+              <Icon className="h-6 w-6 text-foreground md:h-7 md:w-7" strokeWidth={2.15} />
+            )}
           </span>
-          {item.tagline && (
-            <span className="mt-1 hidden font-body text-[11px] font-semibold leading-snug text-foreground/55 line-clamp-1 md:block">
-              {item.tagline}
+          <span className="relative min-w-0 pr-1">
+            <span className={`line-clamp-2 block break-words [overflow-wrap:anywhere] font-heading text-[1.05rem] uppercase leading-[0.95] tracking-normal text-foreground ${titleSizeClass}`}>
+              {menuLabel}
             </span>
-          )}
-        </span>
-        <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.16rem] xl:text-[1.24rem] 2xl:text-[1.34rem]">
-          {currency(protocolPrice(item))}
-        </span>
-        <ArrowRight className="relative h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.45} />
-      </button>
+            {item.tagline && (
+              <span className="mt-1 hidden font-body text-[11px] font-semibold leading-snug text-foreground/55 line-clamp-1 md:block">
+                {item.tagline}
+              </span>
+            )}
+          </span>
+          <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.16rem] xl:text-[1.24rem] 2xl:text-[1.34rem]">
+            {currency(protocolPrice(item))}
+          </span>
+          <ArrowRight className="relative h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.45} />
+        </button>
+        {renderTherapyDetails(item)}
+      </div>
     );
   };
 
@@ -4685,33 +4733,40 @@ export default function BookNow() {
     const selectTherapy = () => chooseTherapyMenuProduct(item.key);
 
     return (
-      <button
+      <div
         key={item.key}
-        type="button"
-        onClick={selectTherapy}
-        aria-pressed={active}
-        className={`relative grid min-h-[100px] shrink-0 grid-cols-[4.25rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 overflow-hidden rounded-[1.15rem] border border-foreground/14 bg-black/85 px-3 py-2 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.28)] backdrop-blur-2xl transition-colors hover:border-foreground/28 min-[390px]:min-h-[108px] min-[390px]:grid-cols-[4.75rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
-          active ? 'border-foreground/58 bg-black/72 ring-1 ring-inset ring-foreground/34' : ''
+        className={`relative shrink-0 overflow-hidden rounded-[1.15rem] border bg-black/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(0_0%_0%/0.28)] backdrop-blur-2xl transition-colors ${
+          active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
         }`}
       >
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
-        <span className="relative flex h-[5.5rem] w-[4.25rem] items-center justify-center min-[390px]:h-[6rem] min-[390px]:w-[4.75rem]">
-          {item.image ? (
-            <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.6)]" />
-          ) : (
-            <Icon className="h-7 w-7 text-foreground min-[390px]:h-8 min-[390px]:w-8" strokeWidth={1.9} />
-          )}
-        </span>
-        <span className="relative min-w-0 font-heading text-[1.22rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.36rem]">
-          <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
-        </span>
-        <span className="relative whitespace-nowrap font-heading text-[1.22rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.36rem]">
-          {currency(price)}
-        </span>
-        <span className="relative flex justify-end">
-          <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
-        </span>
-      </button>
+        <button
+          type="button"
+          onClick={selectTherapy}
+          aria-pressed={active}
+          className={`relative grid min-h-[100px] w-full grid-cols-[4.25rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-2 text-left transition-colors min-[390px]:min-h-[108px] min-[390px]:grid-cols-[4.75rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
+            active ? 'bg-black/72' : 'hover:bg-foreground/[0.03]'
+          }`}
+        >
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
+          <span className="relative flex h-[5.5rem] w-[4.25rem] items-center justify-center min-[390px]:h-[6rem] min-[390px]:w-[4.75rem]">
+            {item.image ? (
+              <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.6)]" />
+            ) : (
+              <Icon className="h-7 w-7 text-foreground min-[390px]:h-8 min-[390px]:w-8" strokeWidth={1.9} />
+            )}
+          </span>
+          <span className="relative min-w-0 font-heading text-[1.22rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+            <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
+          </span>
+          <span className="relative whitespace-nowrap font-heading text-[1.22rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+            {currency(price)}
+          </span>
+          <span className="relative flex justify-end">
+            <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
+          </span>
+        </button>
+        {renderTherapyDetails(item)}
+      </div>
     );
   };
 
@@ -4912,53 +4967,18 @@ export default function BookNow() {
         );
       }
 
-      const isDoseTherapyGroup = ['cbd', 'nad'].includes(activeTherapyGroupData?.key);
       const isVitaminTherapyGroup = activeTherapyGroupData?.key === 'vitamin';
       const orderedMobileIvTherapies = isVitaminTherapyGroup
         ? ivMobileOrder.map((key) => activeTherapies.find((item) => item.key === key)).filter(Boolean)
-        : [];
-      const renderTherapyCard = (item) => {
-        const Icon = item.icon || Droplets;
-        const active = state.productKey === item.key;
-        const copy = compactProtocolCopy(item);
-        const menuLabel = copy.label;
-        const meta = `${currency(protocolPrice(item))} · ${String(protocolDuration(item)).toUpperCase()}`;
-
-        return renderStoreMenuRow({
-          key: item.key,
-          icon: Icon,
-          title: menuLabel,
-          meta,
-          onClick: () => chooseTherapyMenuProduct(item.key),
-          active,
-          compactMobile: true,
-          className: 'md:!min-h-[76px] md:grid-cols-[54px_1fr_28px] md:gap-2 md:px-2.5 md:py-2',
-          iconClassName: 'md:h-10 md:w-10 md:[&_svg]:h-6 md:[&_svg]:w-6',
-          titleClassName: 'md:text-[1.55rem]',
-          metaClassName: 'md:text-xs',
-        });
-      };
-
-      if (isVitaminTherapyGroup) {
-        return (
-          <div className="grid h-full min-h-0 grid-rows-[1fr_auto] gap-1 md:grid-rows-[1fr] md:gap-4">
-            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
-              {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
-            </div>
-            <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
-              {activeTherapies.map((item) => renderIvTherapyTile(item))}
-            </div>
-          </div>
-        );
-      }
+        : activeTherapies;
 
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2 md:gap-4">
-          <p className={`${microLabelClass} pt-0.5 text-left tracking-[0.22em] md:pt-1`}>
-            {isDoseTherapyGroup ? 'Choose dose' : `Choose your ${activeTherapyDisplayTitle.toLowerCase()}`}
-          </p>
-          <div className="grid min-h-0 grid-cols-1 content-start gap-1.5 overflow-visible pb-0 pr-0 md:gap-2">
-            {activeTherapies.map((item) => renderTherapyCard(item))}
+        <div className="grid h-full min-h-0 grid-rows-[1fr_auto] gap-1 md:grid-rows-[1fr] md:gap-4">
+          <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
+            {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
+          </div>
+          <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
+            {activeTherapies.map((item) => renderIvTherapyTile(item))}
           </div>
         </div>
       );
