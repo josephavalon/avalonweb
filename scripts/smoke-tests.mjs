@@ -32,6 +32,8 @@ const appointmentSummarySource = readFileSync(new URL('../api/appointment-summar
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
+const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
+const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -126,6 +128,12 @@ for (const code of ['missing_appointment_lookup', 'appointment_not_found', 'alre
   assert(adminCollectBalanceSource.includes(code), `Admin balance collection must audit ${code} attempts`);
   assert(chargeBalanceSource.includes(code), `Internal balance charge must audit ${code} attempts`);
 }
+assert(orderLookupSource.includes("key: `order-lookup:${clientIp(req)}`"), 'Order lookup must rate-limit by requester IP');
+assert(orderLookupSource.includes('status(429)'), 'Order lookup must reject rate-limited probes');
+assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId))"), 'Acuity webhook must dedupe by appointment id');
+assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
+assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
+assert(acuityWebhookSource.includes('duplicate event hash drift'), 'Acuity webhook must retain payload hash as an integrity signal');
 
 const telemetryEvent = sanitizeErrorTelemetryEvent({
   message: 'Failed for jane@example.com at 415-555-1212 DOB 1980-01-01',

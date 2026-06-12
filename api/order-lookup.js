@@ -9,6 +9,7 @@
  */
 
 import { getSupabaseServiceClient } from './_supabase-server.js';
+import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
 
 const COLUMNS = [
   'id',
@@ -27,10 +28,25 @@ const COLUMNS = [
 const normalizePhone = (v) => String(v || '').replace(/\D/g, '').slice(-10);
 const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
 
+const RATE_LIMIT = {
+  windowMs: 60 * 1000,
+  max: 8,
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed.' });
+  }
+
+  const limit = await checkRateLimit({
+    key: `order-lookup:${clientIp(req)}`,
+    windowMs: RATE_LIMIT.windowMs,
+    max: RATE_LIMIT.max,
+  });
+  if (!limit.ok) {
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000)));
+    return res.status(429).json({ error: 'Too many order lookup attempts. Please try again shortly.' });
   }
 
   const body = req.body || {};

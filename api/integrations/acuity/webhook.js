@@ -10,7 +10,9 @@
  *   URL: https://<domain>/api/integrations/acuity/webhook
  *   Events: scheduled, rescheduled, canceled, changed
  *
- * Idempotency: events deduped by (acuity_appointment_id + action + payload hash).
+ * Idempotency: events deduped by (acuity_appointment_id + action). The payload
+ * hash is retained only as an integrity signal when Acuity resends the same
+ * logical event with timestamp/noise changes.
  * Until Supabase is wired, events are logged and 200'd so Acuity won't retry.
  */
 
@@ -143,20 +145,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Dedupe + log raw event
+    // 1. Dedupe + log raw event. Event identity is appointment + action; the
+    // payload hash only flags replay drift and must not create a second event.
     const tenantId = await defaultTenantId(db);
     const { data: existingEvent } = await db.from('acuity_events')
-      .select('id, processed_status')
+      .select('id, processed_status, webhook_event_hash')
       .eq('acuity_appointment_id', String(apptId))
       .eq('action', action)
-      .eq('webhook_event_hash', hash)
       .maybeSingle();
 
-    if (existingEvent && existingEvent.processed_status === 'processed') {
+    if (existingEvent?.processed_status === 'processed') {
+      if (existingEvent.webhook_event_hash && existingEvent.webhook_event_hash !== hash) {
+        console.warn(`[acuity/webhook] duplicate event hash drift action=${action} apptId=${apptId}`);
+      }
       return res.status(200).json({ ok: true, duplicate: true });
     }
 
-    const { data: eventRow } = await db.from('acuity_events').upsert({
+    const eventPatch = {
       tenant_id:              tenantId,
       webhook_event_hash:    hash,
       acuity_appointment_id: String(apptId),
@@ -166,8 +171,11 @@ export default async function handler(req, res) {
       signature_valid:       signature.valid,
       raw_payload_json:      body,
       processed_status:      'pending',
-      created_at:            new Date().toISOString(),
-    }, { onConflict: 'webhook_event_hash', ignoreDuplicates: false }).select().single();
+    };
+    const eventWrite = existingEvent?.id
+      ? db.from('acuity_events').update(eventPatch).eq('id', existingEvent.id)
+      : db.from('acuity_events').insert({ ...eventPatch, created_at: new Date().toISOString() });
+    const { data: eventRow } = await eventWrite.select().single();
     const eventId = eventRow?.id;
 
     // 2. canceled — flip status on the canonical row, done.
