@@ -3,13 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
+import { requireDemoPassword } from './qa-demo-password.mjs';
 
 const BASE_URL = (process.env.INTERACTION_QA_BASE_URL || 'http://localhost:4173').replace(/\/$/, '');
 const PORT = Number(process.env.INTERACTION_QA_DEBUG_PORT || 9351);
-const PASSWORD = process.env.INTERACTION_QA_PASSWORD || '';
-if (!PASSWORD) {
-  throw new Error('INTERACTION_QA_PASSWORD is required for demo interaction QA.');
-}
+const PASSWORD = requireDemoPassword('INTERACTION_QA_PASSWORD', 'demo interaction QA');
 
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 3, mobile: true };
 const DESKTOP = { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false };
@@ -323,10 +321,9 @@ async function testBookingAddOnFlow(cdp) {
   await open(cdp, '/book?reset=1', MOBILE);
   await evalOnPage(cdp, 'localStorage.clear(); sessionStorage.setItem("av.splash.seen", "1");');
   await open(cdp, '/book?reset=1', MOBILE);
-  await waitForText(cdp, /Choose Your Base|IV Therapy|9 therapies/i);
-  await clickText(cdp, '9 therapies');
-  await waitForText(cdp, /Energy|Myers|Hydration/i);
+  await waitForText(cdp, /IV Vitamins|Energy|Myers|Hydration/i);
   await clickText(cdp, 'Myers');
+  await clickText(cdp, 'NEXT');
   await waitForText(cdp, /Add-ons/i);
   await clickText(cdp, 'IV Add Ons');
   await clickText(cdp, 'Extra Fluid');

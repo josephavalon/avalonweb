@@ -3,13 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
+import { requireDemoPassword } from './qa-demo-password.mjs';
 
 const BASE_URL = (process.env.LOGIN_QA_BASE_URL || 'http://localhost:4173').replace(/\/$/, '');
 const PORT = Number(process.env.LOGIN_QA_DEBUG_PORT || 9348);
-const PASSWORD = process.env.LOGIN_QA_PASSWORD || '';
-if (!PASSWORD) {
-  throw new Error('LOGIN_QA_PASSWORD is required for demo login QA.');
-}
+const PASSWORD = requireDemoPassword('LOGIN_QA_PASSWORD', 'demo login QA');
 
 const VIEWPORT = {
   width: 390,
@@ -236,8 +234,8 @@ async function openLogin(cdp) {
     return true;
   })()`);
   await waitForPageCondition(cdp, `(() => {
-    const username = document.querySelector('#client-id');
-    const password = document.querySelector('#client-password');
+    const username = document.querySelector('#login-identifier');
+    const password = document.querySelector('#login-password');
     const submit = document.querySelector('form button[type="submit"]');
     return Boolean(username && password && submit);
   })()`, 'login controls');
@@ -261,8 +259,8 @@ async function openAdminLogin(cdp) {
     return true;
   })()`);
   await waitForPageCondition(cdp, `(() => {
-    const username = document.querySelector('#admin-id');
-    const password = document.querySelector('#admin-password');
+    const username = document.querySelector('#login-identifier');
+    const password = document.querySelector('#login-password');
     const submit = document.querySelector('form button[type="submit"]');
     return Boolean(username && password && submit);
   })()`, 'admin login controls');
@@ -270,6 +268,7 @@ async function openAdminLogin(cdp) {
 
 async function waitForPath(cdp, expectedPath) {
   const deadline = Date.now() + 8_000;
+  let lastState = null;
   while (Date.now() < deadline) {
     const state = await evalOnPage(cdp, `(() => ({
       path: location.pathname,
@@ -279,26 +278,33 @@ async function waitForPath(cdp, expectedPath) {
         catch { return null; }
       })(),
     }))()`);
+    lastState = state;
     if (state.path === expectedPath) return state;
     await wait(180);
   }
-  throw new Error(`Expected ${expectedPath}, still at ${await evalOnPage(cdp, 'location.pathname')}.`);
+  throw new Error(`Expected ${expectedPath}, still at ${lastState?.path || 'unknown'}. Page: ${lastState?.text || 'empty'}. Session role: ${lastState?.session?.role || 'none'}.`);
 }
+
+const SET_INPUT_VALUE_SOURCE = `((selector, value) => {
+  const el = document.querySelector(selector);
+  if (!el) return false;
+  el.focus();
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  if (setter) setter.call(el, value);
+  else el.value = value;
+  if (el._valueTracker) el._valueTracker.setValue('');
+  el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: String(value) }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+  el.blur();
+  return el.value === String(value);
+})`;
 
 async function runManualLogin(cdp, testCase) {
   await openLogin(cdp);
   const ok = await evalOnPage(cdp, `(() => {
-    const setValue = (selector, value) => {
-      const el = document.querySelector(selector);
-      if (!el) return false;
-      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-      setter.call(el, value);
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-      return true;
-    };
-    const ready = setValue('#client-id', ${JSON.stringify(testCase.username)})
-      && setValue('#client-password', ${JSON.stringify(testCase.password)});
+    const setValue = ${SET_INPUT_VALUE_SOURCE};
+    const ready = setValue('#login-identifier', ${JSON.stringify(testCase.username)})
+      && setValue('#login-password', ${JSON.stringify(testCase.password)});
     const submit = document.querySelector('form button[type="submit"]');
     if (!ready || !submit) return false;
     submit.click();
@@ -337,17 +343,9 @@ async function runShortcutLogin(cdp, testCase) {
 async function runAdminLogin(cdp, testCase) {
   await openAdminLogin(cdp);
   const ok = await evalOnPage(cdp, `(() => {
-    const setValue = (selector, value) => {
-      const el = document.querySelector(selector);
-      if (!el) return false;
-      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-      setter.call(el, value);
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-      return true;
-    };
-    const ready = setValue('#admin-id', ${JSON.stringify(testCase.username)})
-      && setValue('#admin-password', ${JSON.stringify(testCase.password)});
+    const setValue = ${SET_INPUT_VALUE_SOURCE};
+    const ready = setValue('#login-identifier', ${JSON.stringify(testCase.username)})
+      && setValue('#login-password', ${JSON.stringify(testCase.password)});
     const submit = document.querySelector('form button[type="submit"]');
     if (!ready || !submit) return false;
     submit.click();
