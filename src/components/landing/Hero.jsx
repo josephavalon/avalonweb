@@ -36,7 +36,7 @@ export default function Hero() {
 	        <div
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
-	          <div className="relative">
+	          <div className="relative md:flex md:items-center md:justify-between md:gap-10">
         <div className="av-hero-copy md:max-w-xl">
 
         <p
@@ -64,7 +64,7 @@ export default function Hero() {
         </div>
 
         <div
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-10 md:w-[74vw] md:max-w-[86rem] md:grid-cols-3 md:gap-3 xl:w-[56vw]"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[22rem] md:max-w-[22rem] md:shrink-0 md:grid-cols-1 md:gap-3"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
