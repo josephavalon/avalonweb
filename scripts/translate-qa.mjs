@@ -159,7 +159,7 @@ async function waitForReady(cdp) {
 async function waitForLanguageSelector(cdp) {
   const deadline = Date.now() + 12_000;
   while (Date.now() < deadline) {
-    const exists = await evalOnPage(cdp, `Boolean(document.querySelector('[aria-label="Select language"]'))`);
+    const exists = await evalOnPage(cdp, `Boolean(document.querySelector('[aria-label^="Select language"]'))`);
     if (exists) return;
     await wait(180);
   }
@@ -188,7 +188,7 @@ async function removeProfileDir(dir) {
 
 async function readLanguageState(cdp) {
   return evalOnPage(cdp, `(() => {
-    const button = document.querySelector('[aria-label="Select language"]');
+    const button = document.querySelector('[aria-label^="Select language"]');
     const cookie = decodeURIComponent((document.cookie.match(/(?:^|; )googtrans=([^;]*)/) || [])[1] || '');
     return {
       current: button?.dataset.currentLanguage || '',
@@ -221,7 +221,7 @@ async function selectLanguage(cdp, code) {
   await waitForLanguageSelector(cdp);
   await evalOnPage(cdp, `(() => {
     window.scrollTo(0, document.body.scrollHeight);
-    const trigger = document.querySelector('[aria-label="Select language"]');
+    const trigger = document.querySelector('[aria-label^="Select language"]');
     if (!trigger) throw new Error('Language trigger not found');
     trigger.click();
     return true;
