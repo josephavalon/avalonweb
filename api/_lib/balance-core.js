@@ -10,9 +10,36 @@
  * then hand the resolved appointment row here.
  */
 
+function balanceLinkConfigError(message, code) {
+  return { httpStatus: 503, json: { error: message, code } };
+}
+
+export function validateBalanceReturnBaseUrl(baseUrl = '') {
+  let parsed;
+  try {
+    parsed = new URL(String(baseUrl || ''));
+  } catch {
+    return { error: 'PUBLIC_SITE_URL must be configured before creating balance payment links.', code: 'public_site_url_invalid' };
+  }
+  const localHost = /^(localhost|127\.|0\.0\.0\.0)$/i.test(parsed.hostname) || parsed.hostname.endsWith('.local');
+  if (!['https:', 'http:'].includes(parsed.protocol) || (parsed.protocol !== 'https:' && !localHost)) {
+    return { error: 'PUBLIC_SITE_URL must be an HTTPS URL before creating balance payment links.', code: 'public_site_url_unsafe' };
+  }
+  parsed.pathname = parsed.pathname.replace(/\/+$/, '');
+  parsed.search = '';
+  parsed.hash = '';
+  return { baseUrl: parsed.toString().replace(/\/$/, '') };
+}
+
 // A Stripe-hosted page the customer completes themselves (no saved card needed).
 // Also the SCA / card-error fallback for the off-session charge below.
 export function buildBalanceLink({ stripe, appt, amount, currency, baseUrl, metadata }) {
+  const base = validateBalanceReturnBaseUrl(baseUrl);
+  if (base.error) {
+    const err = new Error(base.error);
+    err.code = base.code;
+    throw err;
+  }
   return stripe.checkout.sessions.create({
     mode: 'payment',
     customer: appt.stripe_customer_id,
@@ -21,8 +48,8 @@ export function buildBalanceLink({ stripe, appt, amount, currency, baseUrl, meta
       price_data: { currency, unit_amount: amount, product_data: { name: 'Avalon visit — remaining balance' } },
     }],
     payment_intent_data: { metadata },
-    success_url: `${baseUrl}/booking/confirmation?balance=paid`,
-    cancel_url: `${baseUrl}/booking/confirmation?balance=pending`,
+    success_url: `${base.baseUrl}/booking/confirmation?balance=paid`,
+    cancel_url: `${base.baseUrl}/booking/confirmation?balance=pending`,
   });
 }
 
@@ -36,11 +63,13 @@ export async function collectBalance({ stripe, db, appt, amount, mode = 'charge'
   const metadata = { kind: 'balance', acuityAppointmentId: String(acuityAppointmentId ?? appt.id) };
 
   if (mode === 'link') {
+    const base = validateBalanceReturnBaseUrl(baseUrl);
+    if (base.error) return balanceLinkConfigError(base.error, base.code);
     try {
-      const session = await buildBalanceLink({ stripe, appt, amount, currency, baseUrl, metadata });
+      const session = await buildBalanceLink({ stripe, appt, amount, currency, baseUrl: base.baseUrl, metadata });
       return { httpStatus: 200, json: { ok: true, mode: 'link', url: session.url, amount } };
     } catch (linkErr) {
-      return { httpStatus: 502, json: { error: linkErr.message } };
+      return { httpStatus: linkErr.code?.startsWith('public_site_url_') ? 503 : 502, json: { error: linkErr.message, code: linkErr.code || 'balance_link_failed' } };
     }
   }
 
@@ -73,11 +102,13 @@ export async function collectBalance({ stripe, db, appt, amount, mode = 'charge'
   } catch (err) {
     // SCA / card error → hand the client a Stripe-hosted link to finish.
     if (err.code === 'authentication_required' || err.type === 'StripeCardError') {
+      const base = validateBalanceReturnBaseUrl(baseUrl);
+      if (base.error) return balanceLinkConfigError(base.error, base.code);
       try {
-        const session = await buildBalanceLink({ stripe, appt, amount, currency, baseUrl, metadata });
+        const session = await buildBalanceLink({ stripe, appt, amount, currency, baseUrl: base.baseUrl, metadata });
         return { httpStatus: 200, json: { ok: false, requiresAction: true, url: session.url, reason: err.code || 'card_error' } };
       } catch (linkErr) {
-        return { httpStatus: 502, json: { error: linkErr.message } };
+        return { httpStatus: linkErr.code?.startsWith('public_site_url_') ? 503 : 502, json: { error: linkErr.message, code: linkErr.code || 'balance_link_failed' } };
       }
     }
     return { httpStatus: err.statusCode || 500, json: { error: err.message } };

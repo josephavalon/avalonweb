@@ -11,6 +11,7 @@ import {
 } from '../src/data/catalog.js';
 import { ADDON_PRICE_BY_LABEL, ITEM_PRICE_BY_KEY } from '../api/_lib/catalog-pricing.js';
 import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
+import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
 import { createAppointmentSummaryToken, verifyAppointmentSummaryToken } from '../api/_lib/summary-token.js';
 import {
   hasValidCheckoutContact,
@@ -130,6 +131,9 @@ assert(chargeBalanceSource.includes('writeAuditEvent'), 'Internal balance charge
 assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
 assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
 assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');
+assert(validateBalanceReturnBaseUrl('https://avalonvitality.co/').baseUrl === 'https://avalonvitality.co', 'Balance links must accept canonical HTTPS return URL');
+assert(validateBalanceReturnBaseUrl('').code === 'public_site_url_invalid', 'Balance links must reject missing PUBLIC_SITE_URL');
+assert(validateBalanceReturnBaseUrl('http://avalonvitality.co').code === 'public_site_url_unsafe', 'Balance links must reject non-HTTPS public return URL');
 for (const code of ['missing_appointment_lookup', 'appointment_not_found', 'already_paid']) {
   assert(adminCollectBalanceSource.includes(code), `Admin balance collection must audit ${code} attempts`);
   assert(chargeBalanceSource.includes(code), `Internal balance charge must audit ${code} attempts`);
