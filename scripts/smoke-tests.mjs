@@ -44,6 +44,7 @@ const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.me
 const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
+const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -169,6 +170,9 @@ assert(sendSmsSource.includes("key: `send-sms:${clientIp(req)}`"), 'SMS auth hoo
 assert(sendSmsSource.includes('status: resp.status') && sendSmsSource.includes('SMS provider send failed'), 'SMS auth hook must avoid echoing provider response details');
 assert(viteConfigSource.includes('redactLiveDemoPasswordPlugin'), 'Vite build must redact demo password from live API bundles');
 assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API build redaction must blank the demo password env key');
+assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
+assert(privateAuthTriggerMigrationSource.includes('drop function if exists public.handle_new_user()'), 'Auth profile trigger migration must remove the public security definer function');
+assert(privateAuthTriggerMigrationSource.includes('revoke execute on function app_private.handle_new_user() from authenticated'), 'Private auth trigger must not be directly executable by authenticated API roles');
 assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId))"), 'Acuity webhook must dedupe by appointment id');
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
