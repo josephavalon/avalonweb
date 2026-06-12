@@ -14,15 +14,47 @@
  */
 
 import crypto from 'crypto';
+import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 
 export const config = { api: { bodyParser: false } };
 
-function readRawBody(req) {
+const SEND_SMS_MAX_BODY_BYTES = Number.parseInt(process.env.SEND_SMS_MAX_BODY_BYTES || String(16 * 1024), 10);
+const SEND_SMS_RATE_LIMIT = {
+  windowMs: 60 * 1000,
+  max: 30,
+};
+
+function hookHttpError(message, status, code) {
+  return Object.assign(new Error(message), { status, code });
+}
+
+function readRawBody(req, maxBytes = SEND_SMS_MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
+    let total = 0;
+    let settled = false;
+    req.on('data', (chunk) => {
+      if (settled) return;
+      const buffer = Buffer.from(chunk);
+      total += buffer.length;
+      if (total > maxBytes) {
+        settled = true;
+        reject(hookHttpError('SMS hook payload too large', 413, 'send_sms_body_too_large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(buffer);
+    });
+    req.on('end', () => {
+      if (settled) return;
+      settled = true;
+      resolve(Buffer.concat(chunks));
+    });
+    req.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    });
   });
 }
 
@@ -80,7 +112,23 @@ function hookError(res, httpCode, message) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const rawBody = await readRawBody(req);
+  const limit = await checkRateLimit({
+    key: `send-sms:${clientIp(req)}`,
+    windowMs: SEND_SMS_RATE_LIMIT.windowMs,
+    max: SEND_SMS_RATE_LIMIT.max,
+  });
+  if (!limit.ok) {
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000)));
+    return hookError(res, 429, 'Too many SMS hook attempts. Try again shortly.');
+  }
+
+  let rawBody;
+  try {
+    rawBody = await readRawBody(req);
+  } catch (err) {
+    if (err?.status === 413) return hookError(res, 413, 'SMS hook payload is too large');
+    return hookError(res, 400, 'Could not read SMS hook payload');
+  }
 
   const secret = process.env.SEND_SMS_HOOK_SECRET;
   if (!secret) return hookError(res, 503, 'SMS hook is not configured');
@@ -91,9 +139,10 @@ export default async function handler(req, res) {
   let payload;
   try { payload = JSON.parse(rawBody.toString('utf8')); } catch { return hookError(res, 400, 'Malformed payload'); }
 
-  const phone = payload?.user?.phone;
-  const otp = payload?.sms?.otp;
+  const phone = String(payload?.user?.phone || '').trim();
+  const otp = String(payload?.sms?.otp || '').trim();
   if (!phone || !otp) return hookError(res, 400, 'Missing phone or otp in hook payload');
+  if (phone.length > 32 || otp.length > 16) return hookError(res, 400, 'Invalid phone or otp in hook payload');
 
   const apiKey = process.env.QUO_API_KEY;
   const from = process.env.QUO_FROM_NUMBER;
@@ -111,11 +160,13 @@ export default async function handler(req, res) {
       }),
     });
     if (!resp.ok) {
-      const detail = (await resp.text()).slice(0, 300);
-      return hookError(res, 502, `Quo send failed (${resp.status}): ${detail}`);
+      await resp.text().catch(() => '');
+      console.warn('[send-sms] provider send failed', { status: resp.status });
+      return hookError(res, 502, 'SMS provider send failed');
     }
     return res.status(200).json({}); // Supabase treats 2xx as delivered
   } catch (err) {
-    return hookError(res, 502, `Quo request error: ${err.message}`);
+    console.warn('[send-sms] provider request error', { message: err?.message });
+    return hookError(res, 502, 'SMS provider request failed');
   }
 }
