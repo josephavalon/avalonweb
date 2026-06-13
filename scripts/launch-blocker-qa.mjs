@@ -237,6 +237,42 @@ function checkStripeMetadataFallbackIsLegacyOnly() {
   }
 }
 
+function checkSchedulingRaceLoserDefers() {
+  const verifySource = readRepoFile('api/checkout/verify.js');
+  const webhookSource = readRepoFile('api/integrations/stripe/webhook.js');
+
+  for (const [label, source] of [
+    ['api/checkout/verify.js', verifySource],
+    ['api/integrations/stripe/webhook.js', webhookSource],
+  ]) {
+    for (const required of [
+      'claimSchedulingCreation',
+      'readAcuityAppointmentId',
+      'async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 1000)',
+      'for (let attempt = 0; attempt < attempts; attempt += 1)',
+      'if (attempt < attempts - 1)',
+      'setTimeout(resolve, delayMs)',
+      'if (!wonSchedulingClaim)',
+      'const existingId = await pollAcuityAppointmentId',
+      'schedulingDeferred = true',
+    ]) {
+      if (!source.includes(required)) {
+        fail(`${label} missing scheduling race loser guard: ${required}`);
+      }
+    }
+  }
+
+  if (!verifySource.includes('pendingFulfillment: paid && !fulfillment.appointmentId')) {
+    fail('checkout/verify must surface pendingFulfillment when the race winner has not persisted an Acuity id yet');
+  }
+  if (!verifySource.includes("fulfillment.fulfillmentStatus !== 'acuity_failed'")) {
+    fail('checkout/verify pendingFulfillment must not hide confirmed Acuity failures');
+  }
+  if (!webhookSource.includes("action: 'deposit_paid_checkout_record_missing'")) {
+    fail('Stripe webhook must defer current redacted sessions with missing checkout records instead of scheduling from metadata');
+  }
+}
+
 function checkAppointmentSummaryAuth() {
   const source = readRepoFile('api/appointment-summary.js');
   if (!source.includes("req.headers?.['x-appointment-summary-token']")) {
@@ -460,6 +496,7 @@ function checkGoLiveStatusLedger() {
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
+checkSchedulingRaceLoserDefers();
 checkAppointmentSummaryAuth();
 checkDemoAuthHardening();
 checkBalanceChargeIntegrity();
