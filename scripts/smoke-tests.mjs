@@ -194,6 +194,10 @@ assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin ba
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
 assert(chargeBalanceSource.includes('writeAuditEvent'), 'Internal balance charge must write audit events');
+assert(adminCollectBalanceSource.includes('appointmentId: appt.id'), 'Admin balance audit payloads must include appointmentId without PHI');
+assert(chargeBalanceSource.includes('appointmentId: appt.id'), 'Internal balance audit payloads must include appointmentId without PHI');
+assert(adminCollectBalanceSource.includes('resultCode: result.json?.code'), 'Admin balance attempt audit must include a result code');
+assert(chargeBalanceSource.includes('resultCode: result.json?.code'), 'Internal balance attempt audit must include a result code');
 assert(!bookingEmailSource.includes('return { skipped: true'), 'Fulfillment emails must not silently mark skipped sends as delivered');
 assert(bookingEmailSource.includes('email_delivery_skipped'), 'Fulfillment email skips must become reconciliation-visible failures');
 assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');

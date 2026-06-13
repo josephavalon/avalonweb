@@ -48,6 +48,7 @@ export default async function handler(req, res) {
       entityType: 'appointment',
       payload: {
         reason: 'missing_appointment_lookup',
+        resultCode: 'missing_appointment_lookup',
         mode,
         override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
       },
@@ -71,6 +72,7 @@ export default async function handler(req, res) {
       entityType: 'appointment',
       payload: {
         reason: 'appointment_not_found',
+        resultCode: 'appointment_not_found',
         appointmentId: appointmentId || null,
         acuityAppointmentId: acuityAppointmentId ? String(acuityAppointmentId) : null,
         mode,
@@ -88,6 +90,8 @@ export default async function handler(req, res) {
       entityId: appt.id,
       payload: {
         reason: 'already_paid',
+        resultCode: 'already_paid',
+        appointmentId: appt.id,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
         override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
@@ -106,6 +110,8 @@ export default async function handler(req, res) {
       entityId: appt.id,
       payload: {
         reason: resolved.code,
+        resultCode: resolved.code,
+        appointmentId: appt.id,
         requestedAmountCents: resolved.amount ?? null,
         balanceDueCents: resolved.balance ?? Number(appt.balance_due_cents || 0),
         mode,
@@ -124,6 +130,8 @@ export default async function handler(req, res) {
       entityId: appt.id,
       payload: {
         reason: 'no_balance',
+        resultCode: 'no_balance',
+        appointmentId: appt.id,
         amountCents: amount || 0,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
@@ -141,6 +149,8 @@ export default async function handler(req, res) {
       entityId: appt.id,
       payload: {
         reason: 'no_customer',
+        resultCode: 'no_customer',
+        appointmentId: appt.id,
         amountCents: amount,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
@@ -169,6 +179,7 @@ export default async function handler(req, res) {
     entityType: 'appointment',
     entityId: appt.id,
     payload: {
+      appointmentId: appt.id,
       amountCents: amount,
       balanceDueCents: Number(appt.balance_due_cents || 0),
       mode,

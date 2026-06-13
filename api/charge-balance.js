@@ -79,6 +79,7 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: 'rate_limited',
+        resultCode: 'rate_limited',
         mode,
         override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
       },
@@ -94,6 +95,7 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: 'missing_appointment_lookup',
+        resultCode: 'missing_appointment_lookup',
         mode,
         override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
       },
@@ -114,6 +116,7 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: 'appointment_not_found',
+        resultCode: 'appointment_not_found',
         acuityAppointmentId: String(acuityAppointmentId),
         mode,
         override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
@@ -130,6 +133,8 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: 'already_paid',
+        resultCode: 'already_paid',
+        appointmentId: appt.id,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
         override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
@@ -148,6 +153,8 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: resolved.code,
+        resultCode: resolved.code,
+        appointmentId: appt.id,
         requestedAmountCents: resolved.amount ?? null,
         balanceDueCents: resolved.balance ?? Number(appt.balance_due_cents || 0),
         mode,
@@ -166,6 +173,8 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: 'no_balance',
+        resultCode: 'no_balance',
+        appointmentId: appt.id,
         amountCents: amount || 0,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
@@ -183,6 +192,8 @@ export default async function handler(req, res) {
       payload: {
         actor: 'internal_service',
         reason: 'no_customer',
+        resultCode: 'no_customer',
+        appointmentId: appt.id,
         amountCents: amount,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
@@ -213,6 +224,7 @@ export default async function handler(req, res) {
     entityId: appt.id,
     payload: {
       actor: 'internal_service',
+      appointmentId: appt.id,
       amountCents: amount,
       balanceDueCents: Number(appt.balance_due_cents || 0),
       mode,
