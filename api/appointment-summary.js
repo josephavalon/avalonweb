@@ -80,11 +80,14 @@ function appointmentFromAcuity(appointment, fallback = {}) {
 }
 
 function summaryToken(req) {
-  return String(
-    req.query?.summary_token
-    || req.headers?.['x-appointment-summary-token']
-    || ''
-  ).trim();
+  return String(req.headers?.['x-appointment-summary-token'] || '').trim();
+}
+
+function attemptedSummaryAuthMode(req, authed) {
+  if (authed) return 'supabase';
+  if (summaryToken(req)) return 'summary_token';
+  if (req.query?.summary_token) return 'summary_token_query';
+  return 'none';
 }
 
 function checkoutEmail(checkout = {}) {
@@ -162,7 +165,7 @@ export default async function handler(req, res) {
         payload: {
           route: 'api/appointment-summary',
           result: 'denied',
-          attemptedAuth: authed ? 'supabase' : (summaryToken(req) ? 'summary_token' : 'none'),
+          attemptedAuth: attemptedSummaryAuthMode(req, authed),
           reason: 'summary_auth_required',
           hasRecord: Boolean(record),
           hasAcuityId: Boolean(acuityId),
