@@ -61,6 +61,8 @@ const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url),
 const safeErrorSource = readFileSync(new URL('../api/_lib/safe-error.js', import.meta.url), 'utf8');
 const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
+const applySource = readFileSync(new URL('../api/apply.js', import.meta.url), 'utf8');
+const waitlistSource = readFileSync(new URL('../api/waitlist.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
@@ -274,6 +276,12 @@ assert(sendSmsSource.includes('send_sms_body_too_large'), 'SMS auth hook must re
 assert(sendSmsSource.includes("key: `send-sms:${clientIp(req)}`"), 'SMS auth hook must rate-limit by requester IP');
 assert(sendSmsSource.includes('status: resp.status') && sendSmsSource.includes('SMS provider send failed'), 'SMS auth hook must avoid echoing provider response details');
 assert(safeErrorSource.includes('safeErrorCode') && safeErrorSource.includes('safeLogContext'), 'Server routes must have shared safe error helpers');
+for (const [label, source] of Object.entries({ applySource, waitlistSource })) {
+  assert(source.includes('safeLogContext'), `Public form route must sanitize provider/handler logs: ${label}`);
+  assert(!source.includes('.error.message ||'), `Public form route must not log raw email provider messages: ${label}`);
+  assert(!source.includes('err.message || err'), `Public form route must not log raw caught email errors: ${label}`);
+  assert(!source.includes("handler error:', error"), `Public form route must not log raw handler errors: ${label}`);
+}
 for (const [label, source] of Object.entries({
   acuityBookSource,
   acuityAppointmentSource,

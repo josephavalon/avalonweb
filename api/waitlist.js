@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
+import { safeLogContext } from './_lib/safe-error.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -134,7 +135,7 @@ export default async function handler(req, res) {
       html: internalHtml,
     });
     if (internalResult?.error) {
-      console.warn('Waitlist internal email failed:', internalResult.error.message || internalResult.error);
+      console.warn('Waitlist internal email failed', safeLogContext(internalResult.error, 'waitlist_internal_email_failed'));
     }
 
     // 2. Subscriber confirmation — fire-and-forget.
@@ -147,12 +148,12 @@ export default async function handler(req, res) {
         html: subscriberHtml,
       });
     } catch (err) {
-      console.warn('Waitlist confirmation email failed:', err.message || err);
+      console.warn('Waitlist confirmation email failed', safeLogContext(err, 'waitlist_confirmation_email_failed'));
     }
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Waitlist handler error:', error);
+    console.error('Waitlist handler error', safeLogContext(error, 'waitlist_handler_failed'));
     return res.status(500).json({ error: 'Failed to join waitlist.' });
   }
 }
