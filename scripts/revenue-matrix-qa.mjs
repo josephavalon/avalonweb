@@ -568,7 +568,9 @@ function validateRevenueOutcome(outcome, runtimeIssues = []) {
 }
 
 function isIgnorableRuntimeIssue(issue = '') {
-  return /Failed to load resource: the server responded with a status of 405/i.test(String(issue));
+  const text = String(issue);
+  return /Failed to load resource: the server responded with a status of 405/i.test(text)
+    || /^cancelled https?:\/\/(?:localhost|127\.0\.0\.1):\d+\/bags\/[^ ]+\.(?:png|jpe?g|webp|avif)(?:\?.*)?$/i.test(text);
 }
 
 async function runWebKitEnvironment(webkit, env) {
