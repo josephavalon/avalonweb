@@ -1,4 +1,5 @@
 import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
+import { requireAdmin } from '../../_lib/supabase-auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -19,6 +20,9 @@ export default async function handler(req, res) {
       missing: configured ? [] : ['STRIPE_SECRET_KEY'],
     });
   }
+
+  const authed = await requireAdmin(req, res);
+  if (!authed) return;
 
   return res.status(200).json({
     ok: configured,

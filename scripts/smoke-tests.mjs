@@ -68,6 +68,7 @@ const acuityAppointmentsSource = readFileSync(new URL('../api/acuity-appointment
 const acuityAvailabilitySource = readFileSync(new URL('../api/acuity-availability.js', import.meta.url), 'utf8');
 const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
 const acuityTestSource = readFileSync(new URL('../api/integrations/acuity/test.js', import.meta.url), 'utf8');
+const stripeTestSource = readFileSync(new URL('../api/integrations/stripe/test.js', import.meta.url), 'utf8');
 const safeErrorSource = readFileSync(new URL('../api/_lib/safe-error.js', import.meta.url), 'utf8');
 const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), 'utf8');
 const attioTestSource = readFileSync(new URL('../api/integrations/attio/test.js', import.meta.url), 'utf8');
@@ -422,6 +423,9 @@ for (const [label, source] of Object.entries({ acuityTestSource, attioTestSource
   assert(!source.includes("console.error('[attio/upsert-person]', err.message"), `Attio upsert route must not log raw provider errors: ${label}`);
   assert(!source.includes('error: err.message'), `Live integration diagnostic route must not return raw provider errors: ${label}`);
 }
+assert(stripeTestSource.includes('requireAdmin'), 'Stripe integration diagnostic route must require admin auth in live mode');
+assert(stripeTestSource.includes('isLiveApiEnabled'), 'Stripe integration diagnostic route must keep the pre-API hard wall');
+assert(!stripeTestSource.includes('STRIPE_SECRET_KEY:') && !stripeTestSource.includes('process.env.STRIPE_SECRET_KEY,'), 'Stripe integration diagnostic route must never return secret values');
 assert(attioPlaceholderSource.includes('apiGet') && attioPlaceholderSource.includes('apiPost'), 'Attio admin client helper must attach Supabase auth to integration calls');
 for (const [label, source] of Object.entries({
   acuityBookSource,
