@@ -208,6 +208,14 @@ assert(appointmentSummarySource.includes('verifyAppointmentSummaryToken'), 'appo
 assert(appointmentSummarySource.includes('appointment_summary_read'), 'appointment-summary must audit identifiable summary reads');
 assert(appointmentSummarySource.includes('appointment_summary_denied'), 'appointment-summary must audit denied identifiable summary reads');
 assert(appointmentSummarySource.includes('phiTouched: true'), 'appointment-summary read audit must mark PHI touched');
+assert(appointmentSummarySource.includes("SUMMARY_STAFF_ROLES = new Set(['admin', 'nurse'])"), 'appointment-summary staff access must match launch roles only');
+for (const retiredRole of ["'provider'", "'np'", "'physician'"]) {
+  const staffRoleSource = appointmentSummarySource.slice(
+    appointmentSummarySource.indexOf('SUMMARY_STAFF_ROLES'),
+    appointmentSummarySource.indexOf('function summaryToken')
+  );
+  assert(!staffRoleSource.includes(retiredRole), `appointment-summary staff access must not include retired role ${retiredRole}`);
+}
 assert(appointmentSummarySource.includes("req.headers?.['x-appointment-summary-token']"), 'appointment-summary must read signed summary tokens from a header');
 assert(!appointmentSummarySource.includes('req.query?.summary_token\\n    ||'), 'appointment-summary must not accept signed summary tokens from query strings');
 assert(appointmentSummarySource.includes('summary_token_query'), 'appointment-summary must audit unsafe query-token attempts without honoring them');

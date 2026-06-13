@@ -26,6 +26,8 @@ const SUMMARY_COLUMNS = [
   'external_payload',
 ].join(', ');
 
+const SUMMARY_STAFF_ROLES = new Set(['admin', 'nurse']);
+
 async function appointmentRecordForSession(session) {
   const db = await getSupabaseServiceClient();
   if (!db) return null;
@@ -110,7 +112,7 @@ function summaryAccessMode({ req, authed, session, record, checkout, acuityId })
   }
 
   if (!authed) return '';
-  if (['admin', 'provider', 'np', 'physician', 'nurse'].includes(String(authed.role || '').toLowerCase())) {
+  if (SUMMARY_STAFF_ROLES.has(String(authed.role || '').toLowerCase())) {
     return 'supabase_staff';
   }
   const email = String(authed.email || '').trim().toLowerCase();
