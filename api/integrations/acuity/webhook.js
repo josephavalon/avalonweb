@@ -19,7 +19,7 @@
 import crypto from 'crypto';
 import { getAppointment } from '../../_acuity.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
-import { buildReconciliationCase } from '../../_reconciliation.js';
+import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
 
 export const config = {
@@ -260,14 +260,34 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, note: 'appt_fetch_failed' });
     }
 
-    await upsertAppointment(db, appt, action);
+    const appointmentRecordId = await upsertAppointment(db, appt, action);
 
     // CRM sync — non-blocking, contact only (no clinical detail).
     if (appt.email) {
       upsertAttioPerson({
         firstName: appt.firstName, lastName: appt.lastName, email: appt.email, phone: appt.phone,
         source: 'Acuity', lifecycleStage: 'Booked', service: appt.type || 'IV Therapy',
-      }).catch((e) => console.warn('[acuity/webhook] Attio sync failed', safeLogContext(e, 'attio_sync_failed')));
+      }).catch(async (e) => {
+        console.warn('[acuity/webhook] Attio sync failed', safeLogContext(e, 'attio_sync_failed'));
+        try {
+          await insertReconciliationCaseOnce(db, buildReconciliationCase({
+            caseType: 'crm_sync_failed',
+            provider: 'attio',
+            externalReference: String(apptId),
+            tenantId,
+            payload: {
+              appointmentRecordId,
+              acuityAppointmentId: String(apptId),
+              action,
+              eventId,
+              errorCode: safeErrorCode(e, 'attio_sync_failed'),
+              errorStatus: e?.statusCode || e?.status || null,
+            },
+          }));
+        } catch (err) {
+          console.warn('[acuity/webhook] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
+        }
+      });
     }
 
     if (eventId) await db.from('acuity_events')

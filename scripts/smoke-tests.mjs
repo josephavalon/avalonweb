@@ -488,6 +488,9 @@ assert(acuityWebhookSource.includes("withTimeout(getAppointment(apptId), 'acuity
 assert(acuityWebhookSource.includes('safeLogContext'), 'Acuity webhook must sanitize error log context');
 assert(!acuityWebhookSource.includes("console.error('[acuity/webhook] fetch appt failed:', err.message"), 'Acuity webhook must not log raw appointment fetch errors');
 assert(!acuityWebhookSource.includes("console.warn('[acuity/webhook] Attio sync failed:', e.message"), 'Acuity webhook must not log raw Attio errors');
+assert(acuityWebhookSource.includes("caseType: 'crm_sync_failed'"), 'Acuity webhook Attio failures must create a reconciliation case');
+assert(acuityWebhookSource.includes("provider: 'attio'"), 'Acuity webhook CRM reconciliation must identify Attio as the provider');
+assert(acuityWebhookSource.includes("errorCode: safeErrorCode(e, 'attio_sync_failed')"), 'Acuity webhook CRM reconciliation must store stable error codes');
 assert(!acuityWebhookSource.includes('ok: false, error: err.message'), 'Acuity webhook must not return raw unhandled errors');
 assert(!acuityWebhookSource.includes('error_message: err.message'), 'Acuity webhook must not persist raw appointment fetch errors');
 assert(!acuityWebhookSource.includes('error: err.message'), 'Acuity webhook reconciliation payloads must use stable error codes');
