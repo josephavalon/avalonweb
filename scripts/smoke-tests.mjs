@@ -247,6 +247,9 @@ assert(createCheckoutSource.includes('appointment.notes') && createCheckoutSourc
 assert(createCheckoutSource.includes('resolveCheckoutSchedulingTypeId'), 'Checkout route must preflight scheduling type before Stripe checkout');
 assert(createCheckoutSource.includes('appointment_type_unavailable'), 'Checkout route must reject unmapped scheduling types before payment');
 assert(createCheckoutSource.includes('appointment.acuityTypeId = String(appointmentTypeId)'), 'Checkout route must carry the resolved scheduling type into fulfillment');
+assert(createCheckoutSource.includes('sessionAppointmentRecordId') && createCheckoutSource.includes('canonicalAppointmentRecordId'), 'Checkout route must reuse the canonical appointment record on Stripe idempotency replay');
+assert(createCheckoutSource.includes("provider: 'avalon_checkout_duplicate'"), 'Checkout route must sanitize duplicate pending records created by Stripe idempotency replay');
+assert(createCheckoutSource.includes('checkout_duplicate_mark_failed'), 'Checkout duplicate-record cleanup failures must use sanitized log context');
 assert(createCheckoutSource.includes('safeLogContext'), 'Checkout route must sanitize checkout failure logs');
 assert(createCheckoutSource.includes('CUSTOMER_SAFE_CHECKOUT_ERROR_CODES'), 'Checkout route must allowlist customer-visible error messages');
 assert(!createCheckoutSource.includes('if (err.status && err.status < 500) return err.message'), 'Checkout route must not expose arbitrary provider 4xx messages');

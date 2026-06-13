@@ -418,6 +418,13 @@ export default async function handler(req, res) {
     const cancelUrl = `${baseUrl}/checkout?payment=cancelled`;
     const returnUrl = `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}&payment=success`;
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const idempotencyKey = checkoutIdempotencyKey({
+      mode: sessionMode,
+      contact,
+      appointment: normalizedAppointment,
+      items,
+      membership,
+    });
 
     const sessionParams = {
       mode: sessionMode,
@@ -472,32 +479,59 @@ export default async function handler(req, res) {
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams, {
-      idempotencyKey: checkoutIdempotencyKey({
-        mode: sessionMode,
-        contact,
-        appointment: normalizedAppointment,
-        items,
-        membership,
-      }),
+      idempotencyKey,
     });
 
+    const sessionAppointmentRecordId = String(session.metadata?.appointmentRecordId || '').trim();
+    const canonicalAppointmentRecordId = sessionAppointmentRecordId || pendingRecordId;
     if (db && pendingRecordId) {
-      const { error: sessionLinkError } = await db.from('appointments')
-        .update({
-          stripe_checkout_session_id: session.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', pendingRecordId);
+      if (sessionAppointmentRecordId && sessionAppointmentRecordId !== pendingRecordId) {
+        const now = new Date().toISOString();
+        const { error: canonicalLinkError } = await db.from('appointments')
+          .update({
+            stripe_checkout_session_id: session.id,
+            updated_at: now,
+          })
+          .eq('id', sessionAppointmentRecordId);
+        if (canonicalLinkError) {
+          console.warn('[create-checkout-session] could not link canonical Stripe session', safeLogContext(canonicalLinkError, 'checkout_session_link_failed'));
+        }
 
-      if (sessionLinkError) {
-        console.warn('[create-checkout-session] could not link Stripe session', safeLogContext(sessionLinkError, 'checkout_session_link_failed'));
+        const { error: duplicateMarkError } = await db.from('appointments')
+          .update({
+            status: 'checkout_reused',
+            payment_status: 'checkout_reused',
+            reconciliation_status: 'ok',
+            external_payload: {
+              provider: 'avalon_checkout_duplicate',
+              canonicalAppointmentRecordId: sessionAppointmentRecordId,
+              stripeCheckoutSessionId: session.id,
+              checkoutIdempotencyKey: idempotencyKey,
+            },
+            updated_at: now,
+          })
+          .eq('id', pendingRecordId);
+        if (duplicateMarkError) {
+          console.warn('[create-checkout-session] could not mark duplicate checkout record', safeLogContext(duplicateMarkError, 'checkout_duplicate_mark_failed'));
+        }
+      } else {
+        const { error: sessionLinkError } = await db.from('appointments')
+          .update({
+            stripe_checkout_session_id: session.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', pendingRecordId);
+
+        if (sessionLinkError) {
+          console.warn('[create-checkout-session] could not link Stripe session', safeLogContext(sessionLinkError, 'checkout_session_link_failed'));
+        }
       }
     }
 
     return res.status(200).json({
       ok: true,
       provider: 'stripe',
-      appointment: { id: pendingRecordId || session.id, provider: pendingRecordId ? 'avalon_checkout' : 'stripe_metadata', status: 'payment_pending' },
+      appointment: { id: canonicalAppointmentRecordId || session.id, provider: canonicalAppointmentRecordId ? 'avalon_checkout' : 'stripe_metadata', status: 'payment_pending' },
       balanceDueCents,
       checkoutUiMode: embeddedCheckout ? 'embedded' : 'hosted',
       sessionId: session.id,
