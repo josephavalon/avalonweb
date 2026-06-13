@@ -304,6 +304,65 @@ function checkDemoAuthHardening() {
   }
 }
 
+function checkBalanceChargeIntegrity() {
+  const endpoints = [
+    {
+      label: 'api/admin/collect-balance.js',
+      source: readRepoFile('api/admin/collect-balance.js'),
+      actorNeedle: 'actorProfileId: authed.user?.id || null',
+    },
+    {
+      label: 'api/charge-balance.js',
+      source: readRepoFile('api/charge-balance.js'),
+      actorNeedle: "actor: 'internal_service'",
+    },
+  ];
+
+  for (const { label, source, actorNeedle } of endpoints) {
+    for (const required of [
+      'function resolveChargeAmount',
+      'const amount = hasOverride ? Number(requestedOverride) : balance',
+      'if (hasOverride && amount > balance)',
+      'override_exceeds_balance',
+      'requestedOverride: amountCentsOverride',
+      'balanceDue: appt.balance_due_cents',
+      'writeAuditEvent',
+      "action: 'balance_charge_rejected'",
+      "action: 'balance_charge_attempt'",
+      'appointmentId: appt.id',
+      'amountCents: amount',
+      'balanceDueCents: Number(appt.balance_due_cents || 0)',
+      'mode,',
+      'override: Boolean(resolved.hasOverride)',
+      'resultCode:',
+      actorNeedle,
+    ]) {
+      if (!source.includes(required)) {
+        fail(`${label} missing balance-charge integrity guard: ${required}`);
+      }
+    }
+
+    for (const forbiddenAuditField of [
+      'customerEmail',
+      'customerName',
+      'firstName',
+      'lastName',
+      'phone',
+      'dob',
+      'emergencyContact',
+      'address',
+      'zip',
+      'notes',
+      'clinicalReviewOnFile',
+      'gfeRequired',
+    ]) {
+      if (source.includes(forbiddenAuditField)) {
+        fail(`${label} balance audit path must not include PHI field: ${forbiddenAuditField}`);
+      }
+    }
+  }
+}
+
 function checkGoLiveRunbook() {
   const runbook = readRepoFile('docs/GO_LIVE_STAGING_DRILLS.md');
   for (const required of [
@@ -403,6 +462,7 @@ checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
 checkAppointmentSummaryAuth();
 checkDemoAuthHardening();
+checkBalanceChargeIntegrity();
 checkGoLiveRunbook();
 checkLaunchEnvDocs();
 checkGoLiveStatusLedger();
