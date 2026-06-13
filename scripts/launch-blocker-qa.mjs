@@ -354,6 +354,46 @@ function checkLaunchEnvDocs() {
   }
 }
 
+function checkGoLiveStatusLedger() {
+  const status = readRepoFile('docs/GO_LIVE_STATUS.md');
+  for (const required of [
+    'GL-001',
+    'GL-002',
+    'GL-003',
+    'GL-004',
+    'GL-005',
+    'GL-006',
+    'GL-007',
+    'GL-008',
+    'GL-009',
+    'GL-010',
+    'GL-011',
+    'GL-012',
+    'GL-013',
+    'GL-014',
+    'VITE_AVALON_ENABLE_LIVE_API=true',
+    'AVALON_ENABLE_LIVE_API=true',
+    'APPOINTMENT_SUMMARY_TOKEN_SECRET',
+    'supabase/migrations/011_launch_messaging_roles.sql',
+    'Stripe metadata drill',
+    'Appointment-summary auth drill',
+    'Acuity failure drill',
+    'Webhook/verify race drill',
+    'Balance charge audit drill',
+    'Email/CRM failure drill',
+    'Post-deploy revenue matrix',
+    'BAAs',
+    'MFA',
+    'key',
+    'pending user action',
+    'pending staging drill',
+  ]) {
+    if (!status.includes(required)) {
+      fail(`Go-live status ledger missing required launch status term: ${required}`);
+    }
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
@@ -361,6 +401,7 @@ checkAppointmentSummaryAuth();
 checkDemoAuthHardening();
 checkGoLiveRunbook();
 checkLaunchEnvDocs();
+checkGoLiveStatusLedger();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');
