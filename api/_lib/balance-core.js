@@ -10,8 +10,17 @@
  * then hand the resolved appointment row here.
  */
 
+import { safeErrorCode } from './safe-error.js';
+
 function balanceLinkConfigError(message, code) {
   return { httpStatus: 503, json: { error: message, code } };
+}
+
+function balanceProviderError(err, fallbackCode = 'balance_charge_failed') {
+  return {
+    error: 'Could not collect the remaining balance.',
+    code: safeErrorCode(err, fallbackCode),
+  };
 }
 
 export function validateBalanceReturnBaseUrl(baseUrl = '') {
@@ -69,7 +78,10 @@ export async function collectBalance({ stripe, db, appt, amount, mode = 'charge'
       const session = await buildBalanceLink({ stripe, appt, amount, currency, baseUrl: base.baseUrl, metadata });
       return { httpStatus: 200, json: { ok: true, mode: 'link', url: session.url, amount } };
     } catch (linkErr) {
-      return { httpStatus: linkErr.code?.startsWith('public_site_url_') ? 503 : 502, json: { error: linkErr.message, code: linkErr.code || 'balance_link_failed' } };
+      if (linkErr.code?.startsWith('public_site_url_')) {
+        return balanceLinkConfigError(linkErr.message, linkErr.code);
+      }
+      return { httpStatus: 502, json: balanceProviderError(linkErr, 'balance_link_failed') };
     }
   }
 
@@ -108,9 +120,12 @@ export async function collectBalance({ stripe, db, appt, amount, mode = 'charge'
         const session = await buildBalanceLink({ stripe, appt, amount, currency, baseUrl: base.baseUrl, metadata });
         return { httpStatus: 200, json: { ok: false, requiresAction: true, url: session.url, reason: err.code || 'card_error' } };
       } catch (linkErr) {
-        return { httpStatus: linkErr.code?.startsWith('public_site_url_') ? 503 : 502, json: { error: linkErr.message, code: linkErr.code || 'balance_link_failed' } };
+        if (linkErr.code?.startsWith('public_site_url_')) {
+          return balanceLinkConfigError(linkErr.message, linkErr.code);
+        }
+        return { httpStatus: 502, json: balanceProviderError(linkErr, 'balance_link_failed') };
       }
     }
-    return { httpStatus: err.statusCode || 500, json: { error: err.message } };
+    return { httpStatus: err.statusCode || 500, json: balanceProviderError(err, 'balance_charge_failed') };
   }
 }

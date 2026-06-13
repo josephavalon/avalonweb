@@ -17,6 +17,7 @@ import Stripe from 'stripe';
 import { requireAdmin } from '../_lib/supabase-auth.js';
 import { collectBalance } from '../_lib/balance-core.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
+import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 
 function resolveChargeAmount({ requestedOverride, balanceDue }) {
   const balance = Number(balanceDue || 0);
@@ -64,7 +65,13 @@ export default async function handler(req, res) {
     : lookup.eq('acuity_appointment_id', String(acuityAppointmentId));
 
   const { data: appt, error: lookupErr } = await lookup.maybeSingle();
-  if (lookupErr) return res.status(500).json({ error: lookupErr.message });
+  if (lookupErr) {
+    console.warn('[admin/collect-balance] appointment lookup failed', safeLogContext(lookupErr, 'balance_lookup_failed'));
+    return res.status(500).json({
+      error: 'Could not load appointment balance.',
+      code: safeErrorCode(lookupErr, 'balance_lookup_failed'),
+    });
+  }
   if (!appt) {
     await writeAuditEvent(db, {
       actorProfileId: authed.user?.id || null,

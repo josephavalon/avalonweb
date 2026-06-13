@@ -1,5 +1,6 @@
 import { acuityFetch, resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { upsertAttioPerson } from './_attio.js';
+import { safeLogContext } from './_lib/safe-error.js';
 
 export const STRIPE_PAID_FULFILLMENT_VERSION = 'stripe_paid_then_acuity_attio_v1';
 
@@ -304,7 +305,7 @@ async function bookMonthlyRecurrences({ baseDatetime, months, appointmentTypeID,
       });
       if (appt?.id) created.push(appt.id);
     } catch (err) {
-      console.warn(`[fulfillment] membership recurrence month ${i} failed:`, err.message);
+      console.warn(`[fulfillment] membership recurrence month ${i} failed`, safeLogContext(err, 'membership_recurrence_failed'));
     }
   }
   if (created.length) console.log(`[fulfillment] booked ${created.length} recurring membership appointment(s)`);

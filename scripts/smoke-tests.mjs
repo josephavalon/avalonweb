@@ -35,10 +35,12 @@ const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.
 const bookingConfirmationSource = readFileSync(new URL('../app-modules/pages/BookingConfirmation.jsx', import.meta.url), 'utf8');
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
+const checkoutFulfillmentSource = readFileSync(new URL('../api/_checkout-fulfillment.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const summaryTokenSource = readFileSync(new URL('../api/_lib/summary-token.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
+const balanceCoreSource = readFileSync(new URL('../api/_lib/balance-core.js', import.meta.url), 'utf8');
 const bookingEmailSource = readFileSync(new URL('../api/_booking-email.js', import.meta.url), 'utf8');
 const adminBookingsSource = readFileSync(new URL('../api/admin/bookings.js', import.meta.url), 'utf8');
 const meAppointmentsSource = readFileSync(new URL('../api/me/appointments.js', import.meta.url), 'utf8');
@@ -227,6 +229,13 @@ assert(adminCollectBalanceSource.includes('appointmentId: appt.id'), 'Admin bala
 assert(chargeBalanceSource.includes('appointmentId: appt.id'), 'Internal balance audit payloads must include appointmentId without PHI');
 assert(adminCollectBalanceSource.includes('resultCode: result.json?.code'), 'Admin balance attempt audit must include a result code');
 assert(chargeBalanceSource.includes('resultCode: result.json?.code'), 'Internal balance attempt audit must include a result code');
+assert(balanceCoreSource.includes('balanceProviderError'), 'Balance core must use generic provider error responses');
+assert(!balanceCoreSource.includes('json: { error: err.message }'), 'Balance core must not return raw Stripe errors');
+assert(!balanceCoreSource.includes('json: { error: linkErr.message'), 'Balance core must not return raw balance-link errors');
+assert(adminCollectBalanceSource.includes('safeLogContext'), 'Admin balance lookup failures must sanitize error logs');
+assert(chargeBalanceSource.includes('safeLogContext'), 'Internal balance lookup failures must sanitize error logs');
+assert(!adminCollectBalanceSource.includes('json({ error: lookupErr.message })'), 'Admin balance lookup must not return raw database errors');
+assert(!chargeBalanceSource.includes('json({ error: lookupErr.message })'), 'Internal balance lookup must not return raw database errors');
 assert(!bookingEmailSource.includes('return { skipped: true'), 'Fulfillment emails must not silently mark skipped sends as delivered');
 assert(bookingEmailSource.includes('email_delivery_skipped'), 'Fulfillment email skips must become reconciliation-visible failures');
 assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');
@@ -330,6 +339,8 @@ assert(!stripeWebhookSource.includes("console.warn('[stripe/webhook] Attio sync 
 assert(!stripeWebhookSource.includes("error: err.message || 'Invalid Stripe webhook'"), 'Stripe webhook must not return raw invalid-webhook errors');
 assert(!stripeWebhookSource.includes('persisted: false, error: err.message'), 'Stripe webhook must not return raw processing errors');
 assert(attioSource.includes('crmSafeDescription'), 'Attio CRM payload must use an explicit safe description allowlist');
+assert(checkoutFulfillmentSource.includes('membership_recurrence_failed'), 'Membership recurrence failures must use stable log codes');
+assert(!checkoutFulfillmentSource.includes('failed:`, err.message'), 'Membership recurrence failures must not log raw Acuity errors');
 for (const [label, source] of Object.entries({
   checkoutVerifySource,
   stripeWebhookSource,

@@ -17,6 +17,7 @@ import { requireInternalAccess } from './_lib/pre-api-guard.js';
 import { collectBalance } from './_lib/balance-core.js';
 import { writeAuditEvent } from './_lib/audit-events.js';
 import { checkRateLimit } from './_lib/rate-limit.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 const INTERNAL_CHARGE_LIMIT = {
   windowMs: 60 * 1000,
@@ -108,7 +109,13 @@ export default async function handler(req, res) {
     .eq('acuity_appointment_id', String(acuityAppointmentId))
     .maybeSingle();
 
-  if (lookupErr) return res.status(500).json({ error: lookupErr.message });
+  if (lookupErr) {
+    console.warn('[charge-balance] appointment lookup failed', safeLogContext(lookupErr, 'balance_lookup_failed'));
+    return res.status(500).json({
+      error: 'Could not load appointment balance.',
+      code: safeErrorCode(lookupErr, 'balance_lookup_failed'),
+    });
+  }
   if (!appt) {
     await writeAuditEvent(db, {
       action: 'balance_charge_rejected',
