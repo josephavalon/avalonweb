@@ -57,7 +57,7 @@ export function verifyAppointmentSummaryToken(token = '', {
 
   if (!parsed?.exp || Date.now() > Number(parsed.exp)) return false;
   if (sessionId && parsed.sid !== String(sessionId)) return false;
-  if (appointmentRecordId && parsed.rid && parsed.rid !== String(appointmentRecordId)) return false;
-  if (appointmentId && parsed.aid && parsed.aid !== String(appointmentId)) return false;
+  if (appointmentRecordId && parsed.rid !== String(appointmentRecordId)) return false;
+  if (appointmentId && parsed.aid !== String(appointmentId)) return false;
   return true;
 }

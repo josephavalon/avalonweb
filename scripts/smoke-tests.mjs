@@ -211,6 +211,11 @@ assert(isAppointmentSummaryTokenConfigured(), 'Summary token helper must report 
 const summaryToken = createAppointmentSummaryToken({ sessionId: 'cs_test_123', appointmentRecordId: 'appt_123', appointmentId: 'acuity_123' });
 assert(verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_test_123', appointmentRecordId: 'appt_123' }), 'Summary token should verify');
 assert(!verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_other' }), 'Summary token should reject wrong session');
+assert(!verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_test_123', appointmentRecordId: 'appt_other' }), 'Summary token should reject wrong appointment record');
+assert(!verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_test_123', appointmentId: 'acuity_other' }), 'Summary token should reject wrong Acuity appointment');
+const sessionOnlySummaryToken = createAppointmentSummaryToken({ sessionId: 'cs_test_123' });
+assert(!verifyAppointmentSummaryToken(sessionOnlySummaryToken, { sessionId: 'cs_test_123', appointmentRecordId: 'appt_123' }), 'Session-only summary token must not authorize record-bound appointment details');
+assert(!verifyAppointmentSummaryToken(sessionOnlySummaryToken, { sessionId: 'cs_test_123', appointmentId: 'acuity_123' }), 'Session-only summary token must not authorize Acuity-bound appointment details');
 assert(!summaryTokenSource.includes('STRIPE_SECRET_KEY'), 'Summary tokens must not fall back to the Stripe secret');
 assert(!summaryTokenSource.includes('AVALON_INTERNAL_API_SECRET'), 'Summary tokens must not fall back to the internal API secret');
 assert(summaryTokenSource.includes('APPOINTMENT_SUMMARY_TOKEN_SECRET ||'), 'Summary tokens must require a dedicated server secret');
