@@ -1,3 +1,5 @@
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
+
 export const RECONCILIATION_CASE_TYPES = [
   'stripe_succeeded_acuity_failed',
   'acuity_succeeded_stripe_failed',
@@ -139,8 +141,8 @@ export async function insertReconciliationCaseOnce(db, caseRow = {}) {
     if (error) throw error;
     return { inserted: true, id: data?.id || null };
   } catch (err) {
-    console.warn('[reconciliation] insert failed:', err.message);
-    return { error: err.message };
+    console.warn('[reconciliation] insert failed:', safeLogContext(err, 'reconciliation_insert_failed'));
+    return { error: safeErrorCode(err, 'reconciliation_insert_failed') };
   }
 }
 

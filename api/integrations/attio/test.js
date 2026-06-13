@@ -5,7 +5,9 @@
  */
 
 import { getAttioConfigStatus, identifyAttio } from '../../_attio.js';
+import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
 import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
+import { requireAdmin } from '../../_lib/supabase-auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -24,6 +26,9 @@ export default async function handler(req, res) {
         preApiHardWall: true,
       });
     }
+
+    const authed = await requireAdmin(req, res);
+    if (!authed) return;
 
     if (!config.hasToken) {
       return res.status(200).json({
@@ -50,13 +55,14 @@ export default async function handler(req, res) {
       },
     });
   } catch (err) {
-    console.error('[attio/test]', err.message);
+    console.error('[attio/test]', safeLogContext(err, 'attio_test_failed'));
     return res.status(err.status || 500).json({
       ok: false,
       connected: false,
       provider: 'attio',
       configured: true,
-      error: err.message,
+      error: 'CRM connection check failed',
+      code: safeErrorCode(err, 'attio_test_failed'),
     });
   }
 }

@@ -1,3 +1,5 @@
+import { apiGet, apiPost } from './apiClient';
+
 export const ATTIO_ENV_KEYS = {
   accessToken: 'ATTIO_ACCESS_TOKEN',
   workspaceId: 'ATTIO_WORKSPACE_ID',
@@ -26,17 +28,11 @@ export function isAttioConfigured(env = import.meta.env) {
 }
 
 export async function checkAttioConnection() {
-  const res = await fetch('/api/integrations/attio/test');
-  return res.json();
+  return apiGet('/api/integrations/attio/test');
 }
 
 export async function syncAttioPerson(client) {
-  const res = await fetch('/api/integrations/attio/upsert-person', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client }),
-  });
-  return res.json();
+  return apiPost('/api/integrations/attio/upsert-person', { client });
 }
 
 export function buildAttioClientPayload(client = {}) {

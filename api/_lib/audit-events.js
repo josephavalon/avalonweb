@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { safeErrorCode, safeLogContext } from './safe-error.js';
 
 function sortValue(value) {
   if (Array.isArray(value)) return value.map(sortValue);
@@ -36,7 +37,7 @@ export async function writeAuditEvent(db, {
     if (error) throw error;
     return { inserted: true };
   } catch (err) {
-    console.warn('[audit_events] insert failed:', err.message);
-    return { error: err.message };
+    console.warn('[audit_events] insert failed:', safeLogContext(err, 'audit_event_insert_failed'));
+    return { error: safeErrorCode(err, 'audit_event_insert_failed') };
   }
 }

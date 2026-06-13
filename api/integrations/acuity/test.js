@@ -10,15 +10,14 @@
  */
 
 import { getMe } from '../../_acuity.js';
+import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
 import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
+import { requireAdmin } from '../../_lib/supabase-auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  // In production: enforce admin auth here before exposing
-  // e.g. verifySupabaseSession(req) and check role === 'admin'
 
   try {
     if (!isLiveApiEnabled()) {
@@ -30,6 +29,9 @@ export default async function handler(req, res) {
         preApiHardWall: true,
       });
     }
+
+    const authed = await requireAdmin(req, res);
+    if (!authed) return;
 
     const me = await getMe();
 
@@ -46,12 +48,13 @@ export default async function handler(req, res) {
       },
     });
   } catch (err) {
-    console.error('[acuity/test]', err.message);
+    console.error('[acuity/test]', safeLogContext(err, 'acuity_test_failed'));
     return res.status(500).json({
       ok:        false,
       connected: false,
       provider:  'scheduling',
-      error:     err.message,
+      error:     'Scheduling connection check failed',
+      code:      safeErrorCode(err, 'acuity_test_failed'),
     });
   }
 }

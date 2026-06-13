@@ -38,6 +38,8 @@ const createCheckoutSource = readFileSync(new URL('../api/create-checkout-sessio
 const checkoutFulfillmentSource = readFileSync(new URL('../api/_checkout-fulfillment.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const summaryTokenSource = readFileSync(new URL('../api/_lib/summary-token.js', import.meta.url), 'utf8');
+const auditEventsSource = readFileSync(new URL('../api/_lib/audit-events.js', import.meta.url), 'utf8');
+const reconciliationSource = readFileSync(new URL('../api/_reconciliation.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
 const balanceCoreSource = readFileSync(new URL('../api/_lib/balance-core.js', import.meta.url), 'utf8');
@@ -58,8 +60,12 @@ const acuityAppointmentSource = readFileSync(new URL('../api/acuity-appointment.
 const acuityAppointmentsSource = readFileSync(new URL('../api/acuity-appointments.js', import.meta.url), 'utf8');
 const acuityAvailabilitySource = readFileSync(new URL('../api/acuity-availability.js', import.meta.url), 'utf8');
 const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
+const acuityTestSource = readFileSync(new URL('../api/integrations/acuity/test.js', import.meta.url), 'utf8');
 const safeErrorSource = readFileSync(new URL('../api/_lib/safe-error.js', import.meta.url), 'utf8');
 const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), 'utf8');
+const attioTestSource = readFileSync(new URL('../api/integrations/attio/test.js', import.meta.url), 'utf8');
+const attioUpsertSource = readFileSync(new URL('../api/integrations/attio/upsert-person.js', import.meta.url), 'utf8');
+const attioPlaceholderSource = readFileSync(new URL('../src/lib/attioPlaceholder.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const applySource = readFileSync(new URL('../api/apply.js', import.meta.url), 'utf8');
 const waitlistSource = readFileSync(new URL('../api/waitlist.js', import.meta.url), 'utf8');
@@ -278,6 +284,12 @@ assert(sendSmsSource.includes('send_sms_body_too_large'), 'SMS auth hook must re
 assert(sendSmsSource.includes("key: `send-sms:${clientIp(req)}`"), 'SMS auth hook must rate-limit by requester IP');
 assert(sendSmsSource.includes('status: resp.status') && sendSmsSource.includes('SMS provider send failed'), 'SMS auth hook must avoid echoing provider response details');
 assert(safeErrorSource.includes('safeErrorCode') && safeErrorSource.includes('safeLogContext'), 'Server routes must have shared safe error helpers');
+for (const [label, source] of Object.entries({ auditEventsSource, reconciliationSource })) {
+  assert(source.includes('safeLogContext'), `Shared persistence helper must sanitize insert-failure logs: ${label}`);
+  assert(source.includes('safeErrorCode'), `Shared persistence helper must return stable insert-failure codes: ${label}`);
+  assert(!source.includes("err.message);"), `Shared persistence helper must not log raw insert-failure messages: ${label}`);
+  assert(!source.includes('return { error: err.message }'), `Shared persistence helper must not return raw insert-failure messages: ${label}`);
+}
 for (const [label, source] of Object.entries({ applySource, waitlistSource })) {
   assert(source.includes('safeLogContext'), `Public form route must sanitize provider/handler logs: ${label}`);
   assert(!source.includes('.error.message ||'), `Public form route must not log raw email provider messages: ${label}`);
@@ -292,6 +304,16 @@ for (const [label, source] of Object.entries({ serverAnalyticsSource, reverseGeo
 }
 assert(!reverseGeocodeSource.includes("data?.error || 'Address lookup failed'"), 'Reverse geocode must not echo upstream provider error text');
 assert(!eventPresaleSource.includes('response.scheduleError = err.message'), 'Presale ingress must not return raw scheduling errors');
+for (const [label, source] of Object.entries({ acuityTestSource, attioTestSource, attioUpsertSource })) {
+  assert(source.includes('requireAdmin'), `Live integration diagnostic route must require admin auth: ${label}`);
+  assert(source.includes('safeLogContext'), `Live integration diagnostic route must sanitize error logs: ${label}`);
+  assert(source.includes('safeErrorCode'), `Live integration diagnostic route must return stable error codes: ${label}`);
+  assert(!source.includes("console.error('[acuity/test]', err.message"), `Acuity connection test must not log raw provider errors: ${label}`);
+  assert(!source.includes("console.error('[attio/test]', err.message"), `Attio connection test must not log raw provider errors: ${label}`);
+  assert(!source.includes("console.error('[attio/upsert-person]', err.message"), `Attio upsert route must not log raw provider errors: ${label}`);
+  assert(!source.includes('error: err.message'), `Live integration diagnostic route must not return raw provider errors: ${label}`);
+}
+assert(attioPlaceholderSource.includes('apiGet') && attioPlaceholderSource.includes('apiPost'), 'Attio admin client helper must attach Supabase auth to integration calls');
 for (const [label, source] of Object.entries({
   acuityBookSource,
   acuityAppointmentSource,

@@ -8,6 +8,8 @@
 import { checkRateLimit, clientIp } from '../../_lib/rate-limit.js';
 import { upsertAttioPerson } from '../../_attio.js';
 import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
+import { requireAdmin } from '../../_lib/supabase-auth.js';
 
 function sanitizeClient(input = {}) {
   return {
@@ -60,6 +62,9 @@ export default async function handler(req, res) {
       });
     }
 
+    const authed = await requireAdmin(req, res);
+    if (!authed) return;
+
     const result = await upsertAttioPerson(client);
     return res.status(200).json({
       ok: true,
@@ -70,11 +75,12 @@ export default async function handler(req, res) {
       },
     });
   } catch (err) {
-    console.error('[attio/upsert-person]', err.message);
+    console.error('[attio/upsert-person]', safeLogContext(err, 'attio_upsert_failed'));
     return res.status(err.status || 500).json({
       ok: false,
       provider: 'attio',
-      error: err.message,
+      error: 'CRM sync failed',
+      code: safeErrorCode(err, 'attio_upsert_failed'),
     });
   }
 }
