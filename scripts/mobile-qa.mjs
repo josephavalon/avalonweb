@@ -151,8 +151,9 @@ async function findChrome() {
 }
 
 class CdpClient {
-  constructor(wsUrl) {
+  constructor(wsUrl, targetId = null) {
     this.wsUrl = wsUrl;
+    this.targetId = targetId;
     this.nextId = 1;
     this.pending = new Map();
     this.consoleIssues = [];
@@ -218,6 +219,26 @@ class CdpClient {
   }
 }
 
+async function createPageClient() {
+  const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
+  const client = new CdpClient(target.webSocketDebuggerUrl, target.id);
+  await client.connect();
+  await client.send('Page.enable');
+  await client.send('Runtime.enable');
+  await client.send('Log.enable');
+  return client;
+}
+
+async function closePageClient(client) {
+  if (!client) return;
+  const targetId = client.targetId;
+  client.close();
+  if (!targetId) return;
+  try {
+    await fetch(`http://127.0.0.1:${PORT}/json/close/${encodeURIComponent(targetId)}`);
+  } catch {}
+}
+
 async function waitForChrome() {
   const deadline = Date.now() + Number(process.env.CHROME_READY_TIMEOUT_MS || 30_000);
   while (Date.now() < deadline) {
@@ -231,13 +252,18 @@ async function waitForChrome() {
   throw new Error('Timed out waiting for Chrome debugging port.');
 }
 
-async function waitForReady(cdp) {
+async function waitForReady(cdp, route, viewport) {
   const deadline = Date.now() + 12_000;
   while (Date.now() < deadline) {
-    const result = await cdp.send('Runtime.evaluate', {
-      expression: 'document.readyState',
-      returnByValue: true,
-    });
+    let result;
+    try {
+      result = await cdp.send('Runtime.evaluate', {
+        expression: 'document.readyState',
+        returnByValue: true,
+      });
+    } catch (error) {
+      throw new Error(`Mobile QA page readiness failed for ${route} @${viewport.width}: ${error.message}`);
+    }
     if (result.result?.value === 'complete') return;
     await wait(180);
   }
@@ -245,15 +271,15 @@ async function waitForReady(cdp) {
 
 async function auditRoute(cdp, route, viewport) {
   cdp.consoleIssues = [];
-  await cdp.send('Emulation.setDeviceMetricsOverride', viewport);
-  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: viewport.mobile });
   const url = new URL(route, BASE_URL).toString();
-  await cdp.send('Page.navigate', { url });
-  await waitForReady(cdp);
-  await wait(650);
 
   let result;
   try {
+    await cdp.send('Emulation.setDeviceMetricsOverride', viewport);
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: viewport.mobile });
+    await cdp.send('Page.navigate', { url });
+    await waitForReady(cdp, route, viewport);
+    await wait(650);
     result = await cdp.send('Runtime.evaluate', {
       returnByValue: true,
       expression: `(() => {
@@ -358,6 +384,20 @@ async function auditRoute(cdp, route, viewport) {
   };
 }
 
+async function auditRouteWithRetry(cdp, route, viewport) {
+  try {
+    return { cdp, result: await auditRoute(cdp, route, viewport) };
+  } catch (error) {
+    if (!/CDP command timed out|page readiness failed/i.test(error.message || '')) {
+      throw error;
+    }
+    console.warn(`WARN ${error.message}; retrying with a fresh page target.`);
+    await closePageClient(cdp);
+    const retryClient = await createPageClient();
+    return { cdp: retryClient, result: await auditRoute(retryClient, route, viewport) };
+  }
+}
+
 function printFindings(results) {
   let failed = false;
   for (const result of results) {
@@ -405,21 +445,20 @@ try {
   ], { stdio: 'ignore' });
 
   await waitForChrome();
-  const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
-  cdp = new CdpClient(target.webSocketDebuggerUrl);
-  await cdp.connect();
-  await cdp.send('Page.enable');
-  await cdp.send('Runtime.enable');
-  await cdp.send('Log.enable');
+  cdp = await createPageClient();
 
   const results = [];
   for (const viewport of VIEWPORTS) {
-    for (const route of ROUTES) results.push(await auditRoute(cdp, route, viewport));
+    for (const route of ROUTES) {
+      const audited = await auditRouteWithRetry(cdp, route, viewport);
+      cdp = audited.cdp;
+      results.push(audited.result);
+    }
   }
   printFindings(results);
   console.log(`Mobile QA passed ${results.length}/${ROUTES.length * VIEWPORTS.length} route/viewport checks.`);
 } finally {
-  cdp?.close();
+  await closePageClient(cdp);
   await stopChrome(chrome);
   await removeProfileDir(profileDir);
 }
