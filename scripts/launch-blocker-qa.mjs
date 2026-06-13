@@ -329,12 +329,37 @@ function checkGoLiveRunbook() {
   }
 }
 
+function checkLaunchEnvDocs() {
+  const envExample = readRepoFile('.env.example');
+  const authSetup = readRepoFile('docs/AUTH_SETUP.md');
+  for (const required of [
+    'VITE_AVALON_ENABLE_LIVE_API',
+    'AVALON_ENABLE_LIVE_API',
+    'APPOINTMENT_SUMMARY_TOKEN_SECRET',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'AVALON_INTERNAL_API_SECRET',
+    'ACUITY_API_KEY',
+    'RESEND_API_KEY',
+    'ATTIO_ACCESS_TOKEN',
+  ]) {
+    if (!envExample.includes(required)) {
+      fail(`.env.example missing launch-critical environment key: ${required}`);
+    }
+    if (!authSetup.includes(required)) {
+      fail(`docs/AUTH_SETUP.md missing launch-critical environment key: ${required}`);
+    }
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
 checkAppointmentSummaryAuth();
 checkDemoAuthHardening();
 checkGoLiveRunbook();
+checkLaunchEnvDocs();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');

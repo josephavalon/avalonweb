@@ -83,7 +83,7 @@ CRM sync, browser analytics, and browser error telemetry.
 
 - Apply Supabase migrations through `011_launch_messaging_roles.sql`.
 - Set production Supabase URL and anon key in Vercel.
-- Set `VITE_AVALON_ENABLE_LIVE_API=true` in production.
+- Set `VITE_AVALON_ENABLE_LIVE_API=true` and `AVALON_ENABLE_LIVE_API=true` in production.
 - Set server-only `APPOINTMENT_SUMMARY_TOKEN_SECRET` in Vercel before live checkout confirmation.
 - Rotate exposed Acuity and Gemini keys.
 - Confirm Stripe live mode and webhook secrets.

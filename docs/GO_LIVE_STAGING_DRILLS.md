@@ -10,7 +10,7 @@ Before running these drills, staging must have:
 
 - Supabase migrations applied through `supabase/migrations/011_launch_messaging_roles.sql`.
 - `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set for the staging app.
-- `VITE_AVALON_ENABLE_LIVE_API=true`.
+- `VITE_AVALON_ENABLE_LIVE_API=true` and `AVALON_ENABLE_LIVE_API=true`.
 - Server-only `APPOINTMENT_SUMMARY_TOKEN_SECRET`.
 - Stripe test-mode secret and webhook secret configured.
 - Acuity, Resend, and Attio staging/test credentials configured.

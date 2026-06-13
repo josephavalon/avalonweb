@@ -38,6 +38,7 @@ const appointmentSummarySource = readFileSync(new URL('../api/appointment-summar
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutFulfillmentSource = readFileSync(new URL('../api/_checkout-fulfillment.js', import.meta.url), 'utf8');
 const catalogPricingSource = readFileSync(new URL('../api/_lib/catalog-pricing.js', import.meta.url), 'utf8');
+const preApiGuardSource = readFileSync(new URL('../api/_lib/pre-api-guard.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const summaryTokenSource = readFileSync(new URL('../api/_lib/summary-token.js', import.meta.url), 'utf8');
 const auditEventsSource = readFileSync(new URL('../api/_lib/audit-events.js', import.meta.url), 'utf8');
@@ -468,6 +469,8 @@ for (const retiredRole of ["role: 'np'", "role: 'physician'", 'NP001', 'MD001', 
   assert(!authStoreSource.includes(retiredRole), `Retired prescriber demo role remains in auth store: ${retiredRole}`);
 }
 assert(loginQaSource.includes("expectedRole: 'nurse'"), 'Login QA must cover the launch nurse role');
+assert(preApiGuardSource.includes('AVALON_ENABLE_LIVE_API'), 'Server live API guard must support the server live flag');
+assert(preApiGuardSource.includes('VITE_AVALON_ENABLE_LIVE_API'), 'Server live API guard must recognize the production browser live flag');
 
 const originalResendKey = process.env.RESEND_API_KEY;
 delete process.env.RESEND_API_KEY;

@@ -1,4 +1,4 @@
-const LIVE_API_FLAG = 'AVALON_ENABLE_LIVE_API';
+const LIVE_API_FLAGS = ['AVALON_ENABLE_LIVE_API', 'VITE_AVALON_ENABLE_LIVE_API'];
 
 const PRIVATE_HOST_PATTERNS = [
   /^localhost$/i,
@@ -21,7 +21,7 @@ export function isLocalRequest(req = {}) {
 }
 
 export function isLiveApiEnabled() {
-  return process.env[LIVE_API_FLAG] === 'true';
+  return LIVE_API_FLAGS.some((flag) => process.env[flag] === 'true');
 }
 
 export function preApiBlockedPayload(action = 'Live vendor action') {
@@ -30,7 +30,7 @@ export function preApiBlockedPayload(action = 'Live vendor action') {
     code: 'pre_api_hard_wall',
     mode: 'local-simulation-only',
     action,
-    message: `${action} is blocked until ${LIVE_API_FLAG}=true.`,
+    message: `${action} is blocked until AVALON_ENABLE_LIVE_API=true or VITE_AVALON_ENABLE_LIVE_API=true.`,
   };
 }
 
