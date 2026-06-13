@@ -191,6 +191,10 @@ assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must n
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillment.fulfillmentError'), 'checkout/verify must not return raw fulfillment errors to customers');
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillmentError.slice'), 'checkout/verify must not write raw fulfillment errors into Stripe metadata');
 assert(checkoutVerifySource.includes('appointment_confirmation_pending'), 'checkout/verify must return a customer-safe fulfillment issue code');
+assert(checkoutVerifySource.includes('safeLogContext'), 'checkout/verify must sanitize fulfillment error log context');
+assert(!checkoutVerifySource.includes("console.error('[checkout/verify] Acuity fulfillment failed:', err.message"), 'checkout/verify must not log raw Acuity fulfillment errors');
+assert(!checkoutVerifySource.includes("console.warn('[checkout/verify] Attio sync failed:', err.message"), 'checkout/verify must not log raw Attio errors');
+assert(!checkoutVerifySource.includes("error: err.message || 'Could not verify checkout session'"), 'checkout/verify must not return raw verification errors');
 assert(isValidCheckoutEmail('a+tag@sub.domain.org'), 'Valid tagged email should pass checkout validation');
 assert(!isValidCheckoutEmail('test@'), 'Incomplete email should fail checkout validation');
 assert(isValidCheckoutPhone('(415) 555-1212'), 'Valid US phone should pass checkout validation');
@@ -291,6 +295,11 @@ assert(stripeWebhookSource.includes("caseType: 'webhook_missed'"), 'Stripe webho
 assert(!stripeWebhookSource.includes('fulfillmentError.body'), 'Stripe webhook must not persist raw fulfillment response bodies');
 assert(!stripeWebhookSource.includes('fulfillmentError: fulfillmentError.message.slice'), 'Stripe webhook must not write raw fulfillment errors into Stripe metadata');
 assert(stripeWebhookSource.includes("fulfillmentIssue: 'appointment_confirmation_pending'"), 'Stripe webhook must write customer-safe fulfillment issue codes');
+assert(stripeWebhookSource.includes('safeLogContext'), 'Stripe webhook must sanitize fulfillment error log context');
+assert(!stripeWebhookSource.includes("console.error('[stripe/webhook] Acuity fulfillment failed:', err.message"), 'Stripe webhook must not log raw Acuity fulfillment errors');
+assert(!stripeWebhookSource.includes("console.warn('[stripe/webhook] Attio sync failed:', err.message"), 'Stripe webhook must not log raw Attio errors');
+assert(!stripeWebhookSource.includes("error: err.message || 'Invalid Stripe webhook'"), 'Stripe webhook must not return raw invalid-webhook errors');
+assert(!stripeWebhookSource.includes('persisted: false, error: err.message'), 'Stripe webhook must not return raw processing errors');
 assert(attioSource.includes('crmSafeDescription'), 'Attio CRM payload must use an explicit safe description allowlist');
 for (const [label, source] of Object.entries({
   checkoutVerifySource,

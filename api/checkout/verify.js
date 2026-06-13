@@ -13,6 +13,18 @@ import {
   syncCheckoutAttioPerson,
 } from '../_checkout-fulfillment.js';
 
+function safeErrorCode(err, fallback = 'checkout_verify_error') {
+  const code = err?.code || err?.type || err?.statusCode || err?.status || err?.name || fallback;
+  return String(code).replace(/[^a-z0-9_:-]+/gi, '_').slice(0, 80) || fallback;
+}
+
+function safeLogContext(err, fallback) {
+  return {
+    code: safeErrorCode(err, fallback),
+    status: err?.statusCode || err?.status || null,
+  };
+}
+
 async function findAppointmentForSession(session) {
   const db = await getSupabaseServiceClient();
   if (!db) return null;
@@ -43,7 +55,7 @@ async function updatePaymentIntentMetadata(stripe, paymentIntentId, existingMeta
   try {
     await stripe.paymentIntents.update(paymentIntentId, { metadata: nextMetadata });
   } catch (err) {
-    console.warn('[checkout/verify] payment intent metadata update failed:', err.message);
+    console.warn('[checkout/verify] payment intent metadata update failed', safeLogContext(err, 'stripe_metadata_update_failed'));
   }
   return nextMetadata;
 }
@@ -77,7 +89,7 @@ async function insertAcuityFailureCase(db, { appointment, session, error }) {
       },
     }));
   } catch (err) {
-    console.warn('[checkout/verify] reconciliation insert failed:', err.message);
+    console.warn('[checkout/verify] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
   }
 }
 
@@ -135,7 +147,7 @@ async function persistVerifyFulfillment({ appointment, session, paymentIntentId,
   Object.keys(patch).forEach((key) => patch[key] === undefined && delete patch[key]);
 
   const { error } = await db.from('appointments').update(patch).eq('id', appointment.id);
-  if (error) console.warn('[checkout/verify] appointment status update failed:', error.message);
+  if (error) console.warn('[checkout/verify] appointment status update failed', safeLogContext(error, 'appointment_status_update_failed'));
   if (failed) {
     await insertAcuityFailureCase(db, {
       appointment,
@@ -209,7 +221,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
                 amounts: checkout.amounts || {},
               });
             } catch (err) {
-              console.warn('[checkout/verify] Attio sync failed:', err.message);
+              console.warn('[checkout/verify] Attio sync failed', safeLogContext(err, 'attio_sync_failed'));
               await insertOperationalFailureCase(db, {
                 caseType: 'crm_sync_failed',
                 provider: 'attio',
@@ -231,7 +243,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
           fulfillmentIssue: 'appointment_confirmation_pending',
           fulfillmentError: '',
         });
-        console.error('[checkout/verify] Acuity fulfillment failed:', err.message || 'unknown_error');
+        console.error('[checkout/verify] Acuity fulfillment failed', safeLogContext(err, 'acuity_fulfillment_failed'));
       }
     }
   }
@@ -249,7 +261,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
         opsPaymentEmailSent: 'true',
       });
     } catch (err) {
-      console.warn('[checkout/verify] payment email failed:', err.message);
+      console.warn('[checkout/verify] payment email failed', safeLogContext(err, 'payment_email_failed'));
       await insertOperationalFailureCase(await getSupabaseServiceClient(), {
         caseType: 'operations_email_failed',
         provider: 'resend',
@@ -270,7 +282,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
         customerPaymentPendingEmailSent: 'true',
       });
     } catch (err) {
-      console.warn('[checkout/verify] customer pending email failed:', err.message);
+      console.warn('[checkout/verify] customer pending email failed', safeLogContext(err, 'customer_pending_email_failed'));
       await insertOperationalFailureCase(await getSupabaseServiceClient(), {
         caseType: 'customer_email_failed',
         provider: 'resend',
@@ -384,7 +396,8 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
-      error: err.message || 'Could not verify checkout session',
+      error: 'Could not verify checkout session',
+      code: safeErrorCode(err, 'checkout_verify_failed'),
       paid: false,
     });
   }

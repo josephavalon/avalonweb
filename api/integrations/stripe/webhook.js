@@ -29,6 +29,18 @@ function httpError(message, status, code) {
   return Object.assign(new Error(message), { status, code });
 }
 
+function safeErrorCode(err, fallback = 'stripe_webhook_error') {
+  const code = err?.code || err?.type || err?.statusCode || err?.status || err?.name || fallback;
+  return String(code).replace(/[^a-z0-9_:-]+/gi, '_').slice(0, 80) || fallback;
+}
+
+function safeLogContext(err, fallback) {
+  return {
+    code: safeErrorCode(err, fallback),
+    status: err?.statusCode || err?.status || null,
+  };
+}
+
 function readRawBody(req, maxBytes = STRIPE_WEBHOOK_MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -145,7 +157,7 @@ async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
       },
     });
   } catch (err) {
-    console.warn('[stripe/webhook] payment intent metadata update failed:', err.message);
+    console.warn('[stripe/webhook] payment intent metadata update failed', safeLogContext(err, 'stripe_metadata_update_failed'));
   }
 }
 
@@ -176,7 +188,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
       paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       paymentMethodId = paymentIntent.payment_method || null;
     } catch (e) {
-      console.warn('[stripe/webhook] payment_intent retrieve failed:', e.message);
+      console.warn('[stripe/webhook] payment_intent retrieve failed', safeLogContext(e, 'stripe_payment_intent_retrieve_failed'));
     }
   }
 
@@ -216,7 +228,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         });
       } catch (err) {
         fulfillmentError = err;
-        console.error('[stripe/webhook] Acuity fulfillment failed:', err.message || 'unknown_error');
+        console.error('[stripe/webhook] Acuity fulfillment failed', safeLogContext(err, 'acuity_fulfillment_failed'));
       }
 
       if (acuityAppointment?.id && checkout.contact?.email) {
@@ -231,7 +243,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
           });
           attioSynced = true;
         } catch (err) {
-          console.warn('[stripe/webhook] Attio sync failed:', err.message);
+          console.warn('[stripe/webhook] Attio sync failed', safeLogContext(err, 'attio_sync_failed'));
           await insertOperationalFailureCase(db, {
             caseType: 'crm_sync_failed',
             provider: 'attio',
@@ -289,7 +301,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         },
       });
     } catch (err) {
-      console.warn('[stripe/webhook] payment email failed:', err.message);
+      console.warn('[stripe/webhook] payment email failed', safeLogContext(err, 'payment_email_failed'));
       await insertOperationalFailureCase(db, {
         caseType: 'operations_email_failed',
         provider: 'resend',
@@ -314,7 +326,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         },
       });
     } catch (err) {
-      console.warn('[stripe/webhook] customer pending email failed:', err.message);
+      console.warn('[stripe/webhook] customer pending email failed', safeLogContext(err, 'customer_pending_email_failed'));
       await insertOperationalFailureCase(db, {
         caseType: 'customer_email_failed',
         provider: 'resend',
@@ -399,7 +411,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
     ...patch,
     created_at: now,
   });
-  if (error) console.warn('[stripe/webhook] appointment insert failed:', error.message);
+  if (error) console.warn('[stripe/webhook] appointment insert failed', safeLogContext(error, 'appointment_insert_failed'));
   return { action: 'deposit_paid', matched: false };
 }
 
@@ -465,7 +477,7 @@ export default async function handler(req, res) {
           return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
         }
       } catch (err) {
-        console.warn('[stripe/webhook] idempotency check skipped:', err.message);
+        console.warn('[stripe/webhook] idempotency check skipped', safeLogContext(err, 'idempotency_check_skipped'));
       }
     }
 
@@ -512,7 +524,7 @@ export default async function handler(req, res) {
       } catch (err) {
         // Unique violation = a concurrent duplicate already recorded it; ignore.
         if (!/duplicate|unique|23505/i.test(err.message || '')) {
-          console.warn('[stripe/webhook] event idempotency record failed:', err.message);
+          console.warn('[stripe/webhook] event idempotency record failed', safeLogContext(err, 'idempotency_record_failed'));
         }
       }
     }
@@ -528,7 +540,10 @@ export default async function handler(req, res) {
   } catch (err) {
     // Before verification → 400 (Stripe should resend). After → 200 to avoid retry storms.
     if (!event) {
-      return res.status(err.status || 400).json({ error: err.message || 'Invalid Stripe webhook', code: err.code || 'stripe_webhook_invalid' });
+      return res.status(err.status || 400).json({
+        error: 'Invalid Stripe webhook',
+        code: safeErrorCode(err, 'stripe_webhook_invalid'),
+      });
     }
     if (err.code === 'stripe_webhook_timeout') {
       await insertOperationalFailureCase(db, {
@@ -540,9 +555,18 @@ export default async function handler(req, res) {
           error: err.message,
         },
       });
-      return res.status(200).json({ received: true, persisted: Boolean(db), timeout: true, error: err.message });
+      return res.status(200).json({
+        received: true,
+        persisted: Boolean(db),
+        timeout: true,
+        code: safeErrorCode(err, 'stripe_webhook_timeout'),
+      });
     }
-    console.error('[stripe/webhook] processing error:', err.message);
-    return res.status(200).json({ received: true, persisted: false, error: err.message });
+    console.error('[stripe/webhook] processing error', safeLogContext(err, 'stripe_webhook_processing_failed'));
+    return res.status(200).json({
+      received: true,
+      persisted: false,
+      code: safeErrorCode(err, 'stripe_webhook_processing_failed'),
+    });
   }
 }
