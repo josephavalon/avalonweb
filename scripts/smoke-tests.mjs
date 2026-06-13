@@ -206,6 +206,14 @@ assert(!bookingConfirmationSource.includes("query.set('summary_token'"), 'Bookin
 assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must not return customer email to bearer session-id callers');
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillment.fulfillmentError'), 'checkout/verify must not return raw fulfillment errors to customers');
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillmentError.slice'), 'checkout/verify must not write raw fulfillment errors into Stripe metadata');
+for (const rawPersistedError of [
+  "error: err.message || 'Attio sync failed'",
+  "error: err.message || 'Payment operations email failed'",
+  "error: err.message || 'Customer pending email failed'",
+  'message: fulfillment.fulfillmentError',
+]) {
+  assert(!checkoutVerifySource.includes(rawPersistedError), `checkout/verify must not persist raw operational errors: ${rawPersistedError}`);
+}
 assert(checkoutVerifySource.includes('appointment_confirmation_pending'), 'checkout/verify must return a customer-safe fulfillment issue code');
 assert(checkoutVerifySource.includes('safeLogContext'), 'checkout/verify must sanitize fulfillment error log context');
 assert(!checkoutVerifySource.includes("console.error('[checkout/verify] Acuity fulfillment failed:', err.message"), 'checkout/verify must not log raw Acuity fulfillment errors');
@@ -364,6 +372,8 @@ assert(acuityWebhookSource.includes('safeLogContext'), 'Acuity webhook must sani
 assert(!acuityWebhookSource.includes("console.error('[acuity/webhook] fetch appt failed:', err.message"), 'Acuity webhook must not log raw appointment fetch errors');
 assert(!acuityWebhookSource.includes("console.warn('[acuity/webhook] Attio sync failed:', e.message"), 'Acuity webhook must not log raw Attio errors');
 assert(!acuityWebhookSource.includes('ok: false, error: err.message'), 'Acuity webhook must not return raw unhandled errors');
+assert(!acuityWebhookSource.includes('error_message: err.message'), 'Acuity webhook must not persist raw appointment fetch errors');
+assert(!acuityWebhookSource.includes('error: err.message'), 'Acuity webhook reconciliation payloads must use stable error codes');
 assert(acuitySource.includes('no explicit appointment type match found'), 'Acuity live type resolver must not silently choose an unrelated type');
 assert(!acuitySource.includes('using first active Acuity type'), 'Acuity live type resolver must not fall back to the first active type');
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_MAX_BODY_BYTES'), 'Stripe webhook must enforce a raw body size limit');
@@ -372,6 +382,16 @@ assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS'), 'St
 assert(stripeWebhookSource.includes("caseType: 'webhook_missed'"), 'Stripe webhook timeout must create a reconciliation case');
 assert(!stripeWebhookSource.includes('fulfillmentError.body'), 'Stripe webhook must not persist raw fulfillment response bodies');
 assert(!stripeWebhookSource.includes('fulfillmentError: fulfillmentError.message.slice'), 'Stripe webhook must not write raw fulfillment errors into Stripe metadata');
+for (const rawPersistedError of [
+  "error: err.message || 'Attio sync failed'",
+  "error: err.message || 'Payment operations email failed'",
+  "error: err.message || 'Customer pending email failed'",
+  'message: fulfillmentError.message',
+  'error: fulfillmentError.message',
+  'error: err.message',
+]) {
+  assert(!stripeWebhookSource.includes(rawPersistedError), `Stripe webhook must not persist raw operational errors: ${rawPersistedError}`);
+}
 assert(stripeWebhookSource.includes("fulfillmentIssue: 'appointment_confirmation_pending'"), 'Stripe webhook must write customer-safe fulfillment issue codes');
 assert(stripeWebhookSource.includes('safeLogContext'), 'Stripe webhook must sanitize fulfillment error log context');
 assert(!stripeWebhookSource.includes("console.error('[stripe/webhook] Acuity fulfillment failed:', err.message"), 'Stripe webhook must not log raw Acuity fulfillment errors');

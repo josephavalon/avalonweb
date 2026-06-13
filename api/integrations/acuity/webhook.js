@@ -207,11 +207,16 @@ export default async function handler(req, res) {
     } catch (err) {
       if (eventId) {
         await db.from('acuity_events').update({
-          processed_status: 'failed', error_message: err.message, processed_at: new Date().toISOString(),
+          processed_status: 'failed', error_message: safeErrorCode(err, 'appointment_fetch_failed'), processed_at: new Date().toISOString(),
         }).eq('id', eventId);
         await db.from('reconciliation_cases').insert(buildReconciliationCase({
           caseType: 'appointment_drift', provider: 'acuity',
-          externalReference: String(apptId), payload: { action, eventId, error: err.message },
+          externalReference: String(apptId), payload: {
+            action,
+            eventId,
+            errorCode: safeErrorCode(err, 'appointment_fetch_failed'),
+            errorStatus: err?.statusCode || err?.status || null,
+          },
           tenantId,
         }));
       }

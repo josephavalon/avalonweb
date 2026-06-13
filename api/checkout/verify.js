@@ -140,7 +140,7 @@ async function persistVerifyFulfillment({ appointment, session, paymentIntentId,
       acuityAppointmentId: appointmentId,
       attioPersonId: attioPersonId || null,
       fulfillmentStatus: fulfillment.fulfillmentStatus || null,
-      error: fulfillment.fulfillmentError ? { message: fulfillment.fulfillmentError } : null,
+      error: fulfillment.fulfillmentError ? safeLogContext(fulfillment.fulfillmentError, 'acuity_fulfillment_failed') : null,
     }),
     updated_at: now,
   };
@@ -152,7 +152,7 @@ async function persistVerifyFulfillment({ appointment, session, paymentIntentId,
     await insertAcuityFailureCase(db, {
       appointment,
       session,
-      error: fulfillment.fulfillmentError,
+      error: fulfillment.fulfillmentError ? safeErrorCode(fulfillment.fulfillmentError, 'acuity_fulfillment_failed') : null,
     });
   }
 }
@@ -229,7 +229,8 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
                 payload: {
                   appointmentRecordId: appointment?.id || null,
                   stripeSessionId: session.id,
-                  error: err.message || 'Attio sync failed',
+                  errorCode: safeErrorCode(err, 'attio_sync_failed'),
+                  errorStatus: err?.statusCode || err?.status || null,
                 },
               });
             }
@@ -237,7 +238,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
         }
       } catch (err) {
         fulfillmentStatus = 'acuity_failed';
-        fulfillmentError = err.message || 'Acuity appointment creation failed';
+        fulfillmentError = err;
         metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
           fulfillmentStatus,
           fulfillmentIssue: 'appointment_confirmation_pending',
@@ -269,7 +270,8 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
         payload: {
           appointmentRecordId: appointment?.id || null,
           stripeSessionId: session.id,
-          error: err.message || 'Payment operations email failed',
+          errorCode: safeErrorCode(err, 'payment_email_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
         },
       });
     }
@@ -290,7 +292,8 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
         payload: {
           appointmentRecordId: appointment?.id || null,
           stripeSessionId: session.id,
-          error: err.message || 'Customer pending email failed',
+          errorCode: safeErrorCode(err, 'customer_pending_email_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
         },
       });
     }

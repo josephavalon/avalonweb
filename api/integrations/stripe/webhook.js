@@ -252,7 +252,8 @@ async function handleCheckoutCompleted(stripe, db, session) {
             payload: {
               appointmentRecordId: record?.id || null,
               stripeSessionId: session.id,
-              error: err.message || 'Attio sync failed',
+              errorCode: safeErrorCode(err, 'attio_sync_failed'),
+              errorStatus: err?.statusCode || err?.status || null,
             },
           });
         }
@@ -310,7 +311,8 @@ async function handleCheckoutCompleted(stripe, db, session) {
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
-          error: err.message || 'Payment operations email failed',
+          errorCode: safeErrorCode(err, 'payment_email_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
         },
       });
     }
@@ -335,7 +337,8 @@ async function handleCheckoutCompleted(stripe, db, session) {
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
-          error: err.message || 'Customer pending email failed',
+          errorCode: safeErrorCode(err, 'customer_pending_email_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
         },
       });
     }
@@ -362,10 +365,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
       attioPersonId,
-      error: fulfillmentError ? {
-        message: fulfillmentError.message,
-        status: fulfillmentError.status || null,
-      } : null,
+      error: fulfillmentError ? safeLogContext(fulfillmentError, 'acuity_fulfillment_failed') : null,
     }),
     updated_at:                   now,
   };
@@ -381,7 +381,8 @@ async function handleCheckoutCompleted(stripe, db, session) {
         tenantId,
         payload: {
           appointmentRecordId: record.id,
-          error: fulfillmentError.message,
+          errorCode: safeErrorCode(fulfillmentError, 'acuity_fulfillment_failed'),
+          errorStatus: fulfillmentError?.statusCode || fulfillmentError?.status || null,
           local_contract: 'stripe_paid_then_acuity_attio_v1',
         },
       }));
@@ -552,7 +553,8 @@ export default async function handler(req, res) {
         externalReference: event.id,
         payload: {
           stripeEventType: event.type,
-          error: err.message,
+          errorCode: safeErrorCode(err, 'stripe_webhook_timeout'),
+          errorStatus: err?.statusCode || err?.status || null,
         },
       });
       return res.status(200).json({
