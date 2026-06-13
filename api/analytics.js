@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
+import { safeLogContext } from './_lib/safe-error.js';
 
 const MAX_PAYLOAD_BYTES = 16_384;
 
@@ -56,13 +57,13 @@ export default async function handler(req, res) {
     });
 
     if (error && error.code !== '23505') {
-      console.warn('[analytics]', error.message);
+      console.warn('[analytics]', safeLogContext(error, 'analytics_persist_failed'));
       return res.status(202).json({ ok: true, persisted: false });
     }
 
     return res.status(202).json({ ok: true, persisted: true });
   } catch (err) {
-    console.warn('[analytics]', err.message || err);
+    console.warn('[analytics]', safeLogContext(err, 'analytics_handler_failed'));
     return res.status(202).json({ ok: true, persisted: false });
   }
 }

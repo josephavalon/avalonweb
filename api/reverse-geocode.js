@@ -1,4 +1,5 @@
 import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
+import { safeLogContext } from './_lib/safe-error.js';
 
 const STATE_ABBR = {
   Alabama: 'AL',
@@ -121,7 +122,7 @@ export default async function handler(req, res) {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok || !data) {
-      return res.status(response.status || 502).json({ error: data?.error || 'Address lookup failed' });
+      return res.status(response.status || 502).json({ error: 'Address lookup failed' });
     }
 
     const address = data.address || {};
@@ -139,7 +140,7 @@ export default async function handler(req, res) {
       state: STATE_ABBR[address.state] || address.state || '',
     });
   } catch (err) {
-    console.error('[reverse-geocode]', err.message);
+    console.error('[reverse-geocode]', safeLogContext(err, 'reverse_geocode_failed'));
     return res.status(502).json({ error: 'Address lookup failed' });
   }
 }

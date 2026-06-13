@@ -63,6 +63,8 @@ const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), '
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const applySource = readFileSync(new URL('../api/apply.js', import.meta.url), 'utf8');
 const waitlistSource = readFileSync(new URL('../api/waitlist.js', import.meta.url), 'utf8');
+const serverAnalyticsSource = readFileSync(new URL('../api/analytics.js', import.meta.url), 'utf8');
+const reverseGeocodeSource = readFileSync(new URL('../api/reverse-geocode.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
@@ -282,6 +284,14 @@ for (const [label, source] of Object.entries({ applySource, waitlistSource })) {
   assert(!source.includes('err.message || err'), `Public form route must not log raw caught email errors: ${label}`);
   assert(!source.includes("handler error:', error"), `Public form route must not log raw handler errors: ${label}`);
 }
+for (const [label, source] of Object.entries({ serverAnalyticsSource, reverseGeocodeSource, eventPresaleSource })) {
+  assert(source.includes('safeLogContext'), `Public/request-context route must sanitize error logs: ${label}`);
+  assert(!source.includes('console.warn') || !source.includes('err.message || err'), `Public/request-context route must not warn raw errors: ${label}`);
+  assert(!source.includes("console.error('[reverse-geocode]', err.message"), `Reverse geocode must not log raw lookup errors: ${label}`);
+  assert(!source.includes("console.error('[event-presale]', err.message"), `Presale ingress must not log raw scheduling errors: ${label}`);
+}
+assert(!reverseGeocodeSource.includes("data?.error || 'Address lookup failed'"), 'Reverse geocode must not echo upstream provider error text');
+assert(!eventPresaleSource.includes('response.scheduleError = err.message'), 'Presale ingress must not return raw scheduling errors');
 for (const [label, source] of Object.entries({
   acuityBookSource,
   acuityAppointmentSource,

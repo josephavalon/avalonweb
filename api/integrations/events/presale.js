@@ -8,6 +8,7 @@
 
 import { acuityFetch } from '../../_acuity.js';
 import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
+import { safeLogContext } from '../../_lib/safe-error.js';
 
 function requestOrigin(req) {
   const proto = req.headers['x-forwarded-proto'] || 'https';
@@ -95,9 +96,9 @@ export default async function handler(req, res) {
       response.scheduleStatus = 'created';
       response.scheduleId = appointment?.id;
     } catch (err) {
-      console.error('[event-presale]', err.message || 'unknown_error');
+      console.error('[event-presale]', safeLogContext(err, 'event_presale_schedule_failed'));
       response.scheduleStatus = 'needs_manual_review';
-      response.scheduleError = err.message;
+      response.scheduleError = 'schedule_creation_failed';
       return res.status(202).json(response);
     }
   }
