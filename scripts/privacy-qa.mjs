@@ -31,6 +31,31 @@ function lineForIndex(text, index) {
 
 const failures = [];
 const storageKeys = new Set();
+const phiMap = await fs.readFile(path.join(ROOT, 'docs/PHI_DATA_FLOW.md'), 'utf8').catch(() => '');
+
+if (!phiMap) {
+  failures.push('docs/PHI_DATA_FLOW.md: missing PHI inventory and data-flow map');
+} else {
+  for (const required of [
+    'Supabase `public.appointments.external_payload`',
+    'Stripe Checkout',
+    'Acuity',
+    'Resend ops email',
+    'Resend customer email',
+    'Attio',
+    'Sentry-compatible endpoint',
+    'Appointment Summary Access',
+    'Exhaust Controls',
+    'Client',
+    'Nurse / provider',
+    'Admin / operator / clinical authority',
+    'BAAs before real PHI flows',
+  ]) {
+    if (!phiMap.includes(required)) {
+      failures.push(`docs/PHI_DATA_FLOW.md: missing required data-flow term "${required}"`);
+    }
+  }
+}
 
 for (const dir of SCAN_DIRS) {
   const files = await walk(path.join(ROOT, dir));
