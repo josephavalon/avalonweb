@@ -301,6 +301,9 @@ function checkDemoAuthHardening() {
   const loginQaSource = readRepoFile('scripts/login-qa.mjs');
   const releaseQaSource = readRepoFile('scripts/release-qa.mjs');
   const oldDemoPassword = ['Jon', 'Jones', '1986'].join('');
+  if (fs.existsSync(path.join(repoRoot, 'app-modules/pages/Login 2.jsx'))) {
+    fail('Stale duplicate login page must not ship; it can preserve retired demo shortcuts or password display logic');
+  }
 
   for (const [label, source] of [
     ['src/lib/useAuthStore.js', authStoreSource],
