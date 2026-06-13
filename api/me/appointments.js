@@ -7,6 +7,7 @@
  * access token (Authorization: Bearer …); see _lib/supabase-auth.js.
  */
 
+import { writeAuditEvent } from '../_lib/audit-events.js';
 import { getAuthedUser } from '../_lib/supabase-auth.js';
 
 // Escape LIKE wildcards so an email containing `_` or `%` matches literally.
@@ -52,11 +53,23 @@ export default async function handler(req, res) {
 
   const { db, email } = authed;
   const { data, error } = await db.from('appointments')
-    .select('id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, external_payload, created_at')
+    .select('id, tenant_id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, external_payload, created_at')
     .ilike('external_payload->contact->>email', likeLiteral(email))
     .order('starts_at', { ascending: false, nullsFirst: false })
     .limit(100);
 
   if (error) return res.status(500).json({ error: error.message });
+  await writeAuditEvent(db, {
+    tenantId: authed.tenantId || data?.find((row) => row?.tenant_id)?.tenant_id || null,
+    actorProfileId: authed.user?.id || null,
+    action: 'client_appointments_read',
+    entityType: 'appointments',
+    phiTouched: true,
+    payload: {
+      route: 'api/me/appointments',
+      match: 'session_email',
+      resultCount: (data || []).length,
+    },
+  });
   return res.status(200).json({ appointments: (data || []).map(shapeAppointment) });
 }

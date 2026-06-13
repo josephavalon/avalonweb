@@ -36,6 +36,9 @@ const createCheckoutSource = readFileSync(new URL('../api/create-checkout-sessio
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
+const adminBookingsSource = readFileSync(new URL('../api/admin/bookings.js', import.meta.url), 'utf8');
+const meAppointmentsSource = readFileSync(new URL('../api/me/appointments.js', import.meta.url), 'utf8');
+const supabaseAuthSource = readFileSync(new URL('../api/_lib/supabase-auth.js', import.meta.url), 'utf8');
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
@@ -163,6 +166,9 @@ assert(!verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_other' }), 
 
 assert(appointmentSummarySource.includes('summary_auth_required'), 'appointment-summary must gate identifiable summary access');
 assert(appointmentSummarySource.includes('verifyAppointmentSummaryToken'), 'appointment-summary must verify signed summary tokens');
+assert(appointmentSummarySource.includes('appointment_summary_read'), 'appointment-summary must audit identifiable summary reads');
+assert(appointmentSummarySource.includes('appointment_summary_denied'), 'appointment-summary must audit denied identifiable summary reads');
+assert(appointmentSummarySource.includes('phiTouched: true'), 'appointment-summary read audit must mark PHI touched');
 assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must not return customer email to bearer session-id callers');
 assert(isValidCheckoutEmail('a+tag@sub.domain.org'), 'Valid tagged email should pass checkout validation');
 assert(!isValidCheckoutEmail('test@'), 'Incomplete email should fail checkout validation');
@@ -183,6 +189,11 @@ assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin ba
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
 assert(chargeBalanceSource.includes('writeAuditEvent'), 'Internal balance charge must write audit events');
+assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');
+assert(adminBookingsSource.includes('admin_bookings_read'), 'Admin booking PHI reads must write audit events');
+assert(adminBookingsSource.includes('phiTouched: true'), 'Admin booking read audit must mark PHI touched');
+assert(meAppointmentsSource.includes('client_appointments_read'), 'Client appointment reads must write audit events');
+assert(meAppointmentsSource.includes("match: 'session_email'"), 'Client appointment read audit must avoid storing the email value');
 assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
 assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
 assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');

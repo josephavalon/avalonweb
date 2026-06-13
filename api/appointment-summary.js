@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { getAppointment } from './_acuity.js';
+import { writeAuditEvent } from './_lib/audit-events.js';
 import { isLiveApiEnabled, localAppointment } from './_lib/pre-api-guard.js';
 import { getAuthedUser } from './_lib/supabase-auth.js';
 import { verifyAppointmentSummaryToken } from './_lib/summary-token.js';
@@ -11,6 +12,7 @@ import {
 
 const SUMMARY_COLUMNS = [
   'id',
+  'tenant_id',
   'acuity_appointment_id',
   'stripe_checkout_session_id',
   'payment_status',
@@ -89,21 +91,21 @@ function checkoutEmail(checkout = {}) {
   return String(checkout.contact?.email || '').trim().toLowerCase();
 }
 
-function canReadIdentifiableSummary({ req, authed, session, record, checkout, acuityId }) {
+function summaryAccessMode({ req, authed, session, record, checkout, acuityId }) {
   if (verifyAppointmentSummaryToken(summaryToken(req), {
     sessionId: session.id,
     appointmentRecordId: record?.id || session.metadata?.appointmentRecordId || '',
     appointmentId: acuityId || '',
   })) {
-    return true;
+    return 'summary_token';
   }
 
-  if (!authed) return false;
+  if (!authed) return '';
   if (['admin', 'provider', 'np', 'physician', 'nurse'].includes(String(authed.role || '').toLowerCase())) {
-    return true;
+    return 'supabase_staff';
   }
   const email = String(authed.email || '').trim().toLowerCase();
-  return Boolean(email && email === checkoutEmail(checkout));
+  return email && email === checkoutEmail(checkout) ? 'supabase_owner' : '';
 }
 
 export default async function handler(req, res) {
@@ -147,7 +149,25 @@ export default async function handler(req, res) {
       || '';
 
     const authed = await getAuthedUser(req);
-    if (!canReadIdentifiableSummary({ req, authed, session, record, checkout, acuityId })) {
+    const accessMode = summaryAccessMode({ req, authed, session, record, checkout, acuityId });
+    const auditDb = await getSupabaseServiceClient();
+    if (!accessMode) {
+      await writeAuditEvent(auditDb, {
+        tenantId: record?.tenant_id || authed?.tenantId || null,
+        actorProfileId: authed?.user?.id || null,
+        action: 'appointment_summary_denied',
+        entityType: 'appointment',
+        entityId: record?.id || null,
+        phiTouched: false,
+        payload: {
+          route: 'api/appointment-summary',
+          result: 'denied',
+          attemptedAuth: authed ? 'supabase' : (summaryToken(req) ? 'summary_token' : 'none'),
+          reason: 'summary_auth_required',
+          hasRecord: Boolean(record),
+          hasAcuityId: Boolean(acuityId),
+        },
+      });
       res.setHeader?.('Cache-Control', 'no-store');
       return res.status(401).json({
         error: 'Appointment summary authorization required',
@@ -163,6 +183,23 @@ export default async function handler(req, res) {
         console.warn('[appointment-summary] acuity summary unavailable:', err.message || err);
       }
     }
+
+    await writeAuditEvent(auditDb, {
+      tenantId: record?.tenant_id || authed?.tenantId || null,
+      actorProfileId: authed?.user?.id || null,
+      action: 'appointment_summary_read',
+      entityType: 'appointment',
+      entityId: record?.id || null,
+      phiTouched: true,
+      payload: {
+        route: 'api/appointment-summary',
+        result: 'allowed',
+        authMode: accessMode,
+        source: summary.source,
+        hasRecord: Boolean(record),
+        hasAcuityId: Boolean(acuityId),
+      },
+    });
 
     res.setHeader?.('Cache-Control', 'no-store');
     return res.status(200).json(summary);

@@ -9,6 +9,7 @@
  * Query: ?scope=upcoming|all (default all), ?limit (default 500, max 1000).
  */
 
+import { writeAuditEvent } from '../_lib/audit-events.js';
 import { requireAdmin } from '../_lib/supabase-auth.js';
 
 function dollarsFromCents(cents) {
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
   const scope = req.query?.scope === 'upcoming' ? 'upcoming' : 'all';
 
   let query = db.from('appointments')
-    .select('id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
+    .select('id, tenant_id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
     .order('starts_at', { ascending: scope === 'upcoming', nullsFirst: false })
     .limit(limit);
 
@@ -71,5 +72,18 @@ export default async function handler(req, res) {
 
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
+  await writeAuditEvent(db, {
+    tenantId: authed.tenantId || data?.find((row) => row?.tenant_id)?.tenant_id || null,
+    actorProfileId: authed.user?.id || null,
+    action: 'admin_bookings_read',
+    entityType: 'appointments',
+    phiTouched: true,
+    payload: {
+      route: 'api/admin/bookings',
+      scope,
+      limit,
+      resultCount: (data || []).length,
+    },
+  });
   return res.status(200).json({ bookings: (data || []).map(shapeBooking) });
 }
