@@ -202,6 +202,7 @@ export default async function handler(req, res) {
     });
     if (applyResult?.error) {
       console.warn('Apply internal email failed', safeLogContext(applyResult.error, 'apply_internal_email_failed'));
+      return res.status(502).json({ error: 'Application submission is temporarily unavailable. Please try again.' });
     }
 
     // 2. Applicant confirmation — fire-and-forget. Failure shouldn't block.

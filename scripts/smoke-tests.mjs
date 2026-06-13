@@ -397,6 +397,7 @@ for (const [label, source] of Object.entries({ applySource, waitlistSource })) {
   assert(!source.includes('.error.message ||'), `Public form route must not log raw email provider messages: ${label}`);
   assert(!source.includes('err.message || err'), `Public form route must not log raw caught email errors: ${label}`);
   assert(!source.includes("handler error:', error"), `Public form route must not log raw handler errors: ${label}`);
+  assert(source.includes("return res.status(502).json({ error: '"), `Public form route must fail closed when required internal notification fails: ${label}`);
 }
 for (const [label, source] of Object.entries({ serverAnalyticsSource, reverseGeocodeSource, eventPresaleSource })) {
   assert(source.includes('safeLogContext'), `Public/request-context route must sanitize error logs: ${label}`);

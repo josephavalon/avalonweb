@@ -136,6 +136,7 @@ export default async function handler(req, res) {
     });
     if (internalResult?.error) {
       console.warn('Waitlist internal email failed', safeLogContext(internalResult.error, 'waitlist_internal_email_failed'));
+      return res.status(502).json({ error: 'Waitlist signup is temporarily unavailable. Please try again.' });
     }
 
     // 2. Subscriber confirmation — fire-and-forget.
