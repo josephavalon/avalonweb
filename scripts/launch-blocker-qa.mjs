@@ -303,11 +303,38 @@ function checkDemoAuthHardening() {
   }
 }
 
+function checkGoLiveRunbook() {
+  const runbook = readRepoFile('docs/GO_LIVE_STAGING_DRILLS.md');
+  for (const required of [
+    'Stripe Metadata Inspection',
+    'Unauthenticated Appointment Summary Probe',
+    'Forced Acuity Failure After Paid Stripe Checkout',
+    'Webhook/Verify Race Refresh',
+    'Balance Charge Override And Audit Events',
+    'Email And CRM Failure Reconciliation',
+    'Live Revenue Matrix After Deploy',
+    'APPOINTMENT_SUMMARY_TOKEN_SECRET',
+    'supabase/migrations/011_launch_messaging_roles.sql',
+    'stripe_succeeded_acuity_failed',
+    'summary_auth_required',
+    'operations_email_failed',
+    'customer_email_failed',
+    'crm_sync_failed',
+    'audit_events',
+    'REVENUE_MATRIX_BASE_URL',
+  ]) {
+    if (!runbook.includes(required)) {
+      fail(`Go-live staging runbook missing required launch drill/evidence term: ${required}`);
+    }
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
 checkAppointmentSummaryAuth();
 checkDemoAuthHardening();
+checkGoLiveRunbook();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');
