@@ -655,7 +655,7 @@ export default function CommunicationCenter({ compact = false, roleOverride = nu
   const [activeTab, setActiveTab] = useState(initialTab);
   const visibleAlerts = alerts.filter((alert) => alert.status !== 'resolved');
   const isClient = role === 'client';
-  const isAdmin = role === 'admin' || role === 'superadmin';
+  const isAdmin = role === 'admin';
   const visibleTabs = isClient
     ? tabs.filter((tab) => ['alerts', 'messages', 'announcements', 'timeline'].includes(tab.id))
     : isAdmin

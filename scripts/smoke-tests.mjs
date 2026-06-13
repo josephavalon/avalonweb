@@ -87,6 +87,8 @@ const authSetupSource = readFileSync(new URL('../docs/AUTH_SETUP.md', import.met
 const goLiveStatusSource = readFileSync(new URL('../docs/GO_LIVE_STATUS.md', import.meta.url), 'utf8');
 const navbarSource = readFileSync(new URL('../app-modules/source/components/landing/Navbar.jsx', import.meta.url), 'utf8');
 const adminLayoutSource = readFileSync(new URL('../app-modules/source/layouts/AdminLayout.jsx', import.meta.url), 'utf8');
+const providerRoleOsSource = readFileSync(new URL('../app-modules/pages/provider/RoleOS.jsx', import.meta.url), 'utf8');
+const communicationCenterSource = readFileSync(new URL('../app-modules/source/components/messaging/CommunicationCenter.jsx', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -530,6 +532,11 @@ assert(roleBadgeSource.includes("nurse:      'Nurse'"), 'Admin layout role badge
 for (const retiredRole of ['provider:', 'np:', 'physician:', 'superadmin:']) {
   assert(!roleBadgeSource.includes(retiredRole), `Admin layout role badge must not include retired role ${retiredRole}`);
 }
+assert(providerRoleOsSource.includes("const role = normalize(user?.role || 'nurse')"), 'Provider RoleOS must default to the launch nurse role');
+assert(providerRoleOsSource.includes("const canClear = ['admin', 'nurse'].includes(role)"), 'Provider RoleOS clearance must fold into the launch nurse role');
+assert(!providerRoleOsSource.includes("['admin', 'np', 'physician']"), 'Provider RoleOS must not require retired prescriber roles for clearance');
+assert(communicationCenterSource.includes("const isAdmin = role === 'admin'"), 'Communication center admin checks must match launch admin role');
+assert(!communicationCenterSource.includes("role === 'admin' || role === 'superadmin'"), 'Communication center must not include retired superadmin role');
 assert(preApiGuardSource.includes('AVALON_ENABLE_LIVE_API'), 'Server live API guard must support the server live flag');
 assert(preApiGuardSource.includes('VITE_AVALON_ENABLE_LIVE_API'), 'Server live API guard must recognize the production browser live flag');
 

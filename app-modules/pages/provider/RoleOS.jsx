@@ -89,8 +89,8 @@ function Section({ id, eyebrow, title, children }) {
 export default function RoleOS() {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
-  const role = normalize(user?.role || 'provider');
-  const canClear = ['admin', 'np', 'physician'].includes(role);
+  const role = normalize(user?.role || 'nurse');
+  const canClear = ['admin', 'nurse'].includes(role);
   const isAdmin = role === 'admin';
 
   useSeo({
