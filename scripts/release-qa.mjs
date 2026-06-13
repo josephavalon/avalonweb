@@ -93,6 +93,7 @@ function releaseQaEnv(overrides = {}) {
   return {
     ...process.env,
     VITE_AVALON_ENABLE_LIVE_API: 'false',
+    AVALON_ENABLE_LIVE_API: 'false',
     VITE_SUPABASE_URL: '',
     VITE_SUPABASE_ANON_KEY: '',
     VITE_AVALON_DEMO_PASSWORD: RELEASE_QA_DEMO_PASSWORD,
