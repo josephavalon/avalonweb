@@ -582,6 +582,34 @@ assert(!localRepositorySource.includes("role === 'np' || role === 'physician'"),
 assert(preApiGuardSource.includes('AVALON_ENABLE_LIVE_API'), 'Server live API guard must support the server live flag');
 assert(preApiGuardSource.includes('VITE_AVALON_ENABLE_LIVE_API'), 'Server live API guard must recognize the production browser live flag');
 
+const customerPendingEmailSource = bookingEmailSource.slice(
+  bookingEmailSource.indexOf('export async function sendCustomerPaymentPendingEmail'),
+);
+const customerPendingEmailContentSource = customerPendingEmailSource.slice(
+  customerPendingEmailSource.indexOf('const html ='),
+  customerPendingEmailSource.indexOf('const result ='),
+);
+for (const forbiddenCustomerEmailNeedle of [
+  'sessionId',
+  'paymentIntentId',
+  'acuityAppointmentId',
+  'fulfillmentStatus',
+  'appointment.address',
+  'appointment.zip',
+  'amounts.balanceDueCents',
+  'amounts.depositAmountCents',
+  'Stripe session',
+  'PaymentIntent',
+  'Clinical',
+  'GFE',
+  'error',
+]) {
+  assert(!customerPendingEmailContentSource.includes(forbiddenCustomerEmailNeedle), `Customer pending email must not include internal/PHI detail: ${forbiddenCustomerEmailNeedle}`);
+}
+assert(customerPendingEmailContentSource.includes('appointment details') && customerPendingEmailContentSource.includes('registered nurse will follow up shortly'), 'Customer pending email must keep customer-safe confirmation copy');
+assert(checkoutVerifySource.includes("fulfillmentStatus === 'acuity_failed'"), 'checkout/verify must send customer pending email only after Acuity fulfillment failure');
+assert(stripeWebhookSource.includes('if (fulfillmentError && paymentIntentId'), 'Stripe webhook must send customer pending email only after fulfillment error');
+
 const originalResendKey = process.env.RESEND_API_KEY;
 delete process.env.RESEND_API_KEY;
 for (const [label, fn] of [
