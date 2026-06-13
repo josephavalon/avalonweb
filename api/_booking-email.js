@@ -19,6 +19,13 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#039;');
 }
 
+function skippedEmailError(message, reason) {
+  return Object.assign(new Error(message), {
+    code: 'email_delivery_skipped',
+    reason,
+  });
+}
+
 export async function sendPaymentReceivedEmail({
   checkout = {},
   sessionId = '',
@@ -26,7 +33,9 @@ export async function sendPaymentReceivedEmail({
   acuityAppointmentId = '',
   fulfillmentStatus = '',
 } = {}) {
-  if (!process.env.RESEND_API_KEY) return { skipped: true, reason: 'resend_not_configured' };
+  if (!process.env.RESEND_API_KEY) {
+    throw skippedEmailError('Payment operations email skipped: Resend is not configured', 'resend_not_configured');
+  }
 
   const contact = checkout.contact || {};
   const appointment = checkout.appointment || {};
@@ -74,11 +83,15 @@ export async function sendPaymentReceivedEmail({
 export async function sendCustomerPaymentPendingEmail({
   checkout = {},
 } = {}) {
-  if (!process.env.RESEND_API_KEY) return { skipped: true, reason: 'resend_not_configured' };
+  if (!process.env.RESEND_API_KEY) {
+    throw skippedEmailError('Customer payment email skipped: Resend is not configured', 'resend_not_configured');
+  }
 
   const contact = checkout.contact || {};
   const to = String(contact.email || '').trim();
-  if (!to) return { skipped: true, reason: 'missing_customer_email' };
+  if (!to) {
+    throw skippedEmailError('Customer payment email skipped: missing customer email', 'missing_customer_email');
+  }
 
   const customerName = contact.firstName || String(contact.name || '').trim().split(/\s+/)[0] || 'there';
   const resend = new Resend(process.env.RESEND_API_KEY);

@@ -11,6 +11,7 @@ import {
 } from '../src/data/catalog.js';
 import { ADDON_PRICE_BY_LABEL, ITEM_PRICE_BY_KEY } from '../api/_lib/catalog-pricing.js';
 import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
+import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../api/_booking-email.js';
 import { buildPersonValues } from '../api/_attio.js';
 import { RECONCILIATION_CASE_DEFAULTS, RECONCILIATION_CASE_TYPES } from '../api/_reconciliation.js';
 import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
@@ -36,6 +37,7 @@ const createCheckoutSource = readFileSync(new URL('../api/create-checkout-sessio
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
+const bookingEmailSource = readFileSync(new URL('../api/_booking-email.js', import.meta.url), 'utf8');
 const adminBookingsSource = readFileSync(new URL('../api/admin/bookings.js', import.meta.url), 'utf8');
 const meAppointmentsSource = readFileSync(new URL('../api/me/appointments.js', import.meta.url), 'utf8');
 const supabaseAuthSource = readFileSync(new URL('../api/_lib/supabase-auth.js', import.meta.url), 'utf8');
@@ -189,6 +191,8 @@ assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin ba
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
 assert(chargeBalanceSource.includes('writeAuditEvent'), 'Internal balance charge must write audit events');
+assert(!bookingEmailSource.includes('return { skipped: true'), 'Fulfillment emails must not silently mark skipped sends as delivered');
+assert(bookingEmailSource.includes('email_delivery_skipped'), 'Fulfillment email skips must become reconciliation-visible failures');
 assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');
 assert(adminBookingsSource.includes('admin_bookings_read'), 'Admin booking PHI reads must write audit events');
 assert(adminBookingsSource.includes('phiTouched: true'), 'Admin booking read audit must mark PHI touched');
@@ -306,5 +310,22 @@ for (const retiredRole of ["role: 'np'", "role: 'physician'", 'NP001', 'MD001', 
   assert(!authStoreSource.includes(retiredRole), `Retired prescriber demo role remains in auth store: ${retiredRole}`);
 }
 assert(loginQaSource.includes("expectedRole: 'nurse'"), 'Login QA must cover the launch nurse role');
+
+const originalResendKey = process.env.RESEND_API_KEY;
+delete process.env.RESEND_API_KEY;
+for (const [label, fn] of [
+  ['operations', () => sendPaymentReceivedEmail({ checkout: { contact: { email: 'ops@example.com' } } })],
+  ['customer', () => sendCustomerPaymentPendingEmail({ checkout: { contact: { email: 'client@example.com' } } })],
+]) {
+  let rejected = false;
+  try {
+    await fn();
+  } catch (err) {
+    rejected = err?.code === 'email_delivery_skipped' && err?.reason === 'resend_not_configured';
+  }
+  assert(rejected, `${label} fulfillment email must reject when Resend is not configured`);
+}
+if (originalResendKey) process.env.RESEND_API_KEY = originalResendKey;
+else delete process.env.RESEND_API_KEY;
 
 console.log('Smoke tests passed.');
