@@ -861,11 +861,11 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       });
       if (data.url) window.location.href = data.url;
     } catch (err) {
-      setError(err.message);
+      setError('Checkout could not be started. Please try again or contact Avalon.');
       setLoading(false);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'legacy_checkout',
-        reason: err.message || 'checkout_request_failed',
+        reason: err?.code || err?.status || 'checkout_request_failed',
         has_membership: hasMembership,
         item_count: items.length,
       });

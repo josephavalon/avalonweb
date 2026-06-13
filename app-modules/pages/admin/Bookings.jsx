@@ -259,11 +259,11 @@ function AdminBookings() {
         return;
       }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load appointments');
+      if (!res.ok) throw new Error('Failed to load appointments');
       setAppointments(Array.isArray(data) ? data : []);
       setLastRefreshed(new Date());
     } catch (err) {
-      setError(err.message);
+      setError('Could not load appointments.');
     } finally {
       setLoading(false);
     }

@@ -75,7 +75,7 @@ export function useMessages(activeConversationId = null) {
       const data = await fetchConversations(userId);
       setConversations(data);
     } catch (err) {
-      setError(err.message);
+      setError('Could not load messages.');
     }
   }, [userId]);
 
@@ -89,7 +89,7 @@ export function useMessages(activeConversationId = null) {
       const data = await fetchMessages(activeConversationId);
       setMessages(data);
     } catch (err) {
-      setError(err.message);
+      setError('Could not load messages.');
     }
   }, [activeConversationId]);
 

@@ -186,7 +186,7 @@ export default function LiveAdminBookings() {
       const data = await apiGet('/api/admin/bookings');
       setState({ loading: false, error: '', bookings: Array.isArray(data?.bookings) ? data.bookings : [] });
     } catch (err) {
-      setState({ loading: false, error: err.body?.error || err.message || 'Could not load bookings.', bookings: [] });
+      setState({ loading: false, error: 'Could not load bookings.', bookings: [] });
     }
   }, []);
 
@@ -210,7 +210,7 @@ export default function LiveAdminBookings() {
         setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: res.error || 'Could not complete the charge.' } }));
       }
     } catch (err) {
-      setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: err.body?.error || err.message || 'Action failed.' } }));
+      setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: 'Action failed.' } }));
     }
   }, [load]);
 

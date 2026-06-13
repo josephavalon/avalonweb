@@ -33,6 +33,7 @@ const authStoreSource = readFileSync(new URL('../src/lib/useAuthStore.js', impor
 const loginQaSource = readFileSync(new URL('./login-qa.mjs', import.meta.url), 'utf8');
 const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.meta.url), 'utf8');
 const bookingConfirmationSource = readFileSync(new URL('../app-modules/pages/BookingConfirmation.jsx', import.meta.url), 'utf8');
+const checkoutPageSource = readFileSync(new URL('../app-modules/pages/Checkout.jsx', import.meta.url), 'utf8');
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutFulfillmentSource = readFileSync(new URL('../api/_checkout-fulfillment.js', import.meta.url), 'utf8');
@@ -51,6 +52,8 @@ const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
 const memberDashboardSource = readFileSync(new URL('../app-modules/pages/members/Dashboard.jsx', import.meta.url), 'utf8');
+const adminSchedulingBookingsSource = readFileSync(new URL('../app-modules/pages/admin/Bookings.jsx', import.meta.url), 'utf8');
+const liveAdminBookingsSource = readFileSync(new URL('../app-modules/pages/admin/LiveBookings.jsx', import.meta.url), 'utf8');
 const messagingPanelSource = readFileSync(new URL('../src/components/messaging/MessagingPanel.jsx', import.meta.url), 'utf8');
 const useMessagesSource = readFileSync(new URL('../src/hooks/useMessages.js', import.meta.url), 'utf8');
 const sendSmsSource = readFileSync(new URL('../api/auth/send-sms.js', import.meta.url), 'utf8');
@@ -272,6 +275,11 @@ assert(authStoreSource.includes('demoAuthErrorMessage'), 'Demo auth must keep an
 assert(!authStoreSource.includes('const msg = err.message ||'), 'Supabase auth UI must not render raw provider error messages');
 assert(!authStoreSource.includes("err.message || 'Passkey sign-in failed.'"), 'Passkey sign-in must not render raw provider errors');
 assert(!authStoreSource.includes("err.message || 'Could not add a passkey.'"), 'Passkey registration must not render raw provider errors');
+assert(!checkoutPageSource.includes('setError(err.message)'), 'Checkout UI must not render raw checkout/provider errors');
+assert(!checkoutPageSource.includes("reason: err.message || 'checkout_request_failed'"), 'Checkout analytics must not send raw failure messages');
+assert(!adminSchedulingBookingsSource.includes('setError(err.message)'), 'Admin scheduling bookings UI must not render raw provider errors');
+assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Could not load bookings.'"), 'Live admin bookings UI must not render raw booking API errors');
+assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Action failed.'"), 'Live admin booking actions must not render raw provider/API errors');
 assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
 assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
 assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');
@@ -354,6 +362,7 @@ assert(messagingPanelSource.includes("? ['client', 'nurse']"), 'Admin message pi
 assert(messagingPanelSource.includes(".select('id, full_name, role')"), 'Message picker must avoid selecting support emails for the contact directory');
 assert(!messagingPanelSource.includes("['admin', 'provider']"), 'Message picker must not target retired provider contacts');
 assert(!useMessagesSource.includes('admin/provider'), 'Messaging hook copy must not describe retired provider-only behavior');
+assert(!useMessagesSource.includes('setError(err.message)'), 'Messaging hook must not render raw Supabase errors');
 for (const caseType of RECONCILIATION_CASE_TYPES) {
   assert(clinicalRlsMigrationSource.includes(`'${caseType}'`), `Reconciliation case type missing from DB constraint migration: ${caseType}`);
 }
