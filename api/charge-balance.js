@@ -59,13 +59,27 @@ export default async function handler(req, res) {
 
   const { acuityAppointmentId, amountCentsOverride } = req.body || {};
   const mode = (req.body?.mode || 'charge') === 'link' ? 'link' : 'charge';
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return res.status(503).json({ error: 'Stripe is not configured' });
-  }
+  const overrideRequested = amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '';
 
   const db = await getSupabase();
   if (!db) {
     return res.status(503).json({ error: 'Database is not configured', code: 'db_not_configured' });
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    await writeAuditEvent(db, {
+      action: 'balance_charge_rejected',
+      entityType: 'appointment',
+      payload: {
+        actor: 'internal_service',
+        reason: 'stripe_not_configured',
+        resultCode: 'stripe_not_configured',
+        acuityAppointmentId: acuityAppointmentId ? String(acuityAppointmentId) : null,
+        mode,
+        override: overrideRequested,
+      },
+    });
+    return res.status(503).json({ error: 'Stripe is not configured', code: 'stripe_not_configured' });
   }
 
   const limit = await checkRateLimit({
@@ -82,7 +96,7 @@ export default async function handler(req, res) {
         reason: 'rate_limited',
         resultCode: 'rate_limited',
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     res.setHeader('Retry-After', Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000)));
@@ -98,7 +112,7 @@ export default async function handler(req, res) {
         reason: 'missing_appointment_lookup',
         resultCode: 'missing_appointment_lookup',
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     return res.status(400).json({ error: 'acuityAppointmentId is required', code: 'missing_appointment_lookup' });
@@ -111,6 +125,18 @@ export default async function handler(req, res) {
 
   if (lookupErr) {
     console.warn('[charge-balance] appointment lookup failed', safeLogContext(lookupErr, 'balance_lookup_failed'));
+    await writeAuditEvent(db, {
+      action: 'balance_charge_rejected',
+      entityType: 'appointment',
+      payload: {
+        actor: 'internal_service',
+        reason: 'balance_lookup_failed',
+        resultCode: safeErrorCode(lookupErr, 'balance_lookup_failed'),
+        acuityAppointmentId: String(acuityAppointmentId),
+        mode,
+        override: overrideRequested,
+      },
+    });
     return res.status(500).json({
       error: 'Could not load appointment balance.',
       code: safeErrorCode(lookupErr, 'balance_lookup_failed'),
@@ -126,7 +152,7 @@ export default async function handler(req, res) {
         resultCode: 'appointment_not_found',
         acuityAppointmentId: String(acuityAppointmentId),
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     return res.status(404).json({ error: 'Appointment not found', code: 'appointment_not_found' });
@@ -144,7 +170,7 @@ export default async function handler(req, res) {
         appointmentId: appt.id,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     return res.status(409).json({ error: 'Balance already paid', code: 'already_paid' });

@@ -36,12 +36,26 @@ export default async function handler(req, res) {
   const authed = await requireAdmin(req, res);
   if (!authed) return;
 
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return res.status(503).json({ error: 'Stripe is not configured' });
-  }
-
   const { appointmentId, acuityAppointmentId, amountCentsOverride } = req.body || {};
   const mode = (req.body?.mode || 'charge') === 'link' ? 'link' : 'charge';
+  const overrideRequested = amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '';
+  if (!process.env.STRIPE_SECRET_KEY) {
+    await writeAuditEvent(authed.db, {
+      actorProfileId: authed.user?.id || null,
+      action: 'balance_charge_rejected',
+      entityType: 'appointment',
+      entityId: appointmentId || null,
+      payload: {
+        reason: 'stripe_not_configured',
+        resultCode: 'stripe_not_configured',
+        appointmentId: appointmentId || null,
+        acuityAppointmentId: acuityAppointmentId ? String(acuityAppointmentId) : null,
+        mode,
+        override: overrideRequested,
+      },
+    });
+    return res.status(503).json({ error: 'Stripe is not configured', code: 'stripe_not_configured' });
+  }
   if (!appointmentId && !acuityAppointmentId) {
     await writeAuditEvent(authed.db, {
       actorProfileId: authed.user?.id || null,
@@ -51,7 +65,7 @@ export default async function handler(req, res) {
         reason: 'missing_appointment_lookup',
         resultCode: 'missing_appointment_lookup',
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     return res.status(400).json({ error: 'appointmentId or acuityAppointmentId is required' });
@@ -67,6 +81,20 @@ export default async function handler(req, res) {
   const { data: appt, error: lookupErr } = await lookup.maybeSingle();
   if (lookupErr) {
     console.warn('[admin/collect-balance] appointment lookup failed', safeLogContext(lookupErr, 'balance_lookup_failed'));
+    await writeAuditEvent(db, {
+      actorProfileId: authed.user?.id || null,
+      action: 'balance_charge_rejected',
+      entityType: 'appointment',
+      entityId: appointmentId || null,
+      payload: {
+        reason: 'balance_lookup_failed',
+        resultCode: safeErrorCode(lookupErr, 'balance_lookup_failed'),
+        appointmentId: appointmentId || null,
+        acuityAppointmentId: acuityAppointmentId ? String(acuityAppointmentId) : null,
+        mode,
+        override: overrideRequested,
+      },
+    });
     return res.status(500).json({
       error: 'Could not load appointment balance.',
       code: safeErrorCode(lookupErr, 'balance_lookup_failed'),
@@ -83,7 +111,7 @@ export default async function handler(req, res) {
         appointmentId: appointmentId || null,
         acuityAppointmentId: acuityAppointmentId ? String(acuityAppointmentId) : null,
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     return res.status(404).json({ error: 'Appointment not found', code: 'appointment_not_found' });
@@ -101,7 +129,7 @@ export default async function handler(req, res) {
         appointmentId: appt.id,
         balanceDueCents: Number(appt.balance_due_cents || 0),
         mode,
-        override: amountCentsOverride !== undefined && amountCentsOverride !== null && amountCentsOverride !== '',
+        override: overrideRequested,
       },
     });
     return res.status(409).json({ error: 'Balance already paid', code: 'already_paid' });

@@ -265,6 +265,10 @@ assert(!balanceCoreSource.includes('json: { error: err.message }'), 'Balance cor
 assert(!balanceCoreSource.includes('json: { error: linkErr.message'), 'Balance core must not return raw balance-link errors');
 assert(adminCollectBalanceSource.includes('safeLogContext'), 'Admin balance lookup failures must sanitize error logs');
 assert(chargeBalanceSource.includes('safeLogContext'), 'Internal balance lookup failures must sanitize error logs');
+assert(adminCollectBalanceSource.includes("reason: 'stripe_not_configured'"), 'Admin balance collection must audit missing Stripe configuration attempts');
+assert(chargeBalanceSource.includes("reason: 'stripe_not_configured'"), 'Internal balance charge must audit missing Stripe configuration attempts');
+assert(adminCollectBalanceSource.includes("reason: 'balance_lookup_failed'"), 'Admin balance collection must audit lookup failure attempts');
+assert(chargeBalanceSource.includes("reason: 'balance_lookup_failed'"), 'Internal balance charge must audit lookup failure attempts');
 assert(!adminCollectBalanceSource.includes('json({ error: lookupErr.message })'), 'Admin balance lookup must not return raw database errors');
 assert(!chargeBalanceSource.includes('json({ error: lookupErr.message })'), 'Internal balance lookup must not return raw database errors');
 assert(!bookingEmailSource.includes('return { skipped: true'), 'Fulfillment emails must not silently mark skipped sends as delivered');
