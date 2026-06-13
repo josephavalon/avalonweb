@@ -224,6 +224,7 @@ function checkDemoAuthHardening() {
   const preApiSecuritySource = readRepoFile('src/lib/preApiSecurity.js');
   const viteConfigSource = readRepoFile('vite.config.js');
   const loginQaSource = readRepoFile('scripts/login-qa.mjs');
+  const releaseQaSource = readRepoFile('scripts/release-qa.mjs');
   const oldDemoPassword = ['Jon', 'Jones', '1986'].join('');
 
   for (const [label, source] of [
@@ -246,6 +247,20 @@ function checkDemoAuthHardening() {
   }
   if (!loginQaSource.includes("requireDemoPassword('LOGIN_QA_PASSWORD'")) {
     fail('Login QA must require env-provided demo credentials');
+  }
+  for (const required of [
+    'randomUUID',
+    'releaseQaEnv',
+    "VITE_AVALON_ENABLE_LIVE_API: 'false'",
+    "VITE_SUPABASE_URL: ''",
+    "VITE_SUPABASE_ANON_KEY: ''",
+    'VITE_AVALON_DEMO_PASSWORD: RELEASE_QA_DEMO_PASSWORD',
+    'LOGIN_QA_PASSWORD: RELEASE_QA_DEMO_PASSWORD',
+    'INTERACTION_QA_PASSWORD: RELEASE_QA_DEMO_PASSWORD',
+  ]) {
+    if (!releaseQaSource.includes(required)) {
+      fail(`Release QA must use one ephemeral demo password for build/login checks: ${required}`);
+    }
   }
 }
 

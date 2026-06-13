@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -10,6 +11,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const BASE_URL = process.env.RELEASE_QA_BASE_URL || 'http://localhost:4173';
 const PREVIEW_PORT = Number(new URL(BASE_URL).port || 4173);
 const DEBUG_PORT_BASE = Number(process.env.RELEASE_QA_DEBUG_PORT_BASE || (20_000 + (process.pid % 10_000)));
+const RETIRED_DEMO_PASSWORD = ['Jon', 'Jones', '1986'].join('');
 const BROWSER_QA_DEBUG_ENV = {
   BOOKING_QA_DEBUG_PORT: String(DEBUG_PORT_BASE),
   LOGIN_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 1),
@@ -19,6 +21,17 @@ const BROWSER_QA_DEBUG_ENV = {
   VISUAL_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 5),
   TRANSLATE_QA_DEBUG_PORT: String(DEBUG_PORT_BASE + 6),
 };
+const RELEASE_QA_DEMO_PASSWORD = resolveReleaseQaDemoPassword();
+
+function resolveReleaseQaDemoPassword() {
+  const configured = process.env.RELEASE_QA_DEMO_PASSWORD
+    || process.env.VITE_AVALON_DEMO_PASSWORD
+    || process.env.LOGIN_QA_PASSWORD
+    || process.env.INTERACTION_QA_PASSWORD
+    || '';
+  if (configured && configured !== RETIRED_DEMO_PASSWORD) return configured;
+  return `avalon-release-qa-${randomUUID()}`;
+}
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -74,6 +87,19 @@ function stopPort(port) {
 
 function browserQaEnv(overrides = {}) {
   return { ...process.env, ...BROWSER_QA_DEBUG_ENV, ...overrides };
+}
+
+function releaseQaEnv(overrides = {}) {
+  return {
+    ...process.env,
+    VITE_AVALON_ENABLE_LIVE_API: 'false',
+    VITE_SUPABASE_URL: '',
+    VITE_SUPABASE_ANON_KEY: '',
+    VITE_AVALON_DEMO_PASSWORD: RELEASE_QA_DEMO_PASSWORD,
+    LOGIN_QA_PASSWORD: RELEASE_QA_DEMO_PASSWORD,
+    INTERACTION_QA_PASSWORD: RELEASE_QA_DEMO_PASSWORD,
+    ...overrides,
+  };
 }
 
 async function stopProcess(processRef) {
@@ -142,8 +168,8 @@ try {
   await run('npm', ['run', 'test:compliance']);
   await run('npm', ['run', 'test:privacy']);
   await run('npm', ['run', 'test:security']);
-  await run('npm', ['run', 'build']);
-  await run('npm', ['run', 'test:launch-blockers']);
+  await run('npm', ['run', 'build'], { env: releaseQaEnv() });
+  await run('npm', ['run', 'test:launch-blockers'], { env: releaseQaEnv() });
   previewSnapshotRoot = createPreviewSnapshot();
   await run('npm', ['run', 'test:performance']);
   await run('npm', ['run', 'test:smoke']);
@@ -153,8 +179,8 @@ try {
   await run('npm', ['run', 'test:day']);
 
   await runBrowserQa('test:booking', { BOOKING_QA_BASE_URL: BASE_URL });
-  await runBrowserQa('test:login', { LOGIN_QA_BASE_URL: BASE_URL });
-  await runBrowserQa('test:interaction', { INTERACTION_QA_BASE_URL: BASE_URL });
+  await runBrowserQa('test:login', releaseQaEnv({ LOGIN_QA_BASE_URL: BASE_URL }));
+  await runBrowserQa('test:interaction', releaseQaEnv({ INTERACTION_QA_BASE_URL: BASE_URL }));
   await runBrowserQa('test:mobile', { MOBILE_QA_BASE_URL: BASE_URL });
   await runBrowserQa('test:stability', { STABILITY_QA_BASE_URL: BASE_URL });
   await runBrowserQa('test:visual', { VISUAL_QA_BASE_URL: BASE_URL });
