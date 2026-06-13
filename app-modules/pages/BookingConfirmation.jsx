@@ -318,13 +318,16 @@ export default function BookingConfirmation() {
       setAppointmentLoading(true);
       try {
         const query = new URLSearchParams();
+        const fetchOptions = {};
         if (sessionId) {
           query.set('session_id', sessionId);
-          query.set('summary_token', summaryToken);
+          fetchOptions.headers = {
+            'x-appointment-summary-token': summaryToken,
+          };
         } else {
           query.set('appointment', appointmentId);
         }
-        const res = await fetch(`/api/appointment-summary?${query}`);
+        const res = await fetch(`/api/appointment-summary?${query}`, fetchOptions);
         const data = await res.json();
         if (!cancelled) {
           if (res.ok) setAppt(data);

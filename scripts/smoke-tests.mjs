@@ -32,6 +32,7 @@ const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8
 const authStoreSource = readFileSync(new URL('../src/lib/useAuthStore.js', import.meta.url), 'utf8');
 const loginQaSource = readFileSync(new URL('./login-qa.mjs', import.meta.url), 'utf8');
 const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.meta.url), 'utf8');
+const bookingConfirmationSource = readFileSync(new URL('../app-modules/pages/BookingConfirmation.jsx', import.meta.url), 'utf8');
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
@@ -171,6 +172,8 @@ assert(appointmentSummarySource.includes('verifyAppointmentSummaryToken'), 'appo
 assert(appointmentSummarySource.includes('appointment_summary_read'), 'appointment-summary must audit identifiable summary reads');
 assert(appointmentSummarySource.includes('appointment_summary_denied'), 'appointment-summary must audit denied identifiable summary reads');
 assert(appointmentSummarySource.includes('phiTouched: true'), 'appointment-summary read audit must mark PHI touched');
+assert(bookingConfirmationSource.includes("'x-appointment-summary-token': summaryToken"), 'Booking confirmation must pass summary token in a header');
+assert(!bookingConfirmationSource.includes("query.set('summary_token'"), 'Booking confirmation must not put summary tokens in URLs');
 assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must not return customer email to bearer session-id callers');
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillment.fulfillmentError'), 'checkout/verify must not return raw fulfillment errors to customers');
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillmentError.slice'), 'checkout/verify must not write raw fulfillment errors into Stripe metadata');
