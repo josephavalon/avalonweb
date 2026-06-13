@@ -43,6 +43,18 @@ function payloadHash(body) {
   return crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16);
 }
 
+function safeErrorCode(err, fallback = 'acuity_webhook_error') {
+  const code = err?.code || err?.type || err?.statusCode || err?.status || err?.name || fallback;
+  return String(code).replace(/[^a-z0-9_:-]+/gi, '_').slice(0, 80) || fallback;
+}
+
+function safeLogContext(err, fallback) {
+  return {
+    code: safeErrorCode(err, fallback),
+    status: err?.statusCode || err?.status || null,
+  };
+}
+
 function safeEqual(left = '', right = '') {
   const l = Buffer.from(left);
   const r = Buffer.from(right);
@@ -112,7 +124,7 @@ async function upsertAppointment(db, appt, action) {
     if (!insertError) return inserted?.id || null;
   }
 
-  console.error('[acuity/webhook] appointment upsert failed:', error.message);
+  console.error('[acuity/webhook] appointment upsert failed', safeLogContext(error, 'appointment_upsert_failed'));
   return null;
 }
 
@@ -203,7 +215,7 @@ export default async function handler(req, res) {
           tenantId,
         }));
       }
-      console.error('[acuity/webhook] fetch appt failed:', err.message);
+      console.error('[acuity/webhook] fetch appt failed', safeLogContext(err, 'appointment_fetch_failed'));
       return res.status(200).json({ ok: true, note: 'appt_fetch_failed' });
     }
 
@@ -214,7 +226,7 @@ export default async function handler(req, res) {
       upsertAttioPerson({
         firstName: appt.firstName, lastName: appt.lastName, email: appt.email, phone: appt.phone,
         source: 'Acuity', lifecycleStage: 'Booked', service: appt.type || 'IV Therapy',
-      }).catch((e) => console.warn('[acuity/webhook] Attio sync failed:', e.message));
+      }).catch((e) => console.warn('[acuity/webhook] Attio sync failed', safeLogContext(e, 'attio_sync_failed')));
     }
 
     if (eventId) await db.from('acuity_events')
@@ -222,7 +234,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ok: true, action });
   } catch (err) {
-    console.error('[acuity/webhook] unhandled error:', err.message);
-    return res.status(200).json({ ok: false, error: err.message });
+    console.error('[acuity/webhook] unhandled error', safeLogContext(err, 'acuity_webhook_unhandled'));
+    return res.status(200).json({
+      ok: false,
+      code: safeErrorCode(err, 'acuity_webhook_unhandled'),
+    });
   }
 }

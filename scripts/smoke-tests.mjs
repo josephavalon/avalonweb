@@ -286,6 +286,10 @@ assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId)
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
 assert(acuityWebhookSource.includes('duplicate event hash drift'), 'Acuity webhook must retain payload hash as an integrity signal');
+assert(acuityWebhookSource.includes('safeLogContext'), 'Acuity webhook must sanitize error log context');
+assert(!acuityWebhookSource.includes("console.error('[acuity/webhook] fetch appt failed:', err.message"), 'Acuity webhook must not log raw appointment fetch errors');
+assert(!acuityWebhookSource.includes("console.warn('[acuity/webhook] Attio sync failed:', e.message"), 'Acuity webhook must not log raw Attio errors');
+assert(!acuityWebhookSource.includes('ok: false, error: err.message'), 'Acuity webhook must not return raw unhandled errors');
 assert(acuitySource.includes('no explicit appointment type match found'), 'Acuity live type resolver must not silently choose an unrelated type');
 assert(!acuitySource.includes('using first active Acuity type'), 'Acuity live type resolver must not fall back to the first active type');
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_MAX_BODY_BYTES'), 'Stripe webhook must enforce a raw body size limit');
