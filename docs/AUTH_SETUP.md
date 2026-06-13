@@ -12,12 +12,19 @@ keys for the Supabase project you want to point at:
 ```
 VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
+# Server-only — required for live checkout confirmation summary tokens:
+APPOINTMENT_SUMMARY_TOKEN_SECRET=random-high-entropy-value
 # Optional — only needed for the demo (no-Supabase) fallback:
 # VITE_AVALON_DEMO_PASSWORD=demo-pass
 ```
 
 Without these keys, the auth store falls back to the local demo roster
 (see `src/lib/useAuthStore.js`).
+
+`APPOINTMENT_SUMMARY_TOKEN_SECRET` is not a `VITE_` value and must not be
+available to the browser bundle. In live mode, checkout confirmation can only
+issue signed appointment-summary tokens when this dedicated server secret is
+set.
 
 ## 2. Apply Supabase migrations
 

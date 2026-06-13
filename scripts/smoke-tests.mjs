@@ -36,6 +36,7 @@ const bookingConfirmationSource = readFileSync(new URL('../app-modules/pages/Boo
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
+const summaryTokenSource = readFileSync(new URL('../api/_lib/summary-token.js', import.meta.url), 'utf8');
 const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-balance.js', import.meta.url), 'utf8');
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
 const bookingEmailSource = readFileSync(new URL('../api/_booking-email.js', import.meta.url), 'utf8');
@@ -166,6 +167,9 @@ process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET = 'smoke-summary-secret';
 const summaryToken = createAppointmentSummaryToken({ sessionId: 'cs_test_123', appointmentRecordId: 'appt_123', appointmentId: 'acuity_123' });
 assert(verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_test_123', appointmentRecordId: 'appt_123' }), 'Summary token should verify');
 assert(!verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_other' }), 'Summary token should reject wrong session');
+assert(!summaryTokenSource.includes('STRIPE_SECRET_KEY'), 'Summary tokens must not fall back to the Stripe secret');
+assert(!summaryTokenSource.includes('AVALON_INTERNAL_API_SECRET'), 'Summary tokens must not fall back to the internal API secret');
+assert(summaryTokenSource.includes('APPOINTMENT_SUMMARY_TOKEN_SECRET ||'), 'Summary tokens must require a dedicated server secret');
 
 assert(appointmentSummarySource.includes('summary_auth_required'), 'appointment-summary must gate identifiable summary access');
 assert(appointmentSummarySource.includes('verifyAppointmentSummaryToken'), 'appointment-summary must verify signed summary tokens');

@@ -54,7 +54,7 @@ CRM sync, browser analytics, and browser error telemetry.
 
 | Caller | Access |
 | --- | --- |
-| Booking confirmation page after paid checkout | Calls `checkout/verify`; receives a signed short-lived summary token in component state and uses it for `appointment-summary`. |
+| Booking confirmation page after paid checkout | Calls `checkout/verify`; receives a signed short-lived summary token in component state and sends it to `appointment-summary` through the `x-appointment-summary-token` header. Tokens require the dedicated server-only `APPOINTMENT_SUMMARY_TOKEN_SECRET`. |
 | Authenticated client | Can read an identifiable summary only when their Supabase email matches the checkout email. |
 | Staff roles | Admin and nurse/staff roles can read identifiable summaries for operational use. |
 | Bearer of Stripe session ID only | Receives `401 summary_auth_required`; no address, phone, email, DOB, emergency contact, notes, or clinical flags are returned. |
@@ -84,6 +84,7 @@ CRM sync, browser analytics, and browser error telemetry.
 - Apply Supabase migrations through `011_launch_messaging_roles.sql`.
 - Set production Supabase URL and anon key in Vercel.
 - Set `VITE_AVALON_ENABLE_LIVE_API=true` in production.
+- Set server-only `APPOINTMENT_SUMMARY_TOKEN_SECRET` in Vercel before live checkout confirmation.
 - Rotate exposed Acuity and Gemini keys.
 - Confirm Stripe live mode and webhook secrets.
 - Sign BAAs before real PHI flows: Supabase, Acuity, Resend, Sentry, and hosting if PHI transits it.

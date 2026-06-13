@@ -3,10 +3,7 @@ import crypto from 'crypto';
 const SUMMARY_TOKEN_TTL_MS = 15 * 60 * 1000;
 
 function secret() {
-  return process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET
-    || process.env.STRIPE_SECRET_KEY
-    || process.env.AVALON_INTERNAL_API_SECRET
-    || '';
+  return process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET || '';
 }
 
 function encode(value) {
