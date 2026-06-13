@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import crypto from 'crypto';
 import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
 import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 import { resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
 import {
@@ -217,8 +218,14 @@ function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = 
   return `checkout:${hash}`;
 }
 
+const CUSTOMER_SAFE_CHECKOUT_ERROR_CODES = new Set([
+  'appointment_type_unavailable',
+]);
+
 function publicCheckoutError(err = {}) {
-  if (err.status && err.status < 500) return err.message || 'Checkout could not be started.';
+  if (CUSTOMER_SAFE_CHECKOUT_ERROR_CODES.has(err.code)) {
+    return err.message || 'Checkout could not be started.';
+  }
   if (err.code === 'payment_provider_missing') return 'Secure checkout is not configured.';
   if (err.code === 'public_site_url_missing' || err.code === 'public_site_url_invalid' || err.code === 'public_site_url_unsafe') {
     return 'Checkout is not configured for this domain.';
@@ -483,7 +490,7 @@ export default async function handler(req, res) {
         .eq('id', pendingRecordId);
 
       if (sessionLinkError) {
-        console.warn('[create-checkout-session] could not link Stripe session:', sessionLinkError.message);
+        console.warn('[create-checkout-session] could not link Stripe session', safeLogContext(sessionLinkError, 'checkout_session_link_failed'));
       }
     }
 
@@ -508,12 +515,13 @@ export default async function handler(req, res) {
           updated_at: new Date().toISOString(),
         }).eq('id', pendingRecordId);
       } catch (rollbackErr) {
-        console.error('[create-checkout-session:rollback]', rollbackErr.message || rollbackErr);
+        console.error('[create-checkout-session:rollback]', safeLogContext(rollbackErr, 'checkout_rollback_failed'));
       }
     }
-    console.error('[create-checkout-session]', err.message || 'Checkout failed');
+    console.error('[create-checkout-session] checkout failed', safeLogContext(err, 'checkout_session_create_failed'));
     return res.status(err.status || 500).json({
       error: publicCheckoutError(err),
+      code: safeErrorCode(err, 'checkout_session_create_failed'),
     });
   }
 }

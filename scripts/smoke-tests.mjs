@@ -214,6 +214,11 @@ assert(createCheckoutSource.includes('appointment.notes') && createCheckoutSourc
 assert(createCheckoutSource.includes('resolveCheckoutSchedulingTypeId'), 'Checkout route must preflight scheduling type before Stripe checkout');
 assert(createCheckoutSource.includes('appointment_type_unavailable'), 'Checkout route must reject unmapped scheduling types before payment');
 assert(createCheckoutSource.includes('appointment.acuityTypeId = String(appointmentTypeId)'), 'Checkout route must carry the resolved scheduling type into fulfillment');
+assert(createCheckoutSource.includes('safeLogContext'), 'Checkout route must sanitize checkout failure logs');
+assert(createCheckoutSource.includes('CUSTOMER_SAFE_CHECKOUT_ERROR_CODES'), 'Checkout route must allowlist customer-visible error messages');
+assert(!createCheckoutSource.includes('if (err.status && err.status < 500) return err.message'), 'Checkout route must not expose arbitrary provider 4xx messages');
+assert(!createCheckoutSource.includes("console.error('[create-checkout-session]', err.message"), 'Checkout route must not log raw checkout errors');
+assert(!createCheckoutSource.includes('rollbackErr.message || rollbackErr'), 'Checkout rollback must not log raw rollback errors');
 assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin balance collection must reject over-balance overrides');
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');
 assert(adminCollectBalanceSource.includes('writeAuditEvent'), 'Admin balance collection must write audit events');
