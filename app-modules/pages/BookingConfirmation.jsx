@@ -331,7 +331,9 @@ export default function BookingConfirmation() {
         const data = await res.json();
         if (!cancelled) {
           if (res.ok) setAppt(data);
-          else setApptError(data.error || 'Could not load booking details');
+          else if (paymentSuccess && data.code === 'summary_payload_missing') {
+            setApptError('Payment received. A nurse will confirm your appointment shortly.');
+          } else setApptError(data.error || 'Could not load booking details');
         }
       } catch {
         if (!cancelled) setApptError('Could not load booking details');

@@ -437,6 +437,24 @@ export function checkoutPayloadFromRecord(record = {}) {
   return payload.checkout || payload;
 }
 
+export function isLegacyStripeMetadataPayload(metadata = {}) {
+  return [
+    'customerEmail',
+    'customerName',
+    'firstName',
+    'lastName',
+    'phone',
+    'dob',
+    'emergencyContact',
+    'address',
+    'zip',
+    'notes',
+    'acuityDatetime',
+    'timeLabel',
+    'itemPrices',
+  ].some((key) => String(metadata?.[key] || '').trim());
+}
+
 export function buildStripeCheckoutMetadata({
   appointmentRecordId,
   appointment = {},

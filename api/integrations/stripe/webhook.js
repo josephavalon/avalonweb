@@ -13,6 +13,7 @@ import {
   createSchedulingAppointmentWithFallback,
   claimSchedulingCreation,
   readAcuityAppointmentId,
+  isLegacyStripeMetadataPayload,
   syncCheckoutAttioPerson,
 } from '../../_checkout-fulfillment.js';
 
@@ -121,6 +122,21 @@ async function insertOperationalFailureCase(db, { caseType, provider = 'avalon',
   }));
 }
 
+async function insertMissingCheckoutRecordCase(db, { session, appointmentRecordId, tenantId }) {
+  await insertOperationalFailureCase(db, {
+    caseType: 'stripe_succeeded_acuity_failed',
+    provider: 'stripe',
+    externalReference: session.id,
+    tenantId,
+    payload: {
+      appointmentRecordId: appointmentRecordId || null,
+      stripeSessionId: session.id,
+      reason: 'checkout_record_missing_or_redacted',
+      local_contract: 'stripe_paid_then_acuity_attio_v1',
+    },
+  });
+}
+
 async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 1000) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const existingId = await readAcuityAppointmentId(db, recordId);
@@ -200,7 +216,23 @@ async function handleCheckoutCompleted(stripe, db, session) {
   let attioPersonId = null;
   let attioSynced = false;
   let fulfillmentError = null;
-  const checkout = record ? checkoutPayloadFromRecord(record) : checkoutPayloadFromStripeMetadata(md);
+  const canUseStripeMetadataPayload = !record && isLegacyStripeMetadataPayload(md);
+  const checkout = record
+    ? checkoutPayloadFromRecord(record)
+    : canUseStripeMetadataPayload
+      ? checkoutPayloadFromStripeMetadata(md)
+      : null;
+
+  if (!checkout) {
+    await insertMissingCheckoutRecordCase(db, { session, appointmentRecordId, tenantId });
+    return {
+      action: 'deposit_paid_checkout_record_missing',
+      matched: false,
+      persisted: false,
+      acuityAppointmentId: null,
+      attioSynced: false,
+    };
+  }
 
   let schedulingDeferred = false;
   if (!acuityAppointment?.id) {

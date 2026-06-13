@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
+import {
+  buildStripeCheckoutMetadata,
+  isLegacyStripeMetadataPayload,
+} from '../api/_checkout-fulfillment.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -196,6 +199,42 @@ function checkStripeMetadataShape() {
       fail(`Stripe checkout metadata dropped operational key: ${requiredKey}`);
     }
   }
+
+  if (isLegacyStripeMetadataPayload(metadata)) {
+    fail('Current Stripe checkout metadata must not be treated as a legacy PHI-rich fulfillment payload');
+  }
+
+  if (!isLegacyStripeMetadataPayload({
+    customerEmail: 'legacy@example.com',
+    address: '123 Legacy St',
+    acuityDatetime: '2026-06-20T17:00:00Z',
+  })) {
+    fail('Legacy Stripe metadata detection must still recognize old PHI-rich sessions');
+  }
+}
+
+function checkStripeMetadataFallbackIsLegacyOnly() {
+  const verifySource = readRepoFile('api/checkout/verify.js');
+  const webhookSource = readRepoFile('api/integrations/stripe/webhook.js');
+  const summarySource = readRepoFile('api/appointment-summary.js');
+  for (const [label, source] of [
+    ['api/checkout/verify.js', verifySource],
+    ['api/integrations/stripe/webhook.js', webhookSource],
+    ['api/appointment-summary.js', summarySource],
+  ]) {
+    if (!source.includes('isLegacyStripeMetadataPayload')) {
+      fail(`${label} must guard Stripe metadata fallback as legacy-only`);
+    }
+  }
+  if (!verifySource.includes('checkout_record_missing_or_redacted')) {
+    fail('checkout/verify must reconcile paid sessions whose Supabase checkout payload is missing');
+  }
+  if (!webhookSource.includes('deposit_paid_checkout_record_missing')) {
+    fail('Stripe webhook must not schedule from current redacted metadata when the appointment record is missing');
+  }
+  if (!summarySource.includes('summary_payload_missing')) {
+    fail('appointment-summary must not render identifiable details from current redacted metadata alone');
+  }
 }
 
 function checkAppointmentSummaryAuth() {
@@ -266,6 +305,7 @@ function checkDemoAuthHardening() {
 
 scanDist();
 checkStripeMetadataShape();
+checkStripeMetadataFallbackIsLegacyOnly();
 checkAppointmentSummaryAuth();
 checkDemoAuthHardening();
 

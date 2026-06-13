@@ -8,6 +8,7 @@ import { getSupabaseServiceClient } from './_supabase-server.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
+  isLegacyStripeMetadataPayload,
 } from './_checkout-fulfillment.js';
 
 const SUMMARY_COLUMNS = [
@@ -149,7 +150,9 @@ export default async function handler(req, res) {
     const record = await appointmentRecordForSession(session);
     const checkout = record
       ? checkoutPayloadFromRecord(record)
-      : checkoutPayloadFromStripeMetadata(session.metadata || {});
+      : isLegacyStripeMetadataPayload(session.metadata || {})
+        ? checkoutPayloadFromStripeMetadata(session.metadata || {})
+        : null;
 
     const acuityId = record?.acuity_appointment_id
       || session.metadata?.acuityAppointmentId
@@ -157,7 +160,7 @@ export default async function handler(req, res) {
       || '';
 
     const authed = await getAuthedUser(req);
-    const accessMode = summaryAccessMode({ req, authed, session, record, checkout, acuityId });
+    const accessMode = summaryAccessMode({ req, authed, session, record, checkout: checkout || {}, acuityId });
     const auditDb = await getSupabaseServiceClient();
     if (!accessMode) {
       await writeAuditEvent(auditDb, {
@@ -180,6 +183,14 @@ export default async function handler(req, res) {
       return res.status(401).json({
         error: 'Appointment summary authorization required',
         code: 'summary_auth_required',
+      });
+    }
+
+    if (!checkout) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(404).json({
+        error: 'Appointment summary is not available',
+        code: 'summary_payload_missing',
       });
     }
 

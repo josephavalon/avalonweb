@@ -10,6 +10,7 @@ import {
   createSchedulingAppointmentWithFallback,
   claimSchedulingCreation,
   readAcuityAppointmentId,
+  isLegacyStripeMetadataPayload,
   syncCheckoutAttioPerson,
 } from '../_checkout-fulfillment.js';
 
@@ -104,6 +105,20 @@ async function insertOperationalFailureCase(db, { caseType, provider = 'avalon',
   }));
 }
 
+async function insertMissingCheckoutRecordCase(db, { appointment, session }) {
+  await insertOperationalFailureCase(db, {
+    caseType: 'stripe_succeeded_acuity_failed',
+    provider: 'stripe',
+    externalReference: session.id,
+    payload: {
+      appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || null,
+      stripeSessionId: session.id,
+      reason: 'checkout_record_missing_or_redacted',
+      local_contract: 'stripe_paid_then_acuity_attio_v1',
+    },
+  });
+}
+
 async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 1000) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const existingId = await readAcuityAppointmentId(db, recordId);
@@ -168,7 +183,24 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
   let fulfillmentStatus = appointment?.status || metadata.fulfillmentStatus || null;
   let fulfillmentError = null;
   let attioPersonId = null;
-  const checkout = appointment ? checkoutPayloadFromRecord(appointment) : checkoutPayloadFromStripeMetadata(session.metadata || {});
+  const canUseStripeMetadataPayload = !appointment && isLegacyStripeMetadataPayload(session.metadata || {});
+  const checkout = appointment
+    ? checkoutPayloadFromRecord(appointment)
+    : canUseStripeMetadataPayload
+      ? checkoutPayloadFromStripeMetadata(session.metadata || {})
+      : null;
+
+  if (!checkout) {
+    await insertMissingCheckoutRecordCase(await getSupabaseServiceClient(), { appointment, session });
+    return {
+      appointmentId: acuityAppointmentId,
+      fulfillmentStatus: 'checkout_record_missing',
+      fulfillmentError: null,
+      attioPersonId,
+      paymentIntentMetadata: metadata,
+      deferred: true,
+    };
+  }
 
   let schedulingDeferred = false;
   if (!acuityAppointmentId) {
