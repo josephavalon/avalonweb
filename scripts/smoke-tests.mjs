@@ -342,6 +342,9 @@ assert(sendSmsSource.includes('SEND_SMS_MAX_BODY_BYTES'), 'SMS auth hook must en
 assert(sendSmsSource.includes('send_sms_body_too_large'), 'SMS auth hook must reject oversized raw bodies explicitly');
 assert(sendSmsSource.includes("key: `send-sms:${clientIp(req)}`"), 'SMS auth hook must rate-limit by requester IP');
 assert(sendSmsSource.includes('status: resp.status') && sendSmsSource.includes('SMS provider send failed'), 'SMS auth hook must avoid echoing provider response details');
+assert(sendSmsSource.includes('safeLogContext'), 'SMS auth hook must sanitize provider request error logs');
+assert(!sendSmsSource.includes('err?.message'), 'SMS auth hook must not log raw provider request error messages');
+assert(!sendSmsSource.includes('secretPrefix'), 'SMS auth hook must not log webhook secret prefixes');
 assert(safeErrorSource.includes('safeErrorCode') && safeErrorSource.includes('safeLogContext'), 'Server routes must have shared safe error helpers');
 for (const [label, source] of Object.entries({ auditEventsSource, reconciliationSource })) {
   assert(source.includes('safeLogContext'), `Shared persistence helper must sanitize insert-failure logs: ${label}`);

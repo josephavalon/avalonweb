@@ -15,6 +15,7 @@
 
 import crypto from 'crypto';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
+import { safeLogContext } from '../_lib/safe-error.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -95,7 +96,6 @@ function verifySignature(rawBody, headers, secret) {
   });
   if (!ok) {
     console.warn('[send-sms] signature mismatch', {
-      secretPrefix: String(secret).slice(0, 8),
       keyLen: key.length,
       bodyLen: rawBody.length,
       expectedLen: expected.length,
@@ -166,7 +166,7 @@ export default async function handler(req, res) {
     }
     return res.status(200).json({}); // Supabase treats 2xx as delivered
   } catch (err) {
-    console.warn('[send-sms] provider request error', { message: err?.message });
+    console.warn('[send-sms] provider request error', safeLogContext(err, 'send_sms_provider_request_failed'));
     return hookError(res, 502, 'SMS provider request failed');
   }
 }
