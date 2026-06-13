@@ -51,6 +51,7 @@ const adminBookingsSource = readFileSync(new URL('../api/admin/bookings.js', imp
 const meAppointmentsSource = readFileSync(new URL('../api/me/appointments.js', import.meta.url), 'utf8');
 const supabaseAuthSource = readFileSync(new URL('../api/_lib/supabase-auth.js', import.meta.url), 'utf8');
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
+const rateLimitSource = readFileSync(new URL('../api/_lib/rate-limit.js', import.meta.url), 'utf8');
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
 const memberDashboardSource = readFileSync(new URL('../app-modules/pages/members/Dashboard.jsx', import.meta.url), 'utf8');
@@ -81,6 +82,9 @@ const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.u
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
 const launchMessagingMigrationSource = readFileSync(new URL('../supabase/migrations/011_launch_messaging_roles.sql', import.meta.url), 'utf8');
+const envExampleSource = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
+const authSetupSource = readFileSync(new URL('../docs/AUTH_SETUP.md', import.meta.url), 'utf8');
+const goLiveStatusSource = readFileSync(new URL('../docs/GO_LIVE_STATUS.md', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -321,6 +325,14 @@ assert(orderLookupSource.includes('max: 5'), 'Order lookup rate-limit max must b
 assert(orderLookupSource.includes('contact_verification_required'), 'Order lookup must require both contact factors');
 assert(orderLookupSource.includes('!phoneMatch || !emailMatch'), 'Order lookup must require phone and email to match');
 assert(orderLookupSource.includes('input_too_long'), 'Order lookup must cap input field lengths');
+assert(rateLimitSource.includes('safeLogContext'), 'Rate-limit backend fallback logs must use sanitized error context');
+assert(!rateLimitSource.includes("err?.message"), 'Rate-limit backend fallback must not log raw provider error messages');
+for (const kvEnv of ['KV_REST_API_URL', 'KV_REST_API_TOKEN']) {
+  assert(envExampleSource.includes(kvEnv), `.env.example must document production rate-limit env ${kvEnv}`);
+  assert(authSetupSource.includes(kvEnv), `Auth setup must document production rate-limit env ${kvEnv}`);
+  assert(goLiveStatusSource.includes(kvEnv), `Go-live status must track production rate-limit env ${kvEnv}`);
+}
+assert(goLiveStatusSource.includes('GL-015') && goLiveStatusSource.includes('Rate-limit backend'), 'Go-live status must track persistent rate-limit backend readiness');
 assert(manageOrderSource.includes('id="order-email"') && manageOrderSource.includes('id="order-phone"'), 'Manage order form must collect both email and phone');
 assert(loginPageSource.includes('safeLoginRedirectPath'), 'Login page must sanitize redirect parameters through one helper');
 assert(loginPageSource.includes("new URL(value, 'https://avalon.local')"), 'Login redirect sanitizer must parse redirects as local URLs');

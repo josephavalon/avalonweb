@@ -16,6 +16,8 @@
  * to @vercel/kv for better typing and connection pooling.
  */
 
+import { safeLogContext } from './safe-error.js';
+
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const KV_ENABLED = Boolean(KV_URL && KV_TOKEN);
@@ -70,8 +72,9 @@ async function kvCheck(key, windowMs, max) {
     };
   } catch (err) {
     // Fail-open to memory — do not block legitimate traffic on KV outage.
-    // Vercel's runtime logs pick this up via console.warn.
-    console.warn('[rate-limit] KV check failed, falling back to memory:', err?.message);
+    // Vercel's runtime logs pick this up via console.warn without provider
+    // messages or request context.
+    console.warn('[rate-limit] KV check failed, falling back to memory', safeLogContext(err, 'rate_limit_kv_failed'));
     return memoryCheck(key, windowMs, max);
   }
 }

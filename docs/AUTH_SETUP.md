@@ -43,6 +43,11 @@ Live checkout also needs the server-only environment from `.env.example`:
 `AVALON_OPERATIONS_EMAIL`, `ATTIO_ACCESS_TOKEN`, `ATTIO_WORKSPACE_ID`, and
 `ATTIO_PEOPLE_OBJECT` where those integrations are enabled.
 
+Public lookup and auth endpoints use a shared rate limiter. Set
+`KV_REST_API_URL` and `KV_REST_API_TOKEN` in staging/production so those limits
+persist across serverless instances; without them, functions fall back to
+per-instance memory buckets.
+
 ## 2. Apply Supabase migrations
 
 Run the Supabase migrations in order through

@@ -344,6 +344,8 @@ function checkLaunchEnvDocs() {
     'ACUITY_API_KEY',
     'RESEND_API_KEY',
     'ATTIO_ACCESS_TOKEN',
+    'KV_REST_API_URL',
+    'KV_REST_API_TOKEN',
   ]) {
     if (!envExample.includes(required)) {
       fail(`.env.example missing launch-critical environment key: ${required}`);
@@ -371,6 +373,7 @@ function checkGoLiveStatusLedger() {
     'GL-012',
     'GL-013',
     'GL-014',
+    'GL-015',
     'VITE_AVALON_ENABLE_LIVE_API=true',
     'AVALON_ENABLE_LIVE_API=true',
     'APPOINTMENT_SUMMARY_TOKEN_SECRET',
@@ -382,6 +385,7 @@ function checkGoLiveStatusLedger() {
     'Balance charge audit drill',
     'Email/CRM failure drill',
     'Post-deploy revenue matrix',
+    'Rate-limit backend',
     'BAAs',
     'MFA',
     'key',

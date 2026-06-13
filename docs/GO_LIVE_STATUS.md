@@ -28,7 +28,7 @@ an explicit deferral/waiver in `.context/enterprise-audit-log.md`.
 
 | ID | Area | Required evidence | Status |
 | --- | --- | --- | --- |
-| GL-001 | Vercel env | Production/staging envs set from `.env.example`, including `VITE_AVALON_ENABLE_LIVE_API=true`, `AVALON_ENABLE_LIVE_API=true`, `APPOINTMENT_SUMMARY_TOKEN_SECRET`, Supabase service role, Stripe, Acuity, Resend, Attio, and internal API secret values. | pending user action |
+| GL-001 | Vercel env | Production/staging envs set from `.env.example`, including `VITE_AVALON_ENABLE_LIVE_API=true`, `AVALON_ENABLE_LIVE_API=true`, `APPOINTMENT_SUMMARY_TOKEN_SECRET`, Supabase service role, Stripe, Acuity, Resend, Attio, internal API secret, and KV rate-limit values. | pending user action |
 | GL-002 | Supabase migrations | Production/staging Supabase has migrations applied through `supabase/migrations/011_launch_messaging_roles.sql`. | pending user action |
 | GL-003 | Supabase Auth redirects | Staging and production login/admin-login redirect URLs are configured in Supabase Auth. | pending user action |
 | GL-004 | Key rotation | Exposed Acuity API key and Gemini image-MCP key are rotated and only the new values are set in vendor/Vercel environments. | pending user action |
@@ -42,6 +42,7 @@ an explicit deferral/waiver in `.context/enterprise-audit-log.md`.
 | GL-012 | Balance charge audit drill | Drill 5 passes: over-balance override rejects and all attempts write `audit_events` with no PHI. | pending staging drill |
 | GL-013 | Email/CRM failure drill | Drill 6 passes: Resend and Attio failures create reconciliation cases with safe payloads. | pending staging drill |
 | GL-014 | Post-deploy revenue matrix | Drill 7 passes against staging and production deploy URLs with `REVENUE_MATRIX_BASE_URL`. | pending staging drill |
+| GL-015 | Rate-limit backend | `KV_REST_API_URL` and `KV_REST_API_TOKEN` are configured in staging/production so order lookup, SMS auth, and internal charge throttles persist across serverless instances. | pending user action |
 
 ## Evidence Rules
 
