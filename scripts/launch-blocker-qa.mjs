@@ -1,0 +1,262 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, '..');
+const distRoot = path.join(repoRoot, 'dist');
+
+let failed = false;
+
+function fail(message) {
+  failed = true;
+  console.error(`FAIL: ${message}`);
+}
+
+function readRepoFile(relativePath) {
+  return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+}
+
+function walkFiles(dir) {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkFiles(fullPath));
+    } else if (entry.isFile()) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function isTextBuildFile(filePath) {
+  return /\.(?:html|js|css|json|txt|xml|svg|webmanifest)$/i.test(filePath);
+}
+
+function relative(filePath) {
+  return path.relative(repoRoot, filePath);
+}
+
+function scanDist() {
+  const indexPath = path.join(distRoot, 'index.html');
+  if (!fs.existsSync(indexPath)) {
+    fail('dist/index.html is missing. Run npm run build before npm run test:launch-blockers.');
+    return;
+  }
+
+  const forbiddenLiterals = [
+    {
+      value: ['Jon', 'Jones', '1986'].join(''),
+      label: 'retired hardcoded demo password',
+    },
+    {
+      value: 'summary_token',
+      label: 'appointment summary token query transport',
+    },
+    {
+      value: 'AVALON_INTERNAL_API_SECRET',
+      label: 'internal API secret env name',
+    },
+    {
+      value: 'STRIPE_SECRET_KEY',
+      label: 'Stripe secret env name',
+    },
+    {
+      value: 'APPOINTMENT_SUMMARY_TOKEN_SECRET',
+      label: 'summary-token signing secret env name',
+    },
+    {
+      value: 'SUPABASE_SERVICE_ROLE_KEY',
+      label: 'Supabase service-role secret env name',
+    },
+    {
+      value: 'ACUITY_API_KEY',
+      label: 'Acuity secret env name',
+    },
+    {
+      value: 'RESEND_API_KEY',
+      label: 'Resend secret env name',
+    },
+    {
+      value: 'ATTIO_ACCESS_TOKEN',
+      label: 'Attio secret env name',
+    },
+  ];
+
+  const liveDemoPassword =
+    process.env.VITE_AVALON_ENABLE_LIVE_API === 'true'
+      ? String(process.env.VITE_AVALON_DEMO_PASSWORD || '')
+      : '';
+  if (liveDemoPassword) {
+    forbiddenLiterals.push({
+      value: liveDemoPassword,
+      label: 'live build demo password value',
+    });
+  }
+
+  for (const filePath of walkFiles(distRoot).filter(isTextBuildFile)) {
+    const source = fs.readFileSync(filePath, 'utf8');
+    for (const { value, label } of forbiddenLiterals) {
+      if (value && source.includes(value)) {
+        fail(`${relative(filePath)} contains ${label}`);
+      }
+    }
+  }
+}
+
+function checkStripeMetadataShape() {
+  const metadata = buildStripeCheckoutMetadata({
+    appointmentRecordId: 'appt_live_guard',
+    contact: {
+      name: 'Jane Patient',
+      firstName: 'Jane',
+      lastName: 'Patient',
+      email: 'jane@example.com',
+      phone: '4155551212',
+      dob: '1980-01-01',
+      emergencyContact: 'Care Partner',
+    },
+    appointment: {
+      localBookingId: 'AV-123',
+      reference: 'ref_123',
+      acuityDatetime: '2026-06-20T17:00:00Z',
+      acuityTimezone: 'America/Los_Angeles',
+      address: '123 Health St',
+      zip: '94107',
+      guests: '2',
+      locationType: 'home',
+      orderType: 'visit',
+      paymentType: 'one_time_deposit',
+      notes: 'Sensitive intake note',
+      clientType: 'new',
+      clinicalReviewOnFile: true,
+      gfeRequired: true,
+      dob: '1980-01-01',
+      emergencyContact: 'Care Partner',
+    },
+    items: [
+      {
+        key: 'nad_1000',
+        cartKey: 'nad_1000',
+        label: 'NAD+ (1000mg)',
+        type: 'addon',
+        price: 800,
+      },
+    ],
+    membership: {
+      name: 'Recovery',
+      billing: 'monthly',
+      price: 499,
+    },
+    paymentMethod: 'card',
+    primaryService: 'NAD+ (1000mg)',
+    visitSubtotalCents: 80000,
+    depositCents: 5000,
+    balanceDueCents: 75000,
+  });
+
+  const forbiddenKeys = [
+    'customerName',
+    'customerEmail',
+    'firstName',
+    'lastName',
+    'phone',
+    'dob',
+    'emergencyContact',
+    'address',
+    'zip',
+    'notes',
+    'clientType',
+    'clinicalReviewOnFile',
+    'gfeRequired',
+    'itemPrices',
+  ];
+
+  for (const key of forbiddenKeys) {
+    if (Object.hasOwn(metadata, key)) {
+      fail(`Stripe checkout metadata still emits PHI/high-risk key: ${key}`);
+    }
+  }
+
+  for (const requiredKey of [
+    'fulfillment',
+    'appointmentRecordId',
+    'paymentMethod',
+    'paymentType',
+    'itemLabels',
+    'itemKeys',
+    'itemTypes',
+    'visitSubtotalCents',
+    'depositAmountCents',
+    'balanceDueCents',
+  ]) {
+    if (!Object.hasOwn(metadata, requiredKey)) {
+      fail(`Stripe checkout metadata dropped operational key: ${requiredKey}`);
+    }
+  }
+}
+
+function checkAppointmentSummaryAuth() {
+  const source = readRepoFile('api/appointment-summary.js');
+  if (!source.includes("req.headers?.['x-appointment-summary-token']")) {
+    fail('appointment-summary must read signed summary tokens from a header');
+  }
+  if (source.includes("req.query?.summary_token\n    ||") || source.includes("req.query?.summary_token ||")) {
+    fail('appointment-summary must not authorize signed summary tokens from query strings');
+  }
+  for (const required of [
+    'summary_auth_required',
+    'summary_token_query',
+    'verifyAppointmentSummaryToken',
+    'appointment_summary_read',
+    'appointment_summary_denied',
+  ]) {
+    if (!source.includes(required)) {
+      fail(`appointment-summary missing launch auth/audit guard: ${required}`);
+    }
+  }
+}
+
+function checkDemoAuthHardening() {
+  const authStoreSource = readRepoFile('src/lib/useAuthStore.js');
+  const preApiSecuritySource = readRepoFile('src/lib/preApiSecurity.js');
+  const viteConfigSource = readRepoFile('vite.config.js');
+  const loginQaSource = readRepoFile('scripts/login-qa.mjs');
+  const oldDemoPassword = ['Jon', 'Jones', '1986'].join('');
+
+  for (const [label, source] of [
+    ['src/lib/useAuthStore.js', authStoreSource],
+    ['scripts/login-qa.mjs', loginQaSource],
+  ]) {
+    if (source.includes(oldDemoPassword)) {
+      fail(`${label} still contains the retired hardcoded demo password`);
+    }
+  }
+
+  if (!authStoreSource.includes('VITE_AVALON_DEMO_PASSWORD')) {
+    fail('Demo auth must be sourced from VITE_AVALON_DEMO_PASSWORD');
+  }
+  if (!preApiSecuritySource.includes('isLiveApiArmed') || !preApiSecuritySource.includes('!isLiveApiArmed()')) {
+    fail('Demo auth must be disabled when live API mode is enabled');
+  }
+  if (!viteConfigSource.includes('redactDemoPasswordPlugin')) {
+    fail('Vite build must redact demo credentials from live API bundles');
+  }
+  if (!loginQaSource.includes("requireDemoPassword('LOGIN_QA_PASSWORD'")) {
+    fail('Login QA must require env-provided demo credentials');
+  }
+}
+
+scanDist();
+checkStripeMetadataShape();
+checkAppointmentSummaryAuth();
+checkDemoAuthHardening();
+
+if (failed) {
+  console.error('\nLaunch-blocker QA failed.');
+  process.exit(1);
+}
+
+console.log('PASS: launch-blocker build artifact and PHI guardrails are clear.');

@@ -356,7 +356,7 @@ for (const [label, source] of Object.entries({
   assert(!source.includes('return res.status(err.status || 500).json({ error: err.message'), `Direct scheduling route must not return raw vendor errors: ${label}`);
   assert(!source.includes('console.error') || !source.includes('err.message'), `Direct scheduling route must not log raw vendor errors: ${label}`);
 }
-assert(viteConfigSource.includes('redactLiveDemoPasswordPlugin'), 'Vite build must redact demo password from live API bundles');
+assert(viteConfigSource.includes('redactDemoPasswordPlugin'), 'Vite build must redact demo password from launch-sensitive bundles');
 assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API build redaction must blank the demo password env key');
 assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
 assert(privateAuthTriggerMigrationSource.includes('drop function if exists public.handle_new_user()'), 'Auth profile trigger migration must remove the public security definer function');

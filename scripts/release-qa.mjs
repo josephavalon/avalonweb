@@ -143,6 +143,7 @@ try {
   await run('npm', ['run', 'test:privacy']);
   await run('npm', ['run', 'test:security']);
   await run('npm', ['run', 'build']);
+  await run('npm', ['run', 'test:launch-blockers']);
   previewSnapshotRoot = createPreviewSnapshot();
   await run('npm', ['run', 'test:performance']);
   await run('npm', ['run', 'test:smoke']);

@@ -4,6 +4,8 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { transform as swcTransform } from '@swc/core'
 
+const RETIRED_DEMO_PASSWORD = ['Jon', 'Jones', '1986'].join('');
+
 const API_ROUTES = {
   '/api/acuity-availability': './api/acuity-availability.js',
   '/api/acuity-book': './api/acuity-book.js',
@@ -112,15 +114,27 @@ function swcJsxTransformPlugin() {
   };
 }
 
-function redactLiveDemoPasswordPlugin(isLiveApiEnabled) {
+function applyEnv(mode) {
+  const loadedEnv = loadEnv(mode, process.cwd(), '');
+  for (const [key, value] of Object.entries(loadedEnv)) {
+    if (process.env[key] == null) process.env[key] = value;
+  }
+  if (process.env.VITE_AVALON_DEMO_PASSWORD === RETIRED_DEMO_PASSWORD) {
+    process.env.VITE_AVALON_DEMO_PASSWORD = '';
+  }
+}
+
+function redactDemoPasswordPlugin(isLiveApiEnabled) {
   return {
-    name: 'avalon-redact-live-demo-password',
+    name: 'avalon-redact-demo-password',
     apply: 'build',
     renderChunk(code) {
-      if (!isLiveApiEnabled) return null;
-      const next = code
+      let next = code.replace(/JonJones1986/g, '');
+      if (isLiveApiEnabled) {
+        next = next
         .replace(/VITE_AVALON_DEMO_PASSWORD:"[^"]*"/g, 'VITE_AVALON_DEMO_PASSWORD:""')
         .replace(/JonJones1986/g, '');
+      }
       return next === code ? null : { code: next, map: null };
     },
   };
@@ -128,7 +142,7 @@ function redactLiveDemoPasswordPlugin(isLiveApiEnabled) {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
+  applyEnv(mode);
   const liveApiEnabled = process.env.VITE_AVALON_ENABLE_LIVE_API === 'true';
   const fixtureAliases = mode === 'development'
     ? [
@@ -152,7 +166,7 @@ export default defineConfig(({ mode }) => {
     swcJsxTransformPlugin(),
     react(),
     localApiPlugin(),
-    redactLiveDemoPasswordPlugin(liveApiEnabled),
+    redactDemoPasswordPlugin(liveApiEnabled),
   ],
   optimizeDeps: {
     include: [

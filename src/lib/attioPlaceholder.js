@@ -1,9 +1,9 @@
 import { apiGet, apiPost } from './apiClient';
 
 export const ATTIO_ENV_KEYS = {
-  accessToken: 'ATTIO_ACCESS_TOKEN',
-  workspaceId: 'ATTIO_WORKSPACE_ID',
-  peopleObject: 'ATTIO_PEOPLE_OBJECT',
+  accessToken: 'Server access token',
+  workspaceId: 'Workspace identifier',
+  peopleObject: 'People object mapping',
 };
 
 export const ATTIO_INTEGRATION = {
