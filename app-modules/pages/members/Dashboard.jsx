@@ -218,7 +218,7 @@ function LiveClientDashboard() {
     let active = true;
     apiGet('/api/me/appointments')
       .then((data) => { if (active) setState({ loading: false, error: '', visits: Array.isArray(data?.appointments) ? data.appointments : [] }); })
-      .catch((err) => { if (active) setState({ loading: false, error: err.message || 'Could not load your visits.', visits: [] }); });
+      .catch(() => { if (active) setState({ loading: false, error: 'Could not load your visits.', visits: [] }); });
     return () => { active = false; };
   }, []);
 

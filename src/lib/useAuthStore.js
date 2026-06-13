@@ -44,6 +44,24 @@ function normalizeLoginIdentifier(value = '') {
   return String(value).trim().replace(/\s+/g, '').toUpperCase();
 }
 
+function customerSafeAuthError(fallback) {
+  return fallback;
+}
+
+function demoAuthErrorMessage(err) {
+  const message = String(err?.message || '');
+  if (
+    message === 'Invalid username or password.'
+    || message === 'Local demo auth is disabled outside Avalon simulation mode.'
+    || message === 'Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.'
+    || message === 'Account suspended. Contact support at hello@avalonvitality.co'
+    || message === 'This account is no longer active.'
+  ) {
+    return message;
+  }
+  return 'Sign in failed.';
+}
+
 function demoMfaState() {
   return {
     status: 'not_required_demo_local',
@@ -165,7 +183,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true, pending: true, message: 'Check your email for a secure sign-in link.' };
     } catch (err) {
-      const msg = err.message || 'Could not send the sign-in link.';
+      const msg = customerSafeAuthError('Could not send the sign-in link.');
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
@@ -193,7 +211,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true, pending: true, message: 'Check your email to confirm and finish signing in.' };
     } catch (err) {
-      const msg = err.message || 'Could not create your account.';
+      const msg = customerSafeAuthError('Could not create your account.');
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
@@ -210,7 +228,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true, pending: true, message: 'We texted you a 6-digit code.' };
     } catch (err) {
-      const msg = err.message || 'Could not send the code.';
+      const msg = customerSafeAuthError('Could not send the code.');
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
@@ -228,7 +246,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true }; // onAuthStateChange sets the user
     } catch (err) {
-      const msg = err.message || 'That code was not valid.';
+      const msg = customerSafeAuthError('That code was not valid.');
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
@@ -244,7 +262,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true }; // onAuthStateChange sets the user
     } catch (err) {
-      const msg = err.message || 'Passkey sign-in failed.';
+      const msg = customerSafeAuthError('Passkey sign-in failed.');
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
@@ -258,7 +276,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true, message: 'Passkey added — use it to sign in next time.' };
     } catch (err) {
-      return { ok: false, error: err.message || 'Could not add a passkey.' };
+      return { ok: false, error: customerSafeAuthError('Could not add a passkey.') };
     }
   }, []);
 
@@ -276,7 +294,7 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true, pending: true };
     } catch (err) {
-      const msg = err.message || `Could not sign in with ${provider}.`;
+      const msg = customerSafeAuthError(`Could not sign in with ${provider}.`);
       setError(msg);
       return { ok: false, error: msg };
     }
@@ -324,7 +342,7 @@ export function AuthStoreProvider({ children }) {
       appendActivity('Signed in', { role: sessionUser.role, username: usernameKey, authMode: sessionUser.authMode });
       return { ok: true, user: sessionUser };
     } catch (err) {
-      const msg = err.message || 'Sign in failed.';
+      const msg = demoAuthErrorMessage(err);
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }

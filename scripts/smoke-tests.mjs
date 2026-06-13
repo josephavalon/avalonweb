@@ -50,6 +50,7 @@ const supabaseAuthSource = readFileSync(new URL('../api/_lib/supabase-auth.js', 
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
+const memberDashboardSource = readFileSync(new URL('../app-modules/pages/members/Dashboard.jsx', import.meta.url), 'utf8');
 const messagingPanelSource = readFileSync(new URL('../src/components/messaging/MessagingPanel.jsx', import.meta.url), 'utf8');
 const useMessagesSource = readFileSync(new URL('../src/hooks/useMessages.js', import.meta.url), 'utf8');
 const sendSmsSource = readFileSync(new URL('../api/auth/send-sms.js', import.meta.url), 'utf8');
@@ -265,6 +266,12 @@ assert(meAppointmentsSource.includes('client_appointments_read'), 'Client appoin
 assert(meAppointmentsSource.includes("match: 'session_email'"), 'Client appointment read audit must avoid storing the email value');
 assert(meAppointmentsSource.includes('safeLogContext'), 'Client appointment read failures must sanitize error logs');
 assert(!meAppointmentsSource.includes('json({ error: error.message })'), 'Client appointment read failures must not return raw database errors');
+assert(!memberDashboardSource.includes("error: err.message || 'Could not load your visits.'"), 'Member dashboard must not render raw appointment API errors');
+assert(authStoreSource.includes('customerSafeAuthError'), 'Supabase auth UI must use customer-safe auth error copy');
+assert(authStoreSource.includes('demoAuthErrorMessage'), 'Demo auth must keep an explicit local error allowlist');
+assert(!authStoreSource.includes('const msg = err.message ||'), 'Supabase auth UI must not render raw provider error messages');
+assert(!authStoreSource.includes("err.message || 'Passkey sign-in failed.'"), 'Passkey sign-in must not render raw provider errors');
+assert(!authStoreSource.includes("err.message || 'Could not add a passkey.'"), 'Passkey registration must not render raw provider errors');
 assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
 assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
 assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');
