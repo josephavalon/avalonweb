@@ -315,33 +315,88 @@ function stableHash(value) {
 // boundary — event authors shouldn't have to remember.
 const DROP_KEYS = new Set([
   'email',
+  'customerEmail',
   'first_name',
   'last_name',
   'firstName',
   'lastName',
+  'customerName',
+  'name',
   'phone',
+  'customerPhone',
   'password',
   'token',
+  'summaryToken',
   'ssn',
   'dob',
   'date_of_birth',
+  'dateOfBirth',
+  'birthdate',
+  'address',
+  'zip',
+  'postalCode',
+  'emergencyContact',
+  'notes',
+  'medicalNotes',
+  'clinicalNotes',
+  'clinicalReviewOnFile',
+  'gfeRequired',
+  'diagnosis',
+  'medications',
+  'allergies',
 ]);
+
+function sensitiveAnalyticsKey(key = '') {
+  const normalized = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+  return DROP_KEYS.has(key) || [
+    'email',
+    'firstname',
+    'lastname',
+    'customername',
+    'name',
+    'phone',
+    'password',
+    'token',
+    'ssn',
+    'dob',
+    'dateofbirth',
+    'birthdate',
+    'address',
+    'zip',
+    'postalcode',
+    'emergencycontact',
+    'notes',
+    'medicalnotes',
+    'clinicalnotes',
+    'clinicalreviewonfile',
+    'gferequired',
+    'diagnosis',
+    'medications',
+    'allergies',
+  ].some((blocked) => normalized.includes(blocked));
+}
 
 function sanitize(props) {
   if (!props || typeof props !== 'object') return {};
+  return sanitizeObject(props);
+}
+
+function sanitizeObject(props, depth = 0) {
+  if (!props || typeof props !== 'object' || depth > 2) return {};
   const out = {};
   for (const [k, v] of Object.entries(props)) {
-    if (DROP_KEYS.has(k)) continue;
+    if (sensitiveAnalyticsKey(k)) continue;
     // Truncate strings to keep payloads bounded.
     if (typeof v === 'string') {
       out[k] = v.length > 512 ? v.slice(0, 512) : v;
     } else if (v === null || ['number', 'boolean'].includes(typeof v)) {
       out[k] = v;
     } else if (Array.isArray(v)) {
-      out[k] = v.slice(0, 32);
+      out[k] = v.slice(0, 32).map((item) => (
+        item && typeof item === 'object' ? sanitizeObject(item, depth + 1) : item
+      ));
     } else if (typeof v === 'object') {
-      // One level of nesting allowed; flatten further to avoid unbounded blobs.
-      out[k] = JSON.parse(JSON.stringify(v)); // strip functions / refs
+      out[k] = sanitizeObject(v, depth + 1);
     }
   }
   return out;

@@ -76,6 +76,7 @@ const attioPlaceholderSource = readFileSync(new URL('../src/lib/attioPlaceholder
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const applySource = readFileSync(new URL('../api/apply.js', import.meta.url), 'utf8');
 const waitlistSource = readFileSync(new URL('../api/waitlist.js', import.meta.url), 'utf8');
+const clientAnalyticsSource = readFileSync(new URL('../src/lib/analytics.js', import.meta.url), 'utf8');
 const serverAnalyticsSource = readFileSync(new URL('../api/analytics.js', import.meta.url), 'utf8');
 const reverseGeocodeSource = readFileSync(new URL('../api/reverse-geocode.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
@@ -314,6 +315,19 @@ assert(!authStoreSource.includes("err.message || 'Passkey sign-in failed.'"), 'P
 assert(!authStoreSource.includes("err.message || 'Could not add a passkey.'"), 'Passkey registration must not render raw provider errors');
 assert(!checkoutPageSource.includes('setError(err.message)'), 'Checkout UI must not render raw checkout/provider errors');
 assert(!checkoutPageSource.includes("reason: err.message || 'checkout_request_failed'"), 'Checkout analytics must not send raw failure messages');
+assert(clientAnalyticsSource.includes('sensitiveAnalyticsKey'), 'Client analytics must detect sensitive nested keys');
+assert(clientAnalyticsSource.includes('sanitizeObject(v, depth + 1)'), 'Client analytics must recursively sanitize nested objects');
+assert(clientAnalyticsSource.includes('sanitizeObject(item, depth + 1)'), 'Client analytics must recursively sanitize array object entries');
+for (const sensitiveAnalyticsField of ['customerEmail', 'customerName', 'emergencyContact', 'clinicalReviewOnFile', 'gfeRequired', 'medicalNotes', 'clinicalNotes']) {
+  assert(clientAnalyticsSource.includes(sensitiveAnalyticsField), `Client analytics deny-list must cover ${sensitiveAnalyticsField}`);
+}
+assert(serverAnalyticsSource.includes('sanitizeAnalyticsObject(rawEvent.props)'), 'Server analytics must sanitize event props before persistence');
+assert(serverAnalyticsSource.includes('sanitizeAnalyticsObject(rawEvent.context)'), 'Server analytics must sanitize event context before persistence');
+assert(serverAnalyticsSource.includes('sensitiveAnalyticsKey'), 'Server analytics must detect sensitive nested keys');
+assert(serverAnalyticsSource.includes('sanitizeAnalyticsValue(nested, depth + 1)'), 'Server analytics must recursively sanitize nested objects');
+for (const sensitiveAnalyticsField of ['customeremail', 'customername', 'emergencycontact', 'clinicalreviewonfile', 'gferequired', 'medicalnotes', 'clinicalnotes']) {
+  assert(serverAnalyticsSource.includes(sensitiveAnalyticsField), `Server analytics deny-list must cover ${sensitiveAnalyticsField}`);
+}
 assert(!adminSchedulingBookingsSource.includes('setError(err.message)'), 'Admin scheduling bookings UI must not render raw provider errors');
 assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Could not load bookings.'"), 'Live admin bookings UI must not render raw booking API errors');
 assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Action failed.'"), 'Live admin booking actions must not render raw provider/API errors');
