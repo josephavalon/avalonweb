@@ -266,6 +266,7 @@ assert(createCheckoutSource.includes('safeLogContext'), 'Checkout route must san
 assert(createCheckoutSource.includes('CUSTOMER_SAFE_CHECKOUT_ERROR_CODES'), 'Checkout route must allowlist customer-visible error messages');
 assert(!createCheckoutSource.includes('if (err.status && err.status < 500) return err.message'), 'Checkout route must not expose arbitrary provider 4xx messages');
 assert(!createCheckoutSource.includes("console.error('[create-checkout-session]', err.message"), 'Checkout route must not log raw checkout errors');
+assert(!createCheckoutSource.includes("err?.code || err?.message || 'unknown_error'"), 'Checkout scheduling preflight must not log raw scheduling errors');
 assert(!createCheckoutSource.includes('rollbackErr.message || rollbackErr'), 'Checkout rollback must not log raw rollback errors');
 assert(adminCollectBalanceSource.includes('override_exceeds_balance'), 'Admin balance collection must reject over-balance overrides');
 assert(chargeBalanceSource.includes('override_exceeds_balance'), 'Internal balance charge must reject over-balance overrides');

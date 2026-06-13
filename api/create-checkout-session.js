@@ -326,7 +326,7 @@ export default async function handler(req, res) {
         const appointmentTypeId = await resolveCheckoutSchedulingTypeId({ appointment, items, membership });
         appointment.acuityTypeId = String(appointmentTypeId);
       } catch (err) {
-        console.warn('[create-checkout-session] scheduling type unavailable:', err?.code || err?.message || 'unknown_error');
+        console.warn('[create-checkout-session] scheduling type unavailable', safeLogContext(err, 'appointment_type_unavailable'));
         const publicMessage = 'Scheduling is not configured for this treatment. Please contact Avalon to book.';
         return res.status(err?.status || 503).json({
           error: publicMessage,
