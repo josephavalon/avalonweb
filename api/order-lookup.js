@@ -10,10 +10,13 @@
  */
 
 import { getSupabaseServiceClient } from './_supabase-server.js';
+import { writeAuditEvent } from './_lib/audit-events.js';
 import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 const COLUMNS = [
   'id',
+  'tenant_id',
   'order_number',
   'status',
   'payment_status',
@@ -94,19 +97,63 @@ export default async function handler(req, res) {
       .maybeSingle();
     if (error) throw error;
     record = data;
-  } catch {
-    return res.status(500).json({ error: 'Could not look up that order. Try again shortly.' });
+  } catch (err) {
+    console.warn('[order-lookup] appointment lookup failed', safeLogContext(err, 'order_lookup_failed'));
+    return res.status(500).json({
+      error: 'Could not look up that order. Try again shortly.',
+      code: safeErrorCode(err, 'order_lookup_failed'),
+    });
   }
 
   if (!record) {
+    await writeAuditEvent(db, {
+      action: 'order_lookup_denied',
+      entityType: 'appointment',
+      phiTouched: false,
+      payload: {
+        route: 'api/order-lookup',
+        result: 'not_found',
+        orderNumber: code,
+      },
+    });
     return res.status(404).json({ error: 'No order found with that number.' });
   }
 
   const phoneMatch = phone === normalizePhone(record.customer_phone);
   const emailMatch = email === normalizeEmail(record.customer_email);
   if (!phoneMatch || !emailMatch) {
+    await writeAuditEvent(db, {
+      tenantId: record.tenant_id || null,
+      action: 'order_lookup_denied',
+      entityType: 'appointment',
+      entityId: record.id,
+      phiTouched: true,
+      payload: {
+        route: 'api/order-lookup',
+        result: 'contact_mismatch',
+        orderNumber: record.order_number,
+        matched: {
+          email: emailMatch,
+          phone: phoneMatch,
+        },
+      },
+    });
     return res.status(403).json({ error: 'Those details do not match this order.' });
   }
+
+  await writeAuditEvent(db, {
+    tenantId: record.tenant_id || null,
+    action: 'order_lookup_read',
+    entityType: 'appointment',
+    entityId: record.id,
+    phiTouched: true,
+    payload: {
+      route: 'api/order-lookup',
+      result: 'allowed',
+      orderNumber: record.order_number,
+      match: 'email_and_phone',
+    },
+  });
 
   return res.status(200).json({
     orderNumber: record.order_number,

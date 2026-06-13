@@ -354,6 +354,16 @@ assert(orderLookupSource.includes('max: 5'), 'Order lookup rate-limit max must b
 assert(orderLookupSource.includes('contact_verification_required'), 'Order lookup must require both contact factors');
 assert(orderLookupSource.includes('!phoneMatch || !emailMatch'), 'Order lookup must require phone and email to match');
 assert(orderLookupSource.includes('input_too_long'), 'Order lookup must cap input field lengths');
+assert(orderLookupSource.includes('writeAuditEvent'), 'Order lookup must audit appointment lookup attempts');
+assert(orderLookupSource.includes("action: 'order_lookup_read'"), 'Order lookup must audit successful appointment reads');
+assert(orderLookupSource.includes("action: 'order_lookup_denied'"), 'Order lookup must audit denied record-bound lookup attempts');
+assert(orderLookupSource.includes('phiTouched: true'), 'Order lookup record-bound audits must mark PHI touched');
+assert(orderLookupSource.includes("match: 'email_and_phone'"), 'Order lookup success audit must record contact match mode without contact values');
+assert(orderLookupSource.includes("result: 'contact_mismatch'"), 'Order lookup denied audit must record mismatch result');
+assert(orderLookupSource.includes('safeLogContext'), 'Order lookup database failures must sanitize logs');
+assert(!orderLookupSource.includes('email: email,') && !orderLookupSource.includes('phone: phone,'), 'Order lookup audit payloads must not store raw submitted email or phone values');
+assert(!orderLookupSource.includes('email: record.customer_email') && !orderLookupSource.includes('phone: record.customer_phone'), 'Order lookup audit payloads must not store raw record email or phone values');
+assert(!orderLookupSource.includes('json({ error: err.message'), 'Order lookup must not return raw database error messages');
 assert(rateLimitSource.includes('safeLogContext'), 'Rate-limit backend fallback logs must use sanitized error context');
 assert(!rateLimitSource.includes("err?.message"), 'Rate-limit backend fallback must not log raw provider error messages');
 for (const kvEnv of ['KV_REST_API_URL', 'KV_REST_API_TOKEN']) {
