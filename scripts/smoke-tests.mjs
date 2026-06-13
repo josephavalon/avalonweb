@@ -37,6 +37,7 @@ const checkoutPageSource = readFileSync(new URL('../app-modules/pages/Checkout.j
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutFulfillmentSource = readFileSync(new URL('../api/_checkout-fulfillment.js', import.meta.url), 'utf8');
+const catalogPricingSource = readFileSync(new URL('../api/_lib/catalog-pricing.js', import.meta.url), 'utf8');
 const checkoutVerifySource = readFileSync(new URL('../api/checkout/verify.js', import.meta.url), 'utf8');
 const summaryTokenSource = readFileSync(new URL('../api/_lib/summary-token.js', import.meta.url), 'utf8');
 const auditEventsSource = readFileSync(new URL('../api/_lib/audit-events.js', import.meta.url), 'utf8');
@@ -101,6 +102,13 @@ const nad = IV_SESSIONS.find((item) => item.key === 'nad');
 const cbd = IV_SESSIONS.find((item) => item.key === 'cbd');
 assert(nad.doses.find((dose) => dose.key === 'nad_1000')?.price === 800, 'NAD 1000mg canonical price drifted');
 assert(cbd.doses.find((dose) => dose.key === 'cbd_33')?.price === 250, 'CBD 33mg canonical price drifted');
+assert(catalogPricingSource.includes("from '../../src/data/catalog.js'"), 'Server checkout pricing must derive from the shared catalog');
+assert(!catalogPricingSource.includes('export const ITEM_PRICE_BY_KEY = new Map(Object.entries({'), 'Server item price map must not be hand-maintained');
+assert(!catalogPricingSource.includes('export const ADDON_PRICE_BY_LABEL = new Map(Object.entries({'), 'Server add-on label price map must not be hand-maintained');
+assert(ITEM_PRICE_BY_KEY.get('nad') === 350, 'NAD session key must use the first IV dose, not the NAD+ IM shot');
+assert(ITEM_PRICE_BY_KEY.get('hydration') === IV_SESSIONS.find((item) => item.key === 'hydration')?.price, 'Server hydration price must match client catalog');
+assert(ITEM_PRICE_BY_KEY.get('custom_hydration') === ITEM_PRICE_BY_KEY.get('hydration'), 'Custom hydration alias must track canonical hydration price');
+assert(ADDON_PRICE_BY_LABEL.get('nad') === 80, 'NAD+ IM label must remain priced through label lookup');
 
 const expectedNadPrices = {
   nad_250: 350,

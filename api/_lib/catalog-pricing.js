@@ -1,95 +1,4 @@
-export const ITEM_PRICE_BY_KEY = new Map(Object.entries({
-  hydration: 150,
-  energy: 250,
-  immunity: 250,
-  beauty: 250,
-  recovery: 250,
-  performance: 250,
-  food_poisoning: 250,
-  jetlag: 250,
-  myers: 250,
-  postnight: 250,
-  nad: 350,
-  nad_250: 350,
-  nad_250mg: 350,
-  nad_500: 500,
-  nad_500mg: 500,
-  nad_750: 650,
-  nad_750mg: 650,
-  nad_vitality: 700,
-  nad_1000: 800,
-  nad_1000mg: 800,
-  nad_1250: 1000,
-  nad_1250mg: 1000,
-  nad_1500: 1200,
-  nad_1500mg: 1200,
-  cbd: 250,
-  cbd_33: 250,
-  cbd_33mg: 250,
-  cbd_66: 300,
-  cbd_66mg: 300,
-  cbd_vitality: 350,
-  cbd_99: 350,
-  cbd_99mg: 350,
-  cbd_132: 450,
-  cbd_132mg: 450,
-  custom_hydration: 150,
-  custom_recovery: 250,
-  custom_energy: 250,
-  custom_myers: 250,
-  custom_immunity: 250,
-  custom_beauty: 250,
-  custom_postnight: 250,
-  custom_travel: 250,
-  custom_advanced: 350,
-  custom_cbd: 350,
-}));
-
-export const ADDON_PRICE_BY_LABEL = new Map(Object.entries({
-  'extra fluid': 25,
-  'extra ingredients': 30,
-  'vitamin c iv push 5g': 45,
-  'vitamin c iv push 10g': 85,
-  'vitamin c iv push 15g': 125,
-  'cbd review': 350,
-  'cbd review plus': 450,
-  'nad 250mg': 350,
-  'nad 500mg': 500,
-  'nad 750mg': 650,
-  'nad 1000mg': 800,
-  'nad 1250mg': 1000,
-  'nad 1500mg': 1200,
-  'glutathione push 600mg': 60,
-  'glutathione push 1200mg': 100,
-  'glutathione push 1800mg': 140,
-  'magnesium boost': 30,
-  b12: 40,
-  mic: 50,
-  'nad+': 80,
-  'glutathione im 200mg': 50,
-  'glutathione im 400mg': 80,
-  'vitamin c im 500mg': 30,
-  'vitamin c im 1000mg': 45,
-}));
-
-export const MEMBERSHIP_PRICE_BY_NAME = new Map(Object.entries({
-  starter: 199,
-  pro: 389,
-  premium: 400,
-  vip: 899,
-  concierge: 899,
-}));
-
-const MEMBERSHIP_TERMS = {
-  monthly: { key: 'monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
-  'three month': { key: 'three-month', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
-  'three-month': { key: 'three-month', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
-  'six month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
-  'six-month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
-  annual: { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
-  '12 month': { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
-  '12-month': { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
-};
+import { IM_SHOTS, IV_ADDONS, IV_SESSIONS, PACKAGES } from '../../src/data/catalog.js';
 
 function normalize(value = '') {
   return String(value)
@@ -109,6 +18,98 @@ function normalizeKey(value = '') {
     .replace(/[^a-z0-9_]+/g, '_')
     .replace(/^_+|_+$/g, '');
 }
+
+function addPriceKey(map, key, price) {
+  const normalizedKey = normalizeKey(key);
+  const amount = Number(price);
+  if (!normalizedKey || !Number.isFinite(amount)) return;
+  if (map.has(normalizedKey)) return;
+  map.set(normalizedKey, amount);
+}
+
+function buildItemPriceMap() {
+  const map = new Map();
+
+  for (const session of IV_SESSIONS) {
+    if (Array.isArray(session.doses) && session.doses.length) {
+      const firstDose = session.doses[0];
+      addPriceKey(map, session.key, firstDose.price);
+      for (const dose of session.doses) {
+        addPriceKey(map, dose.key, dose.price);
+        const doseAmount = String(dose.label || '').match(/(\d+)\s*mg/i)?.[1];
+        if (doseAmount) addPriceKey(map, `${dose.key}mg`, dose.price);
+      }
+    } else {
+      addPriceKey(map, session.key, session.price);
+    }
+  }
+
+  for (const shot of IM_SHOTS) addPriceKey(map, shot.label, shot.price);
+  for (const pack of PACKAGES) {
+    addPriceKey(map, pack.key, pack.price);
+    for (const item of pack.items || []) addPriceKey(map, item.cartKey || item.key || item.label, item.price);
+  }
+
+  const aliasEntries = {
+    custom_hydration: map.get('hydration'),
+    custom_recovery: map.get('recovery'),
+    custom_energy: map.get('energy'),
+    custom_myers: map.get('myers'),
+    custom_immunity: map.get('immunity'),
+    custom_beauty: map.get('beauty'),
+    custom_postnight: map.get('postnight'),
+    custom_travel: map.get('jetlag'),
+    custom_advanced: map.get('nad'),
+    custom_cbd: map.get('cbd_vitality') ?? map.get('cbd'),
+  };
+  for (const [key, price] of Object.entries(aliasEntries)) addPriceKey(map, key, price);
+
+  return map;
+}
+
+function buildAddonLabelMap() {
+  const map = new Map();
+  for (const addon of IV_ADDONS) map.set(normalize(addon.label), Number(addon.price));
+  for (const shot of IM_SHOTS) map.set(normalize(shot.label), Number(shot.price));
+
+  for (const session of IV_SESSIONS) {
+    for (const dose of session.doses || []) {
+      const doseAmount = String(dose.label || '').match(/(\d+)\s*mg/i)?.[1];
+      if (doseAmount) map.set(normalize(`${session.label} ${doseAmount}mg`), Number(dose.price));
+    }
+  }
+
+  const aliasEntries = {
+    'magnesium boost': map.get('magnesium support'),
+  };
+  for (const [label, price] of Object.entries(aliasEntries)) {
+    if (Number.isFinite(price)) map.set(label, price);
+  }
+
+  return map;
+}
+
+export const ITEM_PRICE_BY_KEY = buildItemPriceMap();
+export const ADDON_PRICE_BY_LABEL = buildAddonLabelMap();
+
+export const MEMBERSHIP_PRICE_BY_NAME = new Map(Object.entries({
+  starter: 199,
+  pro: 389,
+  premium: 400,
+  vip: 899,
+  concierge: 899,
+}));
+
+const MEMBERSHIP_TERMS = {
+  monthly: { key: 'monthly', months: 1, discount: 0, billing: 'monthly', commitmentMonths: 3 },
+  'three month': { key: 'three-month', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
+  'three-month': { key: 'three-month', months: 3, discount: 0.05, billing: 'three-month', commitmentMonths: 3 },
+  'six month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
+  'six-month': { key: 'six-month', months: 6, discount: 0.08, billing: 'six-month', commitmentMonths: 6 },
+  annual: { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
+  '12 month': { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
+  '12-month': { key: 'annual', months: 12, discount: 0.15, billing: 'annual', commitmentMonths: 12 },
+};
 
 function priceForItem(item = {}) {
   const itemType = String(item.type || '').toLowerCase();
