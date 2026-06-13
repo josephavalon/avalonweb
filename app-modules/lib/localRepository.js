@@ -123,8 +123,6 @@ function number(value, fallback = 0) {
 }
 
 function roleRules(role) {
-  if (role === 'provider') return ROLE_VISIBILITY_RULES.nurse;
-  if (role === 'np' || role === 'physician') return ROLE_VISIBILITY_RULES.clinical;
   return ROLE_VISIBILITY_RULES[role] || ROLE_VISIBILITY_RULES.client;
 }
 

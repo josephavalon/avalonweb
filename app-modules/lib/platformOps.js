@@ -1330,7 +1330,7 @@ export function routeGfeForBooking(booking = {}, options = {}) {
       body: `${item.service} · ${item.date} ${item.time} · ${item.city}. ${destination.fallback ? 'No Avalon NP is on shift.' : `Route to ${destination.name}.`}`,
       priority: destination.fallback ? 'critical' : 'action',
       status: 'open',
-      audience: destination.fallback ? ['admin', 'clinical'] : ['admin', 'provider', 'np', 'clinical'],
+      audience: destination.fallback ? ['admin', 'clinical'] : ['admin', 'nurse', 'clinical'],
       channels: [destination.channel === 'api' ? 'in_app' : 'sms'],
       source: 'GFE Router',
       linkedEntityType: 'booking',

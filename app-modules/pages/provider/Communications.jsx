@@ -207,7 +207,7 @@ export default function Communications() {
   const { user } = useAuthStore();
   const [activeFilter, setActiveFilter] = useState('all');
   const [items, setItems] = useState(FOLLOWUPS);
-  const isNurse = user?.role === 'provider';
+  const isNurse = user?.role === 'nurse';
 
   const handleStatusChange = (id, newStatus) => {
     setItems(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));

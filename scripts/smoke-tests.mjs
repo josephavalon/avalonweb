@@ -91,6 +91,8 @@ const providerRoleOsSource = readFileSync(new URL('../app-modules/pages/provider
 const communicationCenterSource = readFileSync(new URL('../app-modules/source/components/messaging/CommunicationCenter.jsx', import.meta.url), 'utf8');
 const communicationHookSource = readFileSync(new URL('../src/hooks/useCommunicationCenter.js', import.meta.url), 'utf8');
 const platformOpsSource = readFileSync(new URL('../app-modules/lib/platformOps.js', import.meta.url), 'utf8');
+const providerCommunicationsSource = readFileSync(new URL('../app-modules/pages/provider/Communications.jsx', import.meta.url), 'utf8');
+const localRepositorySource = readFileSync(new URL('../app-modules/lib/localRepository.js', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -549,6 +551,11 @@ assert(!platformOpsSource.includes("role === 'admin' || role === 'superadmin'"),
 assert(!platformOpsSource.includes("audience: ['admin', 'provider'"), 'Default platform communications must not publish to retired provider audiences');
 assert(!platformOpsSource.includes("'admin,provider'"), 'Default platform communication strings must not target retired provider audiences');
 assert(!platformOpsSource.includes("alertAudience: item.kind === 'incident' ? 'admin,provider,clinical' : 'admin,provider'"), 'Comms escalation sweep must not alert retired provider audiences');
+assert(!platformOpsSource.includes("['admin', 'provider', 'np', 'clinical']"), 'GFE routing alerts must target launch nurse role instead of retired provider/NP roles');
+assert(providerCommunicationsSource.includes("const isNurse = user?.role === 'nurse'"), 'Provider communications page must recognize the launch nurse role');
+assert(!providerCommunicationsSource.includes("user?.role === 'provider'"), 'Provider communications page must not branch on retired provider role');
+assert(!localRepositorySource.includes("role === 'provider'"), 'Local repository role visibility must not map retired provider role');
+assert(!localRepositorySource.includes("role === 'np' || role === 'physician'"), 'Local repository role visibility must not map retired prescriber roles');
 assert(preApiGuardSource.includes('AVALON_ENABLE_LIVE_API'), 'Server live API guard must support the server live flag');
 assert(preApiGuardSource.includes('VITE_AVALON_ENABLE_LIVE_API'), 'Server live API guard must recognize the production browser live flag');
 
