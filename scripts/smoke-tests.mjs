@@ -423,6 +423,10 @@ assert(acuityWebhookSource.includes(".eq('acuity_appointment_id', String(apptId)
 assert(acuityWebhookSource.includes(".eq('action', action)"), 'Acuity webhook must dedupe by action');
 assert(!acuityWebhookSource.includes(".eq('webhook_event_hash', hash)"), 'Acuity webhook must not use payload hash as event identity');
 assert(acuityWebhookSource.includes('duplicate event hash drift'), 'Acuity webhook must retain payload hash as an integrity signal');
+assert(acuityWebhookSource.includes('ACUITY_WEBHOOK_MAX_BODY_BYTES'), 'Acuity webhook must enforce a payload size limit');
+assert(acuityWebhookSource.includes('acuity_webhook_body_too_large'), 'Acuity webhook must reject oversized payloads explicitly');
+assert(acuityWebhookSource.includes('ACUITY_WEBHOOK_FETCH_TIMEOUT_MS'), 'Acuity webhook must bound external appointment fetch latency');
+assert(acuityWebhookSource.includes("withTimeout(getAppointment(apptId), 'acuity appointment fetch')"), 'Acuity webhook must wrap appointment fetch in a timeout');
 assert(acuityWebhookSource.includes('safeLogContext'), 'Acuity webhook must sanitize error log context');
 assert(!acuityWebhookSource.includes("console.error('[acuity/webhook] fetch appt failed:', err.message"), 'Acuity webhook must not log raw appointment fetch errors');
 assert(!acuityWebhookSource.includes("console.warn('[acuity/webhook] Attio sync failed:', e.message"), 'Acuity webhook must not log raw Attio errors');

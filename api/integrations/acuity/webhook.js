@@ -22,6 +22,17 @@ import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { buildReconciliationCase } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '64kb',
+    },
+  },
+};
+
+const ACUITY_WEBHOOK_MAX_BODY_BYTES = Number.parseInt(process.env.ACUITY_WEBHOOK_MAX_BODY_BYTES || String(64 * 1024), 10);
+const ACUITY_WEBHOOK_FETCH_TIMEOUT_MS = Number.parseInt(process.env.ACUITY_WEBHOOK_FETCH_TIMEOUT_MS || '10000', 10);
+
 // ── Supabase (lazy; graceful no-op until service-role key is configured) ─────
 let _supabase = null;
 async function getSupabase() {
@@ -41,6 +52,28 @@ async function defaultTenantId(db) {
 
 function payloadHash(body) {
   return crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16);
+}
+
+function parsedPayloadSize(body = {}) {
+  try {
+    return Buffer.byteLength(JSON.stringify(body), 'utf8');
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+function timeoutError(label) {
+  return Object.assign(new Error(`${label} timed out`), { code: 'acuity_webhook_timeout' });
+}
+
+function withTimeout(promise, label, ms = ACUITY_WEBHOOK_FETCH_TIMEOUT_MS) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(timeoutError(label)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 function safeErrorCode(err, fallback = 'acuity_webhook_error') {
@@ -140,6 +173,9 @@ export default async function handler(req, res) {
   const apptId = body.id;
   const signature = verifyWebhookSignature(req, body);
 
+  if (parsedPayloadSize(body) > ACUITY_WEBHOOK_MAX_BODY_BYTES) {
+    return res.status(413).json({ error: 'Acuity webhook payload too large', code: 'acuity_webhook_body_too_large' });
+  }
   if (!action || !apptId) {
     return res.status(400).json({ error: 'Missing action or appointment id' });
   }
@@ -203,7 +239,7 @@ export default async function handler(req, res) {
     // 3. scheduled / rescheduled / changed — fetch full appt then upsert canonical row.
     let appt;
     try {
-      appt = await getAppointment(apptId);
+      appt = await withTimeout(getAppointment(apptId), 'acuity appointment fetch');
     } catch (err) {
       if (eventId) {
         await db.from('acuity_events').update({
