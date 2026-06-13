@@ -93,9 +93,9 @@ export function useCommunicationCenter({ roleOverride = null } = {}) {
       } else {
         sendOpsMessage({
           threadId: options.threadId || 'dispatch',
-          audience: options.audience || (role === 'provider' ? 'Dispatch' : 'Operations'),
-          from: user?.name || (role === 'provider' ? 'Nurse' : 'Avalon OS'),
-          role: options.messageRole || (role === 'provider' ? 'nurse' : role),
+          audience: options.audience || (role === 'nurse' ? 'Dispatch' : 'Operations'),
+          from: user?.name || (role === 'nurse' ? 'Nurse' : 'Avalon OS'),
+          role: options.messageRole || role,
           channels: options.channels || ['in_app'],
           text,
         });

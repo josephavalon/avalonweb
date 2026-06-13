@@ -524,7 +524,7 @@ function AppointmentTimeline({ timeline }) {
 function Announcements({ announcements, role, userId, onRead, onPublish }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [audience, setAudience] = useState(role === 'provider' ? 'provider' : 'all');
+  const [audience, setAudience] = useState(role === 'nurse' ? 'nurse' : 'all');
   const [priority, setPriority] = useState('info');
   const canPublish = role === 'admin';
 
@@ -602,7 +602,7 @@ function Announcements({ announcements, role, userId, onRead, onPublish }) {
               >
                 <option value="all">All</option>
                 <option value="client">Clients</option>
-                <option value="provider">Nurses</option>
+                <option value="nurse">Nurses</option>
                 <option value="admin">Admin</option>
               </select>
               <select

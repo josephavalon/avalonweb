@@ -89,6 +89,8 @@ const navbarSource = readFileSync(new URL('../app-modules/source/components/land
 const adminLayoutSource = readFileSync(new URL('../app-modules/source/layouts/AdminLayout.jsx', import.meta.url), 'utf8');
 const providerRoleOsSource = readFileSync(new URL('../app-modules/pages/provider/RoleOS.jsx', import.meta.url), 'utf8');
 const communicationCenterSource = readFileSync(new URL('../app-modules/source/components/messaging/CommunicationCenter.jsx', import.meta.url), 'utf8');
+const communicationHookSource = readFileSync(new URL('../src/hooks/useCommunicationCenter.js', import.meta.url), 'utf8');
+const platformOpsSource = readFileSync(new URL('../app-modules/lib/platformOps.js', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -537,6 +539,16 @@ assert(providerRoleOsSource.includes("const canClear = ['admin', 'nurse'].includ
 assert(!providerRoleOsSource.includes("['admin', 'np', 'physician']"), 'Provider RoleOS must not require retired prescriber roles for clearance');
 assert(communicationCenterSource.includes("const isAdmin = role === 'admin'"), 'Communication center admin checks must match launch admin role');
 assert(!communicationCenterSource.includes("role === 'admin' || role === 'superadmin'"), 'Communication center must not include retired superadmin role');
+assert(communicationCenterSource.includes("role === 'nurse' ? 'nurse' : 'all'"), 'Communication announcement defaults must target the launch nurse role');
+assert(communicationCenterSource.includes('<option value="nurse">Nurses</option>'), 'Communication announcement audience must use the launch nurse role value');
+assert(!communicationCenterSource.includes("role === 'provider' ? 'provider' : 'all'"), 'Communication announcements must not default to retired provider audience');
+assert(!communicationCenterSource.includes('<option value="provider">Nurses</option>'), 'Communication announcements must not use retired provider audience values');
+assert(communicationHookSource.includes("role === 'nurse' ? 'Dispatch' : 'Operations'"), 'Communication hook must treat launch nurse as the field sender');
+assert(!communicationHookSource.includes("role === 'provider' ?"), 'Communication hook must not branch on retired provider role');
+assert(!platformOpsSource.includes("role === 'admin' || role === 'superadmin'"), 'Platform communications must not include retired superadmin read paths');
+assert(!platformOpsSource.includes("audience: ['admin', 'provider'"), 'Default platform communications must not publish to retired provider audiences');
+assert(!platformOpsSource.includes("'admin,provider'"), 'Default platform communication strings must not target retired provider audiences');
+assert(!platformOpsSource.includes("alertAudience: item.kind === 'incident' ? 'admin,provider,clinical' : 'admin,provider'"), 'Comms escalation sweep must not alert retired provider audiences');
 assert(preApiGuardSource.includes('AVALON_ENABLE_LIVE_API'), 'Server live API guard must support the server live flag');
 assert(preApiGuardSource.includes('VITE_AVALON_ENABLE_LIVE_API'), 'Server live API guard must recognize the production browser live flag');
 

@@ -557,7 +557,7 @@ const DEFAULT_COMMUNICATION_ALERTS = [
     body: 'Avalon NP coverage is first. Qualiphy is fallback only when no remote NP is on call.',
     priority: 'action',
     status: 'open',
-    audience: ['admin', 'provider', 'clinical', 'np'],
+    audience: ['admin', 'nurse', 'clinical'],
     channels: ['in_app', 'sms'],
     source: 'Clinical',
     createdAt: new Date().toISOString(),
@@ -570,7 +570,7 @@ const DEFAULT_COMMUNICATION_ALERTS = [
     body: 'Open visits broadcast through Avalon Comms, then queue SMS/email placeholders until delivery is connected.',
     priority: 'info',
     status: 'open',
-    audience: ['admin', 'provider', 'nurse'],
+    audience: ['admin', 'nurse'],
     channels: ['in_app', 'sms', 'email'],
     source: 'Dispatch',
     createdAt: new Date().toISOString(),
@@ -584,7 +584,7 @@ const DEFAULT_ANNOUNCEMENTS = [
     title: 'Event presales now trigger GFE routing',
     body: 'Festival and venue redemptions can queue Acuity, client prep, and pre-event GFE before arrival.',
     priority: 'info',
-    audience: ['admin', 'provider'],
+    audience: ['admin', 'nurse'],
     status: 'published',
     channels: ['in_app'],
     readBy: [],
@@ -804,7 +804,7 @@ export function sendBroadcastMessage(payload = {}) {
       body: text,
       priority,
       status: 'open',
-      audience: normalizeAudience(payload.alertAudience || (channel.id === 'client-texts' ? 'client' : 'admin,provider')),
+      audience: normalizeAudience(payload.alertAudience || (channel.id === 'client-texts' ? 'client' : 'admin,nurse')),
       channels,
       source: 'Avalon Comms',
       linkedEntityType: payload.linkedEntityType || 'broadcast',
@@ -990,7 +990,7 @@ export function runCommsEscalationSweep() {
       requiresAck: item.kind !== 'shift',
       relatedBroadcastId: `sweep-${item.sourceId}`,
       text: `${item.label}: ${item.detail}`,
-      alertAudience: item.kind === 'incident' ? 'admin,provider,clinical' : 'admin,provider',
+      alertAudience: item.kind === 'incident' ? 'admin,nurse,clinical' : 'admin,nurse',
     });
   });
   appendActivity('Comms escalation sweep ran', { role: 'ops', count: escalations.length });
@@ -1005,7 +1005,7 @@ export function readRoleCommunications({ role = 'client', userId = '' } = {}) {
   const allMessages = readOpsMessages();
   const opsMessages = role === 'client'
     ? allMessages.filter((message) => message.threadId === 'client-texts')
-    : role === 'admin' || role === 'superadmin'
+    : role === 'admin'
       ? allMessages
       : allMessages.filter((message) => ['dispatch', 'nurses', 'gfe'].includes(message.threadId));
   const supportThread = readSupportThread();
@@ -1104,7 +1104,7 @@ export function createAssignmentBroadcast(booking = {}, options = {}) {
     body: `${nextItem.service} · ${nextItem.date} ${nextItem.time} · $${nextItem.shiftValue}. Reply Y to accept or N to pass.`,
     priority: 'urgent',
     status: nextItem.status === 'Assigned' ? 'resolved' : 'open',
-    audience: ['admin', 'provider', 'nurse'],
+    audience: ['admin', 'nurse'],
     channels: nextItem.channels.map((channel) => channel.key),
     source: 'Nurse Alert System',
     linkedEntityType: 'booking',
@@ -4417,7 +4417,7 @@ export function completeFieldVisit(visit = {}, options = {}) {
       body: verdict.summary,
       priority: 'action',
       status: 'open',
-      audience: ['admin', 'provider'],
+      audience: ['admin', 'nurse'],
       channels: ['in_app'],
       source: 'Field Control',
       linkedEntityType: 'visit',
@@ -4582,7 +4582,7 @@ export function runFieldVisitControlSweep({
         body: 'Visit appears completed, but local Acuity closeout proof is not present.',
         priority: 'action',
         status: 'open',
-        audience: ['admin', 'provider'],
+        audience: ['admin', 'nurse'],
         channels: ['in_app'],
         source: 'Field Control',
         linkedEntityType: 'visit',
@@ -5594,7 +5594,7 @@ export function redeemPresaleCode({ eventId, code, client = {}, selectedTime = '
     body: `${redemption.client.name} redeemed ${redemption.selectedTime}. Queue Acuity and pre-event GFE before arrival.`,
     priority: 'action',
     status: 'open',
-    audience: ['admin', 'provider', 'events'],
+    audience: ['admin', 'nurse', 'events'],
     channels: ['in_app', 'email'],
     source: 'Event Presale',
     linkedEntityType: 'event',
