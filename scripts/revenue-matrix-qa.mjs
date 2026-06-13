@@ -4,7 +4,9 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 
-const BASE_URL = (process.env.REVENUE_MATRIX_BASE_URL || 'http://localhost:4173').replace(/\/$/, '');
+const SELF_HOST_PREVIEW = !process.env.REVENUE_MATRIX_BASE_URL;
+const PREVIEW_PORT = Number(process.env.REVENUE_MATRIX_PREVIEW_PORT || 4173);
+const BASE_URL = (process.env.REVENUE_MATRIX_BASE_URL || `http://127.0.0.1:${PREVIEW_PORT}`).replace(/\/$/, '');
 const PORT_BASE = Number(process.env.REVENUE_MATRIX_DEBUG_PORT_BASE || 9361);
 const DEFAULT_TIMEOUT_MS = Number(process.env.REVENUE_MATRIX_TIMEOUT_MS || 14_000);
 
@@ -59,8 +61,31 @@ function requestJson(url, method = 'GET') {
   });
 }
 
+function probe(url) {
+  return new Promise((resolve) => {
+    const req = http.get(url, (res) => {
+      res.resume();
+      resolve(res.statusCode < 500);
+    });
+    req.on('error', () => resolve(false));
+    req.setTimeout(900, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
 async function wait(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForPreview(url) {
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    if (await probe(url)) return true;
+    await wait(250);
+  }
+  return false;
 }
 
 async function findChrome() {
@@ -323,6 +348,51 @@ async function removeProfileDir(dir) {
   await fs.rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 150 }).catch(() => {});
 }
 
+async function stopProcess(processRef) {
+  if (!processRef || processRef.killed) return;
+  processRef.kill();
+  await Promise.race([
+    new Promise((resolve) => processRef.once('exit', resolve)),
+    wait(1800),
+  ]);
+}
+
+async function createPreviewSnapshot() {
+  const repoRoot = process.cwd();
+  const sourceDist = path.join(repoRoot, 'dist');
+  const indexPath = path.join(sourceDist, 'index.html');
+  try {
+    await fs.access(indexPath);
+  } catch {
+    throw new Error('dist/index.html is missing. Run npm run build before npm run test:revenue-matrix.');
+  }
+
+  const snapshotRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'avalon-revenue-preview-'));
+  await fs.mkdir(path.join(snapshotRoot, 'scripts'), { recursive: true });
+  await fs.cp(sourceDist, path.join(snapshotRoot, 'dist'), { recursive: true });
+  await fs.copyFile(
+    path.join(repoRoot, 'scripts', 'preview-server.mjs'),
+    path.join(snapshotRoot, 'scripts', 'preview-server.mjs'),
+  );
+  return snapshotRoot;
+}
+
+async function startSnapshotPreview(snapshotRoot) {
+  const preview = spawn('node', ['scripts/preview-server.mjs', '--host', '127.0.0.1', '--port', String(PREVIEW_PORT)], {
+    cwd: snapshotRoot,
+    stdio: 'inherit',
+  });
+  const startup = await Promise.race([
+    waitForPreview(BASE_URL).then((ready) => (ready ? 'ready' : 'timeout')),
+    new Promise((resolve) => preview.once('exit', (code) => resolve(`exited ${code ?? 'unknown'}`))),
+  ]);
+  if (startup !== 'ready') {
+    await stopProcess(preview);
+    throw new Error(`Revenue matrix preview did not become ready at ${BASE_URL}: ${startup}`);
+  }
+  return preview;
+}
+
 function riskEstimate(env) {
   const monthlySessions = Number(process.env.REVENUE_MATRIX_MONTHLY_SESSIONS || 1000);
   const conversionRate = Number(process.env.REVENUE_MATRIX_CONVERSION_RATE || 0.035);
@@ -573,6 +643,21 @@ function isIgnorableRuntimeIssue(issue = '') {
     || /^cancelled https?:\/\/(?:localhost|127\.0\.0\.1):\d+\/bags\/[^ ]+\.(?:png|jpe?g|webp|avif)(?:\?.*)?$/i.test(text);
 }
 
+async function playwrightGoto(page, url) {
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(url, { waitUntil: 'load', timeout: DEFAULT_TIMEOUT_MS });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!/interrupted by another navigation|Navigation failed because page was closed/i.test(String(error?.message || error))) break;
+      await page.waitForTimeout(400);
+    }
+  }
+  throw lastError;
+}
+
 async function runWebKitEnvironment(webkit, env) {
   let browser;
   try {
@@ -597,14 +682,14 @@ async function runWebKitEnvironment(webkit, env) {
       if (!/ERR_ABORTED|favicon|chrome-extension/i.test(`${failure} ${url}`)) runtimeIssues.push(`${failure} ${url}`);
     });
 
-    await page.goto(`${BASE_URL}/?utm_source=revenue_matrix&utm_medium=qa&utm_campaign=${env.id}`, { waitUntil: 'load', timeout: DEFAULT_TIMEOUT_MS });
+    await playwrightGoto(page, `${BASE_URL}/?utm_source=revenue_matrix&utm_medium=qa&utm_campaign=${env.id}`);
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
       localStorage.setItem('cookieConsent', 'allowed');
       sessionStorage.setItem('av.splash.seen', '1');
     });
-    await page.goto(`${BASE_URL}/book?reset=1&matrix=${encodeURIComponent(env.id)}`, { waitUntil: 'load', timeout: DEFAULT_TIMEOUT_MS });
+    await playwrightGoto(page, `${BASE_URL}/book?reset=1&matrix=${encodeURIComponent(env.id)}`);
     await page.waitForTimeout(500);
     await playwrightClickAnyText(page, ['Recovery', 'Hydration']);
     await playwrightAssertStickyBookBar(page, env);
@@ -634,35 +719,48 @@ async function runWebKitEnvironment(webkit, env) {
   }
 }
 
-const needsChrome = selectedMatrix().some((env) => (env.engine || 'chrome') === 'chrome');
-const needsWebKit = selectedMatrix().some((env) => env.engine === 'webkit');
-const chromePath = needsChrome ? await findChrome() : null;
-const webkit = needsWebKit ? await loadWebKit() : null;
-const environments = selectedMatrix();
-if (!environments.length) throw new Error('No revenue matrix environments selected.');
+let previewProcess;
+let previewSnapshotRoot;
 
-const results = [];
-const failures = [];
-for (const [index, env] of environments.entries()) {
-  try {
-    const result = env.engine === 'webkit'
-      ? await runWebKitEnvironment(webkit, env)
-      : await runCdpEnvironment(chromePath, env, index);
-    results.push(result);
-    const mode = result.outcome.hasEmbeddedCheckout ? 'embedded checkout' : 'local checkout fallback';
-    const note = env.limitation ? ` (${env.limitation})` : '';
-    console.log(`PASS revenue ${env.id}: ${mode}; events=${[...new Set(result.outcome.analyticsNames)].join(',')}; assumed risk protected=$${result.risk}/mo${note}`);
-  } catch (error) {
-    const result = error.result || { env, risk: riskEstimate(env), failures: [error.message] };
-    failures.push(result);
-    console.log(`FAIL revenue ${env.id}: ${result.failures.join('; ')}; assumed risk=$${result.risk}/mo`);
+try {
+  if (SELF_HOST_PREVIEW) {
+    previewSnapshotRoot = await createPreviewSnapshot();
+    previewProcess = await startSnapshotPreview(previewSnapshotRoot);
   }
+
+  const environments = selectedMatrix();
+  if (!environments.length) throw new Error('No revenue matrix environments selected.');
+  const needsChrome = environments.some((env) => (env.engine || 'chrome') === 'chrome');
+  const needsWebKit = environments.some((env) => env.engine === 'webkit');
+  const chromePath = needsChrome ? await findChrome() : null;
+  const webkit = needsWebKit ? await loadWebKit() : null;
+
+  const results = [];
+  const failures = [];
+  for (const [index, env] of environments.entries()) {
+    try {
+      const result = env.engine === 'webkit'
+        ? await runWebKitEnvironment(webkit, env)
+        : await runCdpEnvironment(chromePath, env, index);
+      results.push(result);
+      const mode = result.outcome.hasEmbeddedCheckout ? 'embedded checkout' : 'local checkout fallback';
+      const note = env.limitation ? ` (${env.limitation})` : '';
+      console.log(`PASS revenue ${env.id}: ${mode}; events=${[...new Set(result.outcome.analyticsNames)].join(',')}; assumed risk protected=$${result.risk}/mo${note}`);
+    } catch (error) {
+      const result = error.result || { env, risk: riskEstimate(env), failures: [error.message] };
+      failures.push(result);
+      console.log(`FAIL revenue ${env.id}: ${result.failures.join('; ')}; assumed risk=$${result.risk}/mo`);
+    }
+  }
+
+  console.log('Revenue matrix coverage note: WebKit lanes use Playwright WebKit. Real-device Safari and real social app webviews remain staging/post-deploy verification targets.');
+
+  if (failures.length) {
+    throw new Error(`Revenue matrix failed ${failures.length}/${environments.length} environment(s).`);
+  }
+
+  console.log(`Revenue matrix QA passed ${results.length}/${environments.length} browser/profile checks.`);
+} finally {
+  await stopProcess(previewProcess);
+  if (previewSnapshotRoot) await fs.rm(previewSnapshotRoot, { recursive: true, force: true, maxRetries: 3, retryDelay: 150 });
 }
-
-console.log('Revenue matrix coverage note: WebKit lanes use Playwright WebKit. Real-device Safari and real social app webviews remain staging/post-deploy verification targets.');
-
-if (failures.length) {
-  throw new Error(`Revenue matrix failed ${failures.length}/${environments.length} environment(s).`);
-}
-
-console.log(`Revenue matrix QA passed ${results.length}/${environments.length} browser/profile checks.`);
