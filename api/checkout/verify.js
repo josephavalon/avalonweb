@@ -3,7 +3,7 @@ import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../_booking-email.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../_reconciliation.js';
-import { createAppointmentSummaryToken } from '../_lib/summary-token.js';
+import { createAppointmentSummaryToken, isAppointmentSummaryTokenConfigured } from '../_lib/summary-token.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
@@ -314,6 +314,13 @@ export default async function handler(req, res) {
 
   if (!process.env.STRIPE_SECRET_KEY) {
     return res.status(503).json({ error: 'Stripe is not configured', paid: false });
+  }
+  if (!isAppointmentSummaryTokenConfigured()) {
+    return res.status(503).json({
+      error: 'Appointment summary token signing is not configured',
+      code: 'summary_token_secret_missing',
+      paid: false,
+    });
   }
 
   try {

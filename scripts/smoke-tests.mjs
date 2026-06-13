@@ -15,7 +15,7 @@ import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../ap
 import { buildPersonValues } from '../api/_attio.js';
 import { RECONCILIATION_CASE_DEFAULTS, RECONCILIATION_CASE_TYPES } from '../api/_reconciliation.js';
 import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
-import { createAppointmentSummaryToken, verifyAppointmentSummaryToken } from '../api/_lib/summary-token.js';
+import { createAppointmentSummaryToken, isAppointmentSummaryTokenConfigured, verifyAppointmentSummaryToken } from '../api/_lib/summary-token.js';
 import {
   hasValidCheckoutContact,
   isAdultCheckoutDob,
@@ -164,12 +164,15 @@ for (const expected of ['Source: Avalon Booking', 'Lifecycle: Booked', 'City: Sa
 }
 
 process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET = 'smoke-summary-secret';
+assert(isAppointmentSummaryTokenConfigured(), 'Summary token helper must report dedicated secret configuration');
 const summaryToken = createAppointmentSummaryToken({ sessionId: 'cs_test_123', appointmentRecordId: 'appt_123', appointmentId: 'acuity_123' });
 assert(verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_test_123', appointmentRecordId: 'appt_123' }), 'Summary token should verify');
 assert(!verifyAppointmentSummaryToken(summaryToken, { sessionId: 'cs_other' }), 'Summary token should reject wrong session');
 assert(!summaryTokenSource.includes('STRIPE_SECRET_KEY'), 'Summary tokens must not fall back to the Stripe secret');
 assert(!summaryTokenSource.includes('AVALON_INTERNAL_API_SECRET'), 'Summary tokens must not fall back to the internal API secret');
 assert(summaryTokenSource.includes('APPOINTMENT_SUMMARY_TOKEN_SECRET ||'), 'Summary tokens must require a dedicated server secret');
+assert(checkoutVerifySource.includes('isAppointmentSummaryTokenConfigured'), 'checkout/verify must preflight summary-token signing config');
+assert(checkoutVerifySource.includes('summary_token_secret_missing'), 'checkout/verify must fail explicitly when summary-token signing is not configured');
 
 assert(appointmentSummarySource.includes('summary_auth_required'), 'appointment-summary must gate identifiable summary access');
 assert(appointmentSummarySource.includes('verifyAppointmentSummaryToken'), 'appointment-summary must verify signed summary tokens');

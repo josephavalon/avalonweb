@@ -6,6 +6,10 @@ function secret() {
   return process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET || '';
 }
 
+export function isAppointmentSummaryTokenConfigured() {
+  return Boolean(secret());
+}
+
 function encode(value) {
   return Buffer.from(JSON.stringify(value)).toString('base64url');
 }
