@@ -448,10 +448,11 @@ assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API buil
 assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
 assert(privateAuthTriggerMigrationSource.includes('drop function if exists public.handle_new_user()'), 'Auth profile trigger migration must remove the public security definer function');
 assert(privateAuthTriggerMigrationSource.includes('revoke execute on function app_private.handle_new_user() from authenticated'), 'Private auth trigger must not be directly executable by authenticated API roles');
-assert(launchMessagingMigrationSource.includes("app_private.profile_role() in ('admin', 'client', 'nurse', 'rn')"), 'Messaging RLS must allow launch client/admin/nurse conversation creation');
+assert(launchMessagingMigrationSource.includes("app_private.profile_role() in ('admin', 'client', 'nurse')"), 'Messaging RLS must allow launch client/admin/nurse conversation creation');
 assert(launchMessagingMigrationSource.includes("app_private.profile_role() = 'client'"), 'Messaging RLS must support client-started support conversations');
-assert(launchMessagingMigrationSource.includes("role in ('admin', 'nurse', 'rn')"), 'Messaging support directory must target launch nurse/admin roles');
+assert(launchMessagingMigrationSource.includes("role in ('admin', 'nurse')"), 'Messaging support directory must target launch nurse/admin roles');
 assert(!launchMessagingMigrationSource.includes("'provider'"), 'Messaging launch RLS must not depend on the retired provider role');
+assert(!launchMessagingMigrationSource.includes("'rn'"), 'Messaging launch RLS must not grant the retired RN alias directly');
 assert(messagingPanelSource.includes("? ['admin', 'nurse']"), 'Client message picker must target launch support roles');
 assert(messagingPanelSource.includes("? ['client', 'nurse']"), 'Admin message picker must target client/nurse launch roles');
 assert(messagingPanelSource.includes(".select('id, full_name, role')"), 'Message picker must avoid selecting support emails for the contact directory');
