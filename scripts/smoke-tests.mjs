@@ -182,6 +182,9 @@ assert(appointmentSummarySource.includes('phiTouched: true'), 'appointment-summa
 assert(appointmentSummarySource.includes("req.headers?.['x-appointment-summary-token']"), 'appointment-summary must read signed summary tokens from a header');
 assert(!appointmentSummarySource.includes('req.query?.summary_token\\n    ||'), 'appointment-summary must not accept signed summary tokens from query strings');
 assert(appointmentSummarySource.includes('summary_token_query'), 'appointment-summary must audit unsafe query-token attempts without honoring them');
+assert(appointmentSummarySource.includes('safeSummaryErrorCode'), 'appointment-summary must sanitize error log context');
+assert(!appointmentSummarySource.includes("console.error('[appointment-summary]', err.message"), 'appointment-summary must not log raw summary failure messages');
+assert(!appointmentSummarySource.includes("console.warn('[appointment-summary] acuity summary unavailable:', err.message"), 'appointment-summary must not log raw Acuity summary errors');
 assert(bookingConfirmationSource.includes("'x-appointment-summary-token': summaryToken"), 'Booking confirmation must pass summary token in a header');
 assert(!bookingConfirmationSource.includes("query.set('summary_token'"), 'Booking confirmation must not put summary tokens in URLs');
 assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must not return customer email to bearer session-id callers');

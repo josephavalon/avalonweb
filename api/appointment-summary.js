@@ -94,6 +94,11 @@ function checkoutEmail(checkout = {}) {
   return String(checkout.contact?.email || '').trim().toLowerCase();
 }
 
+function safeSummaryErrorCode(err, fallback = 'summary_error') {
+  const code = err?.code || err?.type || err?.statusCode || err?.status || fallback;
+  return String(code).replace(/[^a-z0-9_:-]+/gi, '_').slice(0, 80) || fallback;
+}
+
 function summaryAccessMode({ req, authed, session, record, checkout, acuityId }) {
   if (verifyAppointmentSummaryToken(summaryToken(req), {
     sessionId: session.id,
@@ -183,7 +188,9 @@ export default async function handler(req, res) {
       try {
         summary = appointmentFromAcuity(await getAppointment(acuityId), summary);
       } catch (err) {
-        console.warn('[appointment-summary] acuity summary unavailable:', err.message || err);
+        console.warn('[appointment-summary] acuity summary unavailable', {
+          code: safeSummaryErrorCode(err, 'acuity_summary_unavailable'),
+        });
       }
     }
 
@@ -207,7 +214,9 @@ export default async function handler(req, res) {
     res.setHeader?.('Cache-Control', 'no-store');
     return res.status(200).json(summary);
   } catch (err) {
-    console.error('[appointment-summary]', err.message || 'Summary failed');
+    console.error('[appointment-summary] summary failed', {
+      code: safeSummaryErrorCode(err, 'summary_failed'),
+    });
     return res.status(err.statusCode || err.status || 500).json({
       error: err.statusCode === 404 ? 'Appointment summary not found' : 'Could not load appointment summary',
     });
