@@ -411,6 +411,11 @@ assert(!eventPresaleSource.includes('&name='), 'Presale redemption links must no
 assert(!eventPresaleSource.includes('&phone='), 'Presale redemption links must not put phone numbers in URLs');
 assert(!eventPresaleSource.includes('encodeURIComponent(email)'), 'Presale redemption links must not encode email into URLs');
 assert(!eventPresaleSource.includes('encodeURIComponent(phone)'), 'Presale redemption links must not encode phone into URLs');
+assert(eventPresaleSource.includes('const liveApi = isLiveApiEnabled()'), 'Presale ingress must evaluate live API mode before auth checks');
+assert(eventPresaleSource.includes('event_presale_secret_missing'), 'Live presale ingress must fail closed when webhook secret is missing');
+assert(eventPresaleSource.includes('if (liveApi && !secret)'), 'Live presale ingress must require a configured webhook secret');
+assert(eventPresaleSource.includes('header !== `Bearer ${secret}`'), 'Presale ingress must require the bearer webhook secret when configured');
+assert(eventPresaleSource.includes('if (!liveApi)'), 'Presale ingress must only use local queued scheduling in pre-API mode');
 for (const queryField of ["query.get('name')", "query.get('email')", "query.get('phone')"]) {
   assert(!eventPresalePageSource.includes(queryField), `Presale page must not prefill contact data from URLs: ${queryField}`);
 }

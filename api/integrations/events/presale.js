@@ -21,7 +21,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const liveApi = isLiveApiEnabled();
   const secret = process.env.EVENT_PRESALE_WEBHOOK_SECRET;
+  if (liveApi && !secret) {
+    return res.status(503).json({ error: 'Event presale webhook secret is not configured', code: 'event_presale_secret_missing' });
+  }
   if (secret) {
     const header = req.headers.authorization || '';
     if (header !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
@@ -64,7 +68,7 @@ export default async function handler(req, res) {
   };
 
   if (appointmentTypeID && datetime && firstName && email) {
-    if (!isLiveApiEnabled()) {
+    if (!liveApi) {
       response.scheduleStatus = 'local_presale_queued';
       response.scheduleId = `local-presale-${redemptionCode}`;
       response.preApiHardWall = true;
