@@ -172,6 +172,8 @@ assert(appointmentSummarySource.includes('appointment_summary_read'), 'appointme
 assert(appointmentSummarySource.includes('appointment_summary_denied'), 'appointment-summary must audit denied identifiable summary reads');
 assert(appointmentSummarySource.includes('phiTouched: true'), 'appointment-summary read audit must mark PHI touched');
 assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must not return customer email to bearer session-id callers');
+assert(!checkoutVerifySource.includes('fulfillmentError: fulfillment.fulfillmentError'), 'checkout/verify must not return raw fulfillment errors to customers');
+assert(checkoutVerifySource.includes('appointment_confirmation_pending'), 'checkout/verify must return a customer-safe fulfillment issue code');
 assert(isValidCheckoutEmail('a+tag@sub.domain.org'), 'Valid tagged email should pass checkout validation');
 assert(!isValidCheckoutEmail('test@'), 'Incomplete email should fail checkout validation');
 assert(isValidCheckoutPhone('(415) 555-1212'), 'Valid US phone should pass checkout validation');

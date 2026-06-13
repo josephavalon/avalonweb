@@ -352,6 +352,9 @@ export default async function handler(req, res) {
         attioPersonId: fulfillment.attioPersonId,
       });
     }
+    const fulfillmentIssue = fulfillment.fulfillmentStatus === 'acuity_failed'
+      ? 'appointment_confirmation_pending'
+      : null;
 
     return res.status(paid ? 200 : 402).json({
       paid,
@@ -362,7 +365,8 @@ export default async function handler(req, res) {
       appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || null,
       fulfillmentStatus: fulfillment.fulfillmentStatus || null,
       pendingFulfillment: paid && !fulfillment.appointmentId && fulfillment.fulfillmentStatus !== 'acuity_failed',
-      fulfillmentError: fulfillment.fulfillmentError || null,
+      fulfillmentIssue,
+      fulfillmentError: null,
       summaryToken: paid ? createAppointmentSummaryToken({
         sessionId: session.id,
         appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || '',
