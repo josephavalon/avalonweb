@@ -232,8 +232,12 @@ assert(bookingEmailSource.includes('email_delivery_skipped'), 'Fulfillment email
 assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');
 assert(adminBookingsSource.includes('admin_bookings_read'), 'Admin booking PHI reads must write audit events');
 assert(adminBookingsSource.includes('phiTouched: true'), 'Admin booking read audit must mark PHI touched');
+assert(adminBookingsSource.includes('safeLogContext'), 'Admin booking read failures must sanitize error logs');
+assert(!adminBookingsSource.includes('json({ error: error.message })'), 'Admin booking read failures must not return raw database errors');
 assert(meAppointmentsSource.includes('client_appointments_read'), 'Client appointment reads must write audit events');
 assert(meAppointmentsSource.includes("match: 'session_email'"), 'Client appointment read audit must avoid storing the email value');
+assert(meAppointmentsSource.includes('safeLogContext'), 'Client appointment read failures must sanitize error logs');
+assert(!meAppointmentsSource.includes('json({ error: error.message })'), 'Client appointment read failures must not return raw database errors');
 assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
 assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
 assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');

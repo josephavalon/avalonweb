@@ -8,6 +8,7 @@
  */
 
 import { writeAuditEvent } from '../_lib/audit-events.js';
+import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { getAuthedUser } from '../_lib/supabase-auth.js';
 
 // Escape LIKE wildcards so an email containing `_` or `%` matches literally.
@@ -58,7 +59,13 @@ export default async function handler(req, res) {
     .order('starts_at', { ascending: false, nullsFirst: false })
     .limit(100);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.warn('[me/appointments] appointment query failed', safeLogContext(error, 'client_appointments_query_failed'));
+    return res.status(500).json({
+      error: 'Could not load appointments.',
+      code: safeErrorCode(error, 'client_appointments_query_failed'),
+    });
+  }
   await writeAuditEvent(db, {
     tenantId: authed.tenantId || data?.find((row) => row?.tenant_id)?.tenant_id || null,
     actorProfileId: authed.user?.id || null,

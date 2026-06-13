@@ -10,6 +10,7 @@
  */
 
 import { writeAuditEvent } from '../_lib/audit-events.js';
+import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { requireAdmin } from '../_lib/supabase-auth.js';
 
 function dollarsFromCents(cents) {
@@ -71,7 +72,13 @@ export default async function handler(req, res) {
   }
 
   const { data, error } = await query;
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.warn('[admin/bookings] appointment query failed', safeLogContext(error, 'admin_bookings_query_failed'));
+    return res.status(500).json({
+      error: 'Could not load bookings.',
+      code: safeErrorCode(error, 'admin_bookings_query_failed'),
+    });
+  }
   await writeAuditEvent(db, {
     tenantId: authed.tenantId || data?.find((row) => row?.tenant_id)?.tenant_id || null,
     actorProfileId: authed.user?.id || null,
