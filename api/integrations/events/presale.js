@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'code or ticketId, plus email, are required' });
   }
 
-  const redemptionLink = `${requestOrigin(req)}/presale/${encodeURIComponent(eventId)}?code=${encodeURIComponent(redemptionCode)}&source=${encodeURIComponent(source)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent([firstName, lastName].filter(Boolean).join(' '))}&phone=${encodeURIComponent(phone)}`;
+  const redemptionLink = `${requestOrigin(req)}/presale/${encodeURIComponent(eventId)}?code=${encodeURIComponent(redemptionCode)}&source=${encodeURIComponent(source)}`;
   const response = {
     ok: true,
     eventId,

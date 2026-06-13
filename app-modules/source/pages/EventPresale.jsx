@@ -46,9 +46,9 @@ export default function EventPresale() {
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const [form, setForm] = useState({
     code: query.get('code') || starterCode,
-    name: query.get('name') || '',
-    email: query.get('email') || '',
-    phone: query.get('phone') || '',
+    name: '',
+    email: '',
+    phone: '',
     source: query.get('source') || 'Partner ticket',
     selectedTime: selectedEvent?.slots?.[0] || '',
     intakeStatus: 'GFE intake started',

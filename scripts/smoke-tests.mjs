@@ -74,6 +74,7 @@ const attioTestSource = readFileSync(new URL('../api/integrations/attio/test.js'
 const attioUpsertSource = readFileSync(new URL('../api/integrations/attio/upsert-person.js', import.meta.url), 'utf8');
 const attioPlaceholderSource = readFileSync(new URL('../src/lib/attioPlaceholder.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
+const eventPresalePageSource = readFileSync(new URL('../app-modules/source/pages/EventPresale.jsx', import.meta.url), 'utf8');
 const applySource = readFileSync(new URL('../api/apply.js', import.meta.url), 'utf8');
 const waitlistSource = readFileSync(new URL('../api/waitlist.js', import.meta.url), 'utf8');
 const clientAnalyticsSource = readFileSync(new URL('../src/lib/analytics.js', import.meta.url), 'utf8');
@@ -389,6 +390,14 @@ for (const [label, source] of Object.entries({ serverAnalyticsSource, reverseGeo
 }
 assert(!reverseGeocodeSource.includes("data?.error || 'Address lookup failed'"), 'Reverse geocode must not echo upstream provider error text');
 assert(!eventPresaleSource.includes('response.scheduleError = err.message'), 'Presale ingress must not return raw scheduling errors');
+assert(!eventPresaleSource.includes('&email='), 'Presale redemption links must not put email in URLs');
+assert(!eventPresaleSource.includes('&name='), 'Presale redemption links must not put names in URLs');
+assert(!eventPresaleSource.includes('&phone='), 'Presale redemption links must not put phone numbers in URLs');
+assert(!eventPresaleSource.includes('encodeURIComponent(email)'), 'Presale redemption links must not encode email into URLs');
+assert(!eventPresaleSource.includes('encodeURIComponent(phone)'), 'Presale redemption links must not encode phone into URLs');
+for (const queryField of ["query.get('name')", "query.get('email')", "query.get('phone')"]) {
+  assert(!eventPresalePageSource.includes(queryField), `Presale page must not prefill contact data from URLs: ${queryField}`);
+}
 for (const [label, source] of Object.entries({ acuityTestSource, attioTestSource, attioUpsertSource })) {
   assert(source.includes('requireAdmin'), `Live integration diagnostic route must require admin auth: ${label}`);
   assert(source.includes('safeLogContext'), `Live integration diagnostic route must sanitize error logs: ${label}`);
