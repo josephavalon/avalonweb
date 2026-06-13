@@ -11,6 +11,7 @@
 
 import { acuityFetch, resolveAppointmentTypeId } from './_acuity.js';
 import { isLiveApiEnabled, localAvailability } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -43,7 +44,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json(available);
   } catch (err) {
-    console.error('[scheduling-availability]', err.message);
-    return res.status(err.status || 500).json({ error: err.message });
+    console.error('[scheduling-availability] availability lookup failed', safeLogContext(err, 'scheduling_availability_failed'));
+    return res.status(err.status || 500).json({
+      error: 'Could not load scheduling availability',
+      code: safeErrorCode(err, 'scheduling_availability_failed'),
+    });
   }
 }

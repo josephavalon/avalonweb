@@ -11,6 +11,7 @@
 
 import { acuityFetch } from './_acuity.js';
 import { isLiveApiEnabled, localAppointment, requireInternalAccess } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -34,7 +35,10 @@ export default async function handler(req, res) {
     const appointment = await acuityFetch(`/appointments/${encodeURIComponent(id)}`);
     return res.status(200).json(appointment);
   } catch (err) {
-    console.error('[scheduling-appointment]', err.message);
-    return res.status(err.status || 500).json({ error: err.message });
+    console.error('[scheduling-appointment] appointment detail failed', safeLogContext(err, 'scheduling_appointment_failed'));
+    return res.status(err.status || 500).json({
+      error: 'Could not load scheduling appointment',
+      code: safeErrorCode(err, 'scheduling_appointment_failed'),
+    });
   }
 }

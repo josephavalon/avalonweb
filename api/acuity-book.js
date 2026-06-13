@@ -17,6 +17,7 @@
 import { acuityFetch } from './_acuity.js';
 import { upsertAttioPerson } from './_attio.js';
 import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -65,11 +66,14 @@ export default async function handler(req, res) {
       source: 'Avalon Scheduling',
       lifecycleStage: 'Booked',
       service: appointment?.type || 'IV Therapy',
-    }).catch((e) => console.warn('[scheduling-book] Attio sync failed:', e.message));
+    }).catch((e) => console.warn('[scheduling-book] Attio sync failed', safeLogContext(e, 'attio_sync_failed')));
 
     return res.status(200).json(appointment);
   } catch (err) {
-    console.error('[scheduling-book]', err.message || 'unknown_error');
-    return res.status(err.status || 500).json({ error: err.message });
+    console.error('[scheduling-book] appointment creation failed', safeLogContext(err, 'scheduling_book_failed'));
+    return res.status(err.status || 500).json({
+      error: 'Could not create scheduling appointment',
+      code: safeErrorCode(err, 'scheduling_book_failed'),
+    });
   }
 }

@@ -52,7 +52,11 @@ const sendSmsSource = readFileSync(new URL('../api/auth/send-sms.js', import.met
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
 const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
+const acuityAppointmentSource = readFileSync(new URL('../api/acuity-appointment.js', import.meta.url), 'utf8');
+const acuityAppointmentsSource = readFileSync(new URL('../api/acuity-appointments.js', import.meta.url), 'utf8');
+const acuityAvailabilitySource = readFileSync(new URL('../api/acuity-availability.js', import.meta.url), 'utf8');
 const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
+const safeErrorSource = readFileSync(new URL('../api/_lib/safe-error.js', import.meta.url), 'utf8');
 const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
@@ -251,6 +255,18 @@ assert(sendSmsSource.includes('SEND_SMS_MAX_BODY_BYTES'), 'SMS auth hook must en
 assert(sendSmsSource.includes('send_sms_body_too_large'), 'SMS auth hook must reject oversized raw bodies explicitly');
 assert(sendSmsSource.includes("key: `send-sms:${clientIp(req)}`"), 'SMS auth hook must rate-limit by requester IP');
 assert(sendSmsSource.includes('status: resp.status') && sendSmsSource.includes('SMS provider send failed'), 'SMS auth hook must avoid echoing provider response details');
+assert(safeErrorSource.includes('safeErrorCode') && safeErrorSource.includes('safeLogContext'), 'Server routes must have shared safe error helpers');
+for (const [label, source] of Object.entries({
+  acuityBookSource,
+  acuityAppointmentSource,
+  acuityAppointmentsSource,
+  acuityAvailabilitySource,
+})) {
+  assert(source.includes('safeLogContext'), `Direct scheduling route must sanitize error logs: ${label}`);
+  assert(source.includes('safeErrorCode'), `Direct scheduling route must return stable error codes: ${label}`);
+  assert(!source.includes('return res.status(err.status || 500).json({ error: err.message'), `Direct scheduling route must not return raw vendor errors: ${label}`);
+  assert(!source.includes('console.error') || !source.includes('err.message'), `Direct scheduling route must not log raw vendor errors: ${label}`);
+}
 assert(viteConfigSource.includes('redactLiveDemoPasswordPlugin'), 'Vite build must redact demo password from live API bundles');
 assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API build redaction must blank the demo password env key');
 assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
