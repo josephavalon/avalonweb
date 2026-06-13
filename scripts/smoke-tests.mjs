@@ -85,6 +85,8 @@ const launchMessagingMigrationSource = readFileSync(new URL('../supabase/migrati
 const envExampleSource = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
 const authSetupSource = readFileSync(new URL('../docs/AUTH_SETUP.md', import.meta.url), 'utf8');
 const goLiveStatusSource = readFileSync(new URL('../docs/GO_LIVE_STATUS.md', import.meta.url), 'utf8');
+const navbarSource = readFileSync(new URL('../app-modules/source/components/landing/Navbar.jsx', import.meta.url), 'utf8');
+const adminLayoutSource = readFileSync(new URL('../app-modules/source/layouts/AdminLayout.jsx', import.meta.url), 'utf8');
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
@@ -504,6 +506,30 @@ for (const retiredRole of ["role: 'np'", "role: 'physician'", 'NP001', 'MD001', 
   assert(!authStoreSource.includes(retiredRole), `Retired prescriber demo role remains in auth store: ${retiredRole}`);
 }
 assert(loginQaSource.includes("expectedRole: 'nurse'"), 'Login QA must cover the launch nurse role');
+const dashboardPathSource = navbarSource.slice(
+  navbarSource.indexOf('const dashboardPathFor'),
+  navbarSource.indexOf('export default function Navbar')
+);
+assert(dashboardPathSource.includes("user.role === 'nurse'"), 'Navbar dashboard redirect must recognize the launch nurse role');
+for (const retiredRole of ["'provider'", "'np'", "'physician'"]) {
+  assert(!dashboardPathSource.includes(retiredRole), `Navbar dashboard redirect must not route retired role ${retiredRole}`);
+}
+const adminNavSource = adminLayoutSource.slice(
+  adminLayoutSource.indexOf('const NAV'),
+  adminLayoutSource.indexOf('const BOTTOM_TAB_COUNT')
+);
+assert(adminNavSource.includes("roles: ['nurse']"), 'Admin layout must expose provider navigation to the launch nurse role');
+for (const retiredRole of ["'provider'", "'np'", "'physician'", "'superadmin'"]) {
+  assert(!adminNavSource.includes(retiredRole), `Admin layout launch nav must not include retired role ${retiredRole}`);
+}
+const roleBadgeSource = adminLayoutSource.slice(
+  adminLayoutSource.indexOf('const ROLE_BADGE'),
+  adminLayoutSource.indexOf('const EASE')
+);
+assert(roleBadgeSource.includes("nurse:      'Nurse'"), 'Admin layout role badge must label the launch nurse role');
+for (const retiredRole of ['provider:', 'np:', 'physician:', 'superadmin:']) {
+  assert(!roleBadgeSource.includes(retiredRole), `Admin layout role badge must not include retired role ${retiredRole}`);
+}
 assert(preApiGuardSource.includes('AVALON_ENABLE_LIVE_API'), 'Server live API guard must support the server live flag');
 assert(preApiGuardSource.includes('VITE_AVALON_ENABLE_LIVE_API'), 'Server live API guard must recognize the production browser live flag');
 

@@ -21,7 +21,7 @@ const TEXT_URL = 'sms:+14159807708';
 const dashboardPathFor = (user) => {
   if (!user) return '/login';
   if (user.role === 'admin') return '/admin';
-  if (['provider', 'np', 'physician'].includes(user.role)) return '/provider/shift';
+  if (user.role === 'nurse') return '/provider/shift';
   return '/members/dashboard';
 };
 

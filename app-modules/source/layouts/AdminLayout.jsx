@@ -29,45 +29,41 @@ const readInitialTheme = () => {
 // ─── Nav items ─────────────────────────────────────────────────────────────
 const NAV = [
   // Primary — always visible
-  { to: '/admin',                   icon: Zap,             label: 'Command',    roles: ['admin', 'superadmin'], primary: true },
-  { to: '/admin/bookings',          icon: ClipboardList,   label: 'Visits',     roles: ['admin', 'superadmin'], primary: true, badge: 8 },
-  { to: '/admin/acuity',            icon: CalendarClock,   label: 'Acuity',     roles: ['admin', 'superadmin'], primary: true },
-  { to: '/provider/clients',        icon: Users,           label: 'Clients',    roles: ['admin', 'superadmin'], primary: true },
-  { to: '/admin/dispatch',          icon: Send,            label: 'Dispatch',   roles: ['admin', 'superadmin'] },
-  { to: '/admin/field',             icon: MapPin,          label: 'Field',      roles: ['admin', 'superadmin'] },
-  { to: '/admin/client-heat-map',   icon: Flame,           label: 'Heat Map',   roles: ['admin', 'superadmin'] },
-  { to: '/admin/kits',              icon: Package,         label: 'Kits',       roles: ['admin', 'superadmin'] },
-  { to: '/admin/training',          icon: GraduationCap,   label: 'Training',   roles: ['admin', 'superadmin'] },
-  { to: '/admin/crm',               icon: Mail,            label: 'CRM',        roles: ['admin', 'superadmin'] },
-  { to: '/admin/finance',           icon: CreditCard,      label: 'Finance',    roles: ['admin', 'superadmin'] },
-  { to: '/provider/staff',          icon: UserCheck,       label: 'Nurses',     roles: ['admin', 'superadmin'], primary: true },
-  { to: '/admin/credentials',       icon: Shield,          label: 'Credentials',roles: ['admin', 'superadmin'] },
+  { to: '/admin',                   icon: Zap,             label: 'Command',    roles: ['admin'], primary: true },
+  { to: '/admin/bookings',          icon: ClipboardList,   label: 'Visits',     roles: ['admin'], primary: true, badge: 8 },
+  { to: '/admin/acuity',            icon: CalendarClock,   label: 'Acuity',     roles: ['admin'], primary: true },
+  { to: '/provider/clients',        icon: Users,           label: 'Clients',    roles: ['admin'], primary: true },
+  { to: '/admin/dispatch',          icon: Send,            label: 'Dispatch',   roles: ['admin'] },
+  { to: '/admin/field',             icon: MapPin,          label: 'Field',      roles: ['admin'] },
+  { to: '/admin/client-heat-map',   icon: Flame,           label: 'Heat Map',   roles: ['admin'] },
+  { to: '/admin/kits',              icon: Package,         label: 'Kits',       roles: ['admin'] },
+  { to: '/admin/training',          icon: GraduationCap,   label: 'Training',   roles: ['admin'] },
+  { to: '/admin/crm',               icon: Mail,            label: 'CRM',        roles: ['admin'] },
+  { to: '/admin/finance',           icon: CreditCard,      label: 'Finance',    roles: ['admin'] },
+  { to: '/provider/staff',          icon: UserCheck,       label: 'Nurses',     roles: ['admin'], primary: true },
+  { to: '/admin/credentials',       icon: Shield,          label: 'Credentials',roles: ['admin'] },
   // Nurse shift view
-  { to: '/provider/shift',          icon: Syringe,         label: 'Shift',      roles: ['provider', 'np', 'physician'], primary: true },
-  { to: '/provider/appointments',   icon: CalendarClock,   label: 'Visits',     roles: ['provider', 'np', 'physician'], primary: true },
-  { to: '/provider/communications', icon: MessageSquare,   label: 'Messages',   roles: ['provider', 'np', 'physician'], primary: true },
-  { to: '/provider/role-os',        icon: Grid3X3,         label: 'Tools',      roles: ['provider', 'np', 'physician'], primary: true },
-  { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['provider', 'np', 'physician'] },
-  { to: '/provider/invoicing',      icon: Shield,          label: 'Clearance',  roles: ['np', 'physician'] },
+  { to: '/provider/shift',          icon: Syringe,         label: 'Shift',      roles: ['nurse'], primary: true },
+  { to: '/provider/appointments',   icon: CalendarClock,   label: 'Visits',     roles: ['nurse'], primary: true },
+  { to: '/provider/communications', icon: MessageSquare,   label: 'Messages',   roles: ['nurse'], primary: true },
+  { to: '/provider/role-os',        icon: Grid3X3,         label: 'Tools',      roles: ['nurse'], primary: true },
+  { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['nurse'] },
   // Extended — overflow on mobile
-  { to: '/provider/invoicing',      icon: CreditCard,      label: 'Clearance',  roles: ['admin', 'superadmin'] },
-  { to: '/provider/accounting',     icon: FileText,        label: 'Payments',   roles: ['admin', 'superadmin'] },
-  { to: '/provider/services',       icon: Star,            label: 'Memberships',roles: ['admin', 'superadmin'] },
-  { to: '/admin/communications',    icon: MessageSquare,   label: 'Messages',   roles: ['admin', 'superadmin'] },
-  { to: '/provider/reports',        icon: TrendingUp,      label: 'Reports',    roles: ['admin', 'superadmin'] },
-  { to: '/admin/inventory',         icon: Package,         label: 'Inventory',  roles: ['admin', 'superadmin'] },
-  { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['admin', 'superadmin'] },
+  { to: '/provider/invoicing',      icon: CreditCard,      label: 'Clearance',  roles: ['admin'] },
+  { to: '/provider/accounting',     icon: FileText,        label: 'Payments',   roles: ['admin'] },
+  { to: '/provider/services',       icon: Star,            label: 'Memberships',roles: ['admin'] },
+  { to: '/admin/communications',    icon: MessageSquare,   label: 'Messages',   roles: ['admin'] },
+  { to: '/provider/reports',        icon: TrendingUp,      label: 'Reports',    roles: ['admin'] },
+  { to: '/admin/inventory',         icon: Package,         label: 'Inventory',  roles: ['admin'] },
+  { to: '/provider/settings',       icon: Settings,        label: 'Settings',   roles: ['admin'] },
 ];
 
 // Bottom tab bar — primary tabs only
 const BOTTOM_TAB_COUNT = 4;
 
 const ROLE_BADGE = {
-  superadmin: 'Superadmin',
   admin:      'Admin',
-  provider:   'Nurse',
-  np:         'NP',
-  physician:  'MD',
+  nurse:      'Nurse',
   client:     'Client',
 };
 
@@ -98,8 +94,8 @@ export default function AdminLayout({ children, fullBleed = false }) {
     }
   }, [theme]);
 
-  const role = user?.role || 'provider';
-  const isAdminRole = role === 'admin' || role === 'superadmin';
+  const role = user?.role || 'nurse';
+  const isAdminRole = role === 'admin';
   const shellLabel = isAdminRole ? 'Avalon Admin' : 'Avalon Field';
   const navAriaLabel = isAdminRole ? 'Admin menu' : 'Provider menu';
   const visibleNav = NAV.filter(n => n.roles.includes(role));
