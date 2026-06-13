@@ -260,7 +260,8 @@ async function handleCheckoutCompleted(stripe, db, session) {
   } else if (fulfillmentError) {
     await updateStripeFulfillmentMetadata(stripe, session, {
       fulfillmentStatus: 'acuity_failed',
-      fulfillmentError: fulfillmentError.message.slice(0, 480),
+      fulfillmentIssue: 'appointment_confirmation_pending',
+      fulfillmentError: '',
     });
   }
 
@@ -281,7 +282,8 @@ async function handleCheckoutCompleted(stripe, db, session) {
             fulfillmentStatus: 'acuity_created',
           } : fulfillmentError ? {
             fulfillmentStatus: 'acuity_failed',
-            fulfillmentError: fulfillmentError.message.slice(0, 480),
+            fulfillmentIssue: 'appointment_confirmation_pending',
+            fulfillmentError: '',
           } : {}),
           opsPaymentEmailSent: 'true',
         },

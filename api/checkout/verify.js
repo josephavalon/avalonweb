@@ -154,7 +154,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
   let metadata = paymentIntentMetadata || {};
   let acuityAppointmentId = existingAppointmentId;
   let fulfillmentStatus = appointment?.status || metadata.fulfillmentStatus || null;
-  let fulfillmentError = metadata.fulfillmentError || null;
+  let fulfillmentError = null;
   let attioPersonId = null;
   const checkout = appointment ? checkoutPayloadFromRecord(appointment) : checkoutPayloadFromStripeMetadata(session.metadata || {});
 
@@ -194,6 +194,7 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
           metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
             acuityAppointmentId,
             fulfillmentStatus,
+            fulfillmentIssue: '',
             fulfillmentError: '',
           });
 
@@ -227,7 +228,8 @@ async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, payme
         fulfillmentError = err.message || 'Acuity appointment creation failed';
         metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
           fulfillmentStatus,
-          fulfillmentError: fulfillmentError.slice(0, 480),
+          fulfillmentIssue: 'appointment_confirmation_pending',
+          fulfillmentError: '',
         });
         console.error('[checkout/verify] Acuity fulfillment failed:', err.message || 'unknown_error');
       }
@@ -340,7 +342,7 @@ export default async function handler(req, res) {
       : {
           appointmentId: existingAppointmentId,
           fulfillmentStatus: appointment?.status || paymentIntentMetadata.fulfillmentStatus || null,
-          fulfillmentError: paymentIntentMetadata.fulfillmentError || null,
+          fulfillmentError: null,
           paymentIntentMetadata,
         };
     if (paid && appointment) {
