@@ -104,41 +104,9 @@
     <meta name="theme-color" content="#2A2521" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
-    <!-- Theme + boot bootstrap: INLINE and BLOCKING on purpose. It must set
-         `av-js` (hides the #seo-prerender snapshot) and `av-skip-boot` (hides the
-         boot splash on repeat views) BEFORE the first paint. Deferring it left a
-         paint window where the stale prerender / old splash flashed on refresh. -->
-    <script>
-      (function () {
-        window.__AV_BOOT_STARTED_AT = Date.now();
-        document.documentElement.classList.add('av-js');
-        var VALID = ['dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs'];
-        try {
-          var stored = window.localStorage.getItem('avalon.theme');
-          var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
-          if (theme === 'light') theme = 'daytime';
-          if (theme === 'golden') theme = 'golden-hour';
-          if (theme === 'dubs') theme = 'warriors';
-          var cl = document.documentElement.classList;
-          cl.remove('dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
-          cl.add(theme);
-          var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
-          var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
-          var skipOnce = window.sessionStorage.getItem('av.skipSplashOnce') === '1';
-          var seenInTab = String(window.name || '').indexOf(nameFlag) !== -1;
-          if (seenInSession || skipOnce || seenInTab) {
-            window.sessionStorage.removeItem('av.skipSplashOnce');
-            cl.add('av-skip-boot');
-            window.__AV_BOOT_SKIP_SPLASH = true;
-          } else {
-            window.sessionStorage.setItem('av.bootSplashSeen', '1');
-            window.name = window.name ? window.name + ' ' + nameFlag : nameFlag;
-          }
-        } catch (e) {
-          window.__AV_THEME_BOOTSTRAP_ERROR = true;
-        }
-      })();
-    </script>
+    <!-- Theme + boot bootstrap: blocking on purpose so `av-js`, theme, and
+         splash-skip classes exist before first paint. -->
+    <script src="/theme-bootstrap.js"></script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
          These rules apply the correct background immediately from the theme class that
