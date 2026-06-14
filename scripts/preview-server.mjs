@@ -56,6 +56,44 @@ function isPrivateRoute(urlPath) {
   return ['/admin', '/provider', '/members', '/api'].some((prefix) => urlPath === prefix || urlPath.startsWith(`${prefix}/`));
 }
 
+const PUBLIC_SPA_ROUTE_PATTERNS = [
+  /^\/$/,
+  /^\/(locations|learn|products|launches|events|presale|therapies)(\/.+)?$/,
+  /^\/(our-story|team|medical-direction|apply|careers|faq|services\/nad|services\/cbd)$/,
+  /^\/(subscription|plan|corporate|hotel|service-area|partners|platform|b2b|custom|book|protocols|menu|checkout|login|signup|forgot|forgot-password|order|redeem)$/,
+  /^\/booking\/confirmation$/,
+  /^\/(privacy|privacy-policy|terms|terms-and-conditions|terms-of-service|telehealth-disclaimer|product-disclaimer|notice-of-privacy-practices|hipaa-notice|cookie-policy|cookies)$/,
+];
+
+function isPublicSpaRoute(urlPath) {
+  return PUBLIC_SPA_ROUTE_PATTERNS.some((pattern) => pattern.test(urlPath));
+}
+
+function sendJson(res, status, payload, method) {
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  });
+  if (method === 'HEAD') res.end();
+  else res.end(JSON.stringify(payload));
+}
+
+function localAppointmentSummary(url) {
+  const id = url.searchParams.get('appointment') || url.searchParams.get('id') || url.searchParams.get('session_id') || 'local-preview';
+  return {
+    id,
+    type: 'Avalon local request',
+    datetime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    duration: 60,
+    location: 'Local request address',
+    price: 0,
+    paymentStatus: 'local_preview',
+    status: 'local_preview',
+    source: 'preview-server',
+    preApi: true,
+  };
+}
+
 function routeUrl(urlPath) {
   const normalized = urlPath === '/' ? '/' : urlPath.replace(/\/+$/, '');
   return `https://www.avalonvitality.co${normalized === '/' ? '/' : normalized}`;
@@ -155,6 +193,11 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url || '/', `http://${host}:${port}`);
   const isAssetLike = /\.[a-z0-9]+$/i.test(url.pathname);
 
+  if (url.pathname === '/api/appointment-summary') {
+    sendJson(res, 200, localAppointmentSummary(url), method);
+    return;
+  }
+
   for (const file of candidateFiles(url.pathname)) {
     const live = readIfFile(file);
     if (live) {
@@ -175,6 +218,10 @@ const server = http.createServer((req, res) => {
           canonicalPath: '/login',
           body,
         }), method);
+        return;
+      }
+      if (isPublicSpaRoute(url.pathname)) {
+        send(res, 200, indexPath, liveIndex, method);
         return;
       }
       const body = unavailableBody('Page Not Found', 'The requested Avalon Vitality page does not exist or has moved.');

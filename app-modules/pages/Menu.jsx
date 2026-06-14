@@ -5,15 +5,14 @@ import {
   ArrowRight,
   BatteryCharging,
   ChevronDown,
-  Clock,
   Droplets,
   FlaskConical,
-  Zap,
 } from 'lucide-react';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
-import { EASE, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
+import { EASE, premiumHover, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import { IV_SESSIONS } from '@/config/verticals';
 import { slugify } from '@/data/products';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -133,49 +132,55 @@ function sortSessions(sessions) {
   });
 }
 
-function ProtocolCard({ session, index = 0 }) {
-  const Icon = session.icon || Droplets;
-  const bagSrc = session.image || session.doses?.[0]?.image;
+// Normalize a session (or a single dose of a dose-protocol) into one chip's data.
+function protocolItems(sessions, expandDoses = false) {
+  return sessions.flatMap((session) => {
+    if (expandDoses && session.doses?.length) {
+      return session.doses.map((dose) => ({
+        key: `${session.key}-${dose.key || dose.label}`,
+        label: `${session.label} ${dose.label}`.trim(),
+        price: dose.price,
+        image: dose.image || session.image,
+        icon: session.icon,
+        to: `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`,
+      }));
+    }
+    return [{
+      key: session.key,
+      label: session.label,
+      price: priceFor(session),
+      image: session.image || session.doses?.[0]?.image,
+      icon: session.icon,
+      to: detailPathForSession(session),
+    }];
+  });
+}
+
+function ProtocolCard({ item, index = 0 }) {
+  const Icon = item.icon || Droplets;
 
   return (
     <MotionLink
-      to={detailPathForSession(session)}
+      to={item.to}
       layout
       variants={premiumStaggerItem}
+      whileHover={premiumHover}
+      whileTap={premiumTap}
       transition={{ ...CARD_TRANSITION, delay: Math.min(index * 0.025, 0.12), layout: CARD_TRANSITION }}
-      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/85 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/92 md:rounded-[1.35rem] md:p-3"
+      className="av-treatment-chip group grid min-h-[88px] grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl border px-3.5 py-2.5 transition-colors duration-base ease-editorial"
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.08),transparent_38%)]" />
-      <span className="relative flex min-h-[72px] w-full min-w-0 items-center gap-2.5 text-left md:min-h-[84px] md:gap-3">
-        <div className="flex h-[3.5rem] w-11 shrink-0 items-center justify-center md:h-[4rem] md:w-12">
-          {bagSrc ? (
-            <img src={bagSrc} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]" />
-          ) : (
-            <Icon className="h-5 w-5 text-foreground md:h-[22px] md:w-[22px]" strokeWidth={2.4} />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="truncate font-heading text-[1.5rem] uppercase leading-none tracking-normal text-foreground md:text-[2rem]">
-                {session.label}
-              </h2>
-              <p className="mt-1 flex items-center gap-1.5 font-body text-xs font-bold text-foreground/78 md:text-sm">
-                <Clock className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
-                {session.duration || session.doses?.[0]?.duration || '45-60 min'}
-              </p>
-              <p className="mt-1 font-heading text-[1.35rem] leading-none text-foreground sm:hidden">{money(priceFor(session))}</p>
-            </div>
-            <div className="hidden shrink-0 text-right sm:block">
-              <p className="font-heading text-[1.85rem] leading-none text-foreground md:text-[2.1rem]">{money(priceFor(session))}</p>
-              <p className="font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/58">from</p>
-            </div>
-          </div>
-        </div>
-        <span className="relative shrink-0 text-foreground/70 transition-transform group-hover:translate-x-1" aria-hidden="true">
-          <ArrowRight className="h-5 w-5" strokeWidth={2.2} />
+      {item.image ? (
+        <img src={item.image} alt="" loading="lazy" className="h-[4.5rem] w-14 shrink-0 object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)]" />
+      ) : (
+        <span className="flex h-[4.5rem] w-14 items-center justify-center">
+          <Icon className="h-6 w-6 text-foreground/45 shrink-0" strokeWidth={1.6} />
         </span>
-      </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate font-heading text-[1.15rem] uppercase leading-none tracking-[0.04em] text-foreground">{item.label}</p>
+        <p className="mt-1 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/50">From {money(item.price)}</p>
+      </div>
+      <ArrowRight className="h-5 w-5 shrink-0 text-foreground/35 transition-transform duration-base ease-editorial group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
     </MotionLink>
   );
 }
@@ -185,12 +190,11 @@ function CustomProtocolRow() {
     <MotionLink
       to="/custom?mode=subscription"
       whileTap={premiumTap}
-      className="av-glass-card group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/85 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/92 md:rounded-[1.6rem] md:p-4"
+      className="av-treatment-card group relative min-w-0 overflow-hidden rounded-[1.35rem] p-3 transition-colors md:col-span-2 md:rounded-[1.6rem] md:p-4"
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
       <span className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.06] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-16 md:w-16">
-          <FlaskConical className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.4} />
+        <span className="av-treatment-icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border text-foreground md:h-16 md:w-16">
+          <FlaskConical className="h-6 w-6 text-foreground/66 md:h-7 md:w-7" strokeWidth={1.8} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
@@ -208,7 +212,8 @@ function CustomProtocolRow() {
   );
 }
 
-function ProtocolList({ id, sessions, includeCustom = false }) {
+function ProtocolList({ id, sessions, includeCustom = false, expandDoses = false }) {
+  const items = protocolItems(sessions, expandDoses);
   return (
     <LayoutGroup id={id}>
       <motion.div
@@ -217,11 +222,11 @@ function ProtocolList({ id, sessions, includeCustom = false }) {
         initial="hidden"
         animate="show"
         variants={premiumListContainer(0.04, 0.05)}
-        className="relative grid grid-cols-1 gap-2 py-3 md:gap-3 md:py-4"
+        className="relative grid grid-cols-1 gap-2 py-3 md:grid-cols-2 md:gap-3 md:py-4"
       >
         <AnimatePresence mode="popLayout">
-          {sessions.map((session, index) => (
-            <ProtocolCard key={session.key} session={session} index={index} />
+          {items.map((item, index) => (
+            <ProtocolCard key={item.key} item={item} index={index} />
           ))}
           {includeCustom && <CustomProtocolRow />}
         </AnimatePresence>
@@ -236,15 +241,15 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
   const toggle = onToggle || (() => setLocalOpen((value) => !value));
 
   return (
-    <div className="relative">
+    <div className="av-treatment-card relative overflow-hidden rounded-[1.35rem] transition-colors md:rounded-[1.6rem]">
       <button
         type="button"
         onClick={toggle}
         className="relative flex min-h-[76px] w-full items-center gap-3 px-4 text-left transition-colors hover:bg-foreground/[0.035] md:min-h-[88px] md:px-5"
         aria-expanded={open}
       >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-foreground/[0.055] text-foreground">
-          <Icon className="h-5 w-5" strokeWidth={2.35} />
+        <span className="av-treatment-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-foreground">
+          <Icon className="h-5 w-5 text-foreground/66" strokeWidth={1.8} />
         </span>
         <span className="min-w-0 flex-1 font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground md:text-[2.55rem]">{title}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={CONTROL_TRANSITION} className="shrink-0 text-foreground/72" aria-hidden="true">
@@ -316,12 +321,12 @@ export default function Menu() {
           </div>
           <div id="iv-nad" className="scroll-mt-44">
             <Foldout title="IV NAD+" icon={BatteryCharging} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
-              <ProtocolList id="iv-nad-protocols" sessions={nadSessions} />
+              <ProtocolList id="iv-nad-protocols" sessions={nadSessions} expandDoses />
             </Foldout>
           </div>
           <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="IV CBD Therapy" icon={Zap} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
-              <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} />
+            <Foldout title="IV CBD Therapy" icon={CannabisLeaf} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+              <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} expandDoses />
             </Foldout>
           </div>
         </section>

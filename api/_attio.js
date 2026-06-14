@@ -11,7 +11,7 @@
 const BASE = 'https://api.attio.com/v2';
 
 function authHeader() {
-  const token = process.env.ATTIO_ACCESS_TOKEN;
+  const token = process.env.ATTIO_ACCESS_TOKEN || process.env.ATTIO_API_KEY;
   if (!token) throw new Error('Attio token not configured');
   return `Bearer ${token}`;
 }
@@ -52,6 +52,7 @@ export async function attioFetch(path, opts = {}) {
 export function getAttioConfigStatus() {
   return {
     hasToken: Boolean(process.env.ATTIO_ACCESS_TOKEN),
+    hasLegacyApiKey: Boolean(process.env.ATTIO_API_KEY),
     workspaceId: process.env.ATTIO_WORKSPACE_ID || null,
     peopleObject: process.env.ATTIO_PEOPLE_OBJECT || 'people',
   };
@@ -74,7 +75,12 @@ function splitName(fullName = '') {
 
 function normalizePhone(phone) {
   if (!phone) return null;
-  return String(phone).trim();
+  const trimmed = String(phone).trim();
+  if (trimmed.startsWith('+')) return trimmed;
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  return trimmed;
 }
 
 function crmSafeDescription(client = {}) {

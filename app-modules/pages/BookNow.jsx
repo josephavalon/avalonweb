@@ -428,7 +428,7 @@ function buildTypedAddressSuggestion(address, zip, locationType = 'home') {
   };
 }
 
-const BOOKING_DAYS = 30;
+const BOOKING_DAYS = 180;
 const OPEN_HOUR = 8;
 const CLOSE_HOUR = 20;
 const DEFAULT_EXACT_TIME = '10:00';
@@ -521,7 +521,7 @@ function therapyWhatItDoes(protocol = {}) {
     postnight: 'Supports rehydration after late nights, subject to clinical review.',
     jetlag: 'Supports hydration needs around travel and schedule changes.',
     nad: 'Supports a clinician-reviewed NAD+ wellness appointment with selected dosing.',
-    cbd: 'Provides approval-gated CBD IV information after clinical and legal review.',
+    cbd: 'Provides clinician-reviewed CBD IV wellness support after intake and eligibility review.',
   };
   return copy[key] || protocol.benefitStatement || protocol.tagline || 'Supports a clinician-reviewed wellness visit.';
 }
@@ -600,7 +600,7 @@ function therapyGroupForKey(key) {
 
 function safeProtocol(protocol) {
   if (!protocol) return null;
-  if (protocol.key === 'cbd') return { ...protocol, label: 'CBD Review', tagline: 'Held for clinical and legal approval.' };
+  if (protocol.key === 'cbd') return { ...protocol, label: 'CBD', tagline: 'Clinician-reviewed CBD IV wellness appointment.' };
   return protocol;
 }
 
@@ -643,12 +643,6 @@ function buildSlot(date, timeIntent, customTime) {
 function safeAcuityTypeId(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? String(parsed) : '';
-}
-
-function canUseStaticPreviewFallback() {
-  if (typeof window === 'undefined') return false;
-  const localHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return localHost && ['4173', '4174'].includes(window.location.port);
 }
 
 function clampStep(value) {
@@ -702,6 +696,23 @@ async function createCheckoutSession(payload) {
   if (!response.ok || !body) {
     const error = new Error(body?.error || 'Checkout is unavailable.');
     error.code = body?.code || (!body ? 'checkout_api_unavailable' : 'checkout_failed');
+    error.body = body;
+    throw error;
+  }
+  return body;
+}
+
+async function createManualBooking(payload) {
+  const response = await fetch('/api/manual-booking', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const contentType = response.headers.get('content-type') || '';
+  const body = contentType.includes('application/json') ? await response.json() : null;
+  if (!response.ok || !body?.ok || !body?.acuityAppointmentId) {
+    const error = new Error(body?.error || 'Manual booking requires live Acuity and Attio APIs.');
+    error.code = body?.code || (!body ? 'manual_booking_api_unavailable' : 'manual_booking_failed');
     error.body = body;
     throw error;
   }
@@ -2003,11 +2014,20 @@ function hasValidContactFields(state = {}) {
   );
 }
 
+function hasEmergencyContact(value) {
+  return String(value || '').trim().length >= 4;
+}
+
+function inputIdForLabel(label) {
+  return `booking-${String(label || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'field'}`;
+}
+
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
+  const inputId = inputIdForLabel(label);
   return (
     <div className="block">
       <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
-        <span className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</span>
+        <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</label>
         {actionLabel && onAction && !value && (
           <button
             type="button"
@@ -2021,6 +2041,8 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         )}
       </div>
       <input
+        id={inputId}
+        name={inputId}
         aria-label={label}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
@@ -2563,6 +2585,17 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
             required
           />
         </div>
+        <div className="col-span-2">
+          <TextInput
+            label="Emergency contact"
+            value={state.emergencyContact}
+            onChange={(value) => onChange('emergencyContact', value)}
+            placeholder="Name and phone"
+            autoComplete="section-emergency tel"
+            compact
+            required
+          />
+        </div>
       </div>
       {hasContact && (
         <button
@@ -2964,15 +2997,69 @@ function OptionalNotes({ value, onChange }) {
   );
 }
 
+function BillingChoice({ value, onChange }) {
+  const options = [
+    {
+      key: 'card',
+      label: 'Pay deposit',
+      sub: '$50 today. Balance after visit.',
+      icon: CreditCard,
+    },
+    {
+      key: 'vip-manual',
+      label: 'VIP invoice',
+      sub: 'No charge now. Bill manager later.',
+      icon: ShieldCheck,
+    },
+  ];
+
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
+      <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Payment</p>
+      <div className="relative mt-3 grid gap-2 md:grid-cols-2">
+        {options.map((item) => {
+          const active = value === item.key;
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onChange(item.key)}
+              aria-pressed={active}
+              className={`flex min-h-[72px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${active ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/12 bg-foreground/[0.05]'}`}>
+                  <Icon className="h-5 w-5" strokeWidth={2.35} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-black uppercase tracking-[0.06em]">{item.label}</span>
+                  <span className="mt-1 block text-xs font-bold leading-snug text-foreground/58">{item.sub}</span>
+                </span>
+              </span>
+              {active && <Check className="h-4.5 w-4.5 shrink-0" strokeWidth={2.8} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, dueNow = 0, balanceDue = 0 }) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
+  const manualBilling = state.billingMode === 'vip-manual';
   const items = [
     { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
     { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
-    { label: 'Due now', value: currency(dueNow), icon: Check },
-    { label: 'Upon completion', value: currency(balanceDue), icon: CreditCard },
+    { label: 'Billing', value: manualBilling ? 'VIP invoice' : 'Card deposit', icon: CreditCard },
+    { label: 'Due now', value: manualBilling ? '$0' : currency(dueNow), icon: Check },
+    { label: 'Upon completion', value: manualBilling ? 'Bill manager' : currency(balanceDue), icon: CreditCard },
   ];
 
   return (
@@ -3203,6 +3290,7 @@ const defaultState = {
   emergencyContact: '',
   safetyFlag: '',
   notes: '',
+  billingMode: 'card',
   addOns: [],
   addOnDecision: true,
   clinicalReviewOnFile: false,
@@ -3276,11 +3364,9 @@ export default function BookNow() {
   const initialSubscriptionPlan = MEMBERSHIP_OPTIONS.find((item) => item.key === initialSubscriptionParam);
   const initialSubscriptionTerm = subscriptionTermForKey(searchParams.get('term'));
   const initialOutcome = initialProtocolKey ? outcomeForProtocol(initialProtocolKey) : null;
-  const [step, setStep] = useState(() => (
-    shouldResetDraft
-      ? 0
-      : readStepHash() ?? clampStep(sessionDraft?.step) ?? clampStep(persistedDraft?.step) ?? 0
-  ));
+  // Always open the booking flow on the first step, regardless of any saved/hashed
+  // draft step. (Form data still hydrates from the draft; only the step resets.)
+  const [step, setStep] = useState(0);
   const desktopBookingFrame = useDesktopBookingFrame();
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
@@ -3544,6 +3630,7 @@ export default function BookNow() {
   const pricedGuestCount = isGroupVisit ? Math.min(guestCount, 4) : 1;
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
+  const manualBilling = state.billingMode === 'vip-manual' && state.visitType === 'one-time' && !groupContactRequired;
   const totalLabel = !product ? 'Select' : groupContactRequired ? 'Contact' : currency(subtotal);
   const launchPayment = calculateLaunchPayment({
     subtotal,
@@ -3553,10 +3640,22 @@ export default function BookNow() {
     isGroupVisit,
     hasKnownPrice: !groupContactRequired,
   });
-  const dueNowAmount = launchPayment.depositAmount;
-  const balanceDue = launchPayment.balanceDue;
-  const dueNowLabel = !product && step === 0 ? currency(BOOKING_DEPOSIT_AMOUNT) : state.visitType === 'subscription' ? `${currency(activePlanPrice)} today` : currency(dueNowAmount);
-  const dueAfterLabel = !product && step === 0 ? currency(300) : groupContactRequired ? 'Quote' : currency(balanceDue);
+  const dueNowAmount = manualBilling ? 0 : launchPayment.depositAmount;
+  const balanceDue = manualBilling ? subtotal : launchPayment.balanceDue;
+  const dueNowLabel = manualBilling
+    ? '$0'
+    : !product && step === 0
+      ? currency(BOOKING_DEPOSIT_AMOUNT)
+      : state.visitType === 'subscription'
+        ? `${currency(activePlanPrice)} today`
+        : currency(dueNowAmount);
+  const dueAfterLabel = manualBilling
+    ? 'Invoice'
+    : !product && step === 0
+      ? currency(300)
+      : groupContactRequired
+        ? 'Quote'
+        : currency(balanceDue);
   const dateOptions = useMemo(() => buildDateOptions(), []);
   const timeSlots = useMemo(() => buildTimeSlots(), []);
   const resolvedZip = useMemo(
@@ -4086,6 +4185,7 @@ export default function BookNow() {
 	    if (checkoutLoading) return 'OPENING';
 	    if (embeddedCheckoutSession) return 'PAYMENT READY';
 	    if (step === LAST_STEP && groupContactRequired) return 'CONTACT US';
+	    if (step === LAST_STEP && manualBilling) return 'CONFIRM VIP';
 	    return step < LAST_STEP ? 'NEXT' : 'CONFIRM & PAY';
 	  };
 
@@ -4134,6 +4234,7 @@ export default function BookNow() {
       guests,
 	      notes: [
 	        state.notes,
+	        manualBilling && 'VIP customer. Do not charge now. Bill manager later.',
 	        fastMode && `Hold. Safety: ${state.safetyFlag === 'none' ? 'No' : state.safetyFlag === 'call' ? 'Yes - nurse call requested' : 'Not answered'}. Balance due: ${currency(balanceDue)}.`,
 	      ].filter(Boolean).join('\n'),
       contact: {
@@ -4162,12 +4263,14 @@ export default function BookNow() {
       subtotal,
       depositAmount: dueNowAmount,
       balanceDue,
-      paymentType: launchPayment.paymentType,
-      paymentStatus: launchPayment.paymentStatus,
-      payment: `${currency(dueNowAmount)} due today · ${currency(balanceDue)} after visit`,
-      status: 'Payment received',
-      holdType: 'paid',
-      nextStep: 'Clinical review and scheduling handoff',
+      paymentType: manualBilling ? 'manual_invoice' : launchPayment.paymentType,
+      paymentStatus: manualBilling ? 'manual_invoice_pending' : launchPayment.paymentStatus,
+      payment: manualBilling ? 'VIP manual invoice · $0 due today · bill manager later' : `${currency(dueNowAmount)} due today · ${currency(balanceDue)} after visit`,
+      status: manualBilling ? 'Manual billing request received' : 'Payment received',
+      holdType: manualBilling ? 'manual_invoice' : 'paid',
+      billingMode: state.billingMode,
+      manualBilling,
+      nextStep: manualBilling ? 'Manager billing and clinical review before registered nurse assignment' : 'Clinical review and scheduling handoff',
       intake: 'Needed',
       consent: 'Needed',
       gfe: clinicalReviewClaimedOnFile ? 'On file' : gfeRequirement.required ? 'Pending' : 'Cleared',
@@ -4209,7 +4312,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasValidContactFields(state) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
+  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state.emergencyContact) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     clearItems();
@@ -4223,13 +4326,15 @@ export default function BookNow() {
     });
     writeLocal('webstore.latestHandoff', {
       bookingId: localBooking.id,
-      stack: ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
-      noThirdPartyCalls: false,
+      stack: localBooking.manualBilling
+        ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
+        : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
+      noThirdPartyCalls: Boolean(localBooking.manualBilling),
       updatedAt: new Date().toISOString(),
     });
     if (localBooking.subscription) writeLocal('webstore.subscriptionPlan', localBooking.subscription);
     if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
-    appendActivity(`Webstore payment started: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
+    appendActivity(localBooking.manualBilling ? `VIP manual booking requested: ${localBooking.service}` : `Webstore payment started: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
   };
 
   const checkoutPayloadFor = (localBooking, membershipOverride = null) => {
@@ -4279,6 +4384,9 @@ export default function BookNow() {
         depositAmount: localBooking.depositAmount,
         balanceDue: localBooking.balanceDue,
         paymentType: localBooking.paymentType,
+        paymentStatus: localBooking.paymentStatus,
+        billingMode: localBooking.billingMode,
+        manualBilling: localBooking.manualBilling,
         orderType: localBooking.orderType,
         visitType: state.visitType,
         clientType: localBooking.clientType,
@@ -4338,12 +4446,6 @@ export default function BookNow() {
       setError('');
       window.setTimeout(() => scrollStepIntoView(), 50);
     } catch (err) {
-      if (err.code === 'checkout_api_unavailable' && canUseStaticPreviewFallback()) {
-        clearBookingDraft();
-        clearBookingSessionDraft();
-        navigate(`/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}&preapi=1`);
-        return;
-      }
       setCheckoutLoading(false);
       setCheckoutMountError(err.message || 'Checkout is unavailable. Try again.');
       setError(err.message || 'Checkout is unavailable. Try again.');
@@ -4367,7 +4469,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError(fastMode ? 'Add contact, date of birth, address, and safety response.' : 'Add contact, date of birth, and service address with ZIP.');
+      setError(fastMode ? 'Add contact, date of birth, emergency contact, address, and safety response.' : 'Add contact, date of birth, emergency contact, and service address with ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -4385,6 +4487,58 @@ export default function BookNow() {
       manualReview: true,
       lifecycleWarnings: [...new Set([...(candidate.lifecycleWarnings || []), ...(check.warnings || [])])],
     });
+
+    if (manualBilling) {
+      setCheckoutLoading(true);
+      setCheckoutMountError('');
+      setError('');
+      try {
+        const manualResult = await createManualBooking({
+          ...checkoutPayloadFor(localBooking),
+          primaryService: localBooking.service,
+        });
+        const confirmedBooking = {
+          ...localBooking,
+          status: 'Manual billing appointment created',
+          paymentStatus: 'manual_invoice_pending',
+          acuityAppointmentId: manualResult.acuityAppointmentId,
+          attioPersonId: manualResult.attioPersonId,
+          externalProvider: 'acuity',
+          externalPayload: {
+            provider: manualResult.provider,
+            appointment: manualResult.appointment,
+            attio: manualResult.attio,
+          },
+        };
+        persistLocalBooking(confirmedBooking, 'VIP manual billing');
+        clearBookingDraft();
+        clearBookingSessionDraft();
+        track(ANALYTICS_EVENTS.BOOKING_CONFIRMED, {
+          funnel: 'webstore',
+          booking_id: confirmedBooking.id,
+          acuity_appointment_id: manualResult.acuityAppointmentId,
+          attio_person_id: manualResult.attioPersonId,
+          order_type: confirmedBooking.orderType,
+          product_family: confirmedBooking.productFamily,
+          protocol_key: confirmedBooking.protocolKey,
+          billing_mode: 'vip_manual',
+          gfe_required: confirmedBooking.gfeRequired,
+        });
+        navigate(`/booking/confirmation?appointment=${encodeURIComponent(manualResult.acuityAppointmentId)}&manual=1`);
+      } catch (err) {
+        setError(err.message || 'Could not create the Acuity appointment and Attio client.');
+        setCheckoutMountError(err.message || 'Could not create the Acuity appointment and Attio client.');
+        track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
+          funnel: 'webstore',
+          booking_id: localBooking.id,
+          reason: err.code || 'manual_booking_failed',
+          billing_mode: 'vip_manual',
+        });
+      } finally {
+        setCheckoutLoading(false);
+      }
+      return;
+    }
 
     if (state.visitType === 'subscription') {
       const subscriptionPlan = {
@@ -5114,6 +5268,9 @@ export default function BookNow() {
             ))}
           </div>
         </div>
+        {state.visitType === 'one-time' && !groupContactRequired && (
+          <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
+        )}
         <div className={`${panelCardClass} grid min-h-0 content-start gap-1.5 p-2 md:gap-2 md:p-2.5`}>
           <div className="grid grid-cols-2 gap-1.5 md:gap-2">
             <div className="col-span-2">
@@ -5163,6 +5320,17 @@ export default function BookNow() {
                 required
               />
             </div>
+            <div className="col-span-2">
+              <TextInput
+                label="Emergency contact"
+                value={state.emergencyContact}
+                onChange={(value) => setValue('emergencyContact', value)}
+                placeholder="Name and phone"
+                autoComplete="section-emergency tel"
+                compact
+                required
+              />
+            </div>
           </div>
           <p className="rounded-xl border border-foreground/10 bg-background/30 px-2.5 py-1.5 font-body text-[9px] font-semibold leading-snug text-foreground/52 md:px-3 md:py-2 md:text-[10px]">
             By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
@@ -5190,7 +5358,6 @@ export default function BookNow() {
 
   return (
     <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
-      <span aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-background/32 backdrop-blur-[1px] md:bg-background/44 md:backdrop-blur-[1.5px]" />
       <BookingMobileHeader />
       {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
           a z-10 stacking context, and the booking <main> below (also z-10, later
@@ -5306,7 +5473,7 @@ export default function BookNow() {
               displayStepIndex={progressDisplay.index}
               displayTitle={progressDisplay.title}
               canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
-              actionLabel={step === LAST_STEP ? `CONFIRM & PAY ${currency(dueNowAmount)}` : primaryActionLabel()}
+              actionLabel={step === LAST_STEP ? (manualBilling ? 'CONFIRM VIP' : `CONFIRM & PAY ${currency(dueNowAmount)}`) : primaryActionLabel()}
               checkoutLoading={checkoutLoading}
               error={error}
               canGoBack={canGoBack}
@@ -5675,7 +5842,7 @@ export default function BookNow() {
 	                              </span>
 	                              <span className="relative min-w-0">
 		                                <span className="block font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground md:text-[1.35rem]">{item.label}</span>
-		                                {active && <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">{item.key === 'choose' ? '30 days' : 'Fastest'}</span>}
+		                                {active && <span className="mt-0.5 block font-body text-xs font-bold text-foreground/62">{item.key === 'choose' ? '180 days' : 'Fastest'}</span>}
 	                              </span>
 	                            </button>
 	                          );
@@ -5755,6 +5922,9 @@ export default function BookNow() {
 	                      onChange={(value) => setValue('clinicalReviewOnFile', value)}
 	                      allowOnFile={canUseClinicalReviewOnFile}
 	                    />
+                    )}
+                    {state.visitType === 'one-time' && !groupContactRequired && (
+                      <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
                     )}
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
                     {fastMode && <SafetyFlagChoice value={state.safetyFlag} onChange={(value) => setValue('safetyFlag', value)} />}

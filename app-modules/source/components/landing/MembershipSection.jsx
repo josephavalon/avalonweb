@@ -5,6 +5,7 @@ import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumTap } from '@/lib/motion';
 import { BOOKABLE_SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import ScrollParallax from '@/components/ui/ScrollParallax';
 
 const MotionLink = motion.create(Link);
 
@@ -37,8 +38,8 @@ function TierRow({ tier, index, open, onToggle }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-24px' }}
       transition={{ duration: 0.84, ease: EASE, delay: index * 0.18, layout: premiumExpandTransition }}
       whileHover={premiumHover}
@@ -97,19 +98,13 @@ export default function MembershipSection() {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.95, ease: EASE }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10"
-        >
+        <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
           <div>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
               Plans
             </h2>
           </div>
-        </motion.div>
+        </ScrollParallax>
 
         {/* Tier accordion rows */}
         <LayoutGroup id="membership-tiers">

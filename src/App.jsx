@@ -59,6 +59,7 @@ const BookNow = lazyRoute(() => import('./pages/BookNow'));
 const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
 const Signup = lazyRoute(() => import('./pages/Signup'));
+const ForgotPassword = lazyRoute(() => import('./pages/ForgotPassword'));
 const ManageOrder = lazyRoute(() => import('./pages/ManageOrder'));
 const AdminLogin = lazyRoute(() => import('./pages/AdminLogin'));
 const MemberDashboard = lazyRoute(() => import('./pages/members/Dashboard'));
@@ -298,7 +299,7 @@ function AppRoutes() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/order" element={<ManageOrder />} />
             <Route path="/redeem" element={<Navigate to="/order" replace />} />
-            <Route path="/forgot" element={<Login />} />
+            <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />

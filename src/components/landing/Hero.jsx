@@ -66,8 +66,8 @@ export default function Hero() {
 	        <div
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
-	          <div className="relative md:flex md:items-center md:justify-between md:gap-10">
-        <div className="av-hero-copy md:max-w-xl">
+	          <div className="relative xl:flex xl:items-center xl:justify-between xl:gap-10">
+        <div className="av-hero-copy xl:max-w-xl">
 
         {/* Layer 1 — title (recedes fastest + scales) */}
         <motion.div style={titleStyle}>
@@ -101,7 +101,7 @@ export default function Hero() {
         {/* Layer 3 — action rail (drifts slowest, feels closest) */}
         <motion.div
           style={railStyle}
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 xl:mt-0 xl:w-[28rem] xl:max-w-[28rem] xl:shrink-0 xl:grid-cols-1 xl:gap-3.5"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;

@@ -557,11 +557,11 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   stroke: #1b1815 !important;
 }
 
-/* Book icon chip — the inverse of the cards' dark glass chip: a faint dark-tinted
-   chip on white with a dark calendar, so it rhymes with the IV/Plans icons. */
+/* Book icon chip — white on the white button (no gray tint/border), so only the
+   dark calendar mark reads. */
 .av-hero-action.av-hero-action-primary .av-hero-book-icon {
-  background: rgba(27, 24, 21, 0.05) !important;
-  border-color: rgba(27, 24, 21, 0.14) !important;
+  background: #ffffff !important;
+  border-color: #ffffff !important;
 }
 .av-hero-action.av-hero-action-primary .av-hero-book-icon svg {
   color: #1b1815 !important;

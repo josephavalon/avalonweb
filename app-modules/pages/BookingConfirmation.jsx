@@ -197,12 +197,13 @@ export default function BookingConfirmation() {
   const initialAppointmentId = params.get('appointment');
   const sessionId = params.get('session_id');
   const paymentSuccess = params.get('payment') === 'success' || Boolean(sessionId);
+  const localConfirmation = params.get('manual') === '1' || params.get('preapi') === '1';
   const [localBooking] = useState(() => readLastBooking());
   const [appointmentId, setAppointmentId] = useState(initialAppointmentId);
 
   const [appt, setAppt] = useState(null);
   const [verifyLoading, setVerifyLoading] = useState(Boolean(sessionId && !initialAppointmentId));
-  const [appointmentLoading, setAppointmentLoading] = useState(Boolean(initialAppointmentId));
+  const [appointmentLoading, setAppointmentLoading] = useState(Boolean(initialAppointmentId && !localConfirmation));
   const [apptError, setApptError] = useState(null);
   const [fulfillmentPending, setFulfillmentPending] = useState(Boolean(sessionId && !initialAppointmentId));
   const [verification, setVerification] = useState(null);
@@ -311,6 +312,10 @@ export default function BookingConfirmation() {
   }, [localBooking?.source, sessionId, initialAppointmentId]);
 
   useEffect(() => {
+    if (localConfirmation) {
+      setAppointmentLoading(false);
+      return;
+    }
     if (!appointmentId && !sessionId) return;
     if (sessionId && !summaryToken) return;
     let cancelled = false;
@@ -328,7 +333,8 @@ export default function BookingConfirmation() {
           query.set('appointment', appointmentId);
         }
         const res = await fetch(`/api/appointment-summary?${query}`, fetchOptions);
-        const data = await res.json();
+        const contentType = res.headers.get('content-type') || '';
+        const data = contentType.includes('application/json') ? await res.json() : { error: 'Could not load booking details' };
         if (!cancelled) {
           if (res.ok) setAppt(data);
           else if (paymentSuccess && data.code === 'summary_payload_missing') {
@@ -342,7 +348,7 @@ export default function BookingConfirmation() {
       }
     })();
     return () => { cancelled = true; };
-  }, [appointmentId, sessionId, summaryToken]);
+  }, [appointmentId, localConfirmation, sessionId, summaryToken]);
 
   useEffect(() => {
     const coords = currentLocationCoordinates(localBooking?.address);
@@ -436,6 +442,8 @@ export default function BookingConfirmation() {
       : null;
   const titleText = paymentSuccess
     ? 'Thank you'
+    : localBooking?.manualBilling
+      ? 'Request received.'
     : 'Request Received.';
   const acuityNeedsOps = paymentSuccess && verification?.fulfillmentStatus === 'acuity_failed';
   const statusText = acuityNeedsOps
@@ -444,7 +452,9 @@ export default function BookingConfirmation() {
       ? 'Payment received. Confirming your appointment.'
       : paymentSuccess
         ? 'A nurse will text shortly.'
-        : 'Review comes next.';
+        : localBooking?.manualBilling
+          ? 'VIP manual billing is queued.'
+          : 'Review comes next.';
   return (
     <div className="av-page-surface min-h-screen">
       <Navbar />

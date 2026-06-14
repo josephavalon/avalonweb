@@ -164,11 +164,11 @@ export const IV_SESSIONS = [
     key: 'cbd',
     label: 'CBD',
     icon: Leaf,
-    tagline: 'CBD IV category held for clinical and legal approval.',
-    tag: 'Approval Gated',
+    tagline: 'Clinician-reviewed CBD IV wellness appointment.',
+    tag: 'Clinical Review',
     category: 'recovery',
-    inside: 'CBD IV information pending approval',
-    features: ['Clinical approval required', 'Legal review required', 'No public claims', 'No guaranteed outcomes'],
+    inside: 'CBD dose · IV fluids · Clinical intake review',
+    features: ['Clinical intake review', 'Clinician-guided dose', 'Registered nurse administration', 'No guaranteed outcomes'],
     doses: [
       { key: 'cbd_33', label: '33mg', price: 250, duration: '45 min', image: '/bags/cbd-33.png' },
       { key: 'cbd_66', label: '66mg', price: 300, duration: '45 min', image: '/bags/cbd-66.png' },
@@ -425,19 +425,19 @@ function namedSession(session, name, overrides = {}) {
 
 export const productsByCategory = {
   cbd: {
-    title: 'CBD IV Review',
-    subtitle: 'Approval gated',
-    badge: 'Clinical and legal review required',
+    title: 'CBD IV Therapy',
+    subtitle: 'Clinical review',
+    badge: 'Eligibility confirmed before treatment',
     description:
-      'CBD IV service information is held for clinical and legal approval. Public availability depends on physician-owned clinical approval and compliance-reviewed copy.',
+      'CBD IV appointments are clinician-reviewed wellness visits. Avalon confirms eligibility, dose, and timing before treatment.',
     heroImage: null,
-    categoryLabel: 'CBD Review',
+    categoryLabel: 'CBD IV Therapy',
     backTo: '/services/cbd',
-    backLabel: 'Back to CBD Review',
+    backLabel: 'Back to CBD IV Therapy',
     treatments: byKey.cbd.doses.map((dose) => ({
       ...treatmentFromDose(byKey.cbd, dose),
       name: `CBD IV ${dose.label}`,
-      desc: 'Approval-gated CBD IV information for clinician-reviewed wellness visits.',
+      desc: 'Clinician-reviewed CBD IV wellness appointment. Eligibility and dosing are confirmed before treatment.',
     })),
   },
   nad: {

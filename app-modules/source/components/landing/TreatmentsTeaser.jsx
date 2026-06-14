@@ -8,6 +8,7 @@ import {
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
+import ScrollParallax from '@/components/ui/ScrollParallax';
 
 const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
@@ -145,8 +146,8 @@ function CategoryRow({ cat, index, open, onToggle }) {
   if (cat.type === 'link') {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-        whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-12%' }}
         transition={{ duration: 0.84, delay: index * 0.18, ease: EASE }}
         whileHover={premiumHover}
@@ -171,8 +172,8 @@ function CategoryRow({ cat, index, open, onToggle }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-12%' }}
       transition={{ duration: 0.84, delay: index * 0.18, ease: EASE }}
       whileHover={premiumHover}
@@ -260,17 +261,11 @@ export default function TreatmentsTeaser() {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.95, ease: EASE }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10"
-        >
+        <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10">
           <div>
             <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">IV Therapy</h2>
           </div>
-        </motion.div>
+        </ScrollParallax>
 
         {/* Category accordions */}
         <LayoutGroup id="treatment-teaser-accordion">

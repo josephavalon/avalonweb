@@ -3,6 +3,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import { ChevronDown } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import ScrollParallax from '@/components/ui/ScrollParallax';
 
 const STEPS = [
   {
@@ -29,8 +30,8 @@ function StepCard({ step, index, open, onToggle }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-12%' }}
       transition={{ duration: 0.82, delay: index * 0.18, ease: EASE }}
       whileHover={premiumHover}
@@ -80,17 +81,11 @@ export default function HowItWorks() {
     <section id="how-it-works" className="pt-12 pb-10 md:pt-20 md:pb-16 px-5 md:px-12 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
 
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.95, ease: EASE }}
-          className="mb-6 md:mb-10"
-        >
+        <ScrollParallax className="mb-6 md:mb-10">
           <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92]">
             How it works
           </h2>
-        </motion.div>
+        </ScrollParallax>
 
         <div className="relative space-y-2">
           {STEPS.map((step, i) => (
