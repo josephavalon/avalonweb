@@ -82,7 +82,7 @@ const REPORT_CARDS = [
   },
   {
     id: 'rc8',
-    title: 'Membership Interest',
+    title: 'Plan Interest',
     value: '5 leads',
     sub: '2 contacted',
     icon: Users,
@@ -109,6 +109,7 @@ const THERAPIES = [
 ];
 
 const MAX_THERAPY = Math.max(...THERAPIES.map(t => t.count));
+const REPORTS_CLINICAL_NOTE = 'Operational counts only. Clinical review governs care.';
 
 // ── ReportCard ────────────────────────────────────────────────────────────────
 
@@ -164,9 +165,16 @@ function BarRow({ label, pct, count, max }) {
 
 function SectionHeader({ label }) {
   return (
-    <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 font-medium mb-3">
-      {label}
-    </h2>
+    <div className="mb-3">
+      <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 font-medium">
+        {label}
+      </h2>
+      {label === 'Therapies' && (
+        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.16em] text-foreground/30">
+          {REPORTS_CLINICAL_NOTE}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -221,7 +229,7 @@ export default function Reports() {
       </div>
 
       {/* 2×4 Card grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-8">
         {REPORT_CARDS.map(card => (
           <ReportCard key={card.id} {...card} />
         ))}
@@ -279,7 +287,7 @@ export default function Reports() {
       >
         <p className="font-body text-[12px] leading-relaxed"
           style={{ color: 'hsl(var(--accent) / 0.8)' }}>
-          Reports reflect manual data. Analytics automation placeholder enabled after launch.
+          Reports reflect manual data. Analytics automation can be enabled after launch.
         </p>
       </div>
     </AdminLayout>

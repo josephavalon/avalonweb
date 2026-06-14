@@ -1,0 +1,44 @@
+/**
+ * GET /api/scheduling-appointment?id=<appointmentId>
+ *
+ * Fetches a single scheduling appointment by ID.
+ * Used by the confirmation page to display real booking details.
+ *
+ * Returns the scheduling appointment object:
+ *   { id, type, datetime, duration, location, firstName, lastName,
+ *     email, phone, notes, price, forms, ... }
+ */
+
+import { acuityFetch } from './_acuity.js';
+import { isLiveApiEnabled, localAppointment, requireInternalAccess } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { id } = req.query || {};
+
+  if (!id) {
+    return res.status(400).json({ error: 'id query parameter is required' });
+  }
+
+  try {
+    if (!isLiveApiEnabled()) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(200).json(localAppointment(id));
+    }
+
+    if (!requireInternalAccess(req, res, 'Acuity appointment detail')) return;
+
+    const appointment = await acuityFetch(`/appointments/${encodeURIComponent(id)}`);
+    return res.status(200).json(appointment);
+  } catch (err) {
+    console.error('[scheduling-appointment] appointment detail failed', safeLogContext(err, 'scheduling_appointment_failed'));
+    return res.status(err.status || 500).json({
+      error: 'Could not load scheduling appointment',
+      code: safeErrorCode(err, 'scheduling_appointment_failed'),
+    });
+  }
+}

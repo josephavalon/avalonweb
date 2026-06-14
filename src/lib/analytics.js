@@ -47,6 +47,13 @@ export const ANALYTICS_EVENTS = Object.freeze({
   DRIP_COMPLETED: 'drip_completed',
   DRIP_CANCELED: 'drip_canceled',
 
+  // Booking funnel
+  STEP_VIEWED: 'step_viewed',
+  STEP_COMPLETED: 'step_completed',
+  CHECKOUT_STARTED: 'checkout_started',
+  CHECKOUT_FAILED: 'checkout_failed',
+  BOOKING_CONFIRMED: 'booking_confirmed',
+
   // Cross-vertical crossover — the LTV unlock.
   VERTICAL_CROSSOVER: 'vertical_crossover',
   PROTOCOL_ACTIVATED: 'protocol_activated',
@@ -76,8 +83,14 @@ export const ANALYTICS_EVENTS = Object.freeze({
 
 const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 const QUEUE_CAP = 200; // Drop oldest beyond this — prevents memory leaks.
+const LOCAL_EVENT_KEY = 'av.analytics.events';
+const LOCAL_ATTRIBUTION_KEY = 'av.analytics.attribution';
+const LOCAL_EXPERIMENT_PREFIX = 'av.experiment.';
+const FIRST_PARTY_ANALYTICS_ENABLED =
+  typeof import.meta !== 'undefined' &&
+  import.meta.env?.VITE_AVALON_ENABLE_FIRST_PARTY_ANALYTICS === 'true';
 
-let provider = null;
+let provider = localAnalyticsProvider;
 /** @type {AnalyticsEvent[]} */
 const queue = [];
 /** @type {AnalyticsContext} */
@@ -110,6 +123,59 @@ export function setProvider(fn) {
 export function setContext(next) {
   if (!next || typeof next !== 'object') return;
   context = { ...context, ...next };
+}
+
+export function captureAttribution(search = '') {
+  if (typeof window === 'undefined') return null;
+  try {
+    const params = new URLSearchParams(search || window.location.search || '');
+    const attribution = {};
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid']) {
+      const value = params.get(key);
+      if (value) attribution[key] = value.slice(0, 180);
+    }
+    const existing = readLocalJson(LOCAL_ATTRIBUTION_KEY, null);
+    const next = Object.keys(attribution).length
+      ? { ...existing, ...attribution, firstSeenAt: existing?.firstSeenAt || new Date().toISOString(), lastSeenAt: new Date().toISOString() }
+      : existing;
+    if (next) {
+      window.localStorage.setItem(LOCAL_ATTRIBUTION_KEY, JSON.stringify(next));
+      setContext({ attribution_id: stableHash(JSON.stringify(next)) });
+    }
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+export function getAttribution() {
+  if (typeof window === 'undefined') return null;
+  return readLocalJson(LOCAL_ATTRIBUTION_KEY, null);
+}
+
+export function getExperimentVariant(name, variants = ['control', 'variant']) {
+  if (typeof window === 'undefined' || !name || !variants.length) return variants[0] || 'control';
+  const key = `${LOCAL_EXPERIMENT_PREFIX}${name}`;
+  try {
+    const saved = window.localStorage.getItem(key);
+    if (saved && variants.includes(saved)) return saved;
+    const index = Math.abs(stableHash(`${name}:${window.navigator.userAgent}:${Date.now()}`)) % variants.length;
+    const assigned = variants[index];
+    window.localStorage.setItem(key, assigned);
+    track('experiment_assigned', { experiment: name, variant: assigned });
+    return assigned;
+  } catch {
+    return variants[0] || 'control';
+  }
+}
+
+export function trackPageView({ path, title, referrer } = {}) {
+  track(ANALYTICS_EVENTS.PAGE_VIEW, {
+    path: path || (typeof window !== 'undefined' ? window.location.pathname : ''),
+    title: title || (typeof document !== 'undefined' ? document.title : ''),
+    referrer: referrer || (typeof document !== 'undefined' ? document.referrer : ''),
+    attribution: getAttribution(),
+  });
 }
 
 /**
@@ -167,47 +233,185 @@ function safeDispatch(event) {
   } catch (err) {
     if (IS_DEV) {
       // eslint-disable-next-line no-console
-      console.warn('[analytics] provider threw, dropping event:', err);
+      if (import.meta.env?.DEV) console.warn('[analytics] provider threw, dropping event:', err);
     }
   }
+}
+
+function localAnalyticsProvider(event) {
+  if (typeof window === 'undefined') {
+    queue.push(event);
+    if (queue.length > QUEUE_CAP) queue.splice(0, queue.length - QUEUE_CAP);
+    return;
+  }
+  const saved = readLocalJson(LOCAL_EVENT_KEY, []);
+  saved.push(event);
+  const bounded = saved.slice(-QUEUE_CAP);
+  window.localStorage.setItem(LOCAL_EVENT_KEY, JSON.stringify(bounded));
+  pushBrowserDestinations(event);
+  sendFirstPartyEvent(event);
+  window.dispatchEvent(new CustomEvent('avalon:analytics', { detail: event }));
+}
+
+function pushBrowserDestinations(event) {
+  try {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: event.name,
+      avalon_event: event,
+    });
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', event.name, event.props || {});
+    }
+    if (typeof window.fbq === 'function') {
+      window.fbq('trackCustom', event.name, event.props || {});
+    }
+  } catch {
+    // Browser destination failures must never affect booking.
+  }
+}
+
+function sendFirstPartyEvent(event) {
+  try {
+    if (!FIRST_PARTY_ANALYTICS_ENABLED) return;
+    const payload = JSON.stringify({ event });
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics', blob);
+      return;
+    }
+    fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics collection is best-effort only.
+  }
+}
+
+function readLocalJson(key, fallback) {
+  try {
+    if (typeof window === 'undefined') return fallback;
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function stableHash(value) {
+  const string = String(value || '');
+  let hash = 0;
+  for (let index = 0; index < string.length; index += 1) {
+    hash = ((hash << 5) - hash) + string.charCodeAt(index);
+    hash |= 0;
+  }
+  return hash;
 }
 
 // Guard against accidental PII leakage. Strip common sensitive keys at the
 // boundary — event authors shouldn't have to remember.
 const DROP_KEYS = new Set([
   'email',
+  'customerEmail',
   'first_name',
   'last_name',
   'firstName',
   'lastName',
+  'customerName',
+  'name',
   'phone',
+  'customerPhone',
   'password',
   'token',
+  'summaryToken',
   'ssn',
   'dob',
   'date_of_birth',
+  'dateOfBirth',
+  'birthdate',
+  'address',
+  'zip',
+  'postalCode',
+  'emergencyContact',
+  'notes',
+  'medicalNotes',
+  'clinicalNotes',
+  'clinicalReviewOnFile',
+  'gfeRequired',
+  'diagnosis',
+  'medications',
+  'allergies',
 ]);
+
+function sensitiveAnalyticsKey(key = '') {
+  const normalized = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+  return DROP_KEYS.has(key) || [
+    'email',
+    'firstname',
+    'lastname',
+    'customername',
+    'name',
+    'phone',
+    'password',
+    'token',
+    'ssn',
+    'dob',
+    'dateofbirth',
+    'birthdate',
+    'address',
+    'zip',
+    'postalcode',
+    'emergencycontact',
+    'notes',
+    'medicalnotes',
+    'clinicalnotes',
+    'clinicalreviewonfile',
+    'gferequired',
+    'diagnosis',
+    'medications',
+    'allergies',
+  ].some((blocked) => normalized.includes(blocked));
+}
 
 function sanitize(props) {
   if (!props || typeof props !== 'object') return {};
+  return sanitizeObject(props);
+}
+
+function sanitizeObject(props, depth = 0) {
+  if (!props || typeof props !== 'object' || depth > 2) return {};
   const out = {};
   for (const [k, v] of Object.entries(props)) {
-    if (DROP_KEYS.has(k)) continue;
+    if (sensitiveAnalyticsKey(k)) continue;
     // Truncate strings to keep payloads bounded.
     if (typeof v === 'string') {
       out[k] = v.length > 512 ? v.slice(0, 512) : v;
     } else if (v === null || ['number', 'boolean'].includes(typeof v)) {
       out[k] = v;
     } else if (Array.isArray(v)) {
-      out[k] = v.slice(0, 32);
+      out[k] = v.slice(0, 32).map((item) => (
+        item && typeof item === 'object' ? sanitizeObject(item, depth + 1) : item
+      ));
     } else if (typeof v === 'object') {
-      // One level of nesting allowed; flatten further to avoid unbounded blobs.
-      out[k] = JSON.parse(JSON.stringify(v)); // strip functions / refs
+      out[k] = sanitizeObject(v, depth + 1);
     }
   }
   return out;
 }
 
 // Default export mirrors the named exports for ergonomics at callsites.
-const analytics = { track, setProvider, setContext, resetContext, events: ANALYTICS_EVENTS };
+const analytics = {
+  track,
+  trackPageView,
+  captureAttribution,
+  getAttribution,
+  getExperimentVariant,
+  setProvider,
+  setContext,
+  resetContext,
+  events: ANALYTICS_EVENTS,
+};
 export default analytics;

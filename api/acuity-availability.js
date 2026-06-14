@@ -1,15 +1,17 @@
 /**
- * GET /api/acuity-availability
+ * GET /api/scheduling-availability
  *
  * Query params:
  *   date            YYYY-MM-DD        — day to fetch slots for
- *   appointmentTypeID  number         — Acuity appointment type
+ *   appointmentTypeID  number         — scheduling appointment type
  *   timezone        string (optional) — defaults to America/Los_Angeles
  *
  * Returns: [{ time: ISO8601, slotsAvailable: number }]
  */
 
-import { acuityFetch } from './_acuity.js';
+import { acuityFetch, resolveAppointmentTypeId } from './_acuity.js';
+import { isLiveApiEnabled, localAvailability } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -17,26 +19,35 @@ export default async function handler(req, res) {
   }
 
   const { date, appointmentTypeID, timezone = 'America/Los_Angeles' } = req.query;
+  const resolvedTypeId = Number(appointmentTypeID) || resolveAppointmentTypeId();
 
-  if (!date || !appointmentTypeID) {
+  if (!date || !resolvedTypeId) {
     return res.status(400).json({ error: 'date and appointmentTypeID are required' });
   }
 
   try {
+    if (!isLiveApiEnabled()) {
+      res.setHeader?.('Cache-Control', 'no-store');
+      return res.status(200).json(localAvailability({ date, appointmentTypeID: resolvedTypeId, timezone }));
+    }
+
     const params = new URLSearchParams({
       date,
-      appointmentTypeID,
+      appointmentTypeID: String(resolvedTypeId),
       timezone,
     });
 
     const slots = await acuityFetch(`/availability/times?${params}`);
 
-    // Normalize — Acuity returns an array of { time, slotsAvailable }
+    // Normalize provider response into { time, slotsAvailable }
     const available = (slots || []).filter((s) => s.slotsAvailable > 0);
 
     return res.status(200).json(available);
   } catch (err) {
-    console.error('[acuity-availability]', err.message);
-    return res.status(err.status || 500).json({ error: err.message });
+    console.error('[scheduling-availability] availability lookup failed', safeLogContext(err, 'scheduling_availability_failed'));
+    return res.status(err.status || 500).json({
+      error: 'Could not load scheduling availability',
+      code: safeErrorCode(err, 'scheduling_availability_failed'),
+    });
   }
 }

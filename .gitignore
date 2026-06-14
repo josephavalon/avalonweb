@@ -1,6 +1,7 @@
 #env
 .env
 .env.*
+!.env.example
 
 # Logs
 /logs
@@ -14,6 +15,7 @@ lerna-debug.log*
 node_modules
 node_modules.broken
 node_modules.old*
+node_modules.dataless-*
 dist
 dist-ssr
 *.local
@@ -36,3 +38,9 @@ vite.sandbox.mjs
 .vercel
 .env*.local
 deploy-to-vercel.command
+
+# Local QA / browser automation artifacts
+.codex-audit/
+tmp/
+.gstack/
+.env*

@@ -1,5 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
+import { EASE } from '@/lib/motion';
 
 export default function CuriositySection() {
   return (
@@ -9,7 +10,7 @@ export default function CuriositySection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.9, ease: EASE }}
         >
           <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
             CURIOUS BUT NOT QUITE READY TO DIVE IN?

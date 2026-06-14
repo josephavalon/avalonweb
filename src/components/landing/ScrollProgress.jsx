@@ -32,12 +32,16 @@ export default function ScrollProgress() {
     <div
       aria-hidden="true"
       className="fixed top-0 left-0 right-0 h-[2px] z-[60] pointer-events-none"
+      style={{
+        opacity: progress > 1 ? 1 : 0,
+        transition: 'opacity 0.35s ease',
+      }}
     >
       <div
         className="h-full bg-accent origin-left"
         style={{
           transform: `scaleX(${progress / 100})`,
-          transition: 'transform 0.1s linear',
+          transition: 'transform 0.08s linear',
         }}
       />
     </div>

@@ -1,20 +1,21 @@
 /**
- * Acuity Scheduling API client.
+ * Scheduling API client.
  * Docs: https://developers.acuityscheduling.com/
  *
  * Auth: HTTP Basic — ACUITY_USER_ID : ACUITY_API_KEY
  * Base: https://acuityscheduling.com/api/v1
  *
  * IMPORTANT: Never import this in frontend code.
- * All Acuity API calls must go through Vercel serverless functions.
+ * All scheduling API calls must go through Vercel serverless functions.
  */
 
 const BASE = 'https://acuityscheduling.com/api/v1';
+let appointmentTypesCache = null;
 
 function authHeader() {
   const userId = process.env.ACUITY_USER_ID;
   const apiKey = process.env.ACUITY_API_KEY;
-  if (!userId || !apiKey) throw new Error('Acuity credentials not configured');
+  if (!userId || !apiKey) throw new Error('Scheduling credentials not configured');
   return 'Basic ' + Buffer.from(`${userId}:${apiKey}`).toString('base64');
 }
 
@@ -37,7 +38,7 @@ export async function acuityFetch(path, opts = {}) {
   const data = await res.json();
 
   if (!res.ok) {
-    const msg = data?.message || data?.error || `Acuity error ${res.status}`;
+    const msg = data?.message || data?.error || `Scheduling error ${res.status}`;
     throw Object.assign(new Error(msg), { status: res.status, body: data });
   }
 
@@ -74,6 +75,68 @@ export async function getAppointment(appointmentId) {
  */
 export async function getAppointmentTypes() {
   return acuityFetch('/appointment-types');
+}
+
+function normalizeTypeToken(value = '') {
+  return String(value)
+    .toLowerCase()
+    .replace(/\+/g, ' plus ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function appointmentTypeText(type = {}) {
+  return normalizeTypeToken([
+    type.name,
+    type.category,
+    type.description,
+    type.calendarIDs ? 'calendar' : '',
+  ].filter(Boolean).join(' '));
+}
+
+function candidateTokens(cartItems = [], membership = null) {
+  if (membership) return ['membership', 'subscription'];
+  const tokens = [];
+  for (const item of cartItems || []) {
+    const key = normalizeTypeToken(item.cartKey || item.key || '');
+    const label = normalizeTypeToken(item.label || '');
+    if (key) tokens.push(key);
+    if (label) tokens.push(label);
+    if (item.type === 'iv') tokens.push('iv');
+    if (item.type === 'im') tokens.push('im shot', 'injection');
+    if (`${key} ${label}`.includes('nad')) tokens.push('nad');
+    if (`${key} ${label}`.includes('cbd')) tokens.push('cbd');
+  }
+  return [...new Set(tokens.filter(Boolean))];
+}
+
+async function cachedAppointmentTypes() {
+  if (appointmentTypesCache) return appointmentTypesCache;
+  const types = await getAppointmentTypes();
+  appointmentTypesCache = Array.isArray(types) ? types : [];
+  return appointmentTypesCache;
+}
+
+/**
+ * Last-resort resolver for deployments where ACUITY_TYPE_* env vars are not
+ * present. Prefer explicit env IDs, but do not let a missing mapping block paid
+ * checkout fulfillment when Acuity exposes a clear matching service.
+ */
+export async function resolveAppointmentTypeIdFromLive(cartItems = [], membership = null) {
+  const types = (await cachedAppointmentTypes()).filter((type) => type && type.active !== false);
+  if (!types.length) return 0;
+
+  const tokens = candidateTokens(cartItems, membership);
+  for (const token of tokens) {
+    const match = types.find((type) => appointmentTypeText(type).includes(token));
+    if (match?.id) return Number(match.id);
+  }
+
+  const ivFallback = types.find((type) => /\biv\b|hydration|vitamin|drip/.test(appointmentTypeText(type)));
+  if (ivFallback?.id) return Number(ivFallback.id);
+
+  console.warn('[acuity] no explicit appointment type match found');
+  return 0;
 }
 
 /**
@@ -118,29 +181,43 @@ export async function rescheduleAppointment(appointmentId, { datetime, calendarI
 // ── Appointment type → Avalon cart key resolver ────────────────────────────
 
 /**
- * Map a cart item key to an Acuity appointment type ID.
- * Add your real Acuity type IDs here once you create them in your dashboard.
+ * Map a cart item key to a scheduling appointment type ID.
+ * Add your real scheduling type IDs here once you create them in your dashboard.
  *
- * Acuity dashboard → Services → each service has a numeric ID in the URL.
+ * Scheduling dashboard → Services → each service has a numeric ID in the URL.
  * You can also set ACUITY_DEFAULT_TYPE_ID in .env as a catch-all.
  */
 export function resolveAppointmentTypeId(cartItems = [], membership = null) {
   const defaultId = parseInt(process.env.ACUITY_DEFAULT_TYPE_ID || '0', 10);
+  const ivVitaminsId = parseInt(process.env.ACUITY_TYPE_IV_VITAMINS || defaultId, 10);
+  const ivNadId = parseInt(process.env.ACUITY_TYPE_IV_NAD || defaultId, 10);
+  const ivCbdId = parseInt(process.env.ACUITY_TYPE_IV_CBD || defaultId, 10);
+  const imShotsId = parseInt(process.env.ACUITY_TYPE_IM_SHOTS || defaultId, 10);
+  const membershipId = parseInt(process.env.ACUITY_TYPE_MEMBERSHIP || defaultId, 10);
 
   const TYPE_MAP = {
     // membership tiers
-    'membership-starter':  parseInt(process.env.ACUITY_TYPE_MEMBERSHIP  || defaultId, 10),
-    'membership-premium':  parseInt(process.env.ACUITY_TYPE_MEMBERSHIP  || defaultId, 10),
-    'membership-vip':      parseInt(process.env.ACUITY_TYPE_MEMBERSHIP  || defaultId, 10),
+    'membership-starter':  membershipId,
+    'membership-premium':  membershipId,
+    'membership-vip':      membershipId,
     // one-time IV drips
-    'iv-vitamins':         parseInt(process.env.ACUITY_TYPE_IV_VITAMINS || defaultId, 10),
-    'iv-nad':              parseInt(process.env.ACUITY_TYPE_IV_NAD      || defaultId, 10),
-    'iv-cbd':              parseInt(process.env.ACUITY_TYPE_IV_CBD      || defaultId, 10),
+    'iv-vitamins':         ivVitaminsId,
+    'iv-nad':              ivNadId,
+    'iv-cbd':              ivCbdId,
+    hydration:             parseInt(process.env.ACUITY_TYPE_HYDRATION || defaultId, 10),
+    energy:                parseInt(process.env.ACUITY_TYPE_ENERGY || ivVitaminsId, 10),
+    immunity:              parseInt(process.env.ACUITY_TYPE_IMMUNITY || ivVitaminsId, 10),
+    beauty:                parseInt(process.env.ACUITY_TYPE_BEAUTY || ivVitaminsId, 10),
+    recovery:              parseInt(process.env.ACUITY_TYPE_RECOVERY || ivVitaminsId, 10),
+    jetlag:                parseInt(process.env.ACUITY_TYPE_JETLAG || ivVitaminsId, 10),
+    myers:                 parseInt(process.env.ACUITY_TYPE_MYERS || ivVitaminsId, 10),
+    postnight:             parseInt(process.env.ACUITY_TYPE_HANGOVER || ivVitaminsId, 10),
+    nad_session:           ivNadId,
     // IM shots
-    'im-B12':              parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
-    'im-Glutathione':      parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
-    'im-MIC':              parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
-    'im-NAD+_Shot':        parseInt(process.env.ACUITY_TYPE_IM_SHOTS    || defaultId, 10),
+    'im-B12':              imShotsId,
+    'im-Glutathione':      imShotsId,
+    'im-MIC':              imShotsId,
+    'im-NAD+_Shot':        imShotsId,
   };
 
   // Membership takes precedence
@@ -150,8 +227,16 @@ export function resolveAppointmentTypeId(cartItems = [], membership = null) {
   }
 
   for (const item of cartItems) {
-    const id = TYPE_MAP[item.key];
+    const itemKey = item.cartKey || item.key || '';
+    const label = item.label || '';
+    const normalizedKey = itemKey.toLowerCase();
+    const normalizedLabel = label.toLowerCase();
+    const id = TYPE_MAP[itemKey] || TYPE_MAP[normalizedKey];
     if (id) return id;
+    if (item.type === 'im' || normalizedKey.startsWith('im-')) return imShotsId || defaultId;
+    if (normalizedKey.includes('nad') || normalizedLabel.includes('nad')) return ivNadId || defaultId;
+    if (normalizedKey.includes('cbd') || normalizedLabel.includes('cbd')) return ivCbdId || defaultId;
+    if (item.type === 'iv' || normalizedKey.startsWith('pkg-')) return ivVitaminsId || defaultId;
   }
 
   return defaultId;

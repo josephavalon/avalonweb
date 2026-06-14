@@ -1,27 +1,30 @@
 /**
- * POST /api/acuity-book
+ * POST /api/scheduling-book
  *
  * Body:
- *   appointmentTypeID  number     — Acuity service type
+ *   appointmentTypeID  number     — scheduling service type
  *   datetime           string     — ISO 8601 slot time (from availability response)
  *   firstName          string
  *   lastName           string
  *   email              string
  *   phone              string
  *   notes              string     — address + any special requests
- *   fields             object[]   — optional Acuity custom fields [{ id, value }]
+ *   fields             object[]   — optional scheduling custom fields [{ id, value }]
  *
- * Returns: created Acuity appointment object
+ * Returns: created scheduling appointment object
  */
 
 import { acuityFetch } from './_acuity.js';
-
-const ATTIO_API = 'https://api.attio.com/v2';
+import { upsertAttioPerson } from './_attio.js';
+import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
+import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  if (blockLiveVendorAction(req, res, 'Acuity appointment creation')) return;
 
   const {
     appointmentTypeID,
@@ -53,95 +56,24 @@ export default async function handler(req, res) {
       }),
     });
 
-    // Sync to Attio CRM — non-blocking, never fails the booking
-    syncToAttio({
+    // Sync to Attio CRM - non-blocking, never fails the booking.
+    // Keep this CRM-safe: no clinical notes or intake details.
+    upsertAttioPerson({
       firstName,
       lastName,
       email,
       phone,
-      appointment,
-    }).catch((e) => console.warn('[acuity-book] Attio sync failed:', e.message));
+      source: 'Avalon Scheduling',
+      lifecycleStage: 'Booked',
+      service: appointment?.type || 'IV Therapy',
+    }).catch((e) => console.warn('[scheduling-book] Attio sync failed', safeLogContext(e, 'attio_sync_failed')));
 
     return res.status(200).json(appointment);
   } catch (err) {
-    console.error('[acuity-book]', err.message, err.body);
-    return res.status(err.status || 500).json({ error: err.message });
+    console.error('[scheduling-book] appointment creation failed', safeLogContext(err, 'scheduling_book_failed'));
+    return res.status(err.status || 500).json({
+      error: 'Could not create scheduling appointment',
+      code: safeErrorCode(err, 'scheduling_book_failed'),
+    });
   }
-}
-
-/**
- * Upsert person in Attio matched on email.
- * On first booking: creates the record.
- * On repeat booking: updates it in place (phone/name refresh).
- * Also logs a note on the person with appointment details.
- */
-async function syncToAttio({ firstName, lastName, email, phone, appointment }) {
-  const apiKey = process.env.ATTIO_API_KEY;
-  if (!apiKey) {
-    console.warn('[attio] ATTIO_API_KEY not set — skipping sync');
-    return;
-  }
-
-  const headers = {
-    Authorization: `Bearer ${apiKey}`,
-    'Content-Type': 'application/json',
-  };
-
-  // 1. Upsert person record (matched on email address)
-  const personPayload = {
-    matching_attribute: 'email_addresses',
-    data: {
-      values: {
-        name: [{ first_name: firstName || '', last_name: lastName || '' }],
-        email_addresses: [{ email_address: email }],
-        ...(phone ? { phone_numbers: [{ phone_number: phone }] } : {}),
-      },
-    },
-  };
-
-  const personRes = await fetch(`${ATTIO_API}/objects/people/records`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify(personPayload),
-  });
-
-  if (!personRes.ok) {
-    const body = await personRes.text();
-    throw new Error(`Attio upsert failed (${personRes.status}): ${body}`);
-  }
-
-  const { data: person } = await personRes.json();
-  const recordId = person?.id?.record_id;
-  if (!recordId) return;
-
-  // 2. Log a note on the person record with booking details
-  const apptDate = appointment?.datetime
-    ? new Date(appointment.datetime).toLocaleString('en-US', {
-        timeZone: 'America/Los_Angeles',
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      })
-    : 'unknown date';
-
-  const noteText = [
-    `📅 Acuity booking confirmed`,
-    `Service: ${appointment?.type || 'IV Therapy'}`,
-    `Date: ${apptDate}`,
-    `Confirmation #: ${appointment?.id || 'N/A'}`,
-    ...(appointment?.location ? [`Location: ${appointment.location}`] : []),
-    `Source: avalonvitality.co`,
-  ].join('\n');
-
-  await fetch(`${ATTIO_API}/notes`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      data: {
-        parent_object: 'people',
-        parent_record_id: recordId,
-        title: `Acuity booking — ${apptDate}`,
-        content: noteText,
-      },
-    }),
-  }).catch((e) => console.warn('[attio] note creation failed:', e.message));
 }

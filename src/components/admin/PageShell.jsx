@@ -10,41 +10,59 @@
 //   action    {React.ReactNode} — optional slot for top-right button/chip
 //   children  {React.ReactNode} — page body content
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect } from 'react';
 
-const EASE = [0.16, 1, 0.3, 1];
+export default function PageShell({ eyebrow, title, subtitle, action, children, embedded = false }) {
+  useEffect(() => {
+    if (!title || typeof document === 'undefined') return;
+    document.title = `${title} - Avalon OS`;
+  }, [title]);
 
-export default function PageShell({ eyebrow, title, subtitle, action, children }) {
+  // Embedded: the page already sits inside AdminShell, which owns the big title
+  // + corner logo. Drop the duplicate heading; keep just a slim subtitle and the
+  // action toolbar above the body.
+  if (embedded) {
+    return (
+      <div className="text-foreground">
+        {(subtitle || action) && (
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {subtitle
+              ? <p className="font-body text-[12px] text-foreground/45">{subtitle}</p>
+              : <span className="hidden md:block" />}
+            {action ? <div className="w-full flex-shrink-0 md:w-auto">{action}</div> : null}
+          </div>
+        )}
+        <div className="animate-in fade-in slide-in-from-bottom-3 duration-reveal">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#0a0a08]">
+    <div className="av-page-surface min-h-screen text-foreground">
 
       {/* ── Page header ───────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: EASE }}
-        className="px-4 md:px-6 pt-5 pb-4 border-b border-white/[0.06] flex items-start justify-between gap-4"
-      >
+      <div className="av-motion-rail mb-5 flex flex-col gap-4 rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 px-5 py-5 shadow-[0_24px_90px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 duration-reveal md:flex-row md:items-start md:justify-between md:px-6 md:py-6">
         <div>
           {eyebrow && (
             <p
               className="font-body text-[10px] tracking-[0.3em] uppercase mb-1"
-              style={{ color: 'rgba(255,255,255,0.35)' }}
+              style={{ color: 'hsl(var(--foreground) / 0.35)' }}
             >
               {eyebrow}
             </p>
           )}
           <h1
-            className="font-heading text-3xl md:text-4xl uppercase tracking-wide leading-none"
-            style={{ color: '#F0EDE4' }}
+            className="font-heading text-4xl uppercase tracking-tight leading-[0.88] md:text-6xl md:whitespace-nowrap"
+            style={{ color: 'hsl(var(--foreground))' }}
           >
             {title}
           </h1>
           {subtitle && (
             <p
               className="font-body text-[11px] mt-1"
-              style={{ color: 'rgba(255,255,255,0.4)' }}
+              style={{ color: 'hsl(var(--foreground) / 0.45)' }}
             >
               {subtitle}
             </p>
@@ -52,14 +70,14 @@ export default function PageShell({ eyebrow, title, subtitle, action, children }
         </div>
 
         {action && (
-          <div className="flex-shrink-0 mt-1">
+          <div className="w-full flex-shrink-0 md:mt-1 md:w-auto">
             {action}
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* ── Body ─────────────────────────────────────────────── */}
-      <div className="px-4 md:px-6 py-5">
+      <div className="animate-in fade-in slide-in-from-bottom-3 duration-reveal">
         {children}
       </div>
 

@@ -1,0 +1,439 @@
+import Stripe from 'stripe';
+import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
+import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
+import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../_booking-email.js';
+import { buildReconciliationCase, insertReconciliationCaseOnce } from '../_reconciliation.js';
+import { createAppointmentSummaryToken, isAppointmentSummaryTokenConfigured } from '../_lib/summary-token.js';
+import {
+  checkoutPayloadFromRecord,
+  checkoutPayloadFromStripeMetadata,
+  createSchedulingAppointmentWithFallback,
+  claimSchedulingCreation,
+  readAcuityAppointmentId,
+  isLegacyStripeMetadataPayload,
+  syncCheckoutAttioPerson,
+} from '../_checkout-fulfillment.js';
+
+function safeErrorCode(err, fallback = 'checkout_verify_error') {
+  const code = err?.code || err?.type || err?.statusCode || err?.status || err?.name || fallback;
+  return String(code).replace(/[^a-z0-9_:-]+/gi, '_').slice(0, 80) || fallback;
+}
+
+function safeLogContext(err, fallback) {
+  return {
+    code: safeErrorCode(err, fallback),
+    status: err?.statusCode || err?.status || null,
+  };
+}
+
+async function findAppointmentForSession(session) {
+  const db = await getSupabaseServiceClient();
+  if (!db) return null;
+
+  const columns = 'id, acuity_appointment_id, stripe_checkout_session_id, payment_status, status, external_payload';
+  const { data: bySession } = await db.from('appointments')
+    .select(columns)
+    .eq('stripe_checkout_session_id', session.id)
+    .maybeSingle();
+  if (bySession) return bySession;
+
+  const appointmentRecordId = session.metadata?.appointmentRecordId;
+  if (!appointmentRecordId) return null;
+
+  const { data: byRecord } = await db.from('appointments')
+    .select(columns)
+    .eq('id', appointmentRecordId)
+    .maybeSingle();
+  return byRecord || null;
+}
+
+async function updatePaymentIntentMetadata(stripe, paymentIntentId, existingMetadata = {}, patch = {}) {
+  if (!paymentIntentId) return {};
+  const nextMetadata = {
+    ...(existingMetadata || {}),
+    ...patch,
+  };
+  try {
+    await stripe.paymentIntents.update(paymentIntentId, { metadata: nextMetadata });
+  } catch (err) {
+    console.warn('[checkout/verify] payment intent metadata update failed', safeLogContext(err, 'stripe_metadata_update_failed'));
+  }
+  return nextMetadata;
+}
+
+function buildExternalPayload(existingPayload = {}, patch = {}) {
+  return {
+    ...existingPayload,
+    fulfillment: {
+      ...(existingPayload.fulfillment || {}),
+      ...patch,
+      source: 'checkout_verify',
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+async function insertAcuityFailureCase(db, { appointment, session, error }) {
+  if (!db || !appointment?.id) return;
+  try {
+    const tenantId = await getDefaultTenantId(db);
+    await insertReconciliationCaseOnce(db, buildReconciliationCase({
+      caseType: 'stripe_succeeded_acuity_failed',
+      provider: 'stripe',
+      externalReference: session.id,
+      tenantId,
+      payload: {
+        appointmentRecordId: appointment.id,
+        stripeSessionId: session.id,
+        error: error || 'Acuity appointment creation failed after successful Stripe payment.',
+        local_contract: 'stripe_paid_then_acuity_attio_v1',
+      },
+    }));
+  } catch (err) {
+    console.warn('[checkout/verify] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
+  }
+}
+
+async function insertOperationalFailureCase(db, { caseType, provider = 'avalon', externalReference, tenantId, payload = {} }) {
+  if (!db || !caseType) return;
+  await insertReconciliationCaseOnce(db, buildReconciliationCase({
+    caseType,
+    provider,
+    externalReference,
+    tenantId: tenantId || await getDefaultTenantId(db),
+    payload,
+  }));
+}
+
+async function insertMissingCheckoutRecordCase(db, { appointment, session }) {
+  await insertOperationalFailureCase(db, {
+    caseType: 'stripe_succeeded_acuity_failed',
+    provider: 'stripe',
+    externalReference: session.id,
+    payload: {
+      appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || null,
+      stripeSessionId: session.id,
+      reason: 'checkout_record_missing_or_redacted',
+      local_contract: 'stripe_paid_then_acuity_attio_v1',
+    },
+  });
+}
+
+async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 1000) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const existingId = await readAcuityAppointmentId(db, recordId);
+    if (existingId) return existingId;
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return null;
+}
+
+async function persistVerifyFulfillment({ appointment, session, paymentIntentId, fulfillment, attioPersonId }) {
+  if (!appointment?.id) return;
+  const db = await getSupabaseServiceClient();
+  if (!db) return;
+
+  const now = new Date().toISOString();
+  const appointmentId = fulfillment.appointmentId ? String(fulfillment.appointmentId) : null;
+  const failed = fulfillment.fulfillmentStatus === 'acuity_failed';
+  const patch = {
+    stripe_checkout_session_id: session.id,
+    stripe_customer_id: session.customer || null,
+    stripe_deposit_payment_intent: paymentIntentId || null,
+    deposit_paid_at: now,
+    payment_status: Number(session.metadata?.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
+    status: fulfillment.deferred ? undefined : appointmentId ? 'scheduled' : 'payment_received',
+    acuity_appointment_id: fulfillment.deferred ? undefined : appointmentId || undefined,
+    reconciliation_status: fulfillment.deferred ? undefined : failed ? 'action_required' : appointmentId ? 'ok' : 'pending',
+    attio_person_id: attioPersonId || undefined,
+    attio_synced_at: attioPersonId ? now : undefined,
+    external_payload: buildExternalPayload(appointment.external_payload || {}, {
+      stripeSessionId: session.id,
+      stripePaymentIntentId: paymentIntentId || null,
+      acuityAppointmentId: appointmentId,
+      attioPersonId: attioPersonId || null,
+      fulfillmentStatus: fulfillment.fulfillmentStatus || null,
+      error: fulfillment.fulfillmentError ? safeLogContext(fulfillment.fulfillmentError, 'acuity_fulfillment_failed') : null,
+    }),
+    updated_at: now,
+  };
+  Object.keys(patch).forEach((key) => patch[key] === undefined && delete patch[key]);
+
+  const { error } = await db.from('appointments').update(patch).eq('id', appointment.id);
+  if (error) console.warn('[checkout/verify] appointment status update failed', safeLogContext(error, 'appointment_status_update_failed'));
+  if (failed) {
+    await insertAcuityFailureCase(db, {
+      appointment,
+      session,
+      error: fulfillment.fulfillmentError ? safeErrorCode(fulfillment.fulfillmentError, 'acuity_fulfillment_failed') : null,
+    });
+  }
+}
+
+async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment, paymentIntent, paymentIntentMetadata }) {
+  const paymentIntentId = paymentIntent?.id || (typeof session.payment_intent === 'string' ? session.payment_intent : null);
+  const existingAppointmentId = appointment?.acuity_appointment_id
+    || session.metadata?.acuityAppointmentId
+    || paymentIntentMetadata.acuityAppointmentId
+    || null;
+  let metadata = paymentIntentMetadata || {};
+  let acuityAppointmentId = existingAppointmentId;
+  let fulfillmentStatus = appointment?.status || metadata.fulfillmentStatus || null;
+  let fulfillmentError = null;
+  let attioPersonId = null;
+  const canUseStripeMetadataPayload = !appointment && isLegacyStripeMetadataPayload(session.metadata || {});
+  const checkout = appointment
+    ? checkoutPayloadFromRecord(appointment)
+    : canUseStripeMetadataPayload
+      ? checkoutPayloadFromStripeMetadata(session.metadata || {})
+      : null;
+
+  if (!checkout) {
+    await insertMissingCheckoutRecordCase(await getSupabaseServiceClient(), { appointment, session });
+    return {
+      appointmentId: acuityAppointmentId,
+      fulfillmentStatus: 'checkout_record_missing',
+      fulfillmentError: null,
+      attioPersonId,
+      paymentIntentMetadata: metadata,
+      deferred: true,
+    };
+  }
+
+  let schedulingDeferred = false;
+  if (!acuityAppointmentId) {
+    const db = await getSupabaseServiceClient();
+    const wonSchedulingClaim = await claimSchedulingCreation(db, appointment?.id);
+    if (!wonSchedulingClaim) {
+      // The Stripe webhook (or another poll) is already creating this Acuity
+      // appointment. Re-read for its id; if it isn't persisted yet, defer so we
+      // never double-book and don't overwrite the winner's record.
+      const existingId = await pollAcuityAppointmentId(db, appointment?.id);
+      if (existingId) {
+        acuityAppointmentId = existingId;
+        fulfillmentStatus = 'acuity_created';
+      } else {
+        schedulingDeferred = true;
+        fulfillmentStatus = 'pending';
+      }
+    } else {
+      metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+        fulfillmentStatus: 'acuity_creating',
+      });
+
+      try {
+        const acuityAppointment = await createSchedulingAppointmentWithFallback({
+          appointment: checkout.appointment || {},
+          contact: checkout.contact || {},
+          items: checkout.items || [],
+          membership: checkout.membership || null,
+          amounts: checkout.amounts || {},
+          req: null,
+        });
+        if (acuityAppointment?.id) {
+          acuityAppointmentId = String(acuityAppointment.id);
+          fulfillmentStatus = 'acuity_created';
+          metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+            acuityAppointmentId,
+            fulfillmentStatus,
+            fulfillmentIssue: '',
+            fulfillmentError: '',
+          });
+
+          if (checkout.contact?.email) {
+            try {
+              attioPersonId = await syncCheckoutAttioPerson({
+                contact: checkout.contact,
+                primaryService: checkout.primaryService || session.metadata?.service || 'Avalon Visit',
+                appointment: checkout.appointment || {},
+                items: checkout.items || [],
+                membership: checkout.membership || null,
+                amounts: checkout.amounts || {},
+              });
+            } catch (err) {
+              console.warn('[checkout/verify] Attio sync failed', safeLogContext(err, 'attio_sync_failed'));
+              await insertOperationalFailureCase(db, {
+                caseType: 'crm_sync_failed',
+                provider: 'attio',
+                externalReference: session.id,
+                payload: {
+                  appointmentRecordId: appointment?.id || null,
+                  stripeSessionId: session.id,
+                  errorCode: safeErrorCode(err, 'attio_sync_failed'),
+                  errorStatus: err?.statusCode || err?.status || null,
+                },
+              });
+            }
+          }
+        }
+      } catch (err) {
+        fulfillmentStatus = 'acuity_failed';
+        fulfillmentError = err;
+        metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+          fulfillmentStatus,
+          fulfillmentIssue: 'appointment_confirmation_pending',
+          fulfillmentError: '',
+        });
+        console.error('[checkout/verify] Acuity fulfillment failed', safeLogContext(err, 'acuity_fulfillment_failed'));
+      }
+    }
+  }
+
+  if (!schedulingDeferred && paymentIntentId && metadata.opsPaymentEmailSent !== 'true') {
+    try {
+      await sendPaymentReceivedEmail({
+        checkout,
+        sessionId: session.id,
+        paymentIntentId,
+        acuityAppointmentId,
+        fulfillmentStatus: fulfillmentStatus || 'payment_received',
+      });
+      metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+        opsPaymentEmailSent: 'true',
+      });
+    } catch (err) {
+      console.warn('[checkout/verify] payment email failed', safeLogContext(err, 'payment_email_failed'));
+      await insertOperationalFailureCase(await getSupabaseServiceClient(), {
+        caseType: 'operations_email_failed',
+        provider: 'resend',
+        externalReference: session.id,
+        payload: {
+          appointmentRecordId: appointment?.id || null,
+          stripeSessionId: session.id,
+          errorCode: safeErrorCode(err, 'payment_email_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
+        },
+      });
+    }
+  }
+
+  if (fulfillmentStatus === 'acuity_failed' && paymentIntentId && metadata.customerPaymentPendingEmailSent !== 'true') {
+    try {
+      await sendCustomerPaymentPendingEmail({ checkout });
+      metadata = await updatePaymentIntentMetadata(stripe, paymentIntentId, metadata, {
+        customerPaymentPendingEmailSent: 'true',
+      });
+    } catch (err) {
+      console.warn('[checkout/verify] customer pending email failed', safeLogContext(err, 'customer_pending_email_failed'));
+      await insertOperationalFailureCase(await getSupabaseServiceClient(), {
+        caseType: 'customer_email_failed',
+        provider: 'resend',
+        externalReference: session.id,
+        payload: {
+          appointmentRecordId: appointment?.id || null,
+          stripeSessionId: session.id,
+          errorCode: safeErrorCode(err, 'customer_pending_email_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
+        },
+      });
+    }
+  }
+
+  return {
+    appointmentId: acuityAppointmentId,
+    fulfillmentStatus,
+    fulfillmentError,
+    attioPersonId,
+    paymentIntentMetadata: metadata,
+    deferred: schedulingDeferred,
+  };
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const sessionId = req.body?.session_id;
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Missing checkout session', paid: false });
+  }
+
+  if (!isLiveApiEnabled()) {
+    return res.status(409).json({
+      error: 'Live checkout verification is not enabled in pre-API mode',
+      paid: false,
+      preApiHardWall: true,
+    });
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return res.status(503).json({ error: 'Stripe is not configured', paid: false });
+  }
+  if (!isAppointmentSummaryTokenConfigured()) {
+    return res.status(503).json({
+      error: 'Appointment summary token signing is not configured',
+      code: 'summary_token_secret_missing',
+      paid: false,
+    });
+  }
+
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent'],
+    });
+    const paid = session.payment_status === 'paid' || session.status === 'complete';
+    const appointment = paid ? await findAppointmentForSession(session) : null;
+    const paymentIntent = typeof session.payment_intent === 'object' ? session.payment_intent : null;
+    const paymentIntentMetadata = paymentIntent
+      ? session.payment_intent?.metadata || {}
+      : {};
+    const existingAppointmentId = appointment?.acuity_appointment_id
+      || session.metadata?.acuityAppointmentId
+      || paymentIntentMetadata.acuityAppointmentId
+      || null;
+    const fulfillment = paid
+      ? await fulfillPaidCheckoutIfNeeded({
+          stripe,
+          session,
+          appointment,
+          paymentIntent,
+          paymentIntentMetadata,
+        })
+      : {
+          appointmentId: existingAppointmentId,
+          fulfillmentStatus: appointment?.status || paymentIntentMetadata.fulfillmentStatus || null,
+          fulfillmentError: null,
+          paymentIntentMetadata,
+        };
+    if (paid && appointment) {
+      await persistVerifyFulfillment({
+        appointment,
+        session,
+        paymentIntentId: paymentIntent?.id || (typeof session.payment_intent === 'string' ? session.payment_intent : null),
+        fulfillment,
+        attioPersonId: fulfillment.attioPersonId,
+      });
+    }
+    const fulfillmentIssue = fulfillment.fulfillmentStatus === 'acuity_failed'
+      ? 'appointment_confirmation_pending'
+      : null;
+
+    return res.status(paid ? 200 : 402).json({
+      paid,
+      status: session.status,
+      paymentStatus: session.payment_status,
+      mode: session.mode,
+      appointmentId: fulfillment.appointmentId,
+      appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || null,
+      fulfillmentStatus: fulfillment.fulfillmentStatus || null,
+      pendingFulfillment: paid && !fulfillment.appointmentId && fulfillment.fulfillmentStatus !== 'acuity_failed',
+      fulfillmentIssue,
+      fulfillmentError: null,
+      summaryToken: paid ? createAppointmentSummaryToken({
+        sessionId: session.id,
+        appointmentRecordId: appointment?.id || session.metadata?.appointmentRecordId || '',
+        appointmentId: fulfillment.appointmentId || '',
+      }) : '',
+    });
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({
+      error: 'Could not verify checkout session',
+      code: safeErrorCode(err, 'checkout_verify_failed'),
+      paid: false,
+    });
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import FAQ from '../components/landing/FAQ';
@@ -16,7 +16,7 @@ export default function FAQPage() {
         {
           '@type': 'Question',
           name: 'What is Avalon Vitality?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Avalon Vitality is a mobile IV therapy and longevity service serving the San Francisco Bay Area. RN-administered, MD-supervised.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'Avalon Vitality is a mobile IV therapy and longevity service serving the San Francisco Bay Area. administered by registered nurses, MD-supervised.' },
         },
         {
           '@type': 'Question',
@@ -33,7 +33,7 @@ export default function FAQPage() {
   });
 
   return (
-    <div className="app-shell bg-background min-h-screen w-full">
+    <div className="app-shell av-page-surface min-h-screen w-full">
       <Navbar />
       <main className="pt-24 md:pt-28">
         <FAQ />

@@ -11,7 +11,7 @@ const SECTIONS = [
   {
     h: 'Educational purpose',
     p: [
-      'Information provided through avalonvitality.co, the Avalon OS application, and our marketing materials is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician or other qualified healthcare provider.',
+      'Information provided through avalonvitality.co and our marketing materials is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment from your physician or other qualified healthcare provider.',
       'Always seek the advice of your physician or other qualified healthcare provider with any questions you may have regarding a medical condition or treatment.',
     ],
   },

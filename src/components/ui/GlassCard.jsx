@@ -1,33 +1,66 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
-// Single source of truth for the glass surface used across the site.
-// Defaults: border-white/10, bg-white/[0.03], backdrop-blur-md, rounded-3xl.
-// Use `tone="heavy"` for emphasized cards (Membership tiers, partner cards).
-// Use `radius="2xl" | "3xl" | "xl" | "lg"` to match the host section.
-//
-// Usage: <GlassCard className="p-5 flex flex-col gap-4">...</GlassCard>
-export function GlassCard({
+const TONES = {
+  default: '',
+  soft: '',
+  command: '',
+  selected: 'ring-1 ring-foreground/20',
+  heavy: '',
+};
+
+const BLUR = {
+  soft: '',
+  default: '',
+  command: '',
+  selected: '',
+  heavy: '',
+};
+
+const RADIUS = {
+  lg: 'rounded-lg',
+  xl: 'rounded-xl',
+  '2xl': 'rounded-2xl',
+  '3xl': 'rounded-3xl',
+  '1.25rem': 'rounded-[1.25rem]',
+  '1.35rem': 'rounded-[1.35rem]',
+  '1.5rem': 'rounded-[1.5rem]',
+  '1.55rem': 'rounded-[1.55rem]',
+  '1.75rem': 'rounded-[1.75rem]',
+};
+
+export const glassCardClassName = ({
+  tone = 'default',
+  radius = '3xl',
+  interactive = false,
+  className = '',
+} = {}) => cn(
+  'av-glass-card relative overflow-hidden border text-foreground transition-colors duration-500 ease-editorial',
+  TONES[tone] || TONES.default,
+  BLUR[tone] || BLUR.default,
+  RADIUS[radius] || RADIUS['3xl'],
+  interactive && 'hover:border-[var(--glass-border-hover)]',
+  className
+);
+
+export const GlassCard = React.forwardRef(function GlassCard({
   as: Tag = 'div',
   tone = 'default',
   radius = '3xl',
+  interactive = false,
   className = '',
   children,
   ...rest
-}) {
-  const surface = tone === 'heavy' ? 'bg-white/[0.04]' : 'bg-white/[0.03]';
-  const rounded =
-    radius === 'xl' ? 'rounded-xl' :
-    radius === '2xl' ? 'rounded-2xl' :
-    radius === 'lg' ? 'rounded-lg' :
-    'rounded-3xl';
+}, ref) {
   return (
     <Tag
-      className={`border border-white/10 ${surface} backdrop-blur-md ${rounded} ${className}`}
+      ref={ref}
+      className={glassCardClassName({ tone, radius, interactive, className })}
       {...rest}
     >
       {children}
     </Tag>
   );
-}
+});
 
 export default GlassCard;

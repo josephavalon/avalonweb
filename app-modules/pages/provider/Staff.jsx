@@ -1,0 +1,492 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
+import {
+  Users, User, MessageSquare, Shield, Package,
+  CheckCircle, MapPin, Clock, X, Star, Zap,
+  ChevronRight, AlertTriangle,
+} from 'lucide-react';
+import AdminLayout from '@/layouts/AdminLayout';
+import { REQUESTS, NURSES } from '@/fixtures/commandMockData';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const EASE = [0.16, 1, 0.3, 1];
+
+const STATUS_MAP = {
+  'Available':      { bg: 'rgba(52,211,153,0.12)',  color: 'hsl(158 64% 52%)', border: 'rgba(52,211,153,0.25)'  },
+  'Assigned':       { bg: 'rgba(45,212,191,0.12)',  color: 'hsl(174 72% 56%)', border: 'rgba(45,212,191,0.25)'  },
+  'Off Duty':       { bg: 'rgba(148,163,184,0.10)', color: 'hsl(215 16% 57%)', border: 'rgba(148,163,184,0.20)' },
+  'Pending':        { bg: 'rgba(251,191,36,0.12)',  color: 'hsl(45 93% 58%)', border: 'rgba(251,191,36,0.25)'  },
+  'Ready':          { bg: 'rgba(52,211,153,0.12)',  color: 'hsl(158 64% 52%)', border: 'rgba(52,211,153,0.25)'  },
+  'Restock Needed': { bg: 'rgba(239,68,68,0.12)',   color: 'hsl(var(--destructive))', border: 'rgba(239,68,68,0.25)'   },
+  'Low Stock':      { bg: 'rgba(251,191,36,0.12)',  color: 'hsl(45 93% 58%)', border: 'rgba(251,191,36,0.25)'  },
+  'Check Expiry':   { bg: 'rgba(249,115,22,0.12)',  color: 'hsl(24 95% 53%)', border: 'rgba(249,115,22,0.25)'  },
+  'Clear':          { bg: 'rgba(52,211,153,0.12)',  color: 'hsl(158 64% 52%)', border: 'rgba(52,211,153,0.25)'  },
+  'Review':         { bg: 'rgba(251,191,36,0.12)',  color: 'hsl(45 93% 58%)', border: 'rgba(251,191,36,0.25)'  },
+  'Expiring Soon':  { bg: 'rgba(249,115,22,0.12)',  color: 'hsl(24 95% 53%)', border: 'rgba(249,115,22,0.25)'  },
+};
+
+function nurseCredentialStatus(nurse = {}) {
+  return nurse.nurseys?.status || nurse.credentialStatus || nurse.credStatus || 'Review';
+}
+
+function nurseCredentialSource(nurse = {}) {
+  return nurse.credentialSource || 'Nurseys';
+}
+
+function nurseServiceArea(nurse = {}) {
+  return nurse.serviceArea || nurse.area || 'Area pending';
+}
+
+function nurseVisitsToday(nurse = {}) {
+  return Number(nurse.visitsToday ?? nurse.todayVisits ?? 0);
+}
+
+function nurseysEligible(nurse = {}) {
+  return nurseCredentialStatus(nurse) === 'Clear';
+}
+
+function getStatusStyle(status) {
+  return STATUS_MAP[status] || { bg: 'rgba(148,163,184,0.10)', color: 'hsl(215 16% 57%)', border: 'rgba(148,163,184,0.20)' };
+}
+
+// ── StatusPill ────────────────────────────────────────────────────────────────
+
+function StatusPill({ status }) {
+  const s = getStatusStyle(status);
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[9px] tracking-[0.18em] uppercase font-medium px-2.5 py-1 rounded-full border"
+      style={{ background: s.bg, color: s.color, borderColor: s.border }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'currentColor' }} />
+      {status}
+    </span>
+  );
+}
+
+// ── AssignModal ───────────────────────────────────────────────────────────────
+
+function AssignModal({ nurse, requests, onAssign, onClose }) {
+  const credentialEligible = nurseysEligible(nurse);
+  const eligible = requests.filter(
+    r => !r.nurse && r.status !== 'Completed' && r.status !== 'Cancelled'
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Assign nurse">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="av-modal-scrim absolute inset-0"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 14 }}
+        transition={{ duration: 0.25, ease: EASE }}
+        className="relative w-full max-w-lg rounded-2xl border z-10 overflow-hidden"
+        style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.08)' }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-6 py-4 border-b"
+          style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+        >
+          <div>
+            <p className="text-[9px] tracking-[0.3em] uppercase mb-0.5" style={{ color: 'hsl(var(--accent))' }}>
+              Assign Request
+            </p>
+            <h3 className="font-heading text-xl tracking-widest text-white">
+              {nurse.name.toUpperCase()}
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <X className="w-4 h-4 text-white" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Request list */}
+        <div className="px-6 py-5 max-h-96 overflow-y-auto">
+          {!credentialEligible ? (
+            <div className="rounded-xl border p-4" style={{ background: 'rgba(251,191,36,0.08)', borderColor: 'rgba(251,191,36,0.22)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4" style={{ color: 'hsl(45 93% 58%)' }} strokeWidth={1.5} />
+                <p className="text-sm font-semibold text-white">Nurseys check required</p>
+              </div>
+              <p className="text-xs leading-relaxed text-white/55">
+                Assignment is blocked until Nurseys returns Clear for this nurse.
+              </p>
+            </div>
+          ) : eligible.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle className="w-8 h-8 mx-auto mb-3" style={{ color: 'hsl(158 64% 52%)' }} strokeWidth={1.5} />
+              <p className="text-sm text-white opacity-60">No unassigned requests available.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {eligible.map(req => (
+                <div
+                  key={req.id}
+                  className="flex items-center justify-between rounded-xl border px-4 py-3"
+                  style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}
+                >
+                  <div className="min-w-0 flex-1 mr-4">
+                    <p className="text-sm font-medium text-white truncate">{req.client || req.clientName}</p>
+                    <p className="text-[11px] text-white mt-0.5 truncate" style={{ color: 'hsl(var(--accent))' }}>
+                      {req.therapy}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Clock className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.4)' }} strokeWidth={1.5} />
+                      <span className="text-[10px] text-white opacity-50">{req.time}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onAssign(req.id, nurse.name)}
+                    className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] tracking-[0.1em] uppercase font-semibold transition-all hover:brightness-110"
+                    style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--background))' }}
+                  >
+                    Assign
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── NurseCard ─────────────────────────────────────────────────────────────────
+
+function NurseCard({ nurse, requests, onAssign, index }) {
+  const [showAssignModal, setShowAssignModal] = useState(false);
+
+  function handleAssign(requestId, nurseName) {
+    onAssign(requestId, nurseName, nurse.id);
+    setShowAssignModal(false);
+  }
+
+  const kitStyle  = getStatusStyle(nurse.kitStatus);
+  const credentialStatus = nurseCredentialStatus(nurse);
+  const credentialSource = nurseCredentialSource(nurse);
+  const credentialEligible = nurseysEligible(nurse);
+  const credentialStyle = getStatusStyle(credentialStatus);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: EASE, delay: index * 0.06 }}
+        className="rounded-2xl border overflow-hidden"
+        style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.07)' }}
+      >
+        {/* Header row */}
+        <div
+          className="px-5 py-4 border-b flex items-start justify-between gap-3"
+          style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-heading text-xl tracking-widest text-white uppercase truncate">
+                {nurse.name}
+              </h3>
+              <StatusPill status={nurse.status} />
+            </div>
+            <div className="mt-1.5">
+              <span
+                className="inline-block text-[9px] tracking-[0.15em] uppercase font-medium px-2 py-0.5 rounded border"
+                style={{ background: kitStyle.bg, color: kitStyle.color, borderColor: kitStyle.border }}
+              >
+                Kit: {nurse.kitStatus}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-4 space-y-3">
+          {/* Service area + visits */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1.5} />
+              <span className="text-sm text-white">{nurseServiceArea(nurse)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1.5} />
+              <span className="text-[11px] text-white">
+                <span style={{ color: 'hsl(var(--accent))' }}>{nurseVisitsToday(nurse)}</span>
+                <span className="opacity-50"> visits today</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Credentials */}
+          <div className="flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 shrink-0" style={{ color: credentialStyle.color }} strokeWidth={1.5} />
+            <span className="text-[12px] text-white opacity-70">{credentialSource}:</span>
+            <span
+              className="text-[11px] font-medium tracking-wide"
+              style={{ color: credentialStyle.color }}
+            >
+              {credentialStatus}
+            </span>
+          </div>
+
+          {/* Kit status line */}
+          <div className="flex items-center gap-2">
+            <Package className="w-3.5 h-3.5 shrink-0" style={{ color: kitStyle.color }} strokeWidth={1.5} />
+            <span className="text-[12px] text-white opacity-70">Kit:</span>
+            <span
+              className="text-[11px] font-medium tracking-wide"
+              style={{ color: kitStyle.color }}
+            >
+              {nurse.kitStatus}
+            </span>
+          </div>
+
+          {/* Assigned to */}
+          {nurse.status === 'Assigned' && nurse.assignedTo && (
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2 border"
+              style={{ background: 'rgba(45,212,191,0.06)', borderColor: 'rgba(45,212,191,0.15)' }}
+            >
+              <User className="w-3.5 h-3.5 shrink-0" style={{ color: 'hsl(174 72% 56%)' }} strokeWidth={1.5} />
+              <span className="text-[11px]" style={{ color: 'hsl(174 72% 56%)' }}>
+                Assigned to: <span className="font-medium">{nurse.assignedTo}</span>
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div
+          className="px-5 py-3 border-t flex items-center gap-2"
+          style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+        >
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] tracking-[0.1em] uppercase font-medium text-white transition-colors hover:border-white/20"
+            style={{ borderColor: 'rgba(255,255,255,0.10)' }}
+            title="Message nurse"
+          >
+            <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
+            Message
+          </button>
+
+          <button
+            onClick={() => setShowAssignModal(true)}
+            disabled={!credentialEligible}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] tracking-[0.1em] uppercase font-semibold transition-all hover:brightness-110"
+            style={{
+              background: credentialEligible ? 'hsl(var(--accent))' : 'rgba(255,255,255,0.08)',
+              color: credentialEligible ? 'hsl(var(--background))' : 'rgba(255,255,255,0.35)',
+              cursor: credentialEligible ? 'pointer' : 'not-allowed',
+            }}
+          >
+            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />
+            {credentialEligible ? 'Assign' : 'Nurseys'}
+          </button>
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {showAssignModal && (
+          <AssignModal
+            nurse={nurse}
+            requests={requests}
+            onAssign={handleAssign}
+            onClose={() => setShowAssignModal(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ── Section ───────────────────────────────────────────────────────────────────
+
+function NurseSection({ label, nurses, color, requests, onAssign }) {
+  if (nurses.length === 0) return null;
+  return (
+    <div className="mb-10">
+      <div className="flex items-center gap-3 mb-4">
+        <p
+          className="text-[10px] tracking-[0.3em] uppercase font-semibold"
+          style={{ color }}
+        >
+          {label}
+        </p>
+        <span
+          className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
+          style={{ background: color + '20', color }}
+        >
+          {nurses.length}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {nurses.map((nurse, i) => (
+          <NurseCard
+            key={nurse.id}
+            nurse={nurse}
+            requests={requests}
+            onAssign={onAssign}
+            index={i}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
+const Skeleton = () => (
+  <div className="p-6 space-y-4 animate-pulse">
+    {[1,2,3,4].map(i => (
+      <div key={i} className="h-14 rounded-xl bg-foreground/[0.06]" />
+    ))}
+  </div>
+);
+
+export default function Staff() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
+
+  const [nurses, setNurses]     = useState(NURSES);
+  const [requests, setRequests] = useState(REQUESTS);
+
+  function handleAssign(requestId, nurseName, nurseId) {
+    setRequests(prev =>
+      prev.map(r => r.id === requestId ? { ...r, nurse: nurseName } : r)
+    );
+    setNurses(prev =>
+      prev.map(n =>
+        n.id === nurseId
+          ? { ...n, status: 'Assigned', assignedTo: requests.find(r => r.id === requestId)?.client || requests.find(r => r.id === requestId)?.clientName || nurseName }
+          : n
+      )
+    );
+  }
+
+  const available = nurses.filter(n => n.status === 'Available');
+  const assigned  = nurses.filter(n => n.status === 'Assigned');
+  const other     = nurses.filter(n => n.status !== 'Available' && n.status !== 'Assigned');
+
+  const kitsReady = nurses.filter(n => n.kitStatus === 'Ready').length;
+  const visitsToday = nurses.reduce((s, n) => s + nurseVisitsToday(n), 0);
+  const nurseysClear = nurses.filter(nurseysEligible).length;
+
+  if (loading) return (
+    <AdminLayout>
+      <Skeleton />
+    </AdminLayout>
+  );
+
+  return (
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto">
+
+        {/* ── Page Header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: EASE }}
+          className="mb-8"
+        >
+          <p className="text-[10px] tracking-[0.35em] uppercase mb-1.5 font-medium" style={{ color: 'hsl(var(--accent))' }}>
+            Nurse Assignment Board
+          </p>
+          <h1 className="font-heading text-5xl tracking-widest text-white">NURSES</h1>
+          <p className="text-[13px] text-white mt-2 opacity-60">SF Bay Area · Manual Dispatch</p>
+
+          {/* Summary pills */}
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.1em] uppercase font-medium px-3 py-1.5 rounded-full border"
+              style={{ background: 'rgba(52,211,153,0.10)', color: 'hsl(158 64% 52%)', borderColor: 'rgba(52,211,153,0.25)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              Available: {available.length}
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.1em] uppercase font-medium px-3 py-1.5 rounded-full border"
+              style={{ background: 'rgba(45,212,191,0.10)', color: 'hsl(174 72% 56%)', borderColor: 'rgba(45,212,191,0.25)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              Assigned: {assigned.length}
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.1em] uppercase font-medium px-3 py-1.5 rounded-full border"
+              style={{ background: 'rgba(148,163,184,0.08)', color: 'hsl(215 16% 57%)', borderColor: 'rgba(148,163,184,0.18)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              Off Duty: {other.length}
+            </span>
+          </div>
+        </motion.div>
+
+        {/* ── Quick Stats Bar ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.08, ease: EASE }}
+          className="rounded-xl border px-5 py-3.5 mb-8 flex flex-wrap items-center gap-4"
+          style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.07)' }}
+        >
+          {[
+            { icon: Users,        label: 'Available',     value: available.length,                     color: 'hsl(158 64% 52%)' },
+            { icon: Zap,          label: 'Assigned',      value: assigned.length,                      color: 'hsl(174 72% 56%)' },
+            { icon: Star,         label: 'Visits Today',  value: visitsToday,                          color: 'hsl(var(--accent))' },
+            { icon: Shield,       label: 'Nurseys Clear', value: `${nurseysClear}/${nurses.length}`,   color: 'hsl(158 64% 52%)' },
+            { icon: Package,      label: 'Kits Ready',    value: `${kitsReady}/${nurses.length}`,      color: 'hsl(var(--accent))' },
+          ].map(({ icon: Icon, label, value, color }) => (
+            <div key={label} className="flex items-center gap-2.5">
+              <Icon className="w-4 h-4 shrink-0" style={{ color }} strokeWidth={1.5} />
+              <span className="text-[11px] text-white opacity-60 uppercase tracking-wider">{label}:</span>
+              <span className="text-[13px] font-medium text-white" style={{ color }}>{value}</span>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* ── Sections ── */}
+        <NurseSection
+          label="Available"
+          nurses={available}
+          color="hsl(158 64% 52%)"
+          requests={requests}
+          onAssign={handleAssign}
+        />
+        <NurseSection
+          label="Assigned Today"
+          nurses={assigned}
+          color="hsl(174 72% 56%)"
+          requests={requests}
+          onAssign={handleAssign}
+        />
+        <NurseSection
+          label="Off Duty / Pending"
+          nurses={other}
+          color="hsl(215 16% 57%)"
+          requests={requests}
+          onAssign={handleAssign}
+        />
+
+        {nurses.length === 0 && (
+          <div className="text-center py-20">
+            <AlertTriangle className="w-10 h-10 mx-auto mb-4" style={{ color: 'hsl(var(--accent))' }} strokeWidth={1} />
+            <p className="text-white opacity-50 text-sm">No nurses loaded. Check commandMockData.</p>
+          </div>
+        )}
+
+      </div>
+    </AdminLayout>
+  );
+}

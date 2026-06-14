@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
-  // Suppress on B2B presale routes — friction-free purchase flow.
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/b2b')) {
-    return null;
-  }
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const revenuePath = path === '/' ||
+    path.startsWith('/book') ||
+    path.startsWith('/booking') ||
+    path.startsWith('/checkout') ||
+    path.startsWith('/products') ||
+    path.startsWith('/protocols') ||
+    path.startsWith('/subscription');
+  const suppressed = typeof window !== 'undefined' && (path.startsWith('/b2b') || revenuePath);
 
   useEffect(() => {
+    if (suppressed) return;
     const consentGiven = localStorage.getItem('cookieConsent');
     if (!consentGiven) {
-      setShowConsent(true);
+      const delay = 8000;
+      const timer = window.setTimeout(() => setShowConsent(true), delay);
+      return () => window.clearTimeout(timer);
     }
-  }, []);
+  }, [suppressed]);
 
   const handleAllow = () => {
     localStorage.setItem('cookieConsent', 'allowed');
@@ -25,39 +32,46 @@ export default function CookieConsent() {
     setShowConsent(false);
   };
 
+  if (suppressed) return null;
+
   return (
-    <AnimatePresence>
-      {showConsent && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3 }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-4"
+    <>
+      {showConsent ? (
+        <div
+          className={`fixed left-2 right-2 z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-reveal sm:left-auto sm:right-3 sm:w-[360px] ${
+            path.startsWith('/book')
+              ? 'bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]'
+              : 'bottom-16 sm:bottom-3'
+          }`}
         >
-          <div className="max-w-3xl mx-auto border border-white/20 bg-white/[0.06] backdrop-blur-xl rounded-lg p-8">
-            <h2 className="font-heading text-4xl text-foreground mb-4">Your privacy matters</h2>
-            <p className="font-body text-base text-foreground leading-relaxed mb-6">
-              We use cookies to ensure the website functions properly and to improve your experience. You can accept or decline non-essential cookies. Learn more in our{' '}
-              <a href="/privacy" className="underline font-semibold hover:text-accent transition-colors">Privacy Policy</a>.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={handleDecline}
-                className="px-8 py-3 border-2 border-foreground text-foreground font-body text-sm font-semibold uppercase tracking-wider rounded-full hover:bg-foreground/5 transition-colors"
-              >
-                Decline
-              </button>
-              <button
-                onClick={handleAllow}
-                className="px-8 py-3 bg-foreground text-background font-body text-sm font-semibold uppercase tracking-wider rounded-full hover:bg-foreground/90 transition-colors"
-              >
-                Allow
-              </button>
+          <div className="ml-auto border border-foreground/10 bg-background/82 backdrop-blur-2xl rounded-[0.9rem] p-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] pointer-events-auto">
+            <div className="flex items-center gap-2">
+              <div className="min-w-0">
+                <h2 className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
+                  Privacy
+                </h2>
+                <p className="font-body text-[9px] text-foreground/58 leading-snug mt-0.5 max-w-[13rem]">
+                  Essential only unless allowed.
+                </p>
+              </div>
+              <div className="ml-auto grid grid-cols-2 gap-1.5 shrink-0">
+                <button
+                  onClick={handleDecline}
+                  className="min-h-[34px] px-2.5 py-1 border border-foreground/16 text-foreground/62 font-body text-[8px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/5 hover:border-foreground/30 active:scale-[0.99] transition-all duration-base ease-editorial"
+                >
+                  No
+                </button>
+                <button
+                  onClick={handleAllow}
+                  className="min-h-[34px] px-2.5 py-1 bg-foreground text-background font-body text-[8px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/90 active:scale-[0.99] transition-all duration-base ease-editorial"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      ) : null}
+    </>
   );
 }

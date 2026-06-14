@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
+import { safeLogContext } from './_lib/safe-error.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -200,8 +201,8 @@ export default async function handler(req, res) {
       html: internalHtml,
     });
     if (applyResult?.error) {
-      console.error('Apply internal email failed:', applyResult.error);
-      return res.status(502).json({ error: 'Email service rejected the send.', detail: applyResult.error.message || JSON.stringify(applyResult.error) });
+      console.warn('Apply internal email failed', safeLogContext(applyResult.error, 'apply_internal_email_failed'));
+      return res.status(502).json({ error: 'Application submission is temporarily unavailable. Please try again.' });
     }
 
     // 2. Applicant confirmation — fire-and-forget. Failure shouldn't block.
@@ -214,12 +215,12 @@ export default async function handler(req, res) {
         html: applicantHtml,
       });
     } catch (err) {
-      console.error('Applicant confirmation email failed:', err);
+      console.warn('Applicant confirmation email failed', safeLogContext(err, 'applicant_confirmation_email_failed'));
     }
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Apply handler error:', error);
+    console.error('Apply handler error', safeLogContext(error, 'apply_handler_failed'));
     return res.status(500).json({ error: 'Failed to submit application.' });
   }
 }

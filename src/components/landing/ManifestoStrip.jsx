@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE } from '@/lib/motion';
 
 // Single-line manifesto strip. Sits between sections to break the rhythm.
