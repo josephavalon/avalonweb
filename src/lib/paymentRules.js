@@ -22,13 +22,18 @@ export function calculateLaunchPayment({
   const event = isGroupVisit || normalizedVisit === 'event' || normalizedOrder === 'event';
 
   if (subscription) {
-    const dueNow = money(subscriptionPrice || total);
+    // Plan signups bill like a one-time visit: a flat $50 deposit today, the
+    // remainder of the first month collected after the first visit, and the
+    // recurring full-price subscription starts one period later (created in
+    // fulfillment). We never charge the whole month up front.
+    const monthly = money(subscriptionPrice || total);
+    const dueNow = Math.min(ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS, monthly);
     return {
-      subtotal: dueNow,
-      depositAmount: dueNow,
-      balanceDue: 0,
-      paymentType: 'subscription_first_month',
-      paymentStatus: 'paid_in_full',
+      subtotal: monthly,
+      depositAmount: money(dueNow),
+      balanceDue: money(monthly - dueNow),
+      paymentType: 'subscription_deposit_first_month',
+      paymentStatus: monthly > dueNow ? 'partial_payment' : 'paid_in_full',
     };
   }
 

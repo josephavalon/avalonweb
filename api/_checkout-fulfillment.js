@@ -485,6 +485,13 @@ export function buildStripeCheckoutMetadata({
     visitSubtotalCents: String(visitSubtotalCents),
     depositAmountCents: String(depositCents),
     balanceDueCents: String(balanceDueCents),
+    // Plan-signup carry-through: fulfillment uses these to create the recurring
+    // Stripe subscription AFTER the first visit (full price, starts one period
+    // later). Empty for one-time visits. membershipName/membershipBilling above
+    // carry the plan label + interval.
+    planSignup: membership ? 'true' : '',
+    planMonthlyPriceCents: membership ? String(Math.round(Number(membership.price || 0) * 100)) : '',
+    planFirstVisitDate: metadataValue(appointment.acuityDatetime),
   };
 }
 

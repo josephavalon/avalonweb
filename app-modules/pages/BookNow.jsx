@@ -3305,9 +3305,9 @@ function SummaryRail({
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {[
-              ['Due now', isSubscription ? currency(subscriptionPrice) : currency(dueNow)],
-              [groupContactRequired ? 'Group' : isSubscription ? 'Therapy' : 'Estimate', groupContactRequired ? 'Contact' : totalLabel || currency(subtotal)],
-              isSubscription ? ['Plan', plan.label] : ['Upon completion', currency(balanceDue)],
+              ['Due now', currency(dueNow)],
+              [groupContactRequired ? 'Group' : isSubscription ? 'Plan' : 'Estimate', groupContactRequired ? 'Contact' : isSubscription ? plan.label : totalLabel || currency(subtotal)],
+              isSubscription ? ['After visit', currency(balanceDue)] : ['Upon completion', currency(balanceDue)],
               ['Time', bookingTimeSummary(state)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
@@ -3745,9 +3745,7 @@ export default function BookNow() {
     ? '$0'
     : !product && step === 0
       ? currency(BOOKING_DEPOSIT_AMOUNT)
-      : state.visitType === 'subscription'
-        ? `${currency(activePlanPrice)} today`
-        : currency(dueNowAmount);
+      : currency(dueNowAmount);
   const dueAfterLabel = manualBilling
     ? 'Invoice'
     : !product && step === 0

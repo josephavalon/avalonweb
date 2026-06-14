@@ -335,42 +335,53 @@ export default async function handler(req, res) {
       }
     }
 
-    const sessionMode = mode === 'subscription' || membership ? 'subscription' : 'payment';
+    // Plan signups now bill exactly like a one-time visit: a flat $50 deposit
+    // TODAY via `payment` mode, the rest of the first month collected after the
+    // visit (off-session, same as one-time), and a recurring full-price Stripe
+    // subscription created in fulfillment to start one period AFTER the first
+    // visit (see api/integrations/stripe/webhook.js). We never charge the whole
+    // month/term up front, so the Checkout session is always `payment` now.
+    const sessionMode = 'payment';
     const visitSubtotalCents = dollarsToCents(visitSubtotal);
     const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
     const appointmentOrderType = appointment.orderType || appointment.paymentType || '';
     const guestCount = Number(appointment.guests || 1);
     const isGroupVisit = /event/i.test(`${appointmentOrderType} ${appointment.locationType || ''}`) || guestCount > 1;
+    const planMonthlyCents = membership ? Math.max(0, dollarsToCents(membership.price)) : 0;
     const launchPayment = calculateLaunchPayment({
-      subtotal: visitSubtotal,
+      subtotal: membership ? planMonthlyCents / 100 : visitSubtotal,
       visitType: membership ? 'subscription' : appointment.visitType || '',
       orderType: membership ? 'subscription' : appointmentOrderType,
       subscriptionPrice: membership?.price || 0,
       isGroupVisit,
-      hasKnownPrice: visitSubtotal > 0,
+      hasKnownPrice: membership ? planMonthlyCents > 0 : visitSubtotal > 0,
     });
     const fallbackDepositCents = hasVisitItems ? Math.min(BOOKING_DEPOSIT_CENTS, visitSubtotalCents) : 0;
     const depositCents = membership
-      ? dollarsToCents(membership.price)
+      ? Math.min(BOOKING_DEPOSIT_CENTS, planMonthlyCents)
       : hasVisitItems
         ? dollarsToCents((launchPayment.depositAmount ?? (fallbackDepositCents / 100)))
         : 0;
-    const balanceDueCents = membership ? 0 : Math.max(0, visitSubtotalCents - depositCents);
+    const balanceDueCents = membership
+      ? Math.max(0, planMonthlyCents - depositCents)
+      : Math.max(0, visitSubtotalCents - depositCents);
     const normalizedAppointment = {
       ...appointment,
       orderType: membership ? 'subscription' : (isGroupVisit ? 'event' : appointment.orderType || 'single'),
-      paymentType: membership ? 'subscription_first_month' : launchPayment.paymentType,
+      paymentType: membership ? 'subscription_deposit_first_month' : launchPayment.paymentType,
       depositAmount: depositCents / 100,
       balanceDue: balanceDueCents / 100,
     };
-    const checkoutChargeItems = membership ? [] : [{
+    const checkoutChargeItems = [{
       key: 'booking-deposit',
       cartKey: 'booking-deposit',
-      label: `${primaryService} booking deposit`,
+      label: membership ? `${primaryService} plan deposit` : `${primaryService} booking deposit`,
       price: depositCents / 100,
       type: 'deposit',
     }];
-    const line_items = stripeLineItems(items, membership, checkoutChargeItems);
+    // Always a single $50 deposit line (membership=null here) — the recurring
+    // subscription is created later in fulfillment, NOT as a Checkout line item.
+    const line_items = stripeLineItems(items, null, checkoutChargeItems);
 
     if (!line_items.length) {
       return res.status(400).json({ error: 'No items to checkout' });

@@ -159,7 +159,10 @@ export default function PlanCheckout() {
     }
   };
 
-  const dueToday = perPeriodTotal;
+  // $50 deposit today (like any first visit); the rest of the first period is
+  // collected after the visit, then the full price auto-bills every period.
+  const depositToday = Math.min(50, perPeriodTotal);
+  const firstVisitBalance = Math.max(0, perPeriodTotal - depositToday);
   const renews = term.billing === 'monthly' ? 'every month' : `every ${term.label.toLowerCase()}`;
   const protocolName = protocol.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   const planLabel = `${protocolName} · ${term.label}${sessions > 1 ? ` · ${sessions} visits/mo` : ''}`;
@@ -256,9 +259,12 @@ export default function PlanCheckout() {
               </button>
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-3 border-t border-foreground/10 pt-1.5">
-              <span className="font-body text-[12px] font-bold text-foreground/64">Due today · renews {renews}</span>
-              <span className="font-body text-sm font-black text-foreground">{money(dueToday)}</span>
+              <span className="font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/70">Deposit today</span>
+              <span className="font-body text-sm font-black text-foreground">{money(depositToday)}</span>
             </div>
+            <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/52">
+              {money(firstVisitBalance)} balance after your first visit · then {money(perPeriodTotal)} {renews}
+            </p>
           </div>
           <button
             type="button"
@@ -266,7 +272,7 @@ export default function PlanCheckout() {
             disabled={!canSubmit}
             className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99] disabled:opacity-50"
           >
-            {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Start membership · {money(dueToday)} <ArrowRight className="h-4 w-4" /></>)}
+            {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Start plan · {money(depositToday)} deposit <ArrowRight className="h-4 w-4" /></>)}
           </button>
           <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Secure checkout · licensed RN visit · clinical review before treatment · 3-month minimum, then pause or cancel</p>
         </div>

@@ -177,6 +177,71 @@ async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
   }
 }
 
+function planRecurringInterval(billing) {
+  switch (billing) {
+    case 'annual': return { interval: 'year' };
+    case 'six-month': return { interval: 'month', interval_count: 6 };
+    case 'three-month': return { interval: 'month', interval_count: 3 };
+    default: return { interval: 'month' };
+  }
+}
+
+// Stripe requires trial_end strictly in the future. Anchor the first recurring
+// charge to ONE period after the first visit (so month one — already paid as the
+// $50 deposit + after-visit balance — isn't billed again), floored at now + 1h.
+function planTrialEndUnix(firstVisitIso, recurring) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const base = firstVisitIso ? new Date(firstVisitIso) : new Date();
+  const start = Number.isFinite(base.getTime()) ? new Date(base.getTime()) : new Date();
+  if (recurring.interval === 'year') {
+    start.setFullYear(start.getFullYear() + 1);
+  } else {
+    start.setMonth(start.getMonth() + (recurring.interval_count || 1));
+  }
+  return Math.max(Math.floor(start.getTime() / 1000), nowSec + 3600);
+}
+
+// Create the recurring full-price plan subscription that begins one period AFTER
+// the first visit. The deposit + after-visit balance cover month one, so the
+// subscription trials until the next period, then auto-bills the full price on
+// the saved card. Idempotent on the appointment/session id so webhook retries
+// never double-create. Returns the subscription id, or null if it can't run.
+async function createDeferredPlanSubscription(stripe, { session, md, paymentMethodId, recordId }) {
+  const monthlyCents = Math.round(Number(md.planMonthlyPriceCents || 0));
+  if (!session.customer || !paymentMethodId || !(monthlyCents > 0)) return null;
+  const recurring = planRecurringInterval(md.membershipBilling || 'monthly');
+  const trialEnd = planTrialEndUnix(md.planFirstVisitDate, recurring);
+  const planName = `${md.membershipName || 'Avalon'} Plan`;
+  const scope = recordId || session.id;
+  const product = await stripe.products.create(
+    { name: planName, metadata: { kind: 'plan_recurring' } },
+    { idempotencyKey: `plan-prod:${scope}` },
+  );
+  const subscription = await stripe.subscriptions.create(
+    {
+      customer: session.customer,
+      default_payment_method: paymentMethodId,
+      trial_end: trialEnd,
+      items: [{
+        price_data: {
+          currency: 'usd',
+          product: product.id,
+          unit_amount: monthlyCents,
+          recurring,
+        },
+      }],
+      metadata: {
+        kind: 'plan_recurring',
+        appointmentRecordId: recordId || '',
+        stripeCheckoutSessionId: session.id,
+        planName,
+      },
+    },
+    { idempotencyKey: `plan-sub:${scope}` },
+  );
+  return subscription.id;
+}
+
 async function handleCheckoutCompleted(stripe, db, session) {
   const md = session.metadata || {};
   if (session.payment_status && session.payment_status !== 'paid') {
@@ -376,6 +441,36 @@ async function handleCheckoutCompleted(stripe, db, session) {
     }
   }
 
+  // Plan signups: now that the $50 deposit succeeded and the card is saved on
+  // the customer, set up the recurring full-price subscription that starts one
+  // period after the first visit. Idempotent, so safe on webhook retries.
+  let planSubscriptionId = null;
+  if (md.planSignup === 'true') {
+    try {
+      planSubscriptionId = await createDeferredPlanSubscription(stripe, {
+        session,
+        md,
+        paymentMethodId,
+        recordId: record?.id,
+      });
+    } catch (err) {
+      console.error('[stripe/webhook] plan subscription creation failed', safeLogContext(err, 'plan_subscription_failed'));
+      await insertOperationalFailureCase(db, {
+        caseType: 'stripe_subscription_creation_failed',
+        provider: 'stripe',
+        externalReference: session.id,
+        tenantId,
+        payload: {
+          appointmentRecordId: record?.id || null,
+          stripeSessionId: session.id,
+          stripeCustomerId: session.customer || null,
+          errorCode: safeErrorCode(err, 'plan_subscription_failed'),
+          errorStatus: err?.statusCode || err?.status || null,
+        },
+      });
+    }
+  }
+
   const patch = {
     tenant_id:                    tenantId,
     stripe_checkout_session_id:   session.id,
@@ -397,6 +492,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
       attioPersonId,
+      planSubscriptionId,
       error: fulfillmentError ? safeLogContext(fulfillmentError, 'acuity_fulfillment_failed') : null,
     }),
     updated_at:                   now,
