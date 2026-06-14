@@ -322,6 +322,10 @@ assert(!authStoreSource.includes("err.message || 'Passkey sign-in failed.'"), 'P
 assert(!authStoreSource.includes("err.message || 'Could not add a passkey.'"), 'Passkey registration must not render raw provider errors');
 assert(!checkoutPageSource.includes('setError(err.message)'), 'Checkout UI must not render raw checkout/provider errors');
 assert(!checkoutPageSource.includes("reason: err.message || 'checkout_request_failed'"), 'Checkout analytics must not send raw failure messages');
+assert(checkoutPageSource.includes('checkoutInFlightRef'), 'Checkout UI must synchronously guard rapid repeat submits');
+assert(checkoutPageSource.includes('Redirecting to secure checkout'), 'Checkout UI must show a blocking redirect-pending state');
+assert(checkoutPageSource.includes('window.location.assign(data.url)'), 'Checkout UI must use an explicit redirect after session creation');
+assert(checkoutPageSource.includes('10_000'), 'Checkout redirect pending state must have a retry fallback timeout');
 assert(clientAnalyticsSource.includes('sensitiveAnalyticsKey'), 'Client analytics must detect sensitive nested keys');
 assert(clientAnalyticsSource.includes('sanitizeObject(v, depth + 1)'), 'Client analytics must recursively sanitize nested objects');
 assert(clientAnalyticsSource.includes('sanitizeObject(item, depth + 1)'), 'Client analytics must recursively sanitize array object entries');

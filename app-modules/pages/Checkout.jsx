@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -722,7 +722,9 @@ function ContactStep({ onNext, onBack, defaultValues }) {
 /* ─── Step 3: Reserve ────────────────────────────────────────── */
 function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const [loading, setLoading] = useState(false);
+  const [redirectPending, setRedirectPending] = useState(false);
   const [error, setError] = useState(null);
+  const checkoutInFlightRef = useRef(false);
   const safeContact = contact || {};
   const paymentMethod = 'card';
   const [fullName, setFullName] = useState(`${safeContact.firstName || ''} ${safeContact.lastName || ''}`.trim());
@@ -753,7 +755,19 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       ? `Pay $${itemsTotal.toLocaleString()}`
       : 'Pay';
 
+  useEffect(() => {
+    if (!redirectPending) return undefined;
+    const timeout = window.setTimeout(() => {
+      checkoutInFlightRef.current = false;
+      setRedirectPending(false);
+      setLoading(false);
+      setError('Secure checkout is taking longer than expected. Please try again.');
+    }, 10_000);
+    return () => window.clearTimeout(timeout);
+  }, [redirectPending]);
+
   const handleCheckout = async () => {
+    if (checkoutInFlightRef.current) return;
     if (!contactReady) {
       setError('Add full name, phone, and email.');
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -764,6 +778,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       });
       return;
     }
+    checkoutInFlightRef.current = true;
     setLoading(true);
     setError(null);
     track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
@@ -859,8 +874,15 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         scope: membership ? 'All subscription dates' : 'Single appointment',
         depositAmount: dueToday,
       });
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        setRedirectPending(true);
+        window.location.assign(data.url);
+        return;
+      }
+      checkoutInFlightRef.current = false;
+      setLoading(false);
     } catch (err) {
+      checkoutInFlightRef.current = false;
       setError('Checkout could not be started. Please try again or contact Avalon.');
       setLoading(false);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -876,6 +898,30 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
 
   return (
     <div className="space-y-4">
+      <AnimatePresence>
+        {redirectPending && (
+          <motion.div
+            key="checkout-redirect-pending"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+            className="fixed inset-0 z-[120] flex min-h-[100svh] items-center justify-center bg-background/92 px-6 text-center backdrop-blur-xl"
+          >
+            <div className="max-w-sm">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-accent" strokeWidth={2.2} />
+              <p className="mt-6 font-body text-[11px] font-black uppercase tracking-[0.22em] text-accent">
+                Redirecting to secure checkout...
+              </p>
+              <p className="mt-3 font-body text-sm font-semibold leading-relaxed text-foreground/62">
+                Keep this page open while Stripe loads.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="mb-5">
         <h1 className="mt-2 font-heading text-6xl uppercase leading-[0.85] text-foreground sm:text-7xl">Pay now</h1>
       </div>
@@ -931,6 +977,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
               aria-label="Full name"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
+              disabled={loading}
               placeholder="Full name"
               autoComplete="name"
               className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
@@ -940,6 +987,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 aria-label="Phone"
                 value={phone}
                 onChange={(event) => setPhone(formatCheckoutPhone(event.target.value))}
+                disabled={loading}
                 placeholder="Phone"
                 autoComplete="tel"
                 inputMode="tel"
@@ -949,6 +997,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 aria-label="Email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                disabled={loading}
                 placeholder="Email"
                 autoComplete="email"
                 inputMode="email"
@@ -980,7 +1029,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       )}
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 transition-colors">
+        <button type="button" onClick={onBack} disabled={loading} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 disabled:opacity-50 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
         <button
