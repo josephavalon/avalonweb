@@ -161,6 +161,8 @@ export default function PlanCheckout() {
 
   const dueToday = perPeriodTotal;
   const renews = term.billing === 'monthly' ? 'every month' : `every ${term.label.toLowerCase()}`;
+  const protocolName = protocol.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const planLabel = `${protocolName} · ${term.label}${sessions > 1 ? ` · ${sessions} visits/mo` : ''}`;
 
   return (
     <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
@@ -242,9 +244,21 @@ export default function PlanCheckout() {
         {error && <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 font-body text-sm font-semibold text-red-200" role="alert">{error}</p>}
 
         <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3">
-          <div className="mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
-            <span className="font-body text-[12px] font-bold text-foreground/64">Due today · renews {renews}</span>
-            <span className="font-body text-sm font-black text-foreground">{money(dueToday)}</span>
+          <div className="mb-2.5 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 truncate font-body text-[12px] font-black uppercase tracking-[0.08em] text-foreground/82">{planLabel}</span>
+              <button
+                type="button"
+                onClick={() => navigate('/subscription')}
+                className="shrink-0 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85"
+              >
+                Change
+              </button>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between gap-3 border-t border-foreground/10 pt-1.5">
+              <span className="font-body text-[12px] font-bold text-foreground/64">Due today · renews {renews}</span>
+              <span className="font-body text-sm font-black text-foreground">{money(dueToday)}</span>
+            </div>
           </div>
           <button
             type="button"

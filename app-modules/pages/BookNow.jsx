@@ -1002,8 +1002,15 @@ function UniversalBookingFrame({
   onBack,
   onNext,
   onStepSelect,
+  product = null,
+  selectedAddons = [],
+  onRemoveAddon,
+  onClearOrder,
   children,
 }) {
+  const [orderOpen, setOrderOpen] = useState(false);
+  const hasOrder = Boolean(product);
+  const orderCount = (product ? 1 : 0) + selectedAddons.length;
   return (
     <section data-av-booking-frame="true" className="relative mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
@@ -1040,6 +1047,58 @@ function UniversalBookingFrame({
         style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
+          {hasOrder && (onRemoveAddon || onClearOrder) && (
+            <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/30 md:hidden">
+              <button
+                type="button"
+                onClick={() => setOrderOpen((v) => !v)}
+                aria-expanded={orderOpen}
+                className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5"
+              >
+                <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/70">
+                  Your order
+                  <span className="rounded-full border border-foreground/16 px-1.5 py-[1px] text-[8px] font-black text-foreground/60">{orderCount}</span>
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-foreground/55 transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+              </button>
+              {orderOpen && (
+                <div className="border-t border-foreground/10 px-2.5 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="min-w-0 flex-1 truncate font-body text-[11px] font-bold text-foreground/82">{product.label}</p>
+                    {onClearOrder && (
+                      <button
+                        type="button"
+                        onClick={onClearOrder}
+                        className="shrink-0 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  {selectedAddons.length > 0 && (
+                    <div className="mt-1.5 space-y-1">
+                      {selectedAddons.map((item) => (
+                        <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
+                          <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground/74">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                          <span className="shrink-0 font-body text-[9px] font-black text-foreground/52">{currency(item.price)}</span>
+                          {onRemoveAddon && (
+                            <button
+                              type="button"
+                              onClick={() => onRemoveAddon(item.label)}
+                              aria-label={`Remove ${item.label}`}
+                              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-foreground/40 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                            >
+                              <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-[76px_minmax(0,122px)_1fr] items-center gap-2 md:flex md:gap-2">
           <button
             type="button"
@@ -5512,6 +5571,10 @@ export default function BookNow() {
                 onBack={back}
                 onNext={step < LAST_STEP ? next : submit}
                 onStepSelect={goToStep}
+                product={product}
+                selectedAddons={selectedAddons}
+                onRemoveAddon={removeAddon}
+                onClearOrder={clearOrder}
               >
                 {renderUniversalStep()}
               </UniversalBookingFrame>
