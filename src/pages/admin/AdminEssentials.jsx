@@ -94,7 +94,7 @@ export default function AdminEssentials() {
       </section>
 
       <p className="mt-5 font-body text-[11px] text-foreground/35">
-        Scheduling &amp; nurse dispatch are managed in Acuity. Real collections run from Bookings.
+        Scheduling, clinical review, and nurse dispatch are managed in Acuity. Real collections run from Bookings.
       </p>
     </AdminShell>
   );
