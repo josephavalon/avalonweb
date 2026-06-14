@@ -17,7 +17,7 @@ import {
   Stethoscope,
   UserCheck,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { NURSES, REQUESTS } from '@/fixtures/commandMockData';
@@ -372,8 +372,8 @@ export default function DispatchControl() {
   };
 
   return (
-    <AdminLayout>
-      <PageShell
+    <AdminShell title="Dispatch">
+      <PageShell embedded
         eyebrow="Broadcast · Y/N · route"
         title="Dispatch Control"
         subtitle="Open visit to accepted nurse, fast."
@@ -520,6 +520,6 @@ export default function DispatchControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

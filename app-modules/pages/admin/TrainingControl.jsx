@@ -200,7 +200,7 @@ export default function TrainingControl() {
 
   return (
     <AdminShell title="Training">
-      <PageShell
+      <PageShell embedded
         eyebrow="protocols · competency · readiness"
         title="Training Control"
         subtitle="Fast protocol review and nurse readiness proof."

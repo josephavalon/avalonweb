@@ -342,7 +342,7 @@ export default function FieldControl() {
 
   return (
     <AdminShell title="Field">
-      <PageShell
+      <PageShell embedded
         eyebrow="ETA · route · closeout"
         title="Field Control"
         subtitle="Visit execution without becoming the EMR."

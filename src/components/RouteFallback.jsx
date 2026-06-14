@@ -1,21 +1,28 @@
 export default function RouteFallback() {
   return (
     <div
-      className="av-page-surface flex min-h-[100svh] flex-col items-center justify-center px-4 py-6"
+      className="av-route-fallback"
       role="status"
       aria-live="polite"
       aria-label="Loading Avalon Vitality"
     >
-      <div className="av-loader-lockup flex flex-col items-center justify-center">
-        <p className="av-loader-mark font-heading text-[22vw] leading-none tracking-[0.32em] pl-[0.32em] text-foreground select-none sm:text-[14vw] md:text-[8vw]">
-          AV
-        </p>
-        <p className="mt-2 font-body text-[10px] uppercase tracking-[0.4em] text-foreground/45 select-none">
-          AVALON VITALITY
-        </p>
-        <div className="mt-7 h-px w-40 overflow-hidden bg-foreground/10">
-          <div className="h-full origin-left animate-[av-loader-progress_1500ms_cubic-bezier(0.16,1,0.3,1)_forwards] bg-foreground" />
-        </div>
+      <div className="av-route-fallback-lockup">
+        <svg
+          className="av-route-fallback-logo"
+          viewBox="0 0 346 535"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            fill="currentColor"
+            fillRule="evenodd"
+            d="M 166.509 13.223 C 157.220 34.353, 137.150 75.148, 125.960 95.647 C 111.969 121.278, 96.997 146.556, 69.486 191 C 26.731 260.068, 13.377 286.284, 5.489 316.636 C 2.689 327.410, 0 349.668, 0 362.068 C 0 371.209, 1.644 387.451, 3.327 394.951 L 4.500 400.174 87.943 269.026 C 133.837 196.895, 171.696 137.688, 172.075 137.454 C 172.617 137.118, 211.154 196.924, 274.718 296.750 C 276.557 299.637, 278.385 301.977, 278.781 301.949 C 279.849 301.873, 311 252.405, 311 250.784 C 311 249.179, 292.272 217.639, 269.859 181.500 C 225.700 110.294, 200.765 64.141, 177.995 11.462 C 175.627 5.983, 173.387 1.150, 173.017 0.723 C 172.648 0.295, 169.719 5.920, 166.509 13.223 M 303.858 299.785 C 294.154 315.028, 261.906 365.575, 232.195 412.112 C 202.485 458.648, 176.879 498.807, 175.294 501.353 L 172.413 505.983 119.456 423.003 C 90.330 377.365, 66.275 340.031, 66 340.040 C 65.725 340.048, 53.472 359.425, 38.771 383.099 L 12.041 426.142 16.978 436.453 C 40.773 486.157, 87.818 522.016, 142.500 532.128 C 159.496 535.272, 185.504 535.272, 202.500 532.128 C 256.668 522.111, 302.440 487.907, 326.459 439.500 C 330.007 432.350, 334.289 422.501, 335.975 417.612 C 348.676 380.793, 347.712 334.467, 333.464 296.949 C 329.357 286.132, 322.912 271.989, 322.111 272.035 C 321.775 272.054, 313.561 284.541, 303.858 299.785"
+          />
+        </svg>
+        <p className="av-route-fallback-wordmark">AVALON VITALITY</p>
+      </div>
+      <div className="av-route-fallback-progress" aria-hidden="true">
+        <span />
       </div>
     </div>
   );

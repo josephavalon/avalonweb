@@ -11,7 +11,7 @@ import {
   Navigation,
   Users,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import {
   clientHeatMapNeighborhoods,
@@ -159,8 +159,8 @@ export default function ClientHeatMap() {
   const selectedAnchors = premiumFitnessAnchors.filter((anchor) => anchor.neighborhoodId === selected.id);
 
   return (
-    <AdminLayout>
-      <PageShell
+    <AdminShell title="Heat Map">
+      <PageShell embedded
         eyebrow="Growth intelligence"
         title="Client Heat Map"
         subtitle="San Francisco Wellness Spend x Income index for Avalon ideal-client acquisition."
@@ -289,6 +289,6 @@ export default function ClientHeatMap() {
           </aside>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

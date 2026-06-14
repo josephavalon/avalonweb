@@ -14,7 +14,7 @@ import {
   Truck,
   UserCheck,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { SEED_ITEMS } from '@/data/inventorySeed';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
@@ -462,8 +462,8 @@ export default function KitControl() {
   };
 
   return (
-    <AdminLayout>
-      <PageShell
+    <AdminShell title="Kits">
+      <PageShell embedded
         eyebrow="inventory · kits · deductions"
         title="Kit Control"
         subtitle="Local supply command before Sortly, Acuity, or payroll handoff."
@@ -617,6 +617,6 @@ export default function KitControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

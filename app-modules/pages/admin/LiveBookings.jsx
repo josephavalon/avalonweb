@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
 const BG = 'hsl(var(--background))';
@@ -218,14 +218,12 @@ export default function LiveAdminBookings() {
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
 
   return (
-    <AdminLayout>
+    <AdminShell title="Live Bookings">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
         <div className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>Admin</p>
-              <h1 className="mt-2 font-heading text-5xl uppercase leading-[0.9] md:text-6xl">Bookings</h1>
-              <p className="mt-2 font-body text-sm" style={{ color: MUTED }}>
+              <p className="font-body text-sm" style={{ color: MUTED }}>
                 {loading ? 'Loading…' : `${bookings.length} booking${bookings.length === 1 ? '' : 's'} · ${outstanding.length} with a balance due`}
               </p>
             </div>
@@ -267,6 +265,6 @@ export default function LiveAdminBookings() {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </AdminShell>
   );
 }

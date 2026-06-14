@@ -396,7 +396,7 @@ export default function CredentialControl() {
 
   return (
     <AdminShell title="Credentials">
-      <PageShell
+      <PageShell embedded
         eyebrow="Nurseys · scope · shift gate"
         title="Credential Control"
         subtitle="Only clear nurses can claim shifts."

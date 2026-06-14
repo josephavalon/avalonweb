@@ -12,11 +12,32 @@
 
 import React, { useEffect } from 'react';
 
-export default function PageShell({ eyebrow, title, subtitle, action, children }) {
+export default function PageShell({ eyebrow, title, subtitle, action, children, embedded = false }) {
   useEffect(() => {
     if (!title || typeof document === 'undefined') return;
     document.title = `${title} - Avalon OS`;
   }, [title]);
+
+  // Embedded: the page already sits inside AdminShell, which owns the big title
+  // + corner logo. Drop the duplicate heading; keep just a slim subtitle and the
+  // action toolbar above the body.
+  if (embedded) {
+    return (
+      <div className="text-foreground">
+        {(subtitle || action) && (
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {subtitle
+              ? <p className="font-body text-[12px] text-foreground/45">{subtitle}</p>
+              : <span className="hidden md:block" />}
+            {action ? <div className="w-full flex-shrink-0 md:w-auto">{action}</div> : null}
+          </div>
+        )}
+        <div className="animate-in fade-in slide-in-from-bottom-3 duration-reveal">
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="av-page-surface min-h-screen text-foreground">

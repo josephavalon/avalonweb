@@ -14,7 +14,7 @@ import {
   Send,
   ShieldCheck,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { APPOINTMENTS, CLIENTS, INVOICES, SERVICES } from '@/fixtures/adminMockData';
 import { PAYMENTS } from '@/fixtures/commandMockData';
@@ -408,8 +408,8 @@ export default function FinanceControl() {
   };
 
   return (
-    <AdminLayout>
-      <PageShell
+    <AdminShell title="Finance">
+      <PageShell embedded
         eyebrow="Mercury · Gusto · QuickBooks"
         title="Finance Control"
         subtitle="Money moves. Clinical data does not."
@@ -533,6 +533,6 @@ export default function FinanceControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

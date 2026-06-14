@@ -106,13 +106,19 @@ export default function Hero() {
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
             const isBookAction = action.to === BOOK_URL;
+            // BOOK shares the exact card geometry + layout of the two below it
+            // (icon-left, label, arrow-right, same radius/padding); it differs
+            // only by being the white, filled primary. The white look is forced
+            // in CSS (.av-hero-action.av-hero-action-primary) because the night
+            // theme neutralizes raw `bg-white`/`text-*` utilities — so we keep
+            // those utilities OFF the primary and let the stylesheet own color.
             const actionClassName = isBookAction
-              ? 'av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border border-white bg-white px-4 py-3.5 text-black shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors duration-base ease-editorial hover:bg-white/90 hover:text-black md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
+              ? 'av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
               : 'av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
             const iconWrapClassName = isBookAction
-              ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl md:h-12 md:w-12 md:rounded-2xl'
+              ? 'av-hero-book-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl'
               : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
-            const foregroundClassName = isBookAction ? 'text-black' : 'text-foreground';
+            const foregroundClassName = isBookAction ? '' : 'text-foreground';
 
             return (
               <MotionLink

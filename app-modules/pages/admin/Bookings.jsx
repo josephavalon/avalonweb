@@ -11,7 +11,7 @@ import {
   RefreshCw, Calendar, Clock, MapPin, Phone, Mail, Hash, AlertCircle,
   ChevronDown, ExternalLink,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import { patientToAppointmentPreview } from '@/lib/clientIntakeStore';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -283,16 +283,14 @@ function AdminBookings() {
   };
 
   return (
-    <AdminLayout>
+    <AdminShell title="Visits">
       <div className="mx-auto w-full max-w-3xl space-y-6">
 
         {/* Summary bar */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/36">Admin</p>
-            <h1 className="mt-2 font-heading text-4xl uppercase leading-none tracking-wide text-foreground md:text-5xl">Visits</h1>
             {!loading && (
-              <p className="font-body text-xs text-foreground/40 mt-1">
+              <p className="font-body text-xs text-foreground/40">
                 {upcomingCount} upcoming · {appointments.length} total loaded
               </p>
             )}
@@ -389,7 +387,7 @@ function AdminBookings() {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </AdminShell>
   );
 }
 

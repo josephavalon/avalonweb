@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   DollarSign,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { REQUESTS } from '@/fixtures/commandMockData';
 import { SEED_ITEMS } from '@/data/inventorySeed';
@@ -360,8 +360,8 @@ export default function AcuityControl() {
   };
 
   return (
-    <AdminLayout>
-      <PageShell
+    <AdminShell title="Acuity">
+      <PageShell embedded
         eyebrow="Acuity Source Of Truth"
         title="Acuity Control"
         subtitle="Acuity owns EMR + schedule. Avalon owns motion."
@@ -478,6 +478,6 @@ export default function AcuityControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }

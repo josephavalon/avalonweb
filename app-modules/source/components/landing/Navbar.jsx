@@ -25,25 +25,11 @@ const dashboardPathFor = (user) => {
   return '/members/dashboard';
 };
 
-export default function Navbar({ showBack = false, compact = false, focusMode = false, mobileGlobal = false }) {
+export default function Navbar({ showBack = false, compact = false, focusMode = false, globalShell = false }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopViewport, setDesktopViewport] = useState(() => (
-    typeof window !== 'undefined'
-      ? window.matchMedia('(min-width: 768px)').matches
-      : false
-  ));
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-    const query = window.matchMedia('(min-width: 768px)');
-    const update = () => setDesktopViewport(query.matches);
-    update();
-    query.addEventListener?.('change', update);
-    return () => query.removeEventListener?.('change', update);
-  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -91,17 +77,23 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
   const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
-  const internalToolRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/provider');
-  const navVisible = mobileGlobal ? !desktopViewport : desktopViewport;
+  const internalToolRoute = location.pathname.startsWith('/admin')
+    || location.pathname.startsWith('/provider')
+    || location.pathname.startsWith('/members');
+  const navVisible = true;
   const mobileLinks = [
     ...mainLinks,
     { to: BOOK_URL, label: 'Book', primary: true },
     ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
   ];
 
-  if (mobileGlobal && internalToolRoute) return null;
-  if (mobileGlobal && desktopViewport) return null;
-  if (!mobileGlobal && !desktopViewport) return null;
+  // Single persistent instance: <Navbar globalShell/> renders the bar for ALL
+  // viewports from MobileShell — which sits OUTSIDE the page transition — so the bar
+  // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
+  // scattered across pages now draw nothing.
+  if (!globalShell) return null;
+  // Admin / provider / member areas own their chrome — no marketing bar there.
+  if (internalToolRoute) return null;
 
   return (
     <motion.nav
@@ -111,8 +103,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
       className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
-      mobileGlobal ? 'md:hidden' : 'hidden md:block'
-    } ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'

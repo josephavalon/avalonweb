@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avalon Vitality — Recovery on Demand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070707; --ink:#ffffff;
+    --ink-2:rgba(255,255,255,.72); --ink-3:rgba(255,255,255,.54); --ink-4:rgba(255,255,255,.34);
+    --line:rgba(255,255,255,.13); --line-2:rgba(255,255,255,.24);
+    --glass:rgba(14,14,14,.62);
+    --cyan:#6fe3ff; --gold:#e9c789;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --head:'Bebas Neue',Impact,sans-serif;
+    --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth; scroll-snap-type:y mandatory}
+  body{background:var(--bg); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; overflow-x:hidden}
+  body::-webkit-scrollbar{width:0}
+
+  .slide{
+    position:relative; min-height:100vh; width:100%;
+    scroll-snap-align:start;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:clamp(28px,7vw,104px) clamp(22px,7vw,120px);
+    overflow:hidden; border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  .wrap{width:100%; max-width:1200px; margin:0 auto; position:relative; z-index:2}
+
+  .bg{position:absolute; inset:0; z-index:0; background-size:cover; background-position:center}
+  .bg::after{content:""; position:absolute; inset:0}
+  .scrim-l::after{background:linear-gradient(90deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.8) 42%,rgba(0,0,0,.35) 72%,rgba(0,0,0,.55) 100%)}
+  .scrim-c::after{background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,.5) 0%,rgba(0,0,0,.88) 80%)}
+  .scrim-b::after{background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.8) 58%,rgba(0,0,0,.95) 100%)}
+  .scrim-soft::after{background:linear-gradient(180deg,rgba(7,7,7,.84),rgba(7,7,7,.92))}
+
+  .eyebrow{font-weight:600; font-size:clamp(11px,1vw,13px); letter-spacing:.28em; text-transform:uppercase;
+    color:var(--ink-3); margin-bottom:18px; display:flex; align-items:center; gap:12px}
+  .eyebrow::before{content:""; width:26px; height:1px; background:var(--ink-4)}
+  h1{font-family:var(--head); font-weight:400; line-height:.88; letter-spacing:.01em; font-size:clamp(3.4rem,11vw,9rem); text-transform:uppercase}
+  h2{font-family:var(--head); font-weight:400; line-height:.93; letter-spacing:.01em; font-size:clamp(2.2rem,5.6vw,4.4rem); text-transform:uppercase; margin-bottom:10px}
+  .lede{font-size:clamp(1.05rem,1.65vw,1.5rem); line-height:1.55; color:var(--ink-2); max-width:46ch}
+  .sub{font-size:clamp(1rem,1.45vw,1.28rem); color:var(--ink-2); line-height:1.5; max-width:50ch}
+  .big{font-family:var(--head); font-size:clamp(1.8rem,3.4vw,3rem); line-height:1; letter-spacing:.01em; text-transform:uppercase; margin-top:26px}
+  .accent{color:var(--cyan)} .gold{color:var(--gold)}
+
+  .cover h1{margin:6px 0 22px}
+  .cover .meta{margin-top:38px; font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-3)}
+  .logo{font-family:var(--head); font-size:clamp(1.4rem,2vw,1.9rem); letter-spacing:.06em}
+
+  /* bag strip — product-forward visuals */
+  .bagstrip{display:flex; gap:clamp(8px,1.5vw,26px); align-items:flex-end; justify-content:center; margin-top:clamp(26px,4vw,46px); flex-wrap:nowrap}
+  .bagstrip img{height:clamp(110px,18vw,230px); width:auto; object-fit:contain; filter:drop-shadow(0 22px 40px rgba(0,0,0,.7)) drop-shadow(0 0 30px rgba(111,227,255,.06))}
+  .bagstrip img:nth-child(even){transform:translateY(-14px)}
+  .bagstrip.sm img{height:clamp(78px,11vw,150px)}
+  .float-bag{position:absolute; right:clamp(20px,6vw,120px); top:50%; transform:translateY(-50%); height:min(62vh,520px); z-index:1;
+    filter:drop-shadow(0 30px 60px rgba(0,0,0,.8)) drop-shadow(0 0 50px rgba(111,227,255,.08)); pointer-events:none}
+  .float-needle{position:absolute; right:0; top:0; height:100%; width:min(42vw,560px); object-fit:cover; z-index:1; opacity:.92;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 38%); mask-image:linear-gradient(90deg,transparent,#000 38%)}
+
+  .grid{display:grid; gap:clamp(12px,1.4vw,20px); margin-top:clamp(24px,3.5vw,44px)}
+  .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--glass); border:1px solid var(--line); border-radius:18px; padding:clamp(18px,2vw,28px);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:border-color .5s var(--ease), transform .5s var(--ease)}
+  .card:hover{border-color:var(--line-2); transform:translateY(-3px)}
+  .card .ic{font-family:var(--head); font-size:1.5rem; color:var(--cyan); display:block; margin-bottom:12px}
+  .card h3{font-family:var(--head); font-weight:400; font-size:clamp(1.25rem,1.8vw,1.7rem); letter-spacing:.02em; text-transform:uppercase; margin-bottom:7px}
+  .card p{color:var(--ink-2); font-size:clamp(.9rem,1.05vw,1rem); line-height:1.5}
+  .card .num{font-family:var(--head); font-size:1.5rem; color:var(--ink-4); display:block; margin-bottom:10px}
+  .card.lit{border-color:var(--line-2)}
+
+  /* before -> after chips */
+  .ba{display:flex; align-items:center; gap:12px}
+  .ba .x{font-family:var(--head); font-size:1.4rem; color:var(--ink-4)} .ba .a{color:var(--cyan); font-weight:700}
+
+  /* map rows (toolkit / where-it-goes) */
+  .map{display:flex; align-items:baseline; gap:18px; padding:16px 0; border-bottom:1px solid var(--line)}
+  .map:last-child{border-bottom:0}
+  .map .k{font-family:var(--head); font-size:clamp(1.15rem,1.7vw,1.55rem); letter-spacing:.02em; text-transform:uppercase; min-width:clamp(140px,18vw,230px); color:#fff}
+  .map .v{color:var(--ink-2); font-size:clamp(.9rem,1.1vw,1.05rem); line-height:1.5}
+  .map .tag{margin-left:auto; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--cyan); border:1px solid var(--line); border-radius:100px; padding:5px 12px; white-space:nowrap}
+
+  /* closed-loop flow */
+  .flow{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:32px}
+  .flow .node{font-family:var(--head); font-size:clamp(1rem,1.5vw,1.45rem); letter-spacing:.03em; text-transform:uppercase;
+    border:1px solid var(--line-2); border-radius:100px; padding:12px 22px; background:var(--glass); backdrop-filter:blur(12px)}
+  .flow .arr{color:var(--cyan); font-size:1.2rem}
+  .flow .node.back{border-color:rgba(233,199,137,.4); color:var(--gold)}
+
+  .steps{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:30px}
+  .step{border-top:2px solid var(--line); padding-top:14px}
+  .step .n{font-family:var(--head); font-size:1.7rem; color:var(--cyan)}
+  .step h4{font-weight:600; font-size:.95rem; margin:7px 0 3px} .step p{color:var(--ink-3); font-size:.82rem; line-height:1.4}
+
+  .shots{display:flex; gap:clamp(16px,2.5vw,40px); align-items:flex-end; margin-top:clamp(22px,3vw,38px); flex-wrap:wrap}
+  .browser{flex:1 1 440px; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#0d0d0d; box-shadow:0 40px 120px rgba(0,0,0,.6)}
+  .browser .bar{height:32px; background:#141414; display:flex; align-items:center; gap:7px; padding:0 14px; border-bottom:1px solid var(--line)}
+  .browser .bar i{width:11px; height:11px; border-radius:50%; background:#2c2c2c; display:block}
+  .browser img{width:100%; display:block}
+  .phone{flex:0 0 auto; width:clamp(140px,16vw,210px); border:8px solid #1b1b1b; border-radius:32px; overflow:hidden; box-shadow:0 40px 110px rgba(0,0,0,.65); background:#000}
+  .phone img{width:100%; display:block}
+  .caption{margin-top:20px; color:var(--ink-3); font-size:.9rem}
+
+  .hud{position:fixed; z-index:40; pointer-events:none}
+  .hud.tl{top:26px; left:clamp(22px,5vw,48px)}
+  .hud.br{bottom:24px; right:clamp(22px,5vw,48px); font-size:12px; letter-spacing:.2em; color:var(--ink-3)}
+  .bar-top{position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--cyan),var(--gold)); z-index:50; width:0; transition:width .25s var(--ease)}
+  .dots{position:fixed; right:clamp(16px,2.2vw,28px); top:50%; transform:translateY(-50%); z-index:40; display:flex; flex-direction:column; gap:10px}
+  .dots a{width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); transition:all .4s var(--ease); display:block}
+  .dots a.on{background:var(--cyan); transform:scale(1.35)}
+  .hint{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:40; color:var(--ink-4); font-size:11px; letter-spacing:.22em; text-transform:uppercase; animation:fade 3s ease 6s forwards}
+  @keyframes fade{to{opacity:0}}
+
+  .rv{opacity:0; transform:translateY(26px); transition:opacity .9s var(--ease), transform .9s var(--ease)}
+  .slide.in .rv{opacity:1; transform:none}
+  .slide.in .rv:nth-child(2){transition-delay:.06s}
+  .slide.in .rv:nth-child(3){transition-delay:.12s}
+  .slide.in .rv:nth-child(4){transition-delay:.18s}
+  .slide.in .rv:nth-child(5){transition-delay:.24s}
+  .in .grid .card,.in .steps .step,.in .map,.in .bagstrip img{animation:pop .8s var(--ease) both}
+  .in .grid .card:nth-child(2),.in .steps .step:nth-child(2),.in .bagstrip img:nth-child(2){animation-delay:.05s}
+  .in .grid .card:nth-child(3),.in .steps .step:nth-child(3),.in .bagstrip img:nth-child(3){animation-delay:.1s}
+  .in .grid .card:nth-child(4),.in .steps .step:nth-child(4),.in .bagstrip img:nth-child(4){animation-delay:.15s}
+  .in .grid .card:nth-child(5),.in .steps .step:nth-child(5),.in .bagstrip img:nth-child(5){animation-delay:.2s}
+  .in .bagstrip img:nth-child(6){animation-delay:.25s}
+  @keyframes pop{from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:none}}
+
+  @media (max-width:820px){
+    .g3,.g4,.steps{grid-template-columns:1fr}
+    .map{flex-wrap:wrap; gap:6px} .map .tag{margin-left:0}
+    .dots,.phone,.float-bag,.float-needle{display:none}
+    .bagstrip img{height:78px} .bagstrip img:nth-child(even){transform:none}
+    .flow .node{font-size:.95rem; padding:9px 14px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important} .rv{opacity:1; transform:none}}
+  @media print{
+    html{scroll-snap-type:none}
+    .slide{min-height:96vh; page-break-after:always; border:0}
+    .hud,.dots,.bar-top,.hint{display:none} .rv{opacity:1; transform:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar-top" id="bar"></div>
+<div class="hud tl"><span class="logo">AV<span style="color:var(--cyan)">.</span></span></div>
+<div class="hud br"><span id="counter">01 / 17</span></div>
+<nav class="dots" id="dots"></nav>
+<div class="hint">Scroll or press → to advance</div>
+
+<!-- 1 · COVER -->
+<section class="slide cover" id="s1">
+  <div class="wrap" style="text-align:center">
+    <div class="eyebrow rv" style="justify-content:center">Avalon Vitality</div>
+    <h1 class="rv">Recovery<br>On Demand</h1>
+    <p class="sub rv" style="margin:0 auto">The post-finance operating system for mobile recovery.</p>
+    <div class="bagstrip rv">
+      <img src="assets/bags/dehydration.png" alt="">
+      <img src="assets/bags/energy.png" alt="">
+      <img src="assets/bags/myers.png" alt="">
+      <img src="assets/bags/nad-vitality.png" alt="">
+      <img src="assets/bags/recovery.png" alt="">
+      <img src="assets/bags/immunity.png" alt="">
+    </div>
+    <div class="meta rv">Front end · Back end · Finance loop · Bay Area · 2026</div>
+  </div>
+</section>
+
+<!-- 2 · ONE-LINER -->
+<section class="slide" id="s2">
+  <img class="float-needle" src="assets/gen/motif-needle.jpg" alt="">
+  <div class="wrap">
+    <div class="eyebrow rv">The Future State</div>
+    <h2 class="rv">The site sells the visit.<br>The backend runs it.<br>The finance stack closes it.</h2>
+    <p class="lede rv">Post QuickBooks, Mercury, and Gusto, Avalon becomes one connected system: customers book in 60 seconds or less, nurses deliver care, admin sees the whole clinic, and the money, books, banking, and payroll reconcile behind the scenes.</p>
+  </div>
+</section>
+
+<!-- 3 · WHAT WE'RE BUILDING -->
+<section class="slide" id="s3">
+  <img class="float-bag rv" src="assets/bags/nad-vitality.png" alt="">
+  <div class="wrap">
+    <div class="eyebrow rv">What The Site Does</div>
+    <h2 class="rv">It turns intent<br>into a completed visit.</h2>
+    <p class="lede rv">The front end educates, prices, books, collects deposits, and captures the client. The backend schedules, charts, messages, charges, follows up, reconciles, and pays. The site is not a brochure; it is the operating surface for the clinic.</p>
+  </div>
+</section>
+
+<!-- 4 · WHY NOW -->
+<section class="slide" id="s4">
+  <div class="bg scrim-soft" style="background-image:url('assets/gen/motif-glass.jpg')"></div>
+  <div class="wrap">
+    <div class="eyebrow rv">Why Now</div>
+    <h2 class="rv">Premium front end.<br>Closed-loop operation.</h2>
+    <p class="sub rv">Most mobile recovery brands stop at a pretty website and a manual back office. Avalon connects the customer experience to the operational backend and the finance layer, so every booking becomes structured data, every visit becomes a record, and every dollar knows where to go.</p>
+    <div class="grid g3">
+      <div class="card"><div class="ba"><span>Website</span><span class="x">→</span><span class="a">Booking engine</span></div></div>
+      <div class="card"><div class="ba"><span>Manual ops</span><span class="x">→</span><span class="a">Backend workflow</span></div></div>
+      <div class="card"><div class="ba"><span>Loose dollars</span><span class="x">→</span><span class="a">Finance loop</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · THREE THINGS ONE MACHINE -->
+<section class="slide" id="s5">
+  <div class="wrap">
+    <div class="eyebrow rv">The Build</div>
+    <h2 class="rv">Four layers.<br>One machine.</h2>
+    <div class="grid g3">
+      <div class="card"><span class="ic">01 · Front End</span><h3>The storefront</h3><p>Menu, pricing, education, membership, booking, deposits, saved cards, and a 60-second-or-less checkout that no other mobile recovery service has.</p></div>
+      <div class="card"><span class="ic">02 · Backend</span><h3>The clinic OS</h3><p>Acuity, Attio, Stripe, Quo, and Resend coordinate EMR, CRM, dollars, text/call, and email so the visit moves cleanly from booking to follow-up.</p></div>
+      <div class="card"><span class="ic">03 · Finance</span><h3>The closed loop</h3><p>QuickBooks, Mercury, and Gusto turn completed visits into books, banking, reconciliation, payroll, and admin visibility.</p></div>
+      <div class="card"><span class="ic">04 · Playbook</span><h3>The growth system</h3><p>Marketing, events, partnerships, venues, and growth encoded around the service so a city launch is repeatable, trackable, and teachable.</p></div>
+    </div>
+    <p class="big rv">Together: a <span class="accent">clinic-in-a-browser.</span></p>
+  </div>
+</section>
+
+<!-- 6 · EXPERIENCE -->
+<section class="slide" id="s6">
+  <div class="wrap">
+    <div class="eyebrow rv">Customer Front End</div>
+    <h2 class="rv">The customer knows<br>what to buy and books fast.</h2>
+    <p class="sub rv">The public site does the first half of the work: explain the therapies, make the menu legible, show plans, collect details, save payment, and convert a visitor into a scheduled patient.</p>
+    <div class="shots rv">
+      <div class="browser"><div class="bar"><i></i><i></i><i></i></div><img src="assets/shots/home-desktop.jpg" alt="Home page"></div>
+      <div class="phone"><img src="assets/shots/home-mobile.jpg" alt="Home on mobile"></div>
+    </div>
+    <p class="caption rv">The front end is built for one outcome: landing to booked in 60 seconds or less.</p>
+  </div>
+</section>
+
+<!-- 7 · BOOKING -->
+<section class="slide" id="s7">
+  <div class="wrap">
+    <div class="eyebrow rv">Conversion Engine</div>
+    <h2 class="rv">Booked in<br>60 seconds or less.</h2>
+    <p class="sub rv">Five taps, start to finish — a <span class="accent">60-second-or-less checkout no other mobile recovery service has.</span> It turns the website from marketing into transaction infrastructure.</p>
+    <div class="shots rv">
+      <div class="browser"><div class="bar"><i></i><i></i><i></i></div><img src="assets/shots/book-desktop.jpg" alt="Booking flow"></div>
+      <div class="phone"><img src="assets/shots/book-mobile.jpg" alt="Booking on mobile"></div>
+    </div>
+    <div class="steps rv">
+      <div class="step"><span class="n">1</span><h4>Pick therapy</h4><p>IV, NAD+, or CBD.</p></div>
+      <div class="step"><span class="n">2</span><h4>Add boosts</h4><p>Vitamin & IM shots.</p></div>
+      <div class="step"><span class="n">3</span><h4>Choose a time</h4><p>Live availability.</p></div>
+      <div class="step"><span class="n">4</span><h4>Where to</h4><p>Home, hotel, office.</p></div>
+      <div class="step"><span class="n">5</span><h4>Deposit</h4><p>$50 locks it in.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · THE MENU -->
+<section class="slide" id="s8">
+  <div class="wrap">
+    <div class="eyebrow rv">The Menu</div>
+    <h2 class="rv">The menu is structured data.</h2>
+    <p class="sub rv">Every IV, NAD+ dose, CBD therapy, boost, IM shot, price, membership discount, and deposit rule becomes something the backend can schedule, charge, track, and report on.</p>
+    <div class="bagstrip sm rv">
+      <img src="assets/bags/dehydration.png" alt=""><img src="assets/bags/energy.png" alt="">
+      <img src="assets/bags/immunity.png" alt=""><img src="assets/bags/beauty.png" alt="">
+      <img src="assets/bags/myers.png" alt=""><img src="assets/bags/recovery.png" alt="">
+      <img src="assets/bags/jet-lag.png" alt=""><img src="assets/bags/night-out.png" alt="">
+      <img src="assets/bags/nad-750.png" alt=""><img src="assets/bags/cbd-66.png" alt="">
+    </div>
+    <p class="caption rv">Hydration · Energy · Immunity · Beauty · Myers' · Recovery · Travel · Post-Night-Out · NAD+ · CBD — customer-facing catalog, backend-ready data.</p>
+  </div>
+</section>
+
+<!-- 9 · PLANS & PAYMENTS -->
+<section class="slide" id="s9">
+  <div class="wrap">
+    <div class="eyebrow rv">Plans &amp; Payments</div>
+    <h2 class="rv">Deposit, balance,<br>membership, ledger.</h2>
+    <div class="shots rv">
+      <div class="browser"><div class="bar"><i></i><i></i><i></i></div><img src="assets/shots/plan-desktop.jpg" alt="Membership plans"></div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><span class="ic">$</span><h3>Small deposit</h3><p>Stripe collects the deposit and carries the balance into the visit workflow.</p></div>
+      <div class="card"><span class="ic">▭</span><h3>Card on file</h3><p>Saved payment makes the checkout fast and gives admin a clean path to settle the visit.</p></div>
+      <div class="card"><span class="ic">↻</span><h3>Memberships</h3><p>Plans connect repeat customers to pricing, future visits, revenue visibility, and retention.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · CLOSED LOOP -->
+<section class="slide" id="s10">
+  <div class="bg scrim-b" style="background-image:url('assets/gen/divider-stack.jpg')"></div>
+  <div class="wrap">
+    <div class="eyebrow rv">Post-Finance Workflow</div>
+    <h2 class="rv">Sell, schedule, chart,<br>reconcile, pay.</h2>
+    <p class="sub rv">After the finance integrations, one completed booking can move through the whole business: patient record, CRM record, payment, message history, receipt, bank activity, bookkeeping, and payroll.</p>
+    <div class="flow rv">
+      <span class="node">Checkout</span><span class="arr">→</span>
+      <span class="node">EMR</span><span class="arr">→</span>
+      <span class="node">CRM</span><span class="arr">→</span>
+      <span class="node">Payment</span><span class="arr">→</span>
+      <span class="node">Banking</span><span class="arr">→</span>
+      <span class="node">Books</span><span class="arr">→</span>
+      <span class="node back">Payroll</span>
+    </div>
+    <p class="caption rv">The first two users become fully served: clients get a fast, premium booking experience; admin gets the operating and finance truth in one flow.</p>
+  </div>
+</section>
+
+<!-- 11 · TOOLKIT -->
+<section class="slide" id="s11">
+  <div class="wrap">
+    <div class="eyebrow rv">The Full Stack</div>
+    <h2 class="rv">Every tool has a job.</h2>
+    <p class="sub rv">The point is not the logo list. The point is the handoff: front end to clinical backend to CRM to payment to finance.</p>
+    <div class="rv" style="margin-top:24px">
+      <div class="map"><span class="k">Avalon Site</span><span class="v">Customer front end for education, menu, pricing, membership, checkout, deposit, and account capture.</span><span class="tag">Front End</span></div>
+      <div class="map"><span class="k">Acuity</span><span class="v">EMR, scheduling, charting, availability, calendars, and patient records.</span><span class="tag">Clinical</span></div>
+      <div class="map"><span class="k">Attio</span><span class="v">CRM for clients, leads, partners, venues, events, follow-up, and growth pipeline.</span><span class="tag">Relationships</span></div>
+      <div class="map"><span class="k">Stripe</span><span class="v">Deposits, balances, cards on file, receipts, and the payment record.</span><span class="tag">Dollars</span></div>
+      <div class="map"><span class="k">Quo + Resend</span><span class="v">Text, call, booking confirmations, receipts, reminders, and transactional follow-up.</span><span class="tag">Comms</span></div>
+      <div class="map"><span class="k">Mercury</span><span class="v">Banking layer that gives every payment and payout a home.</span><span class="tag">Banking</span></div>
+      <div class="map"><span class="k">QuickBooks</span><span class="v">Books, categories, reconciliation, reporting, and owner visibility.</span><span class="tag">Books</span></div>
+      <div class="map"><span class="k">Gusto</span><span class="v">Payroll and nurse pay connected back to visits and completed work.</span><span class="tag">Payroll</span></div>
+    </div>
+    <p class="caption rv" style="margin-top:22px">Post integration, the stack is not a collection of apps. <span class="accent">It is a front-to-back operating system for clients and admin.</span></p>
+  </div>
+</section>
+
+<!-- 12 · BY THE NUMBERS -->
+<section class="slide" id="s12">
+  <div class="wrap">
+    <div class="eyebrow rv">By the Numbers</div>
+    <h2 class="rv">The website becomes<br>the control plane.</h2>
+    <p class="sub rv">The value is not just code volume. It is that the site, backend, and finance tools create a measurable operating loop.</p>
+    <div class="grid g4">
+      <div class="card"><span class="ic" style="font-size:2.6rem">60s</span><h3>Checkout</h3><p>A customer can go from interest to booked in 60 seconds or less.</p></div>
+      <div class="card"><span class="ic" style="font-size:2.6rem">9</span><h3>Core systems</h3><p>Site · Acuity · Attio · Stripe · Quo · Resend · Mercury · QuickBooks · Gusto.</p></div>
+      <div class="card"><span class="ic" style="font-size:2.6rem">2</span><h3>Primary users</h3><p>Clients get the premium front end. Admin gets the operational and finance backend.</p></div>
+      <div class="card"><span class="ic" style="font-size:2.6rem">1</span><h3>Closed loop</h3><p>Booking, charting, payment, banking, books, and payroll connected.</p></div>
+    </div>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card lit"><span class="ic" style="color:var(--gold)">Client side</span><h3>Browse, choose, book, pay</h3><p>The site removes friction from the buying moment and captures clean demand.</p></div>
+      <div class="card lit"><span class="ic">Admin side</span><h3>Operate, reconcile, pay</h3><p>The backend removes friction after the visit and turns activity into business control.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · WHAT IT'S WORTH -->
+<section class="slide" id="s13">
+  <div class="bg scrim-soft" style="background-image:url('assets/gen/motif-glass.jpg')"></div>
+  <div class="wrap">
+    <div class="eyebrow rv">What It's Worth</div>
+    <h2 class="rv">The post-finance<br>asset, valued.</h2>
+    <div class="grid g4">
+      <div class="card lit"><span class="ic">Today</span><div style="font-family:var(--head);font-size:clamp(2.4rem,4.6vw,3.6rem);line-height:1;letter-spacing:.01em">$1.2M</div><p style="margin-top:12px">Best-estimate value for the built site, backend workflows, integrations, creative system, and IP already in place. Range: $0.75M-$1.5M.</p></div>
+      <div class="card lit"><span class="ic" style="color:var(--gold)">Post finance loop</span><div style="font-family:var(--head);font-size:clamp(2.4rem,4.6vw,3.6rem);line-height:1;letter-spacing:.01em;color:var(--cyan)">$4.5M</div><p style="margin-top:12px">Best-estimate value once QuickBooks, Mercury &amp; Gusto connect the operating backend to banking, books, reconciliation, and payroll. Range: $3M-$6M.</p></div>
+    </div>
+    <p class="caption rv">Estimated on replacement cost, working IP, operational leverage, and early-stage platform value.</p>
+  </div>
+</section>
+
+<!-- 14 · HOW WE SCALE -->
+<section class="slide" id="s14">
+  <div class="bg scrim-l" style="background-image:url('assets/gen/divider-cities.jpg')"></div>
+  <div class="wrap">
+    <div class="eyebrow rv">How We Scale</div>
+    <h2 class="rv">SF is the master copy.</h2>
+    <p class="lede rv">Once the site and finance loop are connected, San Francisco becomes the operating template: front end, backend, finance stack, playbook, marketing, events, partnerships, venues, and growth all captured in one repeatable system.</p>
+    <p class="big rv"><span class="accent">Configuration, not construction.</span><br>Launch a city in a day, not a quarter.</p>
+  </div>
+</section>
+
+<!-- 15 · WHERE IT GOES -->
+<section class="slide" id="s15">
+  <div class="wrap">
+    <div class="eyebrow rv">Where It Goes</div>
+    <h2 class="rv">From website<br>to operating system.</h2>
+    <div class="rv" style="margin-top:24px">
+      <div class="map"><span class="k">Front end</span><span class="v">The customer understands the offer, chooses the right therapy, books in 60 seconds or less, and pays the deposit.</span><span class="tag">Client</span></div>
+      <div class="map"><span class="k">Backend</span><span class="v">The visit lands in EMR, CRM, payments, text/call, and email without admin retyping the business.</span><span class="tag">Ops</span></div>
+      <div class="map"><span class="k">Finance</span><span class="v">QuickBooks, Mercury, and Gusto connect the visit to books, banking, reconciliation, and payroll.</span><span class="tag">Admin</span></div>
+      <div class="map"><span class="k">Growth</span><span class="v">Marketing, events, partnerships, venues, and growth turn the operating system into a repeatable city-launch engine.</span><span class="tag">Scale</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · THE VISION -->
+<section class="slide" id="s16">
+  <div class="bg scrim-c" style="background-image:url('assets/gen/divider-cities.jpg')"></div>
+  <div class="wrap" style="text-align:center">
+    <div class="eyebrow rv" style="justify-content:center">The Vision</div>
+    <h2 class="rv">The site becomes<br>the business.</h2>
+    <p class="lede rv" style="margin:0 auto;max-width:42ch">Avalon is not just making a nicer booking page. It is turning the website into the front door, the backend into the clinic brain, and the finance stack into the system of record.</p>
+  </div>
+</section>
+
+<!-- 17 · CLOSE -->
+<section class="slide cover" id="s17">
+  <div class="wrap" style="text-align:center">
+    <div class="eyebrow rv" style="justify-content:center">Avalon Vitality</div>
+    <h1 class="rv" style="font-size:clamp(3rem,9vw,7rem)">Recovery<br>On Demand</h1>
+    <div class="bagstrip sm rv">
+      <img src="assets/bags/energy.png" alt=""><img src="assets/bags/myers.png" alt="">
+      <img src="assets/bags/nad-750.png" alt=""><img src="assets/bags/recovery.png" alt="">
+    </div>
+    <div class="meta rv" style="margin-top:34px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);font-size:13px">Front end · Backend · Finance loop · Growth playbook · 2026</div>
+  </div>
+</section>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dots=document.getElementById('dots'), counter=document.getElementById('counter'), bar=document.getElementById('bar');
+  slides.forEach((s)=>{const a=document.createElement('a');a.href='#'+s.id;dots.appendChild(a);});
+  const dotEls=[...dots.children];
+  let idx=0;
+  const setActive=(i)=>{idx=i;counter.textContent=String(i+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');dotEls.forEach((d,j)=>d.classList.toggle('on',j===i));};
+
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');setActive(slides.indexOf(e.target));}});},{threshold:.4});
+  slides.forEach(s=>io.observe(s));
+
+  // bulletproof reveal: never leave a slide near the viewport hidden
+  const reveal=()=>{slides.forEach(s=>{const r=s.getBoundingClientRect(); if(r.top<innerHeight*0.85 && r.bottom>innerHeight*0.15) s.classList.add('in');});};
+  const se=document.scrollingElement||document.documentElement;
+  const onScroll=()=>{bar.style.width=(se.scrollTop/(se.scrollHeight-se.clientHeight)*100)+'%'; reveal();};
+  addEventListener('scroll',onScroll,{passive:true});
+  requestAnimationFrame(()=>{slides[0].classList.add('in'); const h=location.hash&&document.querySelector(location.hash); setActive(h?slides.indexOf(h):0); reveal();});
+  setTimeout(reveal,300); onScroll();
+
+  const go=(n)=>{const t=Math.max(0,Math.min(slides.length-1,n));slides[t].scrollIntoView({behavior:'smooth'});};
+  addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();go(idx+1);}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(idx-1);}
+    else if(e.key==='Home'){e.preventDefault();go(0);}
+    else if(e.key==='End'){e.preventDefault();go(slides.length-1);}
+  });
+</script>
+</body>
+</html>

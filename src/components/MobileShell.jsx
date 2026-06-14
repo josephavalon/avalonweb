@@ -5,7 +5,7 @@ export default function MobileShell() {
   return (
     <>
       <AvalonStaticBackdrop />
-      <Navbar mobileGlobal />
+      <Navbar globalShell />
     </>
   );
 }

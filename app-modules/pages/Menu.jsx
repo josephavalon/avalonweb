@@ -236,8 +236,7 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
   const toggle = onToggle || (() => setLocalOpen((value) => !value));
 
   return (
-    <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] bg-background/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.08),transparent_38%)]" />
+    <div className="relative">
       <button
         type="button"
         onClick={toggle}
@@ -301,10 +300,7 @@ export default function Menu() {
 
       <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
         <section className="relative">
-          <div
-            className="av-glass-card relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/38 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:max-w-3xl md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-0"
-          >
-            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--foreground)/0.10),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.052),transparent_54%,hsl(var(--foreground)/0.026))] md:hidden" />
+          <div className="relative md:max-w-3xl">
             <p className="relative mb-3 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Choose a therapy base</p>
             <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
               IV Therapy

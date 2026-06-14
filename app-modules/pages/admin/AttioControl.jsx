@@ -15,7 +15,7 @@ import {
   Star,
   UserRoundCheck,
 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
 import { CLIENTS, APPOINTMENTS } from '@/fixtures/adminMockData';
 import { FOLLOWUPS, REQUESTS } from '@/fixtures/commandMockData';
@@ -330,8 +330,8 @@ export default function AttioControl() {
   };
 
   return (
-    <AdminLayout>
-      <PageShell
+    <AdminShell title="CRM">
+      <PageShell embedded
         eyebrow="Attio Relationship Layer"
         title="CRM Control"
         subtitle="Relationship state only. No clinical notes."
@@ -446,6 +446,6 @@ export default function AttioControl() {
           </div>
         </div>
       </PageShell>
-    </AdminLayout>
+    </AdminShell>
   );
 }
