@@ -78,9 +78,12 @@ export default function ExitStoreDialog({ open, onKeepShopping, onExit }) {
               type="button"
               aria-label="Keep shopping"
               onClick={onKeepShopping}
-              className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full border border-white/20 text-white/90 transition-colors hover:bg-white/10"
+              /* 44px hit area for touch; inner span keeps the 28px visual circle */
+              className="group absolute right-1.5 top-1.5 grid h-11 w-11 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
-              <X className="h-3.5 w-3.5" />
+              <span className="grid h-7 w-7 place-items-center rounded-full border border-white/20 text-white/90 transition-colors group-hover:bg-white/10">
+                <X className="h-3.5 w-3.5" />
+              </span>
             </button>
 
             <h2
