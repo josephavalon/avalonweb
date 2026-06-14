@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle, ArrowLeft, ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint,
-  LockKeyhole, Mail, MailCheck, ShieldCheck, Smartphone,
+  LockKeyhole, Mail, MailCheck, ShieldCheck, Smartphone, UserPlus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
+import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -59,7 +60,7 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, autoCom
           autoCorrect="off"
           spellCheck={false}
           placeholder={placeholder}
-          className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 py-4 font-body text-[17px] font-semibold text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07]"
+          className="min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 py-3 font-body text-[16px] font-semibold text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07] md:min-h-[46px] md:py-2.5"
         />
         {children}
       </div>
@@ -92,7 +93,7 @@ function SubmitButton({ loading, idle, busy }) {
       type="submit"
       disabled={loading}
       whileTap={{ scale: 0.985 }}
-      className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
+      className="flex min-h-[54px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45 md:min-h-[48px]"
     >
       <span>{loading ? busy : idle}</span>
       {loading ? (
@@ -202,6 +203,10 @@ export default function Login({ defaultAudience = 'patient' }) {
 
   const [audience, setAudience] = useState(defaultAudience === 'admin' ? 'admin' : 'patient');
   const isAdmin = audience === 'admin';
+  // Patient-facing tab: 'returning' (sign in) or 'new' (create account). The
+  // 'nurse' tab is a nav action, not a persistent mode — it routes to /nurses.
+  const [mode, setMode] = useState('returning');
+  const isNew = !isAdmin && mode === 'new';
 
   // 'methods' is the passwordless launchpad; 'email'/'phone' are the expanded forms.
   const [view, setView] = useState('methods');
@@ -245,6 +250,21 @@ export default function Login({ defaultAudience = 'patient' }) {
   const switchAudience = (next) => {
     if (next === audience) return;
     setAudience(next);
+    setMode('returning');
+    setView('methods');
+    setFieldError('');
+    setLinkSent('');
+    setOtpSent(false);
+    setOtp('');
+    setPassword('');
+  };
+
+  // Patient tab switch. 'nurse' routes away to the coming-soon portal; the other
+  // tabs swap the card body in place and clear any in-flight sign-in state.
+  const switchMode = (next) => {
+    if (next === 'nurse') { navigate('/nurses'); return; }
+    if (next === mode) return;
+    setMode(next);
     setView('methods');
     setFieldError('');
     setLinkSent('');
@@ -337,10 +357,14 @@ export default function Login({ defaultAudience = 'patient' }) {
   };
 
   const displayError = fieldError || error;
-  const heading = isAdmin ? ['Admin', 'Sign In'] : ['Welcome', 'Back'];
+  const heading = isAdmin
+    ? ['Admin', 'Sign In']
+    : isNew
+      ? ['New', 'Customer']
+      : ['Welcome', 'Back'];
 
   const emailForm = (
-    <form onSubmit={handleEmailLink} className="space-y-4" noValidate>
+    <form onSubmit={handleEmailLink} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-email"
         label={isAdmin ? 'Admin email' : 'Email'}
@@ -356,7 +380,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   );
 
   const phoneForm = (
-    <form onSubmit={handlePhone} className="space-y-4" noValidate>
+    <form onSubmit={handlePhone} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-phone"
         label="Phone"
@@ -395,7 +419,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   // ID + Passcode. Passwordless methods can't reach a backend offline, so this
   // is the only path the beta surfaces.
   const demoForm = (
-    <form onSubmit={handleDemoSubmit} className="space-y-4" noValidate>
+    <form onSubmit={handleDemoSubmit} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-identifier"
         label={isAdmin ? 'Operator ID' : 'Client ID or Email'}
@@ -437,14 +461,14 @@ export default function Login({ defaultAudience = 'patient' }) {
     body = demoForm;
   } else if (view === 'email') {
     body = (
-      <div className="space-y-4">
+      <div className="space-y-4 md:space-y-3">
         <BackRow label="All sign-in options" onClick={() => { setView('methods'); setFieldError(''); }} />
         {emailForm}
       </div>
     );
   } else if (view === 'phone') {
     body = (
-      <div className="space-y-4">
+      <div className="space-y-4 md:space-y-3">
         <BackRow label="All sign-in options" onClick={() => { setView('methods'); setOtpSent(false); setOtp(''); setFieldError(''); }} />
         {phoneForm}
       </div>
@@ -452,7 +476,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   } else if (isAdmin) {
     // Admin, Supabase: operations-only — passkey + email link, no social.
     body = (
-      <div className="space-y-4">
+      <div className="space-y-4 md:space-y-3">
         <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
         <Divider />
         {emailForm}
@@ -481,7 +505,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   }
 
   const footer = isAdmin ? (
-    <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5">
+    <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5 md:mt-4 md:pt-4">
       <button
         type="button"
         onClick={() => switchAudience('patient')}
@@ -491,47 +515,42 @@ export default function Login({ defaultAudience = 'patient' }) {
       </button>
     </div>
   ) : (
-    <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5">
-      <Link
-        to="/signup"
-        className="flex min-h-[54px] items-center justify-between rounded-2xl border border-foreground/[0.12] bg-background/35 px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
-      >
-        <span>Create Account</span>
-        <ArrowRight className="h-4 w-4" strokeWidth={2} />
-      </Link>
-      <Link
-        to="/book"
-        className="flex min-h-[54px] items-center justify-between rounded-2xl border border-foreground/[0.12] bg-background/35 px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
-      >
-        <span>Book A Visit</span>
-        <ArrowRight className="h-4 w-4" strokeWidth={2} />
-      </Link>
+    <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5 md:mt-4 md:pt-4">
       <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-        <Link
-          to="/forgot"
-          className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
-        >
-          Forgot? Email me a link
-        </Link>
+        {!isNew && (
+          <Link
+            to="/forgot"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+          >
+            Forgot? Email me a link
+          </Link>
+        )}
         <a
           href="mailto:support@avalonvitality.co"
           className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
         >
           Need help?
         </a>
+        <button
+          type="button"
+          onClick={() => switchAudience('admin')}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+        >
+          Avalon staff? Sign in
+        </button>
       </div>
     </div>
   );
 
   return (
-    <div className="relative min-h-screen min-h-dvh overflow-hidden bg-background px-4 py-4 text-foreground md:px-8 md:py-8">
+    <div className="relative min-h-screen min-h-dvh overflow-y-auto bg-background px-4 py-4 text-foreground md:px-8 md:py-8">
       <div className="pointer-events-none fixed inset-0 opacity-70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--foreground)/0.10),transparent_30%),linear-gradient(180deg,hsl(var(--foreground)/0.035),transparent_42%)]" />
       </div>
 
       <main className="relative mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center">
-        <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7">
-          <div className="mb-6 flex items-center justify-between gap-4">
+        <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7 md:p-6">
+          <div className="mb-6 flex items-center justify-between gap-4 md:mb-4">
             <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-opacity hover:opacity-70">
               <span className="block font-heading text-[19px] leading-none tracking-[0.24em] text-foreground">AVALON</span>
               <span className="mt-1 block font-body text-[8px] uppercase tracking-[0.38em] text-foreground/58">
@@ -539,23 +558,29 @@ export default function Login({ defaultAudience = 'patient' }) {
               </span>
             </Link>
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
-              {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
+              {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
             </span>
           </div>
 
-          <div className="mb-5">
-            <SegmentedToggle
-              options={[{ key: 'patient', label: 'Patient' }, { key: 'admin', label: 'Admin' }]}
-              value={audience}
-              onChange={switchAudience}
-            />
-          </div>
+          {!isAdmin && (
+            <div className="mb-5 md:mb-4">
+              <SegmentedToggle
+                options={[
+                  { key: 'returning', label: 'Returning' },
+                  { key: 'new', label: 'New' },
+                  { key: 'nurse', label: 'Nurse' },
+                ]}
+                value={mode}
+                onChange={switchMode}
+              />
+            </div>
+          )}
 
-          <div className="mb-6">
-            <h1 className="font-heading text-[3.15rem] uppercase leading-[0.86] tracking-tight text-foreground sm:text-[3.6rem]">
+          <div className="mb-6 md:mb-4">
+            <h1 className="font-heading text-[2.5rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[2rem]">
               {heading[0]}<br />{heading[1]}
             </h1>
-            {supabaseMode && (
+            {supabaseMode && !isNew && (
               <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
                 {isAdmin
                   ? 'Operations-only. Use your passkey or a secure email link.'
@@ -564,7 +589,7 @@ export default function Login({ defaultAudience = 'patient' }) {
             )}
           </div>
 
-          {body}
+          {isNew ? <NewCustomerPanel showHeading={false} bordered={false} /> : body}
           {footer}
         </section>
       </main>

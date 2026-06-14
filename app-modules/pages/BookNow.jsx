@@ -25,6 +25,7 @@ import {
   Mail,
   Moon,
   Minus,
+  X,
   Navigation,
   Pencil,
   Phone,
@@ -190,7 +191,7 @@ const OUTCOMES = [
 		    key: 'cbd',
 		    label: 'CBD',
 		    sub: 'Review gated.',
-		    icon: Leaf,
+		    icon: CannabisLeaf,
 		    productKeys: ['cbd', 'recovery', 'hydration'],
 		  },
 		  {
@@ -242,7 +243,7 @@ const THERAPY_GROUPS = [
     sub: '5 therapies',
     desc: 'Calm infusion with zero THC.',
     duration: '60 min',
-    icon: Leaf,
+    icon: CannabisLeaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-vitality', 'cbd-99mg', 'cbd-132mg'],
   },
   {
@@ -1147,6 +1148,8 @@ function DesktopOrderRail({
   canGoBack,
   onBack,
   onNext,
+  onRemoveAddon,
+  onClearOrder,
 }) {
   const hasTherapySelection = Boolean(product);
   const displaySubtotal = hasTherapySelection ? subtotal : 0;
@@ -1160,8 +1163,6 @@ function DesktopOrderRail({
 
   const rows = [
     ['Therapy', hasTherapySelection ? product.label : 'Not selected'],
-    ['IV Add-ons', hasTherapySelection && selectedIvAddons.length ? selectedIvAddons.map((item) => item.label).join(', ') : 'None'],
-    ['IM Add-ons', hasTherapySelection && selectedImAddons.length ? selectedImAddons.map((item) => item.label).join(', ') : 'None'],
     ['Date', dateLabel],
     ['Time', timeLabel],
   ];
@@ -1170,7 +1171,18 @@ function DesktopOrderRail({
     <aside className="relative h-full min-h-0 overflow-x-hidden overflow-y-auto rounded-[1.25rem] border border-foreground/10 bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_72px_hsl(var(--foreground)/0.11)] backdrop-blur-2xl 2xl:p-3">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
-        <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Order</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Order</p>
+          {hasTherapySelection && (
+            <button
+              type="button"
+              onClick={onClearOrder}
+              className="font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85 2xl:text-[10px]"
+            >
+              Clear
+            </button>
+          )}
+        </div>
         <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
             <div key={label} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[76px_minmax(0,1fr)] 2xl:py-2">
@@ -1179,6 +1191,24 @@ function DesktopOrderRail({
             </div>
           ))}
         </div>
+        {hasTherapySelection && selectedAddons.length > 0 && (
+          <div className="mt-1.5 space-y-1">
+            {selectedAddons.map((item) => (
+              <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
+                <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground/74 2xl:text-[11px]">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                <span className="shrink-0 font-body text-[9px] font-black text-foreground/52 2xl:text-[10px]">{currency(item.price)}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemoveAddon(item.label)}
+                  aria-label={`Remove ${item.label}`}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-foreground/40 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
           <div className="flex items-center justify-between gap-3">
             <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Subtotal</p>
@@ -1252,6 +1282,8 @@ function DesktopBookingFrame({
   onBack,
   onNext,
   onStepSelect,
+  onRemoveAddon,
+  onClearOrder,
   children,
 }) {
   return (
@@ -1296,6 +1328,8 @@ function DesktopBookingFrame({
           canGoBack={canGoBack}
           onBack={onBack}
           onNext={onNext}
+          onRemoveAddon={onRemoveAddon}
+          onClearOrder={onClearOrder}
         />
       </div>
     </section>
@@ -4082,6 +4116,20 @@ export default function BookNow() {
     }));
   };
 
+  // Cart edit/clear for the Your Order panel. removeAddon drops one add-on line;
+  // clearOrder wipes therapy + add-ons (the cost) and returns to step 1. Neither
+  // touches checkout/payment logic or date/time/location.
+  const removeAddon = (label) => {
+    setError('');
+    setState((current) => ({ ...current, addOns: current.addOns.filter((item) => item !== label) }));
+  };
+
+  const clearOrder = () => {
+    setError('');
+    setState((current) => ({ ...current, outcome: '', productKey: '', addOns: [], addOnDecision: false }));
+    setStep(0);
+  };
+
   const chooseNoAddons = () => {
     setError('');
     setActiveAddonGroup('');
@@ -5487,6 +5535,8 @@ export default function BookNow() {
               onBack={back}
               onNext={step < LAST_STEP ? next : submit}
               onStepSelect={goToStep}
+              onRemoveAddon={removeAddon}
+              onClearOrder={clearOrder}
             >
               {renderUniversalStep()}
             </DesktopBookingFrame>}

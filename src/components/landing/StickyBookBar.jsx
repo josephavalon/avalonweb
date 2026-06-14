@@ -31,7 +31,9 @@ export default function StickyBookBar() {
       return undefined;
     }
 
-    const targets = Array.from(document.querySelectorAll('.av-hero-action'));
+    // Gate on the white primary Book button specifically: the sticky bar stays
+    // hidden until that button is scrolled out of view.
+    const targets = Array.from(document.querySelectorAll('.av-hero-action-primary'));
     if (!targets.length) {
       setHeroActionVisible(false);
       return undefined;

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
+import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -168,6 +169,7 @@ export default function Signup() {
               Need help getting started?
             </a>
           </div>
+          {!sentTo && <NewCustomerPanel showCta={false} showHeading={false} />}
         </section>
       </main>
     </div>

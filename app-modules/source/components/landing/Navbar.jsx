@@ -80,6 +80,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const internalToolRoute = location.pathname.startsWith('/admin')
     || location.pathname.startsWith('/provider')
     || location.pathname.startsWith('/members');
+  // Auth screens own their chrome (each draws its own AVALON header), so the
+  // marketing bar must not render over them — it crowds the card on desktop.
+  const authRoute = ['/login', '/signup', '/nurses', '/forgot', '/forgot-password']
+    .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   const navVisible = true;
   const mobileLinks = [
     ...mainLinks,
@@ -93,7 +97,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   // scattered across pages now draw nothing.
   if (!globalShell) return null;
   // Admin / provider / member areas own their chrome — no marketing bar there.
-  if (internalToolRoute) return null;
+  if (internalToolRoute || authRoute) return null;
 
   return (
     <motion.nav
