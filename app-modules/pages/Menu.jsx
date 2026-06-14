@@ -236,7 +236,7 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
   const toggle = onToggle || (() => setLocalOpen((value) => !value));
 
   return (
-    <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
+    <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] bg-background/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.08),transparent_38%)]" />
       <button
         type="button"
@@ -244,7 +244,7 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
         className="relative flex min-h-[76px] w-full items-center gap-3 px-4 text-left transition-colors hover:bg-foreground/[0.035] md:min-h-[88px] md:px-5"
         aria-expanded={open}
       >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-foreground/12 bg-foreground/[0.055] text-foreground">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-foreground/[0.055] text-foreground">
           <Icon className="h-5 w-5" strokeWidth={2.35} />
         </span>
         <span className="min-w-0 flex-1 font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground md:text-[2.55rem]">{title}</span>
