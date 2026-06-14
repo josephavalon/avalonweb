@@ -17,7 +17,8 @@ import { captureAttribution, trackPageView } from '@/lib/analytics';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 function RequireAuth({ children, allowedRoles }) {
-  const { user } = useAuthStore();
+  const { user, loading, authBackend } = useAuthStore();
+  if (loading && authBackend === 'supabase') return <RouteFallback />;
   if (!user) return <Navigate to="/login" replace />;
   const role = user.role ?? null;
   if (allowedRoles && !allowedRoles.includes(role)) {

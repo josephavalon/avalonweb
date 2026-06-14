@@ -83,6 +83,7 @@ const clientAnalyticsSource = readFileSync(new URL('../src/lib/analytics.js', im
 const serverAnalyticsSource = readFileSync(new URL('../api/analytics.js', import.meta.url), 'utf8');
 const reverseGeocodeSource = readFileSync(new URL('../api/reverse-geocode.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
+const messagingBaseMigrationSource = readFileSync(new URL('../supabase/migrations/002_messages.sql', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
 const launchMessagingMigrationSource = readFileSync(new URL('../supabase/migrations/011_launch_messaging_roles.sql', import.meta.url), 'utf8');
@@ -307,6 +308,8 @@ assert(!chargeBalanceSource.includes('json({ error: lookupErr.message })'), 'Int
 assert(!bookingEmailSource.includes('return { skipped: true'), 'Fulfillment emails must not silently mark skipped sends as delivered');
 assert(bookingEmailSource.includes('email_delivery_skipped'), 'Fulfillment email skips must become reconciliation-visible failures');
 assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');
+assert(appSource.includes('const { user, loading, authBackend } = useAuthStore()'), 'Protected routes must read Supabase auth loading state');
+assert(appSource.includes("if (loading && authBackend === 'supabase') return <RouteFallback />"), 'Protected routes must wait for Supabase session hydration before redirecting');
 assert(adminBookingsSource.includes('admin_bookings_read'), 'Admin booking PHI reads must write audit events');
 assert(adminBookingsSource.includes('phiTouched: true'), 'Admin booking read audit must mark PHI touched');
 assert(adminBookingsSource.includes('safeLogContext'), 'Admin booking read failures must sanitize error logs');
@@ -458,6 +461,10 @@ assert(viteConfigSource.includes('VITE_AVALON_DEMO_PASSWORD:""'), 'Live API buil
 assert(privateAuthTriggerMigrationSource.includes('function app_private.handle_new_user()'), 'Auth profile trigger must live in the private schema');
 assert(privateAuthTriggerMigrationSource.includes('drop function if exists public.handle_new_user()'), 'Auth profile trigger migration must remove the public security definer function');
 assert(privateAuthTriggerMigrationSource.includes('revoke execute on function app_private.handle_new_user() from authenticated'), 'Private auth trigger must not be directly executable by authenticated API roles');
+assert(!messagingBaseMigrationSource.includes('cp.conversation_id = conversation_id'), 'Base messaging RLS must not compare participant rows to their own conversation_id');
+assert(messagingBaseMigrationSource.includes('cp.conversation_id = conversations.id'), 'Conversation RLS must qualify the outer conversation id');
+assert(messagingBaseMigrationSource.includes('cp.conversation_id = conversation_participants.conversation_id'), 'Participant-list RLS must qualify the outer participant conversation id');
+assert(messagingBaseMigrationSource.includes('cp.conversation_id = messages.conversation_id'), 'Message RLS must qualify the outer message conversation id');
 assert(launchMessagingMigrationSource.includes("app_private.profile_role() in ('admin', 'client', 'nurse')"), 'Messaging RLS must allow launch client/admin/nurse conversation creation');
 assert(launchMessagingMigrationSource.includes("app_private.profile_role() = 'client'"), 'Messaging RLS must support client-started support conversations');
 assert(launchMessagingMigrationSource.includes("role in ('admin', 'nurse')"), 'Messaging support directory must target launch nurse/admin roles');

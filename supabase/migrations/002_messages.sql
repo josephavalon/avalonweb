@@ -84,7 +84,7 @@ create policy "participants can view conversation"
   using (
     exists (
       select 1 from public.conversation_participants cp
-      where cp.conversation_id = id and cp.user_id = auth.uid()
+      where cp.conversation_id = conversations.id and cp.user_id = auth.uid()
     )
   );
 
@@ -94,7 +94,8 @@ create policy "participants can view participant list"
   using (
     exists (
       select 1 from public.conversation_participants cp
-      where cp.conversation_id = conversation_id and cp.user_id = auth.uid()
+      where cp.conversation_id = conversation_participants.conversation_id
+        and cp.user_id = auth.uid()
     )
   );
 
@@ -104,7 +105,7 @@ create policy "participants can view messages"
   using (
     exists (
       select 1 from public.conversation_participants cp
-      where cp.conversation_id = conversation_id and cp.user_id = auth.uid()
+      where cp.conversation_id = messages.conversation_id and cp.user_id = auth.uid()
     )
   );
 
@@ -115,7 +116,7 @@ create policy "participants can insert messages"
     sender_id = auth.uid() and
     exists (
       select 1 from public.conversation_participants cp
-      where cp.conversation_id = conversation_id and cp.user_id = auth.uid()
+      where cp.conversation_id = messages.conversation_id and cp.user_id = auth.uid()
     )
   );
 
