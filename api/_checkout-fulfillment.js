@@ -492,6 +492,14 @@ export function buildStripeCheckoutMetadata({
     planSignup: membership ? 'true' : '',
     planMonthlyPriceCents: membership ? String(Math.round(Number(membership.price || 0) * 100)) : '',
     planFirstVisitDate: metadataValue(appointment.acuityDatetime),
+    // Multi-person manifest: peopleCount drives deposit scaling; peopleManifest
+    // is a JSON blob keyed by person id with each patient's IV + add-ons + DOB
+    // so fulfillment can intake every patient on the same visit. Stripe metadata
+    // is capped at 500 chars per value — 4 people × short fields fits easily.
+    peopleCount: String(appointment.peopleCount || 1),
+    peopleManifest: Array.isArray(appointment.peopleManifest) && appointment.peopleManifest.length > 0
+      ? metadataValue(JSON.stringify(appointment.peopleManifest).slice(0, 500))
+      : '',
   };
 }
 

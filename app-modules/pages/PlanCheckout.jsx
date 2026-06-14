@@ -67,6 +67,20 @@ export default function PlanCheckout() {
   const term = TERMS[termKey] || TERMS.monthly;
   const protocol = searchParams.get('protocol') || 'recovery';
   const sessions = Math.max(1, Number(searchParams.get('sessions')) || 1);
+  const peopleCount = Math.max(1, Math.min(4, Number(searchParams.get('people')) || 1));
+  // The manifest is JSON-encoded then URI-encoded by the builder. Decode lazily;
+  // a malformed param shouldn't break checkout (we just hide the per-person list).
+  const peopleManifest = useMemo(() => {
+    const raw = searchParams.get('plan');
+    if (!raw) return [];
+    try {
+      const decoded = JSON.parse(decodeURIComponent(raw));
+      return Array.isArray(decoded) ? decoded : [];
+    } catch (err) {
+      return [];
+    }
+  }, [searchParams]);
+  const isMultiPerson = peopleCount > 1;
 
   // Per-period charge: monthly × term months × (1 − discount). Monthly = monthly.
   const perPeriodTotal = Math.round(monthly * term.months * (1 - term.discount));
@@ -146,6 +160,8 @@ export default function PlanCheckout() {
             protocol,
             recurring: true,
             recurringTerm: term.billing,
+            peopleCount,
+            peopleManifest,
           },
           items: [],
         }),
@@ -159,13 +175,17 @@ export default function PlanCheckout() {
     }
   };
 
-  // $50 deposit today (like any first visit); the rest of the first period is
-  // collected after the visit, then the full price auto-bills every period.
-  const depositToday = Math.min(50, perPeriodTotal);
+  // $50/person deposit today (like any first visit); the rest of the first
+  // period is collected after the visit, then the full price auto-bills every
+  // period. Deposit scales with patients on the plan to match the marginal
+  // intake cost — one clinician sees all of them in a single household visit.
+  const depositToday = Math.min(50 * peopleCount, perPeriodTotal);
   const firstVisitBalance = Math.max(0, perPeriodTotal - depositToday);
   const renews = term.billing === 'monthly' ? 'every month' : `every ${term.label.toLowerCase()}`;
   const protocolName = protocol.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  const planLabel = `${protocolName} · ${term.label}${sessions > 1 ? ` · ${sessions} visits/mo` : ''}`;
+  const planLabel = isMultiPerson
+    ? `${peopleCount} patients · ${term.label}${sessions > 1 ? ` · ${sessions} visits/mo` : ''}`
+    : `${protocolName} · ${term.label}${sessions > 1 ? ` · ${sessions} visits/mo` : ''}`;
 
   return (
     <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
@@ -192,6 +212,28 @@ export default function PlanCheckout() {
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           className="av-glass-card mb-36 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-40 md:p-6"
         >
+          {isMultiPerson && peopleManifest.length > 0 && (
+            <div className="mb-4 rounded-xl border border-foreground/12 bg-foreground/[0.04] p-3">
+              <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/52">
+                On this plan
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {peopleManifest.map((person) => (
+                  <div key={person.id} className="flex items-center justify-between gap-2 font-body text-sm">
+                    <span className="text-foreground/82">
+                      <span className="font-black uppercase tracking-[0.06em] text-foreground/60 mr-2">{person.label}</span>
+                      {person.therapyLabel || 'IV pending'}
+                    </span>
+                    <span className="font-semibold text-foreground/72">{money(person.monthly)}/mo</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 font-body text-[11px] font-semibold text-foreground/52">
+                One nurse visit treats everyone on the plan.
+              </p>
+            </div>
+          )}
+
           {/* Schedule */}
           <p className="flex items-center gap-2 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">
             <CalendarClock className="h-4 w-4" /> Your recurring visit

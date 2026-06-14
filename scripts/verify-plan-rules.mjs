@@ -51,6 +51,23 @@ const amts = planAmounts(350);
 eq('deposit = 5000 cents', amts.depositCents, 5000);
 eq('balance = 30000 cents', amts.balanceDueCents, 30000);
 
+console.log('\nMulti-person one-time visit (2 people, $700 subtotal):');
+const oneTime2p = calculateLaunchPayment({ subtotal: 700, visitType: 'single', orderType: 'single', peopleCount: 2 });
+eq('deposit today is $100 (2 × $50)', oneTime2p.depositAmount, 100);
+eq('balance after visit is $600', oneTime2p.balanceDue, 600);
+eq('peopleCount echoes back', oneTime2p.peopleCount, 2);
+
+console.log('\nMulti-person plan signup (3 people, $750/mo):');
+const plan3p = calculateLaunchPayment({ subtotal: 750, visitType: 'subscription', orderType: 'subscription', subscriptionPrice: 750, peopleCount: 3 });
+eq('deposit today is $150 (3 × $50)', plan3p.depositAmount, 150);
+eq('balance after visit is $600', plan3p.balanceDue, 600);
+eq('paymentType marks deposit-first', plan3p.paymentType, 'subscription_deposit_first_month');
+
+console.log('\nPeopleCount is bounded sanely (zero/negative → 1):');
+const guard = calculateLaunchPayment({ subtotal: 200, visitType: 'single', peopleCount: 0 });
+eq('zero people coerced to 1', guard.peopleCount, 1);
+eq('deposit treated as 1 person', guard.depositAmount, 50);
+
 console.log('\nRecurring subscription starts AFTER the first visit:');
 const visit = new Date(Date.now() + 2 * 86400000); // 2 days out
 const te = trialEndUnix(visit.toISOString());

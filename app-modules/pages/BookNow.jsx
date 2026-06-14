@@ -36,6 +36,7 @@ import {
   Sparkles,
   Syringe,
   Thermometer,
+  Trash2,
   User,
   UserPlus,
   Users,
@@ -72,6 +73,13 @@ import {
   isValidCheckoutEmail,
   isValidCheckoutPhone,
 } from '@/lib/checkoutValidation';
+import {
+  PEOPLE_MAX,
+  createPerson,
+  personLabel as personLabelFor,
+  billablePeopleCount,
+} from '@/lib/peopleState';
+import PersonTabStrip from '@/components/store/PersonTabStrip';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
@@ -2703,6 +2711,61 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
   );
 }
 
+function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange }) {
+  // The order owner's name + DOB live on the top-level ContactConfirmCard. Here
+  // we collect a name + DOB for every OTHER person on the order — every IV
+  // needs an explicit patient identity for clinical intake + Rx attribution.
+  const additionalPeople = peopleBreakdown.filter((row) => row.person.id !== activePersonId);
+  if (additionalPeople.length === 0) return null;
+  return (
+    <div className="mb-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/58">
+          Patients on this visit
+        </span>
+        <span className="h-px flex-1 bg-foreground/12" />
+      </div>
+      {additionalPeople.map((row) => (
+        <div
+          key={row.person.id}
+          className="rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-2xl"
+        >
+          <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/62">
+            {row.label} · {row.product?.label || 'IV pending'}
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <label className="block">
+              <span className="block font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/58">
+                Patient name
+              </span>
+              <input
+                type="text"
+                value={row.person.name || ''}
+                onChange={(event) => onPersonChange(row.person.id, { name: event.target.value })}
+                placeholder="Full name"
+                autoComplete="off"
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-foreground/14 bg-background/60 px-3 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 focus:border-foreground/40 focus:outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="block font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/58">
+                Date of birth
+              </span>
+              <input
+                type="date"
+                value={row.person.dob || ''}
+                onChange={(event) => onPersonChange(row.person.id, { dob: event.target.value })}
+                max={new Date(Date.now() - 18 * 365 * 86400000).toISOString().slice(0, 10)}
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-foreground/14 bg-background/60 px-3 font-body text-sm font-semibold text-foreground focus:border-foreground/40 focus:outline-none"
+              />
+            </label>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SafetyFlagChoice({ value, onChange }) {
   const [open, setOpen] = useState(false);
   return (
@@ -3275,9 +3338,14 @@ function SummaryRail({
   actionDisabled = false,
   showAction = false,
   onAction,
+  peopleBreakdown = [],
+  peopleCount = 1,
+  onSelectPerson,
+  onRemovePerson,
 }) {
   const isSubscription = state.visitType === 'subscription';
   const subscriptionPrice = Number(plan.price || 0);
+  const isMultiPerson = peopleCount > 1;
   const [open, setOpen] = useState(false);
   return (
     <aside className="hidden lg:block">
@@ -3300,9 +3368,60 @@ function SummaryRail({
         <SmoothDisclosure open={open}>
         <div className="relative mt-5 space-y-4">
           <div>
-            <p className="font-heading text-4xl uppercase leading-none">{serviceLabel || product?.label || 'Select protocol'}</p>
+            <p className="font-heading text-4xl uppercase leading-none">
+              {isMultiPerson
+                ? `${peopleCount} people on this visit`
+                : serviceLabel || product?.label || 'Select protocol'}
+            </p>
             <p className="mt-1 font-body text-base font-medium text-foreground/64">{state.visitType === 'subscription' ? 'Monthly' : state.visitType === 'event' ? 'Group' : 'One-time'}</p>
           </div>
+          {isMultiPerson && peopleBreakdown.length > 0 && (
+            <div className="space-y-3">
+              {peopleBreakdown.map((row) => (
+                <div
+                  key={row.person.id}
+                  className="rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onSelectPerson?.(row.person.id)}
+                      className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/74 hover:text-foreground"
+                    >
+                      {row.label}
+                    </button>
+                    {peopleBreakdown.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => onRemovePerson?.(row.person.id)}
+                        className="rounded-full p-1 text-foreground/40 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                        aria-label={`Remove ${row.label}`}
+                        title={`Remove ${row.label}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {row.product ? (
+                    <div className="mt-2 space-y-1.5 font-body text-sm text-foreground/78">
+                      <div className="flex items-center justify-between gap-2">
+                        <span>{row.product.label}</span>
+                        <span className="font-semibold">{currency(row.ivPrice)}</span>
+                      </div>
+                      {row.addons.map((item) => (
+                        <div key={item.cartKey} className="flex items-center justify-between gap-2 text-foreground/64">
+                          <span>{item.type === 'im' ? `IM · ${item.label}` : item.label}</span>
+                          <span>{currency(Number(item.price || 0))}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 font-body text-sm text-foreground/52">No IV picked yet — tap to choose.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="grid gap-2 md:grid-cols-2">
             {[
               ['Due now', currency(dueNow)],
@@ -3358,11 +3477,20 @@ function SummaryRail({
   );
 }
 
+// Roster of people on this order. `productKey`/`addOns`/`addOnDecision` at the
+// top level remain the LIVE values for the currently active person — every
+// existing read/write in this file still works unchanged. The non-active
+// people's stashed selections live inside each `people[i]` entry; switching
+// the active person swaps the stash in/out. See switchActivePerson below.
+const DEFAULT_PERSON = createPerson(0);
+
 const defaultState = {
   draftVersion: BOOKING_DRAFT_VERSION,
   outcome: 'recover',
   visitType: 'one-time',
   productKey: '',
+  people: [DEFAULT_PERSON],
+  activePersonId: DEFAULT_PERSON.id,
   planKey: FEATURED_SUBSCRIPTION_TIER_KEY,
   subscriptionTerm: 'monthly',
   clientType: 'new',
@@ -3486,6 +3614,34 @@ export default function BookNow() {
       ? realAddress(fallback.address)
       : savedWebstoreAddress || realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
     const returningClient = signedInClient;
+    const resolvedProductKey = initialProtocolKey || savedProductKey || defaultState.productKey;
+    const resolvedAddOns = initialProtocolKey ? [] : savedProductKey ? (savedWebstore.addOns || []) : [];
+    const resolvedAddOnDecision = initialProtocolKey ? true : savedProductKey ? Boolean(savedWebstore.addOnDecision) : true;
+    // Roster reconstruction. If the saved draft already carries a people[] (new
+    // multi-person shape), use it directly and overlay the resolved active
+    // person's live values onto whichever entry is active. Otherwise wrap the
+    // legacy single-person selection into people[0].
+    let resolvedPeople;
+    let resolvedActiveId;
+    if (Array.isArray(savedWebstore.people) && savedWebstore.people.length > 0) {
+      const savedActiveId = savedWebstore.activePersonId
+        && savedWebstore.people.some((p) => p.id === savedWebstore.activePersonId)
+        ? savedWebstore.activePersonId
+        : savedWebstore.people[0].id;
+      resolvedActiveId = savedActiveId;
+      resolvedPeople = savedWebstore.people.map((p) => p.id === savedActiveId
+        ? { ...p, productKey: resolvedProductKey, addOns: resolvedAddOns, addOnDecision: resolvedAddOnDecision }
+        : p);
+    } else {
+      const seed = createPerson(0);
+      resolvedActiveId = seed.id;
+      resolvedPeople = [{
+        ...seed,
+        productKey: resolvedProductKey,
+        addOns: resolvedAddOns,
+        addOnDecision: resolvedAddOnDecision,
+      }];
+    }
     return {
       ...defaultState,
       clientType: returningClient ? 'returning' : 'new',
@@ -3500,12 +3656,14 @@ export default function BookNow() {
       emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || defaultState.emergencyContact,
       ...savedWebstore,
       outcome: initialOutcome?.key || savedWebstore.outcome || defaultState.outcome,
-      productKey: initialProtocolKey || savedProductKey || defaultState.productKey,
+      productKey: resolvedProductKey,
       visitType: initialSubscriptionPlan ? 'subscription' : savedWebstore.visitType || defaultState.visitType,
       planKey: initialSubscriptionPlan?.key || savedWebstore.planKey || defaultState.planKey,
       subscriptionTerm: initialSubscriptionPlan ? initialSubscriptionTerm.key : savedWebstore.subscriptionTerm || defaultState.subscriptionTerm,
-      addOns: initialProtocolKey ? [] : savedProductKey ? (savedWebstore.addOns || []) : [],
-      addOnDecision: initialProtocolKey ? true : savedProductKey ? Boolean(savedWebstore.addOnDecision) : true,
+      addOns: resolvedAddOns,
+      addOnDecision: resolvedAddOnDecision,
+      people: resolvedPeople,
+      activePersonId: resolvedActiveId,
     };
   });
   const [error, setError] = useState('');
@@ -3711,7 +3869,37 @@ export default function BookNow() {
     () => addonCatalog.all.filter((item) => state.addOns.includes(item.label)),
     [addonCatalog, state.addOns]
   );
-  const baseSubtotal = (product ? protocolPrice(product) : 0) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  // Per-person hydration: every person's add-on labels resolved against the
+  // catalog they would see for THEIR therapy. We then derive each person's
+  // subtotal and the roster total. When there's only one person these collapse
+  // to the same numbers as the single-person path, so existing UI is unchanged.
+  const peopleBreakdown = useMemo(() => {
+    return (peopleSnapshot || []).map((person, index) => {
+      const personProduct = person.productKey ? safeProtocol(getProductByKey(person.productKey)) : null;
+      const personCatalog = buildAddonCatalog(personProduct);
+      const personAddons = Array.isArray(person.addOns)
+        ? personCatalog.all.filter((item) => person.addOns.includes(item.label))
+        : [];
+      const ivPrice = personProduct ? protocolPrice(personProduct) : 0;
+      const addonsPrice = personAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
+      return {
+        person,
+        index,
+        product: personProduct,
+        addons: personAddons,
+        ivPrice,
+        addonsPrice,
+        subtotal: ivPrice + addonsPrice,
+        label: personLabelFor(person, index),
+      };
+    });
+  }, [peopleSnapshot]);
+  const multiPersonSubtotal = peopleBreakdown.reduce((sum, row) => sum + row.subtotal, 0);
+  const effectivePeopleCount = billablePeopleCount(peopleSnapshot);
+  const isMultiPerson = effectivePeopleCount > 1;
+  const baseSubtotal = isMultiPerson
+    ? multiPersonSubtotal
+    : (product ? protocolPrice(product) : 0) + selectedAddons.reduce((sum, item) => sum + Number(item.price || 0), 0);
   const customPlanSessions = Math.max(1, Number(state.customPlanSessions || 2));
   const customPlanEstimate = Math.max(150, baseSubtotal || protocolPrice(product) || 250) * customPlanSessions;
   // Plans builder handoff: /book?subscription=custom&price=<monthly> bills the
@@ -3738,6 +3926,7 @@ export default function BookNow() {
     subscriptionPrice: activePlanPrice,
     isGroupVisit,
     hasKnownPrice: !groupContactRequired,
+    peopleCount: effectivePeopleCount,
   });
   const dueNowAmount = manualBilling ? 0 : launchPayment.depositAmount;
   const balanceDue = manualBilling ? subtotal : launchPayment.balanceDue;
@@ -4179,6 +4368,84 @@ export default function BookNow() {
     }));
   };
 
+  // Person roster handlers. The "live" selection (state.productKey + addOns +
+  // addOnDecision) is always the active person's; everyone else's is stashed
+  // inside state.people[i]. Switching active person swaps those two columns.
+  const switchActivePerson = (nextId) => {
+    setError('');
+    setState((current) => {
+      if (!nextId || nextId === current.activePersonId) return current;
+      const target = current.people.find((p) => p.id === nextId);
+      if (!target) return current;
+      return {
+        ...current,
+        activePersonId: nextId,
+        productKey: target.productKey || '',
+        addOns: Array.isArray(target.addOns) ? target.addOns : [],
+        addOnDecision: target.addOnDecision ?? true,
+        people: current.people.map((p) => p.id === current.activePersonId
+          ? { ...p, productKey: current.productKey, addOns: current.addOns, addOnDecision: current.addOnDecision }
+          : p),
+      };
+    });
+    setActiveAddonGroup('');
+  };
+
+  const addNewPerson = () => {
+    setError('');
+    setState((current) => {
+      if (current.people.length >= PEOPLE_MAX) return current;
+      const fresh = createPerson(current.people.length);
+      const stashed = current.people.map((p) => p.id === current.activePersonId
+        ? { ...p, productKey: current.productKey, addOns: current.addOns, addOnDecision: current.addOnDecision }
+        : p);
+      return {
+        ...current,
+        people: [...stashed, fresh],
+        activePersonId: fresh.id,
+        productKey: '',
+        addOns: [],
+        addOnDecision: true,
+      };
+    });
+    setActiveAddonGroup('');
+    // A new person lands on Therapy (step 1) — Outcome (step 0) only sets a
+    // recommended default for person 1; additional people pick therapy directly.
+    setStep(1);
+  };
+
+  const deletePerson = (idToRemove) => {
+    setError('');
+    setState((current) => {
+      if (!idToRemove || current.people.length <= 1) return current;
+      const filtered = current.people.filter((p) => p.id !== idToRemove);
+      // If we removed the active person, jump to the first remaining.
+      if (idToRemove === current.activePersonId) {
+        const next = filtered[0];
+        return {
+          ...current,
+          people: filtered,
+          activePersonId: next.id,
+          productKey: next.productKey || '',
+          addOns: Array.isArray(next.addOns) ? next.addOns : [],
+          addOnDecision: next.addOnDecision ?? true,
+        };
+      }
+      return { ...current, people: filtered };
+    });
+    setActiveAddonGroup('');
+  };
+
+  // Live snapshot of all people with the active person's live selections
+  // overlaid. Use this anywhere you need the FULL roster (sidebar, checkout
+  // serialization, billing). `state.people` alone is stale for the active.
+  const peopleSnapshot = useMemo(
+    () => (state.people || []).map((p) => p.id === state.activePersonId
+      ? { ...p, productKey: state.productKey, addOns: state.addOns, addOnDecision: state.addOnDecision }
+      : p),
+    [state.people, state.activePersonId, state.productKey, state.addOns, state.addOnDecision]
+  );
+
   // Cart edit/clear for the Your Order panel. removeAddon drops one add-on line;
   // clearOrder wipes therapy + add-ons (the cost) and returns to step 1. Neither
   // touches checkout/payment logic or date/time/location.
@@ -4361,16 +4628,62 @@ export default function BookNow() {
       },
       dob: state.dob,
       emergencyContact: state.emergencyContact.trim(),
-		      addOns: selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
-		      items: [
-	        { cartKey: isCustomTreatment ? `custom-${customBase.key}` : product.key, label: serviceLabel, price: protocolPrice(product), type: isCustomTreatment ? 'custom-treatment' : 'iv' },
-	        ...selectedAddons.map((item) => ({
-          cartKey: item.cartKey,
+      // Single-person path keeps legacy `items` shape (no personId). Multi-
+      // person path emits one IV line + per-person add-on lines, each tagged
+      // with personId/personLabel so the cart sidebar and the post-checkout
+      // ops dashboard can group by patient.
+      addOns: isMultiPerson
+        ? peopleBreakdown.flatMap((row) => row.addons.map((item) => `${row.label} · ${item.type === 'im' ? `IM · ${item.label}` : item.label}`))
+        : selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
+      items: isMultiPerson
+        ? peopleBreakdown.flatMap((row) => {
+            if (!row.product) return [];
+            const personId = row.person.id;
+            const personLabel = row.label;
+            const ivLine = {
+              cartKey: `${personId}-iv-${row.person.productKey}`,
+              personId,
+              personLabel,
+              label: `${row.product.label} (${personLabel})`,
+              price: row.ivPrice,
+              type: 'iv',
+            };
+            const addonLines = row.addons.map((item) => ({
+              cartKey: `${personId}-${item.cartKey}`,
+              personId,
+              personLabel,
+              label: `${item.type === 'im' ? `IM · ${item.label}` : item.label} (${personLabel})`,
+              price: Number(item.price || 0),
+              type: item.type,
+            }));
+            return [ivLine, ...addonLines];
+          })
+        : [
+            { cartKey: isCustomTreatment ? `custom-${customBase.key}` : product.key, label: serviceLabel, price: protocolPrice(product), type: isCustomTreatment ? 'custom-treatment' : 'iv' },
+            ...selectedAddons.map((item) => ({
+              cartKey: item.cartKey,
+              label: item.type === 'im' ? `IM · ${item.label}` : item.label,
+              price: Number(item.price || 0),
+              type: item.type,
+            })),
+          ],
+      peopleCount: effectivePeopleCount,
+      peopleManifest: peopleBreakdown.map((row) => ({
+        id: row.person.id,
+        label: row.label,
+        name: row.person.name || '',
+        dob: row.person.dob || '',
+        therapyKey: row.person.productKey || '',
+        therapyLabel: row.product?.label || '',
+        ivPrice: row.ivPrice,
+        addOns: row.addons.map((item) => ({
+          key: item.cartKey,
           label: item.type === 'im' ? `IM · ${item.label}` : item.label,
           price: Number(item.price || 0),
           type: item.type,
         })),
-      ],
+        subtotal: row.subtotal,
+      })),
       subtotal,
       depositAmount: dueNowAmount,
       balanceDue,
@@ -4460,6 +4773,8 @@ export default function BookNow() {
         label: item.label,
         price: item.price,
         type: item.type,
+        personId: item.personId || '',
+        personLabel: item.personLabel || '',
       })),
       membership: membershipOverride || (localBooking.subscription ? {
         key: localBooking.subscription.key,
@@ -4503,6 +4818,8 @@ export default function BookNow() {
         clientType: localBooking.clientType,
         dob: localBooking.dob || localBooking.contact?.dob || state.dob,
         emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || state.emergencyContact.trim(),
+        peopleCount: localBooking.peopleCount || 1,
+        peopleManifest: Array.isArray(localBooking.peopleManifest) ? localBooking.peopleManifest : [],
       },
     };
   };
@@ -5693,6 +6010,15 @@ export default function BookNow() {
             >
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
+                {(step === 1 || step === 2) && state.visitType !== 'subscription' && (
+                  <PersonTabStrip
+                    people={state.people}
+                    activePersonId={state.activePersonId}
+                    onSelect={switchActivePerson}
+                    onAdd={addNewPerson}
+                    onRemove={deletePerson}
+                  />
+                )}
                 {step === 0 && (
                   <>
                     <SectionTitle icon={Sparkles} title="CHOOSE YOUR GOAL" />
@@ -6044,6 +6370,30 @@ export default function BookNow() {
                       <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
                     )}
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
+                    {isMultiPerson && peopleBreakdown.length > 1 && (
+                      <AdditionalPeopleForm
+                        peopleBreakdown={peopleBreakdown}
+                        activePersonId={state.activePersonId}
+                        onPersonChange={(personId, patch) => {
+                          setState((current) => {
+                            // Active person's name/dob live at the top level via
+                            // state.name / state.dob — those mirror the owner.
+                            // Additional people store name/dob inside people[i].
+                            if (personId === current.activePersonId) {
+                              return {
+                                ...current,
+                                ...patch,
+                                people: current.people.map((p) => p.id === personId ? { ...p, ...patch } : p),
+                              };
+                            }
+                            return {
+                              ...current,
+                              people: current.people.map((p) => p.id === personId ? { ...p, ...patch } : p),
+                            };
+                          });
+                        }}
+                      />
+                    )}
                     {fastMode && <SafetyFlagChoice value={state.safetyFlag} onChange={(value) => setValue('safetyFlag', value)} />}
                     {fastMode && (
                       <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
@@ -6077,6 +6427,10 @@ export default function BookNow() {
 		            actionDisabled={checkoutLoading}
 		            showAction={step === LAST_STEP}
 		            onAction={submit}
+		            peopleBreakdown={peopleBreakdown}
+		            peopleCount={effectivePeopleCount}
+		            onSelectPerson={switchActivePerson}
+		            onRemovePerson={deletePerson}
 		          />}
         </div>
         )}

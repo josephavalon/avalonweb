@@ -57,7 +57,7 @@ export function CartProvider({ children }) {
   }, [membership]);
 
   const addItem = useCallback((item) => {
-    // item shape: { cartKey, label, price, type: 'iv'|'im' }
+    // item shape: { cartKey, label, price, type: 'iv'|'im', personId?, personLabel? }
     setItems((prev) =>
       prev.find((i) => i.cartKey === item.cartKey) ? prev : [...prev, item]
     );
@@ -65,6 +65,11 @@ export function CartProvider({ children }) {
 
   const removeItem = useCallback((cartKey) => {
     setItems((prev) => prev.filter((i) => i.cartKey !== cartKey));
+  }, []);
+
+  const removePerson = useCallback((personId) => {
+    if (!personId) return;
+    setItems((prev) => prev.filter((i) => i.personId !== personId));
   }, []);
 
   const clearItems = useCallback(() => setItems([]), []);
@@ -93,6 +98,7 @@ export function CartProvider({ children }) {
       appointment,
       addItem,
       removeItem,
+      removePerson,
       clearItems,
       setMembershipTier,
       clearMembership,

@@ -153,7 +153,12 @@ function stripeLineItems(items = [], membership = null, checkoutChargeItems = nu
       unit_amount: dollarsToCents(item.price),
       product_data: {
         name: item.label || 'Avalon Visit',
-        metadata: { type: item.type || 'service', key: item.key || item.cartKey || '' },
+        metadata: {
+          type: item.type || 'service',
+          key: item.key || item.cartKey || '',
+          ...(item.personId ? { personId: item.personId } : {}),
+          ...(item.personLabel ? { personLabel: item.personLabel } : {}),
+        },
       },
     },
   }));
@@ -346,6 +351,11 @@ export default async function handler(req, res) {
     const primaryService = items[0]?.label || membership?.name || 'Avalon Visit';
     const appointmentOrderType = appointment.orderType || appointment.paymentType || '';
     const guestCount = Number(appointment.guests || 1);
+    // peopleCount is the # of patients on this order (1-4). Each consumes a
+    // separate intake/IV setup, so the deposit scales with it. Older clients
+    // omit it — fall back to 1 (or guestCount when guests>1 is a household
+    // signal). isGroupVisit (event/B2B) is a different concept and unchanged.
+    const peopleCount = Math.max(1, Math.min(4, Math.floor(Number(appointment.peopleCount || appointment.people || guestCount || 1))));
     const isGroupVisit = /event/i.test(`${appointmentOrderType} ${appointment.locationType || ''}`) || guestCount > 1;
     const planMonthlyCents = membership ? Math.max(0, dollarsToCents(membership.price)) : 0;
     const launchPayment = calculateLaunchPayment({
@@ -355,10 +365,12 @@ export default async function handler(req, res) {
       subscriptionPrice: membership?.price || 0,
       isGroupVisit,
       hasKnownPrice: membership ? planMonthlyCents > 0 : visitSubtotal > 0,
+      peopleCount,
     });
-    const fallbackDepositCents = hasVisitItems ? Math.min(BOOKING_DEPOSIT_CENTS, visitSubtotalCents) : 0;
+    const scaledDepositCents = BOOKING_DEPOSIT_CENTS * peopleCount;
+    const fallbackDepositCents = hasVisitItems ? Math.min(scaledDepositCents, visitSubtotalCents) : 0;
     const depositCents = membership
-      ? Math.min(BOOKING_DEPOSIT_CENTS, planMonthlyCents)
+      ? Math.min(scaledDepositCents, planMonthlyCents)
       : hasVisitItems
         ? dollarsToCents((launchPayment.depositAmount ?? (fallbackDepositCents / 100)))
         : 0;

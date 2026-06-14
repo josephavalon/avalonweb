@@ -14,6 +14,8 @@ import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
+import { PEOPLE_MAX, createPerson, personLabel as personLabelFor } from '@/lib/peopleState';
+import PersonTabStrip from '@/components/store/PersonTabStrip';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -462,10 +464,11 @@ function RailLine({ label, value, muted }) {
 // The persistent "Your Plan" rail — mirrors the one-time-visit store's order
 // rail (dark glass aside) but adopts the builder's live summary: bag, monthly
 // price, what's included, and the upfront savings.
-function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItems, monthly, term, perMonth, upfrontTotal, onStart, showStart = true }) {
+function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItems, monthly, term, perMonth, upfrontTotal, onStart, showStart = true, peopleBreakdown = [], peopleCount = 1 }) {
   const isMonthly = term.key === 'monthly';
   const bag = therapyOption?.image || '/bags/dehydration.png';
   const saving = Math.round(monthly * term.months - upfrontTotal);
+  const isMultiPerson = peopleCount > 1;
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
       <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-3">
@@ -478,8 +481,12 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
           <img src={bag} alt="" className="h-[5.6rem] w-auto object-contain" />
         </div>
         <div className="min-w-0">
-          <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">{therapyLabel || '—'}</p>
-          <p className="mt-1 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/52">One IV per visit</p>
+          <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
+            {isMultiPerson ? `${peopleCount} patients` : (therapyLabel || '—')}
+          </p>
+          <p className="mt-1 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/52">
+            {isMultiPerson ? `${sessions} visits/mo · one household` : 'One IV per visit'}
+          </p>
         </div>
       </div>
 
@@ -495,10 +502,22 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
 
       <div className="mt-4 grid gap-1.5 border-t border-foreground/10 px-4 pt-3.5">
         <p className="mb-0.5 font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/40">Included</p>
-        <RailLine label={`${sessions}× ${therapyLabel}`} value={money(baseMonthly)} />
-        {lineItems.map((li) => (
-          <RailLine key={li.key} label={`${li.qty}× ${li.label}`} value={money(li.price * li.qty)} />
-        ))}
+        {isMultiPerson ? (
+          peopleBreakdown.map((row) => (
+            <RailLine
+              key={row.person.id}
+              label={`${row.label} · ${row.therapy?.label || 'IV pending'}`}
+              value={money(row.total)}
+            />
+          ))
+        ) : (
+          <>
+            <RailLine label={`${sessions}× ${therapyLabel}`} value={money(baseMonthly)} />
+            {lineItems.map((li) => (
+              <RailLine key={li.key} label={`${li.qty}× ${li.label}`} value={money(li.price * li.qty)} />
+            ))}
+          </>
+        )}
         <RailLine label="Concierge mobile visits" />
         <RailLine label="Clinical review each visit" />
       </div>
@@ -541,12 +560,63 @@ export default function Subscription() {
   });
 
   const navigate = useNavigate();
+  // Sessions/month and term apply to the whole household. Therapy + add-ons +
+  // IM shots are PER PERSON — each patient on the plan picks their own protocol.
   const [sessions, setSessions] = useState(2);
   const [categoryKey, setCategoryKey] = useState('iv-vitamins');
   const [therapyKey, setTherapyKey] = useState('hydration');
   const [ivQty, setIvQty] = useState({});
   const [imQty, setImQty] = useState({});
   const [termKey, setTermKey] = useState('monthly');
+  // Roster. The ACTIVE person's selections live in the top-level state above;
+  // every other person's selections are stashed inside their people[] entry.
+  // Switching active person swaps those two columns.
+  const [people, setPeople] = useState(() => [createPerson(0)]);
+  const [activePersonId, setActivePersonId] = useState(() => people[0].id);
+
+  const switchActivePerson = (nextId) => {
+    if (!nextId || nextId === activePersonId) return;
+    const target = people.find((p) => p.id === nextId);
+    if (!target) return;
+    setPeople((prev) => prev.map((p) => p.id === activePersonId
+      ? { ...p, categoryKey, therapyKey, ivQty, imQty }
+      : p));
+    setActivePersonId(nextId);
+    setCategoryKey(target.categoryKey || 'iv-vitamins');
+    setTherapyKey(target.therapyKey || 'hydration');
+    setIvQty(target.ivQty || {});
+    setImQty(target.imQty || {});
+  };
+
+  const addNewPerson = () => {
+    if (people.length >= PEOPLE_MAX) return;
+    const fresh = createPerson(people.length);
+    setPeople((prev) => {
+      const stashed = prev.map((p) => p.id === activePersonId
+        ? { ...p, categoryKey, therapyKey, ivQty, imQty }
+        : p);
+      return [...stashed, fresh];
+    });
+    setActivePersonId(fresh.id);
+    setCategoryKey('iv-vitamins');
+    setTherapyKey('hydration');
+    setIvQty({});
+    setImQty({});
+  };
+
+  const deletePerson = (idToRemove) => {
+    if (people.length <= 1) return;
+    const filtered = people.filter((p) => p.id !== idToRemove);
+    if (idToRemove === activePersonId) {
+      const next = filtered[0];
+      setCategoryKey(next.categoryKey || 'iv-vitamins');
+      setTherapyKey(next.therapyKey || 'hydration');
+      setIvQty(next.ivQty || {});
+      setImQty(next.imQty || {});
+      setActivePersonId(next.id);
+    }
+    setPeople(filtered);
+  };
 
   const ivs = 1; // One IV per session.
   const term = TERMS.find((t) => t.key === termKey) || TERMS[0];
@@ -577,24 +647,62 @@ export default function Subscription() {
 
   // Per-IV pricing: vitamin = $250, NAD+/CBD = dose price. One IV per session,
   // multiplied by sessions/month. Add-ons are flat monthly. The time commitment
-  // discounts the whole plan.
+  // discounts the whole plan. Multi-person: each person has their own protocol,
+  // their own IM shots, their own IV add-ons. Monthly = sum across all people.
   const perIvPrice = Number(therapyOption?.price || VITAMIN_IV_PRICE);
   const baseMonthly = perIvPrice * ivs * sessions;
   const addOnsTotal = lineItems.reduce((sum, li) => sum + li.price * li.qty, 0);
-  const monthly = baseMonthly + addOnsTotal;
+  const activePersonMonthly = baseMonthly + addOnsTotal;
+  // Snapshot the OTHER people's stashed selections to compute total monthly.
+  const peopleSnapshot = people.map((p) => p.id === activePersonId
+    ? { ...p, categoryKey, therapyKey, ivQty, imQty }
+    : p);
+  const personMonthly = (person) => {
+    const cat = CATEGORIES.find((c) => c.key === person.categoryKey) || CATEGORIES[0];
+    const therapy = cat.options.find((o) => o.key === person.therapyKey) || cat.options[0];
+    const personPerIvPrice = Number(therapy?.price || VITAMIN_IV_PRICE);
+    const personBase = personPerIvPrice * ivs * sessions;
+    const personIv = Array.isArray(IV_ADDON_ITEMS) ? IV_ADDON_ITEMS.reduce((sum, item) => sum + (person.ivQty?.[item.key] || 0) * item.price, 0) : 0;
+    const personIm = Array.isArray(IM_ADDON_ITEMS) ? IM_ADDON_ITEMS.reduce((sum, item) => sum + (person.imQty?.[item.key] || 0) * item.price, 0) : 0;
+    return { therapy, base: personBase, addons: personIv + personIm, total: personBase + personIv + personIm };
+  };
+  const peopleBreakdown = peopleSnapshot.map((p, index) => {
+    const m = personMonthly(p);
+    return { ...m, person: p, index, label: personLabelFor(p, index) };
+  });
+  const peopleCount = peopleBreakdown.length;
+  const monthly = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
   const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
   const perMonth = Math.round(upfrontTotal / term.months);
   const addOnCount = lineItems.reduce((sum, li) => sum + li.qty, 0);
 
   const startPlan = () => {
     // Plans use their OWN checkout (/plan → subscription mode + membership Acuity
-    // type), intentionally NOT the one-time 5-step /book flow.
+    // type), intentionally NOT the one-time 5-step /book flow. The plan manifest
+    // carries each person's protocol so /plan can render a per-person summary
+    // and /api/create-checkout-session can scale the $50 deposit per person.
+    const planManifest = peopleBreakdown.map((row) => ({
+      id: row.person.id,
+      label: row.label,
+      name: row.person.name || '',
+      dob: row.person.dob || '',
+      therapyKey: row.person.therapyKey,
+      therapyLabel: row.therapy?.label || '',
+      ivPrice: row.base / sessions,
+      monthly: row.total,
+      ivQty: row.person.ivQty || {},
+      imQty: row.person.imQty || {},
+    }));
     const params = new URLSearchParams({
       price: String(Math.round(monthly)),
       term: term.key,
       protocol: therapyOption?.protocol || 'recovery',
       sessions: String(sessions),
+      people: String(peopleCount),
     });
+    if (peopleCount > 1) {
+      params.set('plan', encodeURIComponent(JSON.stringify(planManifest)));
+    }
     navigate(`/plan?${params.toString()}`);
   };
 
@@ -610,6 +718,8 @@ export default function Subscription() {
       perMonth={perMonth}
       upfrontTotal={upfrontTotal}
       onStart={startPlan}
+      peopleBreakdown={peopleBreakdown}
+      peopleCount={peopleCount}
     />
   );
 
@@ -635,6 +745,16 @@ export default function Subscription() {
             >
               <Section title={STEP_TITLES.sessions} sub={STEP_SUBS.sessions} first>
                 <SessionSegment sessions={sessions} onSessions={setSessions} />
+              </Section>
+
+              <Section title="Who's on this plan" sub="Up to 4 patients on one household plan. Each picks their own protocol.">
+                <PersonTabStrip
+                  people={peopleSnapshot}
+                  activePersonId={activePersonId}
+                  onSelect={switchActivePerson}
+                  onAdd={addNewPerson}
+                  onRemove={deletePerson}
+                />
               </Section>
 
               <Section title={STEP_TITLES.therapy} sub={STEP_SUBS.therapy}>
@@ -695,6 +815,8 @@ export default function Subscription() {
                 upfrontTotal={upfrontTotal}
                 onStart={startPlan}
                 showStart={false}
+                peopleBreakdown={peopleBreakdown}
+                peopleCount={peopleCount}
               />
             </div>
             <MobileStartBar
