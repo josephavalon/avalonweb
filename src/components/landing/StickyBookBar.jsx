@@ -9,7 +9,12 @@ const BOOK_URL = '/book';
 
 export default function StickyBookBar() {
   const { pathname } = useLocation();
-  const [heroActionVisible, setHeroActionVisible] = useState(false);
+  // The bar is revealed only once the hero's white Book button has scrolled
+  // ABOVE the top of the viewport (i.e. you've scrolled past it). It must stay
+  // hidden on first paint and while the button is still below the fold — the
+  // common mobile case where the hero is tall and the button starts off-screen
+  // below. Default hidden so there is no flash before the observer fires.
+  const [scrolledPast, setScrolledPast] = useState(false);
   const hidden = pathname === '/book' ||
     pathname.startsWith('/book/') ||
     pathname.startsWith('/protocols') ||
@@ -27,35 +32,33 @@ export default function StickyBookBar() {
 
   useEffect(() => {
     if (hidden || typeof window === 'undefined' || !('IntersectionObserver' in window)) {
-      setHeroActionVisible(false);
+      setScrolledPast(false);
       return undefined;
     }
 
-    // Gate on the white primary Book button specifically: the sticky bar stays
-    // hidden until that button is scrolled out of view.
-    const targets = Array.from(document.querySelectorAll('.av-hero-action-primary'));
-    if (!targets.length) {
-      setHeroActionVisible(false);
+    // Gate on the hero's white primary Book button. The bar reveals only when
+    // that button has scrolled fully ABOVE the viewport top (boundingClientRect
+    // top < 0). While the button is on-screen OR still below the fold, the bar
+    // stays hidden — matching the intent that it replaces the white button only
+    // after you scroll past it. IntersectionObserver fires once on observe with
+    // the initial state, so first paint resolves correctly with no flash.
+    const target = document.querySelector('.av-hero-action-primary');
+    if (!target) {
+      setScrolledPast(false);
       return undefined;
     }
 
-    const visibleTargets = new Set();
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          visibleTargets.add(entry.target);
-        } else {
-          visibleTargets.delete(entry.target);
-        }
-      });
-      setHeroActionVisible(visibleTargets.size > 0);
-    }, { threshold: 0.01 });
+      const entry = entries[entries.length - 1];
+      const past = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+      setScrolledPast(past);
+    }, { threshold: 0 });
 
-    targets.forEach((target) => observer.observe(target));
+    observer.observe(target);
     return () => observer.disconnect();
   }, [hidden, pathname]);
 
-  if (hidden || heroActionVisible) return null;
+  if (hidden || !scrolledPast) return null;
 
   return (
     <motion.div
