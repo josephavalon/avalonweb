@@ -17,7 +17,7 @@ export default function CheckoutSuccess() {
   const type = params.get('type'); // 'onetime' | 'subscription'
   const sessionId = params.get('session_id');
   const preApi = params.get('preapi') === '1';
-  const [verification, setVerification] = useState(() => preApi ? 'local' : sessionId ? 'checking' : 'missing');
+  const [verification, setVerification] = useState(() => preApi ? { state: 'local', paid: true } : sessionId ? { state: 'checking' } : { state: 'missing' });
 
   useEffect(() => {
     if (preApi || !sessionId) return;
@@ -30,17 +30,33 @@ export default function CheckoutSuccess() {
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.paid) throw new Error(data?.error || 'Payment not verified');
-        if (!cancelled) setVerification('paid');
+        if (!cancelled) setVerification({ state: 'paid', ...data });
       })
       .catch(() => {
-        if (!cancelled) setVerification('failed');
+        if (!cancelled) setVerification({ state: 'failed', paid: false });
       });
     return () => { cancelled = true; };
   }, [preApi, sessionId]);
 
-  const verified = verification === 'paid' || verification === 'local';
-  const isChecking = verification === 'checking';
+  const verified = Boolean(verification.paid) || verification.state === 'local';
+  const isChecking = verification.state === 'checking';
+  const fulfillmentFailed = verification.fulfillmentStatus === 'acuity_failed';
+  const fulfillmentPending = Boolean(verification.pendingFulfillment) || fulfillmentFailed;
   const isSubscription = type === 'subscription' || type === 'membership';
+  const statusHeadline = isChecking
+    ? 'Hold Tight.'
+    : fulfillmentPending
+      ? 'Payment Received.'
+      : verified
+        ? (isSubscription ? "You're In." : "We'll Be In Touch.")
+        : 'Payment Check Needed.';
+  const statusCopy = isChecking
+    ? 'We are confirming your payment before showing next steps.'
+    : fulfillmentPending
+      ? 'Your payment was received. Avalon is confirming your appointment time and a registered nurse will follow up shortly.'
+      : verified
+        ? 'Your booking request is in. Avalon will text you with arrival details.'
+        : 'We could not confirm the payment from this page. Please contact Avalon if you completed checkout.';
 
   return (
     <div className="av-page-surface min-h-screen">
@@ -61,13 +77,16 @@ export default function CheckoutSuccess() {
           transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
         >
           <h1 className="font-heading text-5xl md:text-7xl text-foreground tracking-wide uppercase leading-[0.95] mb-6">
-            {isChecking ? 'Hold Tight.' : verified ? (isSubscription ? "You're In." : "We'll Be In Touch.") : 'Payment Check Needed.'}
+            {statusHeadline}
           </h1>
+          <p className="mx-auto mb-8 max-w-sm font-body text-sm font-semibold leading-relaxed text-foreground/62">
+            {statusCopy}
+          </p>
           <div className="mb-10 grid grid-cols-3 gap-2">
             {[
               [CreditCard, verified ? 'Paid' : isChecking ? 'Check' : 'Issue'],
-              [ShieldCheck, verified ? 'Review' : 'Verify'],
-              [MessageCircle, verified ? 'Text' : 'Support'],
+              [ShieldCheck, fulfillmentPending ? 'Confirm' : verified ? 'Review' : 'Verify'],
+              [MessageCircle, fulfillmentPending ? 'Nurse' : verified ? 'Text' : 'Support'],
             ].map(([Icon, label]) => (
               <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
                 <Icon className="mx-auto h-4 w-4 text-accent/75" strokeWidth={1.8} />

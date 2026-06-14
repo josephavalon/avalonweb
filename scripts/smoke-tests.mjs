@@ -34,6 +34,7 @@ const loginQaSource = readFileSync(new URL('./login-qa.mjs', import.meta.url), '
 const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.meta.url), 'utf8');
 const bookingConfirmationSource = readFileSync(new URL('../app-modules/pages/BookingConfirmation.jsx', import.meta.url), 'utf8');
 const checkoutPageSource = readFileSync(new URL('../app-modules/pages/Checkout.jsx', import.meta.url), 'utf8');
+const checkoutSuccessSource = readFileSync(new URL('../app-modules/source/pages/CheckoutSuccess.jsx', import.meta.url), 'utf8');
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
 const checkoutFulfillmentSource = readFileSync(new URL('../api/_checkout-fulfillment.js', import.meta.url), 'utf8');
@@ -326,6 +327,10 @@ assert(checkoutPageSource.includes('checkoutInFlightRef'), 'Checkout UI must syn
 assert(checkoutPageSource.includes('Redirecting to secure checkout'), 'Checkout UI must show a blocking redirect-pending state');
 assert(checkoutPageSource.includes('window.location.assign(data.url)'), 'Checkout UI must use an explicit redirect after session creation');
 assert(checkoutPageSource.includes('10_000'), 'Checkout redirect pending state must have a retry fallback timeout');
+assert(checkoutSuccessSource.includes('pendingFulfillment'), 'Checkout success page must inspect pending fulfillment state');
+assert(checkoutSuccessSource.includes("fulfillmentStatus === 'acuity_failed'"), 'Checkout success page must inspect Acuity fulfillment failure state');
+assert(checkoutSuccessSource.includes('Payment Received.'), 'Checkout success page must render a distinct payment-received pending headline');
+assert(checkoutSuccessSource.includes('confirming your appointment'), 'Checkout success page must tell paid users when appointment confirmation is pending');
 assert(clientAnalyticsSource.includes('sensitiveAnalyticsKey'), 'Client analytics must detect sensitive nested keys');
 assert(clientAnalyticsSource.includes('sanitizeObject(v, depth + 1)'), 'Client analytics must recursively sanitize nested objects');
 assert(clientAnalyticsSource.includes('sanitizeObject(item, depth + 1)'), 'Client analytics must recursively sanitize array object entries');
