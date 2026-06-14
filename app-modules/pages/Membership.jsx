@@ -5,12 +5,12 @@ import {
   Check,
   ChevronDown,
   Droplets,
-  Leaf,
   Minus,
   Plus,
   Sparkles,
 } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
@@ -67,7 +67,7 @@ const CATEGORIES = [
   {
     key: 'cbd',
     label: 'IV CBD',
-    icon: Leaf,
+    icon: CannabisLeaf,
     blurb: 'From $350 per dose',
     gated: true,
     options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, note: `${money(d.price)} / IV`, price: d.price, protocol: 'cbd', image: d.image || CBD_THERAPY?.image })),

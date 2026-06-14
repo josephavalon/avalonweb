@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
   Droplets, Zap, ShieldCheck, Sparkles, FlaskConical,
-  Star, ArrowRight, ChevronDown, ChevronRight,
+  ArrowRight, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, premiumListItem, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
 const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
@@ -29,13 +30,13 @@ const SPECIALTY_IVS = [
   },
   {
     label: 'CBD',
-    icon: Star,
+    icon: CannabisLeaf,
     treatments: [
-      { icon: Star, img: '/bags/cbd-33.png',       label: 'CBD 33mg',     price: 250 },
-      { icon: Star, img: '/bags/cbd-66.png',       label: 'CBD 66mg',     price: 300 },
-      { icon: Star, img: '/bags/cbd-vitality.png', label: 'CBD Vitality', price: 350 },
-      { icon: Star, img: '/bags/cbd-99.png',       label: 'CBD 99mg',     price: 350 },
-      { icon: Star, img: '/bags/cbd-132.png',      label: 'CBD 132mg',    price: 450 },
+      { icon: CannabisLeaf, img: '/bags/cbd-33.png',       label: 'CBD 33mg',     price: 250 },
+      { icon: CannabisLeaf, img: '/bags/cbd-66.png',       label: 'CBD 66mg',     price: 300 },
+      { icon: CannabisLeaf, img: '/bags/cbd-vitality.png', label: 'CBD Vitality', price: 350 },
+      { icon: CannabisLeaf, img: '/bags/cbd-99.png',       label: 'CBD 99mg',     price: 350 },
+      { icon: CannabisLeaf, img: '/bags/cbd-132.png',      label: 'CBD 132mg',    price: 450 },
     ],
   },
 ];
@@ -60,7 +61,7 @@ const TOP_CATEGORIES = [
   {
     key: 'cbd',
     label: 'IV CBD',
-    icon: Star,
+    icon: CannabisLeaf,
     type: 'flat-treatments',
     data: (SPECIALTY_IVS.find((s) => s.label === 'CBD') || {}).treatments || [],
   },
@@ -116,7 +117,9 @@ function SubRow({ sub }) {
                   key={t.label}
                   to="/book"
                   variants={premiumListItem}
-                  className="av-treatment-chip group flex min-h-[72px] items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-base ease-editorial"
+                  whileHover={premiumHover}
+                  whileTap={premiumTap}
+                  className="av-treatment-chip group flex min-h-[72px] items-center gap-3 rounded-xl border px-4 py-3 transition-colors duration-base ease-editorial"
                 >
                   {t.img ? (
                     <img src={t.img} alt="" loading="lazy" className="h-11 w-8 shrink-0 object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
@@ -222,7 +225,9 @@ function CategoryRow({ cat, index, open, onToggle }) {
                       key={addon.label}
                       to="/book"
                       variants={premiumListItem}
-                      className="av-treatment-chip group grid min-h-[88px] grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl border px-3.5 py-2.5 transition-all duration-base ease-editorial"
+                      whileHover={premiumHover}
+                      whileTap={premiumTap}
+                      className="av-treatment-chip group grid min-h-[88px] grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl border px-3.5 py-2.5 transition-colors duration-base ease-editorial"
                     >
                       {addon.img ? (
                         <img src={addon.img} alt="" loading="lazy" className="h-[4.5rem] w-14 shrink-0 object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)]" />

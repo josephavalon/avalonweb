@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 
 import Navbar from '@/components/landing/Navbar';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import { useCart } from '@/context/CartContext';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import { COVERED_ZIPS, extractZip } from '@/lib/serviceArea';
@@ -276,7 +277,7 @@ const CUSTOM_BASE_OPTIONS = [
   { key: 'postnight', label: 'Post-Night-Out IV', productKey: 'postnight', icon: Moon },
   { key: 'travel', label: 'Travel IV', productKey: 'jetlag', icon: Plane },
   { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: BatteryCharging },
-  { key: 'cbd', label: 'IV CBD', productKey: 'cbd', icon: Leaf, badge: 'Review' },
+  { key: 'cbd', label: 'IV CBD', productKey: 'cbd', icon: CannabisLeaf, badge: 'Review' },
 ];
 
 const CUSTOM_SUBSCRIPTION_VISITS = [
@@ -960,12 +961,11 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
 
         <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
           <motion.div
-            className="relative h-full overflow-hidden rounded-full bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
+            className="absolute inset-y-0 left-0 w-full origin-left bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
             initial={false}
-            animate={{ width: `${((progressIndex + 1) / STEPS.length) * 100}%` }}
+            animate={{ scaleX: (progressIndex + 1) / STEPS.length }}
             transition={{ duration: 0.56, ease: EASE }}
-          >
-          </motion.div>
+          />
         </div>
       </div>
     </div>
@@ -5402,10 +5402,10 @@ export default function BookNow() {
             <motion.div
               key={step}
               className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-4"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 4, scale: 1 }}
-              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
               exit={{ opacity: 1 }}
-              transition={{ duration: reduceMotion ? 0 : 0.16, ease: EASE }}
+              transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
             >
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">

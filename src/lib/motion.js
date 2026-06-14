@@ -79,10 +79,13 @@ export const premiumCard = (delay = 0) => ({
   transition: { duration: 0.58, delay, ease: EASE },
 });
 
+// Tactile card/button lift. Transform-only (GPU, nav-safe). Snappy in (~0.2s) for a
+// Linear/Raycast feel. Apply only to elements whose CSS uses transition-colors (NOT
+// transition-all) so the browser doesn't also transition this transform → jitter.
 export const premiumHover = {
-  y: -2,
-  scale: 1.003,
-  transition: { duration: DURATIONS.crisp, ease: EASE },
+  y: -3,
+  scale: 1.01,
+  transition: { duration: 0.22, ease: EASE },
 };
 
 export const premiumTap = {

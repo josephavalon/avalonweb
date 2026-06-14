@@ -1,5 +1,6 @@
 import { Toaster } from '@/components/ui/toaster';
 import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { useEffect, lazy, Suspense } from 'react';
 import CookieConsent from '@/components/CookieConsent';
 import ScrollProgress from '@/components/landing/ScrollProgress';
@@ -220,13 +221,19 @@ const GlobalZoomState = () => {
 };
 
 function AppRoutes() {
+  const location = useLocation();
   return (
     <>
       <a href="#main-content" className="skip-to-content" data-mobile-qa-ignore>Skip to content</a>
       <div id="main-content" tabIndex={-1} className="relative z-10 outline-none">
-        <PageTransition>
+        {/* mode="wait" → outgoing page fully crossfades out before the next fades in
+            (avoids two stacked pages / two fixed navbars). initial={false} → no fade
+            on first load, so hero first paint is unchanged. Stage transition is
+            opacity-only (see PageTransition) to keep the fixed Navbar pinned. */}
+        <AnimatePresence mode="wait" initial={false}>
+        <PageTransition key={location.pathname}>
           <Suspense fallback={<RouteFallback />}>
-            <Routes>
+            <Routes location={location}>
             <Route path="/" element={<Home />} />
             {servicePillars.map((page) => (
               <Route key={page.path} path={page.path} element={<SeoPillarPage />} />
@@ -353,6 +360,7 @@ function AppRoutes() {
             </Routes>
           </Suspense>
         </PageTransition>
+        </AnimatePresence>
       </div>
     </>
   );

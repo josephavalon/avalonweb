@@ -25,10 +25,12 @@ export default function Hero() {
   // see onPointerEnter/onFocus below) rather than eagerly on load, to keep the
   // homepage critical path lean.
 
-  // ── Scroll-linked recede (Apple-style) ──────────────────────────────────────
-  // As the next section arrives, the hero parallaxes up and dissolves. The copy
-  // column lifts faster than the action rail → layered depth. Driven by scroll
-  // POSITION (reversible), not a one-shot trigger.
+  // ── Scroll-linked recede (Apple-style, 3-layer parallax) ─────────────────────
+  // As the next section arrives, the hero parallaxes up and dissolves with depth:
+  //   • the headline flies up the most and scales down (the focal layer)
+  //   • the proof points trail at a medium rate
+  //   • the action rail drifts up the slowest (feels "closest"/heaviest)
+  // Driven by scroll POSITION (reversible), not a one-shot trigger.
   // Safety: transform + opacity ONLY (no blur/filter); applied to hero CONTENT,
   // never to .av-page-stage or any ancestor of the fixed Navbar (it lives in a
   // sibling <header>), so the nav stays pinned. Mount is untouched → hero first
@@ -39,12 +41,15 @@ export default function Hero() {
     target: heroRef,
     offset: ['start start', 'end start'],
   });
-  const copyY = useTransform(scrollYProgress, [0, 0.6], [0, -130]);
-  const copyOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const copyScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.97]);
-  const railY = useTransform(scrollYProgress, [0, 0.7], [0, -70]);
+  const titleY = useTransform(scrollYProgress, [0, 0.6], [0, -180]);
+  const titleScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.94]);
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+  const proofY = useTransform(scrollYProgress, [0, 0.65], [0, -120]);
+  const proofOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const railY = useTransform(scrollYProgress, [0, 0.75], [0, -70]);
   const railOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const copyStyle = reduceMotion ? undefined : { y: copyY, opacity: copyOpacity, scale: copyScale };
+  const titleStyle = reduceMotion ? undefined : { y: titleY, scale: titleScale, opacity: titleOpacity };
+  const proofStyle = reduceMotion ? undefined : { y: proofY, opacity: proofOpacity };
   const railStyle = reduceMotion ? undefined : { y: railY, opacity: railOpacity };
 
   return (
@@ -62,21 +67,26 @@ export default function Hero() {
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
 	          <div className="relative md:flex md:items-center md:justify-between md:gap-10">
-        <motion.div className="av-hero-copy md:max-w-xl" style={copyStyle}>
+        <div className="av-hero-copy md:max-w-xl">
 
-        <p
-          className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground md:mb-4 md:text-3xl"
-        >
-          Avalon Vitality
-        </p>
+        {/* Layer 1 — title (recedes fastest + scales) */}
+        <motion.div style={titleStyle}>
+          <p
+            className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground md:mb-4 md:text-3xl"
+          >
+            Avalon Vitality
+          </p>
 
-        <h1
-          className="font-heading text-[clamp(4rem,11vw,10rem)] leading-[0.88] tracking-[0.02em] text-foreground uppercase max-w-3xl"
-        >
-          Recovery<br />On Demand
-        </h1>
+          <h1
+            className="font-heading text-[clamp(4rem,11vw,10rem)] leading-[0.88] tracking-[0.02em] text-foreground uppercase max-w-3xl"
+          >
+            Recovery<br />On Demand
+          </h1>
+        </motion.div>
 
-        <ul
+        {/* Layer 2 — proof points (medium parallax) */}
+        <motion.ul
+          style={proofStyle}
           className="mt-5 grid gap-2 font-body text-[13px] uppercase leading-relaxed tracking-[0.06em] text-foreground md:mt-6 md:text-sm"
         >
           {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
@@ -85,12 +95,13 @@ export default function Hero() {
               <span>{label}</span>
             </li>
           ))}
-        </ul>
-        </motion.div>
+        </motion.ul>
+        </div>
 
+        {/* Layer 3 — action rail (drifts slowest, feels closest) */}
         <motion.div
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
           style={railStyle}
+          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
         >
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
