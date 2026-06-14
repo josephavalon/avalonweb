@@ -141,7 +141,7 @@ function MethodButton({ icon, label, onClick, busy, variant = 'ghost' }) {
       type="button"
       onClick={onClick}
       disabled={busy}
-      className={`flex min-h-[56px] w-full items-center justify-center gap-3 rounded-full font-body text-xs font-bold uppercase tracking-[0.18em] transition-colors disabled:cursor-wait disabled:opacity-50 ${styles}`}
+      className={`flex min-h-[56px] md:min-h-[44px] w-full items-center justify-center gap-3 rounded-full font-body text-xs font-bold uppercase tracking-[0.18em] transition-colors disabled:cursor-wait disabled:opacity-50 ${styles}`}
     >
       {busy ? <span className={`h-4 w-4 rounded-full border-2 ${spinner} animate-spin`} /> : icon}
       {label}
@@ -485,7 +485,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   } else {
     // Patient, Supabase: full passwordless method stack.
     body = (
-      <div className="space-y-3">
+      <div className="space-y-3 md:space-y-2">
         <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
         <MethodButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />
         <MethodButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />
@@ -543,14 +543,14 @@ export default function Login({ defaultAudience = 'patient' }) {
   );
 
   return (
-    <div className="relative min-h-screen min-h-dvh overflow-y-auto bg-background px-4 py-4 text-foreground md:px-8 md:py-8">
+    <div className="relative min-h-screen min-h-dvh overflow-y-auto bg-background px-4 py-4 text-foreground md:px-8 md:py-5">
       <div className="pointer-events-none fixed inset-0 opacity-70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--foreground)/0.10),transparent_30%),linear-gradient(180deg,hsl(var(--foreground)/0.035),transparent_42%)]" />
       </div>
 
       <main className="relative mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center">
-        <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7 md:p-6">
-          <div className="mb-6 flex items-center justify-between gap-4 md:mb-4">
+        <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7 md:max-w-[420px] md:p-5">
+          <div className="mb-6 flex items-center justify-between gap-4 md:mb-3">
             <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-opacity hover:opacity-70">
               <span className="block font-heading text-[19px] leading-none tracking-[0.24em] text-foreground">AVALON</span>
               <span className="mt-1 block font-body text-[8px] uppercase tracking-[0.38em] text-foreground/58">
@@ -563,7 +563,7 @@ export default function Login({ defaultAudience = 'patient' }) {
           </div>
 
           {!isAdmin && (
-            <div className="mb-5 md:mb-4">
+            <div className="mb-5 md:mb-3">
               <SegmentedToggle
                 options={[
                   { key: 'returning', label: 'Returning' },
@@ -576,12 +576,12 @@ export default function Login({ defaultAudience = 'patient' }) {
             </div>
           )}
 
-          <div className="mb-6 md:mb-4">
-            <h1 className="font-heading text-[2.5rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[2rem]">
+          <div className="mb-6 md:mb-3">
+            <h1 className="font-heading text-[2.5rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.85rem]">
               {heading[0]}<br />{heading[1]}
             </h1>
             {supabaseMode && !isNew && (
-              <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
+              <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
                 {isAdmin
                   ? 'Operations-only. Use your passkey or a secure email link.'
                   : 'Passwordless — a passkey, a magic link, or your phone.'}
