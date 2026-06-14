@@ -1049,32 +1049,32 @@ function UniversalBookingFrame({
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
           {hasOrder && (onRemoveAddon || onClearOrder) && (
             <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/30 md:hidden">
-              <button
-                type="button"
-                onClick={() => setOrderOpen((v) => !v)}
-                aria-expanded={orderOpen}
-                className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5"
-              >
-                <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/70">
-                  Your order
-                  <span className="rounded-full border border-foreground/16 px-1.5 py-[1px] text-[8px] font-black text-foreground/60">{orderCount}</span>
-                </span>
-                <ChevronDown className={`h-3.5 w-3.5 text-foreground/55 transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
-              </button>
+              <div className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5">
+                <button
+                  type="button"
+                  onClick={() => setOrderOpen((v) => !v)}
+                  aria-expanded={orderOpen}
+                  className="flex min-w-0 items-center gap-2"
+                >
+                  <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/70">
+                    Your order
+                    <span className="rounded-full border border-foreground/16 px-1.5 py-[1px] text-[8px] font-black text-foreground/60">{orderCount}</span>
+                  </span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-foreground/55 transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+                </button>
+                {onClearOrder && (
+                  <button
+                    type="button"
+                    onClick={onClearOrder}
+                    className="shrink-0 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/90"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               {orderOpen && (
                 <div className="border-t border-foreground/10 px-2.5 py-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="min-w-0 flex-1 truncate font-body text-[11px] font-bold text-foreground/82">{product.label}</p>
-                    {onClearOrder && (
-                      <button
-                        type="button"
-                        onClick={onClearOrder}
-                        className="shrink-0 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
+                  <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground/82">{product.label}</p>
                   {selectedAddons.length > 0 && (
                     <div className="mt-1.5 space-y-1">
                       {selectedAddons.map((item) => (
@@ -3464,7 +3464,13 @@ export default function BookNow() {
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
-    const draft = shouldResetDraft ? {} : (sessionDraft?.webstore || persistedDraft?.webstore || {});
+    // Cart persistence policy: the in-tab session draft hydrates freely (so you
+    // don't lose progress mid-flow), but the cross-session localStorage draft
+    // only rehydrates on an explicit ?resume=1. Closing the browser / returning
+    // later therefore starts with an empty cart instead of a stale selection.
+    const draft = shouldResetDraft
+      ? {}
+      : (sessionDraft?.webstore || (shouldResumeDraft ? persistedDraft?.webstore : null) || {});
     const savedWebstoreRaw = draft && typeof draft === 'object' ? draft : {};
     const savedWebstoreAddress = realAddress(savedWebstoreRaw.address);
     const savedWebstore = {

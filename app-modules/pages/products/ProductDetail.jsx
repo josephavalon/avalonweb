@@ -219,7 +219,8 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={buyNow}
-                  className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-xl bg-white px-8 font-body text-xs font-semibold uppercase tracking-[0.08em] text-black transition-opacity hover:opacity-90 md:min-h-[3.4rem] md:text-sm"
+                  style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                  className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-xl px-8 font-body text-xs font-semibold uppercase tracking-[0.08em] transition-opacity hover:opacity-90 md:min-h-[3.4rem] md:text-sm"
                 >
                   Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </button>
