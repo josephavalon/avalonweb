@@ -16,6 +16,8 @@ import { EASE, premiumHover, premiumListContainer, premiumStaggerItem, premiumTa
 import { IV_SESSIONS } from '@/config/verticals';
 import { slugify } from '@/data/products';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import ExitStoreDialog from '@/components/store/ExitStoreDialog';
+import useBackExitConfirm from '@/hooks/useBackExitConfirm';
 
 const FEATURED_KEYS = ['hydration', 'energy', 'myers', 'recovery', 'nad', 'cbd'];
 const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set([]);
@@ -269,6 +271,7 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
 
 export default function Menu() {
   const [openSections, setOpenSections] = useState({});
+  const exitConfirm = useBackExitConfirm();
 
   useSeo({
     title: 'Mobile IV Therapy Bay Area — Avalon Vitality',
@@ -340,6 +343,12 @@ export default function Menu() {
       </main>
 
       <Footer />
+
+      <ExitStoreDialog
+        open={exitConfirm.open}
+        onKeepShopping={exitConfirm.onKeepShopping}
+        onExit={exitConfirm.onExit}
+      />
     </div>
   );
 }
