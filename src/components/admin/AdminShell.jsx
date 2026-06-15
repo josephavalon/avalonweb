@@ -13,9 +13,11 @@ import {
   Package,
   ShieldCheck,
   Users,
+  UserCog,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
+import { canAccessAdminRoute } from '@/lib/adminAccess';
 
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
 const ACUITY_URL = 'https://avalonvitality.as.me';
@@ -40,7 +42,25 @@ const NAV = [
   { label: 'Analytics', icon: Activity, to: '/admin/client-heat-map' },
   { label: 'Scheduling', icon: CalendarCheck, href: ACUITY_URL, external: true, note: 'Acuity' },
   { label: 'Operations', icon: ShieldCheck, to: '/admin/field' },
+  { label: 'Team', icon: UserCog, to: '/admin/team' },
 ];
+
+// Filter the nav to what the signed-in role may open. Staff see only the
+// customer / scheduling / billing sections; external links (Acuity) stay
+// visible to everyone on the team. Source of truth: src/lib/adminAccess.js.
+function filterNav(nav, role) {
+  return nav
+    .map((item) => {
+      if (item.children) {
+        const children = item.children.filter((c) => canAccessAdminRoute(role, c.to));
+        return children.length ? { ...item, children } : null;
+      }
+      if (item.external) return item;
+      if (item.to) return canAccessAdminRoute(role, item.to) ? item : null;
+      return item;
+    })
+    .filter(Boolean);
+}
 
 function NavGroup({ item, pathname, onNavigate }) {
   const childActive = item.children?.some((c) => pathname === c.to || pathname.startsWith(`${c.to}/`));
@@ -121,13 +141,13 @@ function NavGroup({ item, pathname, onNavigate }) {
 }
 
 export default function AdminShell({ title = 'Dashboard', actions, children, fullBleed = false }) {
-  const { signOut } = useAuthStore();
+  const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [drawer, setDrawer] = useState(false);
 
   const handleSignOut = () => { signOut(); navigate('/login', { replace: true }); };
-  const nav = useMemo(() => NAV, []);
+  const nav = useMemo(() => filterNav(NAV, user?.role), [user?.role]);
 
   const Sidebar = (
     <div className="flex h-full flex-col">

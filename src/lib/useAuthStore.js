@@ -19,6 +19,8 @@ const DEMO_USERS = {
   'ADMIN':        { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
   'ADMIN001':     { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
   'ADMIN0001':    { role: 'admin',     name: 'Admin',             redirect: '/admin',             status: 'active', canonical: 'ADMIN001' },
+  'STAFF':        { role: 'staff',     name: 'Jordan (Staff)',    redirect: '/admin',             status: 'active', canonical: 'STAFF001' },
+  'STAFF001':     { role: 'staff',     name: 'Jordan (Staff)',    redirect: '/admin',             status: 'active', canonical: 'STAFF001' },
   'CLIENT':       { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
   'CLIENT001':    { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
   'CLIENT0001':   { role: 'client',    name: 'Sarah',             redirect: '/members/dashboard', status: 'active', canonical: 'CLIENT001' },
@@ -33,6 +35,7 @@ const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
 
 const ROLE_REDIRECT = {
   admin: '/admin',
+  staff: '/admin',
   client: '/members/dashboard',
   nurse: '/provider/shift',
 };
@@ -125,13 +128,15 @@ function createSessionId() {
 async function buildSupabaseUser(authUser) {
   if (!authUser) return null;
   let role = 'client';
+  let mustChangePassword = false;
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, must_change_password')
       .eq('id', authUser.id)
       .maybeSingle();
     if (data?.role) role = data.role;
+    if (data?.must_change_password) mustChangePassword = true;
   } catch { /* RLS/no row → default to client */ }
   const meta = authUser.user_metadata || {};
   const name = meta.name || meta.full_name || authUser.email || authUser.phone || 'Member';
@@ -141,6 +146,7 @@ async function buildSupabaseUser(authUser) {
     phone: authUser.phone || '',
     name,
     role,
+    mustChangePassword,
     redirect: redirectForRole(role),
     authMode: 'supabase',
     mfa: supabaseMfaState(authUser),
@@ -215,6 +221,44 @@ export function AuthStoreProvider({ children }) {
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
+  }, []);
+
+  // Email + password (Supabase). Used by staff who set a password via the
+  // invite-accept flow; customers stay passwordless (magic link). On success
+  // onAuthStateChange sets the session.
+  const signInWithPassword = useCallback(async ({ email, password } = {}) => {
+    if (!hasSupabase) return { ok: false, error: 'Password sign-in is not configured yet.' };
+    setLoading(true); setError(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: String(email || '').trim(),
+        password: String(password || ''),
+      });
+      if (err) throw err;
+      return { ok: true }; // onAuthStateChange sets the user
+    } catch (err) {
+      const msg = customerSafeAuthError('That email or password was not correct.');
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
+
+  // Update the signed-in user's password (used to clear must_change_password
+  // after an admin force-set a temporary one).
+  const updatePassword = useCallback(async (newPassword) => {
+    if (!hasSupabase) return { ok: false, error: 'Not configured.' };
+    setError(null);
+    try {
+      const { data, error: err } = await supabase.auth.updateUser({ password: String(newPassword || '') });
+      if (err) throw err;
+      // Clear the must-change flag now that they've rotated it.
+      try { await supabase.from('profiles').update({ must_change_password: false }).eq('id', data?.user?.id); } catch { /* non-fatal */ }
+      const u = await buildSupabaseUser(data?.user || null);
+      if (u) setUser(u);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: customerSafeAuthError('Could not update your password.') };
+    }
   }, []);
 
   // Phone OTP (Supabase). signInWithPhone texts a code (delivered via the Quo
@@ -309,6 +353,9 @@ export function AuthStoreProvider({ children }) {
     const identifier = normalizeLoginIdentifier(email);
     const isDemoAccount = isDemoAuthAllowed()
       && Object.keys(DEMO_USERS).some((k) => normalizeLoginIdentifier(k) === identifier);
+    // Staff with a password sign in directly; passwordless customers (no
+    // password supplied) get a magic link as before.
+    if (hasSupabase && !isDemoAccount && String(password || '').length > 0) return signInWithPassword({ email, password });
     if (hasSupabase && !isDemoAccount) return signInWithEmail(email);
 
     setLoading(true); setError(null);
@@ -346,7 +393,7 @@ export function AuthStoreProvider({ children }) {
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
-  }, [signInWithEmail]);
+  }, [signInWithEmail, signInWithPassword]);
 
   // "Forgot password" under a passwordless model is just sending a fresh
   // magic-link to the email on file — same flow as sign-in.
@@ -366,7 +413,7 @@ export function AuthStoreProvider({ children }) {
     {
       value: {
         user, loading, error,
-        signIn, signInWithEmail, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
+        signIn, signInWithEmail, signInWithPassword, updatePassword, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
         signInWithPasskey, registerPasskey, signInWithOAuth,
         signOut, requestPasswordReset,
         authBackend: hasSupabase ? 'supabase' : 'demo',

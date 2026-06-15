@@ -325,6 +325,17 @@ export default function Login({ defaultAudience = 'patient' }) {
     // success → redirect effect handles routing (and admin role bounce)
   };
 
+  // Email + password (Supabase). Staff who set a password via the invite flow
+  // sign in here; signIn() routes a supplied password to signInWithPassword.
+  const handlePasswordSubmit = async (event) => {
+    event.preventDefault();
+    setFieldError('');
+    if (!email.trim() || !password) { setFieldError('Enter your email and password.'); return; }
+    const result = await signIn({ email: email.trim(), password });
+    if (!result.ok) setFieldError(result.error || 'That email or password was not correct.');
+    // success → redirect effect handles routing
+  };
+
   // Phone OTP: first submit sends the code, second verifies it.
   const handlePhone = async (event) => {
     event.preventDefault();
@@ -454,6 +465,40 @@ export default function Login({ defaultAudience = 'patient' }) {
     </form>
   );
 
+  const passwordForm = (
+    <form onSubmit={handlePasswordSubmit} className="space-y-4 md:space-y-3" noValidate>
+      <Field
+        id="login-pw-email"
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => { setEmail(event.target.value); setFieldError(''); }}
+        autoComplete="email"
+        placeholder="you@avalonvitality.co"
+      />
+      <Field
+        id="login-pw-password"
+        label="Password"
+        type={showPassword ? 'text' : 'password'}
+        value={password}
+        onChange={(event) => { setPassword(event.target.value); setFieldError(''); }}
+        autoComplete="current-password"
+        placeholder="Your password"
+      >
+        <button
+          type="button"
+          onClick={() => setShowPassword((value) => !value)}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+        >
+          {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
+        </button>
+      </Field>
+      <ErrorBanner message={displayError} />
+      <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
+    </form>
+  );
+
   let body;
   if (linkSent) {
     body = <InboxPanel address={linkSent} onReset={() => { setLinkSent(''); setEmail(''); setView('methods'); }} />;
@@ -474,11 +519,20 @@ export default function Login({ defaultAudience = 'patient' }) {
         {phoneForm}
       </div>
     );
+  } else if (view === 'password') {
+    body = (
+      <div className="space-y-4 md:space-y-3">
+        <BackRow label="All sign-in options" onClick={() => { setView('methods'); setPassword(''); setFieldError(''); }} />
+        {passwordForm}
+      </div>
+    );
   } else if (isAdmin) {
-    // Admin, Supabase: operations-only — passkey + email link, no social.
+    // Admin, Supabase: operations — passkey, email link, or email + password
+    // (staff who set a password via the invite flow), no social.
     body = (
       <div className="space-y-4 md:space-y-3">
         <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
+        <MethodButton label="Sign In With Password" onClick={() => { setView('password'); setFieldError(''); }} icon={<LockKeyhole className="h-4 w-4" strokeWidth={2} />} />
         <Divider />
         {emailForm}
       </div>

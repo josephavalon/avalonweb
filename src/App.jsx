@@ -18,11 +18,16 @@ import { captureAttribution, trackPageView } from '@/lib/analytics';
 // Guard — redirects to /login if no active session; enforces role-based access
 function RequireAuth({ children, allowedRoles }) {
   const { user, loading, authBackend } = useAuthStore();
+  const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
   if (!user) return <Navigate to="/login" replace />;
+  // Admin force-set a temporary password — make them rotate it before anything else.
+  if (user.mustChangePassword && pathname !== '/account/new-password') {
+    return <Navigate to="/account/new-password" replace />;
+  }
   const role = user.role ?? null;
   if (allowedRoles && !allowedRoles.includes(role)) {
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'admin' || user.role === 'staff') return <Navigate to="/admin" replace />;
     if (user.role === 'nurse') return <Navigate to="/provider/shift" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
     return <Navigate to="/login" replace />;
@@ -143,6 +148,9 @@ const AdminInventory = lazyRoute(() => import('./pages/admin/Inventory'));
 const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
 const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
+const AdminTeamSettings = lazyRoute(() => import('./pages/admin/TeamSettings'));
+const InviteAccept = lazyRoute(() => import('./pages/InviteAccept'));
+const NewPassword = lazyRoute(() => import('./pages/NewPassword'));
 
 
 const ScrollToTop = () => {
@@ -304,6 +312,8 @@ function AppRoutes() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/invite/accept" element={<InviteAccept />} />
+            <Route path="/account/new-password" element={<RequireAuth><NewPassword /></RequireAuth>} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
@@ -334,10 +344,10 @@ function AppRoutes() {
             <Route path="/provider/role-os" element={<RequireAuth allowedRoles={['nurse', 'admin']}><RoleOS /></RequireAuth>} />
             <Route path="/provider/reports" element={<RequireAuth allowedRoles={['admin']}><ProviderReports /></RequireAuth>} />
             <Route path="/provider/settings" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderSettings /></RequireAuth>} />
-            <Route path="/admin" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEssentials /></RequireAuth>} />
             <Route path="/admin/acuity" element={<RequireAuth allowedRoles={['admin']}><AdminAcuityControl /></RequireAuth>} />
-            <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin']}><AdminAttioControl /></RequireAuth>} />
-            <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin']}><AdminFinanceControl /></RequireAuth>} />
+            <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminAttioControl /></RequireAuth>} />
+            <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
             <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />
@@ -346,7 +356,8 @@ function AppRoutes() {
             <Route path="/admin/communications" element={<RequireAuth allowedRoles={['admin']}><ProviderCommunications /></RequireAuth>} />
             <Route path="/admin/role-os" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
             <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><AdminInventory /></RequireAuth>} />
-            <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin']}><AdminBookings /></RequireAuth>} />
+            <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
+            <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin']}><AdminTeamSettings /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
