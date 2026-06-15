@@ -58,3 +58,21 @@ export async function requireAdmin(req, res) {
   if (authed.role !== 'admin') { res.status(403).json({ error: 'Admin access required' }); return null; }
   return authed;
 }
+
+/**
+ * Gate a route to any of `roles`. Writes the 401/403 response itself; returns
+ * null when blocked. Use this for customer/scheduling/billing routes the
+ * `staff` tier should reach — e.g. requireRole(req, res, ['admin', 'staff']).
+ */
+export async function requireRole(req, res, roles = []) {
+  const allowed = Array.isArray(roles) ? roles : [roles];
+  const authed = await getAuthedUser(req);
+  if (!authed) { res.status(401).json({ error: 'Sign in required' }); return null; }
+  if (!allowed.includes(authed.role)) { res.status(403).json({ error: 'Insufficient access' }); return null; }
+  return authed;
+}
+
+/** Gate a route to admin or staff (the operator tier). */
+export function requireStaff(req, res) {
+  return requireRole(req, res, ['admin', 'staff']);
+}

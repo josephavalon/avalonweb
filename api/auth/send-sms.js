@@ -15,7 +15,7 @@
 
 import crypto from 'crypto';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
-import { safeLogContext } from '../_lib/safe-error.js';
+import { sendSms } from '../_lib/send-sms.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -144,29 +144,13 @@ export default async function handler(req, res) {
   if (!phone || !otp) return hookError(res, 400, 'Missing phone or otp in hook payload');
   if (phone.length > 32 || otp.length > 16) return hookError(res, 400, 'Invalid phone or otp in hook payload');
 
-  const apiKey = process.env.QUO_API_KEY;
-  const from = process.env.QUO_FROM_NUMBER;
-  if (!apiKey || !from) return hookError(res, 503, 'Quo SMS is not configured');
-
-  const to = String(phone).startsWith('+') ? String(phone) : `+${phone}`;
-  try {
-    const resp = await fetch('https://api.quo.com/v1/messages', {
-      method: 'POST',
-      headers: { Authorization: apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: `Your Avalon Vitality code is ${otp}. It expires shortly — don't share it.`,
-        from,
-        to: [to],
-      }),
-    });
-    if (!resp.ok) {
-      await resp.text().catch(() => '');
-      console.warn('[send-sms] provider send failed', { status: resp.status });
-      return hookError(res, 502, 'SMS provider send failed');
-    }
-    return res.status(200).json({}); // Supabase treats 2xx as delivered
-  } catch (err) {
-    console.warn('[send-sms] provider request error', safeLogContext(err, 'send_sms_provider_request_failed'));
-    return hookError(res, 502, 'SMS provider request failed');
+  const sent = await sendSms({
+    to: phone,
+    body: `Your Avalon Vitality code is ${otp}. It expires shortly — don't share it.`,
+  });
+  if (!sent.ok) {
+    const httpCode = sent.code === 'sms_not_configured' ? 503 : 502;
+    return hookError(res, httpCode, sent.code === 'sms_not_configured' ? 'Quo SMS is not configured' : 'SMS provider send failed');
   }
+  return res.status(200).json({}); // Supabase treats 2xx as delivered
 }

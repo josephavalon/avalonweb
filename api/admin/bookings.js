@@ -11,7 +11,7 @@
 
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
-import { requireAdmin } from '../_lib/supabase-auth.js';
+import { requireStaff } from '../_lib/supabase-auth.js';
 
 function dollarsFromCents(cents) {
   if (cents == null) return null;
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const authed = await requireAdmin(req, res);
+  const authed = await requireStaff(req, res);
   if (!authed) return;
 
   const { db } = authed;
