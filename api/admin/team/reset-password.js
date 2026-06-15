@@ -13,6 +13,7 @@
  */
 import crypto from 'crypto';
 import { requireAdmin } from '../../_lib/supabase-auth.js';
+import { checkRateLimit } from '../../_lib/rate-limit.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { safeErrorCode } from '../../_lib/safe-error.js';
 import { sendStaffRecoveryEmail } from '../../_lib/invite-email.js';
@@ -40,6 +41,22 @@ export default async function handler(req, res) {
   const profileId = String(req.body?.profileId || '').trim();
   const mode = req.body?.mode === 'temp' ? 'temp' : 'email';
   if (!profileId) return res.status(400).json({ error: 'profileId is required.' });
+
+  // Cap an admin's reset sweep: at most 3 resets/minute against a single target,
+  // and 10 resets/minute total per admin. Prevents a compromised admin session
+  // from cycling through every other team member's account back to back.
+  const targetLimit = await checkRateLimit({
+    key: `team-reset:${authed.user?.id || 'unknown'}:${profileId}`,
+    windowMs: 60 * 1000,
+    max: 3,
+  });
+  if (!targetLimit.ok) return res.status(429).json({ error: 'Too many resets for this member. Try again shortly.', code: 'rate_limited' });
+  const actorLimit = await checkRateLimit({
+    key: `team-reset-actor:${authed.user?.id || 'unknown'}`,
+    windowMs: 60 * 1000,
+    max: 10,
+  });
+  if (!actorLimit.ok) return res.status(429).json({ error: 'Too many password resets. Try again shortly.', code: 'rate_limited' });
 
   let target;
   try {

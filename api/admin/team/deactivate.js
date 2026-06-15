@@ -43,11 +43,21 @@ export default async function handler(req, res) {
     const { error } = await db.from('profiles').update(update).eq('id', profileId);
     if (error) throw error;
 
-    // Ban/unban the auth user so an inactive member can't sign in.
+    // Ban/unban the auth user so an inactive member can't sign in. On
+    // deactivate, also revoke ALL outstanding refresh tokens so any existing
+    // session stops working immediately, not just at JWT exp. (The getAuthedUser
+    // status check is the belt; signOut is the suspenders.)
     try {
       await db.auth.admin.updateUserById(profileId, { ban_duration: reactivate ? 'none' : '876000h' });
     } catch (banErr) {
       console.warn('[team/deactivate] auth ban toggle failed', safeErrorCode(banErr, 'auth_ban_failed'));
+    }
+    if (!reactivate) {
+      try {
+        await db.auth.admin.signOut(profileId, 'global');
+      } catch (signOutErr) {
+        console.warn('[team/deactivate] auth signOut failed', safeErrorCode(signOutErr, 'auth_signout_failed'));
+      }
     }
 
     await writeAuditEvent(db, {

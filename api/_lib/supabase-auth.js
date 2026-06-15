@@ -43,11 +43,17 @@ export async function getAuthedUser(req) {
   const user = data.user;
   let role = 'client';
   let tenantId = null;
+  let status = 'active';
   try {
-    const { data: profile } = await db.from('profiles').select('role, tenant_id').eq('id', user.id).maybeSingle();
+    const { data: profile } = await db.from('profiles').select('role, tenant_id, status').eq('id', user.id).maybeSingle();
     if (profile?.role) role = profile.role;
     if (profile?.tenant_id) tenantId = profile.tenant_id;
+    if (profile?.status) status = profile.status;
   } catch { /* no profile row → default client */ }
+  // A deactivated member's JWT remains valid until exp; reject it here so the
+  // ban is effective immediately for the API. (The browser will redirect to
+  // /admin/login on the next 401.)
+  if (status !== 'active') return null;
   // An elevated role with a null tenant would silently bypass every team-core
   // helper's `if (tenantId) q = q.eq('tenant_id', tenantId)` filter, granting
   // cross-tenant read/write. Treat the row as misconfigured and drop the role
