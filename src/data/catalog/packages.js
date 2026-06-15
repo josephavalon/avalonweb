@@ -1,0 +1,65 @@
+import { FlaskConical, Moon, Sparkles, Zap } from 'lucide-react';
+
+export const PACKAGES = [
+  {
+    key: 'hangover',
+    label: 'Post-Night-Out Kit',
+    tagline: 'Hydration support after late nights.',
+    includes: ['Post-Night-Out IV', 'B12 IM shot', 'Glutathione IM shot'],
+    price: 340,
+    save: 30,
+    icon: Moon,
+    tag: 'Tonight',
+    items: [
+      { cartKey: 'pkg-hangover-iv', label: 'Post-Night-Out IV', price: 250, type: 'iv' },
+      { cartKey: 'pkg-hangover-b12', label: 'IM · B12', price: 40, type: 'im' },
+      { cartKey: 'pkg-hangover-glut', label: 'IM · Glutathione', price: 50, type: 'im' },
+    ],
+  },
+  {
+    key: 'performance',
+    label: 'Performance Bundle',
+    tagline: 'Support before or after high-output days.',
+    includes: ['Energy IV', 'NAD+ IM shot', 'MIC IM shot'],
+    price: 380,
+    save: 30,
+    icon: Zap,
+    tag: 'Athlete Favorite',
+    items: [
+      { cartKey: 'pkg-perf-iv', label: 'Energy IV', price: 250, type: 'iv' },
+      { cartKey: 'pkg-perf-nad', label: 'IM · NAD+', price: 80, type: 'im' },
+      { cartKey: 'pkg-perf-mic', label: 'IM · MIC', price: 50, type: 'im' },
+    ],
+  },
+  {
+    key: 'glow',
+    label: 'Glow Stack',
+    tagline: 'Skin, hair, and radiance from within.',
+    includes: ['Beauty IV', 'Glutathione IM shot', 'Biotin IM shot'],
+    price: 335,
+    save: 30,
+    icon: Sparkles,
+    tag: 'Most Requested',
+    items: [
+      { cartKey: 'pkg-glow-iv', label: 'Beauty IV', price: 250, type: 'iv' },
+      { cartKey: 'pkg-glow-glut', label: 'IM · Glutathione', price: 50, type: 'im' },
+      { cartKey: 'pkg-glow-biotin', label: 'IM · Biotin', price: 35, type: 'im' },
+    ],
+  },
+  {
+    key: 'reset',
+    label: 'Total Reset',
+    tagline: "Expanded protocol review. Myers' + NAD+ + B12.",
+    includes: ["Myers' Cocktail IV", 'NAD+ add-on (250mg)', 'B12 IM shot'],
+    price: 680,
+    save: 60,
+    icon: FlaskConical,
+    tag: 'Expanded',
+    items: [
+      { cartKey: 'pkg-reset-iv', label: "Myers' Cocktail IV", price: 250, type: 'iv' },
+      { cartKey: 'pkg-reset-nad', label: 'NAD+ Add-On (250mg)', price: 350, type: 'addon' },
+      { cartKey: 'pkg-reset-b12', label: 'IM · B12', price: 40, type: 'im' },
+      { cartKey: 'pkg-reset-extra', label: 'Extra Fluid', price: 25, type: 'addon' },
+    ],
+  },
+];

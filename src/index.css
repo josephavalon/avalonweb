@@ -1607,6 +1607,14 @@ select:focus-visible {
   transform: translateX(130%);
 }
 
+/* White Book CTA wears the same shimmer sweep, but with a DARK gradient — the
+   default `hsl(var(--foreground) / 0.12)` is white on the dark theme, which goes
+   invisible on the primary's white fill. Use the brand ink at low alpha so the
+   sweep reads as a polished gleam rather than a smudge. */
+.av-hero-action.av-hero-action-primary.av-premium-cta::after {
+  background: linear-gradient(110deg, transparent 0%, rgba(27, 24, 21, 0.10) 46%, transparent 78%);
+}
+
 .av-motion-rail {
   overflow: hidden;
 }

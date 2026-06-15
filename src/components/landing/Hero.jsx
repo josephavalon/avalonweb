@@ -2,7 +2,8 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
-import { premiumHover, premiumTap } from '@/lib/motion';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import MagneticButton from '@/components/ui/MagneticButton';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
@@ -69,81 +70,135 @@ export default function Hero() {
 	          <div className="relative md:flex md:items-center md:justify-between md:gap-10">
         <div className="av-hero-copy md:max-w-xl">
 
-        {/* Layer 1 — title (recedes fastest + scales) */}
+        {/* Layer 1 — title (recedes fastest + scales).
+            Outer motion.div owns the scroll-parallax style. The eyebrow gets its
+            own mount fade; the three headline words stagger independently as
+            inline-block motion.spans (Apple keynote pattern). The mount tween
+            settles to y:0 + opacity:1 in <600ms, then the outer carries the
+            whole title on scroll. */}
         <motion.div style={titleStyle}>
-          <p
+          <motion.p
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.48, delay: 0.08, ease: EASE }}
             className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground md:mb-4 md:text-3xl"
           >
             Avalon Vitality
-          </p>
+          </motion.p>
 
           <h1
             className="font-heading text-[clamp(4rem,11vw,10rem)] leading-[0.88] tracking-[0.02em] text-foreground uppercase max-w-3xl"
           >
-            Recovery<br />On Demand
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
+              className="inline-block align-baseline"
+            >
+              Recovery
+            </motion.span>
+            <br />
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.30, ease: EASE }}
+              className="inline-block align-baseline mr-[0.18em]"
+            >
+              On
+            </motion.span>
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.42, ease: EASE }}
+              className="inline-block align-baseline"
+            >
+              Demand
+            </motion.span>
           </h1>
         </motion.div>
 
-        {/* Layer 2 — proof points (medium parallax) */}
-        <motion.ul
-          style={proofStyle}
-          className="mt-5 grid gap-2 font-body text-[13px] uppercase leading-relaxed tracking-[0.06em] text-foreground md:mt-6 md:text-sm"
-        >
-          {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
-            <li key={label} className="flex items-start gap-3">
-              <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
-              <span>{label}</span>
-            </li>
-          ))}
-        </motion.ul>
+        {/* Layer 2 — proof points (medium parallax).
+            Same split: outer carries scroll parallax, inner carries mount fade-up. */}
+        <motion.div style={proofStyle}>
+          <motion.ul
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.48, delay: 0.32, ease: EASE }}
+            className="mt-5 grid gap-2 font-body text-[13px] uppercase leading-relaxed tracking-[0.06em] text-foreground md:mt-6 md:text-sm"
+          >
+            {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
+              <li key={label} className="flex items-start gap-3">
+                <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
+                <span>{label}</span>
+              </li>
+            ))}
+          </motion.ul>
+        </motion.div>
         </div>
 
-        {/* Layer 3 — action rail (drifts slowest, feels closest) */}
-        <motion.div
-          style={railStyle}
-          className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
-        >
-          {HERO_ACTIONS.map((action) => {
-            const Icon = action.icon;
-            const isBookAction = action.to === BOOK_URL;
-            // BOOK shares the exact card geometry + layout of the two below it
-            // (icon-left, label, arrow-right, same radius/padding); it differs
-            // only by being the white, filled primary. The white look is forced
-            // in CSS (.av-hero-action.av-hero-action-primary) because the night
-            // theme neutralizes raw `bg-white`/`text-*` utilities — so we keep
-            // those utilities OFF the primary and let the stylesheet own color.
-            const actionClassName = isBookAction
-              ? 'av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
-              : 'av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
-            const iconWrapClassName = isBookAction
-              ? 'av-hero-book-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl'
-              : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
-            const foregroundClassName = isBookAction ? '' : 'text-foreground';
+        {/* Layer 3 — action rail (drifts slowest, feels closest).
+            Outer = scroll parallax (style). Inner = mount lift (opacity + y + tiny scale).
+            The CTA cards each carry `av-premium-cta` to wire the existing shimmer sweep
+            in index.css (line 1594); the WHITE Book button gets a dark-shimmer override
+            (.av-hero-action-primary.av-premium-cta::after) so the sweep is visible on
+            white. Only the Book CTA is wrapped in MagneticButton — a single luxury
+            "pull-to-cursor" reserved for the page's primary action. */}
+        <motion.div style={railStyle}>
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.44, delay: 0.52, ease: EASE }}
+            className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
+          >
+            {HERO_ACTIONS.map((action) => {
+              const Icon = action.icon;
+              const isBookAction = action.to === BOOK_URL;
+              // BOOK shares the exact card geometry + layout of the two below it
+              // (icon-left, label, arrow-right, same radius/padding); it differs
+              // only by being the white, filled primary. The white look is forced
+              // in CSS (.av-hero-action.av-hero-action-primary) because the night
+              // theme neutralizes raw `bg-white`/`text-*` utilities — so we keep
+              // those utilities OFF the primary and let the stylesheet own color.
+              const actionClassName = isBookAction
+                ? 'av-premium-cta av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
+                : 'av-premium-cta av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
+              const iconWrapClassName = isBookAction
+                ? 'av-hero-book-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl'
+                : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
+              const foregroundClassName = isBookAction ? '' : 'text-foreground';
 
-            return (
-              <MotionLink
-                key={action.to}
-                to={action.to}
-                onPointerEnter={action.preload}
-                onFocus={action.preload}
-                whileHover={premiumHover}
-                whileTap={premiumTap}
-                className={actionClassName}
-              >
-                <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
-                  <span className={iconWrapClassName}>
-                    <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
+              const cta = (
+                <MotionLink
+                  to={action.to}
+                  onPointerEnter={action.preload}
+                  onFocus={action.preload}
+                  whileHover={premiumHover}
+                  whileTap={premiumTap}
+                  className={actionClassName}
+                >
+                  <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
+                    <span className={iconWrapClassName}>
+                      <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
+                    </span>
+                    <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
+                      {action.label}
+                    </span>
                   </span>
-                  <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
-                    {action.label}
+                  <span className={`relative shrink-0 transition-transform group-hover:translate-x-1 ${foregroundClassName}`}>
+                    <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
                   </span>
-                </span>
-                <span className={`relative shrink-0 transition-transform group-hover:translate-x-1 ${foregroundClassName}`}>
-                  <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
-                </span>
-              </MotionLink>
-            );
-          })}
+                </MotionLink>
+              );
+
+              return isBookAction ? (
+                <MagneticButton key={action.to} strength={14}>
+                  {cta}
+                </MagneticButton>
+              ) : (
+                <React.Fragment key={action.to}>{cta}</React.Fragment>
+              );
+            })}
+          </motion.div>
         </motion.div>
 
         {/* Proof rail */}
