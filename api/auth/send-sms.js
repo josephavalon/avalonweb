@@ -24,6 +24,25 @@ const SEND_SMS_RATE_LIMIT = {
   windowMs: 60 * 1000,
   max: 30,
 };
+// Per-phone caps to bound SMS toll-fraud / pumping attacks. These are tighter
+// than the per-IP bucket above because Supabase auth retries can multiplex
+// many IPs against the same phone.
+const SEND_SMS_PER_PHONE_HOUR = { windowMs: 60 * 60 * 1000, max: 5 };
+const SEND_SMS_PER_PHONE_DAY = { windowMs: 24 * 60 * 60 * 1000, max: 20 };
+// Country-code allowlist for the destination phone. Defaults to US/CA E.164
+// prefixes — premium-rate / international destinations are the most expensive
+// pumping vectors. Override with SEND_SMS_ALLOWED_COUNTRY_PREFIXES env var
+// (comma-separated, e.g. "+1,+44").
+const ALLOWED_COUNTRY_PREFIXES = String(process.env.SEND_SMS_ALLOWED_COUNTRY_PREFIXES || '+1')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function isAllowedDestination(phone) {
+  const e164 = String(phone || '').trim();
+  if (!/^\+[1-9]\d{6,14}$/.test(e164)) return false; // strict E.164
+  return ALLOWED_COUNTRY_PREFIXES.some((prefix) => e164.startsWith(prefix));
+}
 
 function hookHttpError(message, status, code) {
   return Object.assign(new Error(message), { status, code });
@@ -143,6 +162,30 @@ export default async function handler(req, res) {
   const otp = String(payload?.sms?.otp || '').trim();
   if (!phone || !otp) return hookError(res, 400, 'Missing phone or otp in hook payload');
   if (phone.length > 32 || otp.length > 16) return hookError(res, 400, 'Invalid phone or otp in hook payload');
+
+  if (!isAllowedDestination(phone)) {
+    console.warn('[send-sms] destination blocked by country allowlist', { prefix: phone.slice(0, 4) });
+    return hookError(res, 400, 'Destination is not allowed');
+  }
+
+  const phoneHour = await checkRateLimit({
+    key: `send-sms:phone-hour:${phone}`,
+    windowMs: SEND_SMS_PER_PHONE_HOUR.windowMs,
+    max: SEND_SMS_PER_PHONE_HOUR.max,
+  });
+  if (!phoneHour.ok) {
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((phoneHour.reset - Date.now()) / 1000)));
+    return hookError(res, 429, 'Too many SMS to this number. Try again later.');
+  }
+  const phoneDay = await checkRateLimit({
+    key: `send-sms:phone-day:${phone}`,
+    windowMs: SEND_SMS_PER_PHONE_DAY.windowMs,
+    max: SEND_SMS_PER_PHONE_DAY.max,
+  });
+  if (!phoneDay.ok) {
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((phoneDay.reset - Date.now()) / 1000)));
+    return hookError(res, 429, 'Daily SMS limit reached for this number.');
+  }
 
   const sent = await sendSms({
     to: phone,
