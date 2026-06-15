@@ -34,6 +34,7 @@
     "test:security": "node scripts/security-hard-wall-qa.mjs",
     "test:launch-blockers": "node scripts/launch-blocker-qa.mjs",
     "test:release": "node scripts/release-qa.mjs",
+    "test:team": "node scripts/verify-team-access.mjs",
     "assets:audit": "node scripts/asset-audit.mjs",
     "assets:optimize": "node scripts/optimize-bags.mjs",
     "typecheck": "node scripts/typecheck-contracts.mjs",
