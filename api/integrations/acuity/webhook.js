@@ -22,11 +22,13 @@ import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
 
+// bodyParser is disabled so we can HMAC over the exact bytes Acuity signed.
+// Re-stringifying a parsed body breaks the signature compare every time (and
+// silently nudges deployers toward unsetting the webhook secret, which lets
+// anyone forge a "canceled" event for any guessed appointment id).
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '64kb',
-    },
+    bodyParser: false,
   },
 };
 
@@ -50,16 +52,60 @@ async function defaultTenantId(db) {
   return data?.id || null;
 }
 
-function payloadHash(body) {
-  return crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16);
+function payloadHash(rawBody) {
+  return crypto.createHash('sha256').update(rawBody).digest('hex').slice(0, 16);
 }
 
-function parsedPayloadSize(body = {}) {
-  try {
-    return Buffer.byteLength(JSON.stringify(body), 'utf8');
-  } catch {
-    return Number.POSITIVE_INFINITY;
+function httpError(message, status, code) {
+  return Object.assign(new Error(message), { status, code });
+}
+
+function readRawBody(req, maxBytes = ACUITY_WEBHOOK_MAX_BODY_BYTES) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let total = 0;
+    let settled = false;
+    req.on('data', (chunk) => {
+      if (settled) return;
+      const buffer = Buffer.from(chunk);
+      total += buffer.length;
+      if (total > maxBytes) {
+        settled = true;
+        reject(httpError('Acuity webhook payload too large', 413, 'acuity_webhook_body_too_large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(buffer);
+    });
+    req.on('end', () => {
+      if (settled) return;
+      settled = true;
+      resolve(Buffer.concat(chunks));
+    });
+    req.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    });
+  });
+}
+
+// Acuity posts application/x-www-form-urlencoded by default; some testing
+// harnesses post JSON. Accept either, and surface a clear error if neither.
+function parseAcuityBody(rawBody, contentTypeHeader = '') {
+  const contentType = String(contentTypeHeader).split(';')[0].trim().toLowerCase();
+  const text = rawBody.toString('utf8');
+  if (!text) return {};
+  if (contentType === 'application/x-www-form-urlencoded' || contentType === '') {
+    const params = new URLSearchParams(text);
+    const body = {};
+    for (const [k, v] of params) body[k] = v;
+    return body;
   }
+  if (contentType === 'application/json' || contentType.endsWith('+json')) {
+    return JSON.parse(text);
+  }
+  throw httpError(`Unsupported content-type: ${contentType}`, 415, 'acuity_webhook_unsupported_content_type');
 }
 
 function timeoutError(label) {
@@ -95,7 +141,12 @@ function safeEqual(left = '', right = '') {
   return crypto.timingSafeEqual(l, r);
 }
 
-function verifyWebhookSignature(req, body) {
+// Acuity's signature is HMAC-SHA256 of the raw request bytes, base64-encoded,
+// delivered in `X-Acuity-Signature`. We compare the base64 form first and
+// fall back to hex for ergonomics in non-Acuity callers (load balancers etc.
+// occasionally hex-encode). HMAC is computed over the rawBody Buffer — never
+// over a re-stringified parsed object.
+function verifyWebhookSignature(req, rawBody) {
   const secret = process.env.ACUITY_WEBHOOK_SECRET;
   if (!secret) return { required: false, valid: null };
   const supplied = String(
@@ -103,9 +154,14 @@ function verifyWebhookSignature(req, body) {
     || req.headers?.['x-webhook-signature']
     || req.headers?.['x-signature']
     || ''
-  ).replace(/^sha256=/i, '');
-  const expected = crypto.createHmac('sha256', secret).update(JSON.stringify(body)).digest('hex');
-  return { required: true, valid: Boolean(supplied) && safeEqual(supplied, expected) };
+  ).replace(/^sha256=/i, '').trim();
+  if (!supplied) return { required: true, valid: false };
+  const mac = crypto.createHmac('sha256', secret).update(rawBody);
+  const expectedBase64 = mac.digest('base64');
+  // re-hash for hex fallback (Buffer.digest() consumed the hmac)
+  const expectedHex = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  const valid = safeEqual(supplied, expectedBase64) || safeEqual(supplied, expectedHex);
+  return { required: true, valid };
 }
 
 const STATUS_BY_ACTION = {
@@ -168,23 +224,41 @@ export default async function handler(req, res) {
 
   if (!requireLiveWebhook(req, res, { provider: 'acuity', secretEnv: 'ACUITY_WEBHOOK_SECRET' })) return;
 
-  const body = req.body || {};
-  const action = body.action; // scheduled | rescheduled | canceled | changed
-  const apptId = body.id;
-  const signature = verifyWebhookSignature(req, body);
+  let rawBody;
+  try {
+    rawBody = await readRawBody(req);
+  } catch (err) {
+    if (err.code === 'acuity_webhook_body_too_large') {
+      return res.status(413).json({ error: err.message, code: err.code });
+    }
+    return res.status(400).json({ error: 'Could not read webhook body', code: 'acuity_webhook_body_read_failed' });
+  }
 
-  if (parsedPayloadSize(body) > ACUITY_WEBHOOK_MAX_BODY_BYTES) {
-    return res.status(413).json({ error: 'Acuity webhook payload too large', code: 'acuity_webhook_body_too_large' });
-  }
-  if (!action || !apptId) {
-    return res.status(400).json({ error: 'Missing action or appointment id' });
-  }
+  // Verify signature BEFORE parsing — the HMAC is over the bytes Acuity sent,
+  // not our re-stringified parse of them.
+  const signature = verifyWebhookSignature(req, rawBody);
   if (signature.required && !signature.valid) {
-    console.warn(`[acuity/webhook] invalid signature action=${action} apptId=${apptId}`);
+    console.warn('[acuity/webhook] invalid signature');
     return res.status(401).json({ error: 'Invalid webhook signature' });
   }
 
-  const hash = payloadHash(body);
+  let body;
+  try {
+    body = parseAcuityBody(rawBody, req.headers?.['content-type']);
+  } catch (err) {
+    if (err.code === 'acuity_webhook_unsupported_content_type') {
+      return res.status(415).json({ error: err.message, code: err.code });
+    }
+    return res.status(400).json({ error: 'Could not parse webhook body', code: 'acuity_webhook_body_parse_failed' });
+  }
+
+  const action = body.action; // scheduled | rescheduled | canceled | changed
+  const apptId = body.id;
+  if (!action || !apptId) {
+    return res.status(400).json({ error: 'Missing action or appointment id' });
+  }
+
+  const hash = payloadHash(rawBody);
   console.log(`[acuity/webhook] action=${action} apptId=${apptId} hash=${hash}`);
 
   const db = await getSupabase();

@@ -16,10 +16,13 @@ import { resolveInvite } from './validate.js';
 
 const INVALID = { error: 'This invite is invalid or has expired.', code: 'invite_invalid' };
 
-async function findUserIdByEmail(db, email) {
+async function findExistingProfileByEmail(db, email) {
   // profiles.id mirrors auth.users.id; cheaper than paging admin.listUsers.
-  const { data } = await db.from('profiles').select('id').eq('email', email).maybeSingle();
-  return data?.id || null;
+  const { data } = await db.from('profiles')
+    .select('id, tenant_id, status, role')
+    .eq('email', email)
+    .maybeSingle();
+  return data || null;
 }
 
 export default async function handler(req, res) {
@@ -59,11 +62,31 @@ export default async function handler(req, res) {
       user_metadata: fullName || invite.full_name ? { full_name: fullName || invite.full_name } : undefined,
     });
     if (createErr) {
-      const existing = await findUserIdByEmail(db, invite.email);
+      const existing = await findExistingProfileByEmail(db, invite.email);
       if (!existing) throw createErr;
-      const { error: updErr } = await db.auth.admin.updateUserById(existing, { password, email_confirm: true });
+
+      // Refuse to silently reset another tenant's user, or to overwrite an
+      // already-active team member, just because we hold a matching invite.
+      // Without these checks, anyone who can issue/leak an invite for a known
+      // email can hijack the account: updateUserById would reset the password
+      // and the profile patch below would rewrite role + tenant_id, moving the
+      // victim's admin seat into the attacker's tenant.
+      if (existing.tenant_id && existing.tenant_id !== invite.tenant_id) {
+        return res.status(409).json({
+          error: 'This email is already registered to another workspace. Sign in with that account first.',
+          code: 'email_already_registered',
+        });
+      }
+      if (existing.status === 'active' && existing.role !== 'client') {
+        return res.status(409).json({
+          error: 'This email already has an active team account. Sign in instead.',
+          code: 'email_already_active_team',
+        });
+      }
+
+      const { error: updErr } = await db.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
       if (updErr) throw updErr;
-      userId = existing;
+      userId = existing.id;
     } else {
       userId = created?.user?.id || null;
     }

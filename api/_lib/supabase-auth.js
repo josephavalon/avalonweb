@@ -48,6 +48,13 @@ export async function getAuthedUser(req) {
     if (profile?.role) role = profile.role;
     if (profile?.tenant_id) tenantId = profile.tenant_id;
   } catch { /* no profile row → default client */ }
+  // An elevated role with a null tenant would silently bypass every team-core
+  // helper's `if (tenantId) q = q.eq('tenant_id', tenantId)` filter, granting
+  // cross-tenant read/write. Treat the row as misconfigured and drop the role
+  // to client — the user stays signed in, but admin/staff gates 403.
+  if (role !== 'client' && !tenantId) {
+    role = 'client';
+  }
   return { user, role, email: (user.email || '').trim(), tenantId, db };
 }
 

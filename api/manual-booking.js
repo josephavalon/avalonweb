@@ -11,6 +11,8 @@ import { upsertAttioPerson } from './_attio.js';
 import { createSchedulingAppointmentWithFallback } from './_checkout-fulfillment.js';
 import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
+import { requireStaff } from './_lib/supabase-auth.js';
+import { checkRateLimit } from './_lib/rate-limit.js';
 
 function dollarsToCents(value) {
   return Math.max(0, Math.round(Number(value || 0) * 100));
@@ -57,6 +59,20 @@ export default async function handler(req, res) {
   }
 
   if (blockLiveVendorAction(req, res, 'Manual Acuity and Attio booking')) return;
+
+  // Dispatches a real nurse to a real address + creates a real CRM contact.
+  // Must be an authenticated operator, never anonymous.
+  const authed = await requireStaff(req, res);
+  if (!authed) return;
+
+  const limit = await checkRateLimit({
+    key: `manual-booking:${authed.user.id}`,
+    windowMs: 60 * 1000,
+    max: 5,
+  });
+  if (!limit.ok) {
+    return res.status(429).json({ ok: false, error: 'Too many manual bookings. Try again shortly.', code: 'rate_limited' });
+  }
 
   const {
     contact: rawContact = {},
