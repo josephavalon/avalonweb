@@ -58,7 +58,7 @@ export default async function handler(req, res) {
   const authed = await requireStaff(req, res);
   if (!authed) return;
 
-  const { db } = authed;
+  const { db, tenantId } = authed;
   const limit = Math.min(Number(req.query?.limit) || 500, 1000);
   const scope = req.query?.scope === 'upcoming' ? 'upcoming' : 'all';
 
@@ -66,6 +66,10 @@ export default async function handler(req, res) {
     .select('id, tenant_id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
     .order('starts_at', { ascending: scope === 'upcoming', nullsFirst: false })
     .limit(limit);
+
+  // The service-role client bypasses RLS, so the tenant scope has to come from
+  // the JS side. Without it, staff at tenant A would see/charge tenant B.
+  if (tenantId) query = query.eq('tenant_id', tenantId);
 
   if (scope === 'upcoming') {
     query = query.gte('starts_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString());

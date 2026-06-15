@@ -22,13 +22,29 @@ export default async function handler(req, res) {
   const authed = await requireAdmin(req, res);
   if (!authed) return;
 
-  const limit = await checkRateLimit({ key: `team-resend:${clientIp(req)}`, windowMs: 60 * 1000, max: 20 });
-  if (!limit.ok) return res.status(429).json({ error: 'Too many resend attempts. Try again shortly.' });
+  // Two-layer throttle: cap an admin's total resend burst, then a per-invite
+  // bucket so a compromised admin can't email/SMS-storm the same address.
+  const actorLimit = await checkRateLimit({
+    key: `team-resend-actor:${authed.user?.id || clientIp(req)}`,
+    windowMs: 60 * 1000,
+    max: 5,
+  });
+  if (!actorLimit.ok) return res.status(429).json({ error: 'Too many resend attempts. Try again shortly.' });
 
   const { db, tenantId } = authed;
   const inviteId = String(req.body?.inviteId || '').trim();
   const delivery = ['email', 'sms', 'both'].includes(req.body?.delivery) ? req.body.delivery : 'email';
   if (!inviteId) return res.status(400).json({ error: 'inviteId is required.' });
+
+  const inviteLimit = await checkRateLimit({
+    key: `team-resend-invite:${inviteId}`,
+    windowMs: 60 * 1000,
+    max: 1,
+  });
+  if (!inviteLimit.ok) {
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((inviteLimit.reset - Date.now()) / 1000)));
+    return res.status(429).json({ error: 'Wait a moment before resending this invite again.', code: 'rate_limited' });
+  }
 
   let invite;
   try {

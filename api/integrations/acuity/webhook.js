@@ -173,47 +173,65 @@ const STATUS_BY_ACTION = {
 
 // Canonical: upsert public.appointments by acuity_appointment_id (no native
 // unique constraint, so select-then-update/insert).
-async function upsertAppointment(db, appt, action) {
-  const acuityId = String(appt.id);
-  const tenantId = await defaultTenantId(db);
+//
+// external_payload is treated as a merge target, NOT a write-through. The
+// checkout flow writes provider='avalon_checkout' (with items, membership,
+// amounts, consent flags) and we must preserve those when an Acuity
+// "scheduled"/"changed" event arrives. Acuity's view of the world lives under
+// external_payload.acuity so the two never collide.
+function buildAcuityPayload(existing = {}, appt, action) {
   const contact = {
     name: `${appt.firstName || ''} ${appt.lastName || ''}`.trim() || null,
     email: appt.email || null,
     phone: appt.phone || null,
   };
+  return {
+    ...existing,
+    acuity: {
+      action,
+      contact,
+      appointment: appt,
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+async function upsertAppointment(db, appt, action) {
+  const acuityId = String(appt.id);
+  const tenantId = await defaultTenantId(db);
   const now = new Date().toISOString();
+
+  // Load the existing row first so we can merge external_payload rather than
+  // overwriting checkout's authoritative state.
+  const { data: existing } = await db.from('appointments')
+    .select('id, external_payload')
+    .eq('acuity_appointment_id', acuityId)
+    .maybeSingle();
+
   const patch = {
     tenant_id:             tenantId,
     acuity_appointment_id: acuityId,
     starts_at:             appt.datetime || appt.date || null,
     status:                STATUS_BY_ACTION[action] || 'scheduled',
     protocol_key:          appt.type || null,
-    external_payload:      { provider: 'acuity', action, contact, appointment: appt },
+    external_payload:      buildAcuityPayload(existing?.external_payload || {}, appt, action),
     updated_at:            now,
   };
 
-  const { data, error } = await db.from('appointments')
-    .upsert({ ...patch, created_at: now }, {
-      onConflict: 'acuity_appointment_id',
-      ignoreDuplicates: false,
-    })
-    .select('id')
-    .single();
-  if (!error) return data?.id || null;
-
-  if (/constraint|conflict/i.test(error.message || '')) {
-    const { data: existing } = await db.from('appointments')
-      .select('id').eq('acuity_appointment_id', acuityId).maybeSingle();
-    if (existing) {
-      await db.from('appointments').update(patch).eq('id', existing.id);
-      return existing.id;
+  if (existing?.id) {
+    const { error } = await db.from('appointments').update(patch).eq('id', existing.id);
+    if (error) {
+      console.error('[acuity/webhook] appointment update failed', safeLogContext(error, 'appointment_upsert_failed'));
+      return null;
     }
-    const { data: inserted, error: insertError } = await db.from('appointments')
-      .insert({ ...patch, created_at: now }).select('id').single();
-    if (!insertError) return inserted?.id || null;
+    return existing.id;
   }
 
-  console.error('[acuity/webhook] appointment upsert failed', safeLogContext(error, 'appointment_upsert_failed'));
+  const { data: inserted, error: insertError } = await db.from('appointments')
+    .insert({ ...patch, created_at: now }).select('id').single();
+  if (!insertError) return inserted?.id || null;
+
+  console.error('[acuity/webhook] appointment insert failed', safeLogContext(insertError, 'appointment_upsert_failed'));
   return null;
 }
 

@@ -21,6 +21,9 @@ export default async function handler(req, res) {
   const role = String(req.body?.role || '').trim();
   if (!profileId) return res.status(400).json({ error: 'profileId is required.' });
   if (!TEAM_ROLES.includes(role)) return res.status(400).json({ error: "Role must be 'staff' or 'admin'." });
+  if (profileId === authed.user?.id) {
+    return res.status(409).json({ error: "You can't change your own role.", code: 'self_role_change' });
+  }
 
   try {
     const target = await getTeamMember(db, tenantId, profileId);
