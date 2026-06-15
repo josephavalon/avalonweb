@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
+import AvalonMark from '@/components/AvalonMark';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -552,8 +553,8 @@ export default function Login({ defaultAudience = 'patient' }) {
         <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7 md:max-w-[420px] md:p-5">
           <div className="mb-6 flex items-center justify-between gap-4 md:mb-3">
             <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-opacity hover:opacity-70">
-              <span className="block font-heading text-[19px] leading-none tracking-[0.24em] text-foreground">AVALON</span>
-              <span className="mt-1 block font-body text-[8px] uppercase tracking-[0.38em] text-foreground/58">
+              <AvalonMark className="h-9 w-[23px] text-foreground" />
+              <span className="mt-1.5 block font-body text-[8px] uppercase tracking-[0.38em] text-foreground/58">
                 {isAdmin ? 'OPERATIONS' : 'VITALITY'}
               </span>
             </Link>
