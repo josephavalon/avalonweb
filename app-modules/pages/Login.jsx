@@ -552,11 +552,8 @@ export default function Login({ defaultAudience = 'patient' }) {
       <main className="relative mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center">
         <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7 md:max-w-[420px] md:p-5">
           <div className="mb-6 flex items-center justify-between gap-4 md:mb-3">
-            <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-opacity hover:opacity-70">
-              <AvalonMark className="h-9 w-[23px] text-foreground" />
-              <span className="mt-1.5 block font-body text-[8px] uppercase tracking-[0.38em] text-foreground/58">
-                {isAdmin ? 'OPERATIONS' : 'VITALITY'}
-              </span>
+            <Link to="/" className="inline-flex min-h-11 items-center transition-opacity hover:opacity-70">
+              <AvalonMark className="h-12 w-[31px] text-foreground" />
             </Link>
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
               {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
