@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   Droplets, Zap, ShieldCheck, Sparkles, Heart, Plane, FlaskConical, Moon,
   ArrowRight, Check, X, ShoppingBag, Plus, Syringe, ChevronDown, ChevronRight,
-  Flame, BatteryCharging, Shield, Info, LayoutGrid,
+  Flame, Shield, Info, LayoutGrid,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -35,7 +35,7 @@ const IV_ADDONS = [
 const IM_SHOTS = [
   { label: 'B12',         price: 40, icon: Zap,           desc: 'Energy + metabolism support' },
   { label: 'MIC',         price: 50, icon: Flame,         desc: 'Metabolism support' },
-  { label: 'NAD+',        price: 80, icon: BatteryCharging,desc: 'Clinician-reviewed NAD+ support' },
+  { label: 'NAD+',        price: 80, icon: FlaskConical,desc: 'Clinician-reviewed NAD+ support' },
   { label: 'Glutathione', price: 50, icon: Sparkles,      desc: 'Antioxidant + skin clarity' },
   { label: 'Vitamin C',   price: 30, icon: Shield,        desc: 'Immune + antioxidant support' },
   { label: 'Vitamin D',   price: 35, icon: Zap,           desc: 'Vitamin D support' },

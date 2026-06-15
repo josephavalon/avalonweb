@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BatteryCharging,
+  FlaskConical,
   Building2,
   Calendar,
   Check,
@@ -192,7 +193,7 @@ const OUTCOMES = [
 		    key: 'nad',
 		    label: 'NAD+',
 		    sub: 'Advanced.',
-		    icon: BatteryCharging,
+		    icon: FlaskConical,
 		    productKeys: ['nad', 'myers', 'energy'],
 		  },
 		  {
@@ -261,7 +262,7 @@ const THERAPY_GROUPS = [
     desc: 'Cellular energy and longevity protocols.',
     duration: '1–4 hr',
     badge: 'Most booked',
-    icon: BatteryCharging,
+    icon: FlaskConical,
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-vitality', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
 ];
@@ -285,7 +286,7 @@ const CUSTOM_BASE_OPTIONS = [
   { key: 'beauty', label: 'Glow IV', productKey: 'beauty', icon: Sparkles },
   { key: 'postnight', label: 'Post-Night-Out IV', productKey: 'postnight', icon: Moon },
   { key: 'travel', label: 'Travel IV', productKey: 'jetlag', icon: Plane },
-  { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: BatteryCharging },
+  { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: FlaskConical },
   { key: 'cbd', label: 'IV CBD', productKey: 'cbd', icon: CannabisLeaf, badge: 'Review' },
 ];
 
@@ -437,7 +438,7 @@ function buildTypedAddressSuggestion(address, zip, locationType = 'home') {
   };
 }
 
-const BOOKING_DAYS = 180;
+const BOOKING_DAYS = 14;
 const OPEN_HOUR = 8;
 const CLOSE_HOUR = 20;
 const DEFAULT_EXACT_TIME = '10:00';
@@ -1828,7 +1829,7 @@ function buildAddonCatalog(product) {
     const label = String(item?.label || '').toLowerCase();
     if (item?.type === 'im') return item.icon || Syringe;
     if (label.includes('fluid')) return Droplets;
-    if (label.includes('nad')) return BatteryCharging;
+    if (label.includes('nad')) return FlaskConical;
     if (label.includes('glutathione')) return Sparkles;
     if (label.includes('vitamin c')) return ShieldCheck;
     if (label.includes('magnesium')) return Zap;

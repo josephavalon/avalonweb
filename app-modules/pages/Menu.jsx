@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
   ArrowRight,
-  BatteryCharging,
   ChevronDown,
   Droplets,
   FlaskConical,
@@ -318,12 +317,12 @@ export default function Menu() {
 
         <section className="mt-8 grid gap-2 scroll-mt-44 md:mt-14 md:gap-3">
           <div id="iv-vitamins" className="scroll-mt-44">
-            <Foldout title="IV Therapy" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
+            <Foldout title="IV Vitamins" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
               <ProtocolList id="iv-vitamins-protocols" sessions={vitaminSessions} />
             </Foldout>
           </div>
           <div id="iv-nad" className="scroll-mt-44">
-            <Foldout title="IV NAD+" icon={BatteryCharging} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
+            <Foldout title="IV NAD+" icon={FlaskConical} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
               <ProtocolList id="iv-nad-protocols" sessions={nadSessions} expandDoses />
             </Foldout>
           </div>
