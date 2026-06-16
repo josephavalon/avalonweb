@@ -248,7 +248,7 @@ function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
 
 // One-screen session picker: a horizontal segmented pill row (1×–4×) instead of
 // a vertical wizard list. Big tappable cells, active = filled glass + check.
-function SessionSegment({ sessions, onSessions }) {
+function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE }) {
   return (
     <div>
       <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
@@ -275,7 +275,7 @@ function SessionSegment({ sessions, onSessions }) {
         })}
       </div>
       <p className="mt-2.5 font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/64">
-        From {money(VITAMIN_IV_PRICE * sessions)}/mo · {sessions} IV {sessions === 1 ? 'visit' : 'visits'} a month
+        From {money(perIvPrice * sessions)}/mo · {sessions} IV {sessions === 1 ? 'visit' : 'visits'} a month
       </p>
       <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Each session is one IV visit at your home or office. Sessions roll over while your plan is active. 3-month minimum, then pause or cancel anytime.</p>
     </div>
@@ -744,7 +744,7 @@ export default function Subscription() {
               className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
             >
               <Section title={STEP_TITLES.sessions} sub={STEP_SUBS.sessions} first>
-                <SessionSegment sessions={sessions} onSessions={setSessions} />
+                <SessionSegment sessions={sessions} onSessions={setSessions} perIvPrice={perIvPrice} />
               </Section>
 
               <Section title="Who's on this plan" sub="Up to 4 patients on one household plan. Each picks their own protocol.">
