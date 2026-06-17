@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle, ArrowLeft, ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint,
-  LockKeyhole, Mail, MailCheck, ShieldCheck, Smartphone, UserPlus,
+  LockKeyhole, Mail, MailCheck, ShieldCheck, Smartphone, Stethoscope, UserPlus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -215,6 +215,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   // 'nurse' tab is a nav action, not a persistent mode — it routes to /nurses.
   const [mode, setMode] = useState('returning');
   const isNew = !isAdmin && mode === 'new';
+  const isNurse = !isAdmin && mode === 'nurse';
 
   // 'methods' is the passwordless launchpad; 'email'/'phone' are the expanded forms.
   const [view, setView] = useState('methods');
@@ -269,10 +270,10 @@ export default function Login({ defaultAudience = 'patient' }) {
     setPassword('');
   };
 
-  // Patient tab switch. 'nurse' routes away to the coming-soon portal; the other
-  // tabs swap the card body in place and clear any in-flight sign-in state.
+  // Patient tab switch. Every tab — including 'nurse' (an in-card coming-soon
+  // panel) — swaps the card body in place and clears any in-flight sign-in state.
+  // Nothing navigates away, so the card never remounts/refreshes between tabs.
   const switchMode = (next) => {
-    if (next === 'nurse') { navigate('/nurses'); return; }
     if (next === mode) return;
     setMode(next);
     setView('methods');
@@ -391,9 +392,27 @@ export default function Login({ defaultAudience = 'patient' }) {
   const displayError = fieldError || error;
   const heading = isAdmin
     ? ['Admin', 'Sign In']
-    : isNew
-      ? ['New', 'Customer']
-      : ['Welcome', 'Back'];
+    : isNurse
+      ? ['Nurse', 'Portal']
+      : isNew
+        ? ['New', 'Customer']
+        : ['Welcome', 'Back'];
+
+  // Nurse tab: in-card coming-soon panel (mirrors /nurses copy) so switching to
+  // it keeps the same card — no navigation, no remount.
+  const nursePanel = (
+    <div className="space-y-4 text-center">
+      <span className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
+        <Stethoscope className="h-6 w-6" strokeWidth={1.8} />
+      </span>
+      <p className="font-body text-[11px] font-semibold uppercase tracking-[0.28em] text-foreground/55">
+        Coming Soon
+      </p>
+      <p className="mx-auto max-w-[30ch] font-body text-sm font-medium leading-relaxed text-foreground/55">
+        The Avalon Vitality nurse portal is on the way. Registered nurses will manage visits, kits, and clinical reviews from here.
+      </p>
+    </div>
+  );
 
   const emailForm = (
     <form onSubmit={handleEmailLink} className="space-y-4 md:space-y-3" noValidate>
@@ -494,7 +513,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         value={email}
         onChange={(event) => { setEmail(event.target.value); setFieldError(''); }}
         autoComplete="email"
-        placeholder="you@avalonvitality.co"
+        placeholder={isAdmin ? 'you@avalonvitality.co' : 'you@email.com'}
       />
       <Field
         id="login-pw-password"
@@ -621,10 +640,10 @@ export default function Login({ defaultAudience = 'patient' }) {
         <Divider />
         <button
           type="button"
-          onClick={() => { setView('email'); setFieldError(''); }}
+          onClick={() => { setView('password'); setFieldError(''); }}
           className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-foreground/[0.12] bg-background/35 px-4 font-body text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
         >
-          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Email Me A Link</span>
+          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Login With Email</span>
           <ChevronRight className="h-4 w-4" strokeWidth={2} />
         </button>
       </div>
@@ -638,10 +657,10 @@ export default function Login({ defaultAudience = 'patient' }) {
         <Divider />
         <button
           type="button"
-          onClick={() => { setView('email'); setFieldError(''); }}
+          onClick={() => { setView('password'); setFieldError(''); }}
           className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-foreground/[0.12] bg-background/35 px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
         >
-          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Email Me A Link</span>
+          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Login With Email</span>
           <ChevronRight className="h-4 w-4" strokeWidth={2} />
         </button>
       </div>
@@ -695,19 +714,21 @@ export default function Login({ defaultAudience = 'patient' }) {
   );
 
   return (
-    <div className="relative h-screen h-dvh overflow-hidden bg-background px-3 py-2 text-foreground md:px-6 md:py-3">
-      <div className="pointer-events-none fixed inset-0 opacity-70">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--foreground)/0.10),transparent_30%),linear-gradient(180deg,hsl(var(--foreground)/0.035),transparent_42%)]" />
-      </div>
-
-      <main className="relative mx-auto grid h-full min-h-0 w-full max-w-5xl place-items-center">
-        <section className="w-full max-w-[340px] rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
+    // No opaque bg here — the global AvalonStaticBackdrop photo shows through.
+    // Top padding clears the fixed marketing navbar; scrollable so a tall card
+    // is never clipped on short viewports.
+    <div className="relative h-screen h-dvh overflow-y-auto px-3 py-2 text-foreground md:px-6 md:py-3">
+      <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center pt-20 md:pt-24">
+        {/* Card frame stays static — only the tab content below crossfades on
+            selection. Top menu + photo backdrop are global (MobileShell), so they
+            never move on a tab switch. */}
+        <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
           <div className="mb-3 flex items-center justify-between gap-4">
             <Link to="/" className="inline-flex min-h-9 items-center transition-opacity hover:opacity-70">
               <AvalonMark className="h-10 w-[26px] text-foreground" />
             </Link>
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
-              {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
+              {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNurse ? <Stethoscope className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
             </span>
           </div>
 
@@ -725,20 +746,33 @@ export default function Login({ defaultAudience = 'patient' }) {
             </div>
           )}
 
-          <div className="mb-3">
-            <h1 className="font-heading text-[1.9rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.65rem]">
-              {heading[0]}<br />{heading[1]}
-            </h1>
-            {supabaseMode && !isNew && (
-              <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                {isAdmin
-                  ? 'Operations-only. Use your passkey or a secure email link.'
-                  : 'Passwordless — a passkey, a magic link, or your phone.'}
-              </p>
-            )}
-          </div>
+          {/* Heading + body crossfade together on every tab/view switch; keyed
+              only on audience/mode/view so it never remounts mid-form (no focus
+              loss while typing an OTP). initial={false} avoids a double-fade on
+              first mount — the card itself already fades in above. */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={`${audience}-${mode}-${view}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: EASE }}
+              className="flex-1"
+            >
+              <div className="mb-3">
+                <h1 className="font-heading text-[1.9rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.65rem]">
+                  {heading[0]} {heading[1]}
+                </h1>
+                {supabaseMode && isAdmin && (
+                  <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
+                    Operations-only. Use your passkey or a secure email link.
+                  </p>
+                )}
+              </div>
 
-          {isNew ? <NewCustomerPanel showHeading={false} bordered={false} /> : body}
+              {isNew ? <NewCustomerPanel showHeading={false} bordered={false} embedded /> : isNurse ? nursePanel : body}
+            </motion.div>
+          </AnimatePresence>
           {footer}
         </section>
       </main>

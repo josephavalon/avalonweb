@@ -96,8 +96,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
   // scattered across pages now draw nothing.
   if (!globalShell) return null;
+  // Sign-in screens (customer + admin) intentionally DO show the marketing bar.
+  const loginRoute = location.pathname === '/login' || location.pathname === '/admin/login';
   // Admin / provider / member areas own their chrome — no marketing bar there.
-  if (internalToolRoute || authRoute) return null;
+  if (!loginRoute && (internalToolRoute || authRoute)) return null;
 
   return (
     <motion.nav
