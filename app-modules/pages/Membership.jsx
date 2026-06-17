@@ -739,8 +739,8 @@ export default function Subscription() {
       </header>
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-28">
         <div className="mb-4 text-center md:mb-7 md:text-left">
-          <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Build your plan</h1>
-          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/56 md:text-base">Real per-IV pricing. Cancel or pause anytime.</p>
+          <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Craft your protocol</h1>
+          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/56 md:text-base">A custom protocol for every person — up to 4 on one plan. Real per-IV pricing, cancel anytime.</p>
         </div>
 
         <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
@@ -756,7 +756,7 @@ export default function Subscription() {
                 <SessionSegment sessions={sessions} onSessions={setSessions} perIvPrice={perIvPrice} />
               </Section>
 
-              <Section title="Who's on this plan" sub="Up to 4 patients on one household plan. Each picks their own protocol.">
+              <Section title="Who's on this plan" sub="Up to 4 people on one plan — each with a protocol built just for them.">
                 <SessionBuilder
                   people={sessionPeople}
                   activePersonId={activePersonId}
@@ -766,7 +766,7 @@ export default function Subscription() {
                   title=""
                   subline=""
                   footer=""
-                  addLabel="Add a person's protocol"
+                  addLabel="Add another custom protocol"
                 />
               </Section>
 
