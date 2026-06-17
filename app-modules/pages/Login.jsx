@@ -13,6 +13,10 @@ import AvalonMark from '@/components/AvalonMark';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+// Social login (Google/Apple) stays hidden until the Supabase OAuth providers
+// are configured (GL-002). Flip to true to re-enable the buttons.
+const SOCIAL_LOGIN_ENABLED = false;
+
 export function safeLoginRedirectPath(requested) {
   const value = String(requested || '').trim();
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '';
@@ -31,7 +35,10 @@ export function safeLoginRedirectPath(requested) {
 function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1S8.7 5.9 12 5.9c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.3 14.6 2.4 12 2.4 6.9 2.4 2.8 6.5 2.8 11.6S6.9 20.8 12 20.8c5.3 0 8.8-3.7 8.8-8.9 0-.6-.06-1-.15-1.5H12z" />
+      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.29h6.47c-.28 1.48-1.12 2.74-2.39 3.58v2.92h3.76c2.2-2.03 3.65-5.02 3.65-8.52z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.76-2.92c-1.04.7-2.37 1.11-4.18 1.11-3.12 0-5.76-2.11-6.71-4.94H1.4v3.01C3.36 21.24 7.38 24 12 24z" />
+      <path fill="#FBBC05" d="M5.29 14.34A7.22 7.22 0 0 1 4.91 12c0-.81.14-1.6.38-2.34V6.65H1.4A12 12 0 0 0 0 12c0 1.93.46 3.76 1.4 5.35l3.89-3.01z" />
+      <path fill="#EA4335" d="M12 4.72c1.76 0 3.34.61 4.58 1.8l3.44-3.44C17.95 1.15 15.23 0 12 0 7.38 0 3.36 2.76 1.4 6.65l3.89 3.01C6.24 6.83 8.88 4.72 12 4.72z" />
     </svg>
   );
 }
@@ -39,7 +46,7 @@ function GoogleMark() {
 function AppleMark() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-foreground" aria-hidden="true">
-      <path d="M16.4 12.8c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.15-2.8.85-3.5.85-.72 0-1.85-.83-3.05-.8-1.57.02-3 .9-3.82 2.3-1.63 2.83-.42 7 1.16 9.3.77 1.12 1.69 2.38 2.9 2.34 1.16-.05 1.6-.75 3-.75s1.8.75 3.03.72c1.25-.02 2.04-1.14 2.8-2.27.88-1.3 1.24-2.56 1.26-2.62-.03-.01-2.42-.93-2.45-3.68zM14.2 5.9c.64-.78 1.07-1.86.95-2.94-.92.04-2.04.61-2.7 1.39-.59.69-1.11 1.79-.97 2.85 1.03.08 2.08-.52 2.72-1.3z" />
+      <path d="M12.15 6.9c-.95 0-2.42-1.08-3.96-1.04-2.04.03-3.91 1.18-4.96 3.01-2.12 3.68-.55 9.1 1.52 12.09 1.01 1.45 2.21 3.09 3.79 3.04 1.52-.07 2.09-.99 3.94-.99 1.83 0 2.35.99 3.96.95 1.64-.03 2.68-1.48 3.68-2.95 1.16-1.69 1.64-3.33 1.66-3.42-.04-.01-3.18-1.22-3.22-4.86-.03-3.04 2.48-4.49 2.6-4.56-1.43-2.09-3.62-2.32-4.39-2.38-2-.16-3.68 1.09-4.61 1.09zM15.53 3.83C16.37 2.82 16.93 1.4 16.78 0c-1.21.05-2.66.81-3.53 1.82-.78.9-1.45 2.34-1.27 3.71 1.34.1 2.72-.69 3.56-1.7z" />
     </svg>
   );
 }
@@ -61,7 +68,7 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, autoCom
           autoCorrect="off"
           spellCheck={false}
           placeholder={placeholder}
-          className="min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 py-3 font-body text-[16px] font-semibold text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07] md:min-h-[46px] md:py-2.5"
+          className="min-h-[44px] w-full rounded-xl border border-foreground/14 bg-foreground/[0.045] px-4 py-2.5 font-body text-[15px] font-semibold text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07] md:min-h-[40px] md:py-2"
         />
         {children}
       </div>
@@ -94,7 +101,7 @@ function SubmitButton({ loading, idle, busy }) {
       type="submit"
       disabled={loading}
       whileTap={{ scale: 0.985 }}
-      className="flex min-h-[54px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45 md:min-h-[48px]"
+      className="flex min-h-[46px] w-full items-center justify-between rounded-full bg-foreground px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45 md:min-h-[42px]"
     >
       <span>{loading ? busy : idle}</span>
       {loading ? (
@@ -118,7 +125,7 @@ function SegmentedToggle({ options, value, onChange }) {
           key={key}
           type="button"
           onClick={() => onChange(key)}
-          className={`flex min-h-[44px] items-center justify-center gap-2 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-colors ${value === key ? 'bg-foreground text-background' : 'text-foreground/55 hover:text-foreground'}`}
+          className={`flex min-h-[38px] items-center justify-center gap-1.5 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${value === key ? 'bg-foreground text-background' : 'text-foreground/55 hover:text-foreground'}`}
         >
           {Icon ? <Icon className="h-3.5 w-3.5" strokeWidth={2} /> : null}
           {label}
@@ -142,7 +149,7 @@ function MethodButton({ icon, label, onClick, busy, variant = 'ghost' }) {
       type="button"
       onClick={onClick}
       disabled={busy}
-      className={`flex min-h-[56px] md:min-h-[44px] w-full items-center justify-center gap-3 rounded-full font-body text-xs font-bold uppercase tracking-[0.18em] transition-colors disabled:cursor-wait disabled:opacity-50 ${styles}`}
+      className={`flex min-h-[38px] w-full items-center justify-center gap-1.5 rounded-full px-2 font-body text-[9px] font-bold uppercase tracking-[0.1em] transition-colors disabled:cursor-wait disabled:opacity-50 md:min-h-[40px] md:gap-2.5 md:text-[11px] md:tracking-[0.16em] ${styles}`}
     >
       {busy ? <span className={`h-4 w-4 rounded-full border-2 ${spinner} animate-spin`} /> : icon}
       {label}
@@ -152,7 +159,7 @@ function MethodButton({ icon, label, onClick, busy, variant = 'ghost' }) {
 
 function Divider({ label = 'or' }) {
   return (
-    <div className="flex items-center gap-3 py-0.5">
+    <div className="flex items-center gap-3 py-0">
       <span className="h-px flex-1 bg-foreground/10" />
       <span className="font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/40">{label}</span>
       <span className="h-px flex-1 bg-foreground/10" />
@@ -165,7 +172,7 @@ function BackRow({ label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex min-h-[44px] items-center gap-2 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
+      className="inline-flex min-h-[34px] items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/50 transition-colors hover:text-foreground"
     >
       <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
       {label}
@@ -198,7 +205,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [searchParams] = useSearchParams();
   const {
     user, signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp, signInWithPasskey,
-    signInWithOAuth, signOut, authBackend, loading, error,
+    signInWithOAuth, signOut, requestPasswordReset, authBackend, loading, error,
   } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
 
@@ -219,6 +226,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [linkSent, setLinkSent] = useState('');
+  const [resetSent, setResetSent] = useState('');
   const [fieldError, setFieldError] = useState('');
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [oauthBusy, setOauthBusy] = useState('');
@@ -255,6 +263,7 @@ export default function Login({ defaultAudience = 'patient' }) {
     setView('methods');
     setFieldError('');
     setLinkSent('');
+    setResetSent('');
     setOtpSent(false);
     setOtp('');
     setPassword('');
@@ -269,6 +278,7 @@ export default function Login({ defaultAudience = 'patient' }) {
     setView('methods');
     setFieldError('');
     setLinkSent('');
+    setResetSent('');
     setOtpSent(false);
     setOtp('');
     setPassword('');
@@ -280,10 +290,10 @@ export default function Login({ defaultAudience = 'patient' }) {
   useEffect(() => {
     if (!user) return;
     if (isAdmin) {
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'staff') {
         navigate('/admin', { replace: true });
       } else {
-        setFieldError('This account is not an Avalon admin. Sign out and try the customer sign-in.');
+        setFieldError('This account is not an Avalon team account. Sign out and try the customer sign-in.');
         signOut().catch(() => {});
       }
       return;
@@ -334,6 +344,16 @@ export default function Login({ defaultAudience = 'patient' }) {
     const result = await signIn({ email: email.trim(), password });
     if (!result.ok) setFieldError(result.error || 'That email or password was not correct.');
     // success → redirect effect handles routing
+  };
+
+  const handlePasswordReset = async (event) => {
+    event.preventDefault();
+    setFieldError('');
+    const cleanEmail = email.trim();
+    if (!cleanEmail) { setFieldError('Enter your email address.'); return; }
+    const result = await requestPasswordReset(cleanEmail);
+    if (result.ok) setResetSent(cleanEmail);
+    else setFieldError(result.error || 'Could not send the reset link.');
   };
 
   // Phone OTP: first submit sends the code, second verifies it.
@@ -496,15 +516,60 @@ export default function Login({ defaultAudience = 'patient' }) {
       </Field>
       <ErrorBanner message={displayError} />
       <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
+      <button
+        type="button"
+        onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
+        className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
+      >
+        Send me a reset link
+      </button>
     </form>
+  );
+
+  const resetForm = resetSent ? (
+    <div className="space-y-5">
+      <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
+        <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
+        <p className="font-body text-sm font-medium leading-relaxed">
+          Check your inbox — we sent a password reset link to <span className="font-bold">{resetSent}</span>. Open it on this device to choose a new password.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => { setResetSent(''); setEmail(''); setView('methods'); }}
+        className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
+      >
+        Back to sign in
+      </button>
+    </div>
+  ) : (
+    <form onSubmit={handlePasswordReset} className="space-y-4 md:space-y-3" noValidate>
+      <Field
+        id="login-reset-email"
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => { setEmail(event.target.value); setFieldError(''); }}
+        autoComplete="email"
+        placeholder="you@avalonvitality.co"
+      />
+      <ErrorBanner message={displayError} />
+      <SubmitButton loading={loading} idle="Send Reset Link" busy="Sending Link" />
+    </form>
+  );
+
+  const patientMethodButtons = (
+    <div className="grid grid-cols-2 gap-1.5 md:block md:space-y-2">
+      <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
+      {SOCIAL_LOGIN_ENABLED && <MethodButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />}
+      {SOCIAL_LOGIN_ENABLED && <MethodButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />}
+      <MethodButton label="Continue With Phone" onClick={() => { setView('phone'); setFieldError(''); }} icon={<Smartphone className="h-4 w-4" strokeWidth={2} />} />
+    </div>
   );
 
   let body;
   if (linkSent) {
     body = <InboxPanel address={linkSent} onReset={() => { setLinkSent(''); setEmail(''); setView('methods'); }} />;
-  } else if (!supabaseMode) {
-    // Offline beta: ID + password only (no live passwordless backend).
-    body = demoForm;
   } else if (view === 'email') {
     body = (
       <div className="space-y-4 md:space-y-3">
@@ -526,6 +591,13 @@ export default function Login({ defaultAudience = 'patient' }) {
         {passwordForm}
       </div>
     );
+  } else if (view === 'reset') {
+    body = (
+      <div className="space-y-4 md:space-y-3">
+        <BackRow label="All sign-in options" onClick={() => { setView('methods'); setResetSent(''); setFieldError(''); }} />
+        {resetForm}
+      </div>
+    );
   } else if (isAdmin) {
     // Admin, Supabase: operations — passkey, email link, or email + password
     // (staff who set a password via the invite flow), no social.
@@ -537,20 +609,37 @@ export default function Login({ defaultAudience = 'patient' }) {
         {emailForm}
       </div>
     );
+  } else if (!supabaseMode) {
+    // Offline beta keeps visible method choices while preserving the roster ID
+    // sign-in as the working fallback.
+    body = (
+      <div className="space-y-3">
+        {patientMethodButtons}
+        <ErrorBanner message={displayError} />
+        <Divider label="or client id" />
+        {demoForm}
+        <Divider />
+        <button
+          type="button"
+          onClick={() => { setView('email'); setFieldError(''); }}
+          className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-foreground/[0.12] bg-background/35 px-4 font-body text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
+        >
+          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Email Me A Link</span>
+          <ChevronRight className="h-4 w-4" strokeWidth={2} />
+        </button>
+      </div>
+    );
   } else {
     // Patient, Supabase: full passwordless method stack.
     body = (
       <div className="space-y-3 md:space-y-2">
-        <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
-        <MethodButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />
-        <MethodButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />
-        <MethodButton label="Continue With Phone" onClick={() => { setView('phone'); setFieldError(''); }} icon={<Smartphone className="h-4 w-4" strokeWidth={2} />} />
+        {patientMethodButtons}
         <ErrorBanner message={displayError} />
         <Divider />
         <button
           type="button"
           onClick={() => { setView('email'); setFieldError(''); }}
-          className="flex min-h-[54px] w-full items-center justify-between rounded-2xl border border-foreground/[0.12] bg-background/35 px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
+          className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-foreground/[0.12] bg-background/35 px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
         >
           <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Email Me A Link</span>
           <ChevronRight className="h-4 w-4" strokeWidth={2} />
@@ -560,36 +649,44 @@ export default function Login({ defaultAudience = 'patient' }) {
   }
 
   const footer = isAdmin ? (
-    <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5 md:mt-4 md:pt-4">
+    <div className="mt-4 grid gap-1.5 border-t border-foreground/[0.08] pt-3 md:mt-3 md:pt-3">
+      <button
+        type="button"
+        onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
+        className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
+      >
+        Reset staff password
+      </button>
       <button
         type="button"
         onClick={() => switchAudience('patient')}
-        className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+        className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
       >
         Customer sign-in instead
       </button>
     </div>
   ) : (
-    <div className="mt-6 grid gap-3 border-t border-foreground/[0.08] pt-5 md:mt-4 md:pt-4">
+    <div className="mt-4 grid gap-1.5 border-t border-foreground/[0.08] pt-3 md:mt-3 md:pt-3">
       <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
         {!isNew && (
-          <Link
-            to="/forgot"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+          <button
+            type="button"
+            onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
+            className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
           >
             Forgot? Email me a link
-          </Link>
+          </button>
         )}
         <a
           href="mailto:support@avalonvitality.co"
-          className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+          className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
         >
           Need help?
         </a>
         <button
           type="button"
           onClick={() => switchAudience('admin')}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-full font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/42 transition-colors hover:text-foreground/72"
+          className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
         >
           Avalon staff? Sign in
         </button>
@@ -598,24 +695,24 @@ export default function Login({ defaultAudience = 'patient' }) {
   );
 
   return (
-    <div className="relative min-h-screen min-h-dvh overflow-y-auto bg-background px-4 py-4 text-foreground md:px-8 md:py-5">
+    <div className="relative h-screen h-dvh overflow-hidden bg-background px-3 py-2 text-foreground md:px-6 md:py-3">
       <div className="pointer-events-none fixed inset-0 opacity-70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--foreground)/0.10),transparent_30%),linear-gradient(180deg,hsl(var(--foreground)/0.035),transparent_42%)]" />
       </div>
 
-      <main className="relative mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center">
-        <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7 md:max-w-[420px] md:p-5">
-          <div className="mb-6 flex items-center justify-between gap-4 md:mb-3">
-            <Link to="/" className="inline-flex min-h-11 items-center transition-opacity hover:opacity-70">
-              <AvalonMark className="h-12 w-[31px] text-foreground" />
+      <main className="relative mx-auto grid h-full min-h-0 w-full max-w-5xl place-items-center">
+        <section className="w-full max-w-[340px] rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <Link to="/" className="inline-flex min-h-9 items-center transition-opacity hover:opacity-70">
+              <AvalonMark className="h-10 w-[26px] text-foreground" />
             </Link>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
               {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
             </span>
           </div>
 
           {!isAdmin && (
-            <div className="mb-5 md:mb-3">
+            <div className="mb-3">
               <SegmentedToggle
                 options={[
                   { key: 'returning', label: 'Returning' },
@@ -628,8 +725,8 @@ export default function Login({ defaultAudience = 'patient' }) {
             </div>
           )}
 
-          <div className="mb-6 md:mb-3">
-            <h1 className="font-heading text-[2.5rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.85rem]">
+          <div className="mb-3">
+            <h1 className="font-heading text-[1.9rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.65rem]">
               {heading[0]}<br />{heading[1]}
             </h1>
             {supabaseMode && !isNew && (
