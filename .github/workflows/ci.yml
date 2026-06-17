@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Stripe PHI guard
+        run: npm run test:no-phi-in-stripe
+
       - name: Build
         run: npm run build
         env:
@@ -51,7 +54,7 @@ jobs:
           fetch-depth: 0
 
       - name: TruffleHog
-        uses: trufflesecurity/trufflehog@e0a4f6bd35e6fbf9adacfb9d3e3a8a8c5e3b0e7f # v3.79.0
+        uses: trufflesecurity/trufflehog@b9dd330365132cd2d01dd5dc8a857a056a2544e1 # v3.79.0
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before }}

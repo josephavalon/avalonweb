@@ -39,6 +39,19 @@ function formatCheckoutPhone(value) {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
+function cartItemQuantity(item = {}) {
+  const quantity = Number(item.quantity);
+  return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+}
+
+function cartItemTotal(item = {}) {
+  return (Number(item.price) || 0) * cartItemQuantity(item);
+}
+
+function cartItemsTotal(items = []) {
+  return items.reduce((sum, item) => sum + cartItemTotal(item), 0);
+}
+
 function hasAppointmentDetails(appointment = {}, { requireSlot = false } = {}) {
   if (requireSlot) return Boolean(appointment?.acuitySlot?.datetime);
   return Boolean(appointment?.address || appointment?.acuitySlot || appointment?.date);
@@ -104,7 +117,7 @@ function StepBar({ current }) {
 
 function CheckoutTrustConsole({ current, items, membership, appointment }) {
   const hasVisit = items.length > 0;
-  const visitTotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const visitTotal = cartItemsTotal(items);
   const rail = [
     {
       icon: CreditCard,
@@ -154,7 +167,7 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
 
 /* ─── Step 0: Review ─────────────────────────────────────────── */
 function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext }) {
-  const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
+  const itemsTotal = cartItemsTotal(items);
   const hasItems = items.length > 0 || membership;
   const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
     ? membership.name
@@ -201,8 +214,11 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-body text-xs tracking-widest uppercase text-foreground truncate">{item.label}</p>
+                {cartItemQuantity(item) > 1 && (
+                  <p className="mt-0.5 font-body text-[10px] text-foreground/40">${item.price.toLocaleString()} x {cartItemQuantity(item)}</p>
+                )}
               </div>
-              <span className="font-heading text-xl text-foreground tracking-wide">${item.price.toLocaleString()}</span>
+              <span className="font-heading text-xl text-foreground tracking-wide">${cartItemTotal(item).toLocaleString()}</span>
               <button type="button" onClick={() => onRemoveItem(item.cartKey)} aria-label={`Remove ${item.label}`} className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
                 <X className="w-4 h-4" strokeWidth={1.8} />
               </button>
@@ -740,7 +756,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   };
   const contactReady = hasCompleteContact(checkoutContact);
 
-  const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
+  const itemsTotal = cartItemsTotal(items);
   const hasMembership = !!membership;
   const hasItems = items.length > 0;
   const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
@@ -783,21 +799,17 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     setError(null);
     track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
       funnel: 'legacy_checkout',
-      mode: hasMembership ? 'subscription' : 'payment',
+      mode: 'payment',
       has_membership: hasMembership,
       item_count: items.length,
       amount_due: dueToday,
     });
     try {
-      // Determine mode — if there's a subscription, that goes first
-      // (one-time items can be a separate session or combined)
-      const mode = hasMembership ? 'subscription' : 'payment';
-
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode,
+          mode: 'payment',
           items: hasItems ? items : [],
           membership: hasMembership ? membership : null,
           contact: {
@@ -932,8 +944,13 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         <p className={`${labelClass} relative`}>Total</p>
         {items.map((item) => (
           <div key={item.cartKey} className="relative flex justify-between items-center">
-            <span className="font-body text-sm font-semibold text-foreground tracking-wide">{item.label}</span>
-            <span className="font-body text-sm font-semibold text-foreground">${item.price.toLocaleString()}</span>
+            <span className="min-w-0 font-body text-sm font-semibold text-foreground tracking-wide">
+              <span className="block truncate">{item.label}</span>
+              {cartItemQuantity(item) > 1 && (
+                <span className="mt-0.5 block text-[10px] font-medium text-foreground/42">${item.price.toLocaleString()} x {cartItemQuantity(item)}</span>
+              )}
+            </span>
+            <span className="shrink-0 font-body text-sm font-semibold text-foreground">${cartItemTotal(item).toLocaleString()}</span>
           </div>
         ))}
         {membership && (

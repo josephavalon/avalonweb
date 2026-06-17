@@ -1,17 +1,17 @@
 /**
  * GET /api/admin/team/list
  *
- * Admin-only. Returns the staff/admin roster plus pending invites for the
+ * Staff/admin. Returns the staff/admin roster plus pending invites for the
  * caller's tenant, for the Team & User Settings screen.
  */
-import { requireAdmin } from '../../_lib/supabase-auth.js';
+import { requireStaff } from '../../_lib/supabase-auth.js';
 import { listTeamMembers, listPendingInvites } from '../../_lib/team-core.js';
 import { safeErrorCode } from '../../_lib/safe-error.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const authed = await requireAdmin(req, res);
+  const authed = await requireStaff(req, res);
   if (!authed) return;
 
   try {

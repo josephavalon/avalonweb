@@ -1,92 +1,45 @@
-# Avalon PHI Data Flow
+# PHI Data Flow
 
-Internal launch-readiness artifact for HIPAA Track J. This is a map of where
-client health data is collected, stored, transmitted, displayed, and excluded.
-Do not add real client data or secrets to this file.
+This map identifies where protected or sensitive health/payment-adjacent information can move in the launch build and what controls are required before real PHI flows.
 
-## Scope
+## Stores And Processors
 
-Launch scope is mobile IV therapy. The data below covers booking intake,
-checkout fulfillment, appointment summaries, member/admin/nurse surfaces,
-Supabase persistence, Acuity scheduling, Resend email, Stripe payment, Attio
-CRM sync, browser analytics, and browser error telemetry.
-
-## Data Classes
-
-| Class | Examples | Handling |
-| --- | --- | --- |
-| Contact PII | name, email, phone | Needed for checkout, scheduling, receipts, support, and admin operations. |
-| Visit location | address, ZIP, appointment window | Needed for mobile dispatch and Acuity scheduling. |
-| Clinical intake | DOB, consent flags, medical conditions, allergies, medications, emergency contact, notes, GFE or clinical review flags | Treated as PHI. Stored in Supabase appointment payload and sent only to clinical/fulfillment surfaces that need it. |
-| Payment data | Stripe customer/session/payment intent IDs, deposit, balance due, saved-card presence | Operational financial data. No raw card data is stored by Avalon. |
-| Operational IDs | appointment record ID, Acuity appointment ID, order number, reconciliation case IDs | Preferred cross-system references. Safe for metadata/log correlation when separated from contact or clinical fields. |
-
-## Source Of Collection
-
-| Surface | Data Entered | Local Browser Handling | Server Handling |
-| --- | --- | --- | --- |
-| Booking and checkout flow | selected protocol/add-ons, address, ZIP, name, email, phone, DOB, intake flags, consent flags, notes | Cart and local preview handoff can store non-production simulation state. Privacy/security QA blocks direct PHI-like browser storage keys. | `api/create-checkout-session.js` validates and length-caps contact/appointment fields before building checkout payload. |
-| Member portal | authenticated session identity, own appointment summaries | Uses Supabase auth token for `/api/me/*`. | `/api/me/appointments` matches the signed-in user by checkout email and shapes a safe summary; it does not return raw `external_payload`. |
-| Admin portal | staff-visible booking list, contact/location, balances, saved-card presence | Protected by client route guard and server admin checks. | `/api/admin/bookings` requires Supabase admin role before returning staff-visible fields from appointment payload. |
-| Nurse/provider surface | assigned visit context and local pre-API operational state | Demo/local state only until live assignment flow. | Supabase RLS migrations restrict nurse/provider reads to assigned records for PHI-bearing tables. |
-
-## Persistence
-
-| Store | PHI/PII Stored | Current Control |
-| --- | --- | --- |
-| Supabase `public.appointments.external_payload` | Full checkout payload including contact, appointment, selected items, amount details, and clinical intake fields | Required source of truth for fulfillment. RLS is enabled; service-role API paths write server-side. Migrations through `011_launch_messaging_roles.sql` must be applied live before real PHI. |
-| Supabase appointment payment columns | Stripe IDs, deposit/balance amounts, payment status, Acuity ID | Used for billing, reconciliation, and admin charge integrity. Balance charge attempts write immutable `audit_events`. |
-| Supabase clinical tables | visits, consent signatures, record locks/addenda, escalations, adverse events, do-not-treat flags | `010_tighten_clinical_rls_and_reconciliation_cases.sql` limits client reads to own records, nurse/provider reads to assigned records, and admin/clinical authority reads deliberately. |
-| Browser local/session storage | Demo auth/session, cart, theme, analytics queue, local preview booking handoff | Security/privacy QA blocks direct PHI-like storage keys. Live PHI must stay server-side. |
-
-## Third-Party Data Flows
-
-| Destination | Data Sent | Purpose | Boundary |
-| --- | --- | --- | --- |
-| Stripe Checkout | customer email, receipt email, payment line items, amounts, payment method settings, operational metadata | Payment authorization, deposit capture, receipt, saved-card setup for balance collection | Stripe metadata is limited to operational IDs/amounts/item keys and minimal labels. Contact, DOB, address, emergency contact, notes, clinical flags, and item price detail are excluded from metadata. Stripe still receives payment PII needed for checkout/receipts. |
-| Acuity | name, email, phone, appointment time/type, location, DOB, consent fields, clinical intake fields, notes, selected protocol/add-ons | Scheduling and clinical appointment record/dispatch | Acuity is a PHI vendor and requires BAA before real PHI. API errors must not log raw response bodies. |
-| Resend ops email | PHI-rich operations notification: client contact, service, time, location, payment/balance status, IDs | Staff alert when payment is received or fulfillment needs action | Resend requires BAA before real PHI. Ops email is separate from customer-safe email. |
-| Resend customer email | first name and customer-safe payment-received/confirming copy | Reassure customer after payment when appointment is pending confirmation | Must not include internal IDs, raw errors, clinical details, fulfillment errors, address, DOB, emergency contact, or clinical flags. |
-| Attio | contact identity plus CRM-safe segmentation fields | CRM lifecycle/contact sync | Descriptions use an explicit allowlist: source, lifecycle stage, city, plan interest, visit count. DOB, emergency contact, address, ZIP, appointment time, items, clinical flags, payment amounts/status, booking IDs, and service labels are excluded. |
-| Sentry-compatible endpoint | scrubbed browser error events only when `VITE_SENTRY_DSN` is set | Runtime error visibility | `src/lib/errorTelemetry.js` redacts contact fields, query strings, headers, cookies, DOBs, phone numbers, emails, addresses/notes, and sensitive tokens before dispatch. Sentry requires BAA before enabling with real PHI traffic. |
+- Supabase `public.appointments.external_payload`: canonical appointment payload with checkout contact, intake, scheduling, payment state, and fulfillment status. Server-side service role only; client APIs shape safe summaries. **BAA: required, self-serve on Team plan + HIPAA add-on.**
+- Stripe Checkout: payment processor for deposits and balance collection. Metadata must contain operational IDs and amounts only, not DOB, address, notes, medications, allergies, or emergency contact. **BAA: Stripe does NOT sign BAAs.** Route-around: all metadata writes are filtered through `safeStripeMetadata()` (`api/_lib/safe-stripe.js`) — whitelist of allowed keys plus deny-patterns for PHI-shaped names. CI guard: `scripts/no-phi-in-stripe-qa.mjs` (`npm run test:no-phi-in-stripe`).
+- Acuity: scheduling and intake destination for appointment time, contact, address, consent fields, and clinical appointment notes. **BAA: required, self-serve on Powerhouse/Premium tier (in-app link).**
+- Resend ops email: PHI-free per `api/_booking-email.js`. The ops email body contains only an admin deep link — no name, contact, appointment time, address, or amounts. Staff click through to Supabase (BAA-covered) to view details. **BAA: not signed.**
+- Resend customer email: customer-facing confirmation or pending scheduling messages. Generic content only; minimum-necessary patient-authorized communication per HIPAA permitted use. Do not expose raw provider failures.
+- Attio: CRM destination for safe lifecycle/contact fields only. **BAA: not signed; outbound sync is killed by default** — `api/_attio.js` refuses all calls unless `ATTIO_SYNC_ENABLED=true`. Re-enable only after a BAA is executed or after migration to a HIPAA-eligible CRM.
+- Quo (SMS): OTP-only message bodies. SMS is excluded from Quo's BAA, so we lock the body to authentication codes + staff invite codes. `api/_lib/send-sms.js` refuses bodies containing PHI-shaped tokens as defense-in-depth.
+- Sentry-compatible endpoint: telemetry endpoint must use sanitized events and no raw PHI payloads. **BAA: required if `VITE_SENTRY_DSN` is shipped, self-serve on Business tier (Org Settings → Legal & Compliance).**
+- Vercel: hosts all PHI-touching API routes. **BAA: required, click-through on Pro tier; signed on Enterprise.**
 
 ## Appointment Summary Access
 
-| Caller | Access |
-| --- | --- |
-| Booking confirmation page after paid checkout | Calls `checkout/verify`; receives a signed short-lived summary token in component state and sends it to `appointment-summary` through the `x-appointment-summary-token` header. Tokens require the dedicated server-only `APPOINTMENT_SUMMARY_TOKEN_SECRET`. |
-| Authenticated client | Can read an identifiable summary only when their Supabase email matches the checkout email. |
-| Staff roles | Admin and nurse/staff roles can read identifiable summaries for operational use. |
-| Bearer of Stripe session ID only | Receives `401 summary_auth_required`; no address, phone, email, DOB, emergency contact, notes, or clinical flags are returned. |
+Appointment Summary Access requires either a signed summary token from `APPOINTMENT_SUMMARY_TOKEN_SECRET` or an authorized staff session. Query-string summary tokens are treated as unsafe and denied/audited. Denied reads must not return identifiable appointment details.
+
+## Actors
+
+- Client: can read only their own shaped appointment summaries via session email and signed post-checkout summary tokens.
+- Nurse / provider: can access assigned operational/clinical workflow surfaces according to role policies.
+- Admin / operator / clinical authority: can access admin bookings, finance, scheduling reconciliation, and balance collection according to role policies.
 
 ## Exhaust Controls
 
-| Exhaust Surface | Control |
-| --- | --- |
-| Stripe metadata | `buildStripeCheckoutMetadata` emits IDs, fulfillment version, amount cents, payment type, item keys/types, and minimal labels only. |
-| Analytics | `src/lib/analytics.js` documents and enforces no PII in event props; revenue matrix verifies funnel events without contact fields. |
-| Browser error telemetry | `sanitizeErrorTelemetryEvent` redacts common PII/PHI and strips request query strings, headers, cookies, and body data. |
-| API logs | Smoke tests block raw vendor `err.body` logging in checkout/fulfillment/webhook paths. |
-| URLs | Appointment details are not encoded into success URLs; `session_id` alone is not sufficient to read an identifiable summary. |
-| Client portal summaries | `/api/me/appointments` returns shaped visit/payment status and excludes raw `external_payload`. |
+- Use the Supabase service role only in serverless functions.
+- Keep RLS enabled on exposed public tables.
+- Keep audit events for PHI-touching reads and balance charge attempts.
+- Keep Stripe metadata PHI-free.
+- Keep raw provider errors out of customer responses.
+- Keep reconciliation cases for Acuity, email, and CRM failures.
+- Use persistent rate limiting for auth, invite, SMS, and public side-effect endpoints.
+- Maintain BAAs before real PHI flows with Supabase, Acuity, Vercel, Sentry. For vendors that won't sign a BAA (Stripe, Attio, Resend), keep PHI architecturally walled off via the route-around controls listed in the Stores And Processors section.
 
-## Access Control Summary
+## Route-Around Controls (vendors without a BAA)
 
-| Role | Intended Access |
-| --- | --- |
-| Client | Own appointment/payment summaries and own messages. |
-| Nurse / provider | Assigned appointments, visits, patient/person rows, clinical events, notifications, consent signatures, and reconciliation cases tied to assigned appointments. |
-| Admin / operator / clinical authority | Deliberate staff access to tenant operational and clinical records. |
-| Anonymous | No live PHI. Local preview/demo data only when live API is disabled. |
-
-## Go-Live Requirements
-
-- Apply Supabase migrations through `011_launch_messaging_roles.sql`.
-- Set production Supabase URL and anon key in Vercel.
-- Set `VITE_AVALON_ENABLE_LIVE_API=true` and `AVALON_ENABLE_LIVE_API=true` in production.
-- Set server-only `APPOINTMENT_SUMMARY_TOKEN_SECRET` in Vercel before live checkout confirmation.
-- Rotate exposed Acuity and Gemini keys.
-- Confirm Stripe live mode and webhook secrets.
-- Sign BAAs before real PHI flows: Supabase, Acuity, Resend, Sentry, and hosting if PHI transits it.
-- Confirm production MFA decision/enforcement.
-- Run staging drills for forced Acuity failure, webhook/verify race, and unauthenticated appointment-summary probe.
+| Vendor | Control | Source of truth |
+|---|---|---|
+| Stripe | `safeStripeMetadata()` whitelist at every metadata write; CI guard refuses regressions | `api/_lib/safe-stripe.js`, `scripts/no-phi-in-stripe-qa.mjs` |
+| Resend | Ops email body stripped to admin deep link; client details only inside Supabase admin | `api/_booking-email.js` |
+| Attio | Outbound sync disabled by default (`ATTIO_SYNC_ENABLED`); short-circuits at the API client | `api/_attio.js` |
+| Quo SMS | Body is OTP/invite-code only; PHI-token deny patterns refuse the send | `api/_lib/send-sms.js` |

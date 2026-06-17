@@ -29,8 +29,8 @@ function ErrorBanner({ message }) {
 
 export default function ForgotPassword() {
   useSeo({
-    title: 'Email Sign-In Link - Avalon Vitality',
-    description: 'Request a secure Avalon Vitality sign-in link.',
+    title: 'Reset Password - Avalon Vitality',
+    description: 'Request a secure Avalon Vitality password reset link.',
     path: '/forgot',
   });
 
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
     }
     const result = await requestPasswordReset(cleanEmail);
     if (result.ok) setSentTo(cleanEmail);
-    else setFieldError(result.error || 'Could not send the sign-in link.');
+    else setFieldError(result.error || 'Could not send the reset link.');
   };
 
   const displayError = fieldError || error;
@@ -80,10 +80,10 @@ export default function ForgotPassword() {
 
           <div className="mb-7">
             <h1 className="font-heading text-[3.15rem] uppercase leading-[0.86] tracking-tight text-foreground sm:text-[4rem]">
-              Email<br />Link
+              Reset<br />Password
             </h1>
             <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
-              Avalon uses secure email links. Enter your email and open the link on this device to sign in.
+              Enter your email and open the reset link on this device to choose a new password.
             </p>
           </div>
 
@@ -92,7 +92,7 @@ export default function ForgotPassword() {
               <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
                 <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
                 <p className="font-body text-sm font-medium leading-relaxed">
-                  Check your inbox. We sent a secure sign-in link to <span className="font-bold">{sentTo}</span>.
+                  Check your inbox. We sent a password reset link to <span className="font-bold">{sentTo}</span>.
                 </p>
               </div>
               <Link
@@ -129,7 +129,7 @@ export default function ForgotPassword() {
                 whileTap={{ scale: 0.985 }}
                 className="flex min-h-[62px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-sm font-bold uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45"
               >
-                <span>{loading ? 'Sending Link' : 'Email Me A Link'}</span>
+                <span>{loading ? 'Sending Link' : 'Send Reset Link'}</span>
                 {loading ? (
                   <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
                 ) : (

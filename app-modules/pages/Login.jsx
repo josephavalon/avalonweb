@@ -10,6 +10,7 @@ import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
 import AvalonMark from '@/components/AvalonMark';
+import { isDemoAuthAllowed } from '@/lib/preApiSecurity';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -208,6 +209,7 @@ export default function Login({ defaultAudience = 'patient' }) {
     signInWithOAuth, signOut, requestPasswordReset, authBackend, loading, error,
   } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
+  const demoAuthAvailable = isDemoAuthAllowed();
 
   const [audience, setAudience] = useState(defaultAudience === 'admin' ? 'admin' : 'patient');
   const isAdmin = audience === 'admin';
@@ -619,13 +621,20 @@ export default function Login({ defaultAudience = 'patient' }) {
     );
   } else if (isAdmin) {
     // Admin, Supabase: operations — passkey, email link, or email + password
-    // (staff who set a password via the invite flow), no social.
+    // (staff who set a password via the invite flow), no social. Local/beta
+    // no-API builds also expose the host-gated operator-ID fallback.
     body = (
       <div className="space-y-4 md:space-y-3">
         <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
         <MethodButton label="Sign In With Password" onClick={() => { setView('password'); setFieldError(''); }} icon={<LockKeyhole className="h-4 w-4" strokeWidth={2} />} />
         <Divider />
         {emailForm}
+        {demoAuthAvailable && (
+          <>
+            <Divider label="or operator id" />
+            {demoForm}
+          </>
+        )}
       </div>
     );
   } else if (!supabaseMode) {
@@ -724,7 +733,11 @@ export default function Login({ defaultAudience = 'patient' }) {
             never move on a tab switch. */}
         <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
           <div className="mb-3 flex items-center justify-between gap-4">
-            <Link to="/" className="inline-flex min-h-9 items-center transition-opacity hover:opacity-70">
+            <Link
+              to="/"
+              aria-label="Avalon Vitality home"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center transition-opacity hover:opacity-70"
+            >
               <AvalonMark className="h-10 w-[26px] text-foreground" />
             </Link>
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">

@@ -4,7 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 
-const BASE_URL = process.env.BOOKING_QA_BASE_URL || 'http://localhost:4173';
+const BASE_URL = process.env.BOOKING_QA_BASE_URL || 'http://127.0.0.1:4173';
 const PORT = Number(process.env.BOOKING_QA_DEBUG_PORT || 9338);
 const VIEWPORT = { width: 390, height: 844, deviceScaleFactor: 3, mobile: true };
 
@@ -239,8 +239,13 @@ async function waitForBookingOutcome(cdp) {
       const booking = JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null');
       const handoff = JSON.parse(localStorage.getItem('av.local.webstore.latestHandoff') || 'null');
       const stripeFrame = Array.from(document.querySelectorAll('iframe')).find((frame) => /stripe|checkout/i.test(frame.src || ''));
+      const storageKeys = Object.keys(localStorage)
+        .filter((key) => key.startsWith('av.'))
+        .sort();
       return {
         path: location.pathname,
+        href: location.href,
+        origin: location.origin,
         body: document.body.innerText || '',
         hasEmbeddedCheckout: Boolean(stripeFrame),
         stripeFrameSrc: stripeFrame?.src || '',
@@ -251,12 +256,15 @@ async function waitForBookingOutcome(cdp) {
         payment: booking?.payment || '',
         contact: booking?.contact || null,
         hasHandoff: Boolean(handoff?.bookingId),
+        storageKeys,
         scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
         width: window.innerWidth,
       };
     })()`);
 
-    if (result.hasEmbeddedCheckout || result.path === '/booking/confirmation') return result;
+    const confirmationReady = result.path === '/booking/confirmation' &&
+      ((result.body || '').trim().length > 40 || result.bookingId || result.hasHandoff);
+    if (result.hasEmbeddedCheckout || confirmationReady) return result;
     await wait(250);
   }
 
@@ -331,6 +339,7 @@ try {
   await fillByLabel(cdp, 'Phone', '(415) 555-0199');
   await fillByLabel(cdp, 'DOB', '01/02/1980');
   await fillByLabel(cdp, 'Email', 'qa@avalonvitality.co');
+  await fillByLabel(cdp, 'Emergency contact', 'QA Emergency (415) 555-0100');
   await clickText(cdp, 'CONFIRM & PAY');
   const result = await waitForBookingOutcome(cdp);
 
@@ -348,6 +357,9 @@ try {
   if (!result.hasHandoff && staticFallback) failures.push('No local handoff marker.');
   if (result.scrollWidth - result.width > 2) failures.push(`Horizontal overflow ${result.scrollWidth - result.width}px.`);
   if (cdp.consoleIssues.length) failures.push(`Console issues: ${cdp.consoleIssues.join(' | ')}`);
+  if (failures.length) {
+    failures.push(`Debug href=${result.href || result.path} origin=${result.origin || 'unknown'} keys=${(result.storageKeys || []).join(',') || 'none'} text="${String(result.body || '').replace(/\s+/g, ' ').slice(0, 240)}"`);
+  }
 
   if (failures.length) {
     throw new Error(`Booking QA failed:\n- ${failures.join('\n- ')}`);

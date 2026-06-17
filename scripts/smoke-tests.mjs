@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { allKnownRoutes } from '../src/routes/routeGroups.js';
+import { noindexStaticRoutes } from '../src/data/seoArchitecture.js';
 import {
   IV_ADDONS,
   IV_SESSIONS,
@@ -12,6 +13,7 @@ import {
 import { ADDON_PRICE_BY_LABEL, ITEM_PRICE_BY_KEY } from '../api/_lib/catalog-pricing.js';
 import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../api/_booking-email.js';
+import { sendInviteEmail } from '../api/_lib/invite-email.js';
 import { buildPersonValues } from '../api/_attio.js';
 import { RECONCILIATION_CASE_DEFAULTS, RECONCILIATION_CASE_TYPES } from '../api/_reconciliation.js';
 import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
@@ -29,11 +31,15 @@ function assert(condition, message) {
 }
 
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const authCallbackSource = readFileSync(new URL('../src/pages/AuthCallback.jsx', import.meta.url), 'utf8');
+const newPasswordSource = readFileSync(new URL('../src/pages/NewPassword.jsx', import.meta.url), 'utf8');
 const authStoreSource = readFileSync(new URL('../src/lib/useAuthStore.js', import.meta.url), 'utf8');
+const supabaseClientSource = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8');
 const loginQaSource = readFileSync(new URL('./login-qa.mjs', import.meta.url), 'utf8');
 const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.meta.url), 'utf8');
 const bookingConfirmationSource = readFileSync(new URL('../app-modules/pages/BookingConfirmation.jsx', import.meta.url), 'utf8');
 const checkoutPageSource = readFileSync(new URL('../app-modules/pages/Checkout.jsx', import.meta.url), 'utf8');
+const planCheckoutSource = readFileSync(new URL('../app-modules/pages/PlanCheckout.jsx', import.meta.url), 'utf8');
 const checkoutSuccessSource = readFileSync(new URL('../app-modules/source/pages/CheckoutSuccess.jsx', import.meta.url), 'utf8');
 const appointmentSummarySource = readFileSync(new URL('../api/appointment-summary.js', import.meta.url), 'utf8');
 const createCheckoutSource = readFileSync(new URL('../api/create-checkout-session.js', import.meta.url), 'utf8');
@@ -48,19 +54,33 @@ const adminCollectBalanceSource = readFileSync(new URL('../api/admin/collect-bal
 const chargeBalanceSource = readFileSync(new URL('../api/charge-balance.js', import.meta.url), 'utf8');
 const balanceCoreSource = readFileSync(new URL('../api/_lib/balance-core.js', import.meta.url), 'utf8');
 const bookingEmailSource = readFileSync(new URL('../api/_booking-email.js', import.meta.url), 'utf8');
+const teamInviteSource = readFileSync(new URL('../api/admin/team/invite.js', import.meta.url), 'utf8');
 const adminBookingsSource = readFileSync(new URL('../api/admin/bookings.js', import.meta.url), 'utf8');
+const retryAcuitySource = readFileSync(new URL('../api/admin/bookings/retry-acuity.js', import.meta.url), 'utf8');
+const financeSummarySource = readFileSync(new URL('../api/admin/finance/summary.js', import.meta.url), 'utf8');
 const meAppointmentsSource = readFileSync(new URL('../api/me/appointments.js', import.meta.url), 'utf8');
 const supabaseAuthSource = readFileSync(new URL('../api/_lib/supabase-auth.js', import.meta.url), 'utf8');
 const orderLookupSource = readFileSync(new URL('../api/order-lookup.js', import.meta.url), 'utf8');
 const rateLimitSource = readFileSync(new URL('../api/_lib/rate-limit.js', import.meta.url), 'utf8');
 const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder.jsx', import.meta.url), 'utf8');
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
+const signupPageSource = readFileSync(new URL('../app-modules/pages/Signup.jsx', import.meta.url), 'utf8');
+const forgotPasswordSource = readFileSync(new URL('../app-modules/pages/ForgotPassword.jsx', import.meta.url), 'utf8');
+const memberAccountSource = readFileSync(new URL('../src/pages/members/Account.jsx', import.meta.url), 'utf8');
 const memberDashboardSource = readFileSync(new URL('../app-modules/pages/members/Dashboard.jsx', import.meta.url), 'utf8');
 const adminSchedulingBookingsSource = readFileSync(new URL('../app-modules/pages/admin/Bookings.jsx', import.meta.url), 'utf8');
 const liveAdminBookingsSource = readFileSync(new URL('../app-modules/pages/admin/LiveBookings.jsx', import.meta.url), 'utf8');
+const financeControlSource = readFileSync(new URL('../app-modules/pages/admin/FinanceControl.jsx', import.meta.url), 'utf8');
 const messagingPanelSource = readFileSync(new URL('../src/components/messaging/MessagingPanel.jsx', import.meta.url), 'utf8');
 const useMessagesSource = readFileSync(new URL('../src/hooks/useMessages.js', import.meta.url), 'utf8');
 const sendSmsSource = readFileSync(new URL('../api/auth/send-sms.js', import.meta.url), 'utf8');
+const inviteAcceptSource = readFileSync(new URL('../api/invite/accept.js', import.meta.url), 'utf8');
+const verifySignupSource = readFileSync(new URL('./verify-signup.mjs', import.meta.url), 'utf8');
+const verifyTeamInviteSource = readFileSync(new URL('./verify-team-invite.mjs', import.meta.url), 'utf8');
+const verifyOauthSource = readFileSync(new URL('./verify-oauth.mjs', import.meta.url), 'utf8');
+const verifyBookingToAcuitySource = readFileSync(new URL('./verify-booking-to-acuity.mjs', import.meta.url), 'utf8');
+const verifyPasswordResetSource = readFileSync(new URL('./verify-password-reset.mjs', import.meta.url), 'utf8');
+const verifyProdSource = readFileSync(new URL('./verify-prod.mjs', import.meta.url), 'utf8');
 const acuityWebhookSource = readFileSync(new URL('../api/integrations/acuity/webhook.js', import.meta.url), 'utf8');
 const stripeWebhookSource = readFileSync(new URL('../api/integrations/stripe/webhook.js', import.meta.url), 'utf8');
 const acuityBookSource = readFileSync(new URL('../api/acuity-book.js', import.meta.url), 'utf8');
@@ -68,6 +88,7 @@ const acuityAppointmentSource = readFileSync(new URL('../api/acuity-appointment.
 const acuityAppointmentsSource = readFileSync(new URL('../api/acuity-appointments.js', import.meta.url), 'utf8');
 const acuityAvailabilitySource = readFileSync(new URL('../api/acuity-availability.js', import.meta.url), 'utf8');
 const acuitySource = readFileSync(new URL('../api/_acuity.js', import.meta.url), 'utf8');
+const frontendAcuityTypesSource = readFileSync(new URL('../src/lib/acuityAppointmentTypes.js', import.meta.url), 'utf8');
 const acuityTestSource = readFileSync(new URL('../api/integrations/acuity/test.js', import.meta.url), 'utf8');
 const stripeTestSource = readFileSync(new URL('../api/integrations/stripe/test.js', import.meta.url), 'utf8');
 const safeErrorSource = readFileSync(new URL('../api/_lib/safe-error.js', import.meta.url), 'utf8');
@@ -89,7 +110,10 @@ const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/
 const launchMessagingMigrationSource = readFileSync(new URL('../supabase/migrations/011_launch_messaging_roles.sql', import.meta.url), 'utf8');
 const envExampleSource = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
 const authSetupSource = readFileSync(new URL('../docs/AUTH_SETUP.md', import.meta.url), 'utf8');
+const acuityTypesDocSource = readFileSync(new URL('../docs/ACUITY_TYPES.md', import.meta.url), 'utf8');
+const prodEnvChecklistSource = readFileSync(new URL('../docs/PROD_ENV_CHECKLIST.md', import.meta.url), 'utf8');
 const goLiveStatusSource = readFileSync(new URL('../docs/GO_LIVE_STATUS.md', import.meta.url), 'utf8');
+const goLiveWorkflowSource = readFileSync(new URL('../.github/workflows/go-live-verify.yml', import.meta.url), 'utf8');
 const navbarSource = readFileSync(new URL('../app-modules/source/components/landing/Navbar.jsx', import.meta.url), 'utf8');
 const adminLayoutSource = readFileSync(new URL('../app-modules/source/layouts/AdminLayout.jsx', import.meta.url), 'utf8');
 const providerRoleOsSource = readFileSync(new URL('../app-modules/pages/provider/RoleOS.jsx', import.meta.url), 'utf8');
@@ -258,6 +282,7 @@ for (const rawPersistedError of [
   assert(!checkoutVerifySource.includes(rawPersistedError), `checkout/verify must not persist raw operational errors: ${rawPersistedError}`);
 }
 assert(checkoutVerifySource.includes('appointment_confirmation_pending'), 'checkout/verify must return a customer-safe fulfillment issue code');
+assert(checkoutVerifySource.includes('scheduling_lock_at: failed ? null : undefined'), 'checkout/verify must release the scheduling lock after a persisted Acuity failure');
 assert(checkoutVerifySource.includes('safeLogContext'), 'checkout/verify must sanitize fulfillment error log context');
 assert(!checkoutVerifySource.includes("console.error('[checkout/verify] Acuity fulfillment failed:', err.message"), 'checkout/verify must not log raw Acuity fulfillment errors');
 assert(!checkoutVerifySource.includes("console.warn('[checkout/verify] Attio sync failed:', err.message"), 'checkout/verify must not log raw Attio errors');
@@ -307,15 +332,81 @@ assert(!adminCollectBalanceSource.includes('json({ error: lookupErr.message })')
 assert(!chargeBalanceSource.includes('json({ error: lookupErr.message })'), 'Internal balance lookup must not return raw database errors');
 assert(!bookingEmailSource.includes('return { skipped: true'), 'Fulfillment emails must not silently mark skipped sends as delivered');
 assert(bookingEmailSource.includes('email_delivery_skipped'), 'Fulfillment email skips must become reconciliation-visible failures');
+assert(teamInviteSource.includes('firstDeliveryError?.status || 502'), 'Team invite route must preserve hard email-delivery failure status codes');
+assert(teamInviteSource.includes("firstDeliveryError?.code ? { code: firstDeliveryError.code }"), 'Team invite route must return stable delivery error codes when no channel succeeds');
+assert(inviteAcceptSource.includes(".from('profiles').upsert") && inviteAcceptSource.includes("onConflict: 'id'"), 'Invite accept must upsert the promoted profile instead of assuming the auth trigger inserted it');
+assert(verifyTeamInviteSource.includes('VERIFY_EMAIL_ROOT'), 'Team invite verifier must use a human-owned mailbox root for production email delivery checks');
+assert(verifyTeamInviteSource.includes('Set VERIFY_EMAIL_ROOT to a human-owned mailbox'), 'Team invite verifier must fail early on production targets without VERIFY_EMAIL_ROOT');
+assert(verifyTeamInviteSource.includes("method: 'token'") && verifyTeamInviteSource.includes("method: 'code'"), 'Team invite verifier must exercise both token and email-code acceptance paths');
+assert(verifyOauthSource.includes('Authorization: `Bearer ${anon}`'), 'OAuth verifier must send the anon key as a bearer token as well as apikey');
+assert(verifySignupSource.includes('VERIFY_EMAIL_ROOT'), 'Signup verifier must use a human-owned mailbox root for production signup checks');
+assert(verifySignupSource.includes('production signup verification does not use example.test'), 'Signup verifier must fail early on production targets without VERIFY_EMAIL_ROOT');
+assert(verifySignupSource.includes(".from('profiles').delete().eq('id', userId)"), 'Signup verifier must remove its temporary profile row during cleanup');
+assert(verifyPasswordResetSource.includes('VERIFY_EMAIL_ROOT'), 'Password reset verifier must use a human-owned mailbox root for production email delivery checks');
+assert(verifyPasswordResetSource.includes('Set VERIFY_EMAIL_ROOT to a human-owned mailbox'), 'Password reset verifier must fail early on production targets without VERIFY_EMAIL_ROOT');
+assert(verifyPasswordResetSource.includes(".from('profiles').delete().eq('id', userId)"), 'Password reset verifier must remove its temporary profile row during cleanup');
+assert(verifyPasswordResetSource.includes("redirect.pathname !== '/account/new-password'"), 'Password reset verifier must enforce /account/new-password as the only update target');
+assert(verifyPasswordResetSource.includes('Confirm delivery in the VERIFY_EMAIL_ROOT mailbox'), 'Password reset verifier must disclose the manual hosted email-delivery confirmation');
+assert(signupPageSource.includes("handleOAuth('google')") && signupPageSource.includes("handleOAuth('apple')"), 'Signup page must expose Google and Apple OAuth actions');
+assert(memberAccountSource.includes('registerPasskey') && memberAccountSource.includes('Add Passkey'), 'Member account page must expose passkey enrollment');
+assert(forgotPasswordSource.includes('Could not send the reset link.'), 'Forgot password page must use reset-link copy, not sign-in-link copy');
+assert(verifyProdSource.includes('requiredEnv'), 'verify:prod must preflight required launch verification env');
+assert(verifyProdSource.includes("startsWith('sk_test_')"), 'verify:prod must refuse live Stripe keys');
+for (const verifyProdRequired of [
+  'PUBLIC_SITE_URL',
+  'AVALON_ENABLE_LIVE_API',
+  'VITE_AVALON_ENABLE_LIVE_API',
+  'VITE_STRIPE_PUBLISHABLE_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'APPOINTMENT_SUMMARY_TOKEN_SECRET',
+]) {
+  assert(verifyProdSource.includes(`'${verifyProdRequired}'`), `verify:prod must require ${verifyProdRequired}`);
+  assert(goLiveWorkflowSource.includes(`${verifyProdRequired}:`), `Go-live workflow must pass ${verifyProdRequired} into verify:prod`);
+}
+assert(verifyProdSource.includes("process.env.AVALON_ENABLE_LIVE_API !== 'true'"), 'verify:prod must require live API flags to be true');
+assert(verifyProdSource.includes("startsWith('pk_')"), 'verify:prod must require a Stripe publishable key for the build');
+assert(verifyProdSource.includes('ACUITY_DEFAULT_TYPE_ID') && verifyProdSource.includes('ACUITY_TYPE_HYDRATION') && verifyProdSource.includes('ACUITY_TYPE_MEMBERSHIP'), 'verify:prod must require deterministic Acuity type config');
+for (const workflowStep of ['npm run lint', 'npm run typecheck', 'npm run build', 'npm run verify:prod', 'npm run test:launch-blockers']) {
+  assert(goLiveWorkflowSource.includes(workflowStep), `Go-live workflow must run ${workflowStep}`);
+}
+assert(
+  goLiveWorkflowSource.indexOf('npm run verify:prod') < goLiveWorkflowSource.indexOf('npm run build'),
+  'Go-live workflow must run verify:prod before build so integration smoke gates the prebuilt artifact step'
+);
+assert(
+  goLiveWorkflowSource.indexOf('npm run build') < goLiveWorkflowSource.indexOf('npm run test:launch-blockers'),
+  'Go-live workflow must run launch-blocker checks against the built artifact'
+);
 assert(supabaseAuthSource.includes('tenant_id'), 'Supabase auth helper must carry tenant_id for audit policy inserts');
+assert(supabaseClientSource.includes("flowType: 'pkce'"), 'Supabase browser client must use PKCE so /auth/callback receives an exchangeable code');
+assert(supabaseClientSource.includes('detectSessionInUrl: true'), 'Supabase browser client must detect auth redirects in the browser');
+assert(authStoreSource.includes('emailRedirectTo: `${window.location.origin}/auth/callback`'), 'Email sign-in/signup confirmations must route through /auth/callback');
+assert(authStoreSource.includes('refreshSupabaseSession'), 'Auth store must expose an explicit Supabase session refresh for auth callback routes');
+assert(authCallbackSource.includes('const appUser = await refreshSupabaseSession()'), 'OAuth callback must refresh the auth store before protected-route navigation');
+assert(newPasswordSource.includes('await refreshSupabaseSession()'), 'Password recovery page must refresh the auth store after exchanging the recovery code');
+for (const authUtilityRoute of ['/auth/callback', '/account/new-password']) {
+  assert(appSource.includes(`path="${authUtilityRoute}"`), `App router must expose ${authUtilityRoute}`);
+  assert(noindexStaticRoutes.some((route) => route.path === authUtilityRoute), `Static prerender must create a noindex shell for ${authUtilityRoute}`);
+}
 assert(appSource.includes('const { user, loading, authBackend } = useAuthStore()'), 'Protected routes must read Supabase auth loading state');
 assert(appSource.includes("if (loading && authBackend === 'supabase') return <RouteFallback />"), 'Protected routes must wait for Supabase session hydration before redirecting');
 assert(adminBookingsSource.includes('admin_bookings_read'), 'Admin booking PHI reads must write audit events');
 assert(adminBookingsSource.includes('phiTouched: true'), 'Admin booking read audit must mark PHI touched');
 assert(adminBookingsSource.includes('safeLogContext'), 'Admin booking read failures must sanitize error logs');
 assert(!adminBookingsSource.includes('json({ error: error.message })'), 'Admin booking read failures must not return raw database errors');
+assert((retryAcuitySource.match(/scheduling_lock_at: null/g) || []).length >= 2, 'Retry Acuity endpoint must release the scheduling lock after success and failure');
+assert(retryAcuitySource.includes('admin_retry_acuity'), 'Retry Acuity endpoint must audit retry attempts');
+assert(retryAcuitySource.includes('phiTouched: true'), 'Retry Acuity audit must mark PHI touched because the endpoint reads appointment contact payload');
+assert(retryAcuitySource.includes("query = query.eq('tenant_id', tenantId)"), 'Retry Acuity updates must stay tenant-scoped when tenant_id is known');
+assert(retryAcuitySource.includes("record.reconciliation_status !== 'action_required'"), 'Retry Acuity endpoint must reject direct calls for bookings that are not action_required');
+assert(retryAcuitySource.includes('isPaymentCompleteEnoughForRetry(record.payment_status)'), 'Retry Acuity endpoint must reject direct calls before payment is confirmed');
+assert(retryAcuitySource.includes('retry_payment_not_confirmed'), 'Retry Acuity payment gate must return a stable error code');
+assert(financeSummarySource.includes('admin_finance_summary_read'), 'Admin finance summary reads must write audit events');
+assert(financeSummarySource.includes('phiTouched: true'), 'Admin finance summary audit must mark PHI touched because outstanding rows include contact details');
+assert(!financeSummarySource.includes('customerEmail') || !financeSummarySource.includes('payload: { customerEmail'), 'Admin finance summary audit payload must not store customer emails');
 assert(meAppointmentsSource.includes('client_appointments_read'), 'Client appointment reads must write audit events');
 assert(meAppointmentsSource.includes("match: 'session_email'"), 'Client appointment read audit must avoid storing the email value');
+assert(meAppointmentsSource.includes("query = query.eq('tenant_id', tenantId)"), 'Client appointment reads must tenant-scope the service-role query when tenant_id is known');
 assert(meAppointmentsSource.includes('safeLogContext'), 'Client appointment read failures must sanitize error logs');
 assert(!meAppointmentsSource.includes('json({ error: error.message })'), 'Client appointment read failures must not return raw database errors');
 assert(!memberDashboardSource.includes("error: err.message || 'Could not load your visits.'"), 'Member dashboard must not render raw appointment API errors');
@@ -326,9 +417,16 @@ assert(!authStoreSource.includes("err.message || 'Passkey sign-in failed.'"), 'P
 assert(!authStoreSource.includes("err.message || 'Could not add a passkey.'"), 'Passkey registration must not render raw provider errors');
 assert(!checkoutPageSource.includes('setError(err.message)'), 'Checkout UI must not render raw checkout/provider errors');
 assert(!checkoutPageSource.includes("reason: err.message || 'checkout_request_failed'"), 'Checkout analytics must not send raw failure messages');
+assert(createCheckoutSource.includes("safeLogContext(pendingError, 'appointment_record_unavailable')"), 'Checkout pending appointment-record failures must log sanitized database context');
+assert(!createCheckoutSource.includes("pendingError?.message || 'missing appointment id'"), 'Checkout pending appointment-record failures must not log raw database messages');
 assert(checkoutPageSource.includes('checkoutInFlightRef'), 'Checkout UI must synchronously guard rapid repeat submits');
 assert(checkoutPageSource.includes('Redirecting to secure checkout'), 'Checkout UI must show a blocking redirect-pending state');
 assert(checkoutPageSource.includes('window.location.assign(data.url)'), 'Checkout UI must use an explicit redirect after session creation');
+assert(createCheckoutSource.includes('const requiresScheduling = hasVisitItems || Boolean(membership)'), 'Live checkout must require scheduling for both one-time visits and plans before Stripe payment');
+assert(createCheckoutSource.includes('requiresScheduling && !appointment.acuityDatetime'), 'Live checkout must reject plan checkout without a first appointment time');
+assert(createCheckoutSource.includes('requiresScheduling && !isAdultCheckoutDob'), 'Live checkout must reject plan checkout without an adult birthdate');
+assert(planCheckoutSource.includes('contact.dob.trim()') && planCheckoutSource.includes('contact.emergencyContact.trim()'), 'Plan checkout must collect DOB and emergency contact before starting Stripe payment');
+assert(planCheckoutSource.includes('dob: contact.dob.trim()') && planCheckoutSource.includes('emergencyContact: contact.emergencyContact.trim()'), 'Plan checkout must send DOB and emergency contact into the scheduling payload');
 assert(checkoutPageSource.includes('10_000'), 'Checkout redirect pending state must have a retry fallback timeout');
 assert(checkoutSuccessSource.includes('pendingFulfillment'), 'Checkout success page must inspect pending fulfillment state');
 assert(checkoutSuccessSource.includes("fulfillmentStatus === 'acuity_failed'"), 'Checkout success page must inspect Acuity fulfillment failure state');
@@ -348,8 +446,13 @@ for (const sensitiveAnalyticsField of ['customeremail', 'customername', 'emergen
   assert(serverAnalyticsSource.includes(sensitiveAnalyticsField), `Server analytics deny-list must cover ${sensitiveAnalyticsField}`);
 }
 assert(!adminSchedulingBookingsSource.includes('setError(err.message)'), 'Admin scheduling bookings UI must not render raw provider errors');
+assert(adminSchedulingBookingsSource.includes("authBackend === 'supabase' ? <LiveAdminBookings /> : <AdminBookings />"), '/admin/bookings must use the live payments-backed surface in Supabase mode');
+assert(!financeControlSource.includes("err?.message || 'Could not load finance summary.'"), 'Admin finance UI must not render raw finance API/client errors');
+assert(financeControlSource.includes("error: 'Could not load finance summary.'"), 'Admin finance UI must use customer-safe finance error copy');
 assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Could not load bookings.'"), 'Live admin bookings UI must not render raw booking API errors');
 assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Action failed.'"), 'Live admin booking actions must not render raw provider/API errors');
+assert(!liveAdminBookingsSource.includes("err?.message || 'Acuity retry failed.'"), 'Live admin Acuity retry UI must not render raw provider/API errors');
+assert(liveAdminBookingsSource.includes('Needs scheduling') && liveAdminBookingsSource.includes('Retry Acuity'), 'Live admin bookings must expose Acuity action-required retry controls');
 assert(chargeBalanceSource.includes('key: `charge-balance:${internalTokenFingerprint(req)}`'), 'Internal balance charge must rate-limit by internal token fingerprint');
 assert(chargeBalanceSource.includes("reason: 'rate_limited'"), 'Internal balance charge must audit rate-limited attempts');
 assert(chargeBalanceSource.includes('status(429)'), 'Internal balance charge must return 429 when rate limited');
@@ -383,6 +486,16 @@ for (const kvEnv of ['KV_REST_API_URL', 'KV_REST_API_TOKEN']) {
   assert(envExampleSource.includes(kvEnv), `.env.example must document production rate-limit env ${kvEnv}`);
   assert(authSetupSource.includes(kvEnv), `Auth setup must document production rate-limit env ${kvEnv}`);
   assert(goLiveStatusSource.includes(kvEnv), `Go-live status must track production rate-limit env ${kvEnv}`);
+}
+for (const optionalRuntimeEnv of [
+  'SUPABASE_ANON_KEY',
+  'VITE_APP_VERSION',
+  'VITE_ATTIO_CONFIGURED',
+  'VITE_AVALON_DEMO_AUTH',
+  'VITE_SENTRY_DSN',
+]) {
+  assert(envExampleSource.includes(optionalRuntimeEnv), `.env.example must document optional runtime env ${optionalRuntimeEnv}`);
+  assert(prodEnvChecklistSource.includes(`\`${optionalRuntimeEnv}\``), `Production env checklist must document optional runtime env ${optionalRuntimeEnv}`);
 }
 assert(goLiveStatusSource.includes('GL-015') && goLiveStatusSource.includes('Rate-limit backend'), 'Go-live status must track persistent rate-limit backend readiness');
 assert(manageOrderSource.includes('id="order-email"') && manageOrderSource.includes('id="order-phone"'), 'Manage order form must collect both email and phone');
@@ -512,10 +625,26 @@ assert(!acuityWebhookSource.includes('error_message: err.message'), 'Acuity webh
 assert(!acuityWebhookSource.includes('error: err.message'), 'Acuity webhook reconciliation payloads must use stable error codes');
 assert(acuitySource.includes('no explicit appointment type match found'), 'Acuity live type resolver must not silently choose an unrelated type');
 assert(!acuitySource.includes('using first active Acuity type'), 'Acuity live type resolver must not fall back to the first active type');
+assert(acuitySource.includes('process.env.VERCEL || process.env.VERCEL_ENV'), 'Acuity credentials must fail loud in any Vercel runtime, not only Vercel production');
+assert(acuitySource.includes('ACUITY_USER_ID + ACUITY_API_KEY are required'), 'Acuity missing-credential failure must be explicit');
+const acuityTypeEnvRefs = new Set(`${acuitySource}\n${frontendAcuityTypesSource}\n${envExampleSource}`.match(/\b(?:VITE_)?ACUITY_TYPE_[A-Z0-9_]+\b/g) || []);
+for (const envName of acuityTypeEnvRefs) {
+  assert(acuityTypesDocSource.includes(`\`${envName}\``), `docs/ACUITY_TYPES.md must map ${envName}`);
+}
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_MAX_BODY_BYTES'), 'Stripe webhook must enforce a raw body size limit');
 assert(stripeWebhookSource.includes('webhook_body_too_large'), 'Stripe webhook must reject oversized raw bodies explicitly');
 assert(stripeWebhookSource.includes('STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS'), 'Stripe webhook must enforce a processing timeout');
 assert(stripeWebhookSource.includes("caseType: 'webhook_missed'"), 'Stripe webhook timeout must create a reconciliation case');
+assert(stripeWebhookSource.includes("action: 'duplicate_already_processed'"), 'Stripe webhook duplicate acknowledgements must log a structured result');
+assert(stripeWebhookSource.includes("action: 'processing_timeout'"), 'Stripe webhook timeout acknowledgements must log a structured result');
+assert(stripeWebhookSource.includes("action: 'processing_error'"), 'Stripe webhook error acknowledgements must log a structured result');
+assert(stripeWebhookSource.includes('acuity_missing_appointment_id'), 'Stripe webhook fulfillment must fail closed when Acuity returns no appointment id');
+assert(checkoutVerifySource.includes('acuity_missing_appointment_id'), 'Checkout verify fulfillment must fail closed when Acuity returns no appointment id');
+assert(checkoutFulfillmentSource.includes('export async function createDeferredPlanSubscription'), 'Deferred plan subscription creation must live in the shared checkout fulfillment module');
+assert(stripeWebhookSource.includes('createDeferredPlanSubscription'), 'Stripe webhook must create the deferred plan subscription after Acuity succeeds');
+assert(checkoutVerifySource.includes('createDeferredPlanSubscription'), 'Checkout verify must create the deferred plan subscription when it wins the scheduling race');
+assert(verifyBookingToAcuitySource.includes('Plan webhook + checkout verify race'), 'Booking-to-Acuity verifier must exercise the plan webhook/checkout-verify race');
+assert(verifyBookingToAcuitySource.includes('planSubscriptionId'), 'Booking-to-Acuity verifier must assert the plan race persists a subscription id');
 assert(!stripeWebhookSource.includes('fulfillmentError.body'), 'Stripe webhook must not persist raw fulfillment response bodies');
 assert(!stripeWebhookSource.includes('fulfillmentError: fulfillmentError.message.slice'), 'Stripe webhook must not write raw fulfillment errors into Stripe metadata');
 for (const rawPersistedError of [
@@ -529,6 +658,7 @@ for (const rawPersistedError of [
   assert(!stripeWebhookSource.includes(rawPersistedError), `Stripe webhook must not persist raw operational errors: ${rawPersistedError}`);
 }
 assert(stripeWebhookSource.includes("fulfillmentIssue: 'appointment_confirmation_pending'"), 'Stripe webhook must write customer-safe fulfillment issue codes');
+assert(stripeWebhookSource.includes('scheduling_lock_at:            fulfillmentError ? null : undefined'), 'Stripe webhook must release the scheduling lock after a persisted Acuity failure');
 assert(stripeWebhookSource.includes('safeLogContext'), 'Stripe webhook must sanitize fulfillment error log context');
 assert(!stripeWebhookSource.includes("console.error('[stripe/webhook] Acuity fulfillment failed:', err.message"), 'Stripe webhook must not log raw Acuity fulfillment errors');
 assert(!stripeWebhookSource.includes("console.warn('[stripe/webhook] Attio sync failed:', err.message"), 'Stripe webhook must not log raw Attio errors');
@@ -656,9 +786,11 @@ assert(checkoutVerifySource.includes("fulfillmentStatus === 'acuity_failed'"), '
 assert(stripeWebhookSource.includes('if (fulfillmentError && paymentIntentId'), 'Stripe webhook must send customer pending email only after fulfillment error');
 
 const originalResendKey = process.env.RESEND_API_KEY;
+const originalResendFrom = process.env.RESEND_FROM_EMAIL;
+const originalNodeEnv = process.env.NODE_ENV;
 delete process.env.RESEND_API_KEY;
 for (const [label, fn] of [
-  ['operations', () => sendPaymentReceivedEmail({ checkout: { contact: { email: 'ops@example.com' } } })],
+  ['operations', () => sendPaymentReceivedEmail({ appointmentRecordId: 'smoke-test' })],
   ['customer', () => sendCustomerPaymentPendingEmail({ checkout: { contact: { email: 'client@example.com' } } })],
 ]) {
   let rejected = false;
@@ -671,5 +803,29 @@ for (const [label, fn] of [
 }
 if (originalResendKey) process.env.RESEND_API_KEY = originalResendKey;
 else delete process.env.RESEND_API_KEY;
+
+process.env.RESEND_API_KEY = originalResendKey || 'smoke_resend_key';
+delete process.env.RESEND_FROM_EMAIL;
+process.env.NODE_ENV = 'production';
+for (const [label, fn] of [
+  ['invite', () => sendInviteEmail({ to: 'invite@example.test', inviteUrl: 'https://example.test/invite', code: '123456', role: 'staff' })],
+  ['operations', () => sendPaymentReceivedEmail({ appointmentRecordId: 'smoke-test' })],
+  ['customer', () => sendCustomerPaymentPendingEmail({ checkout: { contact: { email: 'client@example.com' } } })],
+]) {
+  let rejected = false;
+  try {
+    await fn();
+  } catch (err) {
+    rejected = err?.code === 'resend_from_email_missing' && err?.status === 500;
+  }
+  assert(rejected, `${label} email must fail closed when RESEND_FROM_EMAIL is missing in production`);
+}
+
+if (originalResendKey) process.env.RESEND_API_KEY = originalResendKey;
+else delete process.env.RESEND_API_KEY;
+if (originalResendFrom) process.env.RESEND_FROM_EMAIL = originalResendFrom;
+else delete process.env.RESEND_FROM_EMAIL;
+if (originalNodeEnv) process.env.NODE_ENV = originalNodeEnv;
+else delete process.env.NODE_ENV;
 
 console.log('Smoke tests passed.');

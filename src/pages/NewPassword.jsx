@@ -1,35 +1,76 @@
-// Forced password change (/account/new-password). RequireAuth redirects any
-// signed-in user with must_change_password=true here (after an admin force-set a
-// temporary password). They set a new one, the flag clears, and they continue.
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// Password update target for both invited staff forced rotation and Supabase
+// recovery links. Recovery links can arrive with a PKCE `?code=` before the app
+// has a session, so this page performs the exchange itself instead of sitting
+// behind RequireAuth.
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import { useAuthStore } from '@/lib/useAuthStore';
+import { hasSupabase, supabase } from '@/lib/supabase';
 
 const FIELD = 'min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 font-body text-[16px] font-semibold text-foreground outline-none transition-colors placeholder:text-foreground/25 focus:border-foreground/42';
 const LABEL = 'mb-2 block font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58';
 
 export default function NewPassword() {
-  const { user, updatePassword } = useAuthStore();
+  const { user, loading, updatePassword, refreshSupabaseSession } = useAuthStore();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [exchangeState, setExchangeState] = useState({ busy: false, attempted: false });
+
+  useEffect(() => {
+    let active = true;
+    async function exchangeRecoveryCode() {
+      if (!hasSupabase || user) return;
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      if (!code) {
+        setExchangeState({ busy: false, attempted: true });
+        return;
+      }
+      setExchangeState({ busy: true, attempted: true });
+      try {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) throw exchangeError;
+        await refreshSupabaseSession();
+        url.searchParams.delete('code');
+        window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+        if (active) setExchangeState({ busy: false, attempted: true });
+      } catch {
+        if (active) {
+          setExchangeState({ busy: false, attempted: true });
+          setError('This password reset link is invalid or expired. Request a new reset link.');
+        }
+      }
+    }
+    exchangeRecoveryCode();
+    return () => { active = false; };
+  }, [user, refreshSupabaseSession]);
+
+  const destination = () => {
+    if (user?.role === 'admin' || user?.role === 'staff') return '/admin';
+    if (user?.role === 'nurse') return '/provider/shift';
+    return '/members/dashboard';
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!user) { setError('Open the reset link from your email before setting a new password.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     setBusy(true);
     const res = await updatePassword(password);
     setBusy(false);
-    if (res.ok) navigate(user?.redirect || '/admin', { replace: true });
+    if (res.ok) navigate(user?.redirect || destination(), { replace: true });
     else setError(res.error || 'Could not update your password.');
   };
+
+  const waitingForSession = hasSupabase && !user && (loading || exchangeState.busy || !exchangeState.attempted);
 
   return (
     <div className="av-page-surface flex min-h-dvh items-center justify-center px-5 py-10 text-foreground">
@@ -38,6 +79,22 @@ export default function NewPassword() {
           <AvalonMark className="h-[22px] w-[14px] text-foreground" />
           <span className="font-body text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/40">Security</span>
         </div>
+        {waitingForSession ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/[0.04] px-4 py-4 text-foreground/65">
+            <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+            <p className="font-body text-sm font-medium">Opening secure password reset...</p>
+          </div>
+        ) : !user ? (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-500/[0.08] px-4 py-3 text-red-200">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+              <p className="font-body text-sm font-medium">{error || 'Open the reset link from your email before setting a new password.'}</p>
+            </div>
+            <Link to="/login" className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-foreground font-body text-sm font-bold uppercase tracking-[0.18em] text-background">
+              Back to sign in
+            </Link>
+          </div>
+        ) : (
         <form onSubmit={submit} className="space-y-4">
           <div>
             <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Choose a new password</h1>
@@ -63,6 +120,7 @@ export default function NewPassword() {
             {busy && <Loader2 className="h-4 w-4 animate-spin" />} Save & continue
           </button>
         </form>
+        )}
       </div>
     </div>
   );

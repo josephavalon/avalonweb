@@ -1,6 +1,7 @@
 import { acuityFetch, resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { upsertAttioPerson } from './_attio.js';
 import { safeLogContext } from './_lib/safe-error.js';
+import { safeStripeMetadata } from './_lib/safe-stripe.js';
 
 export const STRIPE_PAID_FULFILLMENT_VERSION = 'stripe_paid_then_acuity_attio_v1';
 
@@ -17,11 +18,6 @@ function yesNo(value) {
 
 function yesNoDefaultYes(value) {
   return value === false || value === 'false' || value === 'No' ? 'No' : 'Yes';
-}
-
-function metadataValue(value, max = 480) {
-  const stringValue = value == null ? '' : String(value);
-  return stringValue.length > max ? stringValue.slice(0, max) : stringValue;
 }
 
 function dollarsFromCents(cents = 0) {
@@ -337,6 +333,69 @@ export async function createSchedulingAppointmentWithFallback({ appointment, con
   }
 }
 
+function planRecurringInterval(billing) {
+  switch (billing) {
+    case 'annual': return { interval: 'year' };
+    case 'six-month': return { interval: 'month', interval_count: 6 };
+    case 'three-month': return { interval: 'month', interval_count: 3 };
+    default: return { interval: 'month' };
+  }
+}
+
+// Stripe requires trial_end strictly in the future. Anchor the first recurring
+// charge to ONE period after the first visit so month one is covered by the
+// $50 deposit plus after-visit balance, not a same-day subscription charge.
+function planTrialEndUnix(firstVisitIso, recurring) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const base = firstVisitIso ? new Date(firstVisitIso) : new Date();
+  const start = Number.isFinite(base.getTime()) ? new Date(base.getTime()) : new Date();
+  if (recurring.interval === 'year') {
+    start.setFullYear(start.getFullYear() + 1);
+  } else {
+    start.setMonth(start.getMonth() + (recurring.interval_count || 1));
+  }
+  return Math.max(Math.floor(start.getTime() / 1000), nowSec + 3600);
+}
+
+// Create the recurring full-price plan subscription that begins one period AFTER
+// the first visit. Idempotent on the appointment/session id so either the Stripe
+// webhook or /api/checkout/verify can safely create it after Acuity succeeds.
+export async function createDeferredPlanSubscription(stripe, { session, md, paymentMethodId, recordId }) {
+  const monthlyCents = Math.round(Number(md.planMonthlyPriceCents || 0));
+  if (!session.customer || !paymentMethodId || !(monthlyCents > 0)) return null;
+  const recurring = planRecurringInterval(md.membershipBilling || 'monthly');
+  const trialEnd = planTrialEndUnix(md.planFirstVisitDate, recurring);
+  const planName = `${md.membershipName || 'Avalon'} Plan`;
+  const scope = recordId || session.id;
+  const product = await stripe.products.create(
+    { name: planName, metadata: safeStripeMetadata({ kind: 'plan_recurring' }) },
+    { idempotencyKey: `plan-prod:${scope}` },
+  );
+  const subscription = await stripe.subscriptions.create(
+    {
+      customer: session.customer,
+      default_payment_method: paymentMethodId,
+      trial_end: trialEnd,
+      items: [{
+        price_data: {
+          currency: 'usd',
+          product: product.id,
+          unit_amount: monthlyCents,
+          recurring,
+        },
+      }],
+      metadata: safeStripeMetadata({
+        kind: 'plan_recurring',
+        appointmentRecordId: recordId || '',
+        stripeCheckoutSessionId: session.id,
+        planName,
+      }),
+    },
+    { idempotencyKey: `plan-sub:${scope}` },
+  );
+  return subscription.id;
+}
+
 // ── Double-booking guard ─────────────────────────────────────────────────────
 // The Stripe webhook AND the client return-page (checkout/verify) both create
 // the Acuity appointment after payment. Without a lock they can race and create
@@ -466,41 +525,38 @@ export function buildStripeCheckoutMetadata({
   depositCents = 0,
   balanceDueCents = 0,
 } = {}) {
-  return {
+  // All Stripe metadata is filtered through safeStripeMetadata (whitelist +
+  // PHI-name deny patterns) per the HIPAA route-around in docs/PHI_DATA_FLOW.md.
+  // peopleManifest is intentionally NOT included — it contained per-patient DOB.
+  // The canonical patient manifest lives in Supabase appointments.external_payload
+  // (BAA-covered) and is read at fulfillment time, not from Stripe.
+  return safeStripeMetadata({
     fulfillment: STRIPE_PAID_FULFILLMENT_VERSION,
-    appointmentRecordId: metadataValue(appointmentRecordId),
-    paymentMethod: metadataValue(paymentMethod || 'card'),
-    service: metadataValue(primaryService),
-    acuityTypeId: metadataValue(appointment.acuityTypeId),
-    guests: metadataValue(appointment.guests || '1'),
-    locationType: metadataValue(appointment.locationType),
-    orderType: metadataValue(appointment.orderType),
-    paymentType: metadataValue(appointment.paymentType),
-    itemLabels: metadataValue(items.map((item) => item.label || item.key || 'Avalon Visit').join(' | ')),
-    itemKeys: metadataValue(items.map((item) => item.cartKey || item.key || '').filter(Boolean).join(' | ')),
-    itemTypes: metadataValue(items.map((item) => item.type || 'service').join(' | ')),
-    membershipName: metadataValue(membership?.name),
-    membershipBilling: metadataValue(membership?.billing),
+    appointmentRecordId,
+    paymentMethod: paymentMethod || 'card',
+    service: primaryService,
+    acuityTypeId: appointment.acuityTypeId,
+    guests: appointment.guests || '1',
+    locationType: appointment.locationType,
+    orderType: appointment.orderType,
+    paymentType: appointment.paymentType,
+    itemLabels: items.map((item) => item.label || item.key || 'Avalon Visit').join(' | '),
+    itemKeys: items.map((item) => item.cartKey || item.key || '').filter(Boolean).join(' | '),
+    itemTypes: items.map((item) => item.type || 'service').join(' | '),
+    membershipName: membership?.name,
+    membershipBilling: membership?.billing,
     depositType: balanceDueCents > 0 ? 'non_refundable_deductible' : 'full_payment',
     visitSubtotalCents: String(visitSubtotalCents),
     depositAmountCents: String(depositCents),
     balanceDueCents: String(balanceDueCents),
     // Plan-signup carry-through: fulfillment uses these to create the recurring
     // Stripe subscription AFTER the first visit (full price, starts one period
-    // later). Empty for one-time visits. membershipName/membershipBilling above
-    // carry the plan label + interval.
+    // later). Empty for one-time visits.
     planSignup: membership ? 'true' : '',
     planMonthlyPriceCents: membership ? String(Math.round(Number(membership.price || 0) * 100)) : '',
-    planFirstVisitDate: metadataValue(appointment.acuityDatetime),
-    // Multi-person manifest: peopleCount drives deposit scaling; peopleManifest
-    // is a JSON blob keyed by person id with each patient's IV + add-ons + DOB
-    // so fulfillment can intake every patient on the same visit. Stripe metadata
-    // is capped at 500 chars per value — 4 people × short fields fits easily.
+    planFirstVisitDate: appointment.acuityDatetime,
     peopleCount: String(appointment.peopleCount || 1),
-    peopleManifest: Array.isArray(appointment.peopleManifest) && appointment.peopleManifest.length > 0
-      ? metadataValue(JSON.stringify(appointment.peopleManifest).slice(0, 500))
-      : '',
-  };
+  });
 }
 
 export function checkoutPayloadFromStripeMetadata(metadata = {}) {
@@ -578,5 +634,8 @@ export async function syncCheckoutAttioPerson({
     lifecycleStage: 'Booked',
   });
 
-  return response?.data?.id || response?.id || null;
+  if (response?.skipped) {
+    return { id: null, skipped: true, reason: response.reason || 'attio_sync_disabled' };
+  }
+  return { id: response?.data?.id || response?.id || null, skipped: false };
 }

@@ -139,12 +139,17 @@ export function sanitizeCheckoutItems(items = []) {
   if (!Array.isArray(items)) return [];
   return items.map((item) => {
     const price = priceForItem(item);
+    const rawQuantity = Number(item?.quantity);
+    const quantity = Number.isFinite(rawQuantity)
+      ? Math.min(4, Math.max(1, Math.floor(rawQuantity)))
+      : 1;
     if (price == null) {
       throw Object.assign(new Error(`Unknown checkout item: ${item?.label || item?.key || 'item'}`), { status: 400 });
     }
     return {
       ...item,
       price,
+      quantity,
       label: item.label || item.key || 'Avalon service',
       type: item.type || 'service',
     };

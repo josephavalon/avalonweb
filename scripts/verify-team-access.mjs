@@ -14,7 +14,7 @@ import {
   generateToken, generateCode, hashToken, hashCode, safeEqualHex, isInviteLive, isValidTier,
 } from '../api/_lib/invite-token.js';
 import { decideDropsLastAdmin, TEAM_ROLES } from '../api/_lib/team-core.js';
-import { canAccessAdminRoute, allowedRolesForRoute, STAFF_ROUTES } from '../src/lib/adminAccess.js';
+import { canAccessAdminRoute, allowedRolesForRoute, LIVE_ADMIN_ROUTES } from '../src/lib/adminAccess.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -85,16 +85,23 @@ check('TEAM_ROLES is exactly staff + admin', () => {
 });
 
 console.log('\n[3] Role → allowed routes');
-check('admin can open every route, including team + sensitive', () => {
-  for (const p of ['/admin', '/admin/crm', '/admin/team', '/admin/inventory', '/admin/credentials']) {
-    assert.equal(canAccessAdminRoute('admin', p), true);
+check('admin can open only live admin routes when preview is off', () => {
+  for (const p of LIVE_ADMIN_ROUTES) assert.equal(canAccessAdminRoute('admin', p), true);
+  for (const p of ['/admin/crm', '/admin/credentials', '/admin/field', '/admin/client-heat-map', '/admin/dispatch']) {
+    assert.equal(canAccessAdminRoute('admin', p), false);
   }
 });
-check('staff can open customer/scheduling/billing only', () => {
-  for (const p of STAFF_ROUTES) assert.equal(canAccessAdminRoute('staff', p), true);
+check('dispatch and preview surfaces are redirect-only when preview is off', () => {
+  for (const role of ['admin', 'staff']) {
+    assert.equal(canAccessAdminRoute(role, '/admin/dispatch'), false);
+    assert.equal(canAccessAdminRoute(role, '/admin/client-heat-map'), false);
+  }
 });
-check('staff is blocked from team + sensitive routes', () => {
-  for (const p of ['/admin/team', '/admin/inventory', '/admin/credentials', '/admin/field', '/admin/client-heat-map']) {
+check('staff can open the live staff surface, including read-only Team', () => {
+  for (const p of LIVE_ADMIN_ROUTES) assert.equal(canAccessAdminRoute('staff', p), true);
+});
+check('staff is blocked from hidden preview and sensitive routes when preview is off', () => {
+  for (const p of ['/admin/crm', '/admin/credentials', '/admin/field', '/admin/client-heat-map', '/admin/dispatch']) {
     assert.equal(canAccessAdminRoute('staff', p), false);
   }
 });
@@ -104,7 +111,8 @@ check('unknown role can open nothing', () => {
 });
 check('allowedRolesForRoute adds staff only on staff routes', () => {
   assert.deepEqual(allowedRolesForRoute('/admin/crm'), ['admin', 'staff']);
-  assert.deepEqual(allowedRolesForRoute('/admin/team'), ['admin']);
+  assert.deepEqual(allowedRolesForRoute('/admin/team'), ['admin', 'staff']);
+  assert.deepEqual(allowedRolesForRoute('/admin/credentials'), ['admin']);
 });
 
 console.log(`\n${process.exitCode ? 'FAILED' : `OK — ${passed} checks passed`}\n`);

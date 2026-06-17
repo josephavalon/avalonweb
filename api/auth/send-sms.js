@@ -16,6 +16,7 @@
 import crypto from 'crypto';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { sendSms } from '../_lib/send-sms.js';
+import { safeLogContext } from '../_lib/safe-error.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -192,6 +193,11 @@ export default async function handler(req, res) {
     body: `Your Avalon Vitality code is ${otp}. It expires shortly — don't share it.`,
   });
   if (!sent.ok) {
+    const resp = sent;
+    console.warn('[send-sms] SMS provider send failed', {
+      status: resp.status,
+      context: safeLogContext(resp, 'sms_provider_send_failed'),
+    });
     const httpCode = sent.code === 'sms_not_configured' ? 503 : 502;
     return hookError(res, httpCode, sent.code === 'sms_not_configured' ? 'Quo SMS is not configured' : 'SMS provider send failed');
   }

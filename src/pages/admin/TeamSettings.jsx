@@ -63,6 +63,7 @@ function Banner({ kind, children, onClose }) {
 export default function TeamSettings() {
   const { user, authBackend } = useAuthStore();
   const isDemo = authBackend !== 'supabase';
+  const canManageTeam = isDemo || user?.role === 'admin';
 
   const [members, setMembers] = useState([]);
   const [invites, setInvites] = useState([]);
@@ -91,11 +92,11 @@ export default function TeamSettings() {
     [members],
   );
 
-  const actions = (
+  const actions = canManageTeam ? (
     <Button onClick={() => setInviteOpen(true)} className="gap-2">
       <Plus className="h-4 w-4" /> Invite staff
     </Button>
-  );
+  ) : null;
 
   return (
     <AdminShell title="Team">
@@ -129,9 +130,13 @@ export default function TeamSettings() {
                     <div><StatusPill status={m.status} /></div>
                     <div className="font-body text-[12px] text-foreground/45">{m.created_at ? new Date(m.created_at).toLocaleDateString() : '—'}</div>
                     <div className="justify-self-start md:justify-self-end">
-                      <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setManage(m)}>
-                        <MoreHorizontal className="h-4 w-4" /> Manage
-                      </Button>
+                      {canManageTeam ? (
+                        <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setManage(m)}>
+                          <MoreHorizontal className="h-4 w-4" /> Manage
+                        </Button>
+                      ) : (
+                        <span className="font-body text-[11px] uppercase tracking-[0.14em] text-foreground/35">View only</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -151,9 +156,11 @@ export default function TeamSettings() {
                           {inv.invited_role === 'admin' ? 'Full Admin' : 'Staff'} · expires {inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <InviteRowActions invite={inv} isDemo={isDemo} onDone={(msg) => { setNotice(msg); load(); }} onErr={setError} />
-                      </div>
+                      {canManageTeam && (
+                        <div className="flex items-center gap-2">
+                          <InviteRowActions invite={inv} isDemo={isDemo} onDone={(msg) => { setNotice(msg); load(); }} onErr={setError} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -163,7 +170,7 @@ export default function TeamSettings() {
         )}
       </PageShell>
 
-      {inviteOpen && (
+      {inviteOpen && canManageTeam && (
         <InviteDialog
           open={inviteOpen}
           isDemo={isDemo}
@@ -172,7 +179,7 @@ export default function TeamSettings() {
           onErr={setError}
         />
       )}
-      {manage && (
+      {manage && canManageTeam && (
         <ManageDialog
           member={manage}
           isDemo={isDemo}

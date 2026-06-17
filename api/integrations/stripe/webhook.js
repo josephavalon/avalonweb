@@ -7,10 +7,12 @@ import {
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
+import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
   createSchedulingAppointmentWithFallback,
+  createDeferredPlanSubscription,
   claimSchedulingCreation,
   readAcuityAppointmentId,
   isLegacyStripeMetadataPayload,
@@ -167,82 +169,17 @@ async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
 
   try {
     await stripe.paymentIntents.update(paymentIntentId, {
-      metadata: {
+      metadata: safeStripeMetadata({
         ...(typeof session.payment_intent === 'object' ? session.payment_intent?.metadata || {} : {}),
         ...patch,
-      },
+      }),
     });
   } catch (err) {
     console.warn('[stripe/webhook] payment intent metadata update failed', safeLogContext(err, 'stripe_metadata_update_failed'));
   }
 }
 
-function planRecurringInterval(billing) {
-  switch (billing) {
-    case 'annual': return { interval: 'year' };
-    case 'six-month': return { interval: 'month', interval_count: 6 };
-    case 'three-month': return { interval: 'month', interval_count: 3 };
-    default: return { interval: 'month' };
-  }
-}
-
-// Stripe requires trial_end strictly in the future. Anchor the first recurring
-// charge to ONE period after the first visit (so month one — already paid as the
-// $50 deposit + after-visit balance — isn't billed again), floored at now + 1h.
-function planTrialEndUnix(firstVisitIso, recurring) {
-  const nowSec = Math.floor(Date.now() / 1000);
-  const base = firstVisitIso ? new Date(firstVisitIso) : new Date();
-  const start = Number.isFinite(base.getTime()) ? new Date(base.getTime()) : new Date();
-  if (recurring.interval === 'year') {
-    start.setFullYear(start.getFullYear() + 1);
-  } else {
-    start.setMonth(start.getMonth() + (recurring.interval_count || 1));
-  }
-  return Math.max(Math.floor(start.getTime() / 1000), nowSec + 3600);
-}
-
-// Create the recurring full-price plan subscription that begins one period AFTER
-// the first visit. The deposit + after-visit balance cover month one, so the
-// subscription trials until the next period, then auto-bills the full price on
-// the saved card. Idempotent on the appointment/session id so webhook retries
-// never double-create. Returns the subscription id, or null if it can't run.
-async function createDeferredPlanSubscription(stripe, { session, md, paymentMethodId, recordId }) {
-  const monthlyCents = Math.round(Number(md.planMonthlyPriceCents || 0));
-  if (!session.customer || !paymentMethodId || !(monthlyCents > 0)) return null;
-  const recurring = planRecurringInterval(md.membershipBilling || 'monthly');
-  const trialEnd = planTrialEndUnix(md.planFirstVisitDate, recurring);
-  const planName = `${md.membershipName || 'Avalon'} Plan`;
-  const scope = recordId || session.id;
-  const product = await stripe.products.create(
-    { name: planName, metadata: { kind: 'plan_recurring' } },
-    { idempotencyKey: `plan-prod:${scope}` },
-  );
-  const subscription = await stripe.subscriptions.create(
-    {
-      customer: session.customer,
-      default_payment_method: paymentMethodId,
-      trial_end: trialEnd,
-      items: [{
-        price_data: {
-          currency: 'usd',
-          product: product.id,
-          unit_amount: monthlyCents,
-          recurring,
-        },
-      }],
-      metadata: {
-        kind: 'plan_recurring',
-        appointmentRecordId: recordId || '',
-        stripeCheckoutSessionId: session.id,
-        planName,
-      },
-    },
-    { idempotencyKey: `plan-sub:${scope}` },
-  );
-  return subscription.id;
-}
-
-async function handleCheckoutCompleted(stripe, db, session) {
+export async function handleCheckoutCompleted(stripe, db, session) {
   const md = session.metadata || {};
   if (session.payment_status && session.payment_status !== 'paid') {
     return { action: 'ignored_unpaid_checkout', paymentStatus: session.payment_status };
@@ -323,6 +260,9 @@ async function handleCheckoutCompleted(stripe, db, session) {
           amounts: checkout.amounts || {},
           req: null,
         });
+        if (!acuityAppointment?.id) {
+          throw Object.assign(new Error('Acuity did not return an appointment id.'), { code: 'acuity_missing_appointment_id', status: 502 });
+        }
       } catch (err) {
         fulfillmentError = err;
         console.error('[stripe/webhook] Acuity fulfillment failed', safeLogContext(err, 'acuity_fulfillment_failed'));
@@ -330,7 +270,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
       if (acuityAppointment?.id && checkout.contact?.email) {
         try {
-          attioPersonId = await syncCheckoutAttioPerson({
+          const attioResult = await syncCheckoutAttioPerson({
             contact: checkout.contact,
             primaryService: checkout.primaryService || md.service || 'Avalon Visit',
             appointment: checkout.appointment || {},
@@ -338,7 +278,11 @@ async function handleCheckoutCompleted(stripe, db, session) {
             membership: checkout.membership || null,
             amounts: checkout.amounts || {},
           });
-          attioSynced = true;
+          attioPersonId = attioResult?.id || null;
+          // attioSynced=true ONLY when the sync actually ran. Skipped calls
+          // (BAA-pending kill switch) leave attioSynced=false so reconciliation
+          // dashboards don't show a false positive.
+          attioSynced = Boolean(attioPersonId) && !attioResult?.skipped;
         } catch (err) {
           console.warn('[stripe/webhook] Attio sync failed', safeLogContext(err, 'attio_sync_failed'));
           await insertOperationalFailureCase(db, {
@@ -377,15 +321,14 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
   if (!schedulingDeferred && paymentIntentId && paymentIntent?.metadata?.opsPaymentEmailSent !== 'true') {
     try {
+      // Ops email is PHI-free per docs/PHI_DATA_FLOW.md: only the appointment
+      // record ID + a deep link into the admin. All client details are looked
+      // up by staff in Supabase, not transmitted via Resend.
       await sendPaymentReceivedEmail({
-        checkout,
-        sessionId: session.id,
-        paymentIntentId,
-        acuityAppointmentId: acuityAppointment?.id ? String(acuityAppointment.id) : '',
-        fulfillmentStatus: fulfillmentError ? 'acuity_failed' : acuityAppointment?.id ? 'acuity_created' : 'payment_received',
+        appointmentRecordId: record?.id || md.appointmentRecordId || '',
       });
       await stripe.paymentIntents.update(paymentIntentId, {
-        metadata: {
+        metadata: safeStripeMetadata({
           ...(paymentIntent?.metadata || {}),
           ...(acuityAppointment?.id ? {
             acuityAppointmentId: String(acuityAppointment.id),
@@ -396,7 +339,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
             fulfillmentError: '',
           } : {}),
           opsPaymentEmailSent: 'true',
-        },
+        }),
       });
     } catch (err) {
       console.warn('[stripe/webhook] payment email failed', safeLogContext(err, 'payment_email_failed'));
@@ -419,10 +362,10 @@ async function handleCheckoutCompleted(stripe, db, session) {
     try {
       await sendCustomerPaymentPendingEmail({ checkout });
       await stripe.paymentIntents.update(paymentIntentId, {
-        metadata: {
+        metadata: safeStripeMetadata({
           ...(paymentIntent?.metadata || {}),
           customerPaymentPendingEmailSent: 'true',
-        },
+        }),
       });
     } catch (err) {
       console.warn('[stripe/webhook] customer pending email failed', safeLogContext(err, 'customer_pending_email_failed'));
@@ -445,7 +388,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
   // the customer, set up the recurring full-price subscription that starts one
   // period after the first visit. Idempotent, so safe on webhook retries.
   let planSubscriptionId = null;
-  if (md.planSignup === 'true') {
+  if (md.planSignup === 'true' && acuityAppointment?.id && !fulfillmentError && !schedulingDeferred) {
     try {
       planSubscriptionId = await createDeferredPlanSubscription(stripe, {
         session,
@@ -469,6 +412,19 @@ async function handleCheckoutCompleted(stripe, db, session) {
         },
       });
     }
+  } else if (md.planSignup === 'true') {
+    await insertOperationalFailureCase(db, {
+      caseType: 'stripe_subscription_creation_failed',
+      provider: 'stripe',
+      externalReference: session.id,
+      tenantId,
+      payload: {
+        appointmentRecordId: record?.id || null,
+        stripeSessionId: session.id,
+        reason: schedulingDeferred ? 'acuity_creation_deferred' : 'acuity_appointment_missing',
+        local_contract: 'plan_subscription_after_first_acuity_appointment_v1',
+      },
+    });
   }
 
   const patch = {
@@ -482,6 +438,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
     status:                       schedulingDeferred ? undefined : acuityAppointment?.id ? 'scheduled' : 'payment_received',
     acuity_appointment_id:         schedulingDeferred ? undefined : acuityAppointment?.id ? String(acuityAppointment.id) : null,
     reconciliation_status:         schedulingDeferred ? undefined : fulfillmentError ? 'action_required' : 'ok',
+    scheduling_lock_at:            fulfillmentError ? null : undefined,
     attio_person_id:               attioPersonId || undefined,
     attio_synced_at:               attioSynced ? now : undefined,
     balance_due_cents:            md.balanceDueCents != null ? Number(md.balanceDueCents) : null,
@@ -492,7 +449,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
       attioPersonId,
-      planSubscriptionId,
+      ...(planSubscriptionId ? { planSubscriptionId } : {}),
       error: fulfillmentError ? safeLogContext(fulfillmentError, 'acuity_fulfillment_failed') : null,
     }),
     updated_at:                   now,
@@ -603,6 +560,14 @@ export default async function handler(req, res) {
           .eq('idempotency_key', event.id)
           .maybeSingle();
         if (seenEvent?.status === 'processed') {
+          console.log('[stripe/webhook] event processed', {
+            event: 'stripe_webhook_event_processed',
+            id: event.id,
+            type: event.type,
+            action: 'duplicate_already_processed',
+            matched: null,
+            persisted: true,
+          });
           return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
         }
       } catch (err) {
@@ -635,6 +600,15 @@ export default async function handler(req, res) {
       default:
         result = { action: 'store_for_audit' };
     }
+
+    console.log('[stripe/webhook] event processed', {
+      event: 'stripe_webhook_event_processed',
+      id: event.id,
+      type: event.type,
+      action: result?.action || 'unknown',
+      matched: result?.matched ?? null,
+      persisted: Boolean(db),
+    });
 
     // Record successful processing so a redelivery of this event short-circuits
     // the idempotency check above. Best-effort — never blocks the 200 ack.
@@ -685,6 +659,14 @@ export default async function handler(req, res) {
           errorStatus: err?.statusCode || err?.status || null,
         },
       });
+      console.warn('[stripe/webhook] event processed', {
+        event: 'stripe_webhook_event_processed',
+        id: event.id,
+        type: event.type,
+        action: 'processing_timeout',
+        matched: null,
+        persisted: Boolean(db),
+      });
       return res.status(200).json({
         received: true,
         persisted: Boolean(db),
@@ -693,6 +675,14 @@ export default async function handler(req, res) {
       });
     }
     console.error('[stripe/webhook] processing error', safeLogContext(err, 'stripe_webhook_processing_failed'));
+    console.warn('[stripe/webhook] event processed', {
+      event: 'stripe_webhook_event_processed',
+      id: event.id,
+      type: event.type,
+      action: 'processing_error',
+      matched: null,
+      persisted: false,
+    });
     return res.status(200).json({
       received: true,
       persisted: false,

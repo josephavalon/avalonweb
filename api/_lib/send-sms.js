@@ -9,8 +9,42 @@
  *
  * Returns { ok: true } on a 2xx, or { ok: false, code, status } otherwise.
  * Never throws — callers branch on `ok`.
+ *
+ * ── HIPAA POLICY ─────────────────────────────────────────────────────────────
+ * Quo signs a BAA but SMS/MMS is explicitly NOT covered under it (Quo support
+ * docs, 2026-06). To stay inside HIPAA without expanding scope we restrict
+ * outbound SMS to:
+ *
+ *   1. Authentication codes (OTP) sent on the user's request.
+ *   2. Staff-only operational invite codes.
+ *
+ * Message bodies MUST NOT contain a patient name, appointment time, address,
+ * service/protocol identifier, dosage, or any other PHI. The block-list below
+ * is enforced at runtime as defense-in-depth — a caller that tries to send a
+ * PHI-shaped body gets refused before the message hits Quo's network.
+ *
+ * See docs/PHI_DATA_FLOW.md.
  */
 import { safeLogContext } from './safe-error.js';
+
+// Defense-in-depth: if a caller ever puts PHI-shaped tokens in the body, refuse
+// to send. The auth-hook and team-invite call sites use plain code-only bodies
+// today, so this should never trip in practice.
+const PHI_BODY_PATTERNS = [
+  /\bappointment\b/i,
+  /\bnurse\b/i,
+  /\bdose|dosage\b/i,
+  /\ballerg/i,
+  /\bmedication/i,
+  /\bdiagnos/i,
+  /\bdob\b/i,
+  /\bsymptom/i,
+];
+
+function bodyContainsPhi(body) {
+  const text = String(body || '');
+  return PHI_BODY_PATTERNS.some((re) => re.test(text));
+}
 
 export function isSmsConfigured() {
   return Boolean(process.env.QUO_API_KEY && process.env.QUO_FROM_NUMBER);
@@ -28,6 +62,11 @@ export async function sendSms({ to, body }) {
 
   const recipient = toE164(to);
   if (!recipient || recipient.length > 32) return { ok: false, code: 'invalid_phone', status: 400 };
+
+  if (bodyContainsPhi(body)) {
+    console.error('[send-sms] refusing to send: body contains PHI-shaped tokens (see docs/PHI_DATA_FLOW.md)');
+    return { ok: false, code: 'phi_in_sms_body', status: 422 };
+  }
 
   try {
     const resp = await fetch('https://api.quo.com/v1/messages', {

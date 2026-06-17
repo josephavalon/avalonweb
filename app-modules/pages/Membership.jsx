@@ -15,7 +15,7 @@ import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
 import { PEOPLE_MAX, createPerson, personLabel as personLabelFor } from '@/lib/peopleState';
-import PersonTabStrip from '@/components/store/PersonTabStrip';
+import SessionBuilder from '@/components/store/SessionBuilder';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -672,6 +672,15 @@ export default function Subscription() {
   });
   const peopleCount = peopleBreakdown.length;
   const monthly = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
+  // Roster rows for the "YOUR SESSION" builder. Plans show a per-person monthly.
+  const sessionPeople = peopleBreakdown.map((row) => ({
+    id: row.person.id,
+    index: row.index,
+    label: row.label,
+    productLabel: row.therapy?.label || '',
+    priceLabel: `${money(row.total)}/mo`,
+    filled: Boolean(row.therapy),
+  }));
   const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
   const perMonth = Math.round(upfrontTotal / term.months);
   const addOnCount = lineItems.reduce((sum, li) => sum + li.qty, 0);
@@ -748,12 +757,16 @@ export default function Subscription() {
               </Section>
 
               <Section title="Who's on this plan" sub="Up to 4 patients on one household plan. Each picks their own protocol.">
-                <PersonTabStrip
-                  people={peopleSnapshot}
+                <SessionBuilder
+                  people={sessionPeople}
                   activePersonId={activePersonId}
                   onSelect={switchActivePerson}
                   onAdd={addNewPerson}
                   onRemove={deletePerson}
+                  title=""
+                  subline=""
+                  footer=""
+                  addLabel="Add a person's protocol"
                 />
               </Section>
 

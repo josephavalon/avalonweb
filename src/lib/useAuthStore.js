@@ -1,6 +1,6 @@
 // Auth store — real Supabase Auth in production, demo roster as a local fallback.
 // When VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set (`hasSupabase`), this
-// uses Supabase Auth (email magic-link now; phone/passkey layered on next).
+// uses Supabase Auth (password, passwordless email, OAuth, phone, and passkey).
 // Without them it keeps the original demo behavior, so local/dev is unchanged.
 // The user shape + hook API stay stable, so RequireAuth and every route keep working.
 
@@ -159,22 +159,34 @@ export function AuthStoreProvider({ children }) {
   const [loading, setLoading] = useState(hasSupabase);
   const [error, setError]     = useState(null);
 
+  const refreshSupabaseSession = useCallback(async () => {
+    if (!hasSupabase) return null;
+    setLoading(true);
+    try {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const u = await buildSupabaseUser(data?.session?.user || null);
+      setUser(u);
+      return u;
+    } catch {
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Resolve + track the Supabase session (no-op in demo mode).
   useEffect(() => {
     if (!hasSupabase) return undefined;
     let active = true;
-    supabase.auth.getSession()
-      .then(async ({ data }) => {
-        const u = await buildSupabaseUser(data?.session?.user || null);
-        if (active) { setUser(u); setLoading(false); }
-      })
-      .catch(() => { if (active) setLoading(false); });
+    refreshSupabaseSession().finally(() => { if (!active) setLoading(false); });
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = await buildSupabaseUser(session?.user || null);
-      if (active) setUser(u);
+      if (active) { setUser(u); setLoading(false); }
     });
     return () => { active = false; listener?.subscription?.unsubscribe?.(); };
-  }, []);
+  }, [refreshSupabaseSession]);
 
   // Email magic-link (Supabase). Returns { ok, pending }; the user clicks the
   // emailed link, lands back on /login, and onAuthStateChange sets the session.
@@ -184,7 +196,7 @@ export function AuthStoreProvider({ children }) {
     try {
       const { error: err } = await supabase.auth.signInWithOtp({
         email: String(email || '').trim(),
-        options: { emailRedirectTo: `${window.location.origin}/login` },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (err) throw err;
       return { ok: true, pending: true, message: 'Check your email for a secure sign-in link.' };
@@ -197,7 +209,7 @@ export function AuthStoreProvider({ children }) {
 
   // New-account signup. Supabase sends a confirmation email; once the user
   // clicks the link, onAuthStateChange fires and the public.profiles row is
-  // populated by migration 007's handle_new_user trigger.
+  // populated by the handle_new_user trigger.
   const signUpWithEmail = useCallback(async ({ email, fullName, phone } = {}) => {
     if (!hasSupabase) return { ok: false, error: 'Sign-up is not configured yet.' };
     setLoading(true); setError(null);
@@ -210,7 +222,7 @@ export function AuthStoreProvider({ children }) {
         password: createSessionId(),
         phone: cleanPhone || undefined,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: cleanName ? { full_name: cleanName } : undefined,
         },
       });
@@ -325,7 +337,8 @@ export function AuthStoreProvider({ children }) {
   }, []);
 
   // Social sign-in (Google / Apple) via Supabase OAuth. Redirects to the
-  // provider and back to /login, where onAuthStateChange sets the session.
+  // provider and back to /auth/callback, which exchanges the code and routes
+  // by profile role.
   // Enable the provider in Supabase → Auth → Providers for it to work.
   const signInWithOAuth = useCallback(async (provider) => {
     if (!hasSupabase) return { ok: false, error: 'Social sign-in is not configured yet.' };
@@ -333,7 +346,7 @@ export function AuthStoreProvider({ children }) {
     try {
       const { error: err } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/login` },
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
       if (err) throw err;
       return { ok: true, pending: true };
@@ -395,11 +408,23 @@ export function AuthStoreProvider({ children }) {
     } finally { setLoading(false); }
   }, [signInWithEmail, signInWithPassword]);
 
-  // "Forgot password" under a passwordless model is just sending a fresh
-  // magic-link to the email on file — same flow as sign-in.
+  // Password recovery creates a Supabase recovery session and lands on the same
+  // password update screen used by invited staff who must rotate a temp password.
   const requestPasswordReset = useCallback(async (email) => {
-    return signInWithEmail(email);
-  }, [signInWithEmail]);
+    if (!hasSupabase) return { ok: false, error: 'Password reset is not configured yet.' };
+    setLoading(true); setError(null);
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(String(email || '').trim(), {
+        redirectTo: `${window.location.origin}/account/new-password`,
+      });
+      if (err) throw err;
+      return { ok: true, pending: true, message: 'Check your email for a password reset link.' };
+    } catch (err) {
+      const msg = customerSafeAuthError('Could not send the password reset link.');
+      setError(msg);
+      return { ok: false, error: msg };
+    } finally { setLoading(false); }
+  }, []);
 
   const signOut = useCallback(async () => {
     if (user) appendActivity('Signed out', { role: user.role, username: user.username });
@@ -415,7 +440,7 @@ export function AuthStoreProvider({ children }) {
         user, loading, error,
         signIn, signInWithEmail, signInWithPassword, updatePassword, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
         signInWithPasskey, registerPasskey, signInWithOAuth,
-        signOut, requestPasswordReset,
+        signOut, requestPasswordReset, refreshSupabaseSession,
         authBackend: hasSupabase ? 'supabase' : 'demo',
       },
     },

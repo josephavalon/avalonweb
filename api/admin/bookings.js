@@ -5,6 +5,8 @@
  * (verified Supabase session with profiles.role = 'admin'). Returns contact
  * details (admins are staff) plus payment state + whether a saved card / Stripe
  * customer exists, so the UI can show the right balance-collection action.
+ * Staff and admins may read it; tenant scope comes from the authenticated
+ * profile.
  *
  * Query: ?scope=upcoming|all (default all), ?limit (default 500, max 1000).
  */
@@ -44,6 +46,9 @@ function shapeBooking(row) {
     depositPaidAt: row.deposit_paid_at,
     balancePaidAt: row.balance_paid_at,
     acuityAppointmentId: row.acuity_appointment_id,
+    reconciliationStatus: row.reconciliation_status,
+    acuityConfirmationPage: payload.fulfillment?.acuityAppointment?.confirmationPage || payload.fulfillment?.acuityAppointment?.confirmationPageUrl || '',
+    acuityRescheduleUrl: payload.fulfillment?.acuityAppointment?.rescheduleUrl || payload.fulfillment?.acuityAppointment?.rescheduleURL || '',
     hasSavedCard: !!row.stripe_payment_method_id,
     hasStripeCustomer: !!row.stripe_customer_id,
     createdAt: row.created_at,
@@ -63,7 +68,7 @@ export default async function handler(req, res) {
   const scope = req.query?.scope === 'upcoming' ? 'upcoming' : 'all';
 
   let query = db.from('appointments')
-    .select('id, tenant_id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
+    .select('id, tenant_id, status, starts_at, protocol_key, payment_status, reconciliation_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
     .order('starts_at', { ascending: scope === 'upcoming', nullsFirst: false })
     .limit(limit);
 

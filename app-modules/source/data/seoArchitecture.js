@@ -1032,6 +1032,18 @@ export const noindexStaticRoutes = [
     h1: 'Checkout Confirmation',
   },
   {
+    path: '/auth/callback',
+    title: 'Authentication Callback | Avalon Vitality',
+    description: 'Private Avalon Vitality authentication callback route for OAuth and email confirmation redirects.',
+    h1: 'Authentication Callback',
+  },
+  {
+    path: '/account/new-password',
+    title: 'Set New Password | Avalon Vitality',
+    description: 'Private Avalon Vitality password update route for secure account recovery.',
+    h1: 'Set New Password',
+  },
+  {
     path: '/terms-of-service',
     title: 'Terms of Service | Avalon Vitality',
     description: 'Avalon Vitality terms of service route. Canonical terms live under terms and conditions.',

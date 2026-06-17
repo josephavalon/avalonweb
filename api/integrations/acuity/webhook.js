@@ -247,7 +247,7 @@ export default async function handler(req, res) {
     rawBody = await readRawBody(req);
   } catch (err) {
     if (err.code === 'acuity_webhook_body_too_large') {
-      return res.status(413).json({ error: err.message, code: err.code });
+      return res.status(413).json({ error: 'Acuity webhook payload too large', code: err.code });
     }
     return res.status(400).json({ error: 'Could not read webhook body', code: 'acuity_webhook_body_read_failed' });
   }
@@ -265,7 +265,7 @@ export default async function handler(req, res) {
     body = parseAcuityBody(rawBody, req.headers?.['content-type']);
   } catch (err) {
     if (err.code === 'acuity_webhook_unsupported_content_type') {
-      return res.status(415).json({ error: err.message, code: err.code });
+      return res.status(415).json({ error: 'Unsupported Acuity webhook content type', code: err.code });
     }
     return res.status(400).json({ error: 'Could not parse webhook body', code: 'acuity_webhook_body_parse_failed' });
   }

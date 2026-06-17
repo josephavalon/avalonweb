@@ -106,6 +106,17 @@ function scanDist() {
         fail(`${relative(filePath)} contains ${label}`);
       }
     }
+
+    const secretValuePatterns = [
+      { pattern: /\bsk_(?:live|test)_[A-Za-z0-9_]+/g, label: 'Stripe secret key value' },
+      { pattern: /\bsb_secret_[A-Za-z0-9_]+/g, label: 'Supabase secret key value' },
+      { pattern: /\bre_[A-Za-z0-9_]{20,}/g, label: 'Resend API key value' },
+    ];
+    for (const { pattern, label } of secretValuePatterns) {
+      if (pattern.test(source)) {
+        fail(`${relative(filePath)} contains ${label}`);
+      }
+    }
   }
 }
 
@@ -496,6 +507,90 @@ function checkGoLiveStatusLedger() {
   }
 }
 
+function checkServiceWorkerKillSwitch() {
+  const source = readRepoFile('public/sw.js');
+  for (const required of [
+    'self.skipWaiting()',
+    'caches.delete',
+    'self.registration.unregister()',
+    'client.navigate(client.url)',
+    'No fetch handler',
+  ]) {
+    if (!source.includes(required)) {
+      fail(`public/sw.js must remain a cache-clearing kill switch: ${required}`);
+    }
+  }
+  if (/addEventListener\(['"]fetch['"]/.test(source)) {
+    fail('public/sw.js must not register a fetch handler or reintroduce service-worker caching');
+  }
+}
+
+function checkNoProdDeployAutomation() {
+  const automationFiles = [
+    'package.json',
+    '.github/workflows/ci.yml',
+    '.github/workflows/go-live-verify.yml',
+  ];
+  for (const file of automationFiles) {
+    if (!fs.existsSync(path.join(repoRoot, file))) continue;
+    const source = readRepoFile(file);
+    if (/\bvercel\s+deploy\b[^\n]*\s--prod\b/.test(source)) {
+      fail(`${file} must not run vercel deploy --prod`);
+    }
+  }
+}
+
+function checkAdminApiFunctionsAreDeployable() {
+  const financeUi = readRepoFile('app-modules/pages/admin/FinanceControl.jsx');
+  const bookingsUi = readRepoFile('app-modules/pages/admin/LiveBookings.jsx');
+  const requiredEndpoints = [
+    {
+      endpoint: '/api/admin/finance/summary',
+      uiLabel: 'app-modules/pages/admin/FinanceControl.jsx',
+      uiSource: financeUi,
+      functionFile: 'api/admin/finance/summary.js',
+      requiredNeedles: [
+        'requireStaff(req, res)',
+        'stripe_secret_missing',
+        "action: 'admin_finance_summary_read'",
+      ],
+    },
+    {
+      endpoint: '/api/admin/bookings/retry-acuity',
+      uiLabel: 'app-modules/pages/admin/LiveBookings.jsx',
+      uiSource: bookingsUi,
+      functionFile: 'api/admin/bookings/retry-acuity.js',
+      requiredNeedles: [
+        'requireStaff(req, res)',
+        'claimSchedulingCreation',
+        'createSchedulingAppointmentWithFallback',
+        "action: 'admin_retry_acuity'",
+      ],
+    },
+  ];
+
+  for (const { endpoint, uiLabel, uiSource, functionFile, requiredNeedles } of requiredEndpoints) {
+    if (!uiSource.includes(endpoint)) {
+      fail(`${uiLabel} must call launch admin endpoint: ${endpoint}`);
+      continue;
+    }
+    const absoluteFunctionFile = path.join(repoRoot, functionFile);
+    if (!fs.existsSync(absoluteFunctionFile)) {
+      fail(`${endpoint} is referenced by the UI but ${functionFile} is missing, which deploys as a live 404`);
+      continue;
+    }
+    const source = readRepoFile(functionFile);
+    if (!source.includes('Method not allowed')) {
+      fail(`${functionFile} must reject unsupported methods`);
+    }
+    for (const needle of requiredNeedles) {
+      if (!source.includes(needle)) {
+        fail(`${functionFile} missing launch admin endpoint guard: ${needle}`);
+      }
+    }
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
@@ -506,6 +601,9 @@ checkBalanceChargeIntegrity();
 checkGoLiveRunbook();
 checkLaunchEnvDocs();
 checkGoLiveStatusLedger();
+checkServiceWorkerKillSwitch();
+checkNoProdDeployAutomation();
+checkAdminApiFunctionsAreDeployable();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');

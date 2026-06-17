@@ -53,29 +53,36 @@ function createVercelResponse(res) {
 }
 
 function localApiPlugin() {
+  const mountLocalApi = (middlewares, logger) => {
+    middlewares.use((req, res, next) => {
+      const url = new URL(req.url || '/', 'http://localhost');
+      const routeFile = API_ROUTES[url.pathname];
+      if (!routeFile) return next();
+
+      (async () => {
+        try {
+          const moduleUrl = pathToFileURL(path.resolve(process.cwd(), routeFile)).href;
+          const { default: handler } = await import(`${moduleUrl}?t=${Date.now()}`);
+          req.query = Object.fromEntries(url.searchParams.entries());
+          req.body = ['POST', 'PUT', 'PATCH'].includes(req.method || '') ? await readJsonBody(req) : {};
+          await handler(req, createVercelResponse(res));
+        } catch (err) {
+          logger.error(err);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: err.message || 'Local API failed' }));
+        }
+      })();
+    });
+  };
+
   return {
     name: 'avalon-local-api',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        const url = new URL(req.url || '/', 'http://localhost');
-        const routeFile = API_ROUTES[url.pathname];
-        if (!routeFile) return next();
-
-        (async () => {
-          try {
-            const moduleUrl = pathToFileURL(path.resolve(process.cwd(), routeFile)).href;
-            const { default: handler } = await import(`${moduleUrl}?t=${Date.now()}`);
-            req.query = Object.fromEntries(url.searchParams.entries());
-            req.body = ['POST', 'PUT', 'PATCH'].includes(req.method || '') ? await readJsonBody(req) : {};
-            await handler(req, createVercelResponse(res));
-          } catch (err) {
-            server.config.logger.error(err);
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ error: err.message || 'Local API failed' }));
-          }
-        })();
-      });
+      mountLocalApi(server.middlewares, server.config.logger);
+    },
+    configurePreviewServer(server) {
+      mountLocalApi(server.middlewares, server.config.logger);
     },
   };
 }
@@ -200,6 +207,11 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/')
+          ) return 'react-vendor';
           // `motion` (formerly framer-motion) + its motion-dom/motion-utils deps
           if (id.includes('node_modules/motion')) return 'motion-vendor';
           if (id.includes('node_modules/lucide-react')) return 'icons-vendor';

@@ -92,19 +92,22 @@ export default async function handler(req, res) {
     }
     if (!userId) throw new Error('No user id after provisioning');
 
-    // The handle_new_user trigger seeds a profiles row (role=client). Promote it
-    // to the invited tier, active, in the invitation's tenant.
-    const { error: profErr } = await db.from('profiles').update({
+    // The auth trigger normally seeds a profiles row (role=client), but the
+    // invite accept contract must not silently succeed if the trigger is delayed
+    // or absent. Upsert the promoted profile keyed by auth user id.
+    const { error: profErr } = await db.from('profiles').upsert({
+      id: userId,
+      email: invite.email,
       role: invite.invited_role,
       status: 'active',
       tenant_id: invite.tenant_id,
-      full_name: fullName || invite.full_name || undefined,
+      full_name: fullName || invite.full_name || null,
       must_change_password: false,
       invited_by: null,
       deactivated_at: null,
       deactivation_reason: null,
       updated_at: new Date().toISOString(),
-    }).eq('id', userId);
+    }, { onConflict: 'id' });
     if (profErr) throw profErr;
 
     const { error: invErr } = await db.from('invitations')

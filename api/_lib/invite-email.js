@@ -4,11 +4,26 @@
  *
  * Env:
  *   RESEND_API_KEY    Resend key (required to send)
- *   RESEND_FROM_EMAIL sender; falls back to the onboarding sandbox address
+ *   RESEND_FROM_EMAIL sender; required in production, sandbox fallback only outside production
  */
 import { Resend } from 'resend';
 
-const FROM_INTERNAL = process.env.RESEND_FROM_EMAIL || 'Avalon Booking <onboarding@resend.dev>';
+function isProductionRuntime() {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
+function fromAddress() {
+  const from = String(process.env.RESEND_FROM_EMAIL || '').trim();
+  if (from) return from;
+  if (isProductionRuntime()) {
+    throw Object.assign(new Error('RESEND_FROM_EMAIL is required in production.'), {
+      code: 'resend_from_email_missing',
+      reason: 'resend_from_email_missing',
+      status: 500,
+    });
+  }
+  return 'Avalon Booking <onboarding@resend.dev>';
+}
 
 function escapeHtml(value = '') {
   return String(value)
@@ -59,7 +74,7 @@ export async function sendInviteEmail({ to, inviteUrl, code, role, inviterName }
   `);
 
   const result = await resend.emails.send({
-    from: FROM_INTERNAL,
+    from: fromAddress(),
     to: recipient,
     subject: 'Your Avalon Vitality admin invite',
     html,
@@ -84,7 +99,7 @@ export async function sendStaffRecoveryEmail({ to, recoveryUrl } = {}) {
   `);
 
   const result = await resend.emails.send({
-    from: FROM_INTERNAL,
+    from: fromAddress(),
     to: recipient,
     subject: 'Reset your Avalon Vitality password',
     html,

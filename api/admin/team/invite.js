@@ -97,19 +97,34 @@ export default async function handler(req, res) {
   const inviteUrl = `${siteUrl()}/invite/accept?token=${encodeURIComponent(token)}`;
   const delivered = { email: false, sms: false };
   const errors = [];
+  const deliveryErrors = [];
 
   if (delivery === 'email' || delivery === 'both') {
     try {
       await sendInviteEmail({ to: email, inviteUrl, code, role, inviterName: authed.email });
       delivered.email = true;
-    } catch (err) { errors.push(`email:${err?.reason || err?.code || 'failed'}`); }
+    } catch (err) {
+      deliveryErrors.push(err);
+      errors.push(`email:${err?.reason || err?.code || 'failed'}`);
+    }
   }
   if (delivery === 'sms' || delivery === 'both') {
     const smsRes = await sendSms({
       to: phone,
       body: `You're invited to the Avalon Vitality admin console. Code: ${code}. Open ${siteUrl()}/invite/accept to finish.`,
     });
-    if (smsRes.ok) delivered.sms = true; else errors.push(`sms:${smsRes.code}`);
+    if (smsRes.ok) {
+      delivered.sms = true;
+    } else {
+      console.warn('[team/invite] sms delivery skipped or failed', {
+        event: 'team_invite_sms_delivery_warning',
+        code: smsRes.code,
+        status: smsRes.status,
+        delivery,
+        inviteId,
+      });
+      errors.push(`sms:${smsRes.code}`);
+    }
   }
 
   await writeAuditEvent(db, {
@@ -123,10 +138,12 @@ export default async function handler(req, res) {
 
   // The invite exists even if a channel failed; surface partial failure.
   const anyDelivered = delivered.email || delivered.sms;
-  return res.status(anyDelivered ? 200 : 502).json({
+  const firstDeliveryError = deliveryErrors[0] || null;
+  return res.status(anyDelivered ? 200 : firstDeliveryError?.status || 502).json({
     ok: anyDelivered,
     inviteId,
     delivered,
+    ...(!anyDelivered && firstDeliveryError?.code ? { code: firstDeliveryError.code } : {}),
     ...(errors.length ? { warnings: errors } : {}),
   });
 }

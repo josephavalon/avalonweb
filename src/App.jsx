@@ -14,6 +14,7 @@ import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
+import { canAccessAdminRoute } from '@/lib/adminAccess';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 function RequireAuth({ children, allowedRoles }) {
@@ -31,6 +32,9 @@ function RequireAuth({ children, allowedRoles }) {
     if (user.role === 'nurse') return <Navigate to="/provider/shift" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
     return <Navigate to="/login" replace />;
+  }
+  if ((role === 'admin' || role === 'staff') && pathname.startsWith('/admin') && !canAccessAdminRoute(role, pathname)) {
+    return <Navigate to="/admin" replace />;
   }
   return children;
 }
@@ -65,6 +69,7 @@ const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
 const Signup = lazyRoute(() => import('./pages/Signup'));
 const ForgotPassword = lazyRoute(() => import('./pages/ForgotPassword'));
+const AuthCallback = lazyRoute(() => import('./pages/AuthCallback'));
 const Nurses = lazyRoute(() => import('./pages/Nurses'));
 const ManageOrder = lazyRoute(() => import('./pages/ManageOrder'));
 const AdminLogin = lazyRoute(() => import('./pages/AdminLogin'));
@@ -306,6 +311,7 @@ function AppRoutes() {
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
             <Route path="/order" element={<ManageOrder />} />
             <Route path="/redeem" element={<Navigate to="/order" replace />} />
@@ -313,7 +319,7 @@ function AppRoutes() {
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/invite/accept" element={<InviteAccept />} />
-            <Route path="/account/new-password" element={<RequireAuth><NewPassword /></RequireAuth>} />
+            <Route path="/account/new-password" element={<NewPassword />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
@@ -355,9 +361,9 @@ function AppRoutes() {
             <Route path="/admin/training" element={<RequireAuth allowedRoles={['admin']}><AdminTrainingControl /></RequireAuth>} />
             <Route path="/admin/communications" element={<RequireAuth allowedRoles={['admin']}><ProviderCommunications /></RequireAuth>} />
             <Route path="/admin/role-os" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
-            <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><AdminInventory /></RequireAuth>} />
+            <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInventory /></RequireAuth>} />
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
-            <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin']}><AdminTeamSettings /></RequireAuth>} />
+            <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamSettings /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />

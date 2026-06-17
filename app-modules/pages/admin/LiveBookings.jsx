@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -91,11 +91,12 @@ function ActionResult({ result }) {
   );
 }
 
-function BookingRow({ booking, busy, result, onCharge, onLink }) {
+function BookingRow({ booking, busy, retryBusy, result, onCharge, onLink, onRetryAcuity }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
   const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
   const paymentTypeLabel = PAYMENT_TYPE_LABEL[booking.paymentType] || titleize(booking.paymentType || '');
+  const needsScheduling = booking.reconciliationStatus === 'action_required' && !booking.acuityAppointmentId;
 
   return (
     <div className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
@@ -104,6 +105,12 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
           <div className="flex items-center gap-2">
             <h3 className="truncate font-heading text-xl uppercase leading-none">{booking.customerName}</h3>
             <StatusPill status={booking.paymentStatus} />
+            {needsScheduling ? (
+              <span className="inline-flex min-h-[26px] items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-300/[0.08] px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200">
+                <AlertTriangle className="h-3 w-3" strokeWidth={2} />
+                Needs scheduling
+              </span>
+            ) : null}
             {booking.isMembership ? (
               <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Plan</span>
             ) : null}
@@ -138,8 +145,20 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
         </div>
       </div>
 
-      {collectable ? (
+      {(collectable || needsScheduling) ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
+          {needsScheduling ? (
+            <button
+              type="button"
+              disabled={retryBusy}
+              onClick={() => onRetryAcuity(booking)}
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-full px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-50"
+              style={{ background: 'rgba(245,158,11,0.12)', color: 'hsl(38 92% 72%)', border: '1px solid rgba(245,158,11,0.28)' }}
+            >
+              {retryBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} />}
+              Retry Acuity
+            </button>
+          ) : null}
           {canPay ? (
             <>
               {booking.hasSavedCard ? (
@@ -165,9 +184,9 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
                 Copy payment link
               </button>
             </>
-          ) : (
+          ) : collectable ? (
             <span className="font-body text-xs" style={{ color: DIM }}>No payment method on file — collect in person.</span>
-          )}
+          ) : null}
         </div>
       ) : null}
 
@@ -214,6 +233,21 @@ export default function LiveAdminBookings() {
     }
   }, [load]);
 
+  const retryAcuity = useCallback(async (booking) => {
+    setActions((m) => ({ ...m, [booking.id]: { busyRetry: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/retry-acuity', { appointmentId: booking.id });
+      if (res.ok) {
+        setActions((m) => ({ ...m, [booking.id]: { tone: 'success', message: `Acuity appointment created: ${res.acuityAppointmentId}` } }));
+        load();
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: res.error || 'Could not create the Acuity appointment.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: 'Acuity retry failed.' } }));
+    }
+  }, [load]);
+
   const { loading, error, bookings } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
 
@@ -257,9 +291,11 @@ export default function LiveAdminBookings() {
                 key={booking.id}
                 booking={booking}
                 busy={!!actions[booking.id]?.busy}
+                retryBusy={!!actions[booking.id]?.busyRetry}
                 result={actions[booking.id]}
                 onCharge={(b) => runAction(b, 'charge')}
                 onLink={(b) => runAction(b, 'link')}
+                onRetryAcuity={retryAcuity}
               />
             ))}
           </div>

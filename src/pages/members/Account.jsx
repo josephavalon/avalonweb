@@ -5,6 +5,7 @@ import {
   Bell,
   Check,
   ChevronRight,
+  Fingerprint,
   FileText,
   LogOut,
   MapPin,
@@ -91,11 +92,12 @@ function ChoiceRow({ label, value, values, onChange }) {
 }
 
 export default function MemberAccount() {
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, registerPasskey, authBackend } = useAuthStore();
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState(() => readLocal('clientPrefs', DEFAULT_PREFS));
   const [contact, setContact] = useState(() => readLocal('clientContactPrefs', CONTACT_DEFAULTS));
   const [profile, setProfile] = useState(() => readClientProfile());
+  const [passkeyState, setPasskeyState] = useState({ busy: false, message: '', error: '' });
   const addresses = readSavedAddresses();
   const subscription = profile.subscription || {
     plan: 'No plan',
@@ -132,6 +134,16 @@ export default function MemberAccount() {
     navigate('/login');
   };
 
+  const handleRegisterPasskey = async () => {
+    setPasskeyState({ busy: true, message: '', error: '' });
+    const result = await registerPasskey();
+    setPasskeyState({
+      busy: false,
+      message: result.ok ? (result.message || 'Passkey added.') : '',
+      error: result.ok ? '' : (result.error || 'Could not add a passkey.'),
+    });
+  };
+
   return (
     <div className="min-h-screen pb-[calc(9rem+env(safe-area-inset-bottom))]" style={{ background: BG, color: TEXT }}>
       <header className="sticky top-0 z-40 px-4 py-3 backdrop-blur-2xl" style={{ background: 'hsl(var(--background) / 0.86)', borderBottom: `1px solid ${BORDER}` }}>
@@ -166,6 +178,39 @@ export default function MemberAccount() {
           <SettingCard icon={Bell} eyebrow="Notifications" title="Contact preference" value={prefs.communication} action="Change" onClick={() => updatePrefs('communication', prefs.communication === 'Text first' ? 'Call first' : prefs.communication === 'Call first' ? 'Email summary' : 'Text first')} />
           <SettingCard icon={MapPin} eyebrow="Default location" title={prefs.address || 'Not set'} value={addresses[0]?.address || 'No saved address'} action="Manage" onClick={() => updatePrefs('address', prefs.address ? '' : 'Needs address')} />
           <SettingCard icon={ShieldCheck} eyebrow="Medical profile" title="Intake, consent, emergency" value={contact.emergency || 'Not set'} action="View" onClick={() => rotateContact('emergency', ['Needs update', 'Verified today', ''])} />
+        </section>
+
+        <section className="rounded-[24px] p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: ACCENT }}>
+                <Fingerprint className="h-5 w-5" strokeWidth={1.65} />
+              </span>
+              <div>
+                <p className="font-body text-[10px] uppercase tracking-[0.24em]" style={{ color: DIM }}>Security</p>
+                <h2 className="mt-1 font-heading text-3xl uppercase leading-none">Passkey</h2>
+                <p className="mt-2 font-body text-xs leading-relaxed" style={{ color: MUTED }}>Use Face ID, Touch ID, or a device passkey next time you sign in.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRegisterPasskey}
+              disabled={authBackend !== 'supabase' || passkeyState.busy}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-45"
+              style={{ background: TEXT, color: INVERT }}
+            >
+              {passkeyState.busy ? 'Adding Passkey' : 'Add Passkey'}
+            </button>
+          </div>
+          {(passkeyState.message || passkeyState.error) && (
+            <p className="mt-3 rounded-2xl px-3 py-2 font-body text-xs" style={{
+              color: passkeyState.error ? 'hsl(0 70% 72%)' : 'hsl(152 60% 55%)',
+              background: CARD_STRONG,
+              border: `1px solid ${BORDER}`,
+            }}>
+              {passkeyState.error || passkeyState.message}
+            </p>
+          )}
         </section>
 
         <section className="rounded-[24px] p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>

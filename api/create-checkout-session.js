@@ -24,6 +24,11 @@ function dollarsToCents(value) {
   return Math.max(0, Math.round(Number(value || 0) * 100));
 }
 
+function checkoutItemQuantity(item = {}) {
+  const quantity = Number(item.quantity);
+  return Number.isFinite(quantity) ? Math.min(4, Math.max(1, Math.floor(quantity))) : 1;
+}
+
 const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS);
 
 const CHECKOUT_INPUT_LIMITS = {
@@ -146,8 +151,13 @@ function publicBaseUrl(req) {
 
 function stripeLineItems(items = [], membership = null, checkoutChargeItems = null) {
   const sourceItems = Array.isArray(checkoutChargeItems) ? checkoutChargeItems : items;
+  // product_data.name = generic catalog label (e.g. "NAD+ IV Therapy"); not PHI.
+  // product_data.metadata = operational fields only; personLabel is dropped
+  // because it can be the patient's first name (PHI under HIPAA when tied to
+  // a healthcare transaction). personId is an opaque client-generated token,
+  // safe to send. See docs/PHI_DATA_FLOW.md.
   const lineItems = membership ? [] : sourceItems.map((item) => ({
-    quantity: 1,
+    quantity: checkoutItemQuantity(item),
     price_data: {
       currency: 'usd',
       unit_amount: dollarsToCents(item.price),
@@ -157,7 +167,6 @@ function stripeLineItems(items = [], membership = null, checkoutChargeItems = nu
           type: item.type || 'service',
           key: item.key || item.cartKey || '',
           ...(item.personId ? { personId: item.personId } : {}),
-          ...(item.personLabel ? { personLabel: item.personLabel } : {}),
         },
       },
     },
@@ -212,6 +221,7 @@ function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = 
       label: item.label || '',
       type: item.type || '',
       price: Number(item.price || 0),
+      quantity: checkoutItemQuantity(item),
     })),
     membership: membership ? {
       name: membership.name || '',
@@ -312,21 +322,22 @@ export default async function handler(req, res) {
       });
     }
 
-    const visitSubtotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const visitSubtotal = items.reduce((sum, item) => sum + Number(item.price || 0) * checkoutItemQuantity(item), 0);
     const hasVisitItems = items.length > 0;
-    if (hasVisitItems && !appointment.acuityDatetime) {
+    const requiresScheduling = hasVisitItems || Boolean(membership);
+    if (requiresScheduling && !appointment.acuityDatetime) {
       return res.status(400).json({
         error: 'Appointment time is required before checkout',
         code: 'appointment_time_missing',
       });
     }
-    if (hasVisitItems && !isAdultCheckoutDob(appointment.dob || contact.dob || '')) {
+    if (requiresScheduling && !isAdultCheckoutDob(appointment.dob || contact.dob || '')) {
       return res.status(400).json({
         error: 'Valid adult birthdate is required before checkout',
         code: 'dob_invalid',
       });
     }
-    if (hasVisitItems) {
+    if (requiresScheduling) {
       try {
         const appointmentTypeId = await resolveCheckoutSchedulingTypeId({ appointment, items, membership });
         appointment.acuityTypeId = String(appointmentTypeId);
@@ -355,7 +366,10 @@ export default async function handler(req, res) {
     // separate intake/IV setup, so the deposit scales with it. Older clients
     // omit it — fall back to 1 (or guestCount when guests>1 is a household
     // signal). isGroupVisit (event/B2B) is a different concept and unchanged.
-    const peopleCount = Math.max(1, Math.min(4, Math.floor(Number(appointment.peopleCount || appointment.people || guestCount || 1))));
+    const cartPeopleCount = items
+      .filter((item) => item.type === 'iv')
+      .reduce((sum, item) => sum + checkoutItemQuantity(item), 0);
+    const peopleCount = Math.max(1, Math.min(4, Math.floor(Number(appointment.peopleCount || appointment.people || cartPeopleCount || guestCount || 1))));
     const isGroupVisit = /event/i.test(`${appointmentOrderType} ${appointment.locationType || ''}`) || guestCount > 1;
     const planMonthlyCents = membership ? Math.max(0, dollarsToCents(membership.price)) : 0;
     const launchPayment = calculateLaunchPayment({
@@ -425,7 +439,7 @@ export default async function handler(req, res) {
       if (pendingError || !pendingRecord?.id) {
         console.warn(
           '[create-checkout-session] Supabase appointment record unavailable; refusing live checkout without a safe fulfillment record:',
-          pendingError?.message || 'missing appointment id'
+          pendingError ? safeLogContext(pendingError, 'appointment_record_unavailable') : { code: 'missing_appointment_id' }
         );
         throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
       } else {

@@ -22,27 +22,29 @@ import { canAccessAdminRoute } from '@/lib/adminAccess';
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
 const ACUITY_URL = 'https://avalonvitality.as.me';
 
-// Single source of truth for the nav — add a capability = add an entry here.
-const NAV = [
+const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
+  { label: 'Appointments', icon: CalendarCheck, to: '/admin/bookings' },
+  { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
+  { label: 'Inventory', icon: Package, to: '/admin/inventory' },
+  { label: 'Scheduling', icon: CalendarCheck, href: ACUITY_URL, external: true, note: 'Acuity' },
+  { label: 'Team', icon: UserCog, to: '/admin/team' },
+];
+
+const NAV_PREVIEW = [
   {
     label: 'Patients', icon: Users, children: [
       { label: 'All clients', to: '/admin/crm' },
       { label: 'Intake review', to: '/admin/credentials' },
-      { label: 'CRM', to: '/admin/crm' },
     ],
   },
-  {
-    label: 'Billing', icon: CreditCard, children: [
-      { label: 'Ready to collect', to: '/admin/bookings' },
-      { label: 'Payments', to: '/admin/finance' },
-    ],
-  },
-  { label: 'Inventory', icon: Package, to: '/admin/inventory' },
   { label: 'Analytics', icon: Activity, to: '/admin/client-heat-map' },
-  { label: 'Scheduling', icon: CalendarCheck, href: ACUITY_URL, external: true, note: 'Acuity' },
   { label: 'Operations', icon: ShieldCheck, to: '/admin/field' },
-  { label: 'Team', icon: UserCog, to: '/admin/team' },
+];
+
+const NAV = [
+  ...NAV_LIVE,
+  ...(import.meta.env.VITE_ADMIN_PREVIEW === '1' ? NAV_PREVIEW : []),
 ];
 
 // Filter the nav to what the signed-in role may open. Staff see only the

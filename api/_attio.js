@@ -6,9 +6,20 @@
  *
  * IMPORTANT: Never import this in frontend code.
  * ATTIO_ACCESS_TOKEN must stay server-side only.
+ *
+ * HIPAA / BAA STATUS: Attio has NOT signed a BAA with Avalon. Until a BAA is
+ * executed (or we migrate to a HIPAA-eligible CRM), this client refuses to
+ * send any data to Attio. The kill switch is gated on ATTIO_SYNC_ENABLED.
+ * See docs/PHI_DATA_FLOW.md for the route-around policy.
+ *
+ * Callers should treat a `{ skipped: true }` return as a non-error.
  */
 
 const BASE = 'https://api.attio.com/v2';
+
+function isAttioSyncEnabled() {
+  return String(process.env.ATTIO_SYNC_ENABLED || '').toLowerCase() === 'true';
+}
 
 function authHeader() {
   const token = process.env.ATTIO_ACCESS_TOKEN || process.env.ATTIO_API_KEY;
@@ -27,6 +38,12 @@ async function readJson(res) {
 }
 
 export async function attioFetch(path, opts = {}) {
+  if (!isAttioSyncEnabled()) {
+    // BAA-pending kill switch. No outbound Attio calls until ATTIO_SYNC_ENABLED=true.
+    console.log('[attio] sync skipped (ATTIO_SYNC_ENABLED is not true)', { path });
+    return { skipped: true, reason: 'attio_sync_disabled', data: null };
+  }
+
   const res = await fetch(`${BASE}${path}`, {
     ...opts,
     headers: {

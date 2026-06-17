@@ -45,7 +45,7 @@ const SPECIALTY_IVS = [
 const TOP_CATEGORIES = [
   {
     key: 'vitamins',
-    label: 'VITAMINS',
+    label: 'IV VITAMINS',
     icon: Droplets,
     type: 'flat-treatments',
     data: [

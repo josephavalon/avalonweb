@@ -53,6 +53,7 @@ import { useSeo } from '@/lib/seo';
 import {
   appendActivity,
   clearBookingDraft,
+  readLocal,
   readBookingDraft,
   readLastBooking,
   saveBookingDraft,
@@ -81,6 +82,7 @@ import {
   billablePeopleCount,
 } from '@/lib/peopleState';
 import PersonTabStrip from '@/components/store/PersonTabStrip';
+import SessionBuilder from '@/components/store/SessionBuilder';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
@@ -1056,7 +1058,7 @@ function UniversalBookingFrame({
         style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
-          {hasOrder && (onRemoveAddon || onClearOrder) && (
+          {step !== 0 && hasOrder && (onRemoveAddon || onClearOrder) && (
             <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/30 md:hidden">
               <div className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5">
                 <button
@@ -1218,6 +1220,10 @@ function DesktopOrderRail({
   onNext,
   onRemoveAddon,
   onClearOrder,
+  sessionPeople = [],
+  onSelectPerson,
+  onAddPerson,
+  onRemovePerson,
 }) {
   const hasTherapySelection = Boolean(product);
   const displaySubtotal = hasTherapySelection ? subtotal : 0;
@@ -1227,10 +1233,11 @@ function DesktopOrderRail({
   const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
   const dateLabel = bookingDateLabel(state);
   const timeLabel = bookingTimeLabel(state);
-  const receiptLine = priceReceipt({ product, subtotal: displaySubtotal, groupContactRequired: false });
+  const receiptLine = state.visitType === 'subscription'
+    ? 'Billed monthly · cancel anytime'
+    : priceReceipt({ product, subtotal: displaySubtotal, groupContactRequired: false });
 
   const rows = [
-    ['Therapy', hasTherapySelection ? product.label : 'Not selected'],
     ['Date', dateLabel],
     ['Time', timeLabel],
   ];
@@ -1240,7 +1247,7 @@ function DesktopOrderRail({
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Order</p>
+          <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Session</p>
           {hasTherapySelection && (
             <button
               type="button"
@@ -1251,6 +1258,17 @@ function DesktopOrderRail({
             </button>
           )}
         </div>
+        <SessionBuilder
+          people={sessionPeople}
+          activePersonId={state.activePersonId}
+          onSelect={onSelectPerson}
+          onAdd={onAddPerson}
+          onRemove={onRemovePerson}
+          title=""
+          subline="One custom protocol per person"
+          footer="Up to 4 people · one nurse visit"
+          addLabel="Add a person's protocol"
+        />
         <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
             <div key={label} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[76px_minmax(0,1fr)] 2xl:py-2">
@@ -1352,6 +1370,10 @@ function DesktopBookingFrame({
   onStepSelect,
   onRemoveAddon,
   onClearOrder,
+  sessionPeople,
+  onSelectPerson,
+  onAddPerson,
+  onRemovePerson,
   children,
 }) {
   return (
@@ -1398,6 +1420,10 @@ function DesktopBookingFrame({
           onNext={onNext}
           onRemoveAddon={onRemoveAddon}
           onClearOrder={onClearOrder}
+          sessionPeople={sessionPeople}
+          onSelectPerson={onSelectPerson}
+          onAddPerson={onAddPerson}
+          onRemovePerson={onRemovePerson}
         />
       </div>
     </section>
@@ -3874,6 +3900,12 @@ export default function BookNow() {
   // catalog they would see for THEIR therapy. We then derive each person's
   // subtotal and the roster total. When there's only one person these collapse
   // to the same numbers as the single-person path, so existing UI is unchanged.
+  const peopleSnapshot = useMemo(
+    () => (state.people || []).map((p) => p.id === state.activePersonId
+      ? { ...p, productKey: state.productKey, addOns: state.addOns, addOnDecision: state.addOnDecision }
+      : p),
+    [state.people, state.activePersonId, state.productKey, state.addOns, state.addOnDecision]
+  );
   const peopleBreakdown = useMemo(() => {
     return (peopleSnapshot || []).map((person, index) => {
       const personProduct = person.productKey ? safeProtocol(getProductByKey(person.productKey)) : null;
@@ -3897,6 +3929,27 @@ export default function BookNow() {
   }, [peopleSnapshot]);
   const multiPersonSubtotal = peopleBreakdown.reduce((sum, row) => sum + row.subtotal, 0);
   const effectivePeopleCount = billablePeopleCount(peopleSnapshot);
+  // Roster rows for the "YOUR SESSION" builder (rail on desktop, inline on
+  // mobile). Price label is per-person and matches the order math: a one-time
+  // visit shows the per-visit subtotal, a subscription shows the monthly.
+  const sessionPeople = useMemo(
+    () => peopleBreakdown.map((row) => {
+      const isSub = state.visitType === 'subscription';
+      // One-time shows the per-person visit price. Subscriptions bill a combined
+      // monthly (shown as the rail total), so we don't print a misleading
+      // per-visit number against each person here.
+      const priceLabel = row.product && !isSub ? currency(row.subtotal) : '';
+      return {
+        id: row.person.id,
+        index: row.index,
+        label: row.label,
+        productLabel: row.product?.label || '',
+        priceLabel,
+        filled: Boolean(row.product),
+      };
+    }),
+    [peopleBreakdown, state.visitType]
+  );
   const isMultiPerson = effectivePeopleCount > 1;
   const baseSubtotal = isMultiPerson
     ? multiPersonSubtotal
@@ -3911,7 +3964,12 @@ export default function BookNow() {
     ? (builderMonthly > 0 ? builderMonthly : customPlanEstimate)
     : Number(plan.price || 0);
   const activeSubscriptionTerm = subscriptionTermForKey('monthly');
-  const activePlanPrice = activePlanMonthlyPrice;
+  // Tier plans bill per seat, so the monthly scales with people on the plan
+  // (deposit also scales $50/person in paymentRules). The custom-builder handoff
+  // arrives with a price that already sums every person, so it is left as-is.
+  const activePlanPrice = plan.custom
+    ? activePlanMonthlyPrice
+    : activePlanMonthlyPrice * effectivePeopleCount;
   const activePlanSessions = plan.custom ? customPlanSessions : Number(plan.sessions || 0);
   const isGroupVisit = state.who === 'group' || state.visitType === 'event';
   const guestCount = isGroupVisit ? Math.max(2, Number(state.guests || 2)) : 1;
@@ -3919,7 +3977,13 @@ export default function BookNow() {
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
   const manualBilling = state.billingMode === 'vip-manual' && state.visitType === 'one-time' && !groupContactRequired;
-  const totalLabel = !product ? 'Select' : groupContactRequired ? 'Contact' : currency(subtotal);
+  const totalLabel = !product
+    ? 'Select'
+    : groupContactRequired
+      ? 'Contact'
+      : state.visitType === 'subscription'
+        ? `${currency(activePlanPrice)}/mo`
+        : currency(subtotal);
   const launchPayment = calculateLaunchPayment({
     subtotal,
     visitType: state.visitType,
@@ -4440,13 +4504,6 @@ export default function BookNow() {
   // Live snapshot of all people with the active person's live selections
   // overlaid. Use this anywhere you need the FULL roster (sidebar, checkout
   // serialization, billing). `state.people` alone is stale for the active.
-  const peopleSnapshot = useMemo(
-    () => (state.people || []).map((p) => p.id === state.activePersonId
-      ? { ...p, productKey: state.productKey, addOns: state.addOns, addOnDecision: state.addOnDecision }
-      : p),
-    [state.people, state.activePersonId, state.productKey, state.addOns, state.addOnDecision]
-  );
-
   // Cart edit/clear for the Your Order panel. removeAddon drops one add-on line;
   // clearOrder wipes therapy + add-ons (the cost) and returns to step 1. Neither
   // touches checkout/payment logic or date/time/location.
@@ -4740,6 +4797,17 @@ export default function BookNow() {
   const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state.emergencyContact) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
+    const writeCheckoutHandoffMarker = () => {
+      writeLocal('webstore.latestHandoff', {
+        bookingId: localBooking.id,
+        stack: localBooking.manualBilling
+          ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
+          : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
+        noThirdPartyCalls: Boolean(localBooking.manualBilling),
+        updatedAt: new Date().toISOString(),
+      });
+    };
+
     clearItems();
     localBooking.items.forEach(addItem);
     saveLastBooking(localBooking);
@@ -4749,24 +4817,34 @@ export default function BookNow() {
       scope: scopeLabel,
       depositAmount: localBooking.depositAmount,
     });
-    writeLocal('webstore.latestHandoff', {
-      bookingId: localBooking.id,
-      stack: localBooking.manualBilling
-        ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
-        : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
-      noThirdPartyCalls: Boolean(localBooking.manualBilling),
-      updatedAt: new Date().toISOString(),
-    });
+    writeCheckoutHandoffMarker();
     if (localBooking.subscription) writeLocal('webstore.subscriptionPlan', localBooking.subscription);
     if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
     appendActivity(localBooking.manualBilling ? `VIP manual booking requested: ${localBooking.service}` : `Webstore payment started: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
+  };
+
+  const ensureCheckoutLocalMarkers = (localBooking) => {
+    if (!localBooking?.id) return;
+    const saved = readLastBooking();
+    if (saved?.id !== localBooking.id) saveLastBooking(localBooking);
+    const handoff = readLocal('webstore.latestHandoff', null);
+    if (handoff?.bookingId !== localBooking.id) {
+      writeLocal('webstore.latestHandoff', {
+        bookingId: localBooking.id,
+        stack: localBooking.manualBilling
+          ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
+          : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
+        noThirdPartyCalls: Boolean(localBooking.manualBilling),
+        updatedAt: new Date().toISOString(),
+      });
+    }
   };
 
   const checkoutPayloadFor = (localBooking, membershipOverride = null) => {
     const [firstName, ...rest] = String(localBooking.contact?.name || state.name || '').trim().split(/\s+/).filter(Boolean);
     const appointmentTypeId = safeAcuityTypeId(localBooking.appointmentTypeId || localBooking.acuitySlot?.appointmentTypeID);
     return {
-      mode: localBooking.subscription || membershipOverride ? 'subscription' : 'payment',
+      mode: 'payment',
       checkoutUiMode: 'hosted',
       items: (localBooking.items || []).map((item) => ({
         key: item.cartKey,
@@ -4839,6 +4917,7 @@ export default function BookNow() {
       });
 
       if (session.previewOnly) {
+        ensureCheckoutLocalMarkers(localBooking);
         clearBookingDraft();
         clearBookingSessionDraft();
         navigate(session.url || `/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}&preapi=1`);
@@ -4846,6 +4925,7 @@ export default function BookNow() {
       }
 
       if (session.checkoutUiMode === 'hosted' && session.url) {
+        ensureCheckoutLocalMarkers(localBooking);
         clearBookingDraft();
         clearBookingSessionDraft();
         window.location.assign(session.url);
@@ -5544,7 +5624,22 @@ export default function BookNow() {
       const categoryShortLabels = { vitamin: 'IV Vitamins', cbd: 'IV CBD', nad: 'IV NAD+' };
 
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5 md:gap-3">
+        <div className={`grid h-full min-h-0 gap-2.5 md:gap-3 ${!desktopBookingFrame ? 'grid-rows-[auto_auto_1fr]' : 'grid-rows-[auto_1fr]'}`}>
+          {!desktopBookingFrame && (
+            <div className="rounded-2xl border border-foreground/12 bg-background/40 px-2.5 py-2">
+              <SessionBuilder
+                compact
+                people={sessionPeople}
+                activePersonId={state.activePersonId}
+                onSelect={switchActivePerson}
+                onAdd={addNewPerson}
+                onRemove={deletePerson}
+                subline="One custom protocol per person"
+                footer="Up to 4 people · one nurse visit"
+                addLabel="Add a person's protocol"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
             {therapyGroups.map((group) => {
               const Icon = group.icon || Droplets;
@@ -5922,6 +6017,10 @@ export default function BookNow() {
               onStepSelect={goToStep}
               onRemoveAddon={removeAddon}
               onClearOrder={clearOrder}
+              sessionPeople={sessionPeople}
+              onSelectPerson={switchActivePerson}
+              onAddPerson={addNewPerson}
+              onRemovePerson={deletePerson}
             >
               {renderUniversalStep()}
             </DesktopBookingFrame>}
