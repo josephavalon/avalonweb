@@ -4,6 +4,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { hasSupabase, supabase } from '@/lib/supabase';
+import { apiPost } from '@/lib/apiClient';
 
 function destinationForRole(role) {
   if (role === 'admin' || role === 'staff') return '/admin';
@@ -74,6 +75,11 @@ export default function AuthCallback() {
         if (!user) throw new Error('No Supabase session after auth callback.');
         const appUser = await refreshSupabaseSession();
         const role = appUser?.role || await roleForUser(user.id, abortController.signal);
+        // Best-effort welcome email. Server-side dedupe via audit_events; route
+        // returns 200 whether send succeeds or not — must never block navigation.
+        if (role === 'client') {
+          apiPost('/api/auth/welcome-email', {}).catch(() => { /* swallow */ });
+        }
         if (active) navigate(destinationForRole(role), { replace: true });
       } catch {
         if (active) setError('Could not finish sign-in. Please try again.');

@@ -42,6 +42,7 @@
     "verify:booking-to-acuity": "node scripts/verify-booking-to-acuity.mjs",
     "verify:plan-billing": "node scripts/verify-plan-billing.mjs",
     "verify:password-reset": "node scripts/verify-password-reset.mjs",
+    "verify:welcome-email": "node scripts/verify-welcome-email.mjs",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:hosted-admin-endpoints": "node scripts/verify-hosted-admin-endpoints.mjs",
     "assets:audit": "node scripts/asset-audit.mjs",
