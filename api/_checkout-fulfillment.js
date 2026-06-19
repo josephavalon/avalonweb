@@ -576,13 +576,16 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
   const labels = split(metadata.itemLabels).filter(Boolean);
   const keys = split(metadata.itemKeys);
   const types = split(metadata.itemTypes);
-  const prices = split(metadata.itemPrices);
+  // Per-item prices are intentionally NOT in Stripe metadata (see safe-stripe.js
+  // allow-list), so they can't be reconstructed here. Authoritative money lives
+  // in `amounts` below (visitSubtotal/deposit/balance cents). Items are
+  // label-only in this legacy fallback path.
   const items = labels.map((label, index) => ({
     label,
     key: keys[index] || label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     cartKey: keys[index] || label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     type: types[index] || 'service',
-    price: Number(prices[index] || 0),
+    price: 0,
   }));
 
   return {
@@ -620,7 +623,9 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
     membership: metadata.membershipName ? {
       name: metadata.membershipName,
       billing: metadata.membershipBilling || 'monthly',
-      price: Number(metadata.membershipPrice || 0),
+      // Derive from the whitelisted cents field; `membershipPrice` was never
+      // written to Stripe metadata, so the old read always produced $0.
+      price: Number(metadata.planMonthlyPriceCents || 0) / 100,
     } : null,
     paymentMethod: metadata.paymentMethod || 'card',
     primaryService: metadata.service || labels[0] || metadata.membershipName || 'Avalon Visit',

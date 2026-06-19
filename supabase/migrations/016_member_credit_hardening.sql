@@ -134,3 +134,29 @@ $$;
 revoke all on function public.redeem_member_credit(uuid,uuid,text,uuid,text,integer,integer,text,jsonb) from public;
 revoke all on function public.redeem_member_credit(uuid,uuid,text,uuid,text,integer,integer,text,jsonb) from anon;
 revoke all on function public.redeem_member_credit(uuid,uuid,text,uuid,text,integer,integer,text,jsonb) from authenticated;
+
+-- ── (medium) Dedup keys must be present so a NULL can't bypass the unique
+-- indexes (Postgres treats NULLs as distinct). Every deduped source is required
+-- to carry its conflict key; admin_adjustment is manual and exempt. Keeps the
+-- unique indexes full so the grant upserts' ON CONFLICT targets still resolve.
+alter table public.member_credit_ledger
+  drop constraint if exists member_credit_dedup_key_present;
+alter table public.member_credit_ledger
+  add constraint member_credit_dedup_key_present check (
+    source = 'admin_adjustment'
+    or (source in ('membership_initial_grant', 'iv_credit_redemption')
+        and stripe_checkout_session_id is not null)
+    or (source = 'membership_renewal_grant' and stripe_invoice_id is not null)
+  );
+
+-- ── (low) discount_redemptions append-only-ish: keep insert/update for the
+-- upsert path, drop DELETE for app roles (redemption facts are audit records).
+revoke delete on public.discount_redemptions from authenticated;
+drop policy if exists "discount redemptions tenant operator write" on public.discount_redemptions;
+create policy "discount redemptions tenant operator insert"
+  on public.discount_redemptions for insert
+  with check (app_private.same_tenant(tenant_id) and app_private.is_operator());
+create policy "discount redemptions tenant operator update"
+  on public.discount_redemptions for update
+  using (app_private.same_tenant(tenant_id) and app_private.is_operator())
+  with check (app_private.same_tenant(tenant_id) and app_private.is_operator());

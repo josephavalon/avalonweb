@@ -240,7 +240,9 @@ export default function LiveAdminBookings() {
         setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: res.error || 'Could not complete the charge.' } }));
       }
     } catch (err) {
-      setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: 'Action failed.' } }));
+      // apiClient throws with the server's error text on the message; surface it
+      // instead of a generic line so ops can see why the charge failed.
+      setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: err?.body?.error || err?.message || 'Action failed.' } }));
     }
   }, [load]);
 
@@ -255,7 +257,7 @@ export default function LiveAdminBookings() {
         setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: res.error || 'Could not create the Acuity appointment.' } }));
       }
     } catch (err) {
-      setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: 'Acuity retry failed.' } }));
+      setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: err?.body?.error || err?.message || 'Acuity retry failed.' } }));
     }
   }, [load]);
 
