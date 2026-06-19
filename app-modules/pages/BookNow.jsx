@@ -5428,7 +5428,7 @@ export default function BookNow() {
           onClick={() => setExpandedTherapy(expanded ? null : item.key)}
           aria-expanded={expanded}
           aria-label={`${expanded ? 'Hide' : "Show what's inside"} ${item.label || item.tabLabel || 'this therapy'}`}
-          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-2 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[11px]"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[11px]"
         >
           {expanded ? 'Hide details' : "What's inside"}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} strokeWidth={2.4} />
@@ -5482,12 +5482,12 @@ export default function BookNow() {
           type="button"
           onClick={() => chooseTherapyMenuProduct(item.key)}
           aria-pressed={active}
-          className={`relative grid min-h-[104px] w-full grid-cols-[72px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-2 text-left transition-colors md:min-h-[120px] md:grid-cols-[88px_minmax(0,1fr)_72px_26px] md:px-4 md:py-3 xl:grid-cols-[88px_minmax(0,1fr)_80px_26px] ${
+          className={`relative grid min-h-[88px] w-full grid-cols-[64px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-1.5 text-left transition-colors md:min-h-[100px] md:grid-cols-[76px_minmax(0,1fr)_72px_26px] md:px-4 md:py-2 xl:grid-cols-[76px_minmax(0,1fr)_80px_26px] ${
             active ? 'bg-foreground/[0.14]' : 'hover:bg-foreground/[0.03]'
           }`}
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          <span className="relative flex h-[5.5rem] w-[4.5rem] shrink-0 items-center justify-center md:h-[6rem] md:w-20">
+          <span className="relative flex h-[4.5rem] w-16 shrink-0 items-center justify-center md:h-[4.75rem] md:w-[4.25rem]">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
             ) : (
@@ -5543,12 +5543,12 @@ export default function BookNow() {
           type="button"
           onClick={selectTherapy}
           aria-pressed={active}
-          className={`relative grid min-h-[100px] w-full grid-cols-[4.25rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-2 text-left transition-colors min-[390px]:min-h-[108px] min-[390px]:grid-cols-[4.75rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
+          className={`relative grid min-h-[86px] w-full grid-cols-[3.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-1.5 text-left transition-colors min-[390px]:min-h-[92px] min-[390px]:grid-cols-[4rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
             active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
-          <span className="relative flex h-[5.5rem] w-[4.25rem] items-center justify-center min-[390px]:h-[6rem] min-[390px]:w-[4.75rem]">
+          <span className="relative flex h-[4.5rem] w-16 items-center justify-center min-[390px]:h-[4.75rem] min-[390px]:w-[4.25rem]">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.6)]" />
             ) : (
