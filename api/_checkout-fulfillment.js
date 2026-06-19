@@ -449,6 +449,7 @@ export function buildCheckoutPayload({
   visitSubtotalCents = 0,
   depositCents = 0,
   balanceDueCents = 0,
+  creditRedemption = null,
 } = {}) {
   return {
     fulfillment: STRIPE_PAID_FULFILLMENT_VERSION,
@@ -458,11 +459,19 @@ export function buildCheckoutPayload({
     membership,
     paymentMethod,
     primaryService,
+    creditRedemption: creditRedemption ? {
+      units: Number(creditRedemption.units || 0),
+      amountCents: Number(creditRedemption.amountCents || 0),
+      memberProfileId: creditRedemption.memberProfileId || null,
+      availableBeforeRedemption: Number(creditRedemption.availableBeforeRedemption || 0),
+    } : null,
     amounts: {
       currency: 'usd',
       visitSubtotalCents,
       depositAmountCents: depositCents,
       balanceDueCents,
+      creditRedemptionUnits: creditRedemption ? Number(creditRedemption.units || 0) : 0,
+      creditRedemptionCents: creditRedemption ? Number(creditRedemption.amountCents || 0) : 0,
       depositType: balanceDueCents > 0 ? 'non_refundable_deductible' : 'full_payment',
     },
     createdAt: new Date().toISOString(),
@@ -524,6 +533,7 @@ export function buildStripeCheckoutMetadata({
   visitSubtotalCents = 0,
   depositCents = 0,
   balanceDueCents = 0,
+  creditRedemption = null,
 } = {}) {
   // All Stripe metadata is filtered through safeStripeMetadata (whitelist +
   // PHI-name deny patterns) per the HIPAA route-around in docs/PHI_DATA_FLOW.md.
@@ -549,6 +559,8 @@ export function buildStripeCheckoutMetadata({
     visitSubtotalCents: String(visitSubtotalCents),
     depositAmountCents: String(depositCents),
     balanceDueCents: String(balanceDueCents),
+    creditRedemptionUnits: creditRedemption ? String(Number(creditRedemption.units || 0)) : '',
+    creditRedemptionCents: creditRedemption ? String(Number(creditRedemption.amountCents || 0)) : '',
     // Plan-signup carry-through: fulfillment uses these to create the recurring
     // Stripe subscription AFTER the first visit (full price, starts one period
     // later). Empty for one-time visits.
@@ -617,6 +629,8 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
       visitSubtotalCents: Number(metadata.visitSubtotalCents || 0),
       depositAmountCents: Number(metadata.depositAmountCents || 0),
       balanceDueCents: Number(metadata.balanceDueCents || 0),
+      creditRedemptionUnits: Number(metadata.creditRedemptionUnits || 0),
+      creditRedemptionCents: Number(metadata.creditRedemptionCents || 0),
       depositType: metadata.depositType || (Number(metadata.balanceDueCents || 0) > 0 ? 'non_refundable_deductible' : 'full_payment'),
     },
   };

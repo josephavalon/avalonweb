@@ -5,6 +5,8 @@ import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 import { resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
+import { getAuthedUser } from './_lib/supabase-auth.js';
+import { getMemberCreditBalance, resolveCreditMember } from './_lib/member-credits.js';
 import {
   buildCheckoutPayload,
   buildPendingAppointmentRecord,
@@ -27,6 +29,22 @@ function dollarsToCents(value) {
 function checkoutItemQuantity(item = {}) {
   const quantity = Number(item.quantity);
   return Number.isFinite(quantity) ? Math.min(4, Math.max(1, Math.floor(quantity))) : 1;
+}
+
+function normalizeEmail(value = '') {
+  return String(value || '').trim().toLowerCase();
+}
+
+function requestedCreditUnits(value = {}) {
+  if (!value || typeof value !== 'object') return 0;
+  if (value.useCredits === true) return 1;
+  const units = Number(value.units || 0);
+  return Number.isFinite(units) ? Math.min(1, Math.max(0, Math.floor(units))) : 0;
+}
+
+function firstIvCreditValueCents(items = []) {
+  const iv = items.find((item) => item.type === 'iv' && Number(item.price || 0) > 0);
+  return iv ? dollarsToCents(iv.price) : 0;
 }
 
 const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS);
@@ -205,7 +223,7 @@ function checkoutExpiresAt() {
   return Math.floor(Date.now() / 1000) + minutes * 60;
 }
 
-function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = [], membership = null } = {}) {
+function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = [], membership = null, creditRedemption = null } = {}) {
   const fingerprint = {
     mode,
     email: String(contact.email || '').trim().toLowerCase(),
@@ -227,6 +245,10 @@ function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = 
       name: membership.name || '',
       billing: membership.billing || 'monthly',
       price: Number(membership.price || 0),
+    } : null,
+    creditRedemption: creditRedemption ? {
+      units: Number(creditRedemption.units || 0),
+      amountCents: Number(creditRedemption.amountCents || 0),
     } : null,
   };
   const hash = crypto.createHash('sha256').update(JSON.stringify(fingerprint)).digest('hex').slice(0, 32);
@@ -261,6 +283,7 @@ export default async function handler(req, res) {
     appointment: rawAppointment = {},
     paymentMethod = 'card',
     checkoutUiMode = 'hosted',
+    creditRedemption: rawCreditRedemption = null,
   } = req.body || {};
 
   const {
@@ -322,6 +345,13 @@ export default async function handler(req, res) {
       });
     }
 
+    const db = await getSupabaseServiceClient();
+    if (!db) {
+      console.warn('[create-checkout-session] Supabase is not configured; refusing live checkout without a safe fulfillment record.');
+      throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
+    }
+    const tenantId = await getDefaultTenantId(db);
+
     const visitSubtotal = items.reduce((sum, item) => sum + Number(item.price || 0) * checkoutItemQuantity(item), 0);
     const hasVisitItems = items.length > 0;
     const requiresScheduling = hasVisitItems || Boolean(membership);
@@ -372,25 +402,80 @@ export default async function handler(req, res) {
     const peopleCount = Math.max(1, Math.min(4, Math.floor(Number(appointment.peopleCount || appointment.people || cartPeopleCount || guestCount || 1))));
     const isGroupVisit = /event/i.test(`${appointmentOrderType} ${appointment.locationType || ''}`) || guestCount > 1;
     const planMonthlyCents = membership ? Math.max(0, dollarsToCents(membership.price)) : 0;
+    const requestedCredits = requestedCreditUnits(rawCreditRedemption);
+    let creditRedemption = null;
+    if (requestedCredits > 0) {
+      if (membership) {
+        return res.status(400).json({
+          error: 'Credits can be redeemed for IV visits only.',
+          code: 'credit_membership_not_supported',
+        });
+      }
+      const creditValueCents = firstIvCreditValueCents(items);
+      if (!creditValueCents) {
+        return res.status(400).json({
+          error: 'Credits can be redeemed for IV visits only.',
+          code: 'credit_iv_required',
+        });
+      }
+      const authed = await getAuthedUser(req);
+      if (!authed) {
+        return res.status(401).json({
+          error: 'Sign in to redeem credits.',
+          code: 'credit_auth_required',
+        });
+      }
+      if (normalizeEmail(authed.email) !== normalizeEmail(contact.email)) {
+        return res.status(403).json({
+          error: 'Credits can only be redeemed by the signed-in member.',
+          code: 'credit_email_mismatch',
+        });
+      }
+      const creditTenantId = authed.tenantId || tenantId;
+      const member = await resolveCreditMember(db, {
+        tenantId: creditTenantId,
+        profileId: authed.user?.id || null,
+        email: authed.email,
+      });
+      const balance = await getMemberCreditBalance(db, {
+        tenantId: creditTenantId,
+        profileId: member.profileId || authed.user?.id || null,
+        email: member.email || authed.email,
+      });
+      if (balance < requestedCredits) {
+        return res.status(400).json({
+          error: 'No IV credits are available on this account.',
+          code: 'credit_balance_insufficient',
+        });
+      }
+      creditRedemption = {
+        units: requestedCredits,
+        amountCents: Math.min(visitSubtotalCents, creditValueCents),
+        memberProfileId: member.profileId || authed.user?.id || null,
+        availableBeforeRedemption: balance,
+      };
+    }
+    const creditRedemptionCents = creditRedemption?.amountCents || 0;
+    const billableVisitSubtotalCents = Math.max(0, visitSubtotalCents - creditRedemptionCents);
     const launchPayment = calculateLaunchPayment({
-      subtotal: membership ? planMonthlyCents / 100 : visitSubtotal,
+      subtotal: membership ? planMonthlyCents / 100 : billableVisitSubtotalCents / 100,
       visitType: membership ? 'subscription' : appointment.visitType || '',
       orderType: membership ? 'subscription' : appointmentOrderType,
       subscriptionPrice: membership?.price || 0,
       isGroupVisit,
-      hasKnownPrice: membership ? planMonthlyCents > 0 : visitSubtotal > 0,
+      hasKnownPrice: membership ? planMonthlyCents > 0 : billableVisitSubtotalCents > 0,
       peopleCount,
     });
     const scaledDepositCents = BOOKING_DEPOSIT_CENTS * peopleCount;
-    const fallbackDepositCents = hasVisitItems ? Math.min(scaledDepositCents, visitSubtotalCents) : 0;
+    const fallbackDepositCents = hasVisitItems ? Math.min(scaledDepositCents, billableVisitSubtotalCents) : 0;
     const depositCents = membership
       ? Math.min(scaledDepositCents, planMonthlyCents)
       : hasVisitItems
-        ? dollarsToCents((launchPayment.depositAmount ?? (fallbackDepositCents / 100)))
+        ? Math.min(billableVisitSubtotalCents, dollarsToCents((launchPayment.depositAmount ?? (fallbackDepositCents / 100))))
         : 0;
     const balanceDueCents = membership
       ? Math.max(0, planMonthlyCents - depositCents)
-      : Math.max(0, visitSubtotalCents - depositCents);
+      : Math.max(0, billableVisitSubtotalCents - depositCents);
     const normalizedAppointment = {
       ...appointment,
       orderType: membership ? 'subscription' : (isGroupVisit ? 'event' : appointment.orderType || 'single'),
@@ -423,11 +508,10 @@ export default async function handler(req, res) {
       visitSubtotalCents,
       depositCents,
       balanceDueCents,
+      creditRedemption,
     });
 
-    const db = await getSupabaseServiceClient();
     if (db) {
-      const tenantId = await getDefaultTenantId(db);
       const { data: pendingRecord, error: pendingError } = await db.from('appointments')
         .insert({
           ...buildPendingAppointmentRecord(checkoutPayload),
@@ -461,6 +545,7 @@ export default async function handler(req, res) {
       appointment: normalizedAppointment,
       items,
       membership,
+      creditRedemption,
     });
 
     const sessionParams = {
@@ -476,6 +561,7 @@ export default async function handler(req, res) {
       customer_email: contact.email,
       line_items,
       allow_promotion_codes: true,
+      payment_method_collection: 'if_required',
       expires_at: checkoutExpiresAt(),
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,
@@ -488,6 +574,7 @@ export default async function handler(req, res) {
         visitSubtotalCents,
         depositCents,
         balanceDueCents,
+        creditRedemption,
       }),
     };
 
@@ -501,6 +588,10 @@ export default async function handler(req, res) {
     }
 
     if (sessionMode === 'payment') {
+      // Always create a Stripe Customer for Checkout sessions. This keeps
+      // first-time/customer-restricted promotion codes working and lets 100%
+      // off sessions complete as no-cost orders without a PaymentIntent.
+      sessionParams.customer_creation = 'always';
       sessionParams.payment_intent_data = {
         receipt_email: contact.email,
         // When a balance is owed after the $50 deposit, save the card off-session
@@ -510,9 +601,6 @@ export default async function handler(req, res) {
           ? { setup_future_usage: 'off_session' }
           : {}),
       };
-      if (Number(balanceDueCents) > 0) {
-        sessionParams.customer_creation = 'always';
-      }
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams, {
@@ -570,6 +658,7 @@ export default async function handler(req, res) {
       provider: 'stripe',
       appointment: { id: canonicalAppointmentRecordId || session.id, provider: canonicalAppointmentRecordId ? 'avalon_checkout' : 'stripe_metadata', status: 'payment_pending' },
       balanceDueCents,
+      creditRedemption,
       checkoutUiMode: embeddedCheckout ? 'embedded' : 'hosted',
       sessionId: session.id,
       clientSecret: embeddedCheckout ? session.client_secret : null,

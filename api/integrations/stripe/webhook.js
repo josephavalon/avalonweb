@@ -9,6 +9,10 @@ import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-se
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
 import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import {
+  grantMembershipCredit,
+  redeemMemberCredit,
+} from '../../_lib/member-credits.js';
+import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
   createSchedulingAppointmentWithFallback,
@@ -90,7 +94,7 @@ function withTimeout(promise, label, ms = STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS) 
 
 // Canonical record is public.appointments. Resolve by Acuity id, then Stripe session.
 async function findAppointmentRecord(db, { acuityId, sessionId, appointmentRecordId }) {
-  const columns = 'id, acuity_appointment_id, stripe_checkout_session_id, external_payload';
+  const columns = 'id, tenant_id, acuity_appointment_id, stripe_checkout_session_id, external_payload';
   if (appointmentRecordId) {
     const { data } = await db.from('appointments')
       .select(columns).eq('id', appointmentRecordId).maybeSingle();
@@ -151,14 +155,231 @@ async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 100
 }
 
 function buildExternalPayload(existingPayload = {}, patch = {}) {
+  const { discount, comped, ...fulfillmentPatch } = patch || {};
   return {
     ...existingPayload,
+    ...(discount ? { discount } : {}),
+    ...(comped ? { comped } : {}),
     fulfillment: {
       ...(existingPayload.fulfillment || {}),
-      ...patch,
+      ...fulfillmentPatch,
       updatedAt: new Date().toISOString(),
     },
   };
+}
+
+function stripeObjectId(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  return value.id || null;
+}
+
+function unixToIso(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return new Date(seconds * 1000).toISOString();
+}
+
+function discountCoupon(discount = {}, sessionDiscount = {}) {
+  const direct = discount.coupon || sessionDiscount.coupon || null;
+  if (direct && typeof direct === 'object') return direct;
+  const sourceCoupon = discount.source?.coupon;
+  if (sourceCoupon && typeof sourceCoupon === 'object') return sourceCoupon;
+  return null;
+}
+
+function discountCouponId(discount = {}, sessionDiscount = {}) {
+  return stripeObjectId(discount.coupon)
+    || stripeObjectId(discount.source?.coupon)
+    || stripeObjectId(sessionDiscount.coupon);
+}
+
+function discountPromotionCode(discount = {}, sessionDiscount = {}) {
+  const direct = discount.promotion_code || sessionDiscount.promotion_code || null;
+  return direct && typeof direct === 'object' ? direct : null;
+}
+
+function discountPromotionCodeId(discount = {}, sessionDiscount = {}) {
+  return stripeObjectId(discount.promotion_code) || stripeObjectId(sessionDiscount.promotion_code);
+}
+
+function normalizeCheckoutDiscount({ amount = 0, discount = {}, sessionDiscount = {}, session, index = 0 } = {}) {
+  const coupon = discountCoupon(discount, sessionDiscount);
+  const promotionCode = discountPromotionCode(discount, sessionDiscount);
+  const couponId = coupon?.id || discountCouponId(discount, sessionDiscount);
+  const promotionCodeId = promotionCode?.id || discountPromotionCodeId(discount, sessionDiscount);
+  const percentOff = coupon?.percent_off == null ? null : Number(coupon.percent_off);
+  const amountOffCents = coupon?.amount_off == null ? null : Number(coupon.amount_off);
+  const amountDiscountCents = Math.max(0, Math.round(Number(amount || 0)));
+  const code = promotionCode?.code || '';
+  const redemptionKey = discount.id || promotionCodeId || couponId || code || `discount-${index}`;
+  return {
+    stripeDiscountId: discount.id || null,
+    stripeCouponId: couponId || null,
+    stripePromotionCodeId: promotionCodeId || null,
+    redemptionKey,
+    code,
+    couponName: coupon?.name || '',
+    discountType: percentOff != null ? 'percent' : amountOffCents != null ? 'amount' : 'unknown',
+    percentOff,
+    amountOffCents,
+    amountDiscountCents,
+    currency: (session.currency || coupon?.currency || 'usd').toLowerCase(),
+    redeemedAt: unixToIso(discount.start) || (session.created ? unixToIso(session.created) : null) || new Date().toISOString(),
+  };
+}
+
+function checkoutDiscountEntries(session = {}) {
+  const breakdownDiscounts = session.total_details?.breakdown?.discounts;
+  if (Array.isArray(breakdownDiscounts) && breakdownDiscounts.length) {
+    return breakdownDiscounts.map((entry, index) => normalizeCheckoutDiscount({
+      amount: entry.amount,
+      discount: entry.discount || {},
+      session,
+      index,
+    }));
+  }
+
+  const sessionDiscounts = Array.isArray(session.discounts) ? session.discounts : [];
+  const totalDiscount = Number(session.total_details?.amount_discount || 0);
+  return sessionDiscounts.map((entry, index) => normalizeCheckoutDiscount({
+    amount: index === 0 ? totalDiscount : 0,
+    sessionDiscount: entry || {},
+    session,
+    index,
+  }));
+}
+
+function isFullCompDiscount(session = {}, discounts = []) {
+  const hasFullPercentCoupon = discounts.some((discount) => Number(discount.percentOff || 0) >= 100);
+  return hasFullPercentCoupon && Number(session.amount_total || 0) === 0;
+}
+
+function discountPayload(discounts = [], { fullComp = false } = {}) {
+  if (!discounts.length) return null;
+  const primary = discounts[0];
+  return {
+    code: primary.code || primary.couponName || '',
+    couponName: primary.couponName || '',
+    stripeCouponId: primary.stripeCouponId || '',
+    stripePromotionCodeId: primary.stripePromotionCodeId || '',
+    amountDiscountCents: discounts.reduce((sum, discount) => sum + Number(discount.amountDiscountCents || 0), 0),
+    currency: primary.currency || 'usd',
+    percentOff: primary.percentOff,
+    fullComp: !!fullComp,
+    appliedAt: primary.redeemedAt || new Date().toISOString(),
+  };
+}
+
+async function recordDiscountRedemptions(db, {
+  session,
+  record,
+  tenantId,
+  paymentIntentId,
+  discounts = [],
+  fullComp = false,
+} = {}) {
+  if (!db || !session?.id || !tenantId || !discounts.length) return;
+  const rows = discounts.map((discount) => ({
+    tenant_id: tenantId,
+    appointment_id: record?.id || null,
+    stripe_checkout_session_id: session.id,
+    stripe_payment_intent_id: paymentIntentId || null,
+    stripe_customer_id: stripeObjectId(session.customer),
+    stripe_discount_id: discount.stripeDiscountId || null,
+    stripe_coupon_id: discount.stripeCouponId || null,
+    stripe_promotion_code_id: discount.stripePromotionCodeId || null,
+    redemption_key: discount.redemptionKey,
+    code: discount.code || null,
+    coupon_name: discount.couponName || null,
+    discount_type: discount.discountType || null,
+    percent_off: discount.percentOff,
+    amount_off_cents: discount.amountOffCents,
+    amount_discount_cents: discount.amountDiscountCents,
+    currency: discount.currency || 'usd',
+    full_comp: !!fullComp,
+    redeemed_at: discount.redeemedAt || new Date().toISOString(),
+    external_payload: {
+      checkoutAmountSubtotalCents: Number(session.amount_subtotal || 0),
+      checkoutAmountTotalCents: Number(session.amount_total || 0),
+    },
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { error } = await db.from('discount_redemptions').upsert(rows, {
+    onConflict: 'tenant_id,stripe_checkout_session_id,redemption_key',
+  });
+  if (error) {
+    console.warn('[stripe/webhook] discount redemption upsert failed', safeLogContext(error, 'discount_redemption_upsert_failed'));
+  }
+}
+
+function checkoutCreditRedemption(checkout = {}, md = {}) {
+  const payload = checkout.creditRedemption || {};
+  const units = Number(payload.units || checkout.amounts?.creditRedemptionUnits || md.creditRedemptionUnits || 0);
+  const amountCents = Number(payload.amountCents || checkout.amounts?.creditRedemptionCents || md.creditRedemptionCents || 0);
+  if (!(units > 0) || !(amountCents > 0)) return null;
+  return {
+    units: Math.max(1, Math.floor(units)),
+    amountCents: Math.max(0, Math.round(amountCents)),
+    memberProfileId: payload.memberProfileId || null,
+  };
+}
+
+async function recordMembershipInitialCredit(db, {
+  checkout,
+  record,
+  tenantId,
+  session,
+  planSubscriptionId = null,
+} = {}) {
+  if (!db || !checkout?.membership || !tenantId || !session?.id) return;
+  try {
+    await grantMembershipCredit(db, {
+      tenantId,
+      profileId: checkout.creditRedemption?.memberProfileId || null,
+      email: checkout.contact?.email || '',
+      appointmentId: record?.id || null,
+      stripeCheckoutSessionId: session.id,
+      stripeSubscriptionId: planSubscriptionId || null,
+      source: 'membership_initial_grant',
+      description: 'Membership IV credit',
+      externalPayload: {
+        membershipName: checkout.membership?.name || '',
+        membershipBilling: checkout.membership?.billing || '',
+      },
+    });
+  } catch (err) {
+    console.warn('[stripe/webhook] membership credit grant failed', safeLogContext(err, 'membership_credit_grant_failed'));
+  }
+}
+
+async function recordIvCreditRedemption(db, {
+  checkout,
+  record,
+  tenantId,
+  session,
+  md,
+} = {}) {
+  const credit = checkoutCreditRedemption(checkout, md);
+  if (!db || !tenantId || !session?.id || !credit) return;
+  try {
+    await redeemMemberCredit(db, {
+      tenantId,
+      profileId: credit.memberProfileId || null,
+      email: checkout.contact?.email || '',
+      appointmentId: record?.id || null,
+      stripeCheckoutSessionId: session.id,
+      units: credit.units,
+      creditValueCents: credit.amountCents,
+      description: 'IV credit redeemed',
+      externalPayload: {
+        service: checkout.primaryService || '',
+      },
+    });
+  } catch (err) {
+    console.warn('[stripe/webhook] IV credit redemption failed', safeLogContext(err, 'iv_credit_redemption_failed'));
+  }
 }
 
 async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
@@ -181,7 +402,8 @@ async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
 
 export async function handleCheckoutCompleted(stripe, db, session) {
   const md = session.metadata || {};
-  if (session.payment_status && session.payment_status !== 'paid') {
+  const fulfillablePaymentStatus = session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
+  if (session.payment_status && !fulfillablePaymentStatus) {
     return { action: 'ignored_unpaid_checkout', paymentStatus: session.payment_status };
   }
 
@@ -211,7 +433,10 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   const now = new Date().toISOString();
-  const tenantId = db ? await getDefaultTenantId(db) : null;
+  const tenantId = db ? (record?.tenant_id || await getDefaultTenantId(db)) : null;
+  const discounts = checkoutDiscountEntries(session);
+  const fullComp = isFullCompDiscount(session, discounts);
+  const discountForPayload = discountPayload(discounts, { fullComp });
   let acuityAppointment = (record?.acuity_appointment_id || md.acuityAppointmentId)
     ? { id: record?.acuity_appointment_id || md.acuityAppointmentId, alreadyCreated: true }
     : null;
@@ -252,12 +477,21 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       }
     } else {
       try {
+        const fulfillmentAmounts = fullComp
+          ? {
+              ...(checkout.amounts || {}),
+              depositAmountCents: 0,
+              balanceDueCents: 0,
+              discountAmountCents: discountForPayload?.amountDiscountCents || 0,
+              discountType: 'full_comp',
+            }
+          : checkout.amounts || {};
         acuityAppointment = await createSchedulingAppointmentWithFallback({
           appointment: checkout.appointment || {},
           contact: checkout.contact || {},
           items: checkout.items || [],
           membership: checkout.membership || null,
-          amounts: checkout.amounts || {},
+          amounts: fulfillmentAmounts,
           req: null,
         });
         if (!acuityAppointment?.id) {
@@ -276,7 +510,9 @@ export async function handleCheckoutCompleted(stripe, db, session) {
             appointment: checkout.appointment || {},
             items: checkout.items || [],
             membership: checkout.membership || null,
-            amounts: checkout.amounts || {},
+            amounts: fullComp
+              ? { ...(checkout.amounts || {}), depositAmountCents: 0, balanceDueCents: 0 }
+              : checkout.amounts || {},
           });
           attioPersonId = attioResult?.id || null;
           // attioSynced=true ONLY when the sync actually ran. Skipped calls
@@ -388,7 +624,12 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   // the customer, set up the recurring full-price subscription that starts one
   // period after the first visit. Idempotent, so safe on webhook retries.
   let planSubscriptionId = null;
-  if (md.planSignup === 'true' && acuityAppointment?.id && !fulfillmentError && !schedulingDeferred) {
+  let planSubscriptionDeferredReason = null;
+  if (md.planSignup === 'true' && fullComp) {
+    planSubscriptionDeferredReason = 'full_discount_no_payment_method';
+  } else if (md.planSignup === 'true' && !paymentMethodId) {
+    planSubscriptionDeferredReason = 'payment_method_missing';
+  } else if (md.planSignup === 'true' && acuityAppointment?.id && !fulfillmentError && !schedulingDeferred) {
     try {
       planSubscriptionId = await createDeferredPlanSubscription(stripe, {
         session,
@@ -427,6 +668,10 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     });
   }
 
+  const recordedVisitSubtotalCents = Number(md.visitSubtotalCents || 0)
+    || (md.planSignup === 'true' ? Number(md.planMonthlyPriceCents || 0) : 0)
+    || Number(session.amount_subtotal || 0);
+
   const patch = {
     tenant_id:                    tenantId,
     stripe_checkout_session_id:   session.id,
@@ -434,22 +679,39 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     stripe_deposit_payment_intent: paymentIntentId,
     stripe_payment_method_id:     paymentMethodId,
     deposit_paid_at:              now,
-    payment_status:               Number(md.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
+    payment_status:               fullComp ? 'paid_in_full' : Number(md.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
     status:                       schedulingDeferred ? undefined : acuityAppointment?.id ? 'scheduled' : 'payment_received',
     acuity_appointment_id:         schedulingDeferred ? undefined : acuityAppointment?.id ? String(acuityAppointment.id) : null,
     reconciliation_status:         schedulingDeferred ? undefined : fulfillmentError ? 'action_required' : 'ok',
     scheduling_lock_at:            fulfillmentError ? null : undefined,
     attio_person_id:               attioPersonId || undefined,
     attio_synced_at:               attioSynced ? now : undefined,
-    balance_due_cents:            md.balanceDueCents != null ? Number(md.balanceDueCents) : null,
-    visit_subtotal_cents:         md.visitSubtotalCents != null ? Number(md.visitSubtotalCents) : null,
-    deposit_amount_cents:         md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0),
+    balance_due_cents:            fullComp ? 0 : md.balanceDueCents != null ? Number(md.balanceDueCents) : null,
+    visit_subtotal_cents:         recordedVisitSubtotalCents || null,
+    deposit_amount_cents:         fullComp ? 0 : md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0),
     external_payload:              buildExternalPayload(record?.external_payload || {}, {
       stripeSessionId: session.id,
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
       attioPersonId,
       ...(planSubscriptionId ? { planSubscriptionId } : {}),
+      ...(planSubscriptionDeferredReason ? { planSubscriptionDeferredReason } : {}),
+      ...(discountForPayload ? { discount: discountForPayload } : {}),
+      ...(checkoutCreditRedemption(checkout, md) ? {
+        creditRedemption: {
+          units: checkoutCreditRedemption(checkout, md).units,
+          amountCents: checkoutCreditRedemption(checkout, md).amountCents,
+          redeemedAt: now,
+        },
+      } : {}),
+      ...(fullComp ? {
+        comped: {
+          source: 'stripe_discount',
+          code: discountForPayload?.code || discountForPayload?.couponName || '',
+          amountCompedCents: recordedVisitSubtotalCents,
+          appliedAt: discountForPayload?.appliedAt || now,
+        },
+      } : {}),
       error: fulfillmentError ? safeLogContext(fulfillmentError, 'acuity_fulfillment_failed') : null,
     }),
     updated_at:                   now,
@@ -458,6 +720,28 @@ export async function handleCheckoutCompleted(stripe, db, session) {
 
   if (db && record?.id) {
     await db.from('appointments').update(patch).eq('id', record.id);
+    await recordDiscountRedemptions(db, {
+      session,
+      record,
+      tenantId,
+      paymentIntentId,
+      discounts,
+      fullComp,
+    });
+    await recordMembershipInitialCredit(db, {
+      checkout,
+      record,
+      tenantId,
+      session,
+      planSubscriptionId,
+    });
+    await recordIvCreditRedemption(db, {
+      checkout,
+      record,
+      tenantId,
+      session,
+      md,
+    });
     if (fulfillmentError) {
       await insertReconciliationCase(db, buildReconciliationCase({
         caseType: 'stripe_succeeded_acuity_failed',
@@ -491,13 +775,37 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   // Legacy fallback for older sessions created before the paid-first flow.
-  const { error } = await db.from('appointments').insert({
+  const { data: insertedRecord, error } = await db.from('appointments').insert({
     tenant_id: tenantId,
     acuity_appointment_id: md.acuityAppointmentId || null,
     ...patch,
     created_at: now,
-  });
+  }).select('id, tenant_id').single();
   if (error) console.warn('[stripe/webhook] appointment insert failed', safeLogContext(error, 'appointment_insert_failed'));
+  if (!error && insertedRecord?.id) {
+    await recordDiscountRedemptions(db, {
+      session,
+      record: insertedRecord,
+      tenantId: insertedRecord.tenant_id || tenantId,
+      paymentIntentId,
+      discounts,
+      fullComp,
+    });
+    await recordMembershipInitialCredit(db, {
+      checkout,
+      record: insertedRecord,
+      tenantId: insertedRecord.tenant_id || tenantId,
+      session,
+      planSubscriptionId,
+    });
+    await recordIvCreditRedemption(db, {
+      checkout,
+      record: insertedRecord,
+      tenantId: insertedRecord.tenant_id || tenantId,
+      session,
+      md,
+    });
+  }
   return { action: 'deposit_paid', matched: false };
 }
 
@@ -518,6 +826,49 @@ async function handleBalancePaid(db, paymentIntent) {
       .eq('acuity_appointment_id', String(md.acuityAppointmentId));
   }
   return { action: 'balance_paid' };
+}
+
+async function handleInvoicePaid(stripe, db, invoice) {
+  if (!db) return { action: 'membership_credit_skipped_db_not_configured' };
+  const subscriptionId = stripeObjectId(invoice.subscription);
+  if (!subscriptionId || !invoice.id) return { action: 'ignored_invoice_without_subscription' };
+  if (Number(invoice.amount_paid || 0) <= 0) return { action: 'ignored_zero_amount_membership_invoice' };
+  if (invoice.billing_reason === 'subscription_create') return { action: 'ignored_membership_subscription_create_invoice' };
+
+  let subscription = typeof invoice.subscription === 'object' ? invoice.subscription : null;
+  if (!subscription) {
+    try {
+      subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    } catch (err) {
+      console.warn('[stripe/webhook] subscription retrieve failed for invoice credit', safeLogContext(err, 'stripe_subscription_retrieve_failed'));
+      return { action: 'membership_credit_subscription_retrieve_failed' };
+    }
+  }
+
+  const md = subscription?.metadata || {};
+  if (md.kind !== 'plan_recurring') return { action: 'ignored_non_membership_invoice' };
+  const appointmentRecordId = md.appointmentRecordId || null;
+  const record = appointmentRecordId
+    ? await findAppointmentRecord(db, { appointmentRecordId })
+    : null;
+  if (!record) return { action: 'membership_credit_record_missing' };
+  const checkout = checkoutPayloadFromRecord(record);
+  const tenantId = record.tenant_id || await getDefaultTenantId(db);
+  await grantMembershipCredit(db, {
+    tenantId,
+    email: checkout?.contact?.email || '',
+    appointmentId: record.id,
+    stripeCheckoutSessionId: null,
+    stripeSubscriptionId: subscriptionId,
+    stripeInvoiceId: invoice.id,
+    source: 'membership_renewal_grant',
+    description: 'Membership renewal IV credit',
+    externalPayload: {
+      membershipName: checkout?.membership?.name || md.planName || '',
+      invoiceBillingReason: invoice.billing_reason || '',
+    },
+  });
+  return { action: 'membership_renewal_credit_granted', matched: true, persisted: true };
 }
 
 export default async function handler(req, res) {
@@ -582,7 +933,14 @@ export default async function handler(req, res) {
           (async () => handleCheckoutCompleted(
             stripe,
             db,
-            await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id), 'stripe checkout session retrieve')
+            await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id, {
+              expand: [
+                'discounts.coupon',
+                'discounts.promotion_code',
+                'total_details.breakdown.discounts.discount.coupon',
+                'total_details.breakdown.discounts.discount.promotion_code',
+              ],
+            }), 'stripe checkout session retrieve')
           ))(),
           'stripe checkout fulfillment'
         );
@@ -593,6 +951,12 @@ export default async function handler(req, res) {
           break;
         }
         result = await handleBalancePaid(db, event.data.object);
+        break;
+      case 'invoice.paid':
+        result = await withTimeout(
+          handleInvoicePaid(stripe, db, event.data.object),
+          'stripe membership invoice credit'
+        );
         break;
       case 'checkout.session.expired':
         result = { action: 'release_scheduling_hold' };

@@ -35,6 +35,8 @@ const STRIPE_METADATA_ALLOWED_KEYS = new Set([
   'visitSubtotalCents',
   'depositAmountCents',
   'balanceDueCents',
+  'creditRedemptionUnits',
+  'creditRedemptionCents',
   // Catalog-level: generic product labels (NAD+, Vitamin D, etc.). These exist
   // outside healthcare contexts and are not patient-specific, so they're safe.
   'service',

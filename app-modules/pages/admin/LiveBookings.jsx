@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -113,6 +113,17 @@ function BookingRow({ booking, busy, retryBusy, result, onCharge, onLink, onRetr
             ) : null}
             {booking.isMembership ? (
               <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Plan</span>
+            ) : null}
+            {booking.comped ? (
+              <span className="inline-flex min-h-[26px] items-center rounded-full border border-emerald-300/25 bg-emerald-300/[0.08] px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200">
+                Comped{booking.discountCode ? ` · ${booking.discountCode}` : ''}
+              </span>
+            ) : null}
+            {booking.creditRedeemed ? (
+              <span className="inline-flex min-h-[26px] items-center gap-1.5 rounded-full border border-sky-300/25 bg-sky-300/[0.08] px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-sky-200">
+                <Sparkles className="h-3 w-3" strokeWidth={2} />
+                Credit · {booking.creditUnitsRedeemed || 1}
+              </span>
             ) : null}
           </div>
           <p className="mt-1.5 truncate font-body text-sm" style={{ color: MUTED }}>{booking.service}</p>

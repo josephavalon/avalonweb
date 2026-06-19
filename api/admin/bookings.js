@@ -24,6 +24,9 @@ function shapeBooking(row) {
   const payload = row.external_payload || {};
   const appointment = payload.appointment || {};
   const contact = payload.contact || {};
+  const discount = payload.discount || {};
+  const comped = payload.comped || {};
+  const creditRedemption = payload.creditRedemption || payload.fulfillment?.creditRedemption || {};
   const name = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
   return {
     id: row.id,
@@ -45,6 +48,12 @@ function shapeBooking(row) {
     balanceDueCents: row.balance_due_cents,
     depositPaidAt: row.deposit_paid_at,
     balancePaidAt: row.balance_paid_at,
+    comped: Boolean(comped.source || discount.fullComp),
+    discountCode: discount.code || comped.code || '',
+    discountAmount: dollarsFromCents(discount.amountDiscountCents),
+    creditRedeemed: Number(creditRedemption.units || 0) > 0,
+    creditUnitsRedeemed: Number(creditRedemption.units || 0),
+    creditAmount: dollarsFromCents(creditRedemption.amountCents),
     acuityAppointmentId: row.acuity_appointment_id,
     reconciliationStatus: row.reconciliation_status,
     acuityConfirmationPage: payload.fulfillment?.acuityAppointment?.confirmationPage || payload.fulfillment?.acuityAppointment?.confirmationPageUrl || '',

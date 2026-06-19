@@ -68,4 +68,27 @@ the smoke scripts themselves, including `PUBLIC_SITE_URL`, both live API flags,
 `APPOINTMENT_SUMMARY_TOKEN_SECRET`; the manual GitHub workflow passes those
 values into the verification step before build.
 
+June 18, 2026 snooches evidence: full local release QA passed end to end with
+`npm run test:release` after hardening the mobile and stability browser probes
+against silent Chrome/CDP hangs. Coverage included build, launch blockers,
+booking, login, interaction, mobile 290/290 route/viewport checks, stability
+40/40 checks, visual screenshots, and translation QA. Deployed preview
+`avalonweb-33w03siz4-joseph-8775s-projects.vercel.app` and aliased
+`snooches.avalonvitality.co`; `npm run verify:hosted-admin-endpoints` passes
+against the alias, root headers include CSP/HSTS/noindex, and constrained live
+stability passes 18/18 checks across `/`, `/book`, `/subscription`, auth/legal
+routes, and `/products/cbd/cbd-33mg` at 390px and 1280px. Local
+`npm run verify:prod` still cannot run until the credentialed production
+verification env/secrets are available in the execution context.
+
+June 18, 2026 iOS Simulator Safari evidence: iPhone 17 / iOS 26.5 screenshots
+against the current `snooches.avalonvitality.co` alias were captured at
+`.context/snooches-ios-2026-06-18-home-retry.png`,
+`.context/snooches-ios-2026-06-18-book.png`, and
+`.context/snooches-ios-2026-06-18-subscription.png`. `/book` and
+`/subscription` rendered usable mobile flows, and `/` rendered after a
+cache-busted reload. The first non-cache-busted home capture was blank, so keep
+home first-paint timing in the watch list even though Chrome/CDP live stability
+and the follow-up iOS Safari capture passed.
+
 Deploy reminder: use `vercel build`, `vercel deploy --prebuilt --no-prod`, and `vercel alias set <url> snooches.avalonvitality.co`. Never run `vercel deploy --prod` from this repo during this launch.
