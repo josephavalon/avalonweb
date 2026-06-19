@@ -11,6 +11,7 @@ import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import {
   grantMembershipCredit,
   redeemMemberCredit,
+  InsufficientMemberCreditError,
 } from '../../_lib/member-credits.js';
 import {
   checkoutPayloadFromRecord,
@@ -378,6 +379,26 @@ async function recordIvCreditRedemption(db, {
       },
     });
   } catch (err) {
+    if (err instanceof InsufficientMemberCreditError) {
+      // The visit was discounted at checkout but the member's live balance can't
+      // cover it (e.g. two near-simultaneous redemptions of the same credit).
+      // The ledger is protected (never goes negative); surface the under-charge
+      // for ops to collect the balance instead of silently corrupting the ledger.
+      console.warn('[stripe/webhook] IV credit redemption insufficient', safeLogContext(err, 'iv_credit_insufficient'));
+      await insertOperationalFailureCase(db, {
+        caseType: 'credit_redemption_insufficient',
+        provider: 'stripe',
+        externalReference: session.id,
+        tenantId,
+        payload: {
+          appointmentId: record?.id || null,
+          memberEmail: checkout.contact?.email || '',
+          units: credit.units,
+          creditValueCents: credit.amountCents,
+        },
+      });
+      return;
+    }
     console.warn('[stripe/webhook] IV credit redemption failed', safeLogContext(err, 'iv_credit_redemption_failed'));
   }
 }
@@ -893,6 +914,7 @@ export default async function handler(req, res) {
 
   let event = null;
   let db = null;
+  let eventClaimed = false;
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const rawBody = await readRawBody(req);
@@ -900,29 +922,64 @@ export default async function handler(req, res) {
 
     db = await getSupabaseServiceClient();
 
-    // Idempotency: Stripe redelivers an event (same id) on timeout / non-2xx. We
-    // record an event as processed only on success (below), so a failed first
-    // attempt is NOT recorded and still reprocesses correctly on redelivery.
+    // Idempotency: CLAIM the event before running any side effects. Stripe can
+    // deliver the same event id concurrently (parallel retries on timeout); the
+    // unique (provider, idempotency_key) index makes this insert the atomic
+    // claim, so only one delivery fulfills (no double credit / double email).
+    //  - insert wins        → we own it, process, then mark 'processed'.
+    //  - 'processed' exists  → already done, ack as duplicate.
+    //  - 'processing' exists → a sibling is in flight, ack without reprocessing.
+    //  - 'failed' exists     → reprocess by re-claiming the row.
     if (db) {
       try {
-        const { data: seenEvent } = await db.from('integration_events')
-          .select('id, status')
-          .eq('provider', 'stripe')
-          .eq('idempotency_key', event.id)
-          .maybeSingle();
-        if (seenEvent?.status === 'processed') {
-          console.log('[stripe/webhook] event processed', {
-            event: 'stripe_webhook_event_processed',
-            id: event.id,
-            type: event.type,
-            action: 'duplicate_already_processed',
-            matched: null,
-            persisted: true,
-          });
-          return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
+        const { error: claimErr } = await db.from('integration_events').insert({
+          provider: 'stripe',
+          event_type: event.type,
+          external_event_id: event.id,
+          idempotency_key: event.id,
+          payload_hash: event.id,
+          signature_valid: true,
+          status: 'processing',
+        });
+        if (!claimErr) {
+          eventClaimed = true;
+        } else if (/duplicate|unique|23505/i.test(claimErr.message || '')) {
+          const { data: seenEvent } = await db.from('integration_events')
+            .select('status')
+            .eq('provider', 'stripe')
+            .eq('idempotency_key', event.id)
+            .maybeSingle();
+          if (seenEvent?.status === 'processing') {
+            return res.status(200).json({ received: true, inFlight: true, id: event.id, type: event.type });
+          }
+          if (seenEvent?.status !== 'failed') {
+            console.log('[stripe/webhook] event processed', {
+              event: 'stripe_webhook_event_processed',
+              id: event.id,
+              type: event.type,
+              action: 'duplicate_already_processed',
+              matched: null,
+              persisted: true,
+            });
+            return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
+          }
+          // status 'failed' → re-claim atomically (only if still 'failed').
+          const { data: reclaimed, error: reclaimErr } = await db.from('integration_events')
+            .update({ status: 'processing', signature_valid: true })
+            .eq('provider', 'stripe')
+            .eq('idempotency_key', event.id)
+            .eq('status', 'failed')
+            .select('id');
+          if (reclaimErr || !reclaimed?.length) {
+            return res.status(200).json({ received: true, inFlight: true, id: event.id, type: event.type });
+          }
+          eventClaimed = true;
+        } else {
+          // Non-unique error: fail open and process (best-effort), as before.
+          console.warn('[stripe/webhook] idempotency claim skipped', safeLogContext(claimErr, 'idempotency_claim_skipped'));
         }
       } catch (err) {
-        console.warn('[stripe/webhook] idempotency check skipped', safeLogContext(err, 'idempotency_check_skipped'));
+        console.warn('[stripe/webhook] idempotency claim skipped', safeLogContext(err, 'idempotency_claim_skipped'));
       }
     }
 
@@ -974,11 +1031,21 @@ export default async function handler(req, res) {
       persisted: Boolean(db),
     });
 
-    // Record successful processing so a redelivery of this event short-circuits
-    // the idempotency check above. Best-effort — never blocks the 200 ack.
-    if (db) {
+    // Mark the claimed event 'processed' so a redelivery short-circuits.
+    // Best-effort — never blocks the 200 ack.
+    if (db && eventClaimed) {
       try {
-        await db.from('integration_events').insert({
+        await db.from('integration_events')
+          .update({ status: 'processed', processed_at: new Date().toISOString(), event_type: event.type })
+          .eq('provider', 'stripe')
+          .eq('idempotency_key', event.id);
+      } catch (err) {
+        console.warn('[stripe/webhook] event idempotency record failed', safeLogContext(err, 'idempotency_record_failed'));
+      }
+    } else if (db) {
+      // Claim was skipped (transient error above) — best-effort upsert.
+      try {
+        await db.from('integration_events').upsert({
           provider: 'stripe',
           event_type: event.type,
           external_event_id: event.id,
@@ -987,9 +1054,8 @@ export default async function handler(req, res) {
           signature_valid: true,
           status: 'processed',
           processed_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'provider,idempotency_key' });
       } catch (err) {
-        // Unique violation = a concurrent duplicate already recorded it; ignore.
         if (!/duplicate|unique|23505/i.test(err.message || '')) {
           console.warn('[stripe/webhook] event idempotency record failed', safeLogContext(err, 'idempotency_record_failed'));
         }
@@ -1011,6 +1077,15 @@ export default async function handler(req, res) {
         error: 'Invalid Stripe webhook',
         code: safeErrorCode(err, 'stripe_webhook_invalid'),
       });
+    }
+    // Release our claim so a redelivery of this event can reprocess it.
+    if (db && eventClaimed) {
+      try {
+        await db.from('integration_events')
+          .update({ status: 'failed', failure_reason: safeErrorCode(err, 'stripe_webhook_processing_failed') })
+          .eq('provider', 'stripe')
+          .eq('idempotency_key', event.id);
+      } catch (_) { /* best-effort */ }
     }
     if (err.code === 'stripe_webhook_timeout') {
       await insertOperationalFailureCase(db, {

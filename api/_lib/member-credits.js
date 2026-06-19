@@ -113,6 +113,16 @@ export async function grantMembershipCredit(db, {
   return data || null;
 }
 
+// Thrown when a member tries to redeem more credits than their live balance.
+// The caller (webhook) treats this as a reconciliation case, not a hard failure.
+export class InsufficientMemberCreditError extends Error {
+  constructor(message = 'insufficient_member_credit') {
+    super(message);
+    this.name = 'InsufficientMemberCreditError';
+    this.code = 'insufficient_member_credit';
+  }
+}
+
 export async function redeemMemberCredit(db, {
   tenantId,
   profileId = null,
@@ -128,23 +138,52 @@ export async function redeemMemberCredit(db, {
   const safeUnits = Math.max(1, Math.floor(Number(units || 1)));
   const member = await resolveCreditMember(db, { tenantId, profileId, email });
   if (!member.profileId && !member.email) return null;
-  const row = {
-    tenant_id: tenantId,
-    profile_id: member.profileId || null,
-    member_email: member.email || null,
-    appointment_id: appointmentId || null,
-    stripe_checkout_session_id: stripeCheckoutSessionId,
-    source: 'iv_credit_redemption',
-    units: -safeUnits,
-    credit_value_cents: Math.max(0, Math.round(Number(creditValueCents || 0))),
-    currency: 'usd',
-    description,
-    external_payload: externalPayload || {},
-  };
-  const { data, error } = await db.from('member_credit_ledger')
-    .upsert(row, { onConflict: 'tenant_id,source,stripe_checkout_session_id', ignoreDuplicates: true })
-    .select('id')
-    .maybeSingle();
-  if (error && !/duplicate|unique|23505/i.test(error.message || '')) throw error;
-  return data || null;
+  const valueCents = Math.max(0, Math.round(Number(creditValueCents || 0)));
+  // Atomic, balance-floored debit (migration 016). Serializes concurrent
+  // redemptions for the member and refuses to drive the balance negative, so a
+  // credit can never be spent twice. Idempotent per checkout session.
+  const { data, error } = await db.rpc('redeem_member_credit', {
+    p_tenant_id: tenantId,
+    p_profile_id: member.profileId || null,
+    p_member_email: member.email || null,
+    p_appointment_id: appointmentId || null,
+    p_checkout_session_id: stripeCheckoutSessionId,
+    p_units: safeUnits,
+    p_credit_value_cents: valueCents,
+    p_description: description,
+    p_external_payload: externalPayload || {},
+  });
+  if (error) {
+    if (/insufficient_member_credit/i.test(error.message || '')) {
+      throw new InsufficientMemberCreditError();
+    }
+    // Migration 016 not applied yet (function missing): fall back to the prior
+    // idempotent insert so redemption keeps working. No worse than before; the
+    // atomic guard activates automatically once 016 is live.
+    if (error.code === 'PGRST202' || /could not find the function|does not exist|42883/i.test(error.message || '')) {
+      const row = {
+        tenant_id: tenantId,
+        profile_id: member.profileId || null,
+        member_email: member.email || null,
+        appointment_id: appointmentId || null,
+        stripe_checkout_session_id: stripeCheckoutSessionId,
+        source: 'iv_credit_redemption',
+        units: -safeUnits,
+        credit_value_cents: valueCents,
+        currency: 'usd',
+        description,
+        external_payload: externalPayload || {},
+      };
+      const { data: fb, error: fbErr } = await db.from('member_credit_ledger')
+        .upsert(row, { onConflict: 'tenant_id,source,stripe_checkout_session_id', ignoreDuplicates: true })
+        .select('id')
+        .maybeSingle();
+      if (fbErr && !/duplicate|unique|23505/i.test(fbErr.message || '')) throw fbErr;
+      return fb || null;
+    }
+    throw error;
+  }
+  // rpc returning the row gives an object (or a single-element array depending on
+  // the client); normalize to the row.
+  return Array.isArray(data) ? data[0] || null : data || null;
 }
