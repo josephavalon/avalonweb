@@ -66,6 +66,8 @@ import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { useAuthStore } from '@/lib/useAuthStore';
+import { apiGet } from '@/lib/apiClient';
+import { supabase, hasSupabase } from '@/lib/supabase';
 import {
   ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS,
   calculateLaunchPayment,
@@ -698,9 +700,19 @@ function clearBookingSessionDraft() {
 }
 
 async function createCheckoutSession(payload) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (payload?.creditRedemption && hasSupabase) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+      if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {
+      // The API will return 401 if the token cannot be attached.
+    }
+  }
   const response = await fetch('/api/create-checkout-session', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   });
   const contentType = response.headers.get('content-type') || '';
@@ -1258,16 +1270,29 @@ function DesktopOrderRail({
             </button>
           )}
         </div>
+        {sessionPeople.some((person) => person.filled) && (
+          <div className="mt-1.5 space-y-1">
+            {sessionPeople
+              .filter((person) => person.filled)
+              .map((person) => (
+                <div key={person.id} className="flex items-baseline justify-between gap-2">
+                  <p className="min-w-0 truncate font-body text-[11px] font-black uppercase tracking-[0.02em] text-foreground/88 2xl:text-xs">
+                    {sessionPeople.length > 1 ? `${person.index + 1} · ${person.productLabel}` : person.productLabel}
+                  </p>
+                  {person.priceLabel && (
+                    <span className="shrink-0 font-body text-[11px] font-black text-foreground/70 2xl:text-xs">{person.priceLabel}</span>
+                  )}
+                </div>
+              ))}
+          </div>
+        )}
         <SessionBuilder
           people={sessionPeople}
           activePersonId={state.activePersonId}
           onSelect={onSelectPerson}
           onAdd={onAddPerson}
           onRemove={onRemovePerson}
-          title=""
-          subline="One custom protocol per person"
-          footer="Up to 4 people · one nurse visit"
-          addLabel="Add a person's protocol"
+          addLabel="Add another person"
         />
         <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
@@ -3232,6 +3257,39 @@ function BillingChoice({ value, onChange }) {
   );
 }
 
+function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
+      <div className="relative flex items-center justify-between gap-3">
+        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Member Credit</p>
+        <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62">
+          {balance} available
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!selected)}
+        aria-pressed={selected}
+        className={`relative mt-3 flex min-h-[68px] w-full items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+          selected ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
+        }`}
+      >
+        <span className="flex min-w-0 items-center gap-2.5">
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${selected ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/12 bg-foreground/[0.05]'}`}>
+            <Sparkles className="h-5 w-5" strokeWidth={2.35} />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-black uppercase tracking-[0.06em]">Apply 1 IV credit</span>
+            <span className="mt-1 block text-xs font-bold leading-snug text-foreground/58">Covers {valueLabel} of this IV visit.</span>
+          </span>
+        </span>
+        {selected && <Check className="h-4.5 w-4.5 shrink-0" strokeWidth={2.8} />}
+      </button>
+    </div>
+  );
+}
+
 function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, dueNow = 0, balanceDue = 0 }) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
@@ -3568,6 +3626,8 @@ export default function BookNow() {
   const { clearItems, addItem, setMembershipTier, clearMembership } = useCart();
   const { user } = useAuthStore();
   const signedInClient = user?.role === 'client';
+  const [creditState, setCreditState] = useState({ loading: false, balance: 0, error: '' });
+  const [useMemberCredit, setUseMemberCredit] = useState(false);
   const clientProfile = useMemo(() => readClientProfile(), []);
   const lastBooking = useMemo(() => readLastBooking(), []);
   const savedContactProfile = useMemo(() => {
@@ -3983,7 +4043,45 @@ export default function BookNow() {
       ? 'Contact'
       : state.visitType === 'subscription'
         ? `${currency(activePlanPrice)}/mo`
-        : currency(subtotal);
+      : currency(subtotal);
+  const ivCreditValue = isMultiPerson
+    ? Math.max(0, peopleBreakdown.find((row) => row.product)?.ivPrice || 0)
+    : Math.max(0, product ? protocolPrice(product) : 0);
+  const canRedeemMemberCredit = signedInClient
+    && creditState.balance > 0
+    && state.visitType === 'one-time'
+    && !manualBilling
+    && !groupContactRequired
+    && ivCreditValue > 0;
+
+  useEffect(() => {
+    let active = true;
+    if (!signedInClient || !hasSupabase) {
+      setCreditState({ loading: false, balance: 0, error: '' });
+      setUseMemberCredit(false);
+      return () => { active = false; };
+    }
+    setCreditState((current) => ({ ...current, loading: true, error: '' }));
+    apiGet('/api/me/credits')
+      .then((data) => {
+        if (!active) return;
+        setCreditState({
+          loading: false,
+          balance: Math.max(0, Number(data?.balance || 0)),
+          error: '',
+        });
+      })
+      .catch(() => {
+        if (!active) return;
+        setCreditState({ loading: false, balance: 0, error: 'Credits unavailable' });
+      });
+    return () => { active = false; };
+  }, [signedInClient]);
+
+  useEffect(() => {
+    if (!canRedeemMemberCredit && useMemberCredit) setUseMemberCredit(false);
+  }, [canRedeemMemberCredit, useMemberCredit]);
+
   const launchPayment = calculateLaunchPayment({
     subtotal,
     visitType: state.visitType,
@@ -4900,6 +4998,10 @@ export default function BookNow() {
         peopleCount: localBooking.peopleCount || 1,
         peopleManifest: Array.isArray(localBooking.peopleManifest) ? localBooking.peopleManifest : [],
       },
+      creditRedemption: useMemberCredit && canRedeemMemberCredit ? {
+        useCredits: true,
+        units: 1,
+      } : null,
     };
   };
 
@@ -5624,22 +5726,7 @@ export default function BookNow() {
       const categoryShortLabels = { vitamin: 'IV Vitamins', cbd: 'IV CBD', nad: 'IV NAD+' };
 
       return (
-        <div className={`grid h-full min-h-0 gap-2.5 md:gap-3 ${!desktopBookingFrame ? 'grid-rows-[auto_auto_1fr]' : 'grid-rows-[auto_1fr]'}`}>
-          {!desktopBookingFrame && (
-            <div className="rounded-2xl border border-foreground/12 bg-background/40 px-2.5 py-2">
-              <SessionBuilder
-                compact
-                people={sessionPeople}
-                activePersonId={state.activePersonId}
-                onSelect={switchActivePerson}
-                onAdd={addNewPerson}
-                onRemove={deletePerson}
-                subline="One custom protocol per person"
-                footer="Up to 4 people · one nurse visit"
-                addLabel="Add a person's protocol"
-              />
-            </div>
-          )}
+        <div className={`grid h-full min-h-0 gap-2.5 md:gap-3 ${!desktopBookingFrame ? 'grid-rows-[auto_1fr_auto]' : 'grid-rows-[auto_1fr]'}`}>
           <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
             {therapyGroups.map((group) => {
               const Icon = group.icon || Droplets;
@@ -5670,6 +5757,18 @@ export default function BookNow() {
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
             </div>
           </div>
+          {!desktopBookingFrame && (
+            <div className="justify-self-start">
+              <SessionBuilder
+                people={sessionPeople}
+                activePersonId={state.activePersonId}
+                onSelect={switchActivePerson}
+                onAdd={addNewPerson}
+                onRemove={deletePerson}
+                addLabel="Add another person"
+              />
+            </div>
+          )}
         </div>
       );
     }
@@ -6468,6 +6567,14 @@ export default function BookNow() {
                     )}
                     {state.visitType === 'one-time' && !groupContactRequired && (
                       <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
+                    )}
+                    {canRedeemMemberCredit && (
+                      <MemberCreditChoice
+                        balance={creditState.balance}
+                        selected={useMemberCredit}
+                        valueLabel={currency(ivCreditValue)}
+                        onChange={setUseMemberCredit}
+                      />
                     )}
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
                     {isMultiPerson && peopleBreakdown.length > 1 && (

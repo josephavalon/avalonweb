@@ -763,10 +763,7 @@ export default function Subscription() {
                   onSelect={switchActivePerson}
                   onAdd={addNewPerson}
                   onRemove={deletePerson}
-                  title=""
-                  subline=""
-                  footer=""
-                  addLabel="Add another custom protocol"
+                  addLabel="Add another person"
                 />
               </Section>
 
