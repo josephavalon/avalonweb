@@ -4604,9 +4604,11 @@ export default function BookNow() {
       };
     });
     setActiveAddonGroup('');
-    // A new person lands on Therapy (step 1) — Outcome (step 0) only sets a
-    // recommended default for person 1; additional people pick therapy directly.
-    setStep(1);
+    // A new person lands directly on the Therapy step (step 0) to pick their
+    // protocol. (Was setStep(1) = Add-ons, a stale off-by-one from when step 0
+    // was a separate "Outcome" screen; that left the new, product-less person on
+    // Add-ons and could blank the screen.)
+    setStep(0);
   };
 
   const deletePerson = (idToRemove) => {
@@ -5575,7 +5577,7 @@ export default function BookNow() {
           type="button"
           onClick={selectTherapy}
           aria-pressed={active}
-          className={`relative grid min-h-[86px] w-full grid-cols-[3.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-1.5 text-left transition-colors min-[390px]:min-h-[92px] min-[390px]:grid-cols-[4rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
+          className={`relative grid !min-h-[112px] w-full grid-cols-[3.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-1.5 text-left transition-colors min-[390px]:!min-h-[124px] min-[390px]:grid-cols-[4rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
             active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
