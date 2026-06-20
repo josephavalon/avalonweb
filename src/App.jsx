@@ -412,9 +412,9 @@ function App() {
           <MobileShell />
           <AppRoutes />
           <StickyBookBar />
+          <CookieConsent />
         </Router>
         <Toaster />
-        <CookieConsent />
       </CartProvider>
       </AuthStoreProvider>
     </ErrorBoundary>
