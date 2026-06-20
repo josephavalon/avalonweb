@@ -158,6 +158,7 @@ STRIPE_SECRET_KEY=sk_test_... ACUITY_VERIFY=1 npm run verify:booking-to-acuity
 STRIPE_SECRET_KEY=sk_test_... npm run verify:plan-billing
 npm run verify:password-reset
 npm run verify:prod
+VERIFY_ENV_FILE=.context/vercel-snooches-deploy.env npm run verify:prod
 npm run verify:hosted-admin-endpoints
 npm run exam:snooches
 ```
