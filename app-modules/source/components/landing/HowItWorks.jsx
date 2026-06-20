@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
-import { ChevronDown } from 'lucide-react';
-import { EASE, premiumHover, premiumTap } from '@/lib/motion';
-import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import { EASE } from '@/lib/motion';
 import ScrollParallax from '@/components/ui/ScrollParallax';
 
 // Linear pricing-tick pattern: when the card enters the viewport, the badge
@@ -52,11 +50,14 @@ const STEPS = [
   },
 ];
 
-function StepCard({ step, index, open, onToggle }) {
+function StepCard({ step, index }) {
   const cardRef = useRef(null);
   const reduceMotion = useReducedMotion();
   const display = useCountUpOnView(step.n, cardRef, !reduceMotion);
 
+  // Static numbered step (no disclosure). Three one-line steps have nothing
+  // worth collapsing, so showing the detail outright differentiates this
+  // section from the catalog/footer accordions and reads at a glance.
   return (
     <motion.div
       ref={cardRef}
@@ -64,48 +65,23 @@ function StepCard({ step, index, open, onToggle }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-12%' }}
       transition={{ duration: 0.82, delay: index * 0.18, ease: EASE }}
-      whileHover={premiumHover}
-      className={`av-treatment-card relative overflow-hidden rounded-[1.05rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}
+      className="av-treatment-card relative overflow-hidden rounded-[1.05rem] border"
     >
-      <motion.button
-        type="button"
-        onClick={onToggle}
-        whileTap={premiumTap}
-        className="flex w-full items-center justify-between px-4 py-3.5 transition-colors duration-base ease-editorial md:px-5"
-        aria-expanded={open}
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-            <span className="font-body text-[10px] tracking-[0.2em] text-white tabular-nums">{display}</span>
-          </div>
-          <div className="min-w-0 text-left">
-            <p className="font-heading text-2xl tracking-normal text-white leading-none">{step.title}</p>
-            <p className="mt-1 truncate font-body text-[11px] font-semibold tracking-[0.04em] text-white/76">{step.preview}</p>
-          </div>
+      <div className="flex items-start gap-3 px-4 py-4 md:px-5">
+        <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
+          <span className="font-body text-[11px] tracking-[0.2em] text-white tabular-nums">{display}</span>
         </div>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.38, ease: EASE }}
-          className="shrink-0 text-white"
-        >
-        <ChevronDown
-          className="h-4 w-4 shrink-0 text-white transition-transform duration-300"
-          strokeWidth={2}
-        />
-        </motion.div>
-      </motion.button>
-
-      <SmoothDisclosure open={open}>
-        <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3 md:px-5">
-          <p className="font-body text-xs leading-relaxed text-white">{step.desc}</p>
+        <div className="min-w-0 text-left">
+          <p className="font-heading text-2xl tracking-normal text-white leading-none">{step.title}</p>
+          <p className="mt-1 font-body text-[11px] font-semibold tracking-[0.04em] text-white/76">{step.preview}</p>
+          <p className="mt-2 font-body text-xs leading-relaxed text-white/72">{step.desc}</p>
         </div>
-      </SmoothDisclosure>
+      </div>
     </motion.div>
   );
 }
 
 export default function HowItWorks() {
-  const [openStep, setOpenStep] = useState(null);
   const reduceMotion = useReducedMotion();
 
   return (
@@ -140,8 +116,6 @@ export default function HowItWorks() {
               key={step.n}
               step={step}
               index={i}
-              open={openStep === step.n}
-              onToggle={() => setOpenStep(current => current === step.n ? null : step.n)}
             />
           ))}
         </div>
