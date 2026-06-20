@@ -15,6 +15,12 @@ import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
+import MfaGate from '@/components/auth/MfaGate';
+
+// Operator-tier MFA enforcement. Off by default; flip VITE_MFA_ENFORCED=true
+// (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
+// or the gate would lock every admin out of /admin.
+const MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 function RequireAuth({ children, allowedRoles }) {
@@ -35,6 +41,11 @@ function RequireAuth({ children, allowedRoles }) {
   }
   if ((role === 'admin' || role === 'staff') && pathname.startsWith('/admin') && !canAccessAdminRoute(role, pathname)) {
     return <Navigate to="/admin" replace />;
+  }
+  // Operator-tier step-up: force MFA enrollment/challenge before any admin/staff
+  // route once enforcement is enabled. Lockout-safe — off until the flag flips.
+  if (MFA_ENFORCED && (role === 'admin' || role === 'staff') && !user.mfa?.verified) {
+    return <MfaGate />;
   }
   return children;
 }
