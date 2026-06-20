@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <script src="/scroll-restore.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#2A2521" />
+    <meta name="theme-color" content="#000000" />
 
     <!-- Primary -->
     <title>Avalon Vitality — Mobile IV Therapy in the SF Bay Area</title>
@@ -101,7 +101,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Avalon" />
     <!-- theme-color for light vs dark OS preference -->
-    <meta name="theme-color" content="#2A2521" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
 
     <!-- Theme + boot bootstrap: blocking on purpose so `av-js`, theme, and
@@ -113,7 +113,7 @@
          the script above already wrote to <html>, before a single pixel paints. -->
     <style>
       html, body { background-color: hsl(0,0%,96%); }
-      html.dark, html.dark body { background-color: #2a2521; }
+      html.dark, html.dark body { background-color: #000000; }
       html.golden, html.golden body { background-color: hsl(28,35%,16%); }
       html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
       #root { min-height: 100dvh; background: transparent; }
@@ -130,15 +130,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: #2a2521;
-        background-image:
-          linear-gradient(90deg, rgba(42, 37, 33, 0.84), rgba(42, 37, 33, 0.52) 45%, rgba(42, 37, 33, 0.22)),
-          image-set(
-            url("/images/avalon-static-back-512.webp") type("image/webp"),
-            url("/images/avalon-static-back-512.jpg") type("image/jpeg")
-          );
-        background-size: cover;
-        background-position: 86% 52%;
+        background-color: #000000;
         color: #f4f4f1;
         opacity: 1;
         transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1), visibility 160ms cubic-bezier(0.16, 1, 0.3, 1);

@@ -49,7 +49,7 @@
   }
 
   .dark {
-    --background: 28 12% 13%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 28 12% 16%;
     --card-foreground: 0 0% 100%;
@@ -1843,15 +1843,7 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #2a2521;
-  background-image:
-    linear-gradient(90deg, rgba(42, 37, 33, 0.84), rgba(42, 37, 33, 0.52) 45%, rgba(42, 37, 33, 0.22)),
-    image-set(
-      url("/images/avalon-static-back-512.webp") type("image/webp"),
-      url("/images/avalon-static-back-512.jpg") type("image/jpeg")
-    );
-  background-size: cover;
-  background-position: 86% 52%;
+  background-color: #000000;
   color: #f4f4f1;
   pointer-events: none;
 }

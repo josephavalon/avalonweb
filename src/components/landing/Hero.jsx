@@ -15,7 +15,6 @@ const HERO_ACTIONS = [
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },
   { label: 'Registered Nurses', icon: ShieldPlus },
-  { label: 'Clinical Review', icon: ShieldPlus },
   { label: 'Same Day Service', icon: Clock },
   { label: '60 Second Checkout', icon: Zap },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
@@ -95,24 +94,16 @@ export default function Hero() {
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
               className="inline-block align-baseline"
             >
-              Recovery
+              Mobile
             </motion.span>
             <br />
             <motion.span
               initial={reduceMotion ? false : { opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.30, ease: EASE }}
-              className="inline-block align-baseline mr-[0.18em]"
-            >
-              On
-            </motion.span>
-            <motion.span
-              initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.42, ease: EASE }}
               className="inline-block align-baseline"
             >
-              Demand
+              Recovery
             </motion.span>
           </h1>
         </motion.div>
