@@ -99,7 +99,14 @@ export async function collectBalance({ stripe, db, appt, amount, mode = 'charge'
       confirm: true,
       metadata,
     }, {
-      idempotencyKey: `balance:${appt.id}:${amount}`,
+      // Amount-INDEPENDENT idempotency, matching the per-appointment rate-limit
+      // key in charge-balance.js. Two concurrent charges for the same
+      // appointment now collide on this key: same amount → Stripe dedups to one
+      // PaymentIntent; different amounts → Stripe rejects the second
+      // (idempotency-conflict), which the catch below turns into an error
+      // response. Either way a balance can never be charged twice. The
+      // `already_paid` guard blocks any legitimate later re-charge.
+      idempotencyKey: `balance:${appt.id}`,
     });
 
     const now = new Date().toISOString();

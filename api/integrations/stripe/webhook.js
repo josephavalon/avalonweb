@@ -649,7 +649,24 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   if (md.planSignup === 'true' && fullComp) {
     planSubscriptionDeferredReason = 'full_discount_no_payment_method';
   } else if (md.planSignup === 'true' && !paymentMethodId) {
+    // A paid (non-comped) deposit should always leave a saved card on the customer.
+    // If we got here the card is missing, so the recurring subscription can't be
+    // created — and would otherwise be skipped silently, losing recurring revenue
+    // with no signal. Flag it so ops can set recurring up by hand.
     planSubscriptionDeferredReason = 'payment_method_missing';
+    await insertOperationalFailureCase(db, {
+      caseType: 'stripe_subscription_creation_failed',
+      provider: 'stripe',
+      externalReference: session.id,
+      tenantId,
+      payload: {
+        appointmentRecordId: record?.id || null,
+        stripeSessionId: session.id,
+        stripeCustomerId: session.customer || null,
+        reason: 'payment_method_missing',
+        local_contract: 'plan_subscription_after_first_acuity_appointment_v1',
+      },
+    });
   } else if (md.planSignup === 'true' && acuityAppointment?.id && !fulfillmentError && !schedulingDeferred) {
     try {
       planSubscriptionId = await createDeferredPlanSubscription(stripe, {
@@ -693,6 +710,22 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     || (md.planSignup === 'true' ? Number(md.planMonthlyPriceCents || 0) : 0)
     || Number(session.amount_subtotal || 0);
 
+  // Authoritative deposit + remaining balance, derived once so payment_status and
+  // balance_due_cents can never disagree. Both normally come from server-set
+  // checkout metadata; when balanceDueCents is absent (legacy session) we fall
+  // back to subtotal − deposit rather than defaulting to 0 — the old `|| 0`
+  // default silently marked such visits paid-in-full and suppressed balance
+  // collection (lost revenue). For current bookings (balanceDueCents present)
+  // this reproduces the previous values exactly.
+  const depositPaidCents = fullComp
+    ? 0
+    : (md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0));
+  const balanceDueCents = fullComp
+    ? 0
+    : (md.balanceDueCents != null
+        ? Number(md.balanceDueCents)
+        : Math.max(0, recordedVisitSubtotalCents - depositPaidCents));
+
   const patch = {
     tenant_id:                    tenantId,
     stripe_checkout_session_id:   session.id,
@@ -700,16 +733,16 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     stripe_deposit_payment_intent: paymentIntentId,
     stripe_payment_method_id:     paymentMethodId,
     deposit_paid_at:              now,
-    payment_status:               fullComp ? 'paid_in_full' : Number(md.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
+    payment_status:               balanceDueCents > 0 ? 'partial_payment' : 'paid_in_full',
     status:                       schedulingDeferred ? undefined : acuityAppointment?.id ? 'scheduled' : 'payment_received',
     acuity_appointment_id:         schedulingDeferred ? undefined : acuityAppointment?.id ? String(acuityAppointment.id) : null,
     reconciliation_status:         schedulingDeferred ? undefined : fulfillmentError ? 'action_required' : 'ok',
     scheduling_lock_at:            fulfillmentError ? null : undefined,
     attio_person_id:               attioPersonId || undefined,
     attio_synced_at:               attioSynced ? now : undefined,
-    balance_due_cents:            fullComp ? 0 : md.balanceDueCents != null ? Number(md.balanceDueCents) : null,
+    balance_due_cents:            balanceDueCents,
     visit_subtotal_cents:         recordedVisitSubtotalCents || null,
-    deposit_amount_cents:         fullComp ? 0 : md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0),
+    deposit_amount_cents:         depositPaidCents,
     external_payload:              buildExternalPayload(record?.external_payload || {}, {
       stripeSessionId: session.id,
       stripePaymentIntentId: paymentIntentId,
