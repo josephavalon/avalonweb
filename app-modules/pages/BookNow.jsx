@@ -896,13 +896,24 @@ function useMobileBookingViewportLayout(deps = []) {
           root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(56, headerRect.bottom + 2))}px`);
         }
 
-        // Let the mobile therapy list fill the full available height. A partial
-        // card peeking at the scroll boundary is the desired affordance — it
-        // tells the user there's more below to scroll. The previous snap-to-
-        // whole-card logic produced an empty black block between the last
-        // visible card and the booking footer when the list was shorter than
-        // the snap step.
+        // Size mobile therapy cards so exactly 3 fit in the visible scroll
+        // region. Each card height = (available - 2 * gap) / 3, written to a
+        // CSS var the card uses for its height. Scroll reveals the next 3.
         root.style.removeProperty('--av-therapy-list-max');
+        const therapyList = document.querySelector('[data-av-therapy-list="true"]');
+        if (therapyList) {
+          const listRect = therapyList.getBoundingClientRect();
+          const footerTop = footerRect ? footerRect.top : (window.visualViewport?.height || window.innerHeight || 0);
+          const gap = 8; // tailwind gap-2
+          const bottomPad = 8; // matches the pb-2 on the list
+          const available = footerTop - listRect.top - bottomPad;
+          if (available > 0) {
+            const cardHeight = Math.max(112, Math.floor((available - 2 * gap) / 3));
+            root.style.setProperty('--av-therapy-card-h', `${cardHeight}px`);
+          }
+        } else {
+          root.style.removeProperty('--av-therapy-card-h');
+        }
       });
     };
 
@@ -5577,7 +5588,8 @@ export default function BookNow() {
     return (
       <div
         key={item.key}
-        className={`relative shrink-0 overflow-hidden rounded-[1.15rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(var(--background)/0.28)] backdrop-blur-2xl transition-colors ${
+        style={{ height: 'var(--av-therapy-card-h, 7.5rem)' }}
+        className={`relative shrink-0 overflow-hidden rounded-[1.35rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_56px_hsl(var(--background)/0.32)] backdrop-blur-2xl transition-colors ${
           active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
         }`}
       >
@@ -5585,29 +5597,28 @@ export default function BookNow() {
           type="button"
           onClick={selectTherapy}
           aria-pressed={active}
-          className={`relative grid min-h-[86px] w-full grid-cols-[3.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-1.5 text-left transition-colors min-[390px]:min-h-[92px] min-[390px]:grid-cols-[4rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
+          className={`relative grid h-full w-full grid-cols-[4.5rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 px-3.5 text-left transition-colors min-[390px]:grid-cols-[5rem_minmax(0,1fr)_auto_1.85rem] min-[390px]:gap-3.5 min-[390px]:px-4 ${
             active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
-          <span className="relative flex h-[4.5rem] w-16 items-center justify-center min-[390px]:h-[4.75rem] min-[390px]:w-[4.25rem]">
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.05] via-transparent to-black/24" />
+          <span className="relative flex h-full w-full items-center justify-center py-2">
             {item.image ? (
-              <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.6)]" />
+              <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.6)]" />
             ) : (
-              <Icon className="h-7 w-7 text-foreground min-[390px]:h-8 min-[390px]:w-8" strokeWidth={1.9} />
+              <Icon className="h-9 w-9 text-foreground" strokeWidth={1.9} />
             )}
           </span>
-          <span className="relative min-w-0 font-heading text-[1.22rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+          <span className="relative min-w-0 font-heading text-[1.4rem] uppercase leading-[0.95] tracking-normal text-foreground min-[390px]:text-[1.55rem]">
             <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
           </span>
-          <span className="relative whitespace-nowrap font-heading text-[1.22rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+          <span className="relative whitespace-nowrap font-heading text-[1.4rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem]">
             {currency(price)}
           </span>
           <span className="relative flex justify-end">
-            <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
+            <ArrowRight className="h-7 w-7 shrink-0" strokeWidth={2.1} />
           </span>
         </button>
-        {renderTherapyDetails(item)}
       </div>
     );
   };
