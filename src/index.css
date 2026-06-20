@@ -479,37 +479,6 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   fill: #fff !important;
 }
 
-/* ===== Night-theme text hierarchy =====
-   The rules above flatten every opacity-based text utility to hard white,
-   which erases the primary/secondary/tertiary hierarchy a premium dark UI
-   needs. These two tiers run AFTER the flatten rules (same 0,0,0 :where
-   specificity, later source order, so they win) and soften the mid/low
-   opacity levels to AA-safe greys on the night backdrop:
-     secondary ≈ rgba(255,255,255,0.72) → ~8.7:1
-     tertiary  ≈ rgba(255,255,255,0.56) → ~6.0:1
-   Headings and any level not listed stay hard white (safe default). */
-.dark :where(
-  [class*="text-foreground/56"], [class*="text-foreground/58"], [class*="text-foreground/60"],
-  [class*="text-foreground/62"], [class*="text-foreground/64"], [class*="text-foreground/66"],
-  [class*="text-foreground/68"], [class*="text-foreground/70"], [class*="text-foreground/72"],
-  [class*="text-foreground/74"], [class*="text-white/56"], [class*="text-white/58"],
-  [class*="text-white/60"], [class*="text-white/62"], [class*="text-white/66"],
-  [class*="text-white/70"], [class*="text-white/72"], [class*="text-white/74"],
-  [class*="text-white/76"], [class*="text-muted-foreground"]
-) {
-  color: rgba(255, 255, 255, 0.72) !important;
-}
-.dark :where(
-  [class*="text-foreground/10"], [class*="text-foreground/22"], [class*="text-foreground/24"],
-  [class*="text-foreground/30"], [class*="text-foreground/32"], [class*="text-foreground/36"],
-  [class*="text-foreground/40"], [class*="text-foreground/42"], [class*="text-foreground/44"],
-  [class*="text-foreground/46"], [class*="text-foreground/48"], [class*="text-foreground/50"],
-  [class*="text-foreground/52"], [class*="text-foreground/54"], [class*="text-white/30"],
-  [class*="text-white/40"], [class*="text-white/50"]
-) {
-  color: rgba(255, 255, 255, 0.56) !important;
-}
-
 .dark :where(
   [class*="placeholder:text-foreground/"],
   [class*="placeholder:text-muted-foreground"],
@@ -1870,7 +1839,7 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   font-size: 10px;
   letter-spacing: 0.42em;
   text-transform: uppercase;
-  color: rgba(244, 244, 241, 0.46);
+  color: #ffffff;
   user-select: none;
 }
 .av-route-fallback-progress {
