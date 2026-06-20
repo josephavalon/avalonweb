@@ -22,6 +22,7 @@ export default function SessionBuilder({
   onRemove,
   max = PEOPLE_MAX,
   addLabel = 'Add another person',
+  hideAdd = false,
 }) {
   const list = Array.isArray(people) && people.length ? people : [];
   if (list.length === 0) return null;
@@ -31,8 +32,10 @@ export default function SessionBuilder({
   const canAdd = count < max && lastFilled;
 
   // One person (the common case): no switcher at all — just the small add chip,
-  // always visible so the multi-person option is discoverable up front.
+  // always visible so the multi-person option is discoverable up front. When the
+  // caller owns the add control (e.g. the order footer), hideAdd renders nothing.
   if (count === 1) {
+    if (hideAdd) return null;
     return (
       <button
         type="button"
@@ -84,7 +87,7 @@ export default function SessionBuilder({
           </span>
         );
       })}
-      {canAdd && (
+      {canAdd && !hideAdd && (
         <button
           type="button"
           onClick={() => onAdd?.()}

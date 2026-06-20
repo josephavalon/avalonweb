@@ -1029,11 +1029,19 @@ function UniversalBookingFrame({
   selectedAddons = [],
   onRemoveAddon,
   onClearOrder,
+  sessionPeople = [],
+  activePersonId,
+  onAddPerson,
+  onSelectPerson,
+  onRemovePerson,
   children,
 }) {
   const [orderOpen, setOrderOpen] = useState(false);
   const hasOrder = Boolean(product);
   const orderCount = (product ? 1 : 0) + selectedAddons.length;
+  const lastPerson = sessionPeople[sessionPeople.length - 1];
+  const canAddPerson = Boolean(onAddPerson) && sessionPeople.length < PEOPLE_MAX && Boolean(lastPerson?.filled);
+  const multiPerson = sessionPeople.length > 1;
   return (
     <section data-av-booking-frame="true" className="relative mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
@@ -1070,7 +1078,7 @@ function UniversalBookingFrame({
         style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
-          {step !== 0 && hasOrder && (onRemoveAddon || onClearOrder) && (
+          {hasOrder && (onRemoveAddon || onClearOrder || canAddPerson || multiPerson) && (
             <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/30 md:hidden">
               <div className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5">
                 <button
@@ -1085,18 +1093,42 @@ function UniversalBookingFrame({
                   </span>
                   <ChevronDown className={`h-3.5 w-3.5 text-foreground/55 transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
                 </button>
-                {onClearOrder && (
-                  <button
-                    type="button"
-                    onClick={onClearOrder}
-                    className="shrink-0 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/90"
-                  >
-                    Clear
-                  </button>
-                )}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {canAddPerson && (
+                    <button
+                      type="button"
+                      onClick={() => onAddPerson?.()}
+                      className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground"
+                    >
+                      <Plus className="h-3 w-3" strokeWidth={3} />
+                      Add person
+                    </button>
+                  )}
+                  {onClearOrder && (
+                    <button
+                      type="button"
+                      onClick={onClearOrder}
+                      className="shrink-0 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/90"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               {orderOpen && (
                 <div className="border-t border-foreground/10 px-2.5 py-2">
+                  {multiPerson && (
+                    <div className="mb-2">
+                      <SessionBuilder
+                        people={sessionPeople}
+                        activePersonId={activePersonId}
+                        onSelect={onSelectPerson}
+                        onAdd={onAddPerson}
+                        onRemove={onRemovePerson}
+                        hideAdd
+                      />
+                    </div>
+                  )}
                   <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground/82">{product.label}</p>
                   {selectedAddons.length > 0 && (
                     <div className="mt-1.5 space-y-1">
@@ -5726,7 +5758,7 @@ export default function BookNow() {
       const categoryShortLabels = { vitamin: 'IV Vitamins', cbd: 'IV CBD', nad: 'IV NAD+' };
 
       return (
-        <div className={`grid h-full min-h-0 gap-2.5 md:gap-3 ${!desktopBookingFrame ? 'grid-rows-[auto_1fr_auto]' : 'grid-rows-[auto_1fr]'}`}>
+        <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5 md:gap-3">
           <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
             {therapyGroups.map((group) => {
               const Icon = group.icon || Droplets;
@@ -5757,18 +5789,6 @@ export default function BookNow() {
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
             </div>
           </div>
-          {!desktopBookingFrame && (
-            <div className="justify-self-start">
-              <SessionBuilder
-                people={sessionPeople}
-                activePersonId={state.activePersonId}
-                onSelect={switchActivePerson}
-                onAdd={addNewPerson}
-                onRemove={deletePerson}
-                addLabel="Add another person"
-              />
-            </div>
-          )}
         </div>
       );
     }
@@ -5993,7 +6013,7 @@ export default function BookNow() {
         data-av-booking-main="true"
         className="relative z-10 mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
-          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px) + var(--av-booking-visual-breathing, 0px))',
+          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px))',
           '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5.25rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',
         }}
       >
@@ -6091,6 +6111,11 @@ export default function BookNow() {
                 selectedAddons={selectedAddons}
                 onRemoveAddon={removeAddon}
                 onClearOrder={clearOrder}
+                sessionPeople={sessionPeople}
+                activePersonId={state.activePersonId}
+                onAddPerson={addNewPerson}
+                onSelectPerson={switchActivePerson}
+                onRemovePerson={deletePerson}
               >
                 {renderUniversalStep()}
               </UniversalBookingFrame>
