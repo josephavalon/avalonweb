@@ -97,14 +97,17 @@ export default async function handler(req, res) {
   }
 
   let profileEmail = '';
-  let profileRole = 'client';
+  let profileRole = null; // null = unconfirmed; the gate below fails closed.
   let tenantId = null;
+  let lookupOk = false;
   try {
-    const { data: profile } = await db
+    const { data: profile, error } = await db
       .from('profiles')
       .select('email, role, tenant_id')
       .eq('id', claims.userId)
       .maybeSingle();
+    if (error) throw error;
+    lookupOk = true;
     if (profile?.email) profileEmail = String(profile.email).trim().toLowerCase();
     if (profile?.role) profileRole = profile.role;
     if (profile?.tenant_id) tenantId = profile.tenant_id;
@@ -112,7 +115,11 @@ export default async function handler(req, res) {
     console.warn('[welcome-redeem] profile lookup failed', safeLogContext(err, 'welcome_redeem_profile_lookup_failed'));
   }
 
-  if (profileRole !== 'client') {
+  // Fail closed: only a positively-confirmed `client` may redeem. A lookup
+  // error, a missing profile, or any non-client role is refused — the link must
+  // never mint an elevated or unverified session (CP-2 hardening). Previously
+  // profileRole defaulted to 'client', so a transient lookup error fell open.
+  if (!lookupOk || profileRole !== 'client') {
     await writeAuditEvent(db, {
       tenantId,
       actorProfileId: claims.userId,
@@ -120,9 +127,9 @@ export default async function handler(req, res) {
       entityType: ENTITY_TYPE,
       entityId: claims.userId,
       phiTouched: false,
-      payload: { reason: 'non_client_role', role_observed: profileRole },
+      payload: { reason: lookupOk ? 'non_client_role' : 'profile_lookup_failed', role_observed: profileRole },
     });
-    return sendErrorPage(res, 'welcome_link_non_client', 403);
+    return sendErrorPage(res, lookupOk ? 'welcome_link_non_client' : 'welcome_link_supabase_failed', lookupOk ? 403 : 503);
   }
 
   // Need an email to issue the magic link. The auth user's email is the
