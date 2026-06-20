@@ -895,6 +895,34 @@ function useMobileBookingViewportLayout(deps = []) {
         if (headerRect?.height) {
           root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(56, headerRect.bottom + 2))}px`);
         }
+
+        // Snap the mobile therapy list to a whole number of cards so a partial
+        // card never peeks at the scroll boundary (the "3.5 cards" / "cut off
+        // 3rd card" problem). Robust across device heights and whether the
+        // order bar is showing, because it measures the live card pitch and the
+        // real gap to the footer each layout pass.
+        const therapyList = document.querySelector('[data-av-therapy-list="true"]');
+        if (therapyList) {
+          const rows = Array.from(therapyList.children).filter((node) => node.getBoundingClientRect().height > 12);
+          if (rows.length >= 2) {
+            const first = rows[0].getBoundingClientRect();
+            const second = rows[1].getBoundingClientRect();
+            const pitch = second.top - first.top;            // card height + inter-card gap
+            const gap = Math.max(0, pitch - first.height);
+            const listTop = therapyList.getBoundingClientRect().top;
+            const footerTop = footerRect ? footerRect.top : (window.visualViewport?.height || window.innerHeight || 0);
+            const available = footerTop - listTop;
+            if (pitch > 0 && available > 0) {
+              const whole = Math.max(1, Math.floor((available + gap) / pitch));
+              const clampHeight = Math.round(whole * pitch - gap);
+              root.style.setProperty('--av-therapy-list-max', `${clampHeight}px`);
+            }
+          } else {
+            root.style.removeProperty('--av-therapy-list-max');
+          }
+        } else {
+          root.style.removeProperty('--av-therapy-list-max');
+        }
       });
     };
 
@@ -5784,7 +5812,7 @@ export default function BookNow() {
             })}
           </div>
           <div className="grid min-h-0 grid-rows-[1fr]">
-            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
+            <div data-av-therapy-list="true" style={{ maxHeight: 'var(--av-therapy-list-max, none)' }} className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
             </div>
             <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
