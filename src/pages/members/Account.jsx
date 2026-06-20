@@ -16,6 +16,7 @@ import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { readLocal, writeLocal, appendActivity } from '@/lib/localOs';
 import { readClientProfile, readSavedAddresses, saveClientProfile } from '@/lib/platformOps';
+import { authProviderConfig } from '@/lib/authProviderConfig';
 
 const BG = 'hsl(var(--background))';
 const CARD = 'hsl(var(--foreground) / 0.045)';
@@ -180,38 +181,40 @@ export default function MemberAccount() {
           <SettingCard icon={ShieldCheck} eyebrow="Medical profile" title="Intake, consent, emergency" value={contact.emergency || 'Not set'} action="View" onClick={() => rotateContact('emergency', ['Needs update', 'Verified today', ''])} />
         </section>
 
-        <section className="rounded-[24px] p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: ACCENT }}>
-                <Fingerprint className="h-5 w-5" strokeWidth={1.65} />
-              </span>
-              <div>
-                <p className="font-body text-[10px] uppercase tracking-[0.24em]" style={{ color: DIM }}>Security</p>
-                <h2 className="mt-1 font-heading text-3xl uppercase leading-none">Passkey</h2>
-                <p className="mt-2 font-body text-xs leading-relaxed" style={{ color: MUTED }}>Use Face ID, Touch ID, or a device passkey next time you sign in.</p>
+        {authProviderConfig.passkey && (
+          <section className="rounded-[24px] p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: ACCENT }}>
+                  <Fingerprint className="h-5 w-5" strokeWidth={1.65} />
+                </span>
+                <div>
+                  <p className="font-body text-[10px] uppercase tracking-[0.24em]" style={{ color: DIM }}>Security</p>
+                  <h2 className="mt-1 font-heading text-3xl uppercase leading-none">Passkey</h2>
+                  <p className="mt-2 font-body text-xs leading-relaxed" style={{ color: MUTED }}>Use Face ID, Touch ID, or a device passkey next time you sign in.</p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={handleRegisterPasskey}
+                disabled={authBackend !== 'supabase' || passkeyState.busy}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-45"
+                style={{ background: TEXT, color: INVERT }}
+              >
+                {passkeyState.busy ? 'Adding Passkey' : 'Add Passkey'}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleRegisterPasskey}
-              disabled={authBackend !== 'supabase' || passkeyState.busy}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-45"
-              style={{ background: TEXT, color: INVERT }}
-            >
-              {passkeyState.busy ? 'Adding Passkey' : 'Add Passkey'}
-            </button>
-          </div>
-          {(passkeyState.message || passkeyState.error) && (
-            <p className="mt-3 rounded-2xl px-3 py-2 font-body text-xs" style={{
-              color: passkeyState.error ? 'hsl(0 70% 72%)' : 'hsl(152 60% 55%)',
-              background: CARD_STRONG,
-              border: `1px solid ${BORDER}`,
-            }}>
-              {passkeyState.error || passkeyState.message}
-            </p>
-          )}
-        </section>
+            {(passkeyState.message || passkeyState.error) && (
+              <p className="mt-3 rounded-2xl px-3 py-2 font-body text-xs" style={{
+                color: passkeyState.error ? 'hsl(0 70% 72%)' : 'hsl(152 60% 55%)',
+                background: CARD_STRONG,
+                border: `1px solid ${BORDER}`,
+              }}>
+                {passkeyState.error || passkeyState.message}
+              </p>
+            )}
+          </section>
+        )}
 
         <section className="rounded-[24px] p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
           <div className="flex items-start justify-between gap-3">

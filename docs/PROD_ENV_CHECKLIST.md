@@ -9,6 +9,10 @@ These block payment, scheduling, auth, or staff operations if missing.
 - `PUBLIC_SITE_URL` - set to `https://snooches.avalonvitality.co`.
 - `AVALON_ENABLE_LIVE_API` - set `true` for production API routes.
 - `VITE_AVALON_ENABLE_LIVE_API` - set `true` for the production client build.
+- `VITE_AUTH_GOOGLE_ENABLED` - set `true` only after Google is configured in Supabase and should be exposed in the UI.
+- `VITE_AUTH_APPLE_ENABLED` - set `true` only after Apple is configured in Supabase and should be exposed in the UI.
+- `VITE_AUTH_PHONE_ENABLED` - set `true` only after Phone OTP is configured in Supabase and should be exposed in the UI.
+- `VITE_AUTH_PASSKEY_ENABLED` - set `true` only after passkey sign-in/enrollment is verified for the Supabase project.
 - `VITE_SUPABASE_URL` - public Supabase project URL.
 - `VITE_SUPABASE_ANON_KEY` - public Supabase anon key.
 - `SUPABASE_URL` - server-side Supabase project URL.
@@ -129,6 +133,11 @@ The workflow also sets these non-secret verification env vars directly:
 - `ACUITY_VERIFY` - `1`
 - `PASSWORD_RESET_REDIRECT_TO` - `https://snooches.avalonvitality.co/account/new-password`
 
+Optional provider flags are also passed through the workflow. Leave them unset
+or `false` to keep that provider hidden and non-blocking. Set one to `true` only
+when the matching Supabase provider is configured and should be required by
+`npm run test:oauth-config`.
+
 The Acuity verifier can fall back to live appointment-type name matching, but
 the explicit IDs above make the Book Now and plan deposit smoke test
 deterministic in CI.
@@ -150,14 +159,13 @@ STRIPE_SECRET_KEY=sk_test_... npm run verify:plan-billing
 npm run verify:password-reset
 npm run verify:prod
 npm run verify:hosted-admin-endpoints
+npm run exam:snooches
 ```
 
 Deploy only to snooches:
 
 ```bash
-vercel build
-vercel deploy --prebuilt --no-prod
-vercel alias set <deployment-url> snooches.avalonvitality.co
+npm run deploy:snooches
 ```
 
 Never run `vercel deploy --prod` from this repo for this launch.

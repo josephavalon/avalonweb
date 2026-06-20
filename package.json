@@ -45,6 +45,8 @@
     "verify:welcome-email": "node scripts/verify-welcome-email.mjs",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:hosted-admin-endpoints": "node scripts/verify-hosted-admin-endpoints.mjs",
+    "exam:snooches": "node scripts/snooches-production-exam.mjs",
+    "deploy:snooches": "node scripts/snooches-safe-deploy.mjs",
     "assets:audit": "node scripts/asset-audit.mjs",
     "assets:optimize": "node scripts/optimize-bags.mjs",
     "typecheck": "node scripts/typecheck-contracts.mjs",

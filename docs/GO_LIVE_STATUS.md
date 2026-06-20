@@ -5,7 +5,7 @@ This ledger tracks launch blockers, required user actions, and staging evidence.
 | ID | Area | Status | Evidence / Next Action |
 | --- | --- | --- | --- |
 | GL-001 | Live API flags | verified on snooches | `npx vercel env ls production` on June 17, 2026 shows `VITE_AVALON_ENABLE_LIVE_API=true` and `AVALON_ENABLE_LIVE_API=true` in Production; live harmless checkout probe returns validation errors instead of the pre-API hard-wall payload. |
-| GL-002 | Supabase Auth providers | pending user action | Google, Apple, and Phone provider secrets must be pasted in Supabase Studio, then `npm run test:oauth-config` must pass. |
+| GL-002 | Supabase Auth providers | conditional | Google, Apple, Phone, and Passkey are now build-flagged. Keep `VITE_AUTH_GOOGLE_ENABLED`, `VITE_AUTH_APPLE_ENABLED`, `VITE_AUTH_PHONE_ENABLED`, and `VITE_AUTH_PASSKEY_ENABLED` false until the matching Supabase provider is configured and verified; disabled providers are hidden from the UI and `npm run test:oauth-config` only requires exposed providers. Use `OAUTH_VERIFY_STRICT=1 npm run test:oauth-config` before enabling all providers. |
 | GL-003 | Profile trigger | pending staging drill | Run `npm run verify:signup`; confirm OAuth and email users become active client profiles. |
 | GL-004 | Appointment-summary auth drill | pending staging drill | Run the unauthenticated summary probe; expected `summary_auth_required` and signed access through `APPOINTMENT_SUMMARY_TOKEN_SECRET`. |
 | GL-005 | Stripe metadata drill | pending staging drill | Inspect Stripe metadata drill output for PHI-free payloads. |
@@ -91,4 +91,4 @@ cache-busted reload. The first non-cache-busted home capture was blank, so keep
 home first-paint timing in the watch list even though Chrome/CDP live stability
 and the follow-up iOS Safari capture passed.
 
-Deploy reminder: use `vercel build`, `vercel deploy --prebuilt --no-prod`, and `vercel alias set <url> snooches.avalonvitality.co`. Never run `vercel deploy --prod` from this repo during this launch.
+Deploy reminder: use `npm run exam:snooches` first, then `npm run deploy:snooches` only after it passes. Never run `vercel deploy --prod` from this repo during this launch.

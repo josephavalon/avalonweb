@@ -1,6 +1,13 @@
 # Avalon Auth Setup
 
-This repo wires Google, Apple, phone OTP, email recovery, and passkeys through Supabase Auth. The human operator owns provider secrets and pastes them directly into Supabase Studio; do not commit secrets.
+This repo wires email recovery, optional Google/Apple OAuth, optional phone OTP, and optional passkeys through Supabase Auth. The human operator owns provider secrets and pastes them directly into Supabase Studio; do not commit secrets.
+
+Provider exposure is controlled by build-time flags. Keep a flag `false` until the matching Supabase provider is configured and verified; disabled providers stay hidden in the UI so snooches does not expose broken launch paths.
+
+- `VITE_AUTH_GOOGLE_ENABLED`
+- `VITE_AUTH_APPLE_ENABLED`
+- `VITE_AUTH_PHONE_ENABLED`
+- `VITE_AUTH_PASSKEY_ENABLED`
 
 ## Supabase URL Configuration
 
@@ -32,7 +39,8 @@ Human steps:
 2. Add the Supabase provider callback URL as an authorized redirect URI.
 3. Paste the client id and secret into Supabase Studio -> Auth -> Providers -> Google.
 4. Enable Google.
-5. Run `npm run test:oauth-config`.
+5. Set `VITE_AUTH_GOOGLE_ENABLED=true` in the target Vercel environment.
+6. Run `npm run test:oauth-config`.
 
 ## Apple
 
@@ -42,7 +50,8 @@ Human steps:
 2. Use the same Supabase provider callback URL.
 3. Paste the Services ID/team/key details into Supabase Studio -> Auth -> Providers -> Apple.
 4. Enable Apple.
-5. Run `npm run test:oauth-config`.
+5. Set `VITE_AUTH_APPLE_ENABLED=true` in the target Vercel environment.
+6. Run `npm run test:oauth-config`.
 
 ## Phone OTP
 
@@ -51,17 +60,30 @@ Human steps:
 1. Configure the phone provider in Supabase Studio -> Auth -> Providers -> Phone.
 2. Add the Twilio account SID, auth token, and Verify service.
 3. Confirm Avalon SMS hook settings separately if using `api/auth/send-sms.js`.
-4. Run `npm run test:oauth-config`.
+4. Set `VITE_AUTH_PHONE_ENABLED=true` in the target Vercel environment.
+5. Run `npm run test:oauth-config`.
+
+## Passkeys
+
+Human steps:
+
+1. Confirm Supabase passkey/WebAuthn support is available for the project and target browsers.
+2. Set `VITE_AUTH_PASSKEY_ENABLED=true` in the target Vercel environment.
+3. Run a manual sign-in/enrollment drill from `/members/account`.
 
 ## Verification
 
-After providers are configured:
+After optional providers are configured:
 
 ```bash
 npm run test:oauth-config
 npm run verify:signup
 npm run verify:password-reset
 ```
+
+`npm run test:oauth-config` only requires providers whose `VITE_AUTH_*_ENABLED`
+flag is true. Use `OAUTH_VERIFY_STRICT=1 npm run test:oauth-config` for a
+hard check that Google, Apple, and Phone are all enabled in Supabase.
 
 Manual check:
 
@@ -77,6 +99,10 @@ Production auth, checkout, scheduling, messaging, and rate-limit readiness depen
 
 - `VITE_AVALON_ENABLE_LIVE_API`
 - `AVALON_ENABLE_LIVE_API`
+- `VITE_AUTH_GOOGLE_ENABLED`
+- `VITE_AUTH_APPLE_ENABLED`
+- `VITE_AUTH_PHONE_ENABLED`
+- `VITE_AUTH_PASSKEY_ENABLED`
 - `APPOINTMENT_SUMMARY_TOKEN_SECRET`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `STRIPE_SECRET_KEY`
