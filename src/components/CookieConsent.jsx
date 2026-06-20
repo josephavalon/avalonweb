@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
-  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const { pathname: path } = useLocation();
   const revenuePath = path === '/' ||
     path.startsWith('/book') ||
     path.startsWith('/booking') ||
@@ -10,7 +11,7 @@ export default function CookieConsent() {
     path.startsWith('/products') ||
     path.startsWith('/protocols') ||
     path.startsWith('/subscription');
-  const suppressed = typeof window !== 'undefined' && (path.startsWith('/b2b') || revenuePath);
+  const suppressed = path.startsWith('/b2b') || revenuePath;
 
   useEffect(() => {
     if (suppressed) return;
