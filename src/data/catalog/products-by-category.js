@@ -78,6 +78,9 @@ export const productsByCategory = {
       namedSession(byKey.immunity, 'Immunity IV', {
         benefitStatement: 'Vitamin and mineral support for wellness routines.',
       }),
+      namedSession(byKey.beauty, 'Beauty IV', {
+        benefitStatement: 'Glutathione, biotin, and Vitamin C — nutrients associated with skin, hair, and nails.',
+      }),
       namedSession(byKey.energy, 'Energy IV', {
         benefitStatement: 'B-vitamin and amino acid support for high-output days.',
       }),
@@ -134,12 +137,14 @@ const PRODUCT_SLUG_ALIASES = {
     'nad-1000mg': 'nad-iv-1000mg',
     'nad-1250mg': 'nad-iv-1250mg',
     'nad-1500mg': 'nad-iv-1500mg',
+    'nad-vitality': 'nad-iv-vitality',
   },
   cbd: {
     'cbd-33mg': 'cbd-iv-33mg',
     'cbd-66mg': 'cbd-iv-66mg',
     'cbd-99mg': 'cbd-iv-99mg',
     'cbd-132mg': 'cbd-iv-132mg',
+    'cbd-vitality': 'cbd-iv-vitality',
   },
 };
 
