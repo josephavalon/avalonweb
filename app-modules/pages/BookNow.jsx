@@ -896,19 +896,20 @@ function useMobileBookingViewportLayout(deps = []) {
           root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(56, headerRect.bottom + 2))}px`);
         }
 
-        // Size mobile therapy cards so exactly 3 fit in the visible scroll
-        // region. Each card height = (available - 2 * gap) / 3, written to a
-        // CSS var the card uses for its height. Scroll reveals the next 3.
+        // Size mobile therapy cards so exactly 3 units fit in the visible
+        // scroll region. Each unit = body + "WHAT'S INSIDE" foldout button.
+        // body height = (visible list area - 2 gaps - 3 foldout buttons) / 3.
+        // Scroll reveals the next 3. Expanding a foldout grows that card
+        // beyond its slot, which is intentional.
         root.style.removeProperty('--av-therapy-list-max');
         const therapyList = document.querySelector('[data-av-therapy-list="true"]');
         if (therapyList) {
-          const listRect = therapyList.getBoundingClientRect();
-          const footerTop = footerRect ? footerRect.top : (window.visualViewport?.height || window.innerHeight || 0);
+          const sampleFoldoutBtn = therapyList.firstElementChild?.querySelector('button[aria-expanded]');
+          const foldoutBtnH = Math.ceil(sampleFoldoutBtn?.getBoundingClientRect().height || 44);
           const gap = 8; // tailwind gap-2
-          const bottomPad = 8; // matches the pb-2 on the list
-          const available = footerTop - listRect.top - bottomPad;
+          const available = therapyList.clientHeight;
           if (available > 0) {
-            const cardHeight = Math.max(112, Math.floor((available - 2 * gap) / 3));
+            const cardHeight = Math.max(88, Math.floor((available - 2 * gap - 3 * foldoutBtnH) / 3));
             root.style.setProperty('--av-therapy-card-h', `${cardHeight}px`);
           }
         } else {
@@ -5588,7 +5589,6 @@ export default function BookNow() {
     return (
       <div
         key={item.key}
-        style={{ height: 'var(--av-therapy-card-h, 7.5rem)' }}
         className={`relative shrink-0 overflow-hidden rounded-[1.35rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_56px_hsl(var(--background)/0.32)] backdrop-blur-2xl transition-colors ${
           active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
         }`}
@@ -5597,7 +5597,8 @@ export default function BookNow() {
           type="button"
           onClick={selectTherapy}
           aria-pressed={active}
-          className={`relative grid h-full w-full grid-cols-[4.5rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 px-3.5 text-left transition-colors min-[390px]:grid-cols-[5rem_minmax(0,1fr)_auto_1.85rem] min-[390px]:gap-3.5 min-[390px]:px-4 ${
+          style={{ height: 'var(--av-therapy-card-h, 6.25rem)' }}
+          className={`relative grid w-full grid-cols-[4.5rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 px-3.5 text-left transition-colors min-[390px]:grid-cols-[5rem_minmax(0,1fr)_auto_1.85rem] min-[390px]:gap-3.5 min-[390px]:px-4 ${
             active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
@@ -5619,6 +5620,7 @@ export default function BookNow() {
             <ArrowRight className="h-7 w-7 shrink-0" strokeWidth={2.1} />
           </span>
         </button>
+        {renderTherapyDetails(item)}
       </div>
     );
   };
