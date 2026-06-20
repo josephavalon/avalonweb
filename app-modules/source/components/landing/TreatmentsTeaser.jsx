@@ -9,9 +9,19 @@ import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, prem
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import ScrollParallax from '@/components/ui/ScrollParallax';
+import { getProduct, slugify } from '@/data/products';
 
 const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
+
+const CATEGORY_SLUG_BY_KEY = { vitamins: 'iv-vitamins', nad: 'nad', cbd: 'cbd' };
+
+function productHrefFor(categoryKey, label) {
+  const categorySlug = CATEGORY_SLUG_BY_KEY[categoryKey];
+  if (!categorySlug) return '/protocols';
+  const slug = slugify(label);
+  return getProduct(categorySlug, slug) ? `/products/${categorySlug}/${slug}` : '/protocols';
+}
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -224,7 +234,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
                   {cat.data.map((addon) => (
                     <MotionLink
                       key={addon.label}
-                      to="/book"
+                      to={productHrefFor(cat.key, addon.label)}
                       variants={premiumListItem}
                       whileHover={premiumHover}
                       whileTap={premiumTap}

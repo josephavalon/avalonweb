@@ -121,6 +121,8 @@ const PRODUCT_SLUG_ALIASES = {
     energy: 'energy-iv',
     recovery: 'recovery-iv',
     travel: 'jet-lag-iv',
+    'travel-iv': 'jet-lag-iv',
+    'night-out-iv': 'post-night-out-iv',
     'launch-performance': 'performance-iv',
     'launch-recovery': 'recovery-iv',
     'food-poisoning': 'food-poisoning-recovery-iv',

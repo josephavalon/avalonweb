@@ -26,7 +26,6 @@ import { appendActivity } from '@/lib/localOs';
 import { buildProductJsonLd } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
-const HERO_PHOTO = '/images/avalon-static-back.jpg';
 
 const DESIGN_TIMELINE = [
   { label: '5 MIN', value: 'Arrival & check-in — we get you settled' },
@@ -180,10 +179,8 @@ export default function ProductDetail() {
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.1} /> {cat.backLabel || 'Back to IV Therapy'}
         </Link>
 
-        {/* HERO — photo + dark overlay */}
-        <section className="relative overflow-hidden rounded-[18px] border border-white/10">
-          <img src={HERO_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover [object-position:74%_50%]" />
-          <div aria-hidden className="absolute inset-0 bg-background/62 md:bg-background/58" />
+        {/* HERO — solid black */}
+        <section className="relative overflow-hidden rounded-[18px] border border-white/10 bg-black">
           <motion.div
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
