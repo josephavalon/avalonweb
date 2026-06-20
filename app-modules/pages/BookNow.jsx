@@ -893,7 +893,7 @@ function useMobileBookingViewportLayout(deps = []) {
         });
         const headerRect = header?.getBoundingClientRect();
         if (headerRect?.height) {
-          root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(64, headerRect.bottom + 8))}px`);
+          root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(56, headerRect.bottom + 2))}px`);
         }
       });
     };
@@ -1087,18 +1087,18 @@ function UniversalBookingFrame({
                   aria-expanded={orderOpen}
                   className="flex min-w-0 items-center gap-2"
                 >
-                  <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/70">
+                  <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground">
                     Your order
-                    <span className="rounded-full border border-foreground/16 px-1.5 py-[1px] text-[8px] font-black text-foreground/60">{orderCount}</span>
+                    <span className="rounded-full border border-foreground/30 px-1.5 py-[1px] text-[8px] font-black text-foreground">{orderCount}</span>
                   </span>
-                  <ChevronDown className={`h-3.5 w-3.5 text-foreground/55 transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+                  <ChevronDown className={`h-3.5 w-3.5 text-foreground transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
                 </button>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {canAddPerson && (
                     <button
                       type="button"
                       onClick={() => onAddPerson?.()}
-                      className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground"
+                      className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground transition-colors hover:border-foreground/55"
                     >
                       <Plus className="h-3 w-3" strokeWidth={3} />
                       Add person
@@ -1108,7 +1108,7 @@ function UniversalBookingFrame({
                     <button
                       type="button"
                       onClick={onClearOrder}
-                      className="shrink-0 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/90"
+                      className="shrink-0 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:border-foreground/55"
                     >
                       Clear
                     </button>
@@ -1129,13 +1129,13 @@ function UniversalBookingFrame({
                       />
                     </div>
                   )}
-                  <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground/82">{product.label}</p>
+                  <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground">{product.label}</p>
                   {selectedAddons.length > 0 && (
                     <div className="mt-1.5 space-y-1">
                       {selectedAddons.map((item) => (
                         <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
-                          <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground/74">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
-                          <span className="shrink-0 font-body text-[9px] font-black text-foreground/52">{currency(item.price)}</span>
+                          <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                          <span className="shrink-0 font-body text-[9px] font-black text-foreground">{currency(item.price)}</span>
                           {onRemoveAddon && (
                             <button
                               type="button"
