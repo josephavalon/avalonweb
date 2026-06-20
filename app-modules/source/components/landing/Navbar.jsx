@@ -86,8 +86,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   const navVisible = true;
   const mobileLinks = [
-    ...mainLinks,
     { to: BOOK_URL, label: 'Book', primary: true },
+    ...mainLinks,
     ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
   ];
 
