@@ -5577,7 +5577,7 @@ export default function BookNow() {
           type="button"
           onClick={selectTherapy}
           aria-pressed={active}
-          className={`relative grid !min-h-[112px] w-full grid-cols-[3.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-1.5 text-left transition-colors min-[390px]:!min-h-[124px] min-[390px]:grid-cols-[4rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
+          className={`relative grid min-h-[86px] w-full grid-cols-[3.75rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-1.5 text-left transition-colors min-[390px]:min-h-[92px] min-[390px]:grid-cols-[4rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
             active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
