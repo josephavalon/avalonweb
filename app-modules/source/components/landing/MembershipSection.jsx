@@ -55,14 +55,14 @@ function TierRow({ tier, index, open, onToggle }) {
           <div className="flex items-center gap-2">
             <p className="font-heading text-2xl uppercase leading-none tracking-[0.06em] text-foreground/72 md:text-3xl">{tier.name}</p>
           </div>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
+          <p className="mt-1 font-body text-[11px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3 text-right">
           <div>
-            <span className="block font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">From</span>
+            <span className="block font-body text-[11px] uppercase tracking-[0.12em] text-foreground/38">From</span>
             <span className="font-heading text-2xl leading-none tracking-wide text-foreground/72">{tier.price}</span>
-            {tier.unit && <span className="ml-0.5 font-body text-[10px] text-foreground/32">{tier.unit}</span>}
+            {tier.unit && <span className="ml-0.5 font-body text-[11px] text-foreground/32">{tier.unit}</span>}
           </div>
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
@@ -133,7 +133,7 @@ export default function MembershipSection() {
           </MotionLink>
         </div>
 
-        <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">
+        <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4">
           3-month minimum · then pause or cancel
         </p>
 
