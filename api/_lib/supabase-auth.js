@@ -28,6 +28,27 @@ function bearerToken(req) {
   return match ? match[1].trim() : '';
 }
 
+// The Supabase access token is a JWT whose payload carries the session's
+// Authenticator Assurance Level (`aal`): 'aal1' (single factor) or 'aal2' (a
+// second factor was verified this session). We only READ the claim — the token
+// was already cryptographically verified by db.auth.getUser() above the caller.
+function jwtAal(token) {
+  try {
+    const payload = JSON.parse(Buffer.from(String(token).split('.')[1] || '', 'base64url').toString('utf8'));
+    return String(payload?.aal || 'aal1').toLowerCase();
+  } catch {
+    return 'aal1';
+  }
+}
+
+// Hard MFA enforcement for the operator tier, flag-gated so it can be turned on
+// only AFTER admins have enrolled a factor (otherwise it locks every admin out).
+// Off by default — deploying the gate changes nothing until MFA_ENFORCED is set.
+function mfaEnforced() {
+  const v = String(process.env.MFA_ENFORCED || '').trim().toLowerCase();
+  return v === 'true' || v === '1' || v === 'yes';
+}
+
 /**
  * Verify the request's Supabase access token. Returns
  * { user, role, email, tenantId, db } on success, or null if unauthenticated /
@@ -61,7 +82,7 @@ export async function getAuthedUser(req) {
   if (role !== 'client' && !tenantId) {
     role = 'client';
   }
-  return { user, role, email: (user.email || '').trim(), tenantId, db };
+  return { user, role, email: (user.email || '').trim(), tenantId, db, aal: jwtAal(token) };
 }
 
 /** Gate a route to admins. Writes the 401/403 response itself; returns null when blocked. */
@@ -69,6 +90,10 @@ export async function requireAdmin(req, res) {
   const authed = await getAuthedUser(req);
   if (!authed) { res.status(401).json({ error: 'Sign in required' }); return null; }
   if (authed.role !== 'admin') { res.status(403).json({ error: 'Admin access required' }); return null; }
+  if (mfaEnforced() && authed.aal !== 'aal2') {
+    res.status(403).json({ error: 'Multi-factor authentication required', code: 'mfa_required' });
+    return null;
+  }
   return authed;
 }
 
@@ -82,6 +107,11 @@ export async function requireRole(req, res, roles = []) {
   const authed = await getAuthedUser(req);
   if (!authed) { res.status(401).json({ error: 'Sign in required' }); return null; }
   if (!allowed.includes(authed.role)) { res.status(403).json({ error: 'Insufficient access' }); return null; }
+  // Operator-tier (admin/staff) sessions must be AAL2 once enforcement is on.
+  if (mfaEnforced() && (authed.role === 'admin' || authed.role === 'staff') && authed.aal !== 'aal2') {
+    res.status(403).json({ error: 'Multi-factor authentication required', code: 'mfa_required' });
+    return null;
+  }
   return authed;
 }
 
