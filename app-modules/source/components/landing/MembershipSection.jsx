@@ -84,6 +84,16 @@ function TierRow({ tier, index, open, onToggle }) {
               </div>
             ))}
           </div>
+
+          <MotionLink
+            to={`/subscription?sessions=${tier.sessions}`}
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-body text-sm uppercase tracking-[0.2em] text-background transition-colors duration-base ease-editorial"
+          >
+            Start {tier.name}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </MotionLink>
         </div>
       </SmoothDisclosure>
     </motion.div>

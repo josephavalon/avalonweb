@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
   Check,
@@ -560,9 +560,15 @@ export default function Subscription() {
   });
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   // Sessions/month and term apply to the whole household. Therapy + add-ons +
   // IM shots are PER PERSON — each patient on the plan picks their own protocol.
-  const [sessions, setSessions] = useState(2);
+  // Landing-page tier CTAs deep-link as ?sessions=N (1–4) so the builder opens on
+  // the plan the user picked; a bare /subscription still defaults to 2.
+  const [sessions, setSessions] = useState(() => {
+    const raw = Number(searchParams.get('sessions'));
+    return Number.isInteger(raw) && raw >= 1 && raw <= 4 ? raw : 2;
+  });
   const [categoryKey, setCategoryKey] = useState('iv-vitamins');
   const [therapyKey, setTherapyKey] = useState('hydration');
   const [ivQty, setIvQty] = useState({});
