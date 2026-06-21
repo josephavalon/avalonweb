@@ -3383,56 +3383,48 @@ function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, d
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
-  const manualBilling = state.billingMode === 'vip-manual';
-  const items = [
-    { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
-    { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
-    { label: 'Billing', value: manualBilling ? 'VIP invoice' : 'Card deposit', icon: CreditCard },
-    { label: 'Due now', value: manualBilling ? '$0' : currency(dueNow), icon: Check },
-    { label: 'Upon completion', value: manualBilling ? 'Bill manager' : currency(balanceDue), icon: CreditCard },
+  // Receipt-style summary: product + price up top, then three scannable facts.
+  // Payment terms (deposit today / balance after) live in the footer CTA, so we
+  // don't repeat them here.
+  const clinicalValue = state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready';
+  const facts = [
+    { label: 'Where', value: state.zip || 'Add ZIP', icon: Home },
+    { label: 'When', value: bookingTimeSummary(state), icon: Calendar },
+    { label: 'Clinical', value: clinicalValue, icon: ShieldCheck },
   ];
 
   return (
-    <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
+    <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.10),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.026))]" />
-      <div className="relative flex items-center justify-between gap-3 border-b border-foreground/10 pb-3">
+
+      {/* Product + price */}
+      <div className="relative flex items-start justify-between gap-3 px-5 pt-5">
         <div className="min-w-0">
-          <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/60">Ready</p>
-          <p className="mt-1 truncate font-heading text-[2rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</p>
+          <p className="truncate font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</p>
+          <p className="mt-1.5 font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
         </div>
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-foreground/16 bg-foreground/[0.07] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
-          <Check className="h-5 w-5" strokeWidth={2.8} />
-        </span>
+        <p className="shrink-0 font-heading text-[2.6rem] leading-none tracking-normal text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {currency(subtotal)}
+        </p>
       </div>
-      <div className="relative mt-1 divide-y divide-foreground/8">
-        {items.map((item) => {
-          const Icon = item.icon;
+
+      {/* Perforation */}
+      <div className="relative my-4 h-px">
+        <div className="absolute inset-x-5 top-1/2 -translate-y-1/2 border-t border-dashed border-foreground/15" />
+      </div>
+
+      {/* Three facts */}
+      <div className="relative flex px-3 pb-4">
+        {facts.map((fact, i) => {
+          const Icon = fact.icon;
           return (
-            <div key={`${item.label}-${item.value}`} className="flex min-h-[58px] items-center justify-between gap-3 py-3">
-              <span className="flex min-w-0 items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.055] text-foreground">
-                  <Icon className="h-4.5 w-4.5" strokeWidth={2.35} />
-                </span>
-                <span className="truncate font-body text-base font-extrabold text-foreground">{item.label}</span>
-              </span>
-              <span className="shrink-0 font-body text-base font-black text-foreground/72">{item.value}</span>
+            <div key={fact.label} className={`flex flex-1 flex-col items-center gap-2 px-2 text-center ${i > 0 ? 'border-l border-foreground/10' : ''}`}>
+              <Icon className="h-5 w-5 text-foreground/85" strokeWidth={1.8} />
+              <span className="font-body text-[9.5px] font-black uppercase tracking-[0.16em] text-foreground/55">{fact.label}</span>
+              <span className="font-body text-sm font-bold text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>{fact.value}</span>
             </div>
           );
         })}
-      </div>
-      <div className="relative mt-2 rounded-2xl border border-foreground/10 bg-foreground/[0.035] p-3">
-        <div className="flex items-center justify-between gap-3">
-          <span className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Subtotal</span>
-          <span className="font-body text-sm font-black text-foreground">{currency(subtotal)}</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Taxes</span>
-          <span className="font-body text-sm font-black text-foreground">Calculated in checkout if required</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Discounts</span>
-          <span className="font-body text-sm font-black text-foreground">Promo code accepted at payment</span>
-        </div>
       </div>
     </div>
   );
@@ -5950,30 +5942,33 @@ export default function BookNow() {
 
     return (
       <div className="grid h-full min-h-0 content-start gap-1.5 md:gap-2">
-        <div className={`${panelCardClass} p-2 md:p-2.5`}>
-          <div className="flex items-center justify-between gap-3">
+        {/* Receipt summary: product + price, then three scannable facts. Payment
+            terms (deposit today / balance after) live in the footer CTA. */}
+        <div className={`${panelCardClass} px-4 pt-4 pb-3 md:px-5 md:pt-5`}>
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className={microLabelClass}>Ready</p>
-              <p className="mt-0.5 truncate font-heading text-[1.35rem] uppercase leading-none tracking-normal md:mt-1 md:text-[1.7rem]">{serviceLabel}</p>
+              <p className="truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal md:text-[2.1rem]">{serviceLabel}</p>
+              <p className="mt-1.5 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
             </div>
-            <p className="shrink-0 font-body text-[1.32rem] font-black md:text-[1.55rem]">{currency(subtotal)}</p>
+            <p className="shrink-0 font-heading text-[2rem] leading-none tracking-normal md:text-[2.5rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>{currency(subtotal)}</p>
           </div>
-          <div className="mt-1.5 grid grid-cols-3 gap-1 md:mt-2 md:grid-cols-2 md:gap-1.5">
+          <div className="relative my-3.5 h-px">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed border-foreground/15" />
+          </div>
+          <div className="flex">
             {[
-              ['Where', resolvedZip || 'ZIP'],
-              ['When', bookingTimeSummary(state)],
-              ['Review', state.clinicalReviewOnFile ? 'On file' : 'Needed'],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-foreground/10 bg-foreground/[0.035] p-1.5">
-                <p className="font-body text-[8px] font-black uppercase tracking-[0.1em] text-foreground/52 md:text-[9px]">{label}</p>
-                <p className="mt-0.5 truncate font-body text-[10px] font-black text-foreground/78 md:mt-1 md:text-xs">{value}</p>
+              ['Where', resolvedZip || 'ZIP', Home],
+              ['When', bookingTimeSummary(state), Calendar],
+              ['Clinical', state.clinicalReviewOnFile ? 'On file' : 'Needed', ShieldCheck],
+            ].map(([label, value, Icon], i) => (
+              <div key={label} className={`flex flex-1 flex-col items-center gap-1.5 px-2 text-center ${i > 0 ? 'border-l border-foreground/10' : ''}`}>
+                <Icon className="h-[18px] w-[18px] text-foreground/85" strokeWidth={1.8} />
+                <span className="font-body text-[9px] font-black uppercase tracking-[0.14em] text-foreground/55">{label}</span>
+                <span className="truncate font-body text-[13px] font-bold text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</span>
               </div>
             ))}
           </div>
         </div>
-        {state.visitType === 'one-time' && !groupContactRequired && (
-          <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
-        )}
         <div className={`${panelCardClass} grid min-h-0 content-start gap-1.5 p-2 md:gap-2 md:p-2.5`}>
           <div className="grid grid-cols-2 gap-1.5 md:gap-2">
             <div className="col-span-2">
@@ -6650,9 +6645,6 @@ export default function BookNow() {
 	                      onChange={(value) => setValue('clinicalReviewOnFile', value)}
 	                      allowOnFile={canUseClinicalReviewOnFile}
 	                    />
-                    )}
-                    {state.visitType === 'one-time' && !groupContactRequired && (
-                      <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
                     )}
                     {canRedeemMemberCredit && (
                       <MemberCreditChoice
