@@ -858,6 +858,21 @@ function useMobileBookingViewportLayout(deps = []) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
 
     const root = document.documentElement;
+    const body = document.body;
+
+    // iOS scroll-into-view on focused inputs scrolls the document by default.
+    // The booking shell is position: fixed on mobile, so any document scroll
+    // moves nothing visually — but iOS still tries, and the scrollTop drift
+    // can mis-position the focused input. Lock the document scroll while the
+    // booking page is mounted so scroll-into-view targets the inner scroll
+    // region (overflow-y-auto on the step content) instead.
+    const priorHtmlOverflow = root.style.overflow;
+    const priorBodyOverflow = body.style.overflow;
+    const priorHtmlPos = root.style.position;
+    root.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    root.style.position = 'relative';
+
     let frame = 0;
 
     const update = () => {
@@ -929,6 +944,9 @@ function useMobileBookingViewportLayout(deps = []) {
     return () => {
       window.cancelAnimationFrame(frame);
       root.classList.remove('av-booking-user-zoomed');
+      root.style.overflow = priorHtmlOverflow;
+      body.style.overflow = priorBodyOverflow;
+      root.style.position = priorHtmlPos;
       viewport?.removeEventListener('resize', update);
       viewport?.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
@@ -2260,6 +2278,7 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         autoComplete={autoComplete}
         inputMode={inputMode}
         autoFocus={autoFocus}
+        style={{ scrollMarginTop: '6rem', scrollMarginBottom: 'var(--av-booking-footer-reserve, 6rem)' }}
         className={`mt-0.5 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-3.5 font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:px-4 md:text-lg ${
           compact ? 'min-h-[40px] text-sm md:min-h-[44px] md:text-base' : 'min-h-[52px] text-lg'
         }`}
@@ -5993,6 +6012,7 @@ export default function BookNow() {
                 onChange={(value) => setValue('emergencyContact', value)}
                 placeholder="Name and phone"
                 autoComplete="section-emergency tel"
+                inputMode="tel"
                 compact
                 required
               />
@@ -6023,7 +6043,7 @@ export default function BookNow() {
   ]);
 
   return (
-    <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
+    <div data-av-booking-shell="true" className="app-shell !fixed inset-x-0 top-0 isolate h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-background text-foreground md:!relative md:inset-auto md:h-auto md:min-h-screen md:bg-transparent">
       <BookingMobileHeader />
       {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
           a z-10 stacking context, and the booking <main> below (also z-10, later
