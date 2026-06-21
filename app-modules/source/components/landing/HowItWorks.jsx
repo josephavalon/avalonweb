@@ -80,7 +80,6 @@ function StepCard({ step, index, open, onToggle }) {
           </div>
           <div className="min-w-0 text-left">
             <p className="font-heading text-2xl tracking-normal text-white leading-none">{step.title}</p>
-            <p className="mt-1 truncate font-body text-[11px] font-semibold tracking-[0.04em] text-white/76">{step.preview}</p>
           </div>
         </div>
         <motion.div
@@ -97,7 +96,8 @@ function StepCard({ step, index, open, onToggle }) {
 
       <SmoothDisclosure open={open}>
         <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3 md:px-5">
-          <p className="font-body text-xs leading-relaxed text-white">{step.desc}</p>
+          <p className="font-body text-[11px] font-semibold tracking-[0.04em] text-white/76">{step.preview}</p>
+          <p className="mt-1.5 font-body text-xs leading-relaxed text-white">{step.desc}</p>
         </div>
       </SmoothDisclosure>
     </motion.div>
