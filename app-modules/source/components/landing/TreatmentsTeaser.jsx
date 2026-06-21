@@ -85,7 +85,7 @@ const TOP_CATEGORIES = [
   },
   {
     key: 'all',
-    label: 'ALL PROTOCOLS',
+    label: 'VIEW ALL',
     icon: ArrowRight,
     type: 'link',
     href: '/protocols',
