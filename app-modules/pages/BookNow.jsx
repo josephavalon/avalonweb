@@ -2247,6 +2247,26 @@ function inputIdForLabel(label) {
 
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
   const inputId = inputIdForLabel(label);
+  const inputRef = useRef(null);
+
+  // iOS Safari's keyboard-avoidance scroll is unreliable inside a fixed
+  // shell with an absolute-positioned booking footer: it often leaves the
+  // focused input behind the YOUR ORDER / PAY TODAY footer panel. After the
+  // keyboard finishes opening, force the input into the visible scroll port
+  // of the inner overflow-y-auto step container.
+  const handleFocus = () => {
+    if (typeof window === 'undefined') return;
+    window.setTimeout(() => {
+      const node = inputRef.current;
+      if (!node || document.activeElement !== node) return;
+      try {
+        node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      } catch {
+        node.scrollIntoView();
+      }
+    }, 280);
+  };
+
   return (
     <div className="block">
       <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
@@ -2266,6 +2286,7 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
       <input
         id={inputId}
         name={inputId}
+        ref={inputRef}
         aria-label={label}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
@@ -2274,6 +2295,7 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
+        onFocus={handleFocus}
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
