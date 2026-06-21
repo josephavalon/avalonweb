@@ -2076,7 +2076,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
       <button
         type="button"
         onClick={onNone}
-        className={`group relative flex min-h-[120px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
+        className={`group relative flex min-h-[96px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
           noAddonsSelected
             ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
             : 'border-foreground/12 bg-background/50 text-foreground hover:border-foreground/24'
@@ -2100,6 +2100,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
         {groups.map((group) => {
           const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
           const open = Boolean(openGroups[group.key] || selectedCount > 0);
+          const GroupIcon = group.icon || Plus;
           return (
             <section
               key={group.key}
@@ -2109,11 +2110,14 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
               <button
                 type="button"
                 onClick={() => toggleGroup(group.key)}
-                className="relative flex min-h-[120px] w-full items-center justify-between gap-3 px-4 text-left"
+                className="relative flex min-h-[96px] w-full items-center justify-between gap-3 px-4 text-left"
                 aria-expanded={open}
               >
-                <span className="truncate font-body text-sm font-black uppercase tracking-[0.14em] text-foreground/70">
-                  {group.label}
+                <span className="relative flex min-w-0 items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-background/30">
+                    <GroupIcon className="h-4 w-4" strokeWidth={2.4} />
+                  </span>
+                  <span className="block truncate font-heading text-[2rem] uppercase leading-none tracking-normal">{group.label}</span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
                   {selectedCount > 0 && (
