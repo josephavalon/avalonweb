@@ -922,7 +922,13 @@ function useMobileBookingViewportLayout(deps = []) {
           const sampleFoldoutBtn = therapyList.firstElementChild?.querySelector('button[aria-expanded]');
           const foldoutBtnH = Math.ceil(sampleFoldoutBtn?.getBoundingClientRect().height || 44);
           const gap = 8; // tailwind gap-2
-          const available = therapyList.clientHeight;
+          // clientHeight includes the list's own vertical padding (pb-2), but the
+          // cards lay out inside the content box. Subtract that padding (plus a
+          // 1px rounding guard) so 3 units fit WITHIN the padded area instead of
+          // overflowing it — otherwise the 3rd card's bottom clips on first load.
+          const listStyle = window.getComputedStyle(therapyList);
+          const padY = (parseFloat(listStyle.paddingTop) || 0) + (parseFloat(listStyle.paddingBottom) || 0);
+          const available = therapyList.clientHeight - padY - 1;
           if (available > 0) {
             const cardHeight = Math.max(88, Math.floor((available - 2 * gap - 3 * foldoutBtnH) / 3));
             root.style.setProperty('--av-therapy-card-h', `${cardHeight}px`);
@@ -934,6 +940,13 @@ function useMobileBookingViewportLayout(deps = []) {
     };
 
     update();
+    // First paint can measure the list before the mobile browser chrome / footer
+    // settle, sizing the cards a touch too tall (3rd card clips). Re-measure once
+    // things settle so the initial render fits 3 full cards.
+    const settleTimers = [
+      window.setTimeout(update, 120),
+      window.setTimeout(update, 400),
+    ];
     const viewport = window.visualViewport;
     viewport?.addEventListener('resize', update);
     viewport?.addEventListener('scroll', update);
@@ -943,6 +956,7 @@ function useMobileBookingViewportLayout(deps = []) {
 
     return () => {
       window.cancelAnimationFrame(frame);
+      settleTimers.forEach((id) => window.clearTimeout(id));
       root.classList.remove('av-booking-user-zoomed');
       root.style.overflow = priorHtmlOverflow;
       body.style.overflow = priorBodyOverflow;
@@ -2062,7 +2076,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
       <button
         type="button"
         onClick={onNone}
-        className={`group relative flex min-h-[78px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
+        className={`group relative flex min-h-[96px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
           noAddonsSelected
             ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
             : 'border-foreground/12 bg-background/50 text-foreground hover:border-foreground/24'
@@ -2095,7 +2109,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
               <button
                 type="button"
                 onClick={() => toggleGroup(group.key)}
-                className="relative flex min-h-[62px] w-full items-center justify-between gap-3 px-1 text-left"
+                className="relative flex min-h-[88px] w-full items-center justify-between gap-3 px-1 text-left"
                 aria-expanded={open}
               >
                 <span className="truncate font-body text-sm font-black uppercase tracking-[0.14em] text-foreground/70">
