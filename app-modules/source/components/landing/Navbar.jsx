@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
+import { cycleTheme } from '@/lib/theme';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuthStore } from '@/lib/useAuthStore';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -29,6 +31,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const tapState = useRef({ count: 0, timer: null });
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
@@ -59,6 +63,36 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (e.currentTarget && typeof e.currentTarget.blur === 'function') e.currentTarget.blur();
+    }
+  };
+
+  // Hidden mobile easter egg: one tap on the logo goes home (default Link
+  // behavior), a double tap cycles the color theme (Night → Giants → Warriors).
+  // Mobile only — bound solely to the mobile-bar logo and guarded by useIsMobile.
+  const DOUBLE_TAP_MS = 260;
+  const goHome = () => {
+    if (location.pathname === '/') window.scrollTo({ top: 0, behavior: 'smooth' });
+    else navigate('/');
+  };
+  const handleMarkTap = (e) => {
+    if (!isMobile) {
+      // Desktop never reaches here (mobile bar is display:none), but stay safe:
+      // fall back to the standard home-link behavior.
+      handleLogoClick(e);
+      return;
+    }
+    e.preventDefault();
+    const s = tapState.current;
+    s.count += 1;
+    if (s.count === 1) {
+      s.timer = window.setTimeout(() => {
+        s.count = 0;
+        goHome();
+      }, DOUBLE_TAP_MS);
+    } else {
+      window.clearTimeout(s.timer);
+      s.count = 0;
+      cycleTheme();
     }
   };
 
@@ -212,7 +246,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
           )}
-          <Link to="/" onClick={handleLogoClick} className={logoClass}>
+          <Link to="/" onClick={handleMarkTap} className={logoClass}>
             <AvalonMark className="h-[28px] w-[18px] text-foreground" />
           </Link>
         </div>
