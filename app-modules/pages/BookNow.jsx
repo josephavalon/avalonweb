@@ -2076,7 +2076,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
       <button
         type="button"
         onClick={onNone}
-        className={`group relative flex min-h-[96px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
+        className={`group relative flex min-h-[120px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
           noAddonsSelected
             ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
             : 'border-foreground/12 bg-background/50 text-foreground hover:border-foreground/24'
@@ -2103,13 +2103,13 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
           return (
             <section
               key={group.key}
-              className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/40 p-2.5 pt-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_16px_60px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl"
+              className="relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_16px_60px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
               <button
                 type="button"
                 onClick={() => toggleGroup(group.key)}
-                className="relative flex min-h-[88px] w-full items-center justify-between gap-3 px-1 text-left"
+                className="relative flex min-h-[120px] w-full items-center justify-between gap-3 px-4 text-left"
                 aria-expanded={open}
               >
                 <span className="truncate font-body text-sm font-black uppercase tracking-[0.14em] text-foreground/70">
@@ -2127,7 +2127,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                 </span>
               </button>
               <SmoothDisclosure open={open}>
-                <div className="relative grid grid-cols-1 gap-1.5 border-t border-foreground/8 pt-2.5">
+                <div className="relative grid grid-cols-1 gap-1.5 border-t border-foreground/8 px-2.5 pb-2.5 pt-2.5">
                   {group.items.map((item) => {
                     const active = state.addOns.includes(item.label);
                     const Icon = item.icon || Plus;
