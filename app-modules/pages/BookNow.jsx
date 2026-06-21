@@ -2247,26 +2247,6 @@ function inputIdForLabel(label) {
 
 function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
   const inputId = inputIdForLabel(label);
-  const inputRef = useRef(null);
-
-  // iOS Safari's keyboard-avoidance scroll is unreliable inside a fixed
-  // shell with an absolute-positioned booking footer: it often leaves the
-  // focused input behind the YOUR ORDER / PAY TODAY footer panel. After the
-  // keyboard finishes opening, force the input into the visible scroll port
-  // of the inner overflow-y-auto step container.
-  const handleFocus = () => {
-    if (typeof window === 'undefined') return;
-    window.setTimeout(() => {
-      const node = inputRef.current;
-      if (!node || document.activeElement !== node) return;
-      try {
-        node.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      } catch {
-        node.scrollIntoView();
-      }
-    }, 280);
-  };
-
   return (
     <div className="block">
       <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
@@ -2286,7 +2266,6 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
       <input
         id={inputId}
         name={inputId}
-        ref={inputRef}
         aria-label={label}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
@@ -2295,7 +2274,6 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
-        onFocus={handleFocus}
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
@@ -6065,7 +6043,7 @@ export default function BookNow() {
   ]);
 
   return (
-    <div data-av-booking-shell="true" className="app-shell !fixed inset-x-0 top-0 isolate h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-background text-foreground md:!relative md:inset-auto md:h-auto md:min-h-screen md:bg-transparent">
+    <div data-av-booking-shell="true" className="app-shell !fixed inset-x-0 top-0 isolate h-[100dvh] w-full overflow-x-hidden bg-background text-foreground md:!relative md:inset-auto md:h-auto md:min-h-screen md:bg-transparent">
       <BookingMobileHeader />
       {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
           a z-10 stacking context, and the booking <main> below (also z-10, later
@@ -6076,7 +6054,7 @@ export default function BookNow() {
       </div>
       <main
         data-av-booking-main="true"
-        className="relative z-10 mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
+        className="relative z-10 mx-auto h-[100dvh] max-h-[100dvh] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
           '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px))',
           '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5.25rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',
