@@ -95,43 +95,43 @@
      white foreground/primary/accent swapped to Giants orange. */
   .giants {
     --background: 0 0% 0%;
-    --foreground: 22 100% 48%;
+    --foreground: 16 98% 55%;
     --card: 28 12% 16%;
-    --card-foreground: 22 100% 48%;
+    --card-foreground: 16 98% 55%;
     --popover: 28 12% 16%;
-    --popover-foreground: 22 100% 48%;
-    --primary: 22 100% 48%;
+    --popover-foreground: 16 98% 55%;
+    --primary: 16 98% 55%;
     --primary-foreground: 0 0% 0%;
     --secondary: 0 0% 10%;
-    --secondary-foreground: 22 100% 48%;
+    --secondary-foreground: 16 98% 55%;
     --muted: 0 0% 10%;
-    --muted-foreground: 22 100% 48%;
-    --accent: 22 100% 48%;
+    --muted-foreground: 16 98% 55%;
+    --accent: 16 98% 55%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 22 80% 20%;
-    --input: 22 80% 20%;
-    --ring: 22 100% 48%;
-    --chart-1: 22 100% 48%;
+    --border: 16 60% 22%;
+    --input: 16 60% 22%;
+    --ring: 16 98% 55%;
+    --chart-1: 16 98% 55%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 22 100% 48%;
-    --sidebar-primary: 22 100% 48%;
+    --sidebar-foreground: 16 98% 55%;
+    --sidebar-primary: 16 98% 55%;
     --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 22 100% 48%;
-    --sidebar-border: 22 80% 20%;
-    --sidebar-ring: 22 100% 48%;
+    --sidebar-accent-foreground: 16 98% 55%;
+    --sidebar-border: 16 60% 22%;
+    --sidebar-ring: 16 98% 55%;
     --glass-bg: rgba(7, 7, 7, 0.72);
-    --glass-overlay: linear-gradient(145deg, rgba(245, 90, 0, 0.060) 0%, rgba(245, 90, 0, 0.022) 56%, rgba(255, 255, 255, 0.008) 100%);
+    --glass-overlay: linear-gradient(145deg, rgba(253, 90, 30, 0.060) 0%, rgba(253, 90, 30, 0.022) 56%, rgba(255, 255, 255, 0.008) 100%);
     --glass-blur: 18px;
-    --glass-border: rgba(245, 90, 0, 0.24);
-    --glass-border-hover: rgba(245, 90, 0, 0.38);
-    --glass-highlight: linear-gradient(90deg, rgba(245,90,0,0.016) 0%, rgba(245,90,0,0.030) 25%, rgba(245,90,0,0.008) 50%, rgba(255,255,255,0.00) 100%);
+    --glass-border: rgba(253, 90, 30, 0.22);
+    --glass-border-hover: rgba(253, 90, 30, 0.36);
+    --glass-highlight: linear-gradient(90deg, rgba(253,90,30,0.016) 0%, rgba(253,90,30,0.030) 25%, rgba(253,90,30,0.008) 50%, rgba(255,255,255,0.00) 100%);
     --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 22px 86px rgba(0, 0, 0, 0.40);
     --glass-radius: 1.35rem;
   }
@@ -517,8 +517,8 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   [class*="stroke-white/"],
   [class*="stroke-accent/"]
 ) {
-  color: hsl(22 100% 48%) !important;
-  stroke: hsl(22 100% 48%) !important;
+  color: hsl(16 98% 55%) !important;
+  stroke: hsl(16 98% 55%) !important;
 }
 
 .dark :where(
@@ -554,8 +554,8 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   [class*="fill-white/"],
   [class*="fill-accent/"]
 ) {
-  color: hsl(22 100% 48%) !important;
-  fill: hsl(22 100% 48%) !important;
+  color: hsl(16 98% 55%) !important;
+  fill: hsl(16 98% 55%) !important;
 }
 
 .dark :where(
@@ -591,7 +591,7 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   [class*="placeholder:text-muted-foreground"],
   [class*="placeholder:text-white/"]
 )::placeholder {
-  color: hsl(22 100% 48%) !important;
+  color: hsl(16 98% 55%) !important;
   opacity: 1 !important;
 }
 
