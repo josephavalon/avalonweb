@@ -883,7 +883,15 @@ function useMobileBookingViewportLayout(deps = []) {
         const visualOffsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
         const layoutHeight = Math.max(visualHeight, Math.round(window.innerHeight || visualHeight));
         const zoomed = Number(viewport?.scale || 1) > 1.01;
-        const effectiveHeight = zoomed ? layoutHeight : visualHeight;
+        // When the on-screen keyboard is open, the visual viewport collapses. If we
+        // resized the shell to that, the page condenses and the focused field hides.
+        // Instead keep the shell at full layout height so the keyboard simply overlays
+        // the bottom (footer); the focused input is scrolled into view via focusin.
+        const active = document.activeElement;
+        const keyboardOpen = !zoomed
+          && active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)
+          && (layoutHeight - visualHeight > 120);
+        const effectiveHeight = (zoomed || keyboardOpen) ? layoutHeight : visualHeight;
         const effectiveOffsetTop = zoomed ? 0 : visualOffsetTop;
         const visualBottomGap = zoomed ? 0 : Math.max(0, Math.round(layoutHeight - visualHeight - visualOffsetTop));
         const visualHeightBreathing = Math.max(0, Math.min(44, Math.round((effectiveHeight - 660) * 0.25)));
@@ -939,6 +947,25 @@ function useMobileBookingViewportLayout(deps = []) {
       });
     };
 
+    // When a field is focused, the keyboard animates in (~300ms). Recompute, then
+    // scroll the field to the middle of the still-visible area so the user can see
+    // what they're typing instead of it hiding behind the keyboard.
+    let focusTimer = 0;
+    const onFocusIn = (event) => {
+      const el = event.target;
+      if (!el || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      window.clearTimeout(focusTimer);
+      focusTimer = window.setTimeout(() => {
+        update();
+        try {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch {
+          el.scrollIntoView();
+        }
+      }, 320);
+    };
+    document.addEventListener('focusin', onFocusIn);
+
     update();
     // First paint can measure the list before the mobile browser chrome / footer
     // settle, sizing the cards a touch too tall (3rd card clips). Re-measure once
@@ -956,6 +983,8 @@ function useMobileBookingViewportLayout(deps = []) {
 
     return () => {
       window.cancelAnimationFrame(frame);
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('focusin', onFocusIn);
       settleTimers.forEach((id) => window.clearTimeout(id));
       root.classList.remove('av-booking-user-zoomed');
       root.style.overflow = priorHtmlOverflow;
