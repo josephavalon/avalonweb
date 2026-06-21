@@ -4,14 +4,9 @@ import { useLocation } from 'react-router-dom';
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
   const { pathname: path } = useLocation();
-  const revenuePath = path === '/' ||
-    path.startsWith('/book') ||
-    path.startsWith('/booking') ||
-    path.startsWith('/checkout') ||
-    path.startsWith('/products') ||
-    path.startsWith('/protocols') ||
-    path.startsWith('/subscription');
-  const suppressed = path.startsWith('/b2b') || revenuePath;
+  // Consent banner appears ONLY on the landing page. Every other page
+  // (booking, checkout, /plan, /subscription, products, b2b) stays clean.
+  const suppressed = path !== '/';
 
   useEffect(() => {
     if (suppressed) return;
