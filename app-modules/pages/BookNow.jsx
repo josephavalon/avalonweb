@@ -2341,6 +2341,64 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
   );
 }
 
+function StructuredAddressFields({ street, city, addrState, zip, onChangePart, onSelectSuggestion }) {
+  const [results, setResults] = useState([]);
+  const [open, setOpen] = useState(false);
+  const timer = useRef(0);
+
+  useEffect(() => {
+    const q = String(street || '').trim();
+    window.clearTimeout(timer.current);
+    if (q.length < 3) { setResults([]); return undefined; }
+    timer.current = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/address-search?q=${encodeURIComponent(q)}`);
+        const data = await res.json().catch(() => null);
+        setResults(Array.isArray(data?.results) ? data.results : []);
+        setOpen(true);
+      } catch {
+        setResults([]);
+      }
+    }, 350);
+    return () => window.clearTimeout(timer.current);
+  }, [street]);
+
+  return (
+    <div className="grid gap-2.5">
+      <div className="relative">
+        <TextInput
+          label="Street address"
+          value={street}
+          onChange={(v) => onChangePart('street', v)}
+          placeholder="Start typing your address"
+          autoComplete="off"
+          required
+        />
+        {open && results.length > 0 && (
+          <div className="absolute left-0 right-0 top-full z-30 mt-1.5 grid gap-1 overflow-hidden rounded-2xl border border-foreground/16 bg-background/95 p-1.5 shadow-[0_24px_90px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
+            {results.map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => { onSelectSuggestion(s); setOpen(false); setResults([]); }}
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-foreground/[0.07]"
+              >
+                <MapPin className="h-4 w-4 shrink-0 text-foreground/70" strokeWidth={2} />
+                <span className="truncate font-body text-sm font-semibold text-foreground">{s.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <TextInput label="City" value={city} onChange={(v) => onChangePart('city', v)} placeholder="City" autoComplete="address-level2" required />
+      <div className="grid grid-cols-2 gap-2.5">
+        <TextInput label="State" value={addrState} onChange={(v) => onChangePart('state', v)} placeholder="CA" autoComplete="address-level1" required />
+        <TextInput label="ZIP" value={zip} onChange={(v) => onChangePart('zip', v)} placeholder="94110" inputMode="numeric" autoComplete="postal-code" required />
+      </div>
+    </div>
+  );
+}
+
 function AddressPrediction({ suggestion, onUse, compact = false }) {
   if (!suggestion) return null;
   const Icon = LOCATION_TYPES.find((type) => type.key === suggestion.locationType)?.icon || MapPin;
@@ -3699,6 +3757,9 @@ const defaultState = {
   eventType: 'Private',
   locationType: 'home',
   address: '',
+  street: '',
+  city: '',
+  addrState: '',
   zip: '',
   who: 'me',
   guests: 1,
@@ -4326,6 +4387,49 @@ export default function BookNow() {
       zip: nextZip || current.zip,
     }));
   };
+
+  // Structured address (Street / City / State / ZIP). `address` stays the
+  // canonical composed string that flows to Acuity (notes) + the booking
+  // lifecycle; the separate fields are the editable UI on top of it.
+  const composeFullAddress = (street, city, st, zip) =>
+    [String(street || '').trim(), String(city || '').trim(), [String(st || '').trim(), String(zip || '').trim()].filter(Boolean).join(' ')]
+      .filter(Boolean)
+      .join(', ');
+
+  const setAddressPart = (part, value) => {
+    setError('');
+    setState((current) => {
+      const next = { ...current };
+      if (part === 'street') next.street = value;
+      else if (part === 'city') next.city = value;
+      else if (part === 'state') next.addrState = String(value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+      else if (part === 'zip') next.zip = String(value || '').replace(/\D/g, '').slice(0, 5);
+      next.address = composeFullAddress(next.street, next.city, next.addrState, next.zip);
+      return next;
+    });
+  };
+
+  const applyAddressSuggestion = (s) => {
+    setError('');
+    const zip = String(s?.zip || '').replace(/\D/g, '').slice(0, 5);
+    setState((current) => ({
+      ...current,
+      street: s?.street || '',
+      city: s?.city || '',
+      addrState: String(s?.state || '').toUpperCase().slice(0, 2),
+      zip,
+      address: composeFullAddress(s?.street, s?.city, s?.state, zip),
+    }));
+  };
+
+  // Seed the Street box from a restored full address (returning customer) so
+  // the structured fields aren't blank when state.address came from storage.
+  useEffect(() => {
+    if (state.address && !state.street && !state.city && !state.addrState) {
+      setState((current) => ({ ...current, street: current.address }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!canUseClinicalReviewOnFile && state.clinicalReviewOnFile) {
@@ -5790,46 +5894,23 @@ export default function BookNow() {
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-          <div className={`${panelCardClass} p-2.5 md:p-3`}>
-            <div className="grid gap-2">
-              <TextInput
-                label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'}
-                value={state.address}
-                onChange={setAddressValue}
-                onKeyDown={handleAddressKeyDown}
-                placeholder="Street address"
-                autoComplete="street-address"
-                actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
-                onAction={() => chooseAddressSuggestion(savedVisitAddress)}
-                required
-              />
-              {state.address.trim() && !resolvedZip && (
-                <TextInput
-                  label="ZIP"
-                  value={state.zip}
-                  onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))}
-                  onKeyDown={handleAddressKeyDown}
-                  placeholder="94107"
-                  autoComplete="postal-code"
-                  inputMode="numeric"
-                  required
-                />
-              )}
-            </div>
+          <div className={`${panelCardClass} p-3 md:p-4`}>
+            <StructuredAddressFields
+              street={state.street}
+              city={state.city}
+              addrState={state.addrState}
+              zip={state.zip}
+              onChangePart={setAddressPart}
+              onSelectSuggestion={applyAddressSuggestion}
+            />
           </div>
-          <div className="min-h-0">
-            <AddressPrediction suggestion={topAddressSuggestion} onUse={chooseAddressSuggestion} compact />
-            {!topAddressSuggestion && (
-              <div className={`${panelCardClass} mt-0 flex min-h-[66px] items-center gap-2.5 p-2.5 md:min-h-[76px] md:gap-3 md:p-3`}>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground/80">
-                  <MapPin className="h-5 w-5" strokeWidth={2.4} />
-                </span>
-                <div className="min-w-0">
-                  <p className={microLabelClass}>Coverage</p>
-                  <p className="mt-1 font-body text-sm font-bold leading-snug text-foreground/72">Enter your street address. Avalon checks the ZIP before payment.</p>
-                </div>
-              </div>
-            )}
+          <div className={`${panelCardClass} flex items-center gap-2.5 p-3`}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground/80">
+              <MapPin className="h-[18px] w-[18px]" strokeWidth={2.2} />
+            </span>
+            <p className="font-body text-[11px] font-semibold leading-snug text-foreground/62 md:text-xs">
+              Start typing for suggestions. We confirm your ZIP is in our service area before payment.
+            </p>
           </div>
         </div>
       );
