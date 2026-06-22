@@ -525,6 +525,7 @@ export function isLegacyStripeMetadataPayload(metadata = {}) {
 
 export function buildStripeCheckoutMetadata({
   appointmentRecordId,
+  checkoutStoreKey,
   appointment = {},
   items = [],
   membership = null,
@@ -543,6 +544,7 @@ export function buildStripeCheckoutMetadata({
   return safeStripeMetadata({
     fulfillment: STRIPE_PAID_FULFILLMENT_VERSION,
     appointmentRecordId,
+    checkoutStoreKey,
     paymentMethod: paymentMethod || 'card',
     service: primaryService,
     acuityTypeId: appointment.acuityTypeId,

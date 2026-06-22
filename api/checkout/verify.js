@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
+import { readCheckoutStoreRecord } from '../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../_booking-email.js';
 import { safeStripeMetadata } from '../_lib/safe-stripe.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../_reconciliation.js';
@@ -193,9 +194,14 @@ export async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment
   let fulfillmentError = null;
   let attioPersonId = null;
   let planSubscriptionId = null;
+  const storedCheckout = !appointment && session.metadata?.checkoutStoreKey
+    ? await readCheckoutStoreRecord(session.metadata.checkoutStoreKey)
+    : null;
   const canUseStripeMetadataPayload = !appointment && isLegacyStripeMetadataPayload(session.metadata || {});
   const checkout = appointment
     ? checkoutPayloadFromRecord(appointment)
+    : storedCheckout?.checkout
+      ? storedCheckout.checkout
     : canUseStripeMetadataPayload
       ? checkoutPayloadFromStripeMetadata(session.metadata || {})
       : null;

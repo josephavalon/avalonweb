@@ -27,6 +27,7 @@ const STRIPE_METADATA_ALLOWED_KEYS = new Set([
   // Routing + reconciliation
   'fulfillment',
   'appointmentRecordId',
+  'checkoutStoreKey',
   'idempotencyKey',
   'tenantId',
   // Payment shape (amounts + flow)

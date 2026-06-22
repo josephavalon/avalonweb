@@ -7,6 +7,7 @@ import { resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_a
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
 import { getAuthedUser } from './_lib/supabase-auth.js';
 import { getMemberCreditBalance, resolveCreditMember } from './_lib/member-credits.js';
+import { checkoutStoreAvailable, writeCheckoutStoreRecord } from './_lib/checkout-store.js';
 import {
   buildCheckoutPayload,
   buildPendingAppointmentRecord,
@@ -337,6 +338,7 @@ export default async function handler(req, res) {
   contact.email = normalizeCheckoutEmail(contact.email);
 
   let pendingRecordId = null;
+  let checkoutStoreKey = null;
   try {
     const items = sanitizeCheckoutItems(rawItems);
     const membership = sanitizeCheckoutMembership(rawMembership);
@@ -557,7 +559,24 @@ export default async function handler(req, res) {
             supabaseRuntime: supabaseRuntimeDiagnostic(),
           }
         );
-        throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
+        if (!checkoutStoreAvailable()) {
+          throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
+        }
+        checkoutStoreKey = `checkout:pending:${crypto.randomUUID()}`;
+        const stored = await writeCheckoutStoreRecord(checkoutStoreKey, {
+          provider: 'avalon_checkout_kv_fallback',
+          checkout: checkoutPayload,
+          tenantId,
+          createdAt: new Date().toISOString(),
+          pendingError: pendingError ? safeLogContext(pendingError, 'appointment_record_unavailable') : { code: 'missing_appointment_id' },
+        });
+        if (!stored) {
+          throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
+        }
+        console.warn('[create-checkout-session] using KV checkout fulfillment fallback', {
+          checkoutStoreKey,
+          reason: pendingError ? safeErrorCode(pendingError, 'appointment_record_unavailable') : 'missing_appointment_id',
+        });
       } else {
         pendingRecordId = pendingRecord.id;
       }
@@ -597,6 +616,7 @@ export default async function handler(req, res) {
       expires_at: checkoutExpiresAt(),
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,
+        checkoutStoreKey,
         contact,
         appointment: normalizedAppointment,
         items,
@@ -688,7 +708,11 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       provider: 'stripe',
-      appointment: { id: canonicalAppointmentRecordId || session.id, provider: canonicalAppointmentRecordId ? 'avalon_checkout' : 'stripe_metadata', status: 'payment_pending' },
+      appointment: {
+        id: canonicalAppointmentRecordId || checkoutStoreKey || session.id,
+        provider: canonicalAppointmentRecordId ? 'avalon_checkout' : checkoutStoreKey ? 'avalon_checkout_kv' : 'stripe_metadata',
+        status: 'payment_pending',
+      },
       balanceDueCents,
       creditRedemption,
       checkoutUiMode: embeddedCheckout ? 'embedded' : 'hosted',

@@ -6,6 +6,7 @@ import {
 } from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
+import { readCheckoutStoreRecord } from '../../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
 import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import {
@@ -455,6 +456,9 @@ export async function handleCheckoutCompleted(stripe, db, session) {
 
   const now = new Date().toISOString();
   const tenantId = db ? (record?.tenant_id || await getDefaultTenantId(db)) : null;
+  const storedCheckout = !record && md.checkoutStoreKey
+    ? await readCheckoutStoreRecord(md.checkoutStoreKey)
+    : null;
   const discounts = checkoutDiscountEntries(session);
   const fullComp = isFullCompDiscount(session, discounts);
   const discountForPayload = discountPayload(discounts, { fullComp });
@@ -467,12 +471,15 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   const canUseStripeMetadataPayload = !record && isLegacyStripeMetadataPayload(md);
   const checkout = record
     ? checkoutPayloadFromRecord(record)
+    : storedCheckout?.checkout
+      ? storedCheckout.checkout
     : canUseStripeMetadataPayload
       ? checkoutPayloadFromStripeMetadata(md)
       : null;
+  const fulfillmentTenantId = record?.tenant_id || storedCheckout?.tenantId || tenantId;
 
   if (!checkout) {
-    await insertMissingCheckoutRecordCase(db, { session, appointmentRecordId, tenantId });
+    await insertMissingCheckoutRecordCase(db, { session, appointmentRecordId, tenantId: fulfillmentTenantId });
     return {
       action: 'deposit_paid_checkout_record_missing',
       matched: false,
@@ -546,7 +553,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
             caseType: 'crm_sync_failed',
             provider: 'attio',
             externalReference: session.id,
-            tenantId,
+            tenantId: fulfillmentTenantId,
             payload: {
               appointmentRecordId: record?.id || null,
               stripeSessionId: session.id,
@@ -604,7 +611,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
         caseType: 'operations_email_failed',
         provider: 'resend',
         externalReference: session.id,
-        tenantId,
+        tenantId: fulfillmentTenantId,
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
@@ -630,7 +637,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
         caseType: 'customer_email_failed',
         provider: 'resend',
         externalReference: session.id,
-        tenantId,
+        tenantId: fulfillmentTenantId,
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
@@ -658,7 +665,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       caseType: 'stripe_subscription_creation_failed',
       provider: 'stripe',
       externalReference: session.id,
-      tenantId,
+      tenantId: fulfillmentTenantId,
       payload: {
         appointmentRecordId: record?.id || null,
         stripeSessionId: session.id,
@@ -681,7 +688,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
         caseType: 'stripe_subscription_creation_failed',
         provider: 'stripe',
         externalReference: session.id,
-        tenantId,
+        tenantId: fulfillmentTenantId,
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
@@ -696,7 +703,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       caseType: 'stripe_subscription_creation_failed',
       provider: 'stripe',
       externalReference: session.id,
-      tenantId,
+      tenantId: fulfillmentTenantId,
       payload: {
         appointmentRecordId: record?.id || null,
         stripeSessionId: session.id,
@@ -727,7 +734,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
         : Math.max(0, recordedVisitSubtotalCents - depositPaidCents));
 
   const patch = {
-    tenant_id:                    tenantId,
+    tenant_id:                    fulfillmentTenantId,
     stripe_checkout_session_id:   session.id,
     stripe_customer_id:           session.customer || null,
     stripe_deposit_payment_intent: paymentIntentId,
@@ -830,7 +837,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
 
   // Legacy fallback for older sessions created before the paid-first flow.
   const { data: insertedRecord, error } = await db.from('appointments').insert({
-    tenant_id: tenantId,
+    tenant_id: fulfillmentTenantId,
     acuity_appointment_id: md.acuityAppointmentId || null,
     ...patch,
     created_at: now,
@@ -840,7 +847,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     await recordDiscountRedemptions(db, {
       session,
       record: insertedRecord,
-      tenantId: insertedRecord.tenant_id || tenantId,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
       paymentIntentId,
       discounts,
       fullComp,
@@ -848,14 +855,14 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     await recordMembershipInitialCredit(db, {
       checkout,
       record: insertedRecord,
-      tenantId: insertedRecord.tenant_id || tenantId,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
       session,
       planSubscriptionId,
     });
     await recordIvCreditRedemption(db, {
       checkout,
       record: insertedRecord,
-      tenantId: insertedRecord.tenant_id || tenantId,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
       session,
       md,
     });
