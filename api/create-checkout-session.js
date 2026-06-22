@@ -76,6 +76,35 @@ function httpError(message, status = 500, code = 'server_error') {
   return Object.assign(new Error(message), { status, code });
 }
 
+function supabaseRuntimeDiagnostic() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
+  const diagnostic = {
+    hasUrl: Boolean(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
+    hasServerKey: Boolean(key),
+    keyKind: key.startsWith('sb_secret_')
+      ? 'secret'
+      : key.startsWith('sb_publishable_')
+        ? 'publishable'
+        : key.includes('.')
+          ? 'jwt'
+          : key
+            ? 'other'
+            : 'missing',
+  };
+
+  if (diagnostic.keyKind === 'jwt') {
+    try {
+      const payload = JSON.parse(Buffer.from(key.split('.')[1], 'base64url').toString('utf8'));
+      diagnostic.jwtRole = payload.role || null;
+      diagnostic.jwtAud = payload.aud || null;
+    } catch {
+      diagnostic.jwtRole = 'unreadable';
+    }
+  }
+
+  return diagnostic;
+}
+
 async function resolveCheckoutSchedulingTypeId({ appointment = {}, items = [], membership = null } = {}) {
   const explicitId = Number(appointment.acuityTypeId);
   if (explicitId) return explicitId;
@@ -523,7 +552,10 @@ export default async function handler(req, res) {
       if (pendingError || !pendingRecord?.id) {
         console.warn(
           '[create-checkout-session] Supabase appointment record unavailable; refusing live checkout without a safe fulfillment record:',
-          pendingError ? safeLogContext(pendingError, 'appointment_record_unavailable') : { code: 'missing_appointment_id' }
+          {
+            ...(pendingError ? safeLogContext(pendingError, 'appointment_record_unavailable') : { code: 'missing_appointment_id' }),
+            supabaseRuntime: supabaseRuntimeDiagnostic(),
+          }
         );
         throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
       } else {
