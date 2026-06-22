@@ -79,7 +79,7 @@ function StepCard({ step, index, open, onToggle }) {
             <span className="font-body text-[10px] tracking-[0.2em] text-white tabular-nums">{display}</span>
           </div>
           <div className="min-w-0 text-left">
-            <p className="font-heading text-2xl tracking-normal text-white leading-none">{step.title}</p>
+            <p className="font-heading text-2xl tracking-normal text-foreground leading-none">{step.title}</p>
           </div>
         </div>
         <motion.div
