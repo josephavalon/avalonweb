@@ -4248,7 +4248,10 @@ export default function BookNow() {
     () => String(state.zip || extractZip(state.address) || '').replace(/\D/g, '').slice(0, 5),
     [state.address, state.zip]
   );
-  const hasValidServiceZip = resolvedZip.length === 5 && COVERED_ZIPS.has(resolvedZip);
+  // Service-area coverage is no longer a hard checkout blocker — any valid
+  // 5-digit ZIP can book (out-of-area orders are flagged for ops in the booking
+  // record, not refused). Re-add `&& COVERED_ZIPS.has(resolvedZip)` to re-gate.
+  const hasValidServiceZip = resolvedZip.length === 5;
   const typedAddressSuggestion = useMemo(
     () => buildTypedAddressSuggestion(state.address, resolvedZip, state.locationType),
     [state.address, resolvedZip, state.locationType]
