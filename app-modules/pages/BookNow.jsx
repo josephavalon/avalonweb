@@ -128,7 +128,7 @@ const CARD_REVEAL = {
 };
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Therapy', 'Add-ons', 'Date & Time', 'Location', 'Review'];
+const STEPS = ['Choose Your Therapy', 'Add-ons', 'Date & Time', 'Location', 'Review'];
 const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
@@ -2341,59 +2341,18 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
   );
 }
 
-function StructuredAddressFields({ street, city, addrState, zip, onChangePart, onSelectSuggestion }) {
-  const [results, setResults] = useState([]);
-  const [open, setOpen] = useState(false);
-  const timer = useRef(0);
-
-  useEffect(() => {
-    const q = String(street || '').trim();
-    window.clearTimeout(timer.current);
-    if (q.length < 3) { setResults([]); return undefined; }
-    timer.current = window.setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/address-search?q=${encodeURIComponent(q)}`);
-        const data = await res.json().catch(() => null);
-        setResults(Array.isArray(data?.results) ? data.results : []);
-        setOpen(true);
-      } catch {
-        setResults([]);
-      }
-    }, 350);
-    return () => window.clearTimeout(timer.current);
-  }, [street]);
-
+// Manual structured address entry (Street / City / State / ZIP). No geocoder
+// autocomplete: the free Nominatim search returned inaccurate matches and a
+// wrong ZIP, so the user types the fields directly. Accurate autocomplete can
+// come later via Google Places (requires an API key).
+function StructuredAddressFields({ street, city, addrState, zip, onChangePart }) {
   return (
     <div className="grid gap-2.5">
-      <div className="relative">
-        <TextInput
-          label="Street address"
-          value={street}
-          onChange={(v) => onChangePart('street', v)}
-          placeholder="Start typing your address"
-          autoComplete="off"
-          required
-        />
-        {open && results.length > 0 && (
-          <div className="absolute left-0 right-0 top-full z-30 mt-1.5 grid gap-1 overflow-hidden rounded-2xl border border-foreground/16 bg-background/95 p-1.5 shadow-[0_24px_90px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
-            {results.map((s) => (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => { onSelectSuggestion(s); setOpen(false); setResults([]); }}
-                className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-foreground/[0.07]"
-              >
-                <MapPin className="h-4 w-4 shrink-0 text-foreground/70" strokeWidth={2} />
-                <span className="truncate font-body text-sm font-semibold text-foreground">{s.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <TextInput label="Street address" value={street} onChange={(v) => onChangePart('street', v)} placeholder="123 Main St" autoComplete="address-line1" required />
       <TextInput label="City" value={city} onChange={(v) => onChangePart('city', v)} placeholder="City" autoComplete="address-level2" required />
       <div className="grid grid-cols-2 gap-2.5">
         <TextInput label="State" value={addrState} onChange={(v) => onChangePart('state', v)} placeholder="CA" autoComplete="address-level1" required />
-        <TextInput label="ZIP" value={zip} onChange={(v) => onChangePart('zip', v)} placeholder="94110" inputMode="numeric" autoComplete="postal-code" required />
+        <TextInput label="ZIP" value={String(zip || '').replace(/\D/g, '').slice(0, 5)} onChange={(v) => onChangePart('zip', v)} placeholder="94577" inputMode="numeric" autoComplete="postal-code" required />
       </div>
     </div>
   );
@@ -4422,12 +4381,18 @@ export default function BookNow() {
     }));
   };
 
-  // Seed the Street box from a restored full address (returning customer) so
-  // the structured fields aren't blank when state.address came from storage.
+  // On mount: sanitize any stale ZIP from a saved draft (older builds could
+  // persist a malformed value), and seed the Street box from a restored full
+  // address so the structured fields aren't blank for returning customers.
   useEffect(() => {
-    if (state.address && !state.street && !state.city && !state.addrState) {
-      setState((current) => ({ ...current, street: current.address }));
-    }
+    setState((current) => {
+      const cleanZip = String(current.zip || '').replace(/\D/g, '').slice(0, 5);
+      const street = (current.address && !current.street && !current.city && !current.addrState)
+        ? current.address
+        : current.street;
+      if (cleanZip === current.zip && street === current.street) return current;
+      return { ...current, zip: cleanZip, street };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -5879,21 +5844,6 @@ export default function BookNow() {
       return (
         // Natural height + scroll; don't force-fit (it crams the fields). Scroll is fine.
         <div className="grid content-start gap-3 pb-2">
-          <div className={`${panelCardClass} p-3`}>
-            <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
-            <button
-              type="button"
-              onClick={useCurrentLocation}
-              disabled={locationLoading}
-              className="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/72 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]"
-            >
-              <span className="flex items-center gap-2">
-                <Navigation className="h-4 w-4" strokeWidth={2.4} />
-                {locationLoading ? 'Finding address' : 'Use current location'}
-              </span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
           <div className={`${panelCardClass} p-3 md:p-4`}>
             <StructuredAddressFields
               street={state.street}
@@ -5901,7 +5851,15 @@ export default function BookNow() {
               addrState={state.addrState}
               zip={state.zip}
               onChangePart={setAddressPart}
-              onSelectSuggestion={applyAddressSuggestion}
+            />
+          </div>
+          <div className={`${panelCardClass} p-3 md:p-4`}>
+            <TextInput
+              label="Location note (optional)"
+              value={state.notes}
+              onChange={(value) => setValue('notes', value)}
+              placeholder="Apt / unit, gate code, parking, where to find you"
+              autoComplete="off"
             />
           </div>
           <div className={`${panelCardClass} flex items-center gap-2.5 p-3`}>
@@ -5909,7 +5867,7 @@ export default function BookNow() {
               <MapPin className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </span>
             <p className="font-body text-[11px] font-semibold leading-snug text-foreground/62 md:text-xs">
-              Start typing for suggestions. We confirm your ZIP is in our service area before payment.
+              We confirm your ZIP is in our service area before payment.
             </p>
           </div>
         </div>
