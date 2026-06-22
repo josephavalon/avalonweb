@@ -128,7 +128,7 @@ const CARD_REVEAL = {
 };
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Choose Your Therapy', 'Choose Your Add-ons', 'Date & Time', 'Location', 'Review'];
+const STEPS = ['Choose Your Therapy', 'Choose Your Add-ons', 'Date & Time', 'Your Location', 'Review'];
 const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
