@@ -257,7 +257,7 @@ export default function LiveAdminBookings() {
         setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: res.error || 'Could not create the Acuity appointment.' } }));
       }
     } catch (err) {
-      setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: err?.body?.error || err?.message || 'Acuity retry failed.' } }));
+      setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: 'Acuity retry failed. Review the booking and retry when scheduling is available.' } }));
     }
   }, [load]);
 
