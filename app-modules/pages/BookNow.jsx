@@ -898,6 +898,9 @@ function useMobileBookingViewportLayout(deps = []) {
 
         root.classList.toggle('av-booking-user-zoomed', zoomed);
         root.style.setProperty('--av-booking-visual-height', `${effectiveHeight}px`);
+        // Height the keyboard is covering — used as extra scroll padding so the
+        // focused field can scroll above the keyboard instead of hiding behind it.
+        root.style.setProperty('--av-booking-keyboard-pad', `${keyboardOpen ? Math.max(0, layoutHeight - visualHeight) : 0}px`);
         root.style.setProperty('--av-booking-visual-offset-top', `${effectiveOffsetTop}px`);
         root.style.setProperty('--av-booking-visual-bottom-gap', `${visualBottomGap}px`);
         root.style.setProperty('--av-booking-visual-breathing', `${visualHeightBreathing}px`);
@@ -1152,6 +1155,10 @@ function UniversalBookingFrame({
         <div className="relative h-full min-h-full">
           {children}
         </div>
+        {/* Extra scroll room when the keyboard is open so the focused field can
+            scroll up above it — sibling of the content so it adds scroll height
+            without changing the height-constrained step layouts. */}
+        <div aria-hidden="true" style={{ height: 'var(--av-booking-keyboard-pad, 0px)' }} />
       </motion.div>
       <div
         data-av-booking-mobile-footer="true"
