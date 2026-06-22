@@ -27,7 +27,9 @@ function cityFromAddress(address = {}) {
 
 function streetFromAddress(address = {}) {
   const road = address.road || address.pedestrian || address.footway || address.path || address.residential || '';
-  return [address.house_number, road].filter(Boolean).join(' ').trim();
+  // Nominatim can return a house-number range like "560;562" — use the first.
+  const houseNumber = String(address.house_number || '').split(';')[0].trim();
+  return [houseNumber, road].filter(Boolean).join(' ').trim();
 }
 
 function stateFromAddress(address = {}) {
