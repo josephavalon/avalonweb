@@ -230,6 +230,17 @@ async function fillByLabel(cdp, label, value) {
   await wait(120);
 }
 
+async function fillCheckoutAddress(cdp, { street, city, state, zip }) {
+  try {
+    await fillByLabel(cdp, 'Street address', street);
+    await fillByLabel(cdp, 'City', city);
+    await fillByLabel(cdp, 'State', state);
+  } catch {
+    await fillByLabel(cdp, 'Address', `${street}, ${city}, ${state}`);
+  }
+  await fillByLabel(cdp, 'ZIP', zip);
+}
+
 async function waitForBookingOutcome(cdp) {
   const deadline = Date.now() + 10_000;
   let result = null;
@@ -331,8 +342,7 @@ try {
   await clickText(cdp, 'No Add-Ons');
   await clickText(cdp, 'Next');
   await clickText(cdp, 'Next');
-  await fillByLabel(cdp, 'Address', '188 King St, San Francisco');
-  await fillByLabel(cdp, 'ZIP', '94107');
+  await fillCheckoutAddress(cdp, { street: '188 King St', city: 'San Francisco', state: 'CA', zip: '99999' });
   await clickText(cdp, 'Next');
   await wait(400);
   await fillByLabel(cdp, 'Name', 'QA Mobile Client');

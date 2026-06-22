@@ -96,6 +96,7 @@ export default function PlanCheckout() {
   const [address, setAddress] = useState({ line1: '', zip: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const normalizedZip = address.zip.replace(/\D/g, '').slice(0, 5);
 
   // No plan price → bounce back to the builder.
   useEffect(() => {
@@ -134,12 +135,12 @@ export default function PlanCheckout() {
     && contact.dob.trim()
     && contact.emergencyContact.trim()
     && address.line1.trim()
-    && address.zip.trim()
+    && normalizedZip.length === 5
     && !submitting;
 
   const startMembership = async () => {
     if (!canSubmit) {
-      setError('Pick a time and fill in your contact, birthdate, emergency contact, and address.');
+      setError('Pick a time and fill in your contact, birthdate, emergency contact, address, and 5-digit ZIP.');
       return;
     }
     setSubmitting(true);
@@ -165,7 +166,7 @@ export default function PlanCheckout() {
             acuityTimezone: TZ,
             timeLabel: formatSlotLabel(slot),
             address: address.line1.trim(),
-            zip: address.zip.trim(),
+            zip: normalizedZip,
             dob: contact.dob.trim(),
             emergencyContact: contact.emergencyContact.trim(),
             protocol,
@@ -295,7 +296,7 @@ export default function PlanCheckout() {
             <Field label="Date of birth"><input type="date" className={inputClass} value={contact.dob} onChange={(e) => setContact((c) => ({ ...c, dob: e.target.value }))} autoComplete="bday" /></Field>
             <Field label="Emergency contact"><input className={inputClass} value={contact.emergencyContact} onChange={(e) => setContact((c) => ({ ...c, emergencyContact: e.target.value }))} autoComplete="off" placeholder="Name + phone" /></Field>
             <Field label="Service address"><input className={inputClass} value={address.line1} onChange={(e) => setAddress((a) => ({ ...a, line1: e.target.value }))} autoComplete="address-line1" placeholder="Street address" /></Field>
-            <Field label="ZIP"><input className={inputClass} value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value }))} autoComplete="postal-code" inputMode="numeric" /></Field>
+            <Field label="ZIP"><input className={inputClass} value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value.replace(/\D/g, '').slice(0, 5) }))} autoComplete="postal-code" inputMode="numeric" pattern="[0-9]*" maxLength={5} /></Field>
           </div>
         </motion.section>
 

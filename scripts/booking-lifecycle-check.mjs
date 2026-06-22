@@ -28,7 +28,12 @@ const baseBooking = {
 
 assert.equal(validateBookingForCheckout(baseBooking, { coveredZips }).ok, true);
 assert.equal(validateBookingForCheckout({ ...baseBooking, contact: { ...baseBooking.contact, phone: '12' } }, { coveredZips }).ok, false);
-assert.equal(validateBookingForCheckout({ ...baseBooking, zip: '99999' }, { coveredZips }).manualReview, true);
+assert.equal(validateBookingForCheckout({ ...baseBooking, zip: '' }, { coveredZips }).ok, false);
+assert.equal(validateBookingForCheckout({ ...baseBooking, zip: '9999' }, { coveredZips }).ok, false);
+const outOfAreaZip = validateBookingForCheckout({ ...baseBooking, zip: '99999' }, { coveredZips });
+assert.equal(outOfAreaZip.ok, true);
+assert.equal(outOfAreaZip.manualReview, true);
+assert.ok(outOfAreaZip.warnings.includes('ZIP requires manual service-area review.'));
 assert.equal(validateBookingForCheckout({ ...baseBooking, guests: 5 }, { coveredZips }).ok, false);
 assert.equal(validateBookingForCheckout({ ...baseBooking, acuitySlot: { datetime: '2020-01-01T00:00:00.000Z' } }, { coveredZips }).ok, false);
 

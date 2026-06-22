@@ -4143,7 +4143,9 @@ export default function BookNow() {
     () => String(state.zip || extractZip(state.address) || '').replace(/\D/g, '').slice(0, 5),
     [state.address, state.zip]
   );
-  const hasValidServiceZip = resolvedZip.length === 5 && COVERED_ZIPS.has(resolvedZip);
+  // Service-area coverage is not a checkout gate. ZIP remains required for
+  // scheduling/billing, and uncovered ZIPs are flagged for admin review.
+  const hasValidServiceZip = resolvedZip.length === 5;
   const typedAddressSuggestion = useMemo(
     () => buildTypedAddressSuggestion(state.address, resolvedZip, state.locationType),
     [state.address, resolvedZip, state.locationType]
@@ -4687,11 +4689,9 @@ export default function BookNow() {
           ? 'Choose add-ons or tap No add-ons.'
           : step === 2
             ? 'Choose date and time.'
-            : step === 3 && resolvedZip.length === 5 && !COVERED_ZIPS.has(resolvedZip)
-              ? 'Enter a ZIP in our current service area.'
-              : step === 3
-                ? 'Add address and ZIP.'
-                : 'Finish this step.';
+            : step === 3
+              ? 'Add address and a valid 5-digit ZIP.'
+              : 'Finish this step.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -5738,8 +5738,8 @@ export default function BookNow() {
                   <MapPin className="h-5 w-5" strokeWidth={2.4} />
                 </span>
                 <div className="min-w-0">
-                  <p className={microLabelClass}>Coverage</p>
-                  <p className="mt-1 font-body text-sm font-bold leading-snug text-foreground/72">Enter your street address. Avalon checks the ZIP before payment.</p>
+                  <p className={microLabelClass}>ZIP required</p>
+                  <p className="mt-1 font-body text-sm font-bold leading-snug text-foreground/72">ZIP is required for scheduling and billing. Service-area review happens after checkout when needed.</p>
                 </div>
               </div>
             )}

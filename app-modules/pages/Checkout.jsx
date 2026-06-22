@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
-import { COVERED_ZIPS } from '@/lib/serviceArea';
 import { useSeo } from '@/lib/seo';
 import { acuityTypeForCart } from '@/lib/acuityAppointmentTypes';
 import { avalonErrorClass, avalonLabelClass, avalonLightFieldClass } from '@/components/ui/formStyles';
@@ -386,7 +385,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         {errors.address && <p className={errClass}>{errors.address.message}</p>}
       </div>
 
-      {/* ZIP code — service area enforcement */}
+      {/* ZIP code — required for scheduling and billing, not service-area gating. */}
       <div>
         <label htmlFor="co-zip-code" className={labelClass}>ZIP *</label>
         <input
@@ -394,10 +393,6 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
           {...register('zip', {
             required: 'ZIP needed',
             pattern: { value: /^\d{5}$/, message: '5 digits' },
-            validate: (v) =>
-              COVERED_ZIPS.has(v.trim())
-                ? true
-                : 'Outside service area.',
           })}
           inputMode="numeric"
           maxLength={5}
@@ -858,7 +853,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         plan: membership?.name,
         date: appointment?.date || 'First visit pending',
         time: appointment?.acuitySlot?.timeLabel || 'Intake',
-        address: appointment?.address || 'Service area pending',
+        address: appointment?.address || 'Location pending',
         items,
         subtotal: itemsTotal,
         contact: {
