@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Check, CalendarClock, Loader2, MapPin, User } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, CalendarClock, ChevronDown, Loader2, MapPin, User } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
@@ -43,21 +43,6 @@ function formatSlotLabel(iso) {
   h = h % 12 || 12;
   return `${h}:${min} ${ampm}`;
 }
-
-// Group the live Acuity slots into parts of day so the user scans ~5 times,
-// never a 46-button wall. Pure presentation — the exact ISO is still submitted.
-function bucketOf(iso) {
-  const m = /T(\d{2})/.exec(iso || '');
-  const h = m ? Number(m[1]) : 0;
-  if (h < 12) return 'morning';
-  if (h < 17) return 'afternoon';
-  return 'evening';
-}
-const DAYPARTS = [
-  { key: 'morning', label: 'Morning' },
-  { key: 'afternoon', label: 'Afternoon' },
-  { key: 'evening', label: 'Evening' },
-];
 
 // Section header — icon chip + Bebas title, the same grammar as /subscription.
 function SectionHead({ icon: Icon, title, hint }) {
@@ -121,7 +106,6 @@ export default function PlanCheckout() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState('');
   const [slot, setSlot] = useState(null); // offset-aware ISO
-  const [partOfDay, setPartOfDay] = useState('morning');
 
   const [contact, setContact] = useState({ firstName: '', lastName: '', email: '', phone: '', dob: '', emergencyContact: '' });
   const [address, setAddress] = useState({ line1: '', zip: '' });
@@ -155,7 +139,6 @@ export default function PlanCheckout() {
           // Land pre-confirmed on the soonest opening so a returning user can
           // hit Start in one tap. They can still pick another time.
           setSlot(times[0]);
-          setPartOfDay(bucketOf(times[0]));
         }
       } catch (err) {
         if (!cancelled) { setSlots([]); setSlotsError(err.message || 'Could not load times.'); }
@@ -281,63 +264,45 @@ export default function PlanCheckout() {
             </div>
           )}
 
-          {/* When — day strip + time-of-day buckets. Soonest slot auto-selected
-              so the screen lands pre-confirmed; ~5 times shown, never a wall. */}
+          {/* When — two compact dropdowns (day + time). Soonest slot auto-selected
+              so the screen lands pre-confirmed. */}
           <SectionHead icon={CalendarClock} title="When" hint={`Repeats ${renews} · reschedule anytime`} />
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {dates.map((d) => (
-              <button
-                key={d.iso}
-                type="button"
-                onClick={() => setDate(d.iso)}
-                aria-pressed={date === d.iso}
-                className={`flex shrink-0 flex-col items-center rounded-xl border px-3 py-2 transition-colors ${date === d.iso ? 'border-foreground/46 bg-foreground/[0.12]' : 'border-foreground/14 hover:border-foreground/30'}`}
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className="relative">
+              <select
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                aria-label="Visit day"
+                className="av-treatment-card w-full appearance-none rounded-xl border py-3 pl-3.5 pr-10 font-body text-base font-black text-foreground focus:border-foreground/45 focus:outline-none"
               >
-                <span className="font-body text-[10px] font-bold uppercase tracking-[0.08em] text-foreground/55">{d.weekday}</span>
-                <span className="font-body text-sm font-black text-foreground tabular-nums">{d.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {slotsLoading ? (
-            <p className="mt-3 flex items-center gap-2 font-body text-sm font-semibold text-foreground/55"><Loader2 className="h-4 w-4 animate-spin" /> Loading times…</p>
-          ) : slotsError ? (
-            <p className="mt-3 font-body text-sm font-semibold text-foreground/55">{slotsError}</p>
-          ) : (
-            <>
-              <div className="mt-3 grid grid-cols-3 gap-1.5">
-                {DAYPARTS.map((p) => {
-                  const n = slots.filter((s) => bucketOf(s) === p.key).length;
-                  const active = partOfDay === p.key;
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      disabled={!n}
-                      onClick={() => setPartOfDay(p.key)}
-                      aria-pressed={active}
-                      className={`rounded-xl border px-2 py-2 font-body text-[12px] font-black uppercase tracking-[0.04em] transition-colors ${active ? 'border-foreground/46 bg-foreground/[0.12] text-foreground' : n ? 'border-foreground/14 text-foreground/70 hover:border-foreground/30' : 'border-foreground/8 text-foreground/30'}`}
-                    >
-                      {p.label}{n ? ` · ${n}` : ''}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-4">
-                {slots.filter((s) => bucketOf(s) === partOfDay).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setSlot(t)}
-                    aria-pressed={slot === t}
-                    className={`rounded-lg border px-2 py-2 font-body text-[13px] font-black tabular-nums transition-colors ${slot === t ? 'border-foreground/46 bg-foreground/[0.12] text-foreground' : 'border-foreground/14 text-foreground/80 hover:border-foreground/30'}`}
-                  >
-                    {formatSlotLabel(t)}
-                  </button>
+                {dates.map((d) => (
+                  <option key={d.iso} value={d.iso} className="bg-background text-foreground">{d.weekday}, {d.label}</option>
                 ))}
-              </div>
-            </>
-          )}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/55" strokeWidth={2} />
+            </div>
+            <div className="relative">
+              {slotsLoading ? (
+                <div className="flex h-[50px] items-center gap-2 rounded-xl border border-foreground/14 bg-background/40 px-3.5 font-body text-sm font-semibold text-foreground/55"><Loader2 className="h-4 w-4 animate-spin" /> Loading times…</div>
+              ) : slots.length === 0 ? (
+                <div className="flex h-[50px] items-center rounded-xl border border-foreground/14 bg-background/40 px-3.5 font-body text-[13px] font-semibold text-foreground/55">{slotsError || 'No times open'}</div>
+              ) : (
+                <>
+                  <select
+                    value={slot || ''}
+                    onChange={(e) => setSlot(e.target.value)}
+                    aria-label="Visit time"
+                    className="av-treatment-card w-full appearance-none rounded-xl border py-3 pl-3.5 pr-10 font-body text-base font-black tabular-nums text-foreground focus:border-foreground/45 focus:outline-none"
+                  >
+                    {slots.map((t) => (
+                      <option key={t} value={t} className="bg-background text-foreground">{formatSlotLabel(t)}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/55" strokeWidth={2} />
+                </>
+              )}
+            </div>
+          </div>
 
           {/* You */}
           <div className="mt-6 border-t border-foreground/10 pt-5">
