@@ -546,13 +546,6 @@ export default function Login({ defaultAudience = 'patient' }) {
       </Field>
       <ErrorBanner message={displayError} />
       <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
-      <button
-        type="button"
-        onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-        className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
-      >
-        Send me a reset link
-      </button>
     </form>
   );
 
@@ -629,23 +622,11 @@ export default function Login({ defaultAudience = 'patient' }) {
       </div>
     );
   } else if (isAdmin) {
-    // Admin, Supabase: operations — passkey, email link, or email + password
-    // (staff who set a password via the invite flow), no social. Local/beta
-    // no-API builds also expose the host-gated operator-ID fallback.
-    body = (
-      <div className="space-y-4 md:space-y-3">
-        {authProviderConfig.passkey && <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />}
-        <MethodButton label="Sign In With Password" onClick={() => { setView('password'); setFieldError(''); }} icon={<LockKeyhole className="h-4 w-4" strokeWidth={2} />} />
-        <Divider />
-        {emailForm}
-        {demoAuthAvailable && (
-          <>
-            <Divider label="or operator id" />
-            {demoForm}
-          </>
-        )}
-      </div>
-    );
+    // Admin sign-in is deliberately just email + password — no magic link,
+    // social, passkey, or operator-ID. Operations staff use their password
+    // (Supabase signInWithPassword); the forgot-password reset stays for
+    // lockout recovery.
+    body = passwordForm;
   } else if (!supabaseMode) {
     // Offline beta keeps visible method choices while preserving the roster ID
     // sign-in as the working fallback.
@@ -786,7 +767,7 @@ export default function Login({ defaultAudience = 'patient' }) {
                 </h1>
                 {supabaseMode && isAdmin && (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    Operations-only. Use your secure email link or staff password.
+                    Operations-only. Sign in with your staff email and password.
                   </p>
                 )}
               </div>
