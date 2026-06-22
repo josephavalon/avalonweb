@@ -114,6 +114,7 @@ function stripeRuntimeDiagnostic(err) {
     param: err.param || err.raw?.param || null,
     status: err.statusCode || err.status || null,
     requestId: err.requestId || err.raw?.requestId || null,
+    message: err.message ? String(err.message).slice(0, 240) : null,
   };
 }
 
