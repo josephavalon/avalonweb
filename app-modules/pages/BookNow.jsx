@@ -5773,8 +5773,9 @@ export default function BookNow() {
   const renderUniversalStep = () => {
     if (step === 3) {
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-1.5 md:gap-2">
-          <div className={`${panelCardClass} p-2`}>
+        // Natural height + scroll; don't force-fit (it crams the fields). Scroll is fine.
+        <div className="grid content-start gap-3 pb-2">
+          <div className={`${panelCardClass} p-3`}>
             <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
             <button
               type="button"
@@ -5977,7 +5978,10 @@ export default function BookNow() {
     }
 
     return (
-      <div className="grid h-full min-h-0 content-start gap-1.5 md:gap-2">
+      // Natural height + comfortable spacing; the scroll region handles overflow.
+      // Do NOT use h-full here — that crams everything into one screen and clips
+      // the lower fields. Scrolling is fine.
+      <div className="grid content-start gap-3 pb-2">
         {/* Receipt summary: product + price, then three scannable facts. Payment
             terms (deposit today / balance after) live in the footer CTA. */}
         <div className={`${panelCardClass} px-4 pt-4 pb-3 md:px-5 md:pt-5`}>
@@ -6005,8 +6009,8 @@ export default function BookNow() {
             ))}
           </div>
         </div>
-        <div className={`${panelCardClass} grid min-h-0 content-start gap-1.5 p-2 md:gap-2 md:p-2.5`}>
-          <div className="grid grid-cols-2 gap-1.5 md:gap-2">
+        <div className={`${panelCardClass} grid content-start gap-3 p-3.5 md:p-4`}>
+          <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <TextInput
                 label="Name"
@@ -6014,7 +6018,6 @@ export default function BookNow() {
                 onChange={(value) => updateInlineContactField('name', value)}
                 placeholder="Full name"
                 autoComplete="name"
-                compact
                 actionLabel={hasSavedContactProfile ? 'Saved' : ''}
                 onAction={useSavedContactProfile}
                 required
@@ -6028,7 +6031,6 @@ export default function BookNow() {
               autoComplete="tel"
               inputMode="tel"
               type="tel"
-              compact
               required
             />
             <TextInput
@@ -6038,7 +6040,6 @@ export default function BookNow() {
               placeholder="MM/DD/YYYY"
               autoComplete="bday"
               inputMode="numeric"
-              compact
               required
             />
             <div className="col-span-2">
@@ -6050,7 +6051,6 @@ export default function BookNow() {
                 autoComplete="email"
                 inputMode="email"
                 type="email"
-                compact
                 required
               />
             </div>
@@ -6062,12 +6062,11 @@ export default function BookNow() {
                 placeholder="Name and phone"
                 autoComplete="section-emergency tel"
                 inputMode="tel"
-                compact
                 required
               />
             </div>
           </div>
-          <p className="rounded-xl border border-foreground/10 bg-background/30 px-2.5 py-1.5 font-body text-[9px] font-semibold leading-snug text-foreground/52 md:px-3 md:py-2 md:text-[10px]">
+          <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2.5 font-body text-[11px] font-semibold leading-snug text-foreground/60 md:text-xs">
             By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
           </p>
         </div>
