@@ -106,6 +106,17 @@ function supabaseRuntimeDiagnostic() {
   return diagnostic;
 }
 
+function stripeRuntimeDiagnostic(err) {
+  if (!err || !String(err?.type || err?.name || '').toLowerCase().includes('stripe')) return null;
+  return {
+    type: err.type || err.name || null,
+    code: err.code || err.raw?.code || null,
+    param: err.param || err.raw?.param || null,
+    status: err.statusCode || err.status || null,
+    requestId: err.requestId || err.raw?.requestId || null,
+  };
+}
+
 async function resolveCheckoutSchedulingTypeId({ appointment = {}, items = [], membership = null } = {}) {
   const explicitId = Number(appointment.acuityTypeId);
   if (explicitId) return explicitId;
@@ -734,7 +745,10 @@ export default async function handler(req, res) {
         console.error('[create-checkout-session:rollback]', safeLogContext(rollbackErr, 'checkout_rollback_failed'));
       }
     }
-    console.error('[create-checkout-session] checkout failed', safeLogContext(err, 'checkout_session_create_failed'));
+    console.error('[create-checkout-session] checkout failed', {
+      ...safeLogContext(err, 'checkout_session_create_failed'),
+      stripeRuntime: stripeRuntimeDiagnostic(err),
+    });
     return res.status(err.status || 500).json({
       error: publicCheckoutError(err),
       code: safeErrorCode(err, 'checkout_session_create_failed'),
