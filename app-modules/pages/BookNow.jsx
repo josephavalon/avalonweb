@@ -5489,9 +5489,9 @@ export default function BookNow() {
             ? 3
             : 4,
     title: step === 0
-      ? (therapyCategoryScreen ? 'Therapy Base' : 'Therapy')
+      ? 'Choose Your Therapy'
       : step === 1
-        ? 'ADD-ONS'
+        ? 'Choose Your Add-ons'
       : STEPS[step].toUpperCase(),
   };
   const canGoBack = step > 0;
