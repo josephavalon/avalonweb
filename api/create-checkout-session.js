@@ -264,9 +264,10 @@ function checkoutExpiresAt() {
   return Math.floor(Date.now() / 1000) + minutes * 60;
 }
 
-function checkoutIdempotencyKey({ mode, contact = {}, appointment = {}, items = [], membership = null, creditRedemption = null } = {}) {
+function checkoutIdempotencyKey({ mode, storageMode = 'supabase-v1', contact = {}, appointment = {}, items = [], membership = null, creditRedemption = null } = {}) {
   const fingerprint = {
     mode,
+    storageMode,
     email: String(contact.email || '').trim().toLowerCase(),
     phone: String(contact.phone || '').replace(/\D/g, ''),
     appointment: {
@@ -552,6 +553,14 @@ export default async function handler(req, res) {
       balanceDueCents,
       creditRedemption,
     });
+    const idempotencyInput = {
+      mode: sessionMode,
+      contact,
+      appointment: normalizedAppointment,
+      items,
+      membership,
+      creditRedemption,
+    };
 
     if (db) {
       const { data: pendingRecord, error: pendingError } = await db.from('appointments')
@@ -573,7 +582,7 @@ export default async function handler(req, res) {
         if (!checkoutStoreAvailable()) {
           throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
         }
-        checkoutStoreKey = `checkout:pending:${crypto.randomUUID()}`;
+        checkoutStoreKey = `checkout:pending:${checkoutIdempotencyKey({ ...idempotencyInput, storageMode: 'kv-fallback-v1' })}`;
         const stored = await writeCheckoutStoreRecord(checkoutStoreKey, {
           provider: 'avalon_checkout_kv_fallback',
           checkout: checkoutPayload,
@@ -602,12 +611,8 @@ export default async function handler(req, res) {
     const returnUrl = `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}&payment=success`;
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const idempotencyKey = checkoutIdempotencyKey({
-      mode: sessionMode,
-      contact,
-      appointment: normalizedAppointment,
-      items,
-      membership,
-      creditRedemption,
+      ...idempotencyInput,
+      storageMode: checkoutStoreKey ? 'kv-fallback-v1' : 'supabase-v1',
     });
 
     const sessionParams = {
