@@ -629,7 +629,6 @@ export default async function handler(req, res) {
       customer_email: contact.email,
       line_items,
       allow_promotion_codes: true,
-      payment_method_collection: 'if_required',
       expires_at: checkoutExpiresAt(),
       metadata: buildStripeCheckoutMetadata({
         appointmentRecordId: pendingRecordId,
