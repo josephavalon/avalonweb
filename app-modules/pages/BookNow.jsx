@@ -2291,8 +2291,32 @@ function hasValidContactFields(state = {}) {
   );
 }
 
-function hasEmergencyContact(value) {
-  return String(value || '').trim().length >= 4;
+function splitEmergencyContact(value = '') {
+  const text = String(value || '').trim();
+  if (!text) return { name: '', phone: '' };
+  const phoneMatch = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/);
+  if (!phoneMatch) return { name: text, phone: '' };
+  const phone = phoneMatch[0].trim();
+  const name = text
+    .replace(phoneMatch[0], '')
+    .replace(/^[\s,;:|·-]+|[\s,;:|·-]+$/g, '')
+    .trim();
+  return { name, phone };
+}
+
+function formatEmergencyContact(state = {}) {
+  const name = String(state.emergencyContactName || '').trim();
+  const phone = String(state.emergencyContactPhone || '').trim();
+  if (name || phone) return [name, phone].filter(Boolean).join(' · ');
+  return String(state.emergencyContact || '').trim();
+}
+
+function hasEmergencyContact(state = {}) {
+  if (typeof state === 'string') return String(state || '').trim().length >= 4;
+  return Boolean(
+    String(state.emergencyContactName || '').trim().length >= 2 &&
+    isValidCheckoutPhone(state.emergencyContactPhone)
+  );
 }
 
 function inputIdForLabel(label) {
@@ -2770,7 +2794,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
 }
 
 function ContactConfirmCard({ state, onChange, savedContact }) {
-  const hasContact = hasValidContactFields(state);
+  const hasContact = hasValidContactFields(state) && hasEmergencyContact(state);
   const [editing, setEditing] = useState(!hasContact);
   const hasSavedContact = Boolean(savedContact?.name || savedContact?.email || savedContact?.phone);
 
@@ -2808,8 +2832,8 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
               <span className="flex min-w-0 items-center gap-2"><Calendar className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.dob}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Phone className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.phone}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Mail className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.email}</span></span>
-              {state.emergencyContact && (
-                <span className="flex min-w-0 items-center gap-2"><UserPlus className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.emergencyContact}</span></span>
+              {formatEmergencyContact(state) && (
+                <span className="flex min-w-0 items-center gap-2"><UserPlus className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{formatEmergencyContact(state)}</span></span>
               )}
             </div>
           </div>
@@ -2880,17 +2904,28 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
             required
           />
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 md:col-span-1">
           <TextInput
-            label="Emergency contact"
-            value={state.emergencyContact}
-            onChange={(value) => onChange('emergencyContact', value)}
-            placeholder="Name and phone"
-            autoComplete="section-emergency tel"
+            label="Emergency name"
+            value={state.emergencyContactName}
+            onChange={(value) => onChange('emergencyContactName', value)}
+            placeholder="Full name"
+            autoComplete="section-emergency name"
             compact
             required
           />
         </div>
+        <TextInput
+          label="Emergency phone"
+          value={state.emergencyContactPhone}
+          onChange={(value) => onChange('emergencyContactPhone', value)}
+          placeholder="Phone number"
+          autoComplete="section-emergency tel"
+          inputMode="tel"
+          type="tel"
+          compact
+          required
+        />
       </div>
       {hasContact && (
         <button
@@ -3731,6 +3766,8 @@ const defaultState = {
   phone: '',
   dob: '',
   emergencyContact: '',
+  emergencyContactName: '',
+  emergencyContactPhone: '',
   safetyFlag: '',
   notes: '',
   billingMode: 'card',
@@ -3771,12 +3808,16 @@ export default function BookNow() {
     const savedContact = lastBooking?.contact || {};
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
+    const emergencyContact = realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '';
+    const splitEmergency = splitEmergencyContact(emergencyContact);
     return {
       name: realValue(savedContact.name) || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || '',
       email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || '',
       phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || '',
       dob: realValue(savedContact.dob) || realValue(profileSource.dob) || '',
-      emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '',
+      emergencyContact,
+      emergencyContactName: realValue(savedContact.emergencyContactName) || realValue(profileSource.emergencyContactName) || splitEmergency.name,
+      emergencyContactPhone: realValue(savedContact.emergencyContactPhone) || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone,
     };
   }, [clientProfile, lastBooking, signedInClient]);
   const savedVisitAddress = useMemo(() => {
@@ -3834,6 +3875,8 @@ export default function BookNow() {
     const savedContact = shouldResetDraft ? {} : lastBooking?.contact || {};
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
+    const savedEmergencyContact = realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || defaultState.emergencyContact;
+    const splitEmergency = splitEmergencyContact(savedEmergencyContact);
     const savedAddress = shouldResetDraft
       ? realAddress(fallback.address)
       : savedWebstoreAddress || realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
@@ -3877,8 +3920,14 @@ export default function BookNow() {
       email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || defaultState.email,
       phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || defaultState.phone,
       dob: realValue(savedContact.dob) || realValue(profileSource.dob) || defaultState.dob,
-      emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || defaultState.emergencyContact,
       ...savedWebstore,
+      emergencyContact: formatEmergencyContact({
+        emergencyContact: savedWebstore.emergencyContact || savedEmergencyContact,
+        emergencyContactName: savedWebstore.emergencyContactName || realValue(savedContact.emergencyContactName) || realValue(profileSource.emergencyContactName) || splitEmergency.name,
+        emergencyContactPhone: savedWebstore.emergencyContactPhone || realValue(savedContact.emergencyContactPhone) || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone,
+      }),
+      emergencyContactName: savedWebstore.emergencyContactName || realValue(savedContact.emergencyContactName) || realValue(profileSource.emergencyContactName) || splitEmergency.name || defaultState.emergencyContactName,
+      emergencyContactPhone: savedWebstore.emergencyContactPhone || realValue(savedContact.emergencyContactPhone) || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone || defaultState.emergencyContactPhone,
       outcome: initialOutcome?.key || savedWebstore.outcome || defaultState.outcome,
       productKey: resolvedProductKey,
       visitType: initialSubscriptionPlan ? 'subscription' : savedWebstore.visitType || defaultState.visitType,
@@ -4331,7 +4380,13 @@ export default function BookNow() {
 
   const setValue = (key, value) => {
     setError('');
-    setState((current) => ({ ...current, [key]: value }));
+    setState((current) => {
+      const next = { ...current, [key]: value };
+      if (key === 'emergencyContactName' || key === 'emergencyContactPhone') {
+        next.emergencyContact = formatEmergencyContact(next);
+      }
+      return next;
+    });
   };
 
   const setSubscriptionTerm = (key) => {
@@ -4844,11 +4899,9 @@ export default function BookNow() {
           ? 'Choose add-ons or tap No add-ons.'
           : step === 2
             ? 'Choose date and time.'
-            : step === 3 && resolvedZip.length === 5 && !COVERED_ZIPS.has(resolvedZip)
-              ? 'Enter a ZIP in our current service area.'
-              : step === 3
-                ? 'Add address and ZIP.'
-                : 'Finish this step.';
+            : step === 3
+              ? 'Add address and a valid 5-digit ZIP.'
+              : 'Finish this step.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -4914,6 +4967,8 @@ export default function BookNow() {
 	    return step < LAST_STEP ? 'NEXT' : 'CONFIRM & PAY';
 	  };
 
+  const emergencyContactValue = formatEmergencyContact(state);
+
 	  const buildBooking = () => {
 	    if (!product) return null;
 	    const { firstName, lastName } = splitName(state.name);
@@ -4969,12 +5024,16 @@ export default function BookNow() {
         email: state.email.trim(),
         phone: state.phone.trim(),
         dob: state.dob,
-        emergencyContact: state.emergencyContact.trim(),
+        emergencyContact: emergencyContactValue,
+        emergencyContactName: state.emergencyContactName.trim(),
+        emergencyContactPhone: state.emergencyContactPhone.trim(),
         clientType: state.clientType,
         visitCount: returningClient || clinicalReviewClaimedOnFile ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
       },
       dob: state.dob,
-      emergencyContact: state.emergencyContact.trim(),
+      emergencyContact: emergencyContactValue,
+      emergencyContactName: state.emergencyContactName.trim(),
+      emergencyContactPhone: state.emergencyContactPhone.trim(),
       // Single-person path keeps legacy `items` shape (no personId). Multi-
       // person path emits one IV line + per-person add-on lines, each tagged
       // with personId/personLabel so the cart sidebar and the post-checkout
@@ -5083,7 +5142,7 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state.emergencyContact) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
+  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     const writeCheckoutHandoffMarker = () => {
@@ -5159,7 +5218,9 @@ export default function BookNow() {
         email: localBooking.contact?.email || state.email.trim(),
         phone: localBooking.contact?.phone || state.phone.trim(),
         dob: localBooking.contact?.dob || localBooking.dob || state.dob,
-        emergencyContact: localBooking.contact?.emergencyContact || localBooking.emergencyContact || state.emergencyContact.trim(),
+        emergencyContact: localBooking.contact?.emergencyContact || localBooking.emergencyContact || emergencyContactValue,
+        emergencyContactName: localBooking.contact?.emergencyContactName || localBooking.emergencyContactName || state.emergencyContactName.trim(),
+        emergencyContactPhone: localBooking.contact?.emergencyContactPhone || localBooking.emergencyContactPhone || state.emergencyContactPhone.trim(),
       },
       appointment: {
         localBookingId: localBooking.id,
@@ -5185,7 +5246,9 @@ export default function BookNow() {
         visitType: state.visitType,
         clientType: localBooking.clientType,
         dob: localBooking.dob || localBooking.contact?.dob || state.dob,
-        emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || state.emergencyContact.trim(),
+        emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || emergencyContactValue,
+        emergencyContactName: localBooking.emergencyContactName || localBooking.contact?.emergencyContactName || state.emergencyContactName.trim(),
+        emergencyContactPhone: localBooking.emergencyContactPhone || localBooking.contact?.emergencyContactPhone || state.emergencyContactPhone.trim(),
         peopleCount: localBooking.peopleCount || 1,
         peopleManifest: Array.isArray(localBooking.peopleManifest) ? localBooking.peopleManifest : [],
       },
@@ -5271,7 +5334,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError(fastMode ? 'Add contact, date of birth, emergency contact, address, and safety response.' : 'Add contact, date of birth, emergency contact, and service address with ZIP.');
+      setError(fastMode ? 'Add contact, date of birth, emergency contact name and phone, address, and safety response.' : 'Add contact, date of birth, emergency contact name and phone, and service address with ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -5374,7 +5437,9 @@ export default function BookNow() {
           email: state.email.trim(),
           phone: state.phone.trim(),
           dob: state.dob,
-          emergencyContact: state.emergencyContact.trim(),
+          emergencyContact: emergencyContactValue,
+          emergencyContactName: state.emergencyContactName.trim(),
+          emergencyContactPhone: state.emergencyContactPhone.trim(),
           address: state.address.trim(),
           zip: String(state.zip || '').trim(),
           locationType: state.locationType,
@@ -5870,7 +5935,7 @@ export default function BookNow() {
               <MapPin className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </span>
             <p className="font-body text-[11px] font-semibold leading-snug text-foreground/62 md:text-xs">
-              We confirm your ZIP is in our service area before payment.
+              ZIP is required for scheduling and billing. Service-area review happens after checkout when needed.
             </p>
           </div>
         </div>
@@ -6096,17 +6161,26 @@ export default function BookNow() {
                 required
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2 md:col-span-1">
               <TextInput
-                label="Emergency contact"
-                value={state.emergencyContact}
-                onChange={(value) => setValue('emergencyContact', value)}
-                placeholder="Name and phone"
-                autoComplete="section-emergency tel"
-                inputMode="tel"
+                label="Emergency name"
+                value={state.emergencyContactName}
+                onChange={(value) => setValue('emergencyContactName', value)}
+                placeholder="Full name"
+                autoComplete="section-emergency name"
                 required
               />
             </div>
+            <TextInput
+              label="Emergency phone"
+              value={state.emergencyContactPhone}
+              onChange={(value) => setValue('emergencyContactPhone', value)}
+              placeholder="Phone number"
+              autoComplete="section-emergency tel"
+              inputMode="tel"
+              type="tel"
+              required
+            />
           </div>
           <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2.5 font-body text-[11px] font-semibold leading-snug text-foreground/60 md:text-xs">
             By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.

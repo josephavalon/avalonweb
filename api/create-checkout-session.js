@@ -56,6 +56,8 @@ const CHECKOUT_INPUT_LIMITS = {
   phone: 40,
   dob: 20,
   emergencyContact: 160,
+  emergencyContactName: 80,
+  emergencyContactPhone: 40,
   localBookingId: 80,
   reference: 80,
   acuityDatetime: 40,
@@ -145,6 +147,20 @@ function boundedField(source, key, max, errors, targetKey = key) {
   return value;
 }
 
+function composeEmergencyContact(source = {}) {
+  const existing = String(source.emergencyContact || '').trim();
+  if (existing) return existing;
+  return [source.emergencyContactName, source.emergencyContactPhone]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function hasEmergencyContactInfo(source = {}) {
+  const text = composeEmergencyContact(source);
+  return text.length >= 4;
+}
+
 function sanitizeCheckoutInputFields({ contact = {}, appointment = {} } = {}) {
   const tooLong = [];
   const safeContact = {
@@ -156,6 +172,8 @@ function sanitizeCheckoutInputFields({ contact = {}, appointment = {} } = {}) {
     phone: boundedField(contact, 'phone', CHECKOUT_INPUT_LIMITS.phone, tooLong, 'contact.phone'),
     dob: boundedField(contact, 'dob', CHECKOUT_INPUT_LIMITS.dob, tooLong, 'contact.dob'),
     emergencyContact: boundedField(contact, 'emergencyContact', CHECKOUT_INPUT_LIMITS.emergencyContact, tooLong, 'contact.emergencyContact'),
+    emergencyContactName: boundedField(contact, 'emergencyContactName', CHECKOUT_INPUT_LIMITS.emergencyContactName, tooLong, 'contact.emergencyContactName'),
+    emergencyContactPhone: boundedField(contact, 'emergencyContactPhone', CHECKOUT_INPUT_LIMITS.emergencyContactPhone, tooLong, 'contact.emergencyContactPhone'),
     clientType: boundedField(contact, 'clientType', CHECKOUT_INPUT_LIMITS.clientType, tooLong, 'contact.clientType'),
   };
   const safeAppointment = {
@@ -176,9 +194,15 @@ function sanitizeCheckoutInputFields({ contact = {}, appointment = {} } = {}) {
     notes: boundedField(appointment, 'notes', CHECKOUT_INPUT_LIMITS.notes, tooLong, 'appointment.notes'),
     dob: boundedField(appointment, 'dob', CHECKOUT_INPUT_LIMITS.dob, tooLong, 'appointment.dob'),
     emergencyContact: boundedField(appointment, 'emergencyContact', CHECKOUT_INPUT_LIMITS.emergencyContact, tooLong, 'appointment.emergencyContact'),
+    emergencyContactName: boundedField(appointment, 'emergencyContactName', CHECKOUT_INPUT_LIMITS.emergencyContactName, tooLong, 'appointment.emergencyContactName'),
+    emergencyContactPhone: boundedField(appointment, 'emergencyContactPhone', CHECKOUT_INPUT_LIMITS.emergencyContactPhone, tooLong, 'appointment.emergencyContactPhone'),
     clinicalReviewOnFile: boundedField(appointment, 'clinicalReviewOnFile', CHECKOUT_INPUT_LIMITS.booleanFlag, tooLong, 'appointment.clinicalReviewOnFile'),
     gfeRequired: boundedField(appointment, 'gfeRequired', CHECKOUT_INPUT_LIMITS.booleanFlag, tooLong, 'appointment.gfeRequired'),
   };
+  safeContact.emergencyContact = composeEmergencyContact(safeContact);
+  safeAppointment.emergencyContact = composeEmergencyContact(safeAppointment) || safeContact.emergencyContact;
+  safeAppointment.emergencyContactName = safeAppointment.emergencyContactName || safeContact.emergencyContactName;
+  safeAppointment.emergencyContactPhone = safeAppointment.emergencyContactPhone || safeContact.emergencyContactPhone;
   return { contact: safeContact, appointment: safeAppointment, tooLong };
 }
 
@@ -409,6 +433,12 @@ export default async function handler(req, res) {
       return res.status(400).json({
         error: 'Valid adult birthdate is required before checkout',
         code: 'dob_invalid',
+      });
+    }
+    if (requiresScheduling && !hasEmergencyContactInfo(appointment) && !hasEmergencyContactInfo(contact)) {
+      return res.status(400).json({
+        error: 'Emergency contact name and phone are required before checkout',
+        code: 'emergency_contact_required',
       });
     }
     if (requiresScheduling) {
@@ -750,13 +780,19 @@ export default async function handler(req, res) {
         console.error('[create-checkout-session:rollback]', safeLogContext(rollbackErr, 'checkout_rollback_failed'));
       }
     }
-    console.error('[create-checkout-session] checkout failed', {
+    const stripeRuntime = stripeRuntimeDiagnostic(err);
+    // Stringify so Vercel doesn't truncate the nested object at depth-2 — we
+    // need the full Stripe message/param to root-cause invalid-request failures.
+    console.error('[create-checkout-session] checkout failed ' + JSON.stringify({
       ...safeLogContext(err, 'checkout_session_create_failed'),
-      stripeRuntime: stripeRuntimeDiagnostic(err),
-    });
-    return res.status(err.status || 500).json({
+      stripeRuntime,
+    }));
+    const debugAllowed = String(req.headers['x-checkout-debug'] || '') === String(process.env.CHECKOUT_DEBUG_TOKEN || 'no-debug-key');
+    const responseBody = {
       error: publicCheckoutError(err),
       code: safeErrorCode(err, 'checkout_session_create_failed'),
-    });
+    };
+    if (debugAllowed && stripeRuntime) responseBody.stripeRuntime = stripeRuntime;
+    return res.status(err.status || 500).json(responseBody);
   }
 }
