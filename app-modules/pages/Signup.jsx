@@ -118,7 +118,7 @@ export default function Signup() {
     event.preventDefault();
     setFieldError('');
     if (!supabaseMode) {
-      setFieldError('Account creation is available once Supabase is configured. Use the demo sign-in for now.');
+      setFieldError('Sign-up is temporarily unavailable. Please try again shortly or contact support@avalonvitality.co.');
       return;
     }
     if (!fullName.trim()) { setFieldError('Enter your full name.'); return; }
@@ -131,7 +131,7 @@ export default function Signup() {
   const handleOAuth = async (provider) => {
     setFieldError('');
     if (!supabaseMode) {
-      setFieldError('Social sign-up is available once Supabase is configured.');
+      setFieldError('Sign-up is temporarily unavailable. Please try again shortly.');
       return;
     }
     if (!authProviderConfig[provider]) {
@@ -149,12 +149,8 @@ export default function Signup() {
   const displayError = fieldError || error;
 
   return (
-    <div className="av-page-surface relative min-h-screen min-h-dvh overflow-hidden px-4 py-4 text-foreground md:px-8 md:py-8">
-      <div className="pointer-events-none fixed inset-0 opacity-70">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--foreground)/0.10),transparent_30%),linear-gradient(180deg,hsl(var(--foreground)/0.035),transparent_42%)]" />
-      </div>
-
-      <main className="relative mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center">
+    <div className="relative h-screen h-dvh overflow-y-auto px-3 py-2 text-foreground md:px-6 md:py-3">
+      <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center pt-20 md:pt-24">
         <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7">
           <div className="mb-7 flex items-center justify-between gap-4">
             <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-opacity hover:opacity-70">
@@ -171,9 +167,7 @@ export default function Signup() {
               Create<br />Account
             </h1>
             <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
-              {supabaseMode
-                ? 'We email a confirmation link — no password to remember.'
-                : 'Account creation comes online when Supabase keys are set.'}
+              We email a confirmation link — no password to remember.
             </p>
           </div>
 
