@@ -130,8 +130,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
   // scattered across pages now draw nothing.
   if (!globalShell) return null;
-  // Sign-in screens (customer + admin) intentionally DO show the marketing bar.
-  const loginRoute = location.pathname === '/login' || location.pathname === '/admin/login';
+  // Sign-in / sign-up screens (customer + admin) intentionally DO show the
+  // marketing bar — users mid-funnel need to get back to Plans / Book Now
+  // without having to navigate out of the auth card first.
+  const loginRoute = location.pathname === '/login'
+    || location.pathname === '/admin/login'
+    || location.pathname === '/signup';
   // Admin / provider / member areas own their chrome — no marketing bar there.
   if (!loginRoute && (internalToolRoute || authRoute)) return null;
 
