@@ -1047,7 +1047,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
             </motion.span>
             <div className="min-w-0">
               <p className="font-heading text-[1.3rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.42rem] md:text-[1.55rem]">
-                {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+                STEP {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
               </p>
             </div>
           </div>
@@ -1529,7 +1529,7 @@ function DesktopBookingFrame({
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(248px,300px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,310px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
-            {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+            STEP {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
           </h1>
           <DesktopStepRail displayStepIndex={displayStepIndex} />
           <div className="my-3 h-px bg-foreground/10 2xl:my-5" />
