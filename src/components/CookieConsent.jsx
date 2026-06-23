@@ -48,20 +48,20 @@ export default function CookieConsent() {
                 <h2 className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
                   Privacy
                 </h2>
-                <p className="font-body text-[9px] text-foreground/58 leading-snug mt-0.5 max-w-[13rem]">
+                <p className="font-body text-[11px] text-foreground/58 leading-snug mt-0.5 max-w-[13rem]">
                   Essential only unless allowed.
                 </p>
               </div>
               <div className="ml-auto grid grid-cols-2 gap-1.5 shrink-0">
                 <button
                   onClick={handleDecline}
-                  className="min-h-[34px] px-2.5 py-1 border border-foreground/16 text-foreground/62 font-body text-[8px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/5 hover:border-foreground/30 active:scale-[0.99] transition-all duration-base ease-editorial"
+                  className="min-h-[34px] px-3 py-1 border border-foreground/16 text-foreground/62 font-body text-[10px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/5 hover:border-foreground/30 active:scale-[0.99] transition-all duration-base ease-editorial"
                 >
                   No
                 </button>
                 <button
                   onClick={handleAllow}
-                  className="min-h-[34px] px-2.5 py-1 bg-foreground text-background font-body text-[8px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/90 active:scale-[0.99] transition-all duration-base ease-editorial"
+                  className="min-h-[34px] px-3 py-1 bg-foreground text-background font-body text-[10px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/90 active:scale-[0.99] transition-all duration-base ease-editorial"
                 >
                   OK
                 </button>
