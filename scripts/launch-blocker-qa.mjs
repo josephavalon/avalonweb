@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -309,6 +310,51 @@ function checkAppointmentSummaryAuth() {
 // a summary_token query parameter would leak the token into Vercel access logs
 // and browser history. The endpoint already rejects this transport — this
 // check makes sure nobody silently builds such a URL.
+// Every endpoint under api/admin/ must gate on requireAdmin/requireStaff/
+// requireRole — those helpers carry the MFA_ENFORCED check. Adding an admin
+// route that does its own auth would silently bypass the MFA gate.
+// The production CSP drops 'unsafe-inline' from script-src by hashing the only
+// inline script (the JSON-LD MedicalBusiness block in index.html). If anyone
+// edits that block, the hash falls out of date and the JSON-LD silently fails
+// to apply in browsers — search engines lose the structured-data hint and the
+// CSP report shows violations. Re-hash and update vercel.json when this fires.
+function checkCspJsonLdHash() {
+  const html = readRepoFile('index.html');
+  const match = html.match(/<script type="application\/ld\+json">\n([\s\S]*?)\n {4}<\/script>/);
+  if (!match) {
+    fail('index.html: JSON-LD <script type="application/ld+json"> block not found in expected format');
+    return;
+  }
+  const hash = crypto.createHash('sha256').update(match[1]).digest('base64');
+  const expectedDirective = `'sha256-${hash}'`;
+  const vercel = readRepoFile('vercel.json');
+  if (!vercel.includes(`sha256-${hash}`)) {
+    fail(`vercel.json: CSP script-src is missing the current JSON-LD hash. Update it to ${expectedDirective}`);
+  }
+  if (/script-src\s+[^;]*'unsafe-inline'/.test(vercel)) {
+    fail("vercel.json: CSP script-src still contains 'unsafe-inline' — remove it and rely on the JSON-LD hash");
+  }
+}
+
+function checkAdminEndpointsGated() {
+  const adminDir = path.join(repoRoot, 'api/admin');
+  if (!fs.existsSync(adminDir)) return;
+  const gates = ['requireAdmin', 'requireStaff', 'requireRole'];
+  for (const filePath of walkFiles(adminDir)) {
+    if (!/\.(?:js|mjs|ts)$/i.test(filePath)) continue;
+    const source = fs.readFileSync(filePath, 'utf8');
+    if (!gates.some((gate) => source.includes(gate))) {
+      fail(`${relative(filePath)} is under api/admin/ but does not call requireAdmin/requireStaff/requireRole — would bypass the MFA gate`);
+    }
+  }
+  const helperSource = readRepoFile('api/_lib/supabase-auth.js');
+  for (const required of ['mfaEnforced', "'aal2'", 'MFA_ENFORCED']) {
+    if (!helperSource.includes(required)) {
+      fail(`api/_lib/supabase-auth.js missing MFA enforcement plumbing: ${required}`);
+    }
+  }
+}
+
 function checkSummaryTokenNotInQueryString() {
   const sourceDirs = ['src', 'app-modules', 'api'];
   const allowFiles = new Set([
@@ -637,6 +683,8 @@ checkStripeMetadataFallbackIsLegacyOnly();
 checkSchedulingRaceLoserDefers();
 checkAppointmentSummaryAuth();
 checkSummaryTokenNotInQueryString();
+checkAdminEndpointsGated();
+checkCspJsonLdHash();
 checkDemoAuthHardening();
 checkBalanceChargeIntegrity();
 checkGoLiveRunbook();

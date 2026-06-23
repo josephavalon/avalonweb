@@ -13,6 +13,7 @@ This map identifies where protected or sensitive health/payment-adjacent informa
 - Quo (SMS): OTP-only message bodies. SMS is excluded from Quo's BAA, so we lock the body to authentication codes + staff invite codes. `api/_lib/send-sms.js` refuses bodies containing PHI-shaped tokens as defense-in-depth.
 - Sentry-compatible endpoint: telemetry endpoint must use sanitized events and no raw PHI payloads. **BAA: required if `VITE_SENTRY_DSN` is shipped, self-serve on Business tier (Org Settings → Legal & Compliance).**
 - Vercel: hosts all PHI-touching API routes. **BAA: required, click-through on Pro tier; signed on Enterprise.**
+- Nominatim (OpenStreetMap): proxied via `api/address-search.js` and `api/reverse-geocode.js` for address autocomplete and lat/lng lookup. **BAA: not signed; relied on as a de-identified utility.** Route-around: the outbound `fetch` carries only the address string plus a static User-Agent/Referer — no cookies, no Authorization header, no patient identifier. The browser never calls Nominatim directly (it would carry session cookies); all calls go through these two proxies. No responses are persisted. If patient identity ever needs to be attached to a geocode lookup, swap to a BAA-eligible provider (e.g. Google Maps under the Google Maps Platform BAA) before doing so.
 
 ## Appointment Summary Access
 
