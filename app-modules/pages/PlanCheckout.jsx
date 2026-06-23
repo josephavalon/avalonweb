@@ -241,7 +241,7 @@ export default function PlanCheckout() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="av-glass-card mb-36 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-40 md:p-6"
+          className="av-glass-card mb-56 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-6 md:p-6"
         >
           {isMultiPerson && peopleManifest.length > 0 && (
             <div className="mb-4 rounded-xl border border-foreground/12 bg-foreground/[0.04] p-3">
@@ -330,7 +330,7 @@ export default function PlanCheckout() {
 
         {error && <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 font-body text-sm font-semibold text-red-200" role="alert">{error}</p>}
 
-        <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3">
+        <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 md:static md:bottom-auto md:mx-0 md:bg-transparent md:px-0 md:pb-0 md:pt-2">
           <div className="mb-2.5 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <span className="min-w-0 truncate font-body text-[12px] font-black uppercase tracking-[0.08em] text-foreground/82">{planLabel}</span>
