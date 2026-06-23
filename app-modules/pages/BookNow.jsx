@@ -4626,7 +4626,10 @@ export default function BookNow() {
       ...current,
       productKey: key,
       addOns: [],
-      addOnDecision: false,
+      // Default to "no add-ons" so step 2's NEXT is enabled the moment the user
+      // lands there. Tapping any add-on overrides this. Matches chooseOutcome
+      // and repeatLastVisit, which already default to true.
+      addOnDecision: true,
       ...overrides,
     }));
   };
