@@ -9,7 +9,11 @@ import ScrollParallax from '@/components/ui/ScrollParallax';
 // counts 00 → step.n with a short ease over ~440 ms. IntersectionObserver fires
 // once at 40% visibility so the tick only runs when the user actually sees it.
 function useCountUpOnView(target, ref, enabled) {
-  const [value, setValue] = useState(enabled ? 0 : Number(target));
+  // Initialize to the final value so SSR + first paint render the real step
+  // number (01/02/03), not a `00` placeholder. When motion is enabled the
+  // IntersectionObserver below rewinds to 0 and ticks back up only once the
+  // card actually crosses the threshold.
+  const [value, setValue] = useState(Number(target));
   useEffect(() => {
     if (!enabled || !ref.current) return undefined;
     const node = ref.current;
@@ -19,6 +23,7 @@ function useCountUpOnView(target, ref, enabled) {
       const targetNum = Number(target);
       const steps = 22;
       let i = 0;
+      setValue(0);
       const id = setInterval(() => {
         i += 1;
         setValue(Math.round((i / steps) * targetNum));
