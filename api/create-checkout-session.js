@@ -789,9 +789,19 @@ export default async function handler(req, res) {
     }));
     const debugTokenEnv = String(process.env.CHECKOUT_DEBUG_TOKEN || '');
     const debugAllowed = debugTokenEnv.length >= 16 && String(req.headers['x-checkout-debug'] || '') === debugTokenEnv;
+    // Prefer descriptive snake_case codes; fall back to `checkout_session_create_failed`
+    // rather than letting a numeric HTTP status (e.g. "400" from a Stripe error's
+    // .statusCode) leak through as the public code. Stripe-shaped errors get a
+    // distinguishable code so callers can branch on "stripe error" vs "our bug".
+    const stripeShaped = typeof err?.type === 'string' && err.type.startsWith('Stripe');
+    const fallbackCode = stripeShaped
+      ? `stripe_${(err.code && /^[a-z0-9_]+$/i.test(err.code) ? err.code : err.type).toLowerCase()}`
+      : 'checkout_session_create_failed';
+    const rawCode = safeErrorCode(err, fallbackCode);
+    const responseCode = /^\d+$/.test(rawCode) ? fallbackCode : rawCode;
     const responseBody = {
       error: publicCheckoutError(err),
-      code: safeErrorCode(err, 'checkout_session_create_failed'),
+      code: responseCode,
     };
     if (debugAllowed && stripeRuntime) responseBody.stripeRuntime = stripeRuntime;
     return res.status(err.status || 500).json(responseBody);
