@@ -61,8 +61,8 @@ function TierRow({ tier, index, open, onToggle }) {
         <div className="flex shrink-0 items-center gap-3 text-right">
           <div>
             <span className="block font-body text-[11px] uppercase tracking-[0.12em] text-foreground/38">From</span>
-            <span className="font-heading text-2xl leading-none tracking-wide text-foreground/72">{tier.price}</span>
-            {tier.unit && <span className="ml-0.5 font-body text-[11px] text-foreground/32">{tier.unit}</span>}
+            <span className="font-heading text-2xl leading-none tracking-wide tabular-nums text-foreground/72">{tier.price}</span>
+            {tier.unit && <span className="ml-0.5 font-body text-[11px] tabular-nums text-foreground/32">{tier.unit}</span>}
           </div>
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
