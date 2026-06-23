@@ -152,6 +152,15 @@ function SubRow({ sub }) {
 // ── Top-level category row ────────────────────────────────────────────────────
 function CategoryRow({ cat, index, open, onToggle }) {
   const Icon = cat.icon;
+  // Desktop rows are full-bleed; without a secondary value the collapsed card
+  // reads as label-left + chevron-right over a wide empty gap. Surface the
+  // option count + entry price (same treatment as HowItWorks' inline preview)
+  // so the row carries content end-to-end on md+.
+  const items = Array.isArray(cat.data) ? cat.data : [];
+  const fromPrice = items.length ? Math.min(...items.map((t) => t.price)) : null;
+  const rowMeta = items.length
+    ? `${items.length} drips${fromPrice ? ` · from $${fromPrice}` : ''}`
+    : null;
 
   if (cat.type === 'link') {
     return (
@@ -208,13 +217,20 @@ function CategoryRow({ cat, index, open, onToggle }) {
             ) : null}
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.38, ease: EASE }}
-          className="text-foreground/30 shrink-0"
-        >
-          <ChevronDown className="w-4 h-4" strokeWidth={2} />
-        </motion.div>
+        <div className="flex shrink-0 items-center gap-4">
+          {rowMeta && (
+            <span className="hidden md:block font-body text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+              {rowMeta}
+            </span>
+          )}
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.38, ease: EASE }}
+            className="text-foreground/30 shrink-0"
+          >
+            <ChevronDown className="w-4 h-4" strokeWidth={2} />
+          </motion.div>
+        </div>
       </motion.button>
 
       {/* Expanded body */}
