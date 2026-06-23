@@ -668,7 +668,10 @@ function clampStep(value) {
 function readStepHash() {
   if (typeof window === 'undefined') return null;
   const match = String(window.location.hash || '').match(/^#step-(\d+)$/);
-  return match ? clampStep(match[1]) : null;
+  if (!match) return null;
+  // Hash is 1-indexed so #step-1 matches the "1 OF 5" displayed in the UI.
+  // Internal `step` state is 0-indexed; subtract 1 here.
+  return clampStep(Number(match[1]) - 1);
 }
 
 function readBookingSessionDraft() {
@@ -4008,8 +4011,8 @@ export default function BookNow() {
       hasMountedStepRef.current = true;
       return;
     }
-    if (typeof window !== 'undefined' && window.location.hash !== `#step-${step}`) {
-      window.history.pushState({ avalonBookingStep: step }, '', `${window.location.pathname}${window.location.search}#step-${step}`);
+    if (typeof window !== 'undefined' && window.location.hash !== `#step-${step + 1}`) {
+      window.history.pushState({ avalonBookingStep: step }, '', `${window.location.pathname}${window.location.search}#step-${step + 1}`);
     }
     const draftPayload = {
       webstore: { ...state, customPlanEstimate },
@@ -4115,8 +4118,8 @@ export default function BookNow() {
     setStep(0);
     setTherapyCategoryScreen(false);
     setActiveAddonGroup('');
-    if (typeof window !== 'undefined' && window.location.hash !== '#step-0') {
-      window.history.replaceState({ avalonBookingStep: 0 }, '', `${window.location.pathname}${window.location.search}#step-0`);
+    if (typeof window !== 'undefined' && window.location.hash !== '#step-1') {
+      window.history.replaceState({ avalonBookingStep: 0 }, '', `${window.location.pathname}${window.location.search}#step-1`);
     }
   }, [product, step]);
 
