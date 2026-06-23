@@ -66,8 +66,8 @@ export default function Hero() {
 	        <div
 	          className="relative w-full max-w-[42rem] md:max-w-6xl"
 	        >
-	          <div className="relative md:flex md:items-center md:justify-between md:gap-10">
-        <div className="av-hero-copy md:max-w-xl">
+	          <div className="relative lg:flex lg:items-center lg:justify-between lg:gap-10">
+        <div className="av-hero-copy lg:max-w-xl">
 
         {/* Layer 1 — title (recedes fastest + scales).
             Outer motion.div owns the scroll-parallax style. The eyebrow gets its
@@ -139,7 +139,7 @@ export default function Hero() {
             initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.44, delay: 0.52, ease: EASE }}
-            className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 md:mt-0 md:w-[25rem] md:max-w-[25rem] md:shrink-0 md:grid-cols-1 md:gap-3.5 lg:w-[28rem] lg:max-w-[28rem]"
+            className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 lg:mt-0 lg:w-[28rem] lg:max-w-[28rem] lg:shrink-0 lg:grid-cols-1 lg:gap-3.5"
           >
             {HERO_ACTIONS.map((action) => {
               const Icon = action.icon;
