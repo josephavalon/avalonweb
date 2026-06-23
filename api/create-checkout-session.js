@@ -787,7 +787,8 @@ export default async function handler(req, res) {
       ...safeLogContext(err, 'checkout_session_create_failed'),
       stripeRuntime,
     }));
-    const debugAllowed = String(req.headers['x-checkout-debug'] || '') === String(process.env.CHECKOUT_DEBUG_TOKEN || 'no-debug-key');
+    const debugTokenEnv = String(process.env.CHECKOUT_DEBUG_TOKEN || '');
+    const debugAllowed = debugTokenEnv.length >= 16 && String(req.headers['x-checkout-debug'] || '') === debugTokenEnv;
     const responseBody = {
       error: publicCheckoutError(err),
       code: safeErrorCode(err, 'checkout_session_create_failed'),
