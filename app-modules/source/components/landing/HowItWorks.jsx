@@ -1,40 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { ChevronDown } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import ScrollParallax from '@/components/ui/ScrollParallax';
-
-// Linear pricing-tick pattern: when the card enters the viewport, the badge
-// counts 00 → step.n with a short ease over ~440 ms. IntersectionObserver fires
-// once at 40% visibility so the tick only runs when the user actually sees it.
-function useCountUpOnView(target, ref, enabled) {
-  // Initialize to the final value so SSR + first paint render the real step
-  // number (01/02/03), not a `00` placeholder. When motion is enabled the
-  // IntersectionObserver below rewinds to 0 and ticks back up only once the
-  // card actually crosses the threshold.
-  const [value, setValue] = useState(Number(target));
-  useEffect(() => {
-    if (!enabled || !ref.current) return undefined;
-    const node = ref.current;
-    const obs = new IntersectionObserver((entries) => {
-      if (!entries[0].isIntersecting) return;
-      obs.disconnect();
-      const targetNum = Number(target);
-      const steps = 22;
-      let i = 0;
-      setValue(0);
-      const id = setInterval(() => {
-        i += 1;
-        setValue(Math.round((i / steps) * targetNum));
-        if (i >= steps) clearInterval(id);
-      }, 20);
-    }, { threshold: 0.4 });
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, [target, ref, enabled]);
-  return String(value).padStart(2, '0');
-}
 
 const STEPS = [
   {
@@ -58,13 +27,8 @@ const STEPS = [
 ];
 
 function StepCard({ step, index, open, onToggle }) {
-  const cardRef = useRef(null);
-  const reduceMotion = useReducedMotion();
-  const display = useCountUpOnView(step.n, cardRef, !reduceMotion);
-
   return (
     <motion.div
-      ref={cardRef}
       initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-12%' }}
@@ -81,7 +45,7 @@ function StepCard({ step, index, open, onToggle }) {
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-            <span className="font-body text-[10px] tracking-[0.2em] text-foreground tabular-nums">{display}</span>
+            <span className="font-body text-[10px] tracking-[0.2em] text-foreground tabular-nums">{step.n}</span>
           </div>
           <div className="min-w-0 text-left">
             <p className="font-heading text-2xl tracking-normal text-foreground leading-none">{step.title}</p>
