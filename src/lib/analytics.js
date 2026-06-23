@@ -86,6 +86,7 @@ const QUEUE_CAP = 200; // Drop oldest beyond this — prevents memory leaks.
 const LOCAL_EVENT_KEY = 'av.analytics.events';
 const LOCAL_ATTRIBUTION_KEY = 'av.analytics.attribution';
 const LOCAL_EXPERIMENT_PREFIX = 'av.experiment.';
+const CONSENT_KEY = 'cookieConsent';
 const FIRST_PARTY_ANALYTICS_ENABLED =
   typeof import.meta !== 'undefined' &&
   import.meta.env?.VITE_AVALON_ENABLE_FIRST_PARTY_ANALYTICS === 'true';
@@ -93,8 +94,31 @@ const FIRST_PARTY_ANALYTICS_ENABLED =
 let provider = localAnalyticsProvider;
 /** @type {AnalyticsEvent[]} */
 const queue = [];
+/**
+ * Events that were emitted before the user granted cookie consent. They never
+ * reach third-party trackers or the first-party endpoint until consent flips.
+ * On consent, this buffer drains into outbound destinations.
+ * @type {AnalyticsEvent[]}
+ */
+const pendingOutbound = [];
 /** @type {AnalyticsContext} */
 let context = {};
+
+function hasAnalyticsConsent() {
+  if (typeof window === 'undefined') return false;
+  try { return window.localStorage.getItem(CONSENT_KEY) === 'allowed'; } catch { return false; }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('avalon:consentChanged', () => {
+    if (!hasAnalyticsConsent()) { pendingOutbound.length = 0; return; }
+    while (pendingOutbound.length) {
+      const event = pendingOutbound.shift();
+      try { pushBrowserDestinations(event); } catch { /* best-effort */ }
+      try { sendFirstPartyEvent(event); } catch { /* best-effort */ }
+    }
+  });
+}
 
 // --- Public API --------------------------------------------------------------
 
@@ -248,8 +272,16 @@ function localAnalyticsProvider(event) {
   saved.push(event);
   const bounded = saved.slice(-QUEUE_CAP);
   window.localStorage.setItem(LOCAL_EVENT_KEY, JSON.stringify(bounded));
-  pushBrowserDestinations(event);
-  sendFirstPartyEvent(event);
+  // Third-party trackers and the first-party collector only receive events
+  // after explicit cookie consent. Until then the event sits in the in-memory
+  // pendingOutbound buffer; it drains when 'avalon:consentChanged' fires.
+  if (hasAnalyticsConsent()) {
+    pushBrowserDestinations(event);
+    sendFirstPartyEvent(event);
+  } else {
+    pendingOutbound.push(event);
+    if (pendingOutbound.length > QUEUE_CAP) pendingOutbound.splice(0, pendingOutbound.length - QUEUE_CAP);
+  }
   window.dispatchEvent(new CustomEvent('avalon:analytics', { detail: event }));
 }
 

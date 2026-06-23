@@ -5,6 +5,7 @@ import {
   reconciliationTypeForStripeEvent,
 } from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
+import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
 import { readCheckoutStoreRecord } from '../../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
@@ -781,6 +782,11 @@ export async function handleCheckoutCompleted(stripe, db, session) {
 
   if (db && record?.id) {
     await db.from('appointments').update(patch).eq('id', record.id);
+    await writeAuditEvent(db, {
+      tenantId, action: 'stripe_webhook_deposit_fulfilled',
+      entityType: 'appointment', entityId: record.id, phiTouched: true,
+      payload: { stripeSessionId: session.id, paymentIntentId: paymentIntentId || null, acuityAppointmentId: acuityAppointment?.id || null },
+    });
     await recordDiscountRedemptions(db, {
       session,
       record,
@@ -844,6 +850,12 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   }).select('id, tenant_id').single();
   if (error) console.warn('[stripe/webhook] appointment insert failed', safeLogContext(error, 'appointment_insert_failed'));
   if (!error && insertedRecord?.id) {
+    await writeAuditEvent(db, {
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      action: 'stripe_webhook_appointment_inserted',
+      entityType: 'appointment', entityId: insertedRecord.id, phiTouched: true,
+      payload: { stripeSessionId: session.id, paymentIntentId: paymentIntentId || null, acuityAppointmentId: md.acuityAppointmentId || null },
+    });
     await recordDiscountRedemptions(db, {
       session,
       record: insertedRecord,
@@ -885,6 +897,14 @@ async function handleBalancePaid(db, paymentIntent) {
   if (md.acuityAppointmentId) {
     await db.from('appointments').update(patch)
       .eq('acuity_appointment_id', String(md.acuityAppointmentId));
+    try {
+      await writeAuditEvent(db, {
+        tenantId: await getDefaultTenantId(db),
+        action: 'stripe_webhook_balance_paid',
+        entityType: 'appointment', phiTouched: true,
+        payload: { acuityAppointmentId: String(md.acuityAppointmentId), paymentIntentId: paymentIntent.id },
+      });
+    } catch (err) { /* audit best-effort */ }
   }
   return { action: 'balance_paid' };
 }

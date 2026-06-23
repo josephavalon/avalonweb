@@ -19,6 +19,7 @@
 import crypto from 'crypto';
 import { getAppointment } from '../../_acuity.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
+import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
 
@@ -325,6 +326,11 @@ export default async function handler(req, res) {
         .eq('acuity_appointment_id', String(apptId));
       if (eventId) await db.from('acuity_events')
         .update({ processed_status: 'processed', processed_at: new Date().toISOString() }).eq('id', eventId);
+      await writeAuditEvent(db, {
+        tenantId, action: 'acuity_webhook_appointment_canceled',
+        entityType: 'appointment', phiTouched: true,
+        payload: { acuityAppointmentId: String(apptId), webhookEventHash: hash },
+      });
       return res.status(200).json({ ok: true, action: 'canceled' });
     }
 
@@ -353,6 +359,13 @@ export default async function handler(req, res) {
     }
 
     const appointmentRecordId = await upsertAppointment(db, appt, action);
+    if (appointmentRecordId) {
+      await writeAuditEvent(db, {
+        tenantId, action: `acuity_webhook_appointment_${action}`,
+        entityType: 'appointment', entityId: appointmentRecordId, phiTouched: true,
+        payload: { acuityAppointmentId: String(apptId), webhookEventHash: hash },
+      });
+    }
 
     // CRM sync — non-blocking, contact only (no clinical detail).
     if (appt.email) {

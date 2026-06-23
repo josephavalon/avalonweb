@@ -21,11 +21,13 @@ export default function CookieConsent() {
   const handleAllow = () => {
     localStorage.setItem('cookieConsent', 'allowed');
     setShowConsent(false);
+    window.dispatchEvent(new CustomEvent('avalon:consentChanged', { detail: { value: 'allowed' } }));
   };
 
   const handleDecline = () => {
     localStorage.setItem('cookieConsent', 'declined');
     setShowConsent(false);
+    window.dispatchEvent(new CustomEvent('avalon:consentChanged', { detail: { value: 'declined' } }));
   };
 
   if (suppressed) return null;

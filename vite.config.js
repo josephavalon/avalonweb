@@ -151,6 +151,22 @@ function redactDemoPasswordPlugin(isLiveApiEnabled) {
 export default defineConfig(({ mode }) => {
   applyEnv(mode);
   const liveApiEnabled = process.env.VITE_AVALON_ENABLE_LIVE_API === 'true';
+  // Staging and prod share the same `vite build` invocation; the only signal
+  // that this is a prod-host build is VITE_AVALON_ENABLE_LIVE_API=true. A prod
+  // deploy with the flag missing would ship a demo-bearing bundle, which is a
+  // HIPAA finding. Fail loud at build time so the deployer can't ship it
+  // accidentally. Set AVALON_ALLOW_STAGING_BUILD=true to bypass for staging.
+  if (
+    mode === 'production'
+    && !liveApiEnabled
+    && process.env.VITE_AVALON_DEMO_PASSWORD
+    && process.env.AVALON_ALLOW_STAGING_BUILD !== 'true'
+  ) {
+    throw new Error(
+      'Refusing to build: production mode with VITE_AVALON_DEMO_PASSWORD set but VITE_AVALON_ENABLE_LIVE_API!=true. '
+      + 'Set VITE_AVALON_ENABLE_LIVE_API=true for prod hosts, or AVALON_ALLOW_STAGING_BUILD=true for staging.'
+    );
+  }
   const fixtureAliases = mode === 'development'
     ? [
         { find: /^@\/fixtures\/adminMockData$/, replacement: path.resolve(import.meta.dirname, './src/data/adminMockData.js') },

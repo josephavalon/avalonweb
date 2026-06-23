@@ -305,6 +305,39 @@ function checkAppointmentSummaryAuth() {
   }
 }
 
+// Any source file outside the appointment-summary endpoint itself that builds
+// a summary_token query parameter would leak the token into Vercel access logs
+// and browser history. The endpoint already rejects this transport — this
+// check makes sure nobody silently builds such a URL.
+function checkSummaryTokenNotInQueryString() {
+  const sourceDirs = ['src', 'app-modules', 'api'];
+  const allowFiles = new Set([
+    path.join(repoRoot, 'api/appointment-summary.js'),
+    path.join(repoRoot, 'scripts/launch-blocker-qa.mjs'),
+  ]);
+  const queryUsagePatterns = [
+    /[?&]summary_token=/,
+    /summary_token['"]\s*,\s*['"]/,
+    /set\(['"]summary_token['"]/,
+    /append\(['"]summary_token['"]/,
+  ];
+  for (const dir of sourceDirs) {
+    const root = path.join(repoRoot, dir);
+    if (!fs.existsSync(root)) continue;
+    for (const filePath of walkFiles(root)) {
+      if (allowFiles.has(filePath)) continue;
+      if (!/\.(?:js|jsx|ts|tsx|mjs|cjs)$/i.test(filePath)) continue;
+      const source = fs.readFileSync(filePath, 'utf8');
+      for (const pattern of queryUsagePatterns) {
+        if (pattern.test(source)) {
+          fail(`${relative(filePath)} builds summary_token into a URL/query — tokens must travel via the x-appointment-summary-token header only`);
+          break;
+        }
+      }
+    }
+  }
+}
+
 function checkDemoAuthHardening() {
   const authStoreSource = readRepoFile('src/lib/useAuthStore.js');
   const preApiSecuritySource = readRepoFile('src/lib/preApiSecurity.js');
@@ -603,6 +636,7 @@ checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
 checkSchedulingRaceLoserDefers();
 checkAppointmentSummaryAuth();
+checkSummaryTokenNotInQueryString();
 checkDemoAuthHardening();
 checkBalanceChargeIntegrity();
 checkGoLiveRunbook();
