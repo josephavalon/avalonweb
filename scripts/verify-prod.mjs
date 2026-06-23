@@ -4,6 +4,9 @@
  * stops on the first failure.
  */
 import { spawn } from 'node:child_process';
+import { loadEnvFiles } from './_load-env.mjs';
+
+loadEnvFiles([process.env.VERIFY_ENV_FILE, '.env.local', '.env'].filter(Boolean));
 
 const requiredEnv = [
   'API_BASE_URL',

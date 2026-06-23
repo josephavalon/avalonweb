@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
+import { writeAuditEvent } from '../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
 import { readCheckoutStoreRecord } from '../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../_booking-email.js';
@@ -463,6 +464,23 @@ export default async function handler(req, res) {
         fulfillment,
         attioPersonId: fulfillment.attioPersonId,
       });
+      try {
+        const db = await getSupabaseServiceClient();
+        if (db) {
+          await writeAuditEvent(db, {
+            tenantId: await getDefaultTenantId(db),
+            action: 'checkout_verify_fulfilled',
+            entityType: 'appointment',
+            entityId: appointment.id,
+            phiTouched: true,
+            payload: {
+              stripeSessionId: session.id,
+              acuityAppointmentId: fulfillment.appointmentId || null,
+              fulfillmentStatus: fulfillment.fulfillmentStatus || null,
+            },
+          });
+        }
+      } catch (err) { console.warn('[checkout/verify] audit insert failed', safeLogContext(err, 'audit_insert_failed')); }
     }
     const fulfillmentIssue = fulfillment.fulfillmentStatus === 'acuity_failed'
       ? 'appointment_confirmation_pending'

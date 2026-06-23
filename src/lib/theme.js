@@ -3,6 +3,7 @@ export const DEFAULT_THEME = 'dark';
 
 export const THEME_CLASSES = [
   'dark',
+  'giants',
   'daytime',
   'golden-hour',
   'warriors',
@@ -19,9 +20,10 @@ export const THEME_ALIASES = {
   dubs: 'warriors',
 };
 
-export const VALID_THEMES = ['dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july'];
+export const VALID_THEMES = ['dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july'];
 export const THEME_LABELS = {
   dark: 'Night',
+  giants: 'Giants',
   daytime: 'Daytime',
   'golden-hour': 'Golden',
   warriors: 'Warriors',
@@ -31,12 +33,18 @@ export const THEME_LABELS = {
 
 const THEME_COLOR_SCHEMES = {
   dark: 'dark',
+  giants: 'dark',
   daytime: 'light',
   'golden-hour': 'light',
   warriors: 'dark',
   pride: 'dark',
   july: 'dark',
 };
+
+// Hidden mobile easter egg (double-tap the logo): cycles Night → Giants →
+// Warriors → Night. Only these three are in the cycle; the other themes remain
+// reachable via applyTheme() directly.
+export const THEME_CYCLE = ['dark', 'giants', 'warriors'];
 
 export function normalizeTheme(theme) {
   const value = String(theme || '').trim();
@@ -77,4 +85,12 @@ export function applyTheme(theme = readStoredTheme(), { persist = true } = {}) {
     // CustomEvent can be unavailable in older embedded browsers; the root class still changed.
   }
   return normalized;
+}
+
+export function cycleTheme() {
+  const current = readStoredTheme();
+  const idx = THEME_CYCLE.indexOf(current);
+  // idx === -1 (current theme not in the cycle) → (-1 + 1) % len === 0 → 'dark'.
+  const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+  return applyTheme(next);
 }

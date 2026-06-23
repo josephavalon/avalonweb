@@ -41,6 +41,15 @@ function balanceStatus(amounts = {}) {
   ].filter(Boolean).join('\n');
 }
 
+function emergencyContactForAcuity(appointment = {}) {
+  const existing = String(appointment.emergencyContact || '').trim();
+  if (existing) return existing;
+  return [appointment.emergencyContactName, appointment.emergencyContactPhone]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function formatAddons(items = []) {
   const addons = items.filter((i) => i.type === 'addon' || i.type === 'im');
   if (!addons.length) return null;
@@ -54,6 +63,7 @@ export function appointmentNotes({ appointment = {}, items = [], membership = nu
   const ivItems = items.filter((i) => i.type === 'iv');
   const addonBlock = formatAddons(items);
   const isTest = isDevRequest(req);
+  const emergencyContact = emergencyContactForAcuity(appointment);
 
   const sections = [
     isTest ? '[TEST BOOKING - NOT A REAL APPOINTMENT]' : null,
@@ -85,7 +95,7 @@ export function appointmentNotes({ appointment = {}, items = [], membership = nu
     appointment.ivBefore ? `  IV before: ${appointment.ivBefore}` : null,
     appointment.allergies ? `  Allergies: ${appointment.allergies}` : null,
     appointment.medications ? `  Medications: ${appointment.medications}` : null,
-    appointment.emergencyContact ? `  Emergency contact: ${appointment.emergencyContact}` : null,
+    emergencyContact ? `  Emergency contact: ${emergencyContact}` : null,
 
     appointment.notes ? `\nCLIENT NOTES\n  ${appointment.notes}` : null,
     isTest ? '\n[TEST - DO NOT DISPATCH]' : null,
@@ -101,6 +111,7 @@ function requiresSpecialConsent(items = [], appointmentTypeID, needle) {
 
 export function requiredSchedulingFields(appointment = {}, items = [], appointmentTypeID = '') {
   const medicalConditions = appointment.medicalConditions || 'None of the above';
+  const emergencyContact = emergencyContactForAcuity(appointment);
   const fields = [
     { id: 16968986, value: appointment.dob || '' },
     { id: 16968987, value: appointment.address || '' },
@@ -111,7 +122,7 @@ export function requiredSchedulingFields(appointment = {}, items = [], appointme
     { id: 16969005, value: medicalConditions },
     { id: 16969010, value: appointment.allergies || 'None reported' },
     { id: 16969009, value: appointment.medications || 'None reported' },
-    { id: 16968994, value: appointment.emergencyContact || '' },
+    { id: 16968994, value: emergencyContact },
     { id: 16969698, value: appointment.additionalComments || appointment.notes || 'None' },
     { id: 16969017, value: yesNoDefaultYes(appointment.privacyAck) },
     { id: 16969015, value: yesNoDefaultYes(appointment.treatmentConsent) },

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Check, CalendarClock, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, CalendarClock, ChevronDown, Loader2, MapPin, User } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
@@ -44,6 +44,21 @@ function formatSlotLabel(iso) {
   return `${h}:${min} ${ampm}`;
 }
 
+// Section header — icon chip + Bebas title, the same grammar as /subscription.
+function SectionHead({ icon: Icon, title, hint }) {
+  return (
+    <div className="mb-3 flex items-center gap-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
+        <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
+      </span>
+      <div className="min-w-0">
+        <p className="font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground">{title}</p>
+        {hint && <p className="font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/46">{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
 function Field({ label, children }) {
   return (
     <label className="block">
@@ -54,7 +69,7 @@ function Field({ label, children }) {
 }
 
 const inputClass =
-  'w-full rounded-xl border border-foreground/16 bg-background/50 px-3.5 py-3 font-body text-sm font-semibold text-foreground placeholder:text-foreground/35 focus:border-foreground/45 focus:outline-none';
+  'w-full rounded-xl border border-foreground/16 bg-background/50 px-3.5 py-3 font-body text-base font-semibold text-foreground placeholder:text-foreground/35 focus:border-foreground/45 focus:outline-none';
 
 export default function PlanCheckout() {
   useSeo({ title: 'Start your plan - Avalon Vitality', description: 'Schedule your recurring membership visit and start your Avalon IV therapy plan.', path: '/plan' });
@@ -119,7 +134,13 @@ export default function PlanCheckout() {
         if (cancelled) return;
         const times = Array.isArray(data) ? data.map((s) => s.time).filter(Boolean) : [];
         setSlots(times);
-        if (!times.length) setSlotsError('No times open that day — try another date.');
+        if (!times.length) {
+          setSlotsError('No times open that day — try another date.');
+        } else {
+          // Land pre-confirmed on the soonest opening so a returning user can
+          // hit Start in one tap. They can still pick another time.
+          setSlot(times[0]);
+        }
       } catch (err) {
         if (!cancelled) { setSlots([]); setSlotsError(err.message || 'Could not load times.'); }
       } finally {
@@ -211,18 +232,16 @@ export default function PlanCheckout() {
           <ArrowLeft className="h-3.5 w-3.5" /> Back to plan
         </button>
 
-        <div className="mb-4 md:mb-6">
+        <div className="mb-4 md:mb-5">
           <h1 className="font-heading text-[2.4rem] uppercase leading-[0.88] tracking-normal text-foreground md:text-[3rem]">Start your plan</h1>
-          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/56">
-            Pick the day &amp; time for your recurring visit — it repeats {renews} at the same time. Change it anytime with our team.
-          </p>
+          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/64">Confirm your standing monthly visit. Change anytime.</p>
         </div>
 
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="av-glass-card mb-36 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-40 md:p-6"
+          className="av-glass-card mb-56 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:mb-6 md:p-6"
         >
           {isMultiPerson && peopleManifest.length > 0 && (
             <div className="mb-4 rounded-xl border border-foreground/12 bg-foreground/[0.04] p-3">
@@ -246,63 +265,72 @@ export default function PlanCheckout() {
             </div>
           )}
 
-          {/* Schedule */}
-          <p className="flex items-center gap-2 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">
-            <CalendarClock className="h-4 w-4" /> Your recurring visit
-          </p>
-          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
-            {dates.map((d) => (
-              <button
-                key={d.iso}
-                type="button"
-                onClick={() => setDate(d.iso)}
-                aria-pressed={date === d.iso}
-                className={`flex shrink-0 flex-col items-center rounded-xl border px-3 py-2 transition-colors ${date === d.iso ? 'border-foreground/46 bg-foreground/[0.12]' : 'border-foreground/14 hover:border-foreground/30'}`}
+          {/* When — two compact dropdowns (day + time). Soonest slot auto-selected
+              so the screen lands pre-confirmed. */}
+          <SectionHead icon={CalendarClock} title="When" hint={`Repeats ${renews} · reschedule anytime`} />
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className="relative">
+              <select
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                aria-label="Visit day"
+                className="av-treatment-card w-full appearance-none rounded-xl border py-3 pl-3.5 pr-10 font-body text-base font-black text-foreground focus:border-foreground/45 focus:outline-none"
               >
-                <span className="font-body text-[10px] font-bold uppercase tracking-[0.08em] text-foreground/55">{d.weekday}</span>
-                <span className="font-body text-sm font-black text-foreground">{d.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-3 min-h-[3rem]">
-            {slotsLoading ? (
-              <p className="flex items-center gap-2 font-body text-sm font-semibold text-foreground/55"><Loader2 className="h-4 w-4 animate-spin" /> Loading times…</p>
-            ) : slotsError ? (
-              <p className="font-body text-sm font-semibold text-foreground/55">{slotsError}</p>
-            ) : (
-              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
-                {slots.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setSlot(t)}
-                    aria-pressed={slot === t}
-                    className={`rounded-lg border px-2 py-2 font-body text-[13px] font-black transition-colors ${slot === t ? 'border-foreground/46 bg-foreground/[0.12] text-foreground' : 'border-foreground/14 text-foreground/80 hover:border-foreground/30'}`}
-                  >
-                    {formatSlotLabel(t)}
-                  </button>
+                {dates.map((d) => (
+                  <option key={d.iso} value={d.iso} className="bg-background text-foreground">{d.weekday}, {d.label}</option>
                 ))}
-              </div>
-            )}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/55" strokeWidth={2} />
+            </div>
+            <div className="relative">
+              {slotsLoading ? (
+                <div className="flex h-[50px] items-center gap-2 rounded-xl border border-foreground/14 bg-background/40 px-3.5 font-body text-sm font-semibold text-foreground/55"><Loader2 className="h-4 w-4 animate-spin" /> Loading times…</div>
+              ) : slots.length === 0 ? (
+                <div className="flex h-[50px] items-center rounded-xl border border-foreground/14 bg-background/40 px-3.5 font-body text-[13px] font-semibold text-foreground/55">{slotsError || 'No times open'}</div>
+              ) : (
+                <>
+                  <select
+                    value={slot || ''}
+                    onChange={(e) => setSlot(e.target.value)}
+                    aria-label="Visit time"
+                    className="av-treatment-card w-full appearance-none rounded-xl border py-3 pl-3.5 pr-10 font-body text-base font-black tabular-nums text-foreground focus:border-foreground/45 focus:outline-none"
+                  >
+                    {slots.map((t) => (
+                      <option key={t} value={t} className="bg-background text-foreground">{formatSlotLabel(t)}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/55" strokeWidth={2} />
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Contact */}
-          <div className="mt-5 grid gap-2.5 border-t border-foreground/10 pt-4 sm:grid-cols-2">
-            <Field label="First name"><input className={inputClass} value={contact.firstName} onChange={(e) => setContact((c) => ({ ...c, firstName: e.target.value }))} autoComplete="given-name" /></Field>
-            <Field label="Last name"><input className={inputClass} value={contact.lastName} onChange={(e) => setContact((c) => ({ ...c, lastName: e.target.value }))} autoComplete="family-name" /></Field>
-            <Field label="Email"><input type="email" className={inputClass} value={contact.email} onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))} autoComplete="email" /></Field>
-            <Field label="Phone"><input type="tel" className={inputClass} value={contact.phone} onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))} autoComplete="tel" /></Field>
-            <Field label="Date of birth"><input type="date" className={inputClass} value={contact.dob} onChange={(e) => setContact((c) => ({ ...c, dob: e.target.value }))} autoComplete="bday" /></Field>
-            <Field label="Emergency contact"><input className={inputClass} value={contact.emergencyContact} onChange={(e) => setContact((c) => ({ ...c, emergencyContact: e.target.value }))} autoComplete="off" placeholder="Name + phone" /></Field>
-            <Field label="Service address"><input className={inputClass} value={address.line1} onChange={(e) => setAddress((a) => ({ ...a, line1: e.target.value }))} autoComplete="address-line1" placeholder="Street address" /></Field>
-            <Field label="ZIP"><input className={inputClass} value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value.replace(/\D/g, '').slice(0, 5) }))} autoComplete="postal-code" inputMode="numeric" pattern="[0-9]*" maxLength={5} /></Field>
+          {/* You */}
+          <div className="mt-6 border-t border-foreground/10 pt-5">
+            <SectionHead icon={User} title="You" />
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              <Field label="First name"><input className={inputClass} value={contact.firstName} onChange={(e) => setContact((c) => ({ ...c, firstName: e.target.value }))} autoComplete="given-name" autoCapitalize="words" /></Field>
+              <Field label="Last name"><input className={inputClass} value={contact.lastName} onChange={(e) => setContact((c) => ({ ...c, lastName: e.target.value }))} autoComplete="family-name" autoCapitalize="words" /></Field>
+              <Field label="Email"><input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} className={inputClass} value={contact.email} onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))} autoComplete="email" /></Field>
+              <Field label="Phone"><input type="tel" inputMode="tel" className={inputClass} value={contact.phone} onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))} autoComplete="tel" /></Field>
+              <Field label="Date of birth"><input type="date" className={inputClass} value={contact.dob} onChange={(e) => setContact((c) => ({ ...c, dob: e.target.value }))} autoComplete="bday" /></Field>
+              <Field label="Emergency contact"><input className={inputClass} value={contact.emergencyContact} onChange={(e) => setContact((c) => ({ ...c, emergencyContact: e.target.value }))} autoComplete="off" placeholder="Name + phone" /></Field>
+            </div>
+          </div>
+
+          {/* Where */}
+          <div className="mt-6 border-t border-foreground/10 pt-5">
+            <SectionHead icon={MapPin} title="Where" />
+            <div className="grid gap-2.5 sm:grid-cols-[1fr_7rem]">
+              <Field label="Service address"><input className={inputClass} value={address.line1} onChange={(e) => setAddress((a) => ({ ...a, line1: e.target.value }))} autoComplete="address-line1" autoCapitalize="words" placeholder="Street address" /></Field>
+              <Field label="ZIP"><input className={inputClass} value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value.replace(/\D/g, '').slice(0, 5) }))} autoComplete="postal-code" inputMode="numeric" pattern="[0-9]*" maxLength={5} /></Field>
+            </div>
           </div>
         </motion.section>
 
         {error && <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 font-body text-sm font-semibold text-red-200" role="alert">{error}</p>}
 
-        <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3">
+        <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 md:static md:bottom-auto md:mx-0 md:bg-transparent md:px-0 md:pb-0 md:pt-2">
           <div className="mb-2.5 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <span className="min-w-0 truncate font-body text-[12px] font-black uppercase tracking-[0.08em] text-foreground/82">{planLabel}</span>
@@ -316,9 +344,9 @@ export default function PlanCheckout() {
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-3 border-t border-foreground/10 pt-1.5">
               <span className="font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/70">Deposit today</span>
-              <span className="font-body text-sm font-black text-foreground">{money(depositToday)}</span>
+              <span className="font-body text-sm font-black text-foreground tabular-nums">{money(depositToday)}</span>
             </div>
-            <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/52">
+            <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/52 tabular-nums">
               {money(firstVisitBalance)} balance after your first visit · then {money(perPeriodTotal)} {renews}
             </p>
           </div>
@@ -330,7 +358,7 @@ export default function PlanCheckout() {
           >
             {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Start plan · {money(depositToday)} deposit <ArrowRight className="h-4 w-4" /></>)}
           </button>
-          <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Secure checkout · licensed RN visit · clinical review before treatment · 3-month minimum, then pause or cancel</p>
+          <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Secure checkout · licensed RN · cancel after the 3-month minimum</p>
         </div>
       </main>
     </div>

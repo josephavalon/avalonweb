@@ -5,14 +5,38 @@
 // The user shape + hook API stay stable, so RequireAuth and every route keep working.
 
 import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
-import { appendActivity } from './localOs';
+import { appendActivity, clearAllAvLocal } from './localOs';
 import { seedDemoState } from './platformOps';
 import { isDemoAuthAllowed, PRE_API_SECURITY_MODE } from './preApiSecurity';
 import { supabase, hasSupabase } from './supabase';
+import { authProviderConfig } from './authProviderConfig';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+// HIPAA §164.312(a)(2)(iii): automatic logoff after inactivity. 15 min is the
+// industry default for clinical workstations. Tracked in sessionStorage so a
+// page reload doesn't reset the clock.
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+const IDLE_KEY = 'av.lastActivity';
+const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
+const IDLE_ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+
+function noteActivity() {
+  try { sessionStorage.setItem(IDLE_KEY, String(Date.now())); } catch { /* private mode */ }
+}
+
+function readLastActivity() {
+  try {
+    const raw = sessionStorage.getItem(IDLE_KEY);
+    const value = raw ? Number(raw) : NaN;
+    return Number.isFinite(value) ? value : null;
+  } catch { return null; }
+}
+
+function clearLastActivity() {
+  try { sessionStorage.removeItem(IDLE_KEY); } catch { /* ignore */ }
+}
 
 // ── Demo accounts (local fallback only — used when Supabase is not configured) ──
 const DEMO_USERS = {
@@ -277,6 +301,7 @@ export function AuthStoreProvider({ children }) {
   // Send-SMS auth hook); verifyPhoneOtp checks it and onAuthStateChange sets
   // the session.
   const signInWithPhone = useCallback(async (phone) => {
+    if (!authProviderConfig.phone) return { ok: false, error: 'Phone sign-in is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Phone sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
@@ -291,6 +316,7 @@ export function AuthStoreProvider({ children }) {
   }, []);
 
   const verifyPhoneOtp = useCallback(async (phone, token) => {
+    if (!authProviderConfig.phone) return { ok: false, error: 'Phone sign-in is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Phone sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
@@ -311,6 +337,7 @@ export function AuthStoreProvider({ children }) {
   // Passkey / WebAuthn (Supabase native). signInWithPasskey is a passwordless
   // returning-user sign-in; registerPasskey enrolls one for the current session.
   const signInWithPasskey = useCallback(async () => {
+    if (!authProviderConfig.passkey) return { ok: false, error: 'Passkey sign-in is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Passkey sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
@@ -325,6 +352,7 @@ export function AuthStoreProvider({ children }) {
   }, []);
 
   const registerPasskey = useCallback(async () => {
+    if (!authProviderConfig.passkey) return { ok: false, error: 'Passkey enrollment is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Passkeys are not configured yet.' };
     setError(null);
     try {
@@ -341,6 +369,7 @@ export function AuthStoreProvider({ children }) {
   // by profile role.
   // Enable the provider in Supabase → Auth → Providers for it to work.
   const signInWithOAuth = useCallback(async (provider) => {
+    if (!authProviderConfig[provider]) return { ok: false, error: `${provider === 'apple' ? 'Apple' : 'Google'} sign-in is not enabled for this environment.` };
     if (!hasSupabase) return { ok: false, error: 'Social sign-in is not configured yet.' };
     setError(null);
     try {
@@ -431,7 +460,35 @@ export function AuthStoreProvider({ children }) {
     if (hasSupabase) { try { await supabase.auth.signOut(); } catch { /* ignore */ } }
     setUser(null);
     if (!hasSupabase) writeSession(null);
+    clearLastActivity();
+    clearAllAvLocal();
   }, [user]);
+
+  // Idle auto-logoff. While a user is signed in, track activity and force
+  // sign-out after IDLE_TIMEOUT_MS of inactivity. The timestamp lives in
+  // sessionStorage so a page refresh doesn't reset the clock.
+  useEffect(() => {
+    if (!user) { clearLastActivity(); return undefined; }
+    noteActivity();
+    const onActivity = () => noteActivity();
+    IDLE_ACTIVITY_EVENTS.forEach((evt) => window.addEventListener(evt, onActivity, { passive: true }));
+    const onVisibility = () => { if (document.visibilityState === 'visible') noteActivity(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    const tick = setInterval(() => {
+      const last = readLastActivity();
+      if (last == null) { noteActivity(); return; }
+      if (Date.now() - last >= IDLE_TIMEOUT_MS) {
+        clearInterval(tick);
+        appendActivity('Session idle timeout', { role: user.role, username: user.username });
+        signOut();
+      }
+    }, IDLE_CHECK_INTERVAL_MS);
+    return () => {
+      clearInterval(tick);
+      IDLE_ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, onActivity));
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [user, signOut]);
 
   return React.createElement(
     AuthStoreContext.Provider,

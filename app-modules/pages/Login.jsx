@@ -11,12 +11,9 @@ import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
 import AvalonMark from '@/components/AvalonMark';
 import { isDemoAuthAllowed } from '@/lib/preApiSecurity';
+import { authProviderConfig } from '@/lib/authProviderConfig';
 
 const EASE = [0.16, 1, 0.3, 1];
-
-// Social login (Google/Apple) stays hidden until the Supabase OAuth providers
-// are configured (GL-002). Flip to true to re-enable the buttons.
-const SOCIAL_LOGIN_ENABLED = false;
 
 export function safeLoginRedirectPath(requested) {
   const value = String(requested || '').trim();
@@ -363,6 +360,10 @@ export default function Login({ defaultAudience = 'patient' }) {
   const handlePhone = async (event) => {
     event.preventDefault();
     setFieldError('');
+    if (!authProviderConfig.phone) {
+      setFieldError('Phone sign-in is not enabled for this environment.');
+      return;
+    }
     if (!otpSent) {
       if (!phone.trim()) { setFieldError('Enter your phone number.'); return; }
       const result = await signInWithPhone(phone.trim());
@@ -377,6 +378,10 @@ export default function Login({ defaultAudience = 'patient' }) {
 
   const handlePasskey = async () => {
     setFieldError('');
+    if (!authProviderConfig.passkey) {
+      setFieldError('Passkey sign-in is not enabled for this environment.');
+      return;
+    }
     setPasskeyBusy(true);
     const result = await signInWithPasskey();
     setPasskeyBusy(false);
@@ -385,6 +390,10 @@ export default function Login({ defaultAudience = 'patient' }) {
 
   const handleOAuth = async (provider) => {
     setFieldError('');
+    if (!authProviderConfig[provider]) {
+      setFieldError(`${provider === 'apple' ? 'Apple' : 'Google'} sign-in is not enabled for this environment.`);
+      return;
+    }
     setOauthBusy(provider);
     const result = await signInWithOAuth(provider);
     // On success Supabase redirects to the provider; on failure, surface it.
@@ -537,13 +546,6 @@ export default function Login({ defaultAudience = 'patient' }) {
       </Field>
       <ErrorBanner message={displayError} />
       <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
-      <button
-        type="button"
-        onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-        className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
-      >
-        Send me a reset link
-      </button>
     </form>
   );
 
@@ -581,10 +583,10 @@ export default function Login({ defaultAudience = 'patient' }) {
 
   const patientMethodButtons = (
     <div className="grid grid-cols-2 gap-1.5 md:block md:space-y-2">
-      <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
-      {SOCIAL_LOGIN_ENABLED && <MethodButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />}
-      {SOCIAL_LOGIN_ENABLED && <MethodButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />}
-      <MethodButton label="Continue With Phone" onClick={() => { setView('phone'); setFieldError(''); }} icon={<Smartphone className="h-4 w-4" strokeWidth={2} />} />
+      {authProviderConfig.passkey && <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />}
+      {authProviderConfig.google && <MethodButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />}
+      {authProviderConfig.apple && <MethodButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />}
+      {authProviderConfig.phone && <MethodButton label="Continue With Phone" onClick={() => { setView('phone'); setFieldError(''); }} icon={<Smartphone className="h-4 w-4" strokeWidth={2} />} />}
     </div>
   );
 
@@ -620,23 +622,11 @@ export default function Login({ defaultAudience = 'patient' }) {
       </div>
     );
   } else if (isAdmin) {
-    // Admin, Supabase: operations — passkey, email link, or email + password
-    // (staff who set a password via the invite flow), no social. Local/beta
-    // no-API builds also expose the host-gated operator-ID fallback.
-    body = (
-      <div className="space-y-4 md:space-y-3">
-        <MethodButton variant="primary" label="Continue With Passkey" busy={passkeyBusy} onClick={handlePasskey} icon={<Fingerprint className="h-4 w-4" strokeWidth={2} />} />
-        <MethodButton label="Sign In With Password" onClick={() => { setView('password'); setFieldError(''); }} icon={<LockKeyhole className="h-4 w-4" strokeWidth={2} />} />
-        <Divider />
-        {emailForm}
-        {demoAuthAvailable && (
-          <>
-            <Divider label="or operator id" />
-            {demoForm}
-          </>
-        )}
-      </div>
-    );
+    // Admin sign-in is deliberately just email + password — no magic link,
+    // social, passkey, or operator-ID. Operations staff use their password
+    // (Supabase signInWithPassword); the forgot-password reset stays for
+    // lockout recovery.
+    body = passwordForm;
   } else if (!supabaseMode) {
     // Offline beta keeps visible method choices while preserving the roster ID
     // sign-in as the working fallback.
@@ -723,14 +713,13 @@ export default function Login({ defaultAudience = 'patient' }) {
   );
 
   return (
-    // No opaque bg here — the global AvalonStaticBackdrop photo shows through.
     // Top padding clears the fixed marketing navbar; scrollable so a tall card
     // is never clipped on short viewports.
     <div className="relative h-screen h-dvh overflow-y-auto px-3 py-2 text-foreground md:px-6 md:py-3">
       <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center pt-20 md:pt-24">
         {/* Card frame stays static — only the tab content below crossfades on
-            selection. Top menu + photo backdrop are global (MobileShell), so they
-            never move on a tab switch. */}
+            selection. Top menu is global (MobileShell), so it never moves on a
+            tab switch. */}
         <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
           <div className="mb-3 flex items-center justify-between gap-4">
             <Link
@@ -778,7 +767,7 @@ export default function Login({ defaultAudience = 'patient' }) {
                 </h1>
                 {supabaseMode && isAdmin && (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    Operations-only. Use your passkey or a secure email link.
+                    Operations-only. Sign in with your staff email and password.
                   </p>
                 )}
               </div>

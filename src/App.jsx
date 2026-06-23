@@ -311,6 +311,8 @@ function AppRoutes() {
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
             <Route path="/custom" element={<CustomProtocol />} />
             <Route path="/book" element={<BookNow />} />
+            <Route path="/booking" element={<Navigate to="/book" replace />} />
+            <Route path="/book-now" element={<Navigate to="/book" replace />} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
@@ -412,9 +414,9 @@ function App() {
           <MobileShell />
           <AppRoutes />
           <StickyBookBar />
+          <CookieConsent />
         </Router>
         <Toaster />
-        <CookieConsent />
       </CartProvider>
       </AuthStoreProvider>
     </ErrorBoundary>

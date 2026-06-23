@@ -192,7 +192,7 @@ export default function Footer() {
         <div className="mb-3 flex flex-col gap-2 md:mb-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="font-heading text-xl tracking-widest text-foreground md:text-2xl">AVALON</div>
-            <div className="-mt-1 font-body text-[10px] tracking-[0.3em] text-foreground/60 md:text-xs">VITALITY</div>
+            <div className="-mt-1 font-body text-[11px] tracking-[0.3em] text-foreground/60 md:text-xs">VITALITY</div>
           </div>
           <p className="max-w-sm font-body text-[11px] leading-snug text-foreground/55 md:text-right md:text-xs">
             Clinician-led recovery across the Bay Area.
@@ -281,14 +281,14 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-foreground/[0.07] pt-2 md:pt-2 space-y-1 md:space-y-0.5">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <p className="font-body text-[10px] text-foreground/58 leading-tight">
+            <p className="font-body text-[11px] text-foreground/58 leading-tight">
               © 2026 Avalon Vitality. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <LanguageSelect />
             </div>
           </div>
-          <p className="font-body text-[10px] text-foreground/58 leading-tight">
+          <p className="font-body text-[11px] text-foreground/58 leading-tight">
             California wellness support only. Not emergency care or medical advice.
           </p>
         </div>
