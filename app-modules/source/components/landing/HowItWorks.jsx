@@ -87,22 +87,32 @@ function StepCard({ step, index, open, onToggle }) {
             <p className="font-heading text-2xl tracking-normal text-foreground leading-none">{step.title}</p>
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.38, ease: EASE }}
-          className="shrink-0 text-foreground"
-        >
-        <ChevronDown
-          className="h-4 w-4 shrink-0 text-foreground transition-transform duration-300"
-          strokeWidth={2}
-        />
-        </motion.div>
+        <div className="flex shrink-0 items-center gap-4">
+          {/* Tablet+ inline preview — fills the otherwise-empty wide card row
+              with the same eyebrow we show inside the disclosure body. Hidden
+              on mobile to keep the row compact. */}
+          <p className="hidden md:block font-body text-[11px] font-semibold tracking-[0.04em] uppercase text-foreground/72 text-right max-w-[24rem]">
+            {step.preview}
+          </p>
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.38, ease: EASE }}
+            className="shrink-0 text-foreground"
+          >
+            <ChevronDown
+              className="h-4 w-4 shrink-0 text-foreground transition-transform duration-300"
+              strokeWidth={2}
+            />
+          </motion.div>
+        </div>
       </motion.button>
 
       <SmoothDisclosure open={open}>
         <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3 md:px-5">
-          <p className="font-body text-[11px] font-semibold tracking-[0.04em] text-foreground/76">{step.preview}</p>
-          <p className="mt-1.5 font-body text-xs leading-relaxed text-foreground">{step.desc}</p>
+          {/* Mobile keeps the eyebrow inside the disclosure (since it isn't
+              visible in the collapsed row); tablet+ already shows it inline. */}
+          <p className="md:hidden font-body text-[11px] font-semibold tracking-[0.04em] text-foreground/76">{step.preview}</p>
+          <p className="mt-1.5 md:mt-0 font-body text-xs leading-relaxed text-foreground">{step.desc}</p>
         </div>
       </SmoothDisclosure>
     </motion.div>
