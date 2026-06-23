@@ -151,9 +151,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
       }`}>
-      {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width */}
+      {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width.
+          Gated at lg (not md): at the 768-1023 tablet band the centered links and the
+          right cluster (contact icons + Sign In + Book Now) collide, so tablet keeps the
+          compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
-        className={`av-glass-menu hidden rounded-3xl border md:grid items-center px-8 transition-all duration-500 ease-editorial ${
+        className={`av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
         compact ? 'h-12 px-4' : 'h-16'
         }`}
         style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
@@ -235,8 +238,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         </div>
       </div>
 
-      {/* Mobile bar */}
-      <div className={`av-glass-menu relative md:hidden flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
+      {/* Mobile + tablet bar (shown below lg; desktop grid above takes over at lg) */}
+      <div className={`av-glass-menu relative lg:hidden flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
         compact ? 'h-12' : 'h-14'
       }`}>
         <div className="flex h-full min-w-0 flex-1 items-center gap-3 pr-[8rem]">
@@ -296,8 +299,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         </div>
       </div>
 
-      {/* Mobile dropdown */}
-      {!focusMode && <div className="md:hidden overflow-hidden px-2">
+      {/* Mobile + tablet dropdown (below lg) */}
+      {!focusMode && <div className="lg:hidden overflow-hidden px-2">
         <SmoothDisclosure open={mobileOpen} snapClosed className="pb-2" innerClassName="pb-0">
               <motion.div
                 initial={false}
