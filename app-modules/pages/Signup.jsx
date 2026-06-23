@@ -6,12 +6,9 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
+import { authProviderConfig, socialAuthEnabled } from '@/lib/authProviderConfig';
 
 const EASE = [0.16, 1, 0.3, 1];
-
-// Social login (Google/Apple) stays hidden until the Supabase OAuth providers
-// are configured (GL-002). Flip to true to re-enable the buttons.
-const SOCIAL_LOGIN_ENABLED = false;
 
 function Field({ id, label, type = 'text', value, onChange, placeholder, autoComplete }) {
   return (
@@ -137,6 +134,10 @@ export default function Signup() {
       setFieldError('Social sign-up is available once Supabase is configured.');
       return;
     }
+    if (!authProviderConfig[provider]) {
+      setFieldError(`${provider === 'apple' ? 'Apple' : 'Google'} sign-up is not enabled for this environment.`);
+      return;
+    }
     setOauthBusy(provider);
     const result = await signInWithOAuth(provider);
     if (!result.ok) {
@@ -193,11 +194,11 @@ export default function Signup() {
             </div>
           ) : (
             <div className="space-y-4">
-              {SOCIAL_LOGIN_ENABLED && (
+              {socialAuthEnabled && (
                 <>
                   <div className="space-y-3">
-                    <SocialButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />
-                    <SocialButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />
+                    {authProviderConfig.google && <SocialButton label="Continue With Google" busy={oauthBusy === 'google'} onClick={() => handleOAuth('google')} icon={<GoogleMark />} />}
+                    {authProviderConfig.apple && <SocialButton label="Continue With Apple" busy={oauthBusy === 'apple'} onClick={() => handleOAuth('apple')} icon={<AppleMark />} />}
                   </div>
                   <Divider />
                 </>

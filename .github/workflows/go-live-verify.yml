@@ -37,6 +37,10 @@ jobs:
           PUBLIC_SITE_URL: https://snooches.avalonvitality.co
           AVALON_ENABLE_LIVE_API: 'true'
           VITE_AVALON_ENABLE_LIVE_API: 'true'
+          VITE_AUTH_GOOGLE_ENABLED: ${{ vars.VITE_AUTH_GOOGLE_ENABLED || 'false' }}
+          VITE_AUTH_APPLE_ENABLED: ${{ vars.VITE_AUTH_APPLE_ENABLED || 'false' }}
+          VITE_AUTH_PHONE_ENABLED: ${{ vars.VITE_AUTH_PHONE_ENABLED || 'false' }}
+          VITE_AUTH_PASSKEY_ENABLED: ${{ vars.VITE_AUTH_PASSKEY_ENABLED || 'false' }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

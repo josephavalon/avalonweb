@@ -530,12 +530,19 @@ function checkNoProdDeployAutomation() {
     'package.json',
     '.github/workflows/ci.yml',
     '.github/workflows/go-live-verify.yml',
+    'scripts/snooches-safe-deploy.mjs',
   ];
   for (const file of automationFiles) {
     if (!fs.existsSync(path.join(repoRoot, file))) continue;
     const source = readRepoFile(file);
     if (/\bvercel\s+deploy\b[^\n]*\s--prod\b/.test(source)) {
       fail(`${file} must not run vercel deploy --prod`);
+    }
+    if (/\bvercel\s+promote\b/.test(source)) {
+      fail(`${file} must not promote a deployment to the protected main production aliases`);
+    }
+    if (/\bvercel\s+alias\s+set\b[^\n]\s+(?:avalonvitality\.co|www\.avalonvitality\.co)\b/.test(source)) {
+      fail(`${file} must not alias the protected main production domains`);
     }
   }
 }

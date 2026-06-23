@@ -49,7 +49,7 @@
   }
 
   .dark {
-    --background: 28 12% 13%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 28 12% 16%;
     --card-foreground: 0 0% 100%;
@@ -88,6 +88,51 @@
     --glass-border-hover: rgba(255, 255, 255, 0.24);
     --glass-highlight: linear-gradient(90deg, rgba(255,255,255,0.016) 0%, rgba(255,255,255,0.028) 25%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.00) 100%);
     --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 22px 86px rgba(0, 0, 0, 0.34);
+    --glass-radius: 1.35rem;
+  }
+
+  /* SF Giants — black surfaces, orange ink (≈ #FD5A1E). A clone of .dark with the
+     white foreground/primary/accent swapped to Giants orange. */
+  .giants {
+    --background: 0 0% 0%;
+    --foreground: 16 98% 55%;
+    --card: 28 12% 16%;
+    --card-foreground: 16 98% 55%;
+    --popover: 28 12% 16%;
+    --popover-foreground: 16 98% 55%;
+    --primary: 16 98% 55%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 16 98% 55%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 16 98% 55%;
+    --accent: 16 98% 55%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 16 60% 22%;
+    --input: 16 60% 22%;
+    --ring: 16 98% 55%;
+    --chart-1: 16 98% 55%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 16 98% 55%;
+    --sidebar-primary: 16 98% 55%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 16 98% 55%;
+    --sidebar-border: 16 60% 22%;
+    --sidebar-ring: 16 98% 55%;
+    --glass-bg: rgba(7, 7, 7, 0.72);
+    --glass-overlay: linear-gradient(145deg, rgba(253, 90, 30, 0.060) 0%, rgba(253, 90, 30, 0.022) 56%, rgba(255, 255, 255, 0.008) 100%);
+    --glass-blur: 18px;
+    --glass-border: rgba(253, 90, 30, 0.22);
+    --glass-border-hover: rgba(253, 90, 30, 0.36);
+    --glass-highlight: linear-gradient(90deg, rgba(253,90,30,0.016) 0%, rgba(253,90,30,0.030) 25%, rgba(253,90,30,0.008) 50%, rgba(255,255,255,0.00) 100%);
+    --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 22px 86px rgba(0, 0, 0, 0.40);
     --glass-radius: 1.35rem;
   }
 
@@ -166,17 +211,17 @@
   .warriors,
   .dubs {
     --background: 218 60% 16%;
-    --foreground: 0 0% 100%;
+    --foreground: 45 100% 58%;
     --card: 218 52% 20%;
-    --card-foreground: 0 0% 100%;
+    --card-foreground: 45 100% 58%;
     --popover: 218 52% 20%;
-    --popover-foreground: 0 0% 100%;
+    --popover-foreground: 45 100% 58%;
     --primary: 45 100% 58%;
     --primary-foreground: 218 60% 16%;
     --secondary: 210 40% 28%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 45 100% 58%;
     --muted: 210 40% 28%;
-    --muted-foreground: 0 0% 100%;
+    --muted-foreground: 45 100% 58%;
     --accent: 45 100% 58%;
     --accent-foreground: 218 60% 16%;
     --destructive: 0 84% 60%;
@@ -413,12 +458,6 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   [class*="text-muted-foreground"],
   [class*="text-accent/"]
 ),
-.warriors :where(
-  [class*="text-foreground/"],
-  [class*="text-white/"],
-  [class*="text-muted-foreground"],
-  [class*="text-accent/"]
-),
 .pride :where(
   [class*="text-foreground/"],
   [class*="text-white/"],
@@ -432,11 +471,6 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   [class*="text-accent/"]
 ),
 .dark :where(
-  [class*="stroke-foreground/"],
-  [class*="stroke-white/"],
-  [class*="stroke-accent/"]
-),
-.warriors :where(
   [class*="stroke-foreground/"],
   [class*="stroke-white/"],
   [class*="stroke-accent/"]
@@ -455,12 +489,39 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   stroke: #fff !important;
 }
 
-.dark :where(
-  [class*="fill-foreground/"],
-  [class*="fill-white/"],
-  [class*="fill-accent/"]
+/* Warriors: semi-transparent foreground/accent text snaps to solid gold. */
+.warriors :where(
+  [class*="text-foreground/"],
+  [class*="text-white/"],
+  [class*="text-muted-foreground"],
+  [class*="text-accent/"]
 ),
 .warriors :where(
+  [class*="stroke-foreground/"],
+  [class*="stroke-white/"],
+  [class*="stroke-accent/"]
+) {
+  color: hsl(45 100% 58%) !important;
+  stroke: hsl(45 100% 58%) !important;
+}
+
+/* SF Giants: same selectors snap to solid Giants orange. */
+.giants :where(
+  [class*="text-foreground/"],
+  [class*="text-white/"],
+  [class*="text-muted-foreground"],
+  [class*="text-accent/"]
+),
+.giants :where(
+  [class*="stroke-foreground/"],
+  [class*="stroke-white/"],
+  [class*="stroke-accent/"]
+) {
+  color: hsl(16 98% 55%) !important;
+  stroke: hsl(16 98% 55%) !important;
+}
+
+.dark :where(
   [class*="fill-foreground/"],
   [class*="fill-white/"],
   [class*="fill-accent/"]
@@ -479,43 +540,25 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   fill: #fff !important;
 }
 
-/* ===== Night-theme text hierarchy =====
-   The rules above flatten every opacity-based text utility to hard white,
-   which erases the primary/secondary/tertiary hierarchy a premium dark UI
-   needs. These two tiers run AFTER the flatten rules (same 0,0,0 :where
-   specificity, later source order, so they win) and soften the mid/low
-   opacity levels to AA-safe greys on the night backdrop:
-     secondary ≈ rgba(255,255,255,0.72) → ~8.7:1
-     tertiary  ≈ rgba(255,255,255,0.56) → ~6.0:1
-   Headings and any level not listed stay hard white (safe default). */
-.dark :where(
-  [class*="text-foreground/56"], [class*="text-foreground/58"], [class*="text-foreground/60"],
-  [class*="text-foreground/62"], [class*="text-foreground/64"], [class*="text-foreground/66"],
-  [class*="text-foreground/68"], [class*="text-foreground/70"], [class*="text-foreground/72"],
-  [class*="text-foreground/74"], [class*="text-white/56"], [class*="text-white/58"],
-  [class*="text-white/60"], [class*="text-white/62"], [class*="text-white/66"],
-  [class*="text-white/70"], [class*="text-white/72"], [class*="text-white/74"],
-  [class*="text-white/76"], [class*="text-muted-foreground"]
+.warriors :where(
+  [class*="fill-foreground/"],
+  [class*="fill-white/"],
+  [class*="fill-accent/"]
 ) {
-  color: rgba(255, 255, 255, 0.72) !important;
+  color: hsl(45 100% 58%) !important;
+  fill: hsl(45 100% 58%) !important;
 }
-.dark :where(
-  [class*="text-foreground/10"], [class*="text-foreground/22"], [class*="text-foreground/24"],
-  [class*="text-foreground/30"], [class*="text-foreground/32"], [class*="text-foreground/36"],
-  [class*="text-foreground/40"], [class*="text-foreground/42"], [class*="text-foreground/44"],
-  [class*="text-foreground/46"], [class*="text-foreground/48"], [class*="text-foreground/50"],
-  [class*="text-foreground/52"], [class*="text-foreground/54"], [class*="text-white/30"],
-  [class*="text-white/40"], [class*="text-white/50"]
+
+.giants :where(
+  [class*="fill-foreground/"],
+  [class*="fill-white/"],
+  [class*="fill-accent/"]
 ) {
-  color: rgba(255, 255, 255, 0.56) !important;
+  color: hsl(16 98% 55%) !important;
+  fill: hsl(16 98% 55%) !important;
 }
 
 .dark :where(
-  [class*="placeholder:text-foreground/"],
-  [class*="placeholder:text-muted-foreground"],
-  [class*="placeholder:text-white/"]
-)::placeholder,
-.warriors :where(
   [class*="placeholder:text-foreground/"],
   [class*="placeholder:text-muted-foreground"],
   [class*="placeholder:text-white/"]
@@ -531,6 +574,24 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   [class*="placeholder:text-white/"]
 )::placeholder {
   color: #fff !important;
+  opacity: 1 !important;
+}
+
+.warriors :where(
+  [class*="placeholder:text-foreground/"],
+  [class*="placeholder:text-muted-foreground"],
+  [class*="placeholder:text-white/"]
+)::placeholder {
+  color: hsl(45 100% 58%) !important;
+  opacity: 1 !important;
+}
+
+.giants :where(
+  [class*="placeholder:text-foreground/"],
+  [class*="placeholder:text-muted-foreground"],
+  [class*="placeholder:text-white/"]
+)::placeholder {
+  color: hsl(16 98% 55%) !important;
   opacity: 1 !important;
 }
 
@@ -566,6 +627,38 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
 .av-hero-action.av-hero-action-primary .av-hero-book-icon svg {
   color: #1b1815 !important;
   stroke: #1b1815 !important;
+}
+
+/* Giants/Warriors: the primary Book CTA picks up the theme ink (orange / gold)
+   instead of the hardcoded white above. Two-class + theme prefix out-specifies
+   the white default; dark/night + light themes keep the white fill. The dark
+   contrast text comes from each theme's --background (black on Giants orange,
+   blue on Warriors gold). */
+.giants .av-hero-action.av-hero-action-primary,
+.warriors .av-hero-action.av-hero-action-primary {
+  background: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+}
+.giants .av-hero-action.av-hero-action-primary:hover,
+.warriors .av-hero-action.av-hero-action-primary:hover {
+  background: hsl(var(--foreground) / 0.92) !important;
+}
+.giants .av-hero-action.av-hero-action-primary :where(span),
+.warriors .av-hero-action.av-hero-action-primary :where(span) {
+  color: hsl(var(--background)) !important;
+}
+.giants .av-hero-action.av-hero-action-primary svg,
+.warriors .av-hero-action.av-hero-action-primary svg,
+.giants .av-hero-action.av-hero-action-primary .av-hero-book-icon svg,
+.warriors .av-hero-action.av-hero-action-primary .av-hero-book-icon svg {
+  color: hsl(var(--background)) !important;
+  stroke: hsl(var(--background)) !important;
+}
+.giants .av-hero-action.av-hero-action-primary .av-hero-book-icon,
+.warriors .av-hero-action.av-hero-action-primary .av-hero-book-icon {
+  background: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--foreground)) !important;
 }
 
 #root, .app-shell {
@@ -1843,15 +1936,7 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #2a2521;
-  background-image:
-    linear-gradient(90deg, rgba(42, 37, 33, 0.84), rgba(42, 37, 33, 0.52) 45%, rgba(42, 37, 33, 0.22)),
-    image-set(
-      url("/images/avalon-static-back-512.webp") type("image/webp"),
-      url("/images/avalon-static-back-512.jpg") type("image/jpeg")
-    );
-  background-size: cover;
-  background-position: 86% 52%;
+  background-color: #000000;
   color: #f4f4f1;
   pointer-events: none;
 }
@@ -1878,7 +1963,7 @@ section p:not([class*="max-w-"]):not([class*="text-center"]) {
   font-size: 10px;
   letter-spacing: 0.42em;
   text-transform: uppercase;
-  color: rgba(244, 244, 241, 0.46);
+  color: #ffffff;
   user-select: none;
 }
 .av-route-fallback-progress {

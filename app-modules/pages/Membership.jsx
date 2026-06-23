@@ -1,13 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
+  CalendarClock,
   Check,
   ChevronDown,
+  CreditCard,
   Droplets,
   Minus,
   Plus,
   Sparkles,
+  Users,
 } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
@@ -56,7 +59,9 @@ const CATEGORIES = [
     label: 'IV Vitamins',
     icon: Droplets,
     blurb: `$${VITAMIN_IV_PRICE} per IV`,
-    options: IV_VITAMINS.map((s) => ({ key: s.key, label: s.label, note: s.tag, price: VITAMIN_IV_PRICE, protocol: s.key, image: s.image })),
+    // Each option carries the catalog content the "What's inside" disclosure
+    // needs (desc / inside / features) so the tile face stays name + price only.
+    options: IV_VITAMINS.map((s) => ({ key: s.key, label: s.label, price: VITAMIN_IV_PRICE, protocol: s.key, image: s.image, desc: s.desc || s.tagline, inside: s.inside, features: s.features })),
   },
   {
     key: 'nad',
@@ -64,7 +69,9 @@ const CATEGORIES = [
     icon: Sparkles,
     blurb: 'From $350 per dose',
     gated: true,
-    options: (NAD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `NAD+ ${d.label}`, note: `${money(d.price)} / IV`, price: d.price, protocol: 'nad', image: d.image || NAD_THERAPY?.image })),
+    // Dose rows borrow the parent therapy's content; the dose `note` (e.g.
+    // Vitality) surfaces as the per-option "what it does" line.
+    options: (NAD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `NAD+ ${d.label}`, price: d.price, protocol: 'nad', image: d.image || NAD_THERAPY?.image, desc: d.note || NAD_THERAPY?.tagline, inside: NAD_THERAPY?.inside, features: NAD_THERAPY?.features })),
   },
   {
     key: 'cbd',
@@ -72,7 +79,7 @@ const CATEGORIES = [
     icon: CannabisLeaf,
     blurb: 'From $350 per dose',
     gated: true,
-    options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, note: `${money(d.price)} / IV`, price: d.price, protocol: 'cbd', image: d.image || CBD_THERAPY?.image })),
+    options: (CBD_THERAPY?.doses || []).map((d) => ({ key: d.key, label: `CBD ${d.label}`, price: d.price, protocol: 'cbd', image: d.image || CBD_THERAPY?.image, desc: d.note || CBD_THERAPY?.tagline, inside: CBD_THERAPY?.inside, features: CBD_THERAPY?.features })),
   },
 ];
 
@@ -109,44 +116,35 @@ function buildAddonRows(items) {
 const IV_ADDON_ROWS = buildAddonRows(IV_ADDON_ITEMS);
 const IM_ADDON_ROWS = buildAddonRows(IM_ADDON_ITEMS);
 
-// Section titles + subs for the one-screen builder. One screen, every decision.
+// Section titles for the one-screen builder. Titles only — no sub-paragraphs;
+// the tile/price/disclosure grammar carries the meaning (menu pattern).
 const STEP_TITLES = {
-  sessions: 'How many sessions?',
-  category: 'Therapy category',
-  therapy: 'Choose your therapy',
+  sessions: 'Sessions',
+  therapy: 'Therapy',
   addons: 'Add-ons',
-  term: 'Billing term',
-};
-
-const STEP_SUBS = {
-  sessions: 'How many IV visits each month.',
-  category: 'Pick your therapy family.',
-  therapy: 'Your primary IV for every session.',
-  addons: 'Optional — boost any session.',
-  term: 'Pay monthly, or commit upfront to save.',
+  term: 'Term',
 };
 
 // ── Shared bits ───────────────────────────────────────────────────────────
 
-function SelectRow({ label, sub, price, active, onClick }) {
+// Compact dropdown — the builder's default control. Native <select>: one tap,
+// zero open/close movement, every choice on one short screen.
+function PlanSelect({ value, onChange, ariaLabel, children, icon: Icon }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`av-treatment-card flex min-h-[54px] w-full items-center justify-between gap-3 rounded-xl border px-3.5 text-left transition-colors md:min-h-[62px] md:px-4 ${
-        active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : 'hover:border-foreground/24'
-      }`}
-    >
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-body text-sm font-black text-foreground md:text-base">{label}</span>
-        {sub && <span className="mt-0.5 block truncate font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/50">{sub}</span>}
-      </span>
-      <span className="flex shrink-0 items-center gap-2">
-        {price && <span className="whitespace-nowrap font-body text-sm font-black text-foreground md:text-base">{price}</span>}
-        {active && <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.7} />}
-      </span>
-    </button>
+    <div className="relative">
+      {Icon && (
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/60" strokeWidth={2} />
+      )}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        className={`av-treatment-card w-full appearance-none rounded-xl border py-3 pr-10 font-body text-sm font-black text-foreground focus:border-foreground/45 focus:outline-none md:text-base ${Icon ? 'pl-10' : 'pl-3.5'}`}
+      >
+        {children}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/55" strokeWidth={2} />
+    </div>
   );
 }
 
@@ -251,60 +249,52 @@ function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
 function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE }) {
   return (
     <div>
-      <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
-        {SESSION_OPTIONS.map((n) => {
-          const active = sessions === n;
-          return (
-            <button
-              key={n}
-              type="button"
-              onClick={() => onSessions(n)}
-              aria-pressed={active}
-              aria-label={`${n} ${n === 1 ? 'session' : 'sessions'} per month`}
-              className={`relative flex min-h-[58px] flex-col items-center justify-center gap-0.5 rounded-xl border px-2 text-center transition-colors md:min-h-[64px] ${
-                active
-                  ? 'border-foreground/46 bg-foreground/[0.12] text-foreground'
-                  : 'border-transparent text-foreground/72 hover:bg-foreground/[0.05] hover:text-foreground'
-              }`}
-            >
-              <span className="font-heading text-[1.7rem] leading-none md:text-[2rem]">{n}×</span>
-              <span className="font-body text-[10px] font-bold uppercase tracking-[0.08em] text-foreground/52">/ month</span>
-              {active && <Check className="absolute right-1.5 top-1.5 h-3.5 w-3.5 text-foreground" strokeWidth={2.7} />}
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-2.5 font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/64">
-        From {money(perIvPrice * sessions)}/mo · {sessions} IV {sessions === 1 ? 'visit' : 'visits'} a month
+      <PlanSelect value={String(sessions)} onChange={(v) => onSessions(Number(v))} ariaLabel="Sessions per month" icon={CalendarClock}>
+        {SESSION_OPTIONS.map((n) => (
+          <option key={n} value={n} className="bg-background text-foreground">
+            {n}× / month · {n} IV {n === 1 ? 'visit' : 'visits'}
+          </option>
+        ))}
+      </PlanSelect>
+      <p className="mt-2 font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/60">
+        From {money(perIvPrice * sessions)}/mo
       </p>
-      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Each session is one IV visit at your home or office. Sessions roll over while your plan is active. 3-month minimum, then pause or cancel anytime.</p>
     </div>
   );
 }
 
-// A compact section block on the one-screen builder. Dividers separate decisions.
-function Section({ title, sub, children, first }) {
+// A compact section block on the one-screen builder. Dividers separate
+// decisions. Title only — no sub-paragraph, to keep the screen scannable.
+function Section({ title, action, children, first, icon: Icon }) {
   return (
     <section className={first ? '' : 'mt-5 border-t border-foreground/10 pt-5 md:mt-6 md:pt-6'}>
-      <div className="mb-3">
-        <h2 className="font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.8rem]">{title}</h2>
-        {sub && <p className="mt-0.5 font-body text-xs font-semibold leading-snug text-foreground/56">{sub}</p>}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2.5 font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.8rem]">
+          {Icon && (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
+              <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
+            </span>
+          )}
+          {title}
+        </h2>
+        {action}
       </div>
       {children}
     </section>
   );
 }
 
-// Sticky mobile CTA: live price + Start plan, replaces the old Continue/Back bar.
-function MobileStartBar({ therapyLabel, sessions, addOnCount, monthly, onStart }) {
+// Sticky mobile CTA: deposit-today + monthly + Start plan. Leads with the $50
+// deposit (what they actually pay now), monthly as the secondary number.
+function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart }) {
   return (
     <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-foreground/10 bg-background/92 px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 backdrop-blur-xl md:hidden">
       <div className="mb-2 flex items-center justify-between gap-3">
         <p className="min-w-0 truncate font-body text-[12px] font-bold text-foreground/64">
-          {therapyLabel} · {sessions}×/mo{addOnCount > 0 ? ` · +${addOnCount} add-on${addOnCount > 1 ? 's' : ''}` : ''}
+          {therapyLabel} · {sessions}×/mo · {money(monthly)}/mo
         </p>
         <p className="shrink-0 font-body text-sm font-black text-foreground" aria-live="polite">
-          {money(monthly)}<span className="text-foreground/50">/mo</span>
+          {money(depositToday)}<span className="text-foreground/50"> today</span>
         </p>
       </div>
       <button
@@ -312,59 +302,46 @@ function MobileStartBar({ therapyLabel, sessions, addOnCount, monthly, onStart }
         onClick={onStart}
         className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
       >
-        Start plan <ArrowRight className="h-4 w-4" />
+        Start plan · {money(depositToday)} today <ArrowRight className="h-4 w-4" />
       </button>
     </div>
   );
 }
 
-// Compact category switch — a 3-up segmented toggle that sits inside the single
-// "Choose your therapy" block (replaces the old full-height category cards).
-function CategoryToggle({ categoryKey, onCategory }) {
-  return (
-    <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
-      {CATEGORIES.map((cat) => {
-        const Icon = cat.icon;
-        const active = categoryKey === cat.key;
-        return (
-          <button
-            key={cat.key}
-            type="button"
-            onClick={() => onCategory(cat.key)}
-            aria-pressed={active}
-            className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-center transition-colors ${
-              active
-                ? 'border-foreground/46 bg-foreground/[0.12] text-foreground'
-                : 'border-transparent text-foreground/72 hover:bg-foreground/[0.05] hover:text-foreground'
-            }`}
-          >
-            <Icon className="h-4 w-4 shrink-0" strokeWidth={2.2} />
-            <span className="font-body text-[12px] font-black uppercase tracking-[0.03em]">{cat.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function StepTherapy({ category, therapyKey, onTherapy }) {
-  if (!category) return null;
+// One grouped dropdown over every category — selecting an option sets both the
+// category and the therapy, so there's a single control to read and tap.
+function StepTherapy({ therapyKey, onSelect }) {
+  const activeCat = CATEGORIES.find((c) => c.options.some((o) => o.key === therapyKey));
+  const activeOpt = activeCat?.options.find((o) => o.key === therapyKey);
   return (
     <div className="grid gap-2">
-      {category.gated && (
-        <p className="rounded-lg border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 font-body text-[11px] font-bold leading-snug text-amber-100">
-          Priced per dose · clinician-reviewed. Final dosing and billing are confirmed at your consult.
-        </p>
+      <div className="flex items-center gap-3">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-gradient-to-b from-foreground/[0.08] to-transparent">
+          {activeOpt?.image ? (
+            <img src={activeOpt.image} alt="" className="h-[3.4rem] w-auto object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
+          ) : (
+            <Droplets className="h-5 w-5 text-foreground/55" strokeWidth={1.8} />
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <PlanSelect value={therapyKey} onChange={onSelect} ariaLabel="Therapy">
+            {CATEGORIES.map((cat) => (
+          <optgroup key={cat.key} label={cat.label} className="bg-background text-foreground">
+            {cat.options.map((opt) => (
+              <option key={opt.key} value={opt.key} className="bg-background text-foreground">
+                {opt.label} — {money(opt.price)}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+          </PlanSelect>
+        </div>
+      </div>
+      {activeCat?.gated && (
+        <span className="inline-flex w-fit items-center rounded-full border border-amber-300/22 bg-amber-300/[0.07] px-2.5 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em] text-amber-100">
+          Clinician-reviewed · dose at consult
+        </span>
       )}
-      {category.options.map((opt) => (
-        <SelectRow
-          key={opt.key}
-          label={opt.label}
-          sub={opt.note}
-          active={therapyKey === opt.key}
-          onClick={() => onTherapy(opt.key)}
-        />
-      ))}
     </div>
   );
 }
@@ -402,49 +379,25 @@ function StepAddons({ ivQty, imQty, onIv, onIm }) {
         <p className="mb-1.5 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">IM shots</p>
         <AddonRows rows={IM_ADDON_ROWS} qtyMap={imQty} onQty={onIm} />
       </div>
-      <p className="font-body text-[11px] font-semibold leading-snug text-foreground/46">Add-ons billed monthly. Your time-commitment discount applies to the whole plan.</p>
     </div>
   );
 }
 
-function StepTerm({ monthly, termKey, onTerm }) {
+function StepTerm({ monthly, termKey, onTerm, upfrontTotal, perMonth }) {
+  const term = TERMS.find((t) => t.key === termKey) || TERMS[0];
+  const isMonthly = term.key === 'monthly';
   return (
-    <div className="grid gap-2">
-      {TERMS.map((t) => {
-        const total = Math.round(monthly * t.months * (1 - t.discount));
-        const eff = Math.round(total / t.months);
-        const active = termKey === t.key;
-        const isMonthly = t.key === 'monthly';
-        return (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => onTerm(t.key)}
-            aria-pressed={active}
-            className={`av-treatment-card flex min-h-[62px] w-full items-center justify-between gap-3 rounded-xl border px-3.5 text-left transition-colors md:min-h-[70px] md:px-4 ${
-              active ? 'is-open border-foreground/46 bg-foreground/[0.12]' : 'hover:border-foreground/24'
-            }`}
-          >
-            <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="font-body text-sm font-black text-foreground md:text-base">{isMonthly ? 'Monthly' : `${t.label} upfront`}</span>
-                {!isMonthly && <span className="rounded-full bg-foreground/16 px-2 py-0.5 font-body text-[10px] font-black uppercase tracking-[0.04em] text-foreground">Save {Math.round(t.discount * 100)}%</span>}
-              </span>
-              <span className="mt-0.5 block font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/52">
-                {isMonthly ? 'Billed monthly · 3-month minimum, then flexible' : `${money(eff)}/mo effective · charged once today`}
-              </span>
-            </span>
-            <span className="flex shrink-0 items-center gap-2">
-              <span className="text-right">
-                <span className="block whitespace-nowrap font-body text-sm font-black text-foreground md:text-base">{isMonthly ? `${money(monthly)}/mo` : money(total)}</span>
-                {!isMonthly && <span className="block font-body text-[10px] font-bold uppercase tracking-[0.04em] text-foreground/46">due today</span>}
-              </span>
-              {active && <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.7} />}
-            </span>
-          </button>
-        );
-      })}
-      <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/46">Monthly has a 3-month minimum. After that, pause or cancel anytime. Upfront terms charge once today, then renew at the same term.</p>
+    <div>
+      <PlanSelect value={termKey} onChange={onTerm} ariaLabel="Billing term" icon={CreditCard}>
+        {TERMS.map((t) => (
+          <option key={t.key} value={t.key} className="bg-background text-foreground">
+            {t.key === 'monthly' ? 'Monthly' : `${t.label} upfront`}{t.discount ? ` · save ${Math.round(t.discount * 100)}%` : ''}
+          </option>
+        ))}
+      </PlanSelect>
+      <p className="mt-2 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/52">
+        {isMonthly ? `${money(monthly)}/mo · 3-month minimum` : `${money(upfrontTotal)} today · ${money(perMonth)}/mo effective`}
+      </p>
     </div>
   );
 }
@@ -456,7 +409,7 @@ function RailLine({ label, value, muted }) {
         <Check className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-foreground/52" strokeWidth={2.6} />
         <span className="truncate font-body text-[13px] font-bold text-foreground/74">{label}</span>
       </span>
-      {value && <span className={`shrink-0 font-body text-[13px] font-bold ${muted ? 'text-foreground/46' : 'text-foreground/74'}`}>{value}</span>}
+      {value && <span className={`shrink-0 font-body text-[13px] font-bold tabular-nums ${muted ? 'text-foreground/46' : 'text-foreground/74'}`}>{value}</span>}
     </div>
   );
 }
@@ -469,6 +422,13 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
   const bag = therapyOption?.image || '/bags/dehydration.png';
   const saving = Math.round(monthly * term.months - upfrontTotal);
   const isMultiPerson = peopleCount > 1;
+  // Billing model (must match PlanCheckout + /api/create-checkout-session):
+  // $50/person deposit today, the rest of the first period after the first
+  // visit, then the full plan auto-bills every period on the billing date.
+  const periodTotal = isMonthly ? monthly : upfrontTotal;
+  const depositToday = Math.min(50 * peopleCount, periodTotal);
+  const firstVisitBalance = Math.max(0, periodTotal - depositToday);
+  const renews = isMonthly ? 'every month' : `every ${term.label.toLowerCase()}`;
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
       <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-3">
@@ -495,9 +455,28 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
           <span className="font-heading text-[2.7rem] leading-none text-foreground">{money(isMonthly ? monthly : perMonth)}</span>
           <span className="font-body text-sm font-bold text-foreground/52">/mo</span>
         </div>
-        {!isMonthly && (
-          <p className="mt-1.5 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50">{money(upfrontTotal)} due today · {term.label}</p>
-        )}
+      </div>
+
+      {/* How billing works — deposit today, balance after the first visit, then
+          the full plan every period. Same numbers PlanCheckout charges. */}
+      <div className="mx-4 mt-3 rounded-xl border border-foreground/12 bg-foreground/[0.04] px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/74">Due today</span>
+          <span className="font-heading text-[1.3rem] leading-none text-foreground tabular-nums">{money(depositToday)}</span>
+        </div>
+        <p className="mt-0.5 font-body text-[10px] font-bold uppercase tracking-[0.06em] text-foreground/42">
+          $50 deposit{peopleCount > 1 ? ` · ${peopleCount} people` : ' to start'}
+        </p>
+        <div className="mt-2 space-y-1 border-t border-foreground/10 pt-2 font-body text-[11px] font-semibold text-foreground/60">
+          <div className="flex items-center justify-between gap-2">
+            <span>Balance after 1st visit</span>
+            <span className="text-foreground/80 tabular-nums">{money(firstVisitBalance)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>Then {renews}, billing date</span>
+            <span className="text-foreground/80 tabular-nums">{money(periodTotal)}{isMonthly ? '/mo' : ''}</span>
+          </div>
+        </div>
       </div>
 
       <div className="mt-4 grid gap-1.5 border-t border-foreground/10 px-4 pt-3.5">
@@ -540,10 +519,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
           </button>
         )}
         <p className={`text-center font-body text-[11px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2.5' : ''}`}>
-          Licensed RN visits · clinical review before treatment
-        </p>
-        <p className="mt-1 text-center font-body text-[11px] font-semibold leading-snug text-foreground/44">
-          Cancel or pause anytime after the 3-month minimum.
+          Licensed RN visits · cancel anytime after the 3-month minimum
         </p>
       </div>
     </div>
@@ -560,9 +536,15 @@ export default function Subscription() {
   });
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   // Sessions/month and term apply to the whole household. Therapy + add-ons +
   // IM shots are PER PERSON — each patient on the plan picks their own protocol.
-  const [sessions, setSessions] = useState(2);
+  // Landing-page tier CTAs deep-link as ?sessions=N (1–4) so the builder opens on
+  // the plan the user picked; a bare /subscription still defaults to 2.
+  const [sessions, setSessions] = useState(() => {
+    const raw = Number(searchParams.get('sessions'));
+    return Number.isInteger(raw) && raw >= 1 && raw <= 4 ? raw : 2;
+  });
   const [categoryKey, setCategoryKey] = useState('iv-vitamins');
   const [therapyKey, setTherapyKey] = useState('hydration');
   const [ivQty, setIvQty] = useState({});
@@ -623,13 +605,12 @@ export default function Subscription() {
   const category = CATEGORIES.find((c) => c.key === categoryKey) || CATEGORIES[0];
   const therapyOption = category.options.find((o) => o.key === therapyKey) || category.options[0];
 
-  // When the category changes, snap the therapy to that category's first option.
-  const selectCategory = (key) => {
-    setCategoryKey(key);
-    const next = CATEGORIES.find((c) => c.key === key);
-    if (next && !next.options.some((o) => o.key === therapyKey)) {
-      setTherapyKey(next.options[0]?.key || '');
-    }
+  // One grouped therapy dropdown: picking any option sets both its category
+  // (for pricing/gating) and the therapy key — a single tap, no second control.
+  const selectTherapyOption = (optKey) => {
+    const cat = CATEGORIES.find((c) => c.options.some((o) => o.key === optKey)) || CATEGORIES[0];
+    setCategoryKey(cat.key);
+    setTherapyKey(optKey);
   };
 
   const lineItems = useMemo(() => {
@@ -684,6 +665,8 @@ export default function Subscription() {
   const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
   const perMonth = Math.round(upfrontTotal / term.months);
   const addOnCount = lineItems.reduce((sum, li) => sum + li.qty, 0);
+  // $50/person deposit due today (matches PlanRail + PlanCheckout).
+  const depositToday = Math.min(50 * peopleCount, term.key === 'monthly' ? monthly : upfrontTotal);
 
   const startPlan = () => {
     // Plans use their OWN checkout (/plan → subscription mode + membership Acuity
@@ -739,8 +722,8 @@ export default function Subscription() {
       </header>
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-28">
         <div className="mb-4 text-center md:mb-7 md:text-left">
-          <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Craft your protocol</h1>
-          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/56 md:text-base">A custom protocol for every person — up to 4 on one plan. Real per-IV pricing, cancel anytime.</p>
+          <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Choose your plan</h1>
+          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/68 md:text-base">Up to 4 people on one plan. Cancel anytime.</p>
         </div>
 
         <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
@@ -752,11 +735,11 @@ export default function Subscription() {
               transition={{ duration: 0.28, ease: EASE }}
               className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
             >
-              <Section title={STEP_TITLES.sessions} sub={STEP_SUBS.sessions} first>
+              <Section title={STEP_TITLES.sessions} icon={CalendarClock} first>
                 <SessionSegment sessions={sessions} onSessions={setSessions} perIvPrice={perIvPrice} />
               </Section>
 
-              <Section title="Who's on this plan" sub="Up to 4 people on one plan — each with a protocol built just for them.">
+              <Section title="Who's on it" icon={Users}>
                 <SessionBuilder
                   people={sessionPeople}
                   activePersonId={activePersonId}
@@ -767,14 +750,11 @@ export default function Subscription() {
                 />
               </Section>
 
-              <Section title={STEP_TITLES.therapy} sub={STEP_SUBS.therapy}>
-                <CategoryToggle categoryKey={categoryKey} onCategory={selectCategory} />
-                <div className="mt-2.5">
-                  <StepTherapy category={category} therapyKey={therapyKey} onTherapy={setTherapyKey} />
-                </div>
+              <Section title={STEP_TITLES.therapy} icon={Droplets}>
+                <StepTherapy therapyKey={therapyKey} onSelect={selectTherapyOption} />
               </Section>
 
-              <Section title={STEP_TITLES.addons} sub={STEP_SUBS.addons}>
+              <Section title={STEP_TITLES.addons} icon={Sparkles}>
                 <details className="group av-treatment-card rounded-xl border px-3.5 py-3">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-body text-sm font-black text-foreground [&::-webkit-details-marker]:hidden">
                     <span>{addOnCount > 0 ? `${addOnCount} add-on${addOnCount > 1 ? 's' : ''} added` : 'Add a boost'}</span>
@@ -791,23 +771,8 @@ export default function Subscription() {
                 </details>
               </Section>
 
-              <Section title={STEP_TITLES.term} sub={STEP_SUBS.term}>
-                <details className="group av-treatment-card rounded-xl border px-3.5 py-3">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-                    <span className="min-w-0">
-                      <span className="block font-body text-sm font-black text-foreground">
-                        {term.key === 'monthly' ? 'Monthly billing' : `${term.label} upfront`}
-                      </span>
-                      <span className="mt-0.5 block font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/52">
-                        {term.key === 'monthly' ? 'Save up to 15% by paying upfront' : `Save ${Math.round(term.discount * 100)}% · ${money(upfrontTotal)} today`}
-                      </span>
-                    </span>
-                    <Plus className="h-4 w-4 shrink-0 text-foreground/60 transition-transform group-open:rotate-45" />
-                  </summary>
-                  <div className="mt-3">
-                    <StepTerm monthly={monthly} termKey={termKey} onTerm={setTermKey} />
-                  </div>
-                </details>
+              <Section title={STEP_TITLES.term} icon={CreditCard}>
+                <StepTerm monthly={monthly} termKey={termKey} onTerm={setTermKey} upfrontTotal={upfrontTotal} perMonth={perMonth} />
               </Section>
             </motion.div>
 
@@ -832,8 +797,8 @@ export default function Subscription() {
             <MobileStartBar
               therapyLabel={therapyOption?.label}
               sessions={sessions}
-              addOnCount={addOnCount}
               monthly={monthly}
+              depositToday={depositToday}
               onStart={startPlan}
             />
           </div>

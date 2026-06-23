@@ -9,6 +9,7 @@ import { appendActivity } from './localOs';
 import { seedDemoState } from './platformOps';
 import { isDemoAuthAllowed, PRE_API_SECURITY_MODE } from './preApiSecurity';
 import { supabase, hasSupabase } from './supabase';
+import { authProviderConfig } from './authProviderConfig';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
@@ -277,6 +278,7 @@ export function AuthStoreProvider({ children }) {
   // Send-SMS auth hook); verifyPhoneOtp checks it and onAuthStateChange sets
   // the session.
   const signInWithPhone = useCallback(async (phone) => {
+    if (!authProviderConfig.phone) return { ok: false, error: 'Phone sign-in is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Phone sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
@@ -291,6 +293,7 @@ export function AuthStoreProvider({ children }) {
   }, []);
 
   const verifyPhoneOtp = useCallback(async (phone, token) => {
+    if (!authProviderConfig.phone) return { ok: false, error: 'Phone sign-in is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Phone sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
@@ -311,6 +314,7 @@ export function AuthStoreProvider({ children }) {
   // Passkey / WebAuthn (Supabase native). signInWithPasskey is a passwordless
   // returning-user sign-in; registerPasskey enrolls one for the current session.
   const signInWithPasskey = useCallback(async () => {
+    if (!authProviderConfig.passkey) return { ok: false, error: 'Passkey sign-in is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Passkey sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
@@ -325,6 +329,7 @@ export function AuthStoreProvider({ children }) {
   }, []);
 
   const registerPasskey = useCallback(async () => {
+    if (!authProviderConfig.passkey) return { ok: false, error: 'Passkey enrollment is not enabled for this environment.' };
     if (!hasSupabase) return { ok: false, error: 'Passkeys are not configured yet.' };
     setError(null);
     try {
@@ -341,6 +346,7 @@ export function AuthStoreProvider({ children }) {
   // by profile role.
   // Enable the provider in Supabase → Auth → Providers for it to work.
   const signInWithOAuth = useCallback(async (provider) => {
+    if (!authProviderConfig[provider]) return { ok: false, error: `${provider === 'apple' ? 'Apple' : 'Google'} sign-in is not enabled for this environment.` };
     if (!hasSupabase) return { ok: false, error: 'Social sign-in is not configured yet.' };
     setError(null);
     try {

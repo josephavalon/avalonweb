@@ -14,6 +14,7 @@ import { readLastBooking } from '@/lib/localOs';
 import { apiGet } from '@/lib/apiClient';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
+import { authProviderConfig } from '@/lib/authProviderConfig';
 
 function formatWhen(startsAt) {
   if (!startsAt) return '';
@@ -239,7 +240,7 @@ function LiveClientDashboard() {
   } : null;
   const recent = visits.slice(0, 4).map((v) => ({ service: v.service, when: formatWhen(v.startsAt) || 'Date to be confirmed', status: paymentLabel(v.paymentStatus) }));
 
-  const footer = (
+  const footer = authProviderConfig.passkey ? (
     <div className="mt-4 rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <button
         type="button"
@@ -256,7 +257,7 @@ function LiveClientDashboard() {
         </p>
       )}
     </div>
-  );
+  ) : null;
 
   return (
     <DashboardBody

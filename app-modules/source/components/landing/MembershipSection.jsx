@@ -55,14 +55,14 @@ function TierRow({ tier, index, open, onToggle }) {
           <div className="flex items-center gap-2">
             <p className="font-heading text-2xl uppercase leading-none tracking-[0.06em] text-foreground/72 md:text-3xl">{tier.name}</p>
           </div>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
+          <p className="mt-1 font-body text-[11px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3 text-right">
           <div>
-            <span className="block font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">From</span>
+            <span className="block font-body text-[11px] uppercase tracking-[0.12em] text-foreground/38">From</span>
             <span className="font-heading text-2xl leading-none tracking-wide text-foreground/72">{tier.price}</span>
-            {tier.unit && <span className="ml-0.5 font-body text-[10px] text-foreground/32">{tier.unit}</span>}
+            {tier.unit && <span className="ml-0.5 font-body text-[11px] text-foreground/32">{tier.unit}</span>}
           </div>
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
@@ -84,6 +84,16 @@ function TierRow({ tier, index, open, onToggle }) {
               </div>
             ))}
           </div>
+
+          <MotionLink
+            to={`/subscription?sessions=${tier.sessions}`}
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-body text-sm uppercase tracking-[0.2em] text-background transition-colors duration-base ease-editorial"
+          >
+            Start {tier.name}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </MotionLink>
         </div>
       </SmoothDisclosure>
     </motion.div>
@@ -126,14 +136,14 @@ export default function MembershipSection() {
             to="/subscription"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground/66 font-body text-xs tracking-[0.2em] uppercase hover:border-foreground/35 hover:text-foreground transition-colors duration-base ease-editorial"
+            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/40 text-foreground font-body text-sm tracking-[0.2em] uppercase hover:border-foreground/70 hover:bg-foreground/[0.04] transition-colors duration-base ease-editorial"
           >
-            Plans
+            View all plans
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
           </MotionLink>
         </div>
 
-        <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">
+        <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4">
           3-month minimum · then pause or cancel
         </p>
 

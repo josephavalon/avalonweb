@@ -9,9 +9,19 @@ import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, prem
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import ScrollParallax from '@/components/ui/ScrollParallax';
+import { getProduct, slugify } from '@/data/products';
 
 const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
+
+const CATEGORY_SLUG_BY_KEY = { vitamins: 'iv-vitamins', nad: 'nad', cbd: 'cbd' };
+
+function productHrefFor(categoryKey, label) {
+  const categorySlug = CATEGORY_SLUG_BY_KEY[categoryKey];
+  if (!categorySlug) return '/protocols';
+  const slug = slugify(label);
+  return getProduct(categorySlug, slug) ? `/products/${categorySlug}/${slug}` : '/protocols';
+}
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -75,7 +85,7 @@ const TOP_CATEGORIES = [
   },
   {
     key: 'all',
-    label: 'ALL PROTOCOLS',
+    label: 'VIEW ALL',
     icon: ArrowRight,
     type: 'link',
     href: '/protocols',
@@ -99,7 +109,7 @@ function SubRow({ sub }) {
         <div className="flex items-center gap-2.5">
           <Icon className="w-3.5 h-3.5 text-accent/70" strokeWidth={1.5} />
           <span className="font-body text-xs font-semibold tracking-[0.15em] uppercase text-foreground/80">{sub.label}</span>
-          <span className="font-body text-[9px] text-foreground/30 tracking-[0.1em]">{sub.treatments.length} options</span>
+          <span className="font-body text-[11px] text-foreground/30 tracking-[0.1em]">{sub.treatments.length} options</span>
         </div>
         <motion.span animate={{ rotate: open ? 90 : 0 }} transition={FOLDOUT_TRANSITION} className="shrink-0 text-foreground/25">
           <ChevronRight className="w-3 h-3" strokeWidth={2} />
@@ -129,7 +139,7 @@ function SubRow({ sub }) {
                   )}
                   <div className="min-w-0">
                     <p className="font-body text-[11px] text-foreground/80 leading-snug truncate">{t.label}</p>
-                    <p className="font-body text-[9px] text-foreground/35">${t.price}{sub.label === 'IV NAD+' ? ' · 1-4 hr' : ''}</p>
+                    <p className="font-body text-[11px] text-foreground/35">${t.price}{sub.label === 'IV NAD+' ? ' · 1-4 hr' : ''}</p>
                   </div>
                 </MotionLink>
               ))}
@@ -194,7 +204,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
           <div className="text-left">
             <p className="font-heading text-xl tracking-[0.06em] text-foreground/66 uppercase leading-none">{cat.label}</p>
             {cat.sub ? (
-              <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
+              <p className="font-body text-[11px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
             ) : null}
           </div>
         </div>
@@ -224,7 +234,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
                   {cat.data.map((addon) => (
                     <MotionLink
                       key={addon.label}
-                      to="/book"
+                      to={productHrefFor(cat.key, addon.label)}
                       variants={premiumListItem}
                       whileHover={premiumHover}
                       whileTap={premiumTap}

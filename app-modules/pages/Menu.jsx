@@ -186,34 +186,7 @@ function ProtocolCard({ item, index = 0 }) {
   );
 }
 
-function CustomProtocolRow() {
-  return (
-    <MotionLink
-      to="/custom?mode=subscription"
-      whileTap={premiumTap}
-      className="av-treatment-card group relative min-w-0 overflow-hidden rounded-[1.35rem] p-3 transition-colors md:col-span-2 md:rounded-[1.6rem] md:p-4"
-    >
-      <span className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4">
-        <span className="av-treatment-icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border text-foreground md:h-16 md:w-16">
-          <FlaskConical className="h-6 w-6 text-foreground/66 md:h-7 md:w-7" strokeWidth={1.8} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
-            Custom
-          </span>
-          <span className="mt-1 block font-body text-base font-bold text-foreground/64 md:text-lg">
-            Build your own protocol
-          </span>
-        </span>
-        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/30 text-foreground/72 transition-colors group-hover:border-foreground/28 group-hover:text-foreground">
-          <ArrowRight className="h-5 w-5" strokeWidth={2.35} />
-        </span>
-      </span>
-    </MotionLink>
-  );
-}
-
-function ProtocolList({ id, sessions, includeCustom = false, expandDoses = false }) {
+function ProtocolList({ id, sessions, expandDoses = false }) {
   const items = protocolItems(sessions, expandDoses);
   return (
     <LayoutGroup id={id}>
@@ -229,7 +202,6 @@ function ProtocolList({ id, sessions, includeCustom = false, expandDoses = false
           {items.map((item, index) => (
             <ProtocolCard key={item.key} item={item} index={index} />
           ))}
-          {includeCustom && <CustomProtocolRow />}
         </AnimatePresence>
       </motion.div>
     </LayoutGroup>
@@ -334,8 +306,8 @@ export default function Menu() {
         </section>
 
         <section id="protocol-directory" className="mt-4 scroll-mt-44 md:mt-6">
-          <Foldout title="All Protocols" icon={FlaskConical} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
-            <ProtocolList id="all-protocols" sessions={filtered} includeCustom />
+          <Foldout title="View All" icon={FlaskConical} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
+            <ProtocolList id="all-protocols" sessions={filtered} />
           </Foldout>
         </section>
 
