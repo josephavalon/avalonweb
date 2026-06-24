@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2 } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -31,6 +31,15 @@ function fmtWhen(iso) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return 'Date to be confirmed';
   return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+// ISO → value for <input type="datetime-local"> in the admin's local time.
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 const PAYMENT_LABEL = { paid_in_full: 'Paid', partial_payment: 'Partial', deposit_paid: 'Deposit paid', pending: 'Pending' };
@@ -91,7 +100,76 @@ function ActionResult({ result }) {
   );
 }
 
-function BookingRow({ booking, busy, retryBusy, deleteBusy, result, onCharge, onLink, onRetryAcuity, onDelete }) {
+const FIELD_STYLE = {
+  background: 'hsl(var(--background))',
+  color: 'hsl(var(--foreground))',
+  border: '1px solid hsl(var(--foreground) / 0.16)',
+};
+
+function EditField({ label, type = 'text', value, onChange, placeholder }) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>{label}</span>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="min-h-[40px] rounded-xl px-3 font-body text-sm outline-none focus:ring-1"
+        style={FIELD_STYLE}
+      />
+    </label>
+  );
+}
+
+function EditForm({ booking, busy, onSave, onCancel }) {
+  const [form, setForm] = useState({
+    name: booking.customerName === '—' ? '' : (booking.customerName || ''),
+    email: booking.customerEmail || '',
+    phone: booking.customerPhone || '',
+    address: booking.address || '',
+    service: booking.service || '',
+    startsAt: toLocalInput(booking.startsAt),
+  });
+  const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  return (
+    <div className="mt-3 rounded-2xl p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+      <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: MUTED }}>Edit booking details</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <EditField label="Client name" value={form.name} onChange={set('name')} placeholder="Full name" />
+        <EditField label="Email" type="email" value={form.email} onChange={set('email')} placeholder="name@email.com" />
+        <EditField label="Phone" type="tel" value={form.phone} onChange={set('phone')} placeholder="(415) 555-0100" />
+        <EditField label="Date & time" type="datetime-local" value={form.startsAt} onChange={set('startsAt')} />
+        <EditField label="Service" value={form.service} onChange={set('service')} placeholder="Avalon Visit" />
+        <EditField label="Address" value={form.address} onChange={set('address')} placeholder="Service address" />
+      </div>
+      <div className="mt-4 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onCancel}
+          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-50"
+          style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={2} /> Cancel
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onSave(booking, form)}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-full px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-50"
+          style={{ background: TEXT, color: INVERT }}
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Save className="h-3.5 w-3.5" strokeWidth={2} />}
+          Save changes
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, editing, result, onCharge, onLink, onRetryAcuity, onDelete, onEdit, onSave, onCancelEdit }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
   const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
@@ -201,7 +279,17 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, result, onCharge, on
         </div>
       ) : null}
 
-      <div className="mt-3 flex justify-end border-t pt-3" style={{ borderColor: BORDER }}>
+      <div className="mt-3 flex items-center justify-end gap-1 border-t pt-3" style={{ borderColor: BORDER }}>
+        <button
+          type="button"
+          disabled={saveBusy}
+          onClick={() => (editing ? onCancelEdit() : onEdit(booking))}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity hover:opacity-80 disabled:opacity-50"
+          style={{ color: MUTED }}
+        >
+          {editing ? <X className="h-3.5 w-3.5" strokeWidth={2} /> : <Pencil className="h-3.5 w-3.5" strokeWidth={2} />}
+          {editing ? 'Close' : 'Edit'}
+        </button>
         <button
           type="button"
           disabled={deleteBusy}
@@ -214,6 +302,8 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, result, onCharge, on
         </button>
       </div>
 
+      {editing ? <EditForm booking={booking} busy={saveBusy} onSave={onSave} onCancel={onCancelEdit} /> : null}
+
       <ActionResult result={result} />
     </div>
   );
@@ -222,6 +312,7 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, result, onCharge, on
 export default function LiveAdminBookings() {
   const [state, setState] = useState({ loading: true, error: '', bookings: [] });
   const [actions, setActions] = useState({}); // id -> { busy, message, tone, link }
+  const [editingId, setEditingId] = useState(null);
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: '' }));
@@ -284,6 +375,32 @@ export default function LiveAdminBookings() {
     }
   }, [load]);
 
+  const saveBooking = useCallback(async (booking, form) => {
+    setActions((m) => ({ ...m, [booking.id]: { busySave: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/update', {
+        appointmentId: booking.id,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        service: form.service,
+        // datetime-local is local time; convert to a real ISO instant so the
+        // server stores the correct moment regardless of its timezone.
+        startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : '',
+      });
+      if (res?.ok) {
+        setEditingId(null);
+        setActions((m) => ({ ...m, [booking.id]: { busySave: false, tone: 'success', message: 'Booking details updated.' } }));
+        load();
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { busySave: false, tone: 'error', message: 'Could not save changes.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busySave: false, tone: 'error', message: 'Save failed.' } }));
+    }
+  }, [load]);
+
   const { loading, error, bookings } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
 
@@ -334,6 +451,11 @@ export default function LiveAdminBookings() {
                 onRetryAcuity={retryAcuity}
                 deleteBusy={!!actions[booking.id]?.busyDelete}
                 onDelete={deleteBooking}
+                editing={editingId === booking.id}
+                saveBusy={!!actions[booking.id]?.busySave}
+                onEdit={(b) => setEditingId(b.id)}
+                onCancelEdit={() => setEditingId(null)}
+                onSave={saveBooking}
               />
             ))}
           </div>
