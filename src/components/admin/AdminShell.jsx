@@ -10,7 +10,6 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
-  Package,
   ShieldCheck,
   Users,
   UserCog,
@@ -26,7 +25,8 @@ const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
   { label: 'Appointments', icon: CalendarCheck, to: '/admin/bookings' },
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
-  { label: 'Inventory', icon: Package, to: '/admin/inventory' },
+  // Inventory hidden for now (less friction at launch). Route still exists at
+  // /admin/inventory; restore this entry to bring the nav link back.
   { label: 'Scheduling', icon: CalendarCheck, href: ACUITY_URL, external: true, note: 'Acuity' },
   { label: 'Team', icon: UserCog, to: '/admin/team' },
 ];
