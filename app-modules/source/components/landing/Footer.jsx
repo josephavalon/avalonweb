@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Mail, Phone, Clock, MapPin, ChevronDown, Layers, Building2, Scale } from 'lucide-react';
+import { ArrowRight, Mail, Phone, Clock, MapPin, ChevronDown, Layers, Building2, Scale, Facebook, Instagram, Star } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import LanguageSelect from '@/components/landing/LanguageSelect';
@@ -28,6 +28,24 @@ const GROUPS = [
   { label: 'Company', icon: Building2, links: COMPANY },
   { label: 'Legal', icon: Scale, links: LEGAL },
   { label: 'Contact', icon: Mail, type: 'contact' },
+];
+
+// X (Twitter) isn't in lucide; inline the brand glyph. Yelp/Google use a star
+// and map-pin as recognizable stand-ins (lucide has no Yelp/Google-Business mark).
+function XIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+const SOCIALS = [
+  { label: 'Facebook', href: 'https://www.facebook.com/avalon.vitality/', Icon: Facebook },
+  { label: 'Instagram', href: 'https://www.instagram.com/avalon_vitality/', Icon: Instagram },
+  { label: 'X', href: 'https://x.com/avalonvitality', Icon: XIcon },
+  { label: 'Google', href: 'https://www.google.com/maps/search/?api=1&query=Avalon+Vitality+San+Francisco', Icon: MapPin },
+  { label: 'Yelp', href: 'https://www.yelp.com/biz/avalon-vitality-san-francisco', Icon: Star },
 ];
 
 const DESKTOP_LINK =
@@ -242,6 +260,26 @@ export default function Footer() {
               ))}
           </FooterDesktopGroup>
 
+        </div>
+
+        {/* Social */}
+        <div className="mb-3 flex flex-col items-center gap-3 border-t border-foreground/[0.07] pt-4">
+          <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/45">Follow Avalon</p>
+          <div className="flex items-center gap-3">
+            {SOCIALS.map(({ label, href, Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                title={label}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/[0.12] bg-background/80 text-foreground/70 transition-colors hover:border-foreground/30 hover:text-foreground"
+              >
+                <Icon className="h-4 w-4" strokeWidth={1.8} />
+              </a>
+            ))}
+          </div>
         </div>
 
         {/* Bottom bar */}

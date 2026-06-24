@@ -78,6 +78,7 @@ export default async function handler(req, res) {
 
   let query = db.from('appointments')
     .select('id, tenant_id, status, starts_at, protocol_key, payment_status, reconciliation_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
+    .neq('status', 'archived')
     .order('starts_at', { ascending: scope === 'upcoming', nullsFirst: false })
     .limit(limit);
 
