@@ -80,7 +80,10 @@ export default async function handler(req, res) {
   const errors = [];
   if (delivery === 'email' || delivery === 'both') {
     try { await sendInviteEmail({ to: invite.email, inviteUrl, code, role: invite.invited_role, inviterName: authed.email }); delivered.email = true; }
-    catch (err) { errors.push(`email:${err?.reason || err?.code || 'failed'}`); }
+    catch (err) {
+      console.warn('[team/resend] invite email failed', { reason: err?.reason || err?.code, message: String(err?.message || '').slice(0, 300), provider: err?.body });
+      errors.push(`email:${err?.reason || err?.code || err?.message || 'failed'}`);
+    }
   }
   if (delivery === 'sms' || delivery === 'both') {
     if (!invite.phone) { errors.push('sms:no_phone'); }
@@ -97,5 +100,8 @@ export default async function handler(req, res) {
   });
 
   const anyDelivered = delivered.email || delivered.sms;
-  return res.status(anyDelivered ? 200 : 502).json({ ok: anyDelivered, delivered, ...(errors.length ? { warnings: errors } : {}) });
+  if (!anyDelivered) {
+    return res.status(502).json({ ok: false, error: `Invite not sent — ${errors.join('; ') || 'delivery failed'}.`, delivered, warnings: errors });
+  }
+  return res.status(200).json({ ok: true, delivered, ...(errors.length ? { warnings: errors } : {}) });
 }
