@@ -47,6 +47,43 @@ function StatusPill({ status }) {
   );
 }
 
+function Monogram({ name }) {
+  const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
+  return (
+    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-foreground/10 bg-foreground/[0.06] font-heading text-xl uppercase leading-none text-foreground">
+      {initial}
+    </span>
+  );
+}
+
+const GROUPS = [
+  { key: 'admin', label: 'Admin' },
+  { key: 'avalon', label: 'Avalon Staff' },
+  { key: 'clinical', label: 'Clinical Staff' },
+];
+
+function GroupToggle({ value, onChange }) {
+  return (
+    <div className="mb-5 flex rounded-full border border-foreground/10 bg-foreground/[0.04] p-1">
+      {GROUPS.map((g) => {
+        const active = g.key === value;
+        return (
+          <button
+            key={g.key}
+            type="button"
+            onClick={() => onChange(g.key)}
+            className={`flex-1 truncate rounded-full px-3 py-2 text-center font-body text-[12px] font-semibold transition-colors ${
+              active ? 'bg-foreground text-background' : 'text-foreground/55 hover:text-foreground/80'
+            }`}
+          >
+            {g.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Banner({ kind, children, onClose }) {
   if (!children) return null;
   const tone = kind === 'error'
@@ -73,6 +110,7 @@ export default function TeamSettings() {
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [manage, setManage] = useState(null); // selected member
+  const [group, setGroup] = useState('admin'); // visual grouping toggle
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -113,35 +151,50 @@ export default function TeamSettings() {
           <div className="flex items-center gap-2 py-16 text-foreground/50"><Loader2 className="h-4 w-4 animate-spin" /> Loading team…</div>
         ) : (
           <>
+            {/* Grouping toggle (visual for now — Admin is the populated tab) */}
+            <GroupToggle value={group} onChange={setGroup} />
+
             {/* Roster */}
-            <div className="overflow-hidden rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02]">
-              <div className="hidden grid-cols-[1.6fr_1fr_0.9fr_0.9fr_auto] gap-3 border-b border-foreground/[0.08] px-5 py-3 font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/40 md:grid">
-                <span>Member</span><span>Access</span><span>Status</span><span>Added</span><span className="justify-self-end">Manage</span>
+            {group !== 'admin' ? (
+              <div className="rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02] px-5 py-12 text-center">
+                <p className="font-body text-sm text-foreground/55">No {group === 'avalon' ? 'Avalon' : 'Clinical'} staff yet.</p>
+                <p className="mt-1 font-body text-[12px] text-foreground/35">You'll be able to add them here later.</p>
               </div>
-              <div className="divide-y divide-foreground/[0.06]">
-                {members.length === 0 && <p className="px-5 py-8 font-body text-sm text-foreground/50">No staff yet. Invite your first teammate.</p>}
+            ) : members.length === 0 ? (
+              <div className="rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02] px-5 py-12 text-center font-body text-sm text-foreground/50">
+                No staff yet. Invite your first teammate.
+              </div>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
                 {members.map((m) => (
-                  <div key={m.id} className="grid grid-cols-1 gap-2 px-5 py-4 md:grid-cols-[1.6fr_1fr_0.9fr_0.9fr_auto] md:items-center md:gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-body text-sm font-semibold text-foreground">{m.full_name || m.email}</p>
-                      <p className="truncate font-body text-[12px] text-foreground/45">{m.email}</p>
+                  <div key={m.id} className="rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02] p-5">
+                    <div className="flex items-center gap-3.5">
+                      <Monogram name={m.full_name || m.email} />
+                      <div className="min-w-0">
+                        <p className="truncate font-body text-base font-semibold text-foreground">{m.full_name || m.email}</p>
+                        <p className="truncate font-body text-[12px] text-foreground/45">{m.email}</p>
+                      </div>
                     </div>
-                    <div><RoleBadge role={m.role} /></div>
-                    <div><StatusPill status={m.status} /></div>
-                    <div className="font-body text-[12px] text-foreground/45">{m.created_at ? new Date(m.created_at).toLocaleDateString() : '—'}</div>
-                    <div className="justify-self-start md:justify-self-end">
+                    <div className="my-4 border-t border-foreground/[0.08]" />
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 font-body text-[12px] text-foreground/45">
+                      <RoleBadge role={m.role} />
+                      <StatusPill status={m.status} />
+                      <span className="text-foreground/25">·</span>
+                      <span>Joined {m.created_at ? new Date(m.created_at).toLocaleDateString() : '—'}</span>
+                    </div>
+                    <div className="mt-4">
                       {canManageTeam ? (
-                        <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setManage(m)}>
+                        <Button variant="outline" className="w-full gap-1.5 border-foreground/20 hover:bg-foreground/[0.05]" onClick={() => setManage(m)}>
                           <MoreHorizontal className="h-4 w-4" /> Manage
                         </Button>
                       ) : (
-                        <span className="font-body text-[11px] uppercase tracking-[0.14em] text-foreground/35">View only</span>
+                        <span className="block text-center font-body text-[11px] uppercase tracking-[0.14em] text-foreground/35">View only</span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            )}
 
             {/* Pending invites */}
             {invites.length > 0 && (
