@@ -30,6 +30,7 @@ const ACUITY_URL = 'https://avalonvitality.as.me';
 const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
   { label: 'Appointments', icon: CalendarCheck, to: '/admin/bookings' },
+  { label: 'Patients', icon: Users, to: '/admin/clients' },
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
   { label: 'Acuity', icon: CalendarCheck, href: ACUITY_URL, external: true },
   { label: 'Team', icon: UserCog, to: '/admin/team' },
@@ -45,7 +46,7 @@ const NAV_LIVE = [
 
 const NAV_PREVIEW = [
   {
-    label: 'Patients', icon: Users, children: [
+    label: 'CRM', icon: Users, children: [
       { label: 'All clients', to: '/admin/crm' },
       { label: 'Intake review', to: '/admin/credentials' },
     ],
