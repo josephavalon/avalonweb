@@ -41,3 +41,9 @@ create index if not exists comm_threads_recent_idx on public.comm_threads (last_
 alter table public.comm_threads  enable row level security;
 alter table public.comm_messages enable row level security;
 -- No policies: only the service role (which bypasses RLS) touches these tables.
+
+-- This project grants table privileges explicitly (017 granted service_role on
+-- tables that existed then; new tables must grant themselves). Without these the
+-- service-role insert fails with 42501 (permission denied).
+grant select, insert, update, delete on public.comm_threads  to service_role;
+grant select, insert, update, delete on public.comm_messages to service_role;
