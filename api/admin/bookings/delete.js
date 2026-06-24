@@ -23,15 +23,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'appointmentId is required', code: 'appointment_id_required' });
   }
 
-  let query = db.from('appointments').delete().eq('id', appointmentId);
-  // Service-role bypasses RLS — scope the delete to the caller's tenant.
+  // Soft-delete (archive). Hard DELETE on appointments isn't granted to the
+  // service role — clinical/payment records aren't hard-deleted in this schema —
+  // so a real DELETE 500s. Instead we mark the row 'archived'; the bookings list
+  // filters archived rows out, so it disappears from the admin view while the
+  // record is preserved. Service role has UPDATE (the webhook uses it).
+  let query = db.from('appointments')
+    .update({ status: 'archived', updated_at: new Date().toISOString() })
+    .eq('id', appointmentId);
+  // Service-role bypasses RLS — scope the update to the caller's tenant.
   if (tenantId) query = query.eq('tenant_id', tenantId);
 
   const { error } = await query;
   if (error) {
-    console.warn('[admin/bookings/delete] delete failed', safeLogContext(error, 'admin_booking_delete_failed'));
+    console.warn('[admin/bookings/delete] archive failed', safeLogContext(error, 'admin_booking_delete_failed'));
     return res.status(500).json({
-      error: 'Could not delete booking.',
+      error: 'Could not remove booking.',
       code: safeErrorCode(error, 'admin_booking_delete_failed'),
     });
   }
