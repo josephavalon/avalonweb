@@ -88,7 +88,7 @@ export async function sendSms({ to, body }, opts = {}) {
       console.warn('[send-sms] provider send failed', { status: resp.status, detail: String(detail).slice(0, 400) });
       return { ok: false, code: 'provider_send_failed', status: 502, providerStatus: resp.status };
     }
-    return { ok: true };
+    return { ok: true, normalizedTo: recipient };
   } catch (err) {
     console.warn('[send-sms] provider request error', safeLogContext(err, 'send_sms_provider_request_failed'));
     return { ok: false, code: 'provider_request_failed', status: 502 };
