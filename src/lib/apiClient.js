@@ -11,9 +11,10 @@ import { supabase, hasSupabase } from './supabase';
 // is lock-free, so requests stop blocking each other.
 let cachedToken = null;
 if (hasSupabase) {
-  supabase.auth.getSession()
-    .then(({ data }) => { cachedToken = data?.session?.access_token || null; })
-    .catch(() => {});
+  // onAuthStateChange fires INITIAL_SESSION on registration (seeding the token)
+  // and keeps it fresh on refresh/sign-in/out. This callback is synchronous and
+  // makes no supabase calls, so it never holds/needs the auth lock — safe inline
+  // and lock-free for the common path.
   supabase.auth.onAuthStateChange((_event, session) => {
     cachedToken = session?.access_token || null;
   });
