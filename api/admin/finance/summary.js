@@ -94,15 +94,23 @@ export default async function handler(req, res) {
       .gt('balance_due_cents', 0)
       .order('starts_at', { ascending: true, nullsFirst: false })
       .limit(100);
+    // Deposits taken: every booking whose deposit has been collected, whether or
+    // not the balance is settled (so partial_payment bookings count too).
+    let depositsQuery = db.from('appointments')
+      .select('deposit_amount_cents')
+      .not('deposit_paid_at', 'is', null)
+      .limit(2000);
     if (tenantId) {
       paidQuery = paidQuery.eq('tenant_id', tenantId);
       outstandingQuery = outstandingQuery.eq('tenant_id', tenantId);
+      depositsQuery = depositsQuery.eq('tenant_id', tenantId);
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const [paidResult, outstandingResult, payouts, activeSubscriptions] = await Promise.all([
+    const [paidResult, outstandingResult, depositsResult, payouts, activeSubscriptions] = await Promise.all([
       paidQuery,
       outstandingQuery,
+      depositsQuery,
       stripe.payouts.list({ limit: 5 }),
       activeSubscriptionCount(stripe),
     ]);
@@ -112,6 +120,8 @@ export default async function handler(req, res) {
 
     const paidRows = (paidResult.data || []).filter((row) => isWithinWindow(paidTimestamp(row), sinceMs));
     const outstandingRows = outstandingResult.data || [];
+    const depositRows = depositsResult?.error ? [] : (depositsResult?.data || []);
+    const depositsTakenCents = sumCents(depositRows, 'deposit_amount_cents');
 
     await writeAuditEvent(db, {
       tenantId,
@@ -132,6 +142,10 @@ export default async function handler(req, res) {
         count: paidRows.length,
         amount: centsToDollars(sumCents(paidRows, 'visit_subtotal_cents')),
         since,
+      },
+      depositsTaken: {
+        count: depositRows.length,
+        amount: centsToDollars(depositsTakenCents),
       },
       outstandingBalances: {
         count: outstandingRows.length,

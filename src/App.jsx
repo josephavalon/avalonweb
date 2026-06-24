@@ -161,6 +161,7 @@ const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
 const AdminKitControl = lazyRoute(() => import('./pages/admin/KitControl'));
 const AdminTrainingControl = lazyRoute(() => import('./pages/admin/TrainingControl'));
 const AdminInventory = lazyRoute(() => import('./pages/admin/Inventory'));
+const AdminComingSoon = lazyRoute(() => import('./pages/admin/ComingSoon'));
 const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
 const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
@@ -377,6 +378,7 @@ function AppRoutes() {
             <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInventory /></RequireAuth>} />
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
             <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamSettings /></RequireAuth>} />
+            <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />

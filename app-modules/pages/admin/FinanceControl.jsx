@@ -144,7 +144,13 @@ export default function FinanceControl() {
 
         {tab === 'summary' ? (
           <>
-        <section className="grid gap-3 md:grid-cols-4">
+        <section className="grid gap-3 md:grid-cols-5">
+          <Metric
+            label="Deposits Taken"
+            value={money(data.depositsTaken?.amount)}
+            detail={`${data.depositsTaken?.count || 0} deposit${data.depositsTaken?.count === 1 ? '' : 's'} collected`}
+            icon={WalletCards}
+          />
           <Metric
             label="Last 30 Days"
             value={money(data.last30Days?.amount)}

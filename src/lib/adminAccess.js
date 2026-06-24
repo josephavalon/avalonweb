@@ -14,6 +14,7 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/finance', // billing — payments
   '/admin/inventory',
   '/admin/team',
+  '/admin/soon', // coming-soon placeholders (Inventory/Events/Clinical/GFE/Tools/Settings)
 ]);
 
 export const ALL_TEAM_ROLES = Object.freeze(['admin', 'staff']);
@@ -24,6 +25,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/finance',
   '/admin/inventory',
   '/admin/team',
+  '/admin/soon', // coming-soon placeholders
 ]);
 
 function normalizeAdminPath(path = '') {
