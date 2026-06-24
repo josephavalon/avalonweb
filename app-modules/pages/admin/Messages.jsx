@@ -13,9 +13,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Send, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Phone, Mail, MessageSquare } from 'lucide-react';
+import { Send, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Phone, Mail, MessageSquare, Inbox as InboxIcon } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { InboxPanel } from './Inbox';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -120,13 +121,15 @@ export default function Messages() {
   return (
     <AdminShell title="Communications">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
-        <div className="mx-auto max-w-3xl px-4 py-6 md:px-8 md:py-10">
-          {/* Channel toggle */}
+        <div className={`mx-auto px-4 py-6 md:px-8 md:py-10 ${channel === 'inbox' ? 'max-w-6xl' : 'max-w-3xl'}`}>
+          {/* Tabs: Text / Email compose, Inbox conversations */}
           <div className="mb-5 flex gap-2">
             <ChannelBtn id="sms" icon={MessageSquare} label="Text" />
             <ChannelBtn id="email" icon={Mail} label="Email" />
+            <ChannelBtn id="inbox" icon={InboxIcon} label="Inbox" />
           </div>
 
+          {channel === 'inbox' ? <InboxPanel /> : (<>
           {/* Compliance note */}
           <div className="mb-6 flex items-start gap-3 rounded-2xl px-4 py-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} style={{ color: 'hsl(150 60% 45%)' }} />
@@ -233,6 +236,7 @@ export default function Messages() {
               {isEmail ? 'Send email' : 'Send text'}
             </button>
           </div>
+          </>)}
         </div>
       </div>
     </AdminShell>

@@ -81,7 +81,9 @@ function Bubble({ msg }) {
   );
 }
 
-export default function Inbox() {
+// The conversation UI, reusable both as a full page (/admin/inbox) and as a tab
+// inside the Communications page. Bounded height so it works embedded.
+export function InboxPanel() {
   const [threads, setThreads] = useState([]);
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [activeId, setActiveId] = useState(null);
@@ -167,8 +169,7 @@ export default function Inbox() {
   const isEmail = activeThread?.channel === 'email';
 
   return (
-    <AdminShell title="Inbox" fullBleed>
-      <div className="flex min-h-0 flex-1 md:h-full" style={{ background: BG, color: TEXT }}>
+      <div className="flex h-[74vh] min-h-0 overflow-hidden rounded-2xl border" style={{ background: BG, color: TEXT, borderColor: BORDER }}>
         {/* Thread list */}
         <aside
           className={`${mobileView === 'thread' ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-r md:w-80`}
@@ -246,6 +247,15 @@ export default function Inbox() {
             </div>
           )}
         </section>
+      </div>
+  );
+}
+
+export default function Inbox() {
+  return (
+    <AdminShell title="Inbox" fullBleed>
+      <div className="mx-auto w-full max-w-6xl px-4 py-5 md:px-7 md:py-7">
+        <InboxPanel />
       </div>
     </AdminShell>
   );
