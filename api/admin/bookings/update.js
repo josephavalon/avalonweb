@@ -82,6 +82,15 @@ export default async function handler(req, res) {
   payload.appointment = appointment;
   if (service !== undefined) payload.primaryService = service;
 
+  // Staff-recorded SMS-reminder consent (e.g. captured verbally). Stored with a
+  // timestamp + the staff member who recorded it so there's an audit trail for
+  // why PHI-bearing reminders are permitted to this number.
+  if (req.body?.smsConsent !== undefined) {
+    payload.smsReminderConsent = req.body.smsConsent
+      ? { granted: true, at: new Date().toISOString(), source: 'staff_recorded', recordedBy: authed.user?.id || null }
+      : { granted: false, at: new Date().toISOString(), source: 'staff_recorded', recordedBy: authed.user?.id || null };
+  }
+
   const update = { external_payload: payload, updated_at: new Date().toISOString() };
   if (startsAtIso) update.starts_at = startsAtIso;
 

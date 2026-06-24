@@ -55,7 +55,19 @@ function toE164(phone) {
   return value.startsWith('+') ? value : `+${value}`;
 }
 
-export async function sendSms({ to, body }) {
+/**
+ * @param {object}  message
+ * @param {string}  message.to    recipient phone
+ * @param {string}  message.body  message text
+ * @param {object}  [opts]
+ * @param {boolean} [opts.allowConsentedPhi=false]
+ *   Skip the PHI block-list. This is ONLY for appointment reminders to a patient
+ *   who has opted in to unsecured SMS (45 CFR §164.522 — a patient may request
+ *   communication by an unsecured channel after being advised of the risk). The
+ *   CALLER must have verified stored consent on the appointment before setting
+ *   this; the OTP and staff-invite paths never set it. See docs/PHI_DATA_FLOW.md.
+ */
+export async function sendSms({ to, body }, opts = {}) {
   const apiKey = process.env.QUO_API_KEY;
   const from = process.env.QUO_FROM_NUMBER;
   if (!apiKey || !from) return { ok: false, code: 'sms_not_configured', status: 503 };
@@ -63,7 +75,7 @@ export async function sendSms({ to, body }) {
   const recipient = toE164(to);
   if (!recipient || recipient.length > 32) return { ok: false, code: 'invalid_phone', status: 400 };
 
-  if (bodyContainsPhi(body)) {
+  if (!opts.allowConsentedPhi && bodyContainsPhi(body)) {
     console.error('[send-sms] refusing to send: body contains PHI-shaped tokens (see docs/PHI_DATA_FLOW.md)');
     return { ok: false, code: 'phi_in_sms_body', status: 422 };
   }
