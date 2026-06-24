@@ -265,7 +265,7 @@ export default function Footer() {
         {/* Social */}
         <div className="mb-3 flex flex-col items-center gap-3 border-t border-foreground/[0.07] pt-4">
           <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/45">Follow Avalon</p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-5">
             {SOCIALS.map(({ label, href, Icon }) => (
               <a
                 key={label}
@@ -274,9 +274,9 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label={label}
                 title={label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/[0.12] bg-background/80 text-foreground/70 transition-colors hover:border-foreground/30 hover:text-foreground"
+                className="flex h-11 w-11 items-center justify-center text-foreground/70 transition-colors hover:text-foreground"
               >
-                <Icon className="h-4 w-4" strokeWidth={1.8} />
+                <Icon className="h-7 w-7" strokeWidth={1.7} />
               </a>
             ))}
           </div>
