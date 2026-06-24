@@ -32,9 +32,22 @@ export function isSmsConfigured() {
   return Boolean(process.env.QUO_API_KEY && process.env.QUO_FROM_NUMBER);
 }
 
+// Normalize human-typed input to E.164. The auth hook always passed a clean
+// E.164 number, but the admin Communications page accepts free-form input like
+// "(415) 555-0100" or "415-555-0100", so strip formatting and default a bare
+// 10-digit number to US/CA (+1).
 function toE164(phone) {
-  const value = String(phone || '').trim();
-  return value.startsWith('+') ? value : `+${value}`;
+  const raw = String(phone || '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('+')) {
+    const digits = raw.slice(1).replace(/\D/g, '');
+    return digits ? `+${digits}` : '';
+  }
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  return `+${digits}`;
 }
 
 /**
@@ -69,9 +82,11 @@ export async function sendSms({ to, body }, opts = {}) {
       body: JSON.stringify({ content: String(body || ''), from, to: [recipient] }),
     });
     if (!resp.ok) {
-      await resp.text().catch(() => '');
-      console.warn('[send-sms] provider send failed', { status: resp.status });
-      return { ok: false, code: 'provider_send_failed', status: 502 };
+      // Capture the provider's error so SMS failures are diagnosable (no PHI —
+      // this is Quo's own validation/auth message, e.g. bad number or key).
+      const detail = await resp.text().catch(() => '');
+      console.warn('[send-sms] provider send failed', { status: resp.status, detail: String(detail).slice(0, 400) });
+      return { ok: false, code: 'provider_send_failed', status: 502, providerStatus: resp.status };
     }
     return { ok: true };
   } catch (err) {
