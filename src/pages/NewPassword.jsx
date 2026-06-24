@@ -1,14 +1,15 @@
 // Password update target for both invited staff forced rotation and Supabase
-// recovery links. Recovery links arrive with a PKCE `?code=` before the app has
-// a session; the Supabase client exchanges it via detectSessionInUrl and fires
-// onAuthStateChange, so this page only waits for that session (it must NOT
-// exchange the single-use code itself — see the effect below).
+// recovery links. Preferred recovery links carry `?token_hash=...&type=recovery`
+// and are verified with verifyOtp() — which needs NO stored PKCE code_verifier,
+// so the link works from ANY browser/device. Legacy `?code=` PKCE links are
+// still handled as a fallback (auto-exchanged by detectSessionInUrl). See the
+// effect below.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import { useAuthStore } from '@/lib/useAuthStore';
-import { hasSupabase } from '@/lib/supabase';
+import { hasSupabase, supabase } from '@/lib/supabase';
 
 const FIELD = 'min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 font-body text-[16px] font-semibold text-foreground outline-none transition-colors placeholder:text-foreground/25 focus:border-foreground/42';
 const LABEL = 'mb-2 block font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58';
@@ -29,18 +30,50 @@ export default function NewPassword() {
       return undefined;
     }
     const url = new URL(window.location.href);
-    const hasRecoveryToken = Boolean(url.searchParams.get('code')) || url.hash.includes('access_token');
-    if (!hasRecoveryToken) {
+    const tokenHash = url.searchParams.get('token_hash');
+    const otpType = url.searchParams.get('type');
+
+    // Preferred path: token-hash recovery. verifyOtp() needs NO stored PKCE
+    // code_verifier, so the link completes from ANY browser/device — unlike the
+    // legacy ?code= flow, which only worked if the link was opened in the exact
+    // browser window that requested the reset. detectSessionInUrl ignores
+    // ?token_hash, so there is no double-exchange / navigator.locks deadlock.
+    if (tokenHash && otpType) {
+      let active = true;
+      setExchangeState({ busy: true, attempted: true });
+      supabase.auth
+        .verifyOtp({ token_hash: tokenHash, type: otpType })
+        .then(({ error: otpError }) => {
+          if (!active) return;
+          setExchangeState({ busy: false, attempted: true });
+          if (otpError) {
+            setError('This reset link is invalid or has expired. Request a new one and try again.');
+            return;
+          }
+          // Success: onAuthStateChange sets `user`, which re-renders the form.
+          url.searchParams.delete('token_hash');
+          url.searchParams.delete('type');
+          window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+        })
+        .catch(() => {
+          if (active) {
+            setExchangeState({ busy: false, attempted: true });
+            setError('This reset link is invalid or has expired. Request a new one and try again.');
+          }
+        });
+      return () => { active = false; };
+    }
+
+    // Fallback: legacy ?code= PKCE links. The Supabase client (flowType 'pkce',
+    // detectSessionInUrl: true) auto-exchanges the code and fires
+    // onAuthStateChange; we must NOT exchange it ourselves (single-use code +
+    // navigator.locks deadlock). Wait for `user`, with a timeout so a stale or
+    // cross-browser link surfaces an error instead of spinning forever.
+    const hasPkceCode = Boolean(url.searchParams.get('code')) || url.hash.includes('access_token');
+    if (!hasPkceCode) {
       setExchangeState({ busy: false, attempted: true });
       return undefined;
     }
-    // The Supabase client (flowType 'pkce', detectSessionInUrl: true) exchanges
-    // the recovery ?code= itself on load and fires onAuthStateChange, which sets
-    // `user`. We must NOT also call exchangeCodeForSession here: the code is
-    // single-use and both exchanges contend for the same navigator.locks auth
-    // lock, deadlocking so neither resolves — that left this page spinning on
-    // "Opening secure password reset..." forever. Instead wait for `user` to
-    // appear, with a timeout so a stale/invalid link surfaces an error.
     setExchangeState({ busy: true, attempted: true });
     const timer = setTimeout(() => {
       setExchangeState({ busy: false, attempted: true });
