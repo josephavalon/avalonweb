@@ -1,19 +1,20 @@
 // Password update target for both invited staff forced rotation and Supabase
-// recovery links. Recovery links can arrive with a PKCE `?code=` before the app
-// has a session, so this page performs the exchange itself instead of sitting
-// behind RequireAuth.
+// recovery links. Recovery links arrive with a PKCE `?code=` before the app has
+// a session; the Supabase client exchanges it via detectSessionInUrl and fires
+// onAuthStateChange, so this page only waits for that session (it must NOT
+// exchange the single-use code itself — see the effect below).
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import { useAuthStore } from '@/lib/useAuthStore';
-import { hasSupabase, supabase } from '@/lib/supabase';
+import { hasSupabase } from '@/lib/supabase';
 
 const FIELD = 'min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 font-body text-[16px] font-semibold text-foreground outline-none transition-colors placeholder:text-foreground/25 focus:border-foreground/42';
 const LABEL = 'mb-2 block font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58';
 
 export default function NewPassword() {
-  const { user, loading, updatePassword, refreshSupabaseSession } = useAuthStore();
+  const { user, loading, updatePassword } = useAuthStore();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -23,33 +24,30 @@ export default function NewPassword() {
   const [exchangeState, setExchangeState] = useState({ busy: false, attempted: false });
 
   useEffect(() => {
-    let active = true;
-    async function exchangeRecoveryCode() {
-      if (!hasSupabase || user) return;
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
-      if (!code) {
-        setExchangeState({ busy: false, attempted: true });
-        return;
-      }
-      setExchangeState({ busy: true, attempted: true });
-      try {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) throw exchangeError;
-        await refreshSupabaseSession();
-        url.searchParams.delete('code');
-        window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
-        if (active) setExchangeState({ busy: false, attempted: true });
-      } catch {
-        if (active) {
-          setExchangeState({ busy: false, attempted: true });
-          setError('This password reset link is invalid or expired. Request a new reset link.');
-        }
-      }
+    if (!hasSupabase || user) {
+      setExchangeState({ busy: false, attempted: true });
+      return undefined;
     }
-    exchangeRecoveryCode();
-    return () => { active = false; };
-  }, [user, refreshSupabaseSession]);
+    const url = new URL(window.location.href);
+    const hasRecoveryToken = Boolean(url.searchParams.get('code')) || url.hash.includes('access_token');
+    if (!hasRecoveryToken) {
+      setExchangeState({ busy: false, attempted: true });
+      return undefined;
+    }
+    // The Supabase client (flowType 'pkce', detectSessionInUrl: true) exchanges
+    // the recovery ?code= itself on load and fires onAuthStateChange, which sets
+    // `user`. We must NOT also call exchangeCodeForSession here: the code is
+    // single-use and both exchanges contend for the same navigator.locks auth
+    // lock, deadlocking so neither resolves — that left this page spinning on
+    // "Opening secure password reset..." forever. Instead wait for `user` to
+    // appear, with a timeout so a stale/invalid link surfaces an error.
+    setExchangeState({ busy: true, attempted: true });
+    const timer = setTimeout(() => {
+      setExchangeState({ busy: false, attempted: true });
+      setError('This reset link took too long to open or has expired. Request a new reset link and try again.');
+    }, 12000);
+    return () => clearTimeout(timer);
+  }, [user]);
 
   const destination = () => {
     if (user?.role === 'admin' || user?.role === 'staff') return '/admin';
