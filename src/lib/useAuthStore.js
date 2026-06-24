@@ -210,9 +210,17 @@ export function AuthStoreProvider({ children }) {
     // session landed). Cleared as soon as the real resolution arrives.
     const loadingSafety = setTimeout(() => { if (active) setLoading(false); }, 8000);
     refreshSupabaseSession().finally(() => { if (active) { clearTimeout(loadingSafety); setLoading(false); } });
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const u = await buildSupabaseUser(session?.user || null);
-      if (active) { setUser(u); setLoading(false); clearTimeout(loadingSafety); }
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Defer the profile lookup OUT of this callback. buildSupabaseUser runs a
+      // supabase.from('profiles') query, and PostgREST calls getSession() to
+      // attach its auth header — which needs the navigator.locks auth lock that
+      // this callback is currently HOLDING. Awaiting it inline deadlocks (the
+      // login button spins forever after sign-in). setTimeout(0) lets the lock
+      // release first. supabase-js documents this exact pitfall.
+      setTimeout(async () => {
+        const u = await buildSupabaseUser(session?.user || null);
+        if (active) { setUser(u); setLoading(false); clearTimeout(loadingSafety); }
+      }, 0);
     });
     return () => { active = false; clearTimeout(loadingSafety); listener?.subscription?.unsubscribe?.(); };
   }, [refreshSupabaseSession]);
