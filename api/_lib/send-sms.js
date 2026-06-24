@@ -26,25 +26,7 @@
  * See docs/PHI_DATA_FLOW.md.
  */
 import { safeLogContext } from './safe-error.js';
-
-// Defense-in-depth: if a caller ever puts PHI-shaped tokens in the body, refuse
-// to send. The auth-hook and team-invite call sites use plain code-only bodies
-// today, so this should never trip in practice.
-const PHI_BODY_PATTERNS = [
-  /\bappointment\b/i,
-  /\bnurse\b/i,
-  /\bdose|dosage\b/i,
-  /\ballerg/i,
-  /\bmedication/i,
-  /\bdiagnos/i,
-  /\bdob\b/i,
-  /\bsymptom/i,
-];
-
-function bodyContainsPhi(body) {
-  const text = String(body || '');
-  return PHI_BODY_PATTERNS.some((re) => re.test(text));
-}
+import { bodyContainsPhi } from './phi-guard.js';
 
 export function isSmsConfigured() {
   return Boolean(process.env.QUO_API_KEY && process.env.QUO_FROM_NUMBER);
