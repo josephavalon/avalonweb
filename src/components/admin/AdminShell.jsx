@@ -33,7 +33,7 @@ const NAV_LIVE = [
   { label: 'Patients', icon: Users, to: '/admin/clients' },
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
   { label: 'Acuity', icon: CalendarCheck, href: ACUITY_URL, external: true },
-  { label: 'Team', icon: UserCog, to: '/admin/team' },
+  { label: 'Users', icon: UserCog, to: '/admin/team' },
   // Coming-soon placeholders — listed below the working links, all route to the
   // shared /admin/soon page (?feature names what's coming).
   { label: 'Inventory', icon: Package, to: '/admin/soon?feature=Inventory' },
