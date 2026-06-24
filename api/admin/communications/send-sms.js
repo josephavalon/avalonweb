@@ -11,6 +11,7 @@
 import { requireStaff } from '../../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
+import { recordOutbound } from '../../_lib/comm-store.js';
 
 const FRIENDLY = {
   sms_not_configured: 'Texting is not configured yet (missing Quo credentials).',
@@ -34,11 +35,17 @@ export default async function handler(req, res) {
 
   const to = String(req.body?.to || '').trim();
   const body = String(req.body?.body || '').trim();
+  const name = String(req.body?.name || '').trim() || null;
   if (!to) return res.status(400).json({ error: 'A phone number is required.', code: 'phone_required' });
   if (!body) return res.status(400).json({ error: 'Message text is required.', code: 'body_required' });
   if (body.length > 480) return res.status(400).json({ error: 'Message is too long.', code: 'body_too_long' });
 
   const result = await sendSms({ to, body });
+
+  // Log the sent text as an outbound message so it threads in the inbox.
+  if (result.ok) {
+    await recordOutbound({ tenantId: authed.tenantId, channel: 'sms', contact: result.normalizedTo || to, name, body, sentBy: authed.user?.id || null });
+  }
 
   await writeAuditEvent(authed.db, {
     tenantId: authed.tenantId || null,

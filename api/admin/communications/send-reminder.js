@@ -12,6 +12,7 @@
 import { requireStaff } from '../../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
+import { recordOutbound } from '../../_lib/comm-store.js';
 import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
 
 function consentGranted(payload) {
@@ -73,6 +74,10 @@ export default async function handler(req, res) {
   // Consent verified above → the PHI block-list is intentionally bypassed for
   // this one consented recipient.
   const result = await sendSms({ to: phone, body }, { allowConsentedPhi: true });
+
+  if (result.ok) {
+    await recordOutbound({ tenantId: authed.tenantId, channel: 'sms', contact: result.normalizedTo || phone, name: payload.contact?.name || null, body, sentBy: authed.user?.id || null });
+  }
 
   await writeAuditEvent(db, {
     tenantId: authed.tenantId || null,

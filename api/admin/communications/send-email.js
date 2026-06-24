@@ -9,6 +9,7 @@
 import { requireStaff } from '../../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { sendEmail, isEmailConfigured } from '../../_lib/send-email.js';
+import { recordOutbound } from '../../_lib/comm-store.js';
 
 const FRIENDLY = {
   email_not_configured: 'Email is not configured yet (missing Resend credentials).',
@@ -45,6 +46,10 @@ export default async function handler(req, res) {
   const html = `<div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; font-size: 15px; line-height: 1.55; color: #111;">${escapeHtml(body).replace(/\n/g, '<br>')}</div>`;
 
   const result = await sendEmail({ to, subject, html, text: body });
+
+  if (result.ok) {
+    await recordOutbound({ tenantId: authed.tenantId, channel: 'email', contact: to.toLowerCase(), name: String(req.body?.name || '').trim() || null, body, sentBy: authed.user?.id || null });
+  }
 
   await writeAuditEvent(authed.db, {
     tenantId: authed.tenantId || null,
