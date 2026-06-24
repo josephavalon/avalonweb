@@ -4,15 +4,39 @@
 
 import { supabase, hasSupabase } from './supabase';
 
+// Cache the access token and keep it fresh via onAuthStateChange. Calling
+// supabase.auth.getSession() on EVERY request contends on the navigator.locks
+// auth lock; when the admin dashboard fires several requests at once they
+// serialize on that lock and the data loads stall/spin. Reading a cached token
+// is lock-free, so requests stop blocking each other.
+let cachedToken = null;
+if (hasSupabase) {
+  supabase.auth.getSession()
+    .then(({ data }) => { cachedToken = data?.session?.access_token || null; })
+    .catch(() => {});
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedToken = session?.access_token || null;
+  });
+}
+
 export async function authedFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
 
   if (hasSupabase) {
-    try {
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-      if (token) headers.Authorization = `Bearer ${token}`;
-    } catch { /* no session — request will 401 */ }
+    let token = cachedToken;
+    if (!token) {
+      // No cached token yet (first call before the seed resolves). Fetch once,
+      // but never let a stalled auth lock hang the request forever.
+      try {
+        const { data } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('getSession_timeout')), 4000)),
+        ]);
+        token = data?.session?.access_token || null;
+        if (token) cachedToken = token;
+      } catch { /* proceed unauthenticated — request will 401 and the UI shows an error */ }
+    }
+    if (token) headers.Authorization = `Bearer ${token}`;
   }
 
   const res = await fetch(path, { ...options, headers });
