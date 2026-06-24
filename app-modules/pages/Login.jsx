@@ -758,7 +758,7 @@ export default function Login({ defaultAudience = 'patient' }) {
                 </h1>
                 {supabaseMode && isAdmin && (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    Operations-only. Sign in with your staff email and password.
+                    Sign in with your staff email and password.
                   </p>
                 )}
               </div>

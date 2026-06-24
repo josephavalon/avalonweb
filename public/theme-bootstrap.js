@@ -1,7 +1,7 @@
 (function () {
   window.__AV_BOOT_STARTED_AT = Date.now();
   document.documentElement.classList.add('av-js');
-  var VALID = ['dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs'];
+  var VALID = ['dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs'];
   try {
     var stored = window.localStorage.getItem('avalon.theme');
     var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
@@ -9,7 +9,7 @@
     if (theme === 'golden') theme = 'golden-hour';
     if (theme === 'dubs') theme = 'warriors';
     var cl = document.documentElement.classList;
-    cl.remove('dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
+    cl.remove('dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
     cl.add(theme);
     var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
     var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
