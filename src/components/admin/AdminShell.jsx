@@ -4,15 +4,21 @@ import AvalonMark from '@/components/AvalonMark';
 import {
   Activity,
   CalendarCheck,
+  CalendarDays,
   ChevronDown,
+  ClipboardList,
   CreditCard,
   ExternalLink,
   LayoutGrid,
   LogOut,
   Menu,
+  Package,
+  Settings,
   ShieldCheck,
+  Stethoscope,
   Users,
   UserCog,
+  Wrench,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -25,10 +31,16 @@ const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
   { label: 'Appointments', icon: CalendarCheck, to: '/admin/bookings' },
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
-  // Inventory hidden for now (less friction at launch). Route still exists at
-  // /admin/inventory; restore this entry to bring the nav link back.
-  { label: 'Scheduling', icon: CalendarCheck, href: ACUITY_URL, external: true, note: 'Acuity' },
+  { label: 'Acuity', icon: CalendarCheck, href: ACUITY_URL, external: true },
   { label: 'Team', icon: UserCog, to: '/admin/team' },
+  // Coming-soon placeholders — listed below the working links, all route to the
+  // shared /admin/soon page (?feature names what's coming).
+  { label: 'Inventory', icon: Package, to: '/admin/soon?feature=Inventory' },
+  { label: 'Events', icon: CalendarDays, to: '/admin/soon?feature=Events' },
+  { label: 'Clinical Staff', icon: Stethoscope, to: '/admin/soon?feature=Clinical%20Staff' },
+  { label: 'GFE', icon: ClipboardList, to: '/admin/soon?feature=GFE' },
+  { label: 'Tools', icon: Wrench, to: '/admin/soon?feature=Tools' },
+  { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
 ];
 
 const NAV_PREVIEW = [

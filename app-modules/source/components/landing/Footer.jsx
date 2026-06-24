@@ -7,13 +7,9 @@ import LanguageSelect from '@/components/landing/LanguageSelect';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const SERVICES = [
-  { label: 'Book',   to: '/book' },
-  { label: 'Plans',  to: '/subscription' },
-  { label: 'IV Therapy',   to: '/protocols' },
-  { label: 'Launches', to: '/launches' },
-  { label: 'Bay Area IV', to: '/mobile-iv-therapy-bay-area' },
-  { label: 'Locations', to: '/locations' },
-  { label: 'Learn', to: '/learn' },
+  { label: 'Book',       to: '/book' },
+  { label: 'IV Therapy', to: '/protocols' },
+  { label: 'Plans',      to: '/subscription' },
 ];
 
 const COMPANY = [

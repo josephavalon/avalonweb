@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -91,7 +91,7 @@ function ActionResult({ result }) {
   );
 }
 
-function BookingRow({ booking, busy, retryBusy, result, onCharge, onLink, onRetryAcuity }) {
+function BookingRow({ booking, busy, retryBusy, deleteBusy, result, onCharge, onLink, onRetryAcuity, onDelete }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
   const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
@@ -201,6 +201,19 @@ function BookingRow({ booking, busy, retryBusy, result, onCharge, onLink, onRetr
         </div>
       ) : null}
 
+      <div className="mt-3 flex justify-end border-t pt-3" style={{ borderColor: BORDER }}>
+        <button
+          type="button"
+          disabled={deleteBusy}
+          onClick={() => onDelete(booking)}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity hover:opacity-80 disabled:opacity-50"
+          style={{ color: 'hsl(0 70% 62%)' }}
+        >
+          {deleteBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />}
+          Delete
+        </button>
+      </div>
+
       <ActionResult result={result} />
     </div>
   );
@@ -259,6 +272,18 @@ export default function LiveAdminBookings() {
     }
   }, [load]);
 
+  const deleteBooking = useCallback(async (booking) => {
+    if (!window.confirm(`Delete this booking${booking.customerName ? ` for ${booking.customerName}` : ''}? This permanently removes it and cannot be undone.`)) return;
+    setActions((m) => ({ ...m, [booking.id]: { busyDelete: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/delete', { appointmentId: booking.id });
+      if (res?.ok) { load(); }
+      else { setActions((m) => ({ ...m, [booking.id]: { busyDelete: false, tone: 'error', message: 'Could not delete this booking.' } })); }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busyDelete: false, tone: 'error', message: 'Delete failed.' } }));
+    }
+  }, [load]);
+
   const { loading, error, bookings } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
 
@@ -307,6 +332,8 @@ export default function LiveAdminBookings() {
                 onCharge={(b) => runAction(b, 'charge')}
                 onLink={(b) => runAction(b, 'link')}
                 onRetryAcuity={retryAcuity}
+                deleteBusy={!!actions[booking.id]?.busyDelete}
+                onDelete={deleteBooking}
               />
             ))}
           </div>
