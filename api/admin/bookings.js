@@ -20,6 +20,13 @@ function dollarsFromCents(cents) {
   return Math.round(Number(cents)) / 100;
 }
 
+// Did this client opt in to text reminders? Captured at booking
+// (contact.smsReminderConsent) or recorded by staff (smsReminderConsent).
+function smsConsentGranted(payload) {
+  const truthy = (v) => v === true || (v && typeof v === 'object' && v.granted === true);
+  return truthy(payload?.contact?.smsReminderConsent) || truthy(payload?.smsReminderConsent);
+}
+
 function shapeBooking(row) {
   const payload = row.external_payload || {};
   const appointment = payload.appointment || {};
@@ -60,6 +67,7 @@ function shapeBooking(row) {
     acuityRescheduleUrl: payload.fulfillment?.acuityAppointment?.rescheduleUrl || payload.fulfillment?.acuityAppointment?.rescheduleURL || '',
     hasSavedCard: !!row.stripe_payment_method_id,
     hasStripeCustomer: !!row.stripe_customer_id,
+    smsConsent: smsConsentGranted(payload),
     createdAt: row.created_at,
   };
 }

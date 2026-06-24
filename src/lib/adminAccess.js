@@ -10,6 +10,7 @@
 export const STAFF_ROUTES = Object.freeze([
   '/admin', // dashboard
   '/admin/clients', // patient records (live, derived from bookings)
+  '/admin/messages', // PHI-free client texting (Quo)
   '/admin/crm', // preview-only patients/customer surface
   '/admin/bookings', // billing — ready to collect
   '/admin/finance', // billing — payments
@@ -23,6 +24,7 @@ export const ALL_TEAM_ROLES = Object.freeze(['admin', 'staff']);
 export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin',
   '/admin/clients',
+  '/admin/messages',
   '/admin/bookings',
   '/admin/finance',
   '/admin/inventory',

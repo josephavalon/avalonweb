@@ -3280,6 +3280,18 @@ function FastReviewSurface({
           By paying, you consent to intake and privacy terms. Treatment requires clinical approval.
         </p>
 
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3">
+          <input
+            type="checkbox"
+            checked={!!state.smsReminderConsent}
+            onChange={(e) => onValue('smsReminderConsent', e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-current"
+          />
+          <span className="font-body text-xs leading-snug text-foreground/58">
+            Text me appointment reminders. I understand standard SMS isn’t encrypted and consent to receive reminders by text. (Optional — reply STOP anytime.)
+          </span>
+        </label>
+
       </div>
 
       <div
@@ -3779,6 +3791,7 @@ const defaultState = {
   clinicalReviewOnFile: false,
   customBase: 'advanced',
   customPlanSessions: 2,
+  smsReminderConsent: false,
 };
 
 const EMPTY_CLIENT_PROFILE = {
@@ -5035,6 +5048,9 @@ export default function BookNow() {
         emergencyContactPhone: state.emergencyContactPhone.trim(),
         clientType: state.clientType,
         visitCount: returningClient || clinicalReviewClaimedOnFile ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
+        // Opt-in to text reminders (45 CFR §164.522). Flows through to
+        // external_payload.contact and gates PHI-bearing reminder SMS.
+        smsReminderConsent: state.smsReminderConsent === true,
       },
       dob: state.dob,
       emergencyContact: emergencyContactValue,

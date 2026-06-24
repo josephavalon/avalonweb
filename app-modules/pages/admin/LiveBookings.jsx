@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save, MessageSquare, BellRing } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -169,7 +169,7 @@ function EditForm({ booking, busy, onSave, onCancel }) {
   );
 }
 
-function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, editing, result, onCharge, onLink, onRetryAcuity, onDelete, onEdit, onSave, onCancelEdit }) {
+function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBusy, consentBusy, editing, result, onCharge, onLink, onRetryAcuity, onDelete, onEdit, onSave, onCancelEdit, onSendReminder, onToggleConsent }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
   const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
@@ -278,6 +278,37 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, editing, r
           ) : null}
         </div>
       ) : null}
+
+      {/* SMS reminders — gated on the client's opt-in (45 CFR §164.522). */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: BORDER }}>
+        <span className="inline-flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: booking.smsConsent ? 'hsl(150 60% 45%)' : DIM }}>
+          <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
+          {booking.smsConsent ? 'Text reminders: opted in' : 'Text reminders: not consented'}
+        </span>
+        <button
+          type="button"
+          disabled={consentBusy || !booking.customerPhone}
+          onClick={() => onToggleConsent(booking, !booking.smsConsent)}
+          title={!booking.customerPhone ? 'No phone number on file' : undefined}
+          className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-opacity hover:opacity-80 disabled:opacity-40"
+          style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+        >
+          {consentBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : null}
+          {booking.smsConsent ? 'Revoke consent' : 'Record consent'}
+        </button>
+        {booking.smsConsent && booking.customerPhone ? (
+          <button
+            type="button"
+            disabled={reminderBusy}
+            onClick={() => onSendReminder(booking)}
+            className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: TEXT, color: INVERT }}
+          >
+            {reminderBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <BellRing className="h-3.5 w-3.5" strokeWidth={2} />}
+            Send reminder
+          </button>
+        ) : null}
+      </div>
 
       <div className="mt-3 flex items-center justify-end gap-1 border-t pt-3" style={{ borderColor: BORDER }}>
         <button
@@ -401,6 +432,35 @@ export default function LiveAdminBookings() {
     }
   }, [load]);
 
+  const toggleConsent = useCallback(async (booking, granted) => {
+    setActions((m) => ({ ...m, [booking.id]: { busyConsent: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/update', { appointmentId: booking.id, smsConsent: granted });
+      if (res?.ok) {
+        setActions((m) => ({ ...m, [booking.id]: { busyConsent: false, tone: 'success', message: granted ? 'Text-reminder consent recorded.' : 'Consent revoked.' } }));
+        load();
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { busyConsent: false, tone: 'error', message: 'Could not update consent.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busyConsent: false, tone: 'error', message: 'Could not update consent.' } }));
+    }
+  }, [load]);
+
+  const sendReminder = useCallback(async (booking) => {
+    setActions((m) => ({ ...m, [booking.id]: { busyReminder: true } }));
+    try {
+      const res = await apiPost('/api/admin/communications/send-reminder', { appointmentId: booking.id });
+      if (res?.ok) {
+        setActions((m) => ({ ...m, [booking.id]: { busyReminder: false, tone: 'success', message: 'Reminder text sent.' } }));
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { busyReminder: false, tone: 'error', message: res?.error || 'Could not send the reminder.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busyReminder: false, tone: 'error', message: err?.body?.error || 'Could not send the reminder.' } }));
+    }
+  }, []);
+
   const { loading, error, bookings } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
 
@@ -456,6 +516,10 @@ export default function LiveAdminBookings() {
                 onEdit={(b) => setEditingId(b.id)}
                 onCancelEdit={() => setEditingId(null)}
                 onSave={saveBooking}
+                reminderBusy={!!actions[booking.id]?.busyReminder}
+                consentBusy={!!actions[booking.id]?.busyConsent}
+                onSendReminder={sendReminder}
+                onToggleConsent={toggleConsent}
               />
             ))}
           </div>
