@@ -204,12 +204,17 @@ export function AuthStoreProvider({ children }) {
   useEffect(() => {
     if (!hasSupabase) return undefined;
     let active = true;
-    refreshSupabaseSession().finally(() => { if (!active) setLoading(false); });
+    // Safety net: if getSession ever stalls (e.g. navigator.locks contention),
+    // never leave the whole authed app stuck behind RequireAuth's loading gate.
+    // Force loading off after a few seconds so it can resolve (to /login if no
+    // session landed). Cleared as soon as the real resolution arrives.
+    const loadingSafety = setTimeout(() => { if (active) setLoading(false); }, 8000);
+    refreshSupabaseSession().finally(() => { if (active) { clearTimeout(loadingSafety); setLoading(false); } });
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = await buildSupabaseUser(session?.user || null);
-      if (active) { setUser(u); setLoading(false); }
+      if (active) { setUser(u); setLoading(false); clearTimeout(loadingSafety); }
     });
-    return () => { active = false; listener?.subscription?.unsubscribe?.(); };
+    return () => { active = false; clearTimeout(loadingSafety); listener?.subscription?.unsubscribe?.(); };
   }, [refreshSupabaseSession]);
 
   // Email magic-link (Supabase). Returns { ok, pending }; the user clicks the
@@ -457,11 +462,14 @@ export function AuthStoreProvider({ children }) {
 
   const signOut = useCallback(async () => {
     if (user) appendActivity('Signed out', { role: user.role, username: user.username });
-    if (hasSupabase) { try { await supabase.auth.signOut(); } catch { /* ignore */ } }
+    // Clear LOCAL session state first so sign-out is instant. supabase.auth.signOut()
+    // can stall on the navigator.locks auth lock; awaiting it before clearing left
+    // the UI hung on "Signing out…" forever. Fire it best-effort in the background.
     setUser(null);
     if (!hasSupabase) writeSession(null);
     clearLastActivity();
     clearAllAvLocal();
+    if (hasSupabase) { supabase.auth.signOut().catch(() => { /* best-effort */ }); }
   }, [user]);
 
   // Idle auto-logoff. While a user is signed in, track activity and force

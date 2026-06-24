@@ -57,18 +57,19 @@ export default function AuthCallback() {
       }
 
       try {
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
+        // The Supabase client (flowType 'pkce', detectSessionInUrl: true)
+        // exchanges the ?code= itself on load and fires onAuthStateChange. We
+        // must NOT also call exchangeCodeForSession here: the code is single-use
+        // and the two exchanges deadlock on the navigator.locks auth lock, so
+        // the "Finishing sign-in" screen hangs forever. Instead poll getSession
+        // until the client's own exchange lands, with a ~6s timeout.
         let session = null;
-
-        if (code) {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) throw exchangeError;
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          if (abortController.signal.aborted) return;
+          const { data } = await supabase.auth.getSession();
           session = data?.session || null;
-        } else {
-          const { data, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError) throw sessionError;
-          session = data?.session || null;
+          if (session?.user) break;
+          await waitForProfileRetry(abortController.signal);
         }
 
         const user = session?.user || null;
