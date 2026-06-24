@@ -1,16 +1,19 @@
 /**
  * Communications — /admin/messages
  *
- * Send a general, PHI-free text to a client through Quo (api/admin/communications/
- * send-sms). Pick a client from the live bookings feed or type a number, choose a
- * template or write a short message, send. The endpoint enforces the PHI block-
- * list, and this page makes the boundary explicit: SMS is for nudges + payment
- * links, not appointment/clinical detail (that goes by email, or by a consented
- * reminder from the booking row).
+ * Admin-initiated client messaging over two channels:
+ *   • Text  → Quo SMS  (api/admin/communications/send-sms)
+ *   • Email → Resend   (api/admin/communications/send-email)
+ *
+ * Pick a client from the live bookings feed or type a recipient, choose a
+ * template or write a message, send. Both channels are PHI-free: the server
+ * refuses clinical/appointment content (no names+times+services). For an actual
+ * appointment reminder, use "Send reminder" on a booking where the client opted
+ * in.
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Send, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Phone } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Send, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Phone, Mail, MessageSquare } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -25,15 +28,24 @@ const BORDER = 'hsl(var(--foreground) / 0.1)';
 
 const FIELD_STYLE = { background: BG, color: TEXT, border: '1px solid hsl(var(--foreground) / 0.16)' };
 
-const TEMPLATES = [
-  { label: 'Check your email', text: 'Avalon Vitality: you have a new update — please check your email. Reply here with any questions.' },
-  { label: 'We replied', text: 'Avalon Vitality: thanks for reaching out! We just replied to your email.' },
-  { label: 'Payment link', text: 'Avalon Vitality: here is your secure payment link → ' },
-];
+const TEMPLATES = {
+  sms: [
+    { label: 'Check your email', text: 'Avalon Vitality: you have a new update — please check your email. Reply here with any questions.' },
+    { label: 'We replied', text: 'Avalon Vitality: thanks for reaching out! We just replied to your email.' },
+    { label: 'Payment link', text: 'Avalon Vitality: here is your secure payment link → ' },
+  ],
+  email: [
+    { label: 'Check your portal', subject: 'A new update from Avalon Vitality', text: 'Hi,\n\nYou have a new update from Avalon Vitality. Please sign in to your account to view the details.\n\n— The Avalon Vitality Team' },
+    { label: 'Following up', subject: 'Following up — Avalon Vitality', text: 'Hi,\n\nJust following up on your message. Reply any time and we’ll help.\n\n— The Avalon Vitality Team' },
+    { label: 'Payment link', subject: 'Your Avalon Vitality payment link', text: 'Hi,\n\nHere is your secure payment link:\n\n\n\nReply with any questions.\n\n— The Avalon Vitality Team' },
+  ],
+};
 
 export default function Messages() {
   const [clients, setClients] = useState([]);
+  const [channel, setChannel] = useState('sms');
   const [to, setTo] = useState('');
+  const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
@@ -45,61 +57,94 @@ export default function Messages() {
       const list = [];
       for (const b of (Array.isArray(data?.bookings) ? data.bookings : [])) {
         const phone = (b.customerPhone || '').trim();
-        if (!phone || seen.has(phone)) continue;
-        seen.add(phone);
-        list.push({ name: b.customerName && b.customerName !== '—' ? b.customerName : phone, phone });
+        const email = (b.customerEmail || '').trim();
+        const key = `${phone}|${email}`;
+        if ((!phone && !email) || seen.has(key)) continue;
+        seen.add(key);
+        list.push({ name: b.customerName && b.customerName !== '—' ? b.customerName : (email || phone), phone, email });
       }
       setClients(list);
-    } catch { /* leave list empty — manual entry still works */ }
+    } catch { /* leave empty — manual entry still works */ }
   }, []);
 
   useEffect(() => { loadClients(); }, [loadClients]);
 
+  const isEmail = channel === 'email';
   const charCount = body.length;
   const segments = Math.max(1, Math.ceil(charCount / 160));
+
+  const switchChannel = (next) => {
+    if (next === channel) return;
+    setChannel(next);
+    setTo('');
+    setResult(null);
+  };
+
+  const applyTemplate = (t) => {
+    setBody(t.text);
+    if (isEmail && t.subject) setSubject(t.subject);
+  };
 
   const send = useCallback(async () => {
     setResult(null);
     setBusy(true);
     try {
-      const res = await apiPost('/api/admin/communications/send-sms', { to: to.trim(), body: body.trim() });
+      const res = isEmail
+        ? await apiPost('/api/admin/communications/send-email', { to: to.trim(), subject: subject.trim(), body: body.trim() })
+        : await apiPost('/api/admin/communications/send-sms', { to: to.trim(), body: body.trim() });
       if (res?.ok) {
-        setResult({ tone: 'success', message: 'Text sent.' });
+        setResult({ tone: 'success', message: isEmail ? 'Email sent.' : 'Text sent.' });
         setBody('');
       } else {
-        setResult({ tone: 'error', message: res?.error || 'Could not send the text.' });
+        setResult({ tone: 'error', message: res?.error || 'Could not send the message.' });
       }
     } catch (err) {
-      setResult({ tone: 'error', message: err?.body?.error || 'Could not send the text.' });
+      setResult({ tone: 'error', message: err?.body?.error || 'Could not send the message.' });
     } finally {
       setBusy(false);
     }
-  }, [to, body]);
+  }, [isEmail, to, subject, body]);
 
   const canSend = to.trim() && body.trim() && !busy;
+  const ChannelBtn = ({ id, icon: Icon, label }) => (
+    <button
+      type="button"
+      onClick={() => switchChannel(id)}
+      className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-xl font-body text-[11px] font-bold uppercase tracking-[0.14em] transition-colors"
+      style={channel === id ? { background: TEXT, color: INVERT } : { background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}
+    >
+      <Icon className="h-3.5 w-3.5" strokeWidth={2} />{label}
+    </button>
+  );
 
   return (
     <AdminShell title="Communications">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
         <div className="mx-auto max-w-3xl px-4 py-6 md:px-8 md:py-10">
+          {/* Channel toggle */}
+          <div className="mb-5 flex gap-2">
+            <ChannelBtn id="sms" icon={MessageSquare} label="Text" />
+            <ChannelBtn id="email" icon={Mail} label="Email" />
+          </div>
+
           {/* Compliance note */}
           <div className="mb-6 flex items-start gap-3 rounded-2xl px-4 py-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} style={{ color: 'hsl(150 60% 45%)' }} />
             <p className="font-body text-xs leading-relaxed" style={{ color: MUTED }}>
-              Texts are for general, non-clinical messages and payment links — no names, appointment times, or visit details
-              (those go by email). Clinical content is blocked automatically. To text an actual appointment reminder, use
+              {isEmail ? 'Email' : 'Text'} is for general, non-clinical messages and payment links — no appointment times or visit
+              details (clinical content is blocked automatically). To send an actual appointment reminder, use
               <span style={{ color: TEXT }}> Send reminder</span> on a booking where the client has opted in.
             </p>
           </div>
 
           {/* Recipient */}
           <label className="flex flex-col gap-1">
-            <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>To (phone)</span>
+            <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>{isEmail ? 'To (email)' : 'To (phone)'}</span>
             <input
-              type="tel"
+              type={isEmail ? 'email' : 'tel'}
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              placeholder="+1 415 555 0100"
+              placeholder={isEmail ? 'name@email.com' : '+1 415 555 0100'}
               className="min-h-[44px] rounded-xl px-3 font-body text-sm outline-none"
               style={FIELD_STYLE}
             />
@@ -107,27 +152,44 @@ export default function Messages() {
 
           {clients.length ? (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {clients.map((c) => (
-                <button
-                  key={c.phone}
-                  type="button"
-                  onClick={() => setTo(c.phone)}
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-body text-[11px] transition-colors hover:opacity-80"
-                  style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}
-                >
-                  <Phone className="h-3 w-3" strokeWidth={1.8} />{c.name}
-                </button>
-              ))}
+              {clients
+                .filter((c) => (isEmail ? c.email : c.phone))
+                .map((c) => (
+                  <button
+                    key={`${c.phone}|${c.email}`}
+                    type="button"
+                    onClick={() => setTo(isEmail ? c.email : c.phone)}
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-body text-[11px] transition-colors hover:opacity-80"
+                    style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}
+                  >
+                    {isEmail ? <Mail className="h-3 w-3" strokeWidth={1.8} /> : <Phone className="h-3 w-3" strokeWidth={1.8} />}{c.name}
+                  </button>
+                ))}
             </div>
+          ) : null}
+
+          {/* Subject (email only) */}
+          {isEmail ? (
+            <label className="mt-4 flex flex-col gap-1">
+              <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Subject</span>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="A message from Avalon Vitality"
+                className="min-h-[44px] rounded-xl px-3 font-body text-sm outline-none"
+                style={FIELD_STYLE}
+              />
+            </label>
           ) : null}
 
           {/* Templates */}
           <div className="mt-5 flex flex-wrap gap-1.5">
-            {TEMPLATES.map((t) => (
+            {TEMPLATES[channel].map((t) => (
               <button
                 key={t.label}
                 type="button"
-                onClick={() => setBody(t.text)}
+                onClick={() => applyTemplate(t)}
                 className="rounded-full px-3 py-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
                 style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
               >
@@ -142,13 +204,15 @@ export default function Messages() {
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              rows={4}
+              rows={isEmail ? 7 : 4}
               placeholder="Keep it short and non-clinical…"
               className="rounded-xl p-3 font-body text-sm outline-none"
               style={FIELD_STYLE}
             />
           </label>
-          <p className="mt-1 font-body text-[11px]" style={{ color: DIM }}>{charCount} characters · {segments} segment{segments === 1 ? '' : 's'}</p>
+          {!isEmail ? (
+            <p className="mt-1 font-body text-[11px]" style={{ color: DIM }}>{charCount} characters · {segments} segment{segments === 1 ? '' : 's'}</p>
+          ) : null}
 
           {result ? (
             <div className="mt-4 flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: result.tone === 'error' ? 'hsl(0 70% 62%)' : 'hsl(150 60% 45%)' }}>
@@ -166,7 +230,7 @@ export default function Messages() {
               style={{ background: TEXT, color: INVERT }}
             >
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
-              Send text
+              {isEmail ? 'Send email' : 'Send text'}
             </button>
           </div>
         </div>
