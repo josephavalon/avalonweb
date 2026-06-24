@@ -648,22 +648,13 @@ export default function Login({ defaultAudience = 'patient' }) {
       </div>
     );
   } else {
-    // Patient, Supabase: full passwordless method stack.
-    body = (
-      <div className="space-y-3 md:space-y-2">
-        {patientMethodButtons}
-        <ErrorBanner message={displayError} />
-        <Divider />
-        <button
-          type="button"
-          onClick={() => { setView('password'); setFieldError(''); }}
-          className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-foreground/[0.12] bg-background/35 px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
-        >
-          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Login With Email</span>
-          <ChevronRight className="h-4 w-4" strokeWidth={2} />
-        </button>
-      </div>
-    );
+    // Patient, Supabase: email + password only. Passwordless methods (passkey,
+    // Google/Apple, phone magic-link) are not in use right now, so the returning
+    // tab shows the password form directly instead of a launchpad behind a
+    // "Login With Email" click. The method-stack machinery (patientMethodButtons,
+    // emailForm/phoneForm, view 'email'/'phone'/'password') stays defined so a
+    // single line here re-enables it when those providers are turned on.
+    body = passwordForm;
   }
 
   const footer = isAdmin ? (

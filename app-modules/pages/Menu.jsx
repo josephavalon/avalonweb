@@ -208,7 +208,7 @@ function ProtocolList({ id, sessions, expandDoses = false }) {
   );
 }
 
-function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }) {
+function Foldout({ title, icon: Icon, children, meta, open: controlledOpen, onToggle }) {
   const [localOpen, setLocalOpen] = useState(false);
   const open = controlledOpen ?? localOpen;
   const toggle = onToggle || (() => setLocalOpen((value) => !value));
@@ -225,6 +225,14 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
           <Icon className="h-5 w-5 text-foreground/66" strokeWidth={1.8} />
         </span>
         <span className="min-w-0 flex-1 font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground md:text-[2.55rem]">{title}</span>
+        {/* Desktop rows are full-bleed; a closed foldout would otherwise read as
+            title-left + chevron-right over a wide gap. Surface the protocol count
+            inline on md+ so the row stays informative while collapsed. */}
+        {meta && (
+          <span className="mr-3 hidden shrink-0 font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/40 md:block">
+            {meta}
+          </span>
+        )}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={CONTROL_TRANSITION} className="shrink-0 text-foreground/72" aria-hidden="true">
           <ChevronDown className="h-5 w-5" strokeWidth={2.2} />
         </motion.span>
@@ -271,6 +279,14 @@ export default function Menu() {
   const vitaminSessions = useMemo(() => filtered.filter((session) => !DOSE_PROTOCOL_KEYS.has(session.key)), [filtered]);
   const nadSessions = useMemo(() => filtered.filter((session) => session.key === 'nad'), [filtered]);
   const cbdSessions = useMemo(() => filtered.filter((session) => session.key === 'cbd'), [filtered]);
+  // Protocol counts surfaced inline on each foldout header (desktop) so a closed
+  // section still tells the user how much is inside. Matches the actual rendered
+  // card count (dose-expanded for NAD/CBD).
+  const vitaminCount = useMemo(() => protocolItems(vitaminSessions).length, [vitaminSessions]);
+  const nadCount = useMemo(() => protocolItems(nadSessions, true).length, [nadSessions]);
+  const cbdCount = useMemo(() => protocolItems(cbdSessions, true).length, [cbdSessions]);
+  const allCount = useMemo(() => protocolItems(filtered).length, [filtered]);
+  const drips = (n) => `${n} drip${n === 1 ? '' : 's'}`;
   const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
 
   return (
@@ -289,24 +305,24 @@ export default function Menu() {
 
         <section className="mt-8 grid gap-2 scroll-mt-44 md:mt-14 md:gap-3">
           <div id="iv-vitamins" className="scroll-mt-44">
-            <Foldout title="IV Vitamins" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
+            <Foldout title="IV Vitamins" icon={Droplets} meta={drips(vitaminCount)} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
               <ProtocolList id="iv-vitamins-protocols" sessions={vitaminSessions} />
             </Foldout>
           </div>
           <div id="iv-nad" className="scroll-mt-44">
-            <Foldout title="IV NAD+" icon={FlaskConical} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
+            <Foldout title="IV NAD+" icon={FlaskConical} meta={drips(nadCount)} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
               <ProtocolList id="iv-nad-protocols" sessions={nadSessions} expandDoses />
             </Foldout>
           </div>
           <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="IV CBD Therapy" icon={CannabisLeaf} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+            <Foldout title="IV CBD Therapy" icon={CannabisLeaf} meta={drips(cbdCount)} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
               <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} expandDoses />
             </Foldout>
           </div>
         </section>
 
         <section id="protocol-directory" className="mt-4 scroll-mt-44 md:mt-6">
-          <Foldout title="View All" icon={FlaskConical} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
+          <Foldout title="View All" icon={FlaskConical} meta={drips(allCount)} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
             <ProtocolList id="all-protocols" sessions={filtered} />
           </Foldout>
         </section>
