@@ -9,6 +9,7 @@ import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
 import { readCheckoutStoreRecord } from '../../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
+import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import {
   grantMembershipCredit,
@@ -620,6 +621,35 @@ export async function handleCheckoutCompleted(stripe, db, session) {
           errorStatus: err?.statusCode || err?.status || null,
         },
       });
+    }
+  }
+
+  // Customer booking-confirmation SMS — auto, PHI-free (no name, time, address,
+  // service/protocol, or any clinical detail; details live in the email). Sent
+  // once per booking; the paymentIntent metadata flag guards webhook retries so
+  // we never double-text. Quo's runtime PHI block-list in send-sms.js is the
+  // backstop. See docs/PHI_DATA_FLOW.md.
+  if (acuityAppointment?.id && paymentIntentId && paymentIntent?.metadata?.customerBookingSmsSent !== 'true') {
+    const customerPhone = checkout.contact?.phone || '';
+    if (customerPhone && isSmsConfigured()) {
+      try {
+        const smsResult = await sendSms({
+          to: customerPhone,
+          body: 'Avalon Vitality: your visit is booked. Check your email for the details. Reply STOP to opt out.',
+        });
+        if (smsResult.ok) {
+          await stripe.paymentIntents.update(paymentIntentId, {
+            metadata: safeStripeMetadata({
+              ...(paymentIntent?.metadata || {}),
+              customerBookingSmsSent: 'true',
+            }),
+          });
+        } else {
+          console.warn('[stripe/webhook] booking SMS not sent', { code: smsResult.code, status: smsResult.status });
+        }
+      } catch (err) {
+        console.warn('[stripe/webhook] booking SMS failed', safeLogContext(err, 'booking_sms_failed'));
+      }
     }
   }
 

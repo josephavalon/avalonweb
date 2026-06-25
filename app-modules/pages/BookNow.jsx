@@ -1143,7 +1143,7 @@ function UniversalBookingFrame({
       {error && (
         <div role="alert" className="mb-2 flex min-h-[42px] items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
           <p className="truncate font-body text-sm font-black">{error}</p>
-          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-2.5 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em]">
+          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-2.5 py-1 font-body text-[13px] font-black uppercase tracking-[0.08em]">
             Text
           </a>
         </div>
@@ -1180,9 +1180,9 @@ function UniversalBookingFrame({
                   aria-expanded={orderOpen}
                   className="flex min-w-0 items-center gap-2"
                 >
-                  <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground">
+                  <span className="flex items-center gap-2 font-body text-[13px] font-black uppercase tracking-[0.12em] text-foreground">
                     Order
-                    <span className="rounded-full border border-foreground/30 px-1.5 py-[1px] text-[8px] font-black text-foreground">{orderCount}</span>
+                    <span className="rounded-full border border-foreground/30 px-1.5 py-[1px] text-[11px] font-black text-foreground">{orderCount}</span>
                   </span>
                   <ChevronDown className={`h-3.5 w-3.5 text-foreground transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
                 </button>
@@ -1191,7 +1191,7 @@ function UniversalBookingFrame({
                     <button
                       type="button"
                       onClick={() => onAddPerson?.()}
-                      className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground transition-colors hover:border-foreground/55"
+                      className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground transition-colors hover:border-foreground/55"
                     >
                       <Plus className="h-3 w-3" strokeWidth={3} />
                       Person
@@ -1201,7 +1201,7 @@ function UniversalBookingFrame({
                     <button
                       type="button"
                       onClick={onClearOrder}
-                      className="shrink-0 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:border-foreground/55"
+                      className="shrink-0 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:border-foreground/55"
                     >
                       Clear
                     </button>
@@ -1222,13 +1222,13 @@ function UniversalBookingFrame({
                       />
                     </div>
                   )}
-                  <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground">{product.label}</p>
+                  <p className="min-w-0 truncate font-body text-[14px] font-bold text-foreground">{product.label}</p>
                   {selectedAddons.length > 0 && (
                     <div className="mt-1.5 space-y-1">
                       {selectedAddons.map((item) => (
                         <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
-                          <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
-                          <span className="shrink-0 font-body text-[9px] font-black text-foreground">{currency(item.price)}</span>
+                          <p className="min-w-0 flex-1 truncate font-body text-[13px] font-bold text-foreground">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                          <span className="shrink-0 font-body text-[12px] font-black text-foreground">{currency(item.price)}</span>
                           {onRemoveAddon && (
                             <button
                               type="button"
@@ -1253,15 +1253,15 @@ function UniversalBookingFrame({
             onClick={onBack}
             disabled={!canGoBack}
             aria-label="Go back"
-            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[11px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[13px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[14px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
           >
             Back
           </button>
           <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
-            <p className="font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[8px] md:text-[10px] md:tracking-[0.12em]">Today</p>
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[11px] md:text-[13px] md:tracking-[0.12em]">Today</p>
             <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
             {showDueAfter && (
-              <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Then {dueAfter}</p>
+              <p className="mt-0.5 truncate font-body text-[12px] font-semibold text-foreground/62 min-[390px]:text-[13px]">Then {dueAfter}</p>
             )}
           </div>
           <button
@@ -1289,12 +1289,7 @@ function UniversalBookingFrame({
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
-          {step === LAST_STEP && (
-            <p className="mt-1.5 px-1 text-center font-body text-[8px] font-black uppercase leading-tight tracking-[0.04em] text-foreground/62 min-[390px]:text-[9px] md:text-[10px]">
-              {dueNow} NOW · {showDueAfter ? `${dueAfter} LATER · ` : ''}{total} TOTAL
-            </p>
-          )}
-          <p className="mt-1 px-1 text-center font-body text-[9px] font-black leading-tight text-foreground/58 md:text-[10px]">
+          <p className="mt-1 px-1 text-center font-body text-[12px] font-black leading-tight text-foreground/58 md:text-[13px]">
             {step !== LAST_STEP && receiptLine ? `${receiptLine} · ` : ''}
             {CLINICAL_REVIEW_NOTICE}
           </p>
@@ -1370,9 +1365,11 @@ function DesktopOrderRail({
   const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
   const dateLabel = bookingDateLabel(state);
   const timeLabel = bookingTimeLabel(state);
+  // One-time visits show the total on the line below already, so the "Total $X"
+  // receipt line is redundant — only subscriptions carry a billing note here.
   const receiptLine = state.visitType === 'subscription'
     ? 'Billed monthly · cancel anytime'
-    : priceReceipt({ product, subtotal: displaySubtotal, groupContactRequired: false });
+    : '';
 
   const rows = [
     ['Date', dateLabel],
@@ -1384,12 +1381,12 @@ function DesktopOrderRail({
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Session</p>
+          <p className="font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Session</p>
           {hasTherapySelection && (
             <button
               type="button"
               onClick={onClearOrder}
-              className="font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85 2xl:text-[10px]"
+              className="font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85 2xl:text-[13px]"
             >
               Clear
             </button>
@@ -1401,11 +1398,11 @@ function DesktopOrderRail({
               .filter((person) => person.filled)
               .map((person) => (
                 <div key={person.id} className="flex items-baseline justify-between gap-2">
-                  <p className="min-w-0 truncate font-body text-[11px] font-black uppercase tracking-[0.02em] text-foreground/88 2xl:text-xs">
+                  <p className="min-w-0 truncate font-body text-[14px] font-black uppercase tracking-[0.02em] text-foreground/88 2xl:text-xs">
                     {sessionPeople.length > 1 ? `${person.index + 1} · ${person.productLabel}` : person.productLabel}
                   </p>
                   {person.priceLabel && (
-                    <span className="shrink-0 font-body text-[11px] font-black text-foreground/70 2xl:text-xs">{person.priceLabel}</span>
+                    <span className="shrink-0 font-body text-[14px] font-black text-foreground/70 2xl:text-xs">{person.priceLabel}</span>
                   )}
                 </div>
               ))}
@@ -1422,8 +1419,8 @@ function DesktopOrderRail({
         <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
             <div key={label} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[76px_minmax(0,1fr)] 2xl:py-2">
-              <p className="font-body text-[10px] font-black text-foreground/58 2xl:text-[11px]">{label}</p>
-              <p className="min-w-0 break-words text-right font-body text-[10px] font-bold leading-snug text-foreground/82 2xl:text-[11px]">{value}</p>
+              <p className="font-body text-[13px] font-black text-foreground/58 2xl:text-[14px]">{label}</p>
+              <p className="min-w-0 break-words text-right font-body text-[13px] font-bold leading-snug text-foreground/82 2xl:text-[14px]">{value}</p>
             </div>
           ))}
         </div>
@@ -1431,8 +1428,8 @@ function DesktopOrderRail({
           <div className="mt-1.5 space-y-1">
             {selectedAddons.map((item) => (
               <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
-                <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground/74 2xl:text-[11px]">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
-                <span className="shrink-0 font-body text-[9px] font-black text-foreground/52 2xl:text-[10px]">{currency(item.price)}</span>
+                <p className="min-w-0 flex-1 truncate font-body text-[13px] font-bold text-foreground/74 2xl:text-[14px]">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                <span className="shrink-0 font-body text-[12px] font-black text-foreground/52 2xl:text-[13px]">{currency(item.price)}</span>
                 <button
                   type="button"
                   onClick={() => onRemoveAddon(item.label)}
@@ -1447,17 +1444,17 @@ function DesktopOrderRail({
         )}
         <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Subtotal</p>
+            <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Total</p>
             <p className="font-body text-sm font-black text-foreground 2xl:text-base">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
           </div>
-          <p className="mt-1 max-w-full break-words font-body text-[10px] font-bold leading-snug text-foreground/54 2xl:text-[11px]">{receiptLine}</p>
+          {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
           <div className="mt-2.5 2xl:mt-3">
-            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit</p>
+            <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit</p>
             <p className="mt-1 font-body text-[1.85rem] font-black leading-none text-foreground 2xl:text-[2.15rem]">{currency(displayDueNow)}</p>
-            {displayBalanceDue > 0 && <p className="mt-1 font-body text-[11px] font-bold text-foreground/52 2xl:text-xs">Balance {currency(displayBalanceDue)}</p>}
+            {displayBalanceDue > 0 && <p className="mt-1 font-body text-[14px] font-bold text-foreground/52 2xl:text-xs">Balance {currency(displayBalanceDue)}</p>}
           </div>
         </div>
-        <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[9px] font-black leading-snug text-foreground/64 2xl:text-[10px]">
+        <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[12px] font-black leading-snug text-foreground/64 2xl:text-[13px]">
           {CLINICAL_REVIEW_NOTICE}
         </p>
         <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[70px_1fr] 2xl:grid-cols-[76px_1fr]' : 'grid-cols-1'}`}>
@@ -1465,7 +1462,7 @@ function DesktopOrderRail({
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/30 px-2.5 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/30 px-2.5 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
             >
               Back
             </button>
@@ -1490,7 +1487,7 @@ function DesktopOrderRail({
             <ArrowRight className="h-5 w-5 2xl:h-6 2xl:w-6" strokeWidth={2.6} />
           </button>
         </div>
-        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[10px] font-semibold text-foreground/50 2xl:text-[11px]">
+        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[13px] font-semibold text-foreground/50 2xl:text-[14px]">
           <ShieldCheck className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
           Secure booking
         </div>
@@ -1538,7 +1535,7 @@ function DesktopBookingFrame({
           {error && (
             <div role="alert" className="mb-4 flex min-h-[42px] items-center justify-between gap-3 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
               <p className="font-body text-sm font-black">{error}</p>
-              <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em]">
+              <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1 font-body text-[13px] font-black uppercase tracking-[0.08em]">
                 Text
               </a>
             </div>
@@ -1796,7 +1793,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
           </div>
           <div className="flex min-w-[68px] shrink-0 flex-col items-end justify-center text-right md:min-w-[72px]">
             {recommendation && (
-              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-1.5 py-0.5 font-body text-[9px] font-black uppercase leading-none tracking-[0.08em] text-foreground/66 backdrop-blur-2xl md:text-[9px]">
+              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-1.5 py-0.5 font-body text-[12px] font-black uppercase leading-none tracking-[0.08em] text-foreground/66 backdrop-blur-2xl md:text-[12px]">
                 {recommendation}
               </span>
             )}
@@ -2063,7 +2060,7 @@ function AddOnGroup({ group, defaultOpen = false, selectedCount, selectedLabels,
           <p className="font-body text-xs font-bold uppercase tracking-[0.18em] text-foreground/80">{group.label}</p>
           <p className="mt-1 font-body text-sm font-medium text-foreground/62">{group.sub}</p>
         </div>
-        <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground/68">
+        <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[14px] font-semibold uppercase tracking-[0.1em] text-foreground/68">
           {selectedCount ? `${selectedCount} picked` : open ? 'Hide' : 'Show'}
         </span>
       </button>
@@ -2162,7 +2159,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
                   {selectedCount > 0 && (
-                    <span className="rounded-full border border-foreground/12 px-2.5 py-1 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70">
+                    <span className="rounded-full border border-foreground/12 px-2.5 py-1 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/70">
                       {selectedCount}
                     </span>
                   )}
@@ -2337,14 +2334,14 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
     <div className="block">
       {showLabelRow && (
         <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
-          {!Icon && <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</label>}
+          {!Icon && <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[14px] md:text-xs' : 'text-sm'}`}>{label}</label>}
           {actionLabel && onAction && !value && (
             <button
               type="button"
               onClick={(event) => {
                 onAction();
               }}
-              className="ml-auto rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72"
+              className="ml-auto rounded-full border border-foreground/12 px-3 py-1 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/72"
             >
               {actionLabel}
             </button>
@@ -2418,7 +2415,7 @@ function AddressPrediction({ suggestion, onUse, compact = false }) {
           <Icon className="h-4 w-4 md:h-4 md:w-4" strokeWidth={2.35} />
         </span>
         <span className="min-w-0">
-          <span className="block font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/64">
+          <span className="block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/64">
             Use this address
           </span>
           <span className="mt-1 block truncate font-body text-base font-black leading-tight md:text-base">{suggestion.address}</span>
@@ -2558,7 +2555,7 @@ function ClientFastLane({ state, profileGfe, hasSavedVisit, signedIn, onChoose }
               <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
               {item.label}
             </span>
-            <span className={`mt-0.5 block font-body text-[11px] font-semibold uppercase tracking-[0.08em] ${active ? 'text-foreground/66' : 'text-foreground/58'}`}>
+            <span className={`mt-0.5 block font-body text-[14px] font-semibold uppercase tracking-[0.08em] ${active ? 'text-foreground/66' : 'text-foreground/58'}`}>
               {returning ? (signedIn ? (hasSavedVisit ? 'Saved' : profileGfe.required ? 'Review' : 'Ready') : 'Sign in') : 'First'}
             </span>
           </button>
@@ -2583,7 +2580,7 @@ function VisitForSelector({ value, onChoose }) {
           <p className="font-body text-xs font-bold uppercase tracking-[0.16em] text-foreground/62">Who</p>
           <p className="mt-1 truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal text-foreground">{copy[value] || activeOption.label}</p>
         </div>
-        <span className="rounded-full border border-foreground/12 px-3 py-1.5 font-body text-[11px] font-bold uppercase tracking-[0.1em] text-foreground/68">
+        <span className="rounded-full border border-foreground/12 px-3 py-1.5 font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/68">
           {activeOption.label}
         </span>
       </div>
@@ -2603,7 +2600,7 @@ function VisitForSelector({ value, onChoose }) {
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
               <Icon className="relative h-4 w-4 md:h-4 md:w-4" strokeWidth={2.55} />
-              <span className="relative font-body text-[11px] font-extrabold uppercase tracking-[0.1em]">{item.label}</span>
+              <span className="relative font-body text-[14px] font-extrabold uppercase tracking-[0.1em]">{item.label}</span>
               {active && <Check className="hidden" strokeWidth={2.8} />}
             </button>
           );
@@ -2625,7 +2622,7 @@ function LocationTypeDropdown({ value, onChange }) {
           <Icon className="h-4 w-4 md:h-4 md:w-4" strokeWidth={2.45} />
         </span>
         <span className="min-w-0">
-          <span className="block font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/58">Place</span>
+          <span className="block font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/58">Place</span>
           <span className="mt-0.5 block truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal md:mt-1 md:text-[1.55rem]">{selected.label}</span>
         </span>
       </span>
@@ -2968,7 +2965,7 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
   return (
     <div className="mb-3 space-y-3">
       <div className="flex items-center gap-2">
-        <span className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/58">
+        <span className="font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/58">
           Patients on this visit
         </span>
         <span className="h-px flex-1 bg-foreground/12" />
@@ -2978,12 +2975,12 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
           key={row.person.id}
           className="rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-2xl"
         >
-          <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/62">
+          <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/62">
             {row.label} · {row.product?.label || 'IV pending'}
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <label className="block">
-              <span className="block font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/58">
+              <span className="block font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/58">
                 Patient name
               </span>
               <input
@@ -2996,7 +2993,7 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
               />
             </label>
             <label className="block">
-              <span className="block font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/58">
+              <span className="block font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/58">
                 Date of birth
               </span>
               <input
@@ -3014,6 +3011,128 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
   );
 }
 
+// Full Acuity/HIPAA intake collected before payment. Field names match
+// api/_checkout-fulfillment.js requiredSchedulingFields() exactly so each value
+// lands in its Acuity custom field. Consents are unchecked by default and gated
+// in canSubmit — we never auto-affirm them.
+const MEDICAL_CONDITION_OPTIONS = [
+  'None of the above',
+  'Allergies',
+  'Active Viral or Bacterial infection',
+  'Diabetes (Type I or II)',
+  'Heart Disease',
+  'Kidney Problems',
+  'Liver Problems',
+  'Pregnancy/Breastfeeding',
+  'Other symptoms or medical conditions not listed above',
+];
+
+const INTAKE_CONSENTS = [
+  ['privacyAck', 'I agree to the Privacy Notice & HIPAA terms.'],
+  ['treatmentConsent', 'I consent to telehealth care and accept treatment risks.'],
+  ['generalConsent', "I'm 18+ and accept the Terms of Service."],
+];
+
+function YesNoToggle({ label, value, onChange }) {
+  return (
+    <div>
+      <span className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">{label}</span>
+      <div className="grid grid-cols-2 gap-1.5">
+        {['No', 'Yes'].map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              aria-pressed={active}
+              className={`min-h-[44px] rounded-xl border px-3 font-body text-sm font-black transition-colors ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/70'
+              }`}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ClinicalIntakeCard({ state, onChange }) {
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+      <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Medical &amp; consent</p>
+
+      <div className="relative mt-3 space-y-3">
+        <div>
+          <label htmlFor="bk-medical-conditions" className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Health</label>
+          <select
+            id="bk-medical-conditions"
+            value={state.medicalConditions}
+            onChange={(e) => onChange('medicalConditions', e.target.value)}
+            className="min-h-[48px] w-full rounded-xl border border-foreground/14 bg-background/42 px-3 font-body text-sm font-semibold text-foreground outline-none focus:border-foreground/40"
+          >
+            {MEDICAL_CONDITION_OPTIONS.map((opt) => (
+              <option key={opt} value={opt} className="bg-background text-foreground">{opt}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <YesNoToggle label="Covid?" value={state.covidPositive} onChange={(v) => onChange('covidPositive', v)} />
+          <YesNoToggle label="Infection?" value={state.infectiousDisease} onChange={(v) => onChange('infectiousDisease', v)} />
+          <YesNoToggle label="IV before?" value={state.ivBefore} onChange={(v) => onChange('ivBefore', v)} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="bk-allergies" className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Allergies</label>
+            <textarea
+              id="bk-allergies"
+              value={state.allergies}
+              onChange={(e) => onChange('allergies', e.target.value)}
+              rows={2}
+              placeholder="None, or list details"
+              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/42 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
+            />
+          </div>
+          <div>
+            <label htmlFor="bk-medications" className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Meds</label>
+            <textarea
+              id="bk-medications"
+              value={state.medications}
+              onChange={(e) => onChange('medications', e.target.value)}
+              rows={2}
+              placeholder="None, or list details"
+              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/42 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-foreground/12 bg-background/40">
+          <p className="px-3 pt-3 pb-2 font-body text-[13px] font-black uppercase tracking-[0.2em] text-foreground/45">Required</p>
+          {INTAKE_CONSENTS.map(([name, text], i) => (
+            <label
+              key={name}
+              className={`flex cursor-pointer items-start gap-3 px-3 py-3 font-body text-xs font-semibold leading-relaxed text-foreground/72 ${i > 0 ? 'border-t border-foreground/[0.08]' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(state[name])}
+                onChange={(e) => onChange(name, e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+              />
+              <span>{text}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SafetyFlagChoice({ value, onChange }) {
   const [open, setOpen] = useState(false);
   return (
@@ -3024,7 +3143,7 @@ function SafetyFlagChoice({ value, onChange }) {
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="min-h-[38px] rounded-full border border-foreground/12 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62"
+          className="min-h-[38px] rounded-full border border-foreground/12 px-3 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/62"
         >
           {open ? 'Hide' : 'View'}
         </button>
@@ -3143,7 +3262,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
             <button
               type="button"
               onClick={() => setOpen((current) => !current)}
-              className="min-h-[34px] rounded-full border border-foreground/12 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62"
+              className="min-h-[34px] rounded-full border border-foreground/12 px-3 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/62"
             >
               {open ? 'Hide' : 'View'}
             </button>
@@ -3203,7 +3322,7 @@ function FastReviewSurface({
   onSubmit,
 }) {
   const Icon = product?.icon || Droplets;
-  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
+  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag && state.privacyAck && state.treatmentConsent && state.generalConsent);
 
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
@@ -3232,7 +3351,7 @@ function FastReviewSurface({
             <button
               type="button"
               onClick={onChangeTherapy}
-              className="min-h-[42px] shrink-0 rounded-full border border-foreground/14 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/68"
+              className="min-h-[42px] shrink-0 rounded-full border border-foreground/14 px-3 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/68"
             >
               Change
             </button>
@@ -3243,7 +3362,7 @@ function FastReviewSurface({
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
           <div className="relative mb-3 flex items-center justify-between gap-3">
             <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Address</p>
-            {resolvedZip && <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/58">{resolvedZip}</span>}
+            {resolvedZip && <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/58">{resolvedZip}</span>}
           </div>
           <div className="relative grid gap-2">
             <button
@@ -3471,7 +3590,7 @@ function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
         <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Member Credit</p>
-        <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62">
+        <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/62">
           {balance} available
         </span>
       </div>
@@ -3513,7 +3632,7 @@ function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, d
       <div className="relative flex items-start justify-between gap-3 px-5 pb-5 pt-5">
         <div className="min-w-0">
           <p className="truncate font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</p>
-          <p className="mt-1.5 font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
+          <p className="mt-1.5 font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
         </div>
         <p className="shrink-0 font-heading text-[2.6rem] leading-none tracking-normal text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>
           {currency(subtotal)}
@@ -3645,7 +3764,7 @@ function SummaryRail({
                     <button
                       type="button"
                       onClick={() => onSelectPerson?.(row.person.id)}
-                      className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/74 hover:text-foreground"
+                      className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/74 hover:text-foreground"
                     >
                       {row.label}
                     </button>
@@ -3689,7 +3808,7 @@ function SummaryRail({
               ['Time', bookingTimeSummary(state)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
-                <p className="font-body text-[11px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
+                <p className="font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
                 <p className="mt-1 font-body text-sm font-bold text-foreground/82">{value}</p>
               </div>
             ))}
@@ -3727,7 +3846,7 @@ function SummaryRail({
             </p>
           )}
           {actionDetail && (
-            <p className="text-center font-body text-[11px] font-semibold text-foreground/52">{actionDetail}</p>
+            <p className="text-center font-body text-[14px] font-semibold text-foreground/52">{actionDetail}</p>
           )}
         </div>
         </SmoothDisclosure>
@@ -3774,6 +3893,19 @@ const defaultState = {
   emergencyContactName: '',
   emergencyContactPhone: '',
   safetyFlag: '',
+  // Acuity/HIPAA intake — these map 1:1 to Acuity custom-field IDs in
+  // api/_checkout-fulfillment.js (requiredSchedulingFields). They must be
+  // collected and forwarded so Acuity receives the client's real answers, not
+  // server defaults. Each stays its own field (never consolidated).
+  covidPositive: 'No',
+  infectiousDisease: 'No',
+  ivBefore: 'No',
+  medicalConditions: 'None of the above',
+  allergies: '',
+  medications: '',
+  privacyAck: false,
+  treatmentConsent: false,
+  generalConsent: false,
   notes: '',
   billingMode: 'card',
   addOns: [],
@@ -4441,6 +4573,22 @@ export default function BookNow() {
       next.address = composeFullAddress(next.street, next.city, next.addrState, next.zip);
       return next;
     });
+    // Auto-advance when the address is finished — ZIP is the last field people
+    // fill, so completing a valid 5-digit ZIP (with the rest present) advances
+    // the Where step without a Next tap. Guarding on `part === 'zip'` means
+    // editing an earlier field later never re-jumps the user.
+    if (part === 'zip' && step === 3 && !groupContactRequired) {
+      const zip = String(value || '').replace(/\D/g, '').slice(0, 5);
+      const street = String(state.street || '').trim();
+      const city = String(state.city || '').trim();
+      const addrState = String(state.addrState || '').trim();
+      if (zip.length === 5 && street && city && addrState) {
+        const nextStep = Math.min(step + 1, LAST_STEP);
+        const nextAddress = composeFullAddress(state.street, state.city, state.addrState, zip);
+        persistBookingProgress(nextStep, therapyCategoryScreen, { ...state, zip, address: nextAddress });
+        setStep(nextStep);
+      }
+    }
   };
 
   const applyAddressSuggestion = (s) => {
@@ -4771,17 +4919,22 @@ export default function BookNow() {
 
   const chooseTimeIntent = (key) => {
     setError('');
-    setState((current) => {
-      const nextDate = key === 'choose' ? current.customDate || todayDate() : todayDate();
-      const nextTime = key === 'choose' ? current.customTime || DEFAULT_EXACT_TIME : '';
-      return {
-        ...current,
-        timeIntent: key,
-        customDate: nextDate,
-        customTime: nextTime,
-        availabilityWindow: key === 'choose' ? `${nextDate}-${nextTime}` : key,
-      };
-    });
+    const nextDate = key === 'choose' ? state.customDate || todayDate() : todayDate();
+    const nextTime = key === 'choose' ? state.customTime || DEFAULT_EXACT_TIME : '';
+    const patch = {
+      timeIntent: key,
+      customDate: nextDate,
+      customTime: nextTime,
+      availabilityWindow: key === 'choose' ? `${nextDate}-${nextTime}` : key,
+    };
+    setState((current) => ({ ...current, ...patch }));
+    // Tapping an instant time (ASAP/soonest) completes the When step — advance
+    // without a Next tap. "Choose" needs a date+time, so it never auto-advances.
+    if (step === 2 && key !== 'choose') {
+      const nextStep = Math.min(step + 1, LAST_STEP);
+      persistBookingProgress(nextStep, therapyCategoryScreen, { ...state, ...patch });
+      setStep(nextStep);
+    }
   };
 
   const toggleAddon = (label) => {
@@ -4885,6 +5038,7 @@ export default function BookNow() {
   const chooseNoAddons = () => {
     setError('');
     setActiveAddonGroup('');
+    const nextState = { ...state, addOns: [], addOnDecision: true };
     setState((current) => ({
       ...current,
       addOns: [],
@@ -4899,6 +5053,12 @@ export default function BookNow() {
       addon_revenue: 0,
       addon_decision: 'none',
     });
+    // Tapping "No add-ons" completes the Add-ons step — advance without a Next tap.
+    if (step === 1) {
+      const nextStep = Math.min(step + 1, LAST_STEP);
+      persistBookingProgress(nextStep, therapyCategoryScreen, nextState);
+      setStep(nextStep);
+    }
   };
 
   const canAdvance = () => {
@@ -5165,7 +5325,10 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
+  // All three consents must be actively checked before payment — we never
+  // auto-affirm HIPAA/treatment/age consent.
+  const hasRequiredConsents = Boolean(state.privacyAck && state.treatmentConsent && state.generalConsent);
+  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state) && state.address.trim() && hasValidServiceZip && hasRequiredConsents && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
     const writeCheckoutHandoffMarker = () => {
@@ -5272,6 +5435,18 @@ export default function BookNow() {
         emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || emergencyContactValue,
         emergencyContactName: localBooking.emergencyContactName || localBooking.contact?.emergencyContactName || state.emergencyContactName.trim(),
         emergencyContactPhone: localBooking.emergencyContactPhone || localBooking.contact?.emergencyContactPhone || state.emergencyContactPhone.trim(),
+        // Acuity/HIPAA intake — forwarded with the client's real answers so the
+        // server (requiredSchedulingFields) writes them to Acuity instead of
+        // defaulting. Field names match the Acuity custom-field mapping exactly.
+        covidPositive: state.covidPositive || 'No',
+        infectiousDisease: state.infectiousDisease || 'No',
+        ivBefore: state.ivBefore || 'No',
+        medicalConditions: state.medicalConditions || 'None of the above',
+        allergies: state.allergies || '',
+        medications: state.medications || '',
+        privacyAck: Boolean(state.privacyAck),
+        treatmentConsent: Boolean(state.treatmentConsent),
+        generalConsent: Boolean(state.generalConsent),
         peopleCount: localBooking.peopleCount || 1,
         peopleManifest: Array.isArray(localBooking.peopleManifest) ? localBooking.peopleManifest : [],
       },
@@ -5626,7 +5801,7 @@ export default function BookNow() {
 
   const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/14 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl';
   const expandedPanelCardClass = panelCardClass.replace('overflow-hidden', 'overflow-visible');
-  const microLabelClass = 'font-body text-[10px] font-black uppercase tracking-[0.10em] text-foreground/70 md:text-[11px]';
+  const microLabelClass = 'font-body text-[13px] font-black uppercase tracking-[0.10em] text-foreground/70 md:text-[14px]';
   const renderStoreMenuRow = ({
     key,
     icon: Icon = Droplets,
@@ -5655,8 +5830,8 @@ export default function BookNow() {
       ? 'block truncate font-heading text-[0.95rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.02rem] md:text-[2.15rem]'
       : 'block truncate font-heading text-[1.68rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.9rem] md:text-[2.15rem]';
     const metaBaseClass = compactMobile
-      ? 'mt-1 block truncate font-body text-[7px] font-black uppercase tracking-[0.06em] text-foreground/70 min-[390px]:text-[7.5px] md:text-sm'
-      : 'mt-1 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm';
+      ? 'mt-1 block truncate font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/70 min-[390px]:text-[10.5px] md:text-sm'
+      : 'mt-1 block truncate font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm';
     return (
       <button
         key={key}
@@ -5703,7 +5878,7 @@ export default function BookNow() {
           onClick={() => setExpandedTherapy(expanded ? null : item.key)}
           aria-expanded={expanded}
           aria-label={`${expanded ? 'Hide' : "Show what's inside"} ${item.label || item.tabLabel || 'this therapy'}`}
-          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[11px]"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-1.5 font-body text-[13px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[14px]"
         >
           {expanded ? 'Hide details' : "What's inside"}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} strokeWidth={2.4} />
@@ -5713,16 +5888,16 @@ export default function BookNow() {
             <div className="space-y-2.5 border-t border-foreground/10 px-3.5 py-3 text-left">
               {whatItDoes && (
                 <div>
-                  <p className="mb-1 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
-                  <p className="font-body text-[12px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
+                  <p className="mb-1 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
+                  <p className="font-body text-[15px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
                 </div>
               )}
               {ingredients.length > 0 && (
                 <div>
-                  <p className="mb-1.5 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
+                  <p className="mb-1.5 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ingredients.map((ingredient) => (
-                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{ingredient}</span>
+                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[13px] font-bold text-foreground/74">{ingredient}</span>
                     ))}
                   </div>
                 </div>
@@ -5730,7 +5905,7 @@ export default function BookNow() {
               {ingredients.length === 0 && item.features && item.features.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {item.features.map((f) => (
-                    <span key={f} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{f}</span>
+                    <span key={f} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[13px] font-bold text-foreground/74">{f}</span>
                   ))}
                 </div>
               )}
@@ -5774,7 +5949,7 @@ export default function BookNow() {
               {menuLabel}
             </span>
             {item.tagline && (
-              <span className="mt-1 hidden font-body text-[11px] font-semibold leading-snug text-foreground/55 line-clamp-1 md:block">
+              <span className="mt-1 hidden font-body text-[14px] font-semibold leading-snug text-foreground/55 line-clamp-1 md:block">
                 {item.tagline}
               </span>
             )}
@@ -5910,7 +6085,7 @@ export default function BookNow() {
               <span className="block truncate font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.48rem] md:text-[1.85rem]">
                 {group.label}
               </span>
-              <span className="mt-0.5 block truncate font-body text-[9px] font-black uppercase tracking-[0.07em] text-foreground/70 md:text-[10px]">
+              <span className="mt-0.5 block truncate font-body text-[12px] font-black uppercase tracking-[0.07em] text-foreground/70 md:text-[13px]">
                 {selectedCount ? `${selectedCount} selected` : group.sub}
               </span>
             </span>
@@ -5984,7 +6159,7 @@ export default function BookNow() {
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                  <span className="font-body text-[11px] font-black uppercase tracking-[0.03em] md:text-[12px]">{categoryShortLabels[group.key] || group.label}</span>
+                  <span className="font-body text-[14px] font-black uppercase tracking-[0.03em] md:text-[15px]">{categoryShortLabels[group.key] || group.label}</span>
                 </button>
               );
             })}
@@ -6017,7 +6192,7 @@ export default function BookNow() {
               compactMobile: true,
               className: '!min-h-[86px] min-[390px]:!min-h-[92px] md:!min-h-[96px]',
               titleClassName: 'text-[1.18rem] min-[390px]:text-[1.3rem] md:text-[1.55rem]',
-              metaClassName: 'text-[8px] min-[390px]:text-[9px] md:text-[11px]',
+              metaClassName: 'text-[11px] min-[390px]:text-[12px] md:text-[14px]',
             })}
             {addonCatalog.groups.map((group) => renderAddonAccordion(group))}
           </div>
@@ -6101,17 +6276,19 @@ export default function BookNow() {
       // Do NOT use h-full here — that crams everything into one screen and clips
       // the lower fields. Scrolling is fine.
       <div className="grid content-start gap-3 pb-2">
-        {/* Receipt summary: product + price only. Payment terms (deposit today /
-            balance after) live in the footer CTA. */}
-        <div className={`${panelCardClass} px-4 py-4 md:px-5 md:py-5`}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal md:text-[2.1rem]">{serviceLabel}</p>
-              <p className="mt-1.5 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
+        {/* Receipt summary: product + price. On desktop the persistent rail already
+            shows this, so it only renders on mobile to avoid the duplicate. */}
+        {!desktopBookingFrame && (
+          <div className={`${panelCardClass} px-4 py-4 md:px-5 md:py-5`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal md:text-[2.1rem]">{serviceLabel}</p>
+                <p className="mt-1.5 font-body text-[13px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
+              </div>
+              <p className="shrink-0 font-heading text-[2rem] leading-none tracking-normal md:text-[2.5rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>{currency(subtotal)}</p>
             </div>
-            <p className="shrink-0 font-heading text-[2rem] leading-none tracking-normal md:text-[2.5rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>{currency(subtotal)}</p>
           </div>
-        </div>
+        )}
         <div className={`${panelCardClass} grid content-start gap-3 p-3.5 md:p-4`}>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
@@ -6182,10 +6359,8 @@ export default function BookNow() {
               required
             />
           </div>
-          <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2.5 font-body text-[11px] font-semibold leading-snug text-foreground/60 md:text-xs">
-            By paying, you consent to intake, privacy & clinical review.
-          </p>
         </div>
+        <ClinicalIntakeCard state={state} onChange={setValue} />
       </div>
     );
   };
@@ -6250,7 +6425,7 @@ export default function BookNow() {
                 </div>
                 <div data-av-embedded-checkout className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
                   <div className="border-b border-foreground/8 px-4 py-3">
-                    <p className="font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/60">Secure checkout ready</p>
+                    <p className="font-body text-[14px] font-black uppercase tracking-[0.16em] text-foreground/60">Secure checkout ready</p>
                     <div className="mt-2 h-px overflow-hidden bg-foreground/10">
                       <motion.div
                         className="h-full bg-foreground"
@@ -6452,7 +6627,7 @@ export default function BookNow() {
                 )}
                 {step === 0 && (
                   <>
-                    <SectionTitle icon={Sparkles} title="CHOOSE YOUR GOAL" />
+                    <SectionTitle icon={Sparkles} title="PICK A GOAL" />
                     <LayoutGroup id="outcomes">
                       <div className="grid gap-2 md:grid-cols-2 md:gap-3">
                         {OUTCOMES.filter((item) => PRIMARY_OUTCOME_KEYS.includes(item.key)).map((item, index) => (
@@ -6625,7 +6800,7 @@ export default function BookNow() {
                         <button
                           type="button"
                           onClick={() => chooseTimeIntent(state.timeIntent === 'choose' ? 'asap' : 'choose')}
-                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/72"
+                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[13px] font-black uppercase tracking-[0.1em] text-foreground/72"
                         >
                           {state.timeIntent === 'choose' ? 'ASAP' : 'Pick time'}
                         </button>

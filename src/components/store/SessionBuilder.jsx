@@ -41,7 +41,7 @@ export default function SessionBuilder({
         type="button"
         onClick={() => onAdd?.()}
         title={addLabel}
-        className="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-foreground/28 bg-foreground/[0.05] px-3.5 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/55 hover:bg-foreground/[0.1] hover:text-foreground"
+        className="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-foreground/28 bg-foreground/[0.05] px-3.5 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/85 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/55 hover:bg-foreground/[0.1] hover:text-foreground"
       >
         <Plus className="h-4 w-4" strokeWidth={3} />
         {addLabel}
@@ -68,7 +68,7 @@ export default function SessionBuilder({
               type="button"
               onClick={() => onSelect?.(person.id)}
               title={filled && person.productLabel ? `${person.label}: ${person.productLabel}` : person.label}
-              className={`inline-flex items-center gap-1 font-body text-[10px] font-black uppercase tracking-[0.08em] transition-colors ${
+              className={`inline-flex items-center gap-1 font-body text-[13px] font-black uppercase tracking-[0.08em] transition-colors ${
                 isActive ? 'text-foreground' : filled ? 'text-emerald-100/90 hover:text-foreground' : 'text-foreground/55 hover:text-foreground'
               }`}
             >
@@ -92,7 +92,7 @@ export default function SessionBuilder({
           type="button"
           onClick={() => onAdd?.()}
           title={addLabel}
-          className="inline-flex items-center gap-1 rounded-full border border-dashed border-foreground/30 py-1 pl-1.5 pr-2 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/70 transition-colors hover:border-foreground/55 hover:text-foreground"
+          className="inline-flex items-center gap-1 rounded-full border border-dashed border-foreground/30 py-1 pl-1.5 pr-2 font-body text-[13px] font-black uppercase tracking-[0.1em] text-foreground/70 transition-colors hover:border-foreground/55 hover:text-foreground"
         >
           <Plus className="h-3 w-3" strokeWidth={3} />
           Add

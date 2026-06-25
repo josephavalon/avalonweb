@@ -36,17 +36,17 @@ function paymentLabel(status) {
 // Pick a product bag image for a therapy name (mirrors the booking/menu mapping).
 function bagForService(service = '') {
   const s = String(service).toLowerCase();
-  if (s.includes('nad')) return '/bags/nad.png';
-  if (s.includes('cbd')) return '/bags/cbd.png';
-  if (s.includes('hydrat') || s.includes('dehydr')) return '/bags/dehydration.png';
-  if (s.includes('energy')) return '/bags/energy.png';
-  if (s.includes('immun')) return '/bags/immunity.png';
-  if (s.includes('beauty') || s.includes('glow')) return '/bags/beauty.png';
-  if (s.includes('recover')) return '/bags/recovery.png';
-  if (s.includes('myers')) return '/bags/myers.png';
-  if (s.includes('night')) return '/bags/night-out.png';
-  if (s.includes('travel') || s.includes('jet')) return '/bags/jet-lag.png';
-  return '/bags/dehydration.png';
+  if (s.includes('nad')) return '/bags/nad.webp';
+  if (s.includes('cbd')) return '/bags/cbd.webp';
+  if (s.includes('hydrat') || s.includes('dehydr')) return '/bags/dehydration.webp';
+  if (s.includes('energy')) return '/bags/energy.webp';
+  if (s.includes('immun')) return '/bags/immunity.webp';
+  if (s.includes('beauty') || s.includes('glow')) return '/bags/beauty.webp';
+  if (s.includes('recover')) return '/bags/recovery.webp';
+  if (s.includes('myers')) return '/bags/myers.webp';
+  if (s.includes('night')) return '/bags/night-out.webp';
+  if (s.includes('travel') || s.includes('jet')) return '/bags/jet-lag.webp';
+  return '/bags/dehydration.webp';
 }
 
 const BG = 'hsl(var(--background))';
@@ -145,7 +145,7 @@ function DashboardBody({ primary, balanceLabel, planLabel, visitsCount, recent, 
               ) : null}
             </div>
             <img
-              src={primary ? primary.img : '/bags/dehydration.png'}
+              src={primary ? primary.img : '/bags/dehydration.webp'}
               alt=""
               loading="lazy"
               className="h-28 w-auto object-contain drop-shadow-[0_12px_28px_rgba(0,0,0,0.6)] md:h-36"

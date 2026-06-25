@@ -18,6 +18,7 @@ import { readBookingDraft, readLastBooking, readLocal } from '@/lib/localOs';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
 import { hasValidCheckoutContact } from '@/lib/checkoutValidation';
+import { extractZip } from '@/lib/serviceArea';
 
 function hasCompleteContact(contact = {}) {
   return hasValidCheckoutContact(contact);
@@ -98,7 +99,7 @@ function StepBar({ current }) {
                   : <Icon className={`w-3.5 h-3.5 ${active ? 'text-foreground' : 'text-foreground/45'}`} strokeWidth={1.8} />
                 }
               </div>
-              <span className={`font-body text-[9px] tracking-[0.2em] uppercase hidden sm:block ${
+              <span className={`font-body text-[12px] tracking-[0.2em] uppercase hidden sm:block ${
                 active ? 'text-foreground' : done ? 'text-foreground' : 'text-foreground/45'
               }`}>{label}</span>
             </div>
@@ -156,8 +157,8 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
           active ? 'border-foreground/20 bg-foreground/[0.05]' : 'border-foreground/[0.08] bg-background/30'
         }`}>
           <Icon className={`mx-auto h-3.5 w-3.5 ${active ? 'text-foreground' : 'text-foreground/40'}`} strokeWidth={1.6} />
-          <p className="mt-1 font-body text-[8px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
-          <p className="mt-0.5 truncate font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
+          <p className="mt-1 font-body text-[11px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
+          <p className="mt-0.5 truncate font-body text-[13px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
         </div>
       ))}
     </motion.div>
@@ -188,7 +189,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
         >
           Start <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
         </Link>
-        <p className="mt-4 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/38">
+        <p className="mt-4 font-body text-[13px] font-black uppercase tracking-[0.18em] text-foreground/38">
           Bay Area · Licensed Registered Nurse
         </p>
       </div>
@@ -202,7 +203,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
       {/* One-time items */}
       {items.length > 0 && (
         <div className="space-y-2">
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Visit</p>
+          <p className="font-body text-[13px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Visit</p>
           {items.map((item) => (
             <div key={item.cartKey} className="flex items-center gap-3 p-3.5 rounded-2xl border border-white/10 bg-white/[0.03]">
               <div className="p-2 rounded-xl bg-foreground/[0.08] shrink-0">
@@ -214,7 +215,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
               <div className="flex-1 min-w-0">
                 <p className="font-body text-xs tracking-widest uppercase text-foreground truncate">{item.label}</p>
                 {cartItemQuantity(item) > 1 && (
-                  <p className="mt-0.5 font-body text-[10px] text-foreground/40">${item.price.toLocaleString()} x {cartItemQuantity(item)}</p>
+                  <p className="mt-0.5 font-body text-[13px] text-foreground/40">${item.price.toLocaleString()} x {cartItemQuantity(item)}</p>
                 )}
               </div>
               <span className="font-heading text-xl text-foreground tracking-wide">${cartItemTotal(item).toLocaleString()}</span>
@@ -224,7 +225,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
             </div>
           ))}
           <div className="flex justify-between items-center pt-2 px-1">
-            <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
+            <span className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
             <span className="font-heading text-2xl text-foreground tracking-wide">${itemsTotal.toLocaleString()}</span>
           </div>
         </div>
@@ -233,18 +234,18 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
       {/* Subscription */}
       {membership && (
         <div className="space-y-2 mt-4">
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Plan</p>
+          <p className="font-body text-[13px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Plan</p>
           <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-foreground/12 bg-foreground/[0.04]">
             <div className="p-2 rounded-xl bg-foreground/[0.08] shrink-0">
               <Sparkles className="w-4 h-4 text-foreground" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-body text-xs tracking-widest uppercase text-foreground">{membershipTitle}</p>
-              <p className="font-body text-[10px] text-foreground/40 capitalize">{membership.ivCount} / mo</p>
+              <p className="font-body text-[13px] text-foreground/40 capitalize">{membership.ivCount} / mo</p>
             </div>
             <div className="text-right">
               <span className="font-heading text-xl text-foreground tracking-wide">${membership.price.toLocaleString()}</span>
-              <p className="font-body text-[10px] text-foreground/40">/{membership.billing === 'annual' ? 'yr' : 'mo'}</p>
+              <p className="font-body text-[13px] text-foreground/40">/{membership.billing === 'annual' ? 'yr' : 'mo'}</p>
             </div>
             <button type="button" onClick={onClearMembership} aria-label="Remove subscription from cart" className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
               <X className="w-4 h-4" strokeWidth={1.8} />
@@ -289,6 +290,18 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
   });
 
   const selectedDate = watch('date');
+
+  // Derive ZIP from the address so the user never types it twice. We take the
+  // last 5-digit run in the address (ZIP sits at the end of US addresses) and
+  // only fall back to a manual ZIP field when none can be parsed.
+  const addressValue = watch('address') || '';
+  const zipValue = watch('zip') || '';
+  const derivedZip = extractZip(addressValue);
+  useEffect(() => {
+    if (derivedZip && derivedZip !== zipValue) {
+      setValue('zip', derivedZip, { shouldValidate: true });
+    }
+  }, [derivedZip, zipValue, setValue]);
 
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -378,18 +391,20 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         <label htmlFor="co-service-address" className={labelClass}>Address *</label>
         <input
           id="co-service-address"
+          autoComplete="street-address"
           {...register('address', { required: 'Address needed' })}
-          placeholder="Street, unit, city"
+          placeholder="Street, unit, city, ZIP"
           className={fieldClass}
         />
         {errors.address && <p className={errClass}>{errors.address.message}</p>}
       </div>
 
-      {/* ZIP code — required for scheduling and billing, not service-area gating. */}
-      <div>
+      {/* ZIP — auto-derived from the address above; only shown if we can't parse one. */}
+      <div className={derivedZip ? 'hidden' : ''}>
         <label htmlFor="co-zip-code" className={labelClass}>ZIP *</label>
         <input
           id="co-zip-code"
+          autoComplete="postal-code"
           {...register('zip', {
             required: 'ZIP needed',
             pattern: { value: /^\d{5}$/, message: '5 digits' },
@@ -446,7 +461,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                 <button
                   type="button"
                   onClick={() => fetchSlots(selectedDate)}
-                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground/50 hover:text-foreground transition-colors shrink-0"
+                  className="flex items-center gap-1.5 font-body text-[13px] tracking-widest uppercase text-foreground/50 hover:text-foreground transition-colors shrink-0"
                 >
                   <RefreshCw className="w-3 h-3" strokeWidth={2} /> Retry
                 </button>
@@ -469,7 +484,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                     setNextAvailLoading(false);
                   }}
                   disabled={nextAvailLoading}
-                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground hover:text-foreground/70 transition-colors shrink-0 disabled:opacity-50"
+                  className="flex items-center gap-1.5 font-body text-[13px] tracking-widest uppercase text-foreground hover:text-foreground/70 transition-colors shrink-0 disabled:opacity-50"
                 >
                   {nextAvailLoading
                     ? <><Loader2 className="w-3 h-3 animate-spin" strokeWidth={2} /> Searching…</>
@@ -495,7 +510,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                         timeLabel: label,
                         timezone: TZ,
                       })}
-                      className={`py-3.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
+                      className={`py-3.5 rounded-xl font-body text-[14px] tracking-wide transition-all duration-200 ${
                         active
                           ? 'bg-foreground text-background'
                           : 'border border-foreground/15 text-foreground/70 hover:border-foreground/50 hover:text-foreground'
@@ -517,6 +532,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
           <input
             id="co-dob"
             type="date"
+            autoComplete="bday"
             {...register('dob', { required: 'Birthdate needed' })}
             className={fieldClass}
           />
@@ -566,12 +582,12 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
       {/* Notes */}
       <div>
-        <label htmlFor="co-medical-notes" className={labelClass}>Registered nurse note</label>
+        <label htmlFor="co-medical-notes" className={labelClass}>Notes for nurse</label>
         <textarea
           id="co-medical-notes"
           {...register('notes')}
           rows={3}
-          placeholder="Allergies, access notes, health conditions, preferences…"
+          placeholder="Allergies, access, anything we should know…"
           className={`${fieldClass} resize-none`}
         />
       </div>
@@ -610,21 +626,21 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       <div className="space-y-0 rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/45 px-4 pt-4 pb-3">
+        <p className="font-body text-[12px] tracking-[0.25em] uppercase text-foreground/45 px-4 pt-4 pb-3">
           Required
         </p>
         {[
           {
             name: 'privacyAck',
-            text: 'Privacy use ok.',
+            text: 'I agree to the Privacy Notice & HIPAA terms.',
           },
           {
             name: 'treatmentConsent',
-            text: 'Risks reviewed.',
+            text: 'I consent to telehealth care and accept treatment risks.',
           },
           {
             name: 'generalConsent',
-            text: 'Terms accepted. 18+.',
+            text: "I'm 18+ and accept the Terms of Service.",
           },
         ].map(({ name, text }, i) => (
           <label
@@ -644,7 +660,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         )}
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
         <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
@@ -658,7 +674,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       {!selectedSlot && selectedDate && slots.length > 0 && (
-        <p className="font-body text-[10px] text-foreground/45 text-center -mt-1">Pick time.</p>
+        <p className="font-body text-[13px] text-foreground/45 text-center -mt-1">Pick time.</p>
       )}
     </form>
   );
@@ -679,12 +695,12 @@ function ContactStep({ onNext, onBack, defaultValues }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="co-first-name" className={labelClass}>First Name *</label>
-          <input id="co-first-name" {...register('firstName', { required: 'Needed' })} placeholder="First" className={fieldClass} />
+          <input id="co-first-name" autoComplete="given-name" {...register('firstName', { required: 'Needed' })} placeholder="First" className={fieldClass} />
           {errors.firstName && <p className={errClass}>{errors.firstName.message}</p>}
         </div>
         <div>
           <label htmlFor="co-last-name" className={labelClass}>Last Name *</label>
-          <input id="co-last-name" {...register('lastName', { required: 'Needed' })} placeholder="Last" className={fieldClass} />
+          <input id="co-last-name" autoComplete="family-name" {...register('lastName', { required: 'Needed' })} placeholder="Last" className={fieldClass} />
           {errors.lastName && <p className={errClass}>{errors.lastName.message}</p>}
         </div>
       </div>
@@ -695,6 +711,7 @@ function ContactStep({ onNext, onBack, defaultValues }) {
           id="co-email"
           type="email"
           inputMode="email"
+          autoComplete="email"
           {...register('email', {
             required: 'Email needed',
             pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Valid email' }
@@ -711,14 +728,15 @@ function ContactStep({ onNext, onBack, defaultValues }) {
           id="co-phone"
           type="tel"
           inputMode="tel"
+          autoComplete="tel"
           {...register('phone', { required: 'Phone needed' })}
-          placeholder="+1 (415) 000-0000"
+          placeholder="Phone number"
           className={fieldClass}
         />
         {errors.phone && <p className={errClass}>{errors.phone.message}</p>}
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
         <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
@@ -901,7 +919,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     }
   };
 
-  const labelClass = "font-body text-[10px] tracking-[0.24em] uppercase text-foreground/48";
+  const labelClass = "font-body text-[13px] tracking-[0.24em] uppercase text-foreground/48";
 
   return (
     <div className="space-y-4">
@@ -919,7 +937,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           >
             <div className="max-w-sm">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-foreground" strokeWidth={2.2} />
-              <p className="mt-6 font-body text-[11px] font-black uppercase tracking-[0.22em] text-foreground">
+              <p className="mt-6 font-body text-[14px] font-black uppercase tracking-[0.22em] text-foreground">
                 Redirecting to secure checkout...
               </p>
               <p className="mt-3 font-body text-sm font-semibold leading-relaxed text-foreground/62">
@@ -941,7 +959,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             <span className="min-w-0 font-body text-sm font-semibold text-foreground tracking-wide">
               <span className="block truncate">{item.label}</span>
               {cartItemQuantity(item) > 1 && (
-                <span className="mt-0.5 block text-[10px] font-medium text-foreground/42">${item.price.toLocaleString()} x {cartItemQuantity(item)}</span>
+                <span className="mt-0.5 block text-[13px] font-medium text-foreground/42">${item.price.toLocaleString()} x {cartItemQuantity(item)}</span>
               )}
             </span>
             <span className="shrink-0 font-body text-sm font-semibold text-foreground">${cartItemTotal(item).toLocaleString()}</span>
@@ -964,7 +982,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground/70" strokeWidth={2} />
               <div>
-                <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/70">
+                <p className="font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/70">
                   Paid in full
                 </p>
               </div>
@@ -1026,7 +1044,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Stripe</span>
-            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card · Apple Pay · Google Pay</span>
+            <span className="mt-1 block font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card · Apple Pay · Google Pay</span>
           </span>
         </div>
       </div>
@@ -1037,7 +1055,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         </div>
       )}
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
         <button type="button" onClick={onBack} disabled={loading} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 disabled:opacity-50 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
@@ -1060,7 +1078,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         </button>
       </div>
 
-      <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
+      <p className="font-body text-[13px] text-center text-foreground/45 tracking-wide">
         Review required.
       </p>
     </div>
@@ -1190,7 +1208,7 @@ export default function Checkout() {
               <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.08] text-foreground">
                 <Droplets className="h-7 w-7" strokeWidth={2.45} />
               </div>
-              <p className="font-body text-[11px] font-black uppercase tracking-[0.22em] text-foreground/54">Checkout</p>
+              <p className="font-body text-[14px] font-black uppercase tracking-[0.22em] text-foreground/54">Checkout</p>
               <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-none tracking-normal text-foreground sm:text-[4rem]">Choose IV</h1>
               <p className="mt-3 max-w-md font-body text-sm font-semibold leading-relaxed text-foreground/62">
                 Select a therapy first. Then confirm address, patient details, and secure payment.
