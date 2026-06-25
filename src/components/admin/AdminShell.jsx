@@ -41,7 +41,7 @@ const NAV_LIVE = [
   { label: 'Inventory', icon: Package, to: '/admin/soon?feature=Inventory' },
   { label: 'Events', icon: CalendarDays, to: '/admin/soon?feature=Events' },
   { label: 'Clinical Staff', icon: Stethoscope, to: '/admin/soon?feature=Clinical%20Staff' },
-  { label: 'GFE', icon: ClipboardList, to: '/admin/soon?feature=GFE' },
+  { label: 'GFE', icon: ClipboardList, to: '/admin/gfe' },
   { label: 'Tools', icon: Wrench, to: '/admin/soon?feature=Tools' },
   { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
 ];
