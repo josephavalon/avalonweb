@@ -6085,31 +6085,15 @@ export default function BookNow() {
       // Do NOT use h-full here — that crams everything into one screen and clips
       // the lower fields. Scrolling is fine.
       <div className="grid content-start gap-3 pb-2">
-        {/* Receipt summary: product + price, then three scannable facts. Payment
-            terms (deposit today / balance after) live in the footer CTA. */}
-        <div className={`${panelCardClass} px-4 pt-4 pb-3 md:px-5 md:pt-5`}>
+        {/* Receipt summary: product + price only. Payment terms (deposit today /
+            balance after) live in the footer CTA. */}
+        <div className={`${panelCardClass} px-4 py-4 md:px-5 md:py-5`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal md:text-[2.1rem]">{serviceLabel}</p>
               <p className="mt-1.5 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
             </div>
             <p className="shrink-0 font-heading text-[2rem] leading-none tracking-normal md:text-[2.5rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>{currency(subtotal)}</p>
-          </div>
-          <div className="relative my-3.5 h-px">
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed border-foreground/15" />
-          </div>
-          <div className="flex">
-            {[
-              ['Where', resolvedZip || 'ZIP', Home],
-              ['When', bookingTimeSummary(state), Calendar],
-              ['Clinical', state.clinicalReviewOnFile ? 'On file' : 'Needed', ShieldCheck],
-            ].map(([label, value, Icon], i) => (
-              <div key={label} className={`flex flex-1 flex-col items-center gap-1.5 px-2 text-center ${i > 0 ? 'border-l border-foreground/10' : ''}`}>
-                <Icon className="h-[18px] w-[18px] text-foreground/85" strokeWidth={1.8} />
-                <span className="font-body text-[9px] font-black uppercase tracking-[0.14em] text-foreground/55">{label}</span>
-                <span className="truncate font-body text-[13px] font-bold text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-              </div>
-            ))}
           </div>
         </div>
         <div className={`${panelCardClass} grid content-start gap-3 p-3.5 md:p-4`}>
