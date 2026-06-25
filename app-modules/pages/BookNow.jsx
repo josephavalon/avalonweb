@@ -133,7 +133,7 @@ const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
 const BOOKING_SESSION_KEY = 'avalon.webstore.sessionDraft';
-const CLINICAL_REVIEW_NOTICE = 'Clinical review required before service.';
+const CLINICAL_REVIEW_NOTICE = 'Clinical approval required.';
 const PRIMARY_OUTCOME_KEYS = ['recover', 'perform', 'performance', 'longevity'];
 const SAFETY_FLAGS = [
   'Pregnant',
@@ -1179,7 +1179,7 @@ function UniversalBookingFrame({
                   className="flex min-w-0 items-center gap-2"
                 >
                   <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground">
-                    Your order
+                    Order
                     <span className="rounded-full border border-foreground/30 px-1.5 py-[1px] text-[8px] font-black text-foreground">{orderCount}</span>
                   </span>
                   <ChevronDown className={`h-3.5 w-3.5 text-foreground transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
@@ -1192,7 +1192,7 @@ function UniversalBookingFrame({
                       className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.1em] text-foreground transition-colors hover:border-foreground/55"
                     >
                       <Plus className="h-3 w-3" strokeWidth={3} />
-                      Add person
+                      Person
                     </button>
                   )}
                   {onClearOrder && (
@@ -1256,10 +1256,10 @@ function UniversalBookingFrame({
             Back
           </button>
           <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
-            <p className="font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[8px] md:text-[10px] md:tracking-[0.12em]">Pay today</p>
+            <p className="font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[8px] md:text-[10px] md:tracking-[0.12em]">Today</p>
             <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
             {showDueAfter && (
-              <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Balance after visit {dueAfter}</p>
+              <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Then {dueAfter}</p>
             )}
           </div>
           <button
@@ -1287,13 +1287,13 @@ function UniversalBookingFrame({
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
-          {actionLabel === 'CONFIRM & PAY' && (
+          {step === LAST_STEP && (
             <p className="mt-1.5 px-1 text-center font-body text-[8px] font-black uppercase leading-tight tracking-[0.04em] text-foreground/62 min-[390px]:text-[9px] md:text-[10px]">
-              {dueNow} deposit today · {showDueAfter ? `${dueAfter} balance after visit · ` : ''}Total {total}
+              {dueNow} NOW · {showDueAfter ? `${dueAfter} LATER · ` : ''}{total} TOTAL
             </p>
           )}
           <p className="mt-1 px-1 text-center font-body text-[9px] font-black leading-tight text-foreground/58 md:text-[10px]">
-            {receiptLine ? `${receiptLine} · ` : ''}
+            {step !== LAST_STEP && receiptLine ? `${receiptLine} · ` : ''}
             {CLINICAL_REVIEW_NOTICE}
           </p>
         </div>
@@ -3486,22 +3486,15 @@ function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, d
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
-  // Receipt-style summary: product + price up top, then three scannable facts.
-  // Payment terms (deposit today / balance after) live in the footer CTA, so we
-  // don't repeat them here.
-  const clinicalValue = state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready';
-  const facts = [
-    { label: 'Where', value: state.zip || 'Add ZIP', icon: Home },
-    { label: 'When', value: bookingTimeSummary(state), icon: Calendar },
-    { label: 'Clinical', value: clinicalValue, icon: ShieldCheck },
-  ];
+  // Receipt-style summary: product + price only. Payment terms (deposit today /
+  // balance after) live in the footer CTA, so we don't repeat them here.
 
   return (
     <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.10),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.026))]" />
 
       {/* Product + price */}
-      <div className="relative flex items-start justify-between gap-3 px-5 pt-5">
+      <div className="relative flex items-start justify-between gap-3 px-5 pb-5 pt-5">
         <div className="min-w-0">
           <p className="truncate font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</p>
           <p className="mt-1.5 font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
@@ -3509,25 +3502,6 @@ function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, d
         <p className="shrink-0 font-heading text-[2.6rem] leading-none tracking-normal text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>
           {currency(subtotal)}
         </p>
-      </div>
-
-      {/* Perforation */}
-      <div className="relative my-4 h-px">
-        <div className="absolute inset-x-5 top-1/2 -translate-y-1/2 border-t border-dashed border-foreground/15" />
-      </div>
-
-      {/* Three facts */}
-      <div className="relative flex px-3 pb-4">
-        {facts.map((fact, i) => {
-          const Icon = fact.icon;
-          return (
-            <div key={fact.label} className={`flex flex-1 flex-col items-center gap-2 px-2 text-center ${i > 0 ? 'border-l border-foreground/10' : ''}`}>
-              <Icon className="h-5 w-5 text-foreground/85" strokeWidth={1.8} />
-              <span className="font-body text-[9.5px] font-black uppercase tracking-[0.16em] text-foreground/55">{fact.label}</span>
-              <span className="font-body text-sm font-bold text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>{fact.value}</span>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
@@ -6329,7 +6303,7 @@ export default function BookNow() {
                 displayTitle={progressDisplay.title}
                 progressIndex={progressDisplay.index}
                 canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
-                actionLabel={primaryActionLabel()}
+                actionLabel={step === LAST_STEP ? (manualBilling ? 'CONFIRM VIP' : `PAY ${currency(dueNowAmount)}`) : primaryActionLabel()}
                 checkoutLoading={checkoutLoading}
                 error={error}
                 canGoBack={canGoBack}
