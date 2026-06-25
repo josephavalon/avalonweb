@@ -31,6 +31,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/finance',
   '/admin/inventory',
   '/admin/team',
+  '/admin/gfe', // GFE policy toggles (admin-only)
   '/admin/soon', // coming-soon placeholders
 ]);
 
