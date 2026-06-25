@@ -52,7 +52,7 @@ export const productsByCategory = {
         timeline: defaultTimeline('1-4 hr'),
         faq: defaultFaq(byKey.nad),
         related: ['nad-iv-250mg', 'myers-cocktail-iv', 'energy-iv'],
-        image: '/bags/nad-750.png',
+        image: '/bags/nad-750.webp',
       },
     ],
   },
@@ -90,7 +90,7 @@ export const productsByCategory = {
       namedSession(byKey.energy, 'Performance IV', {
         desc: 'B vitamins, magnesium, taurine, Vitamin C, and hydration support for performance-focused routines.',
         benefitStatement: 'Nutrient support before or after high-output performance.',
-        image: '/bags/performance.png',
+        image: '/bags/performance.webp',
         idealFor: ['Performance', 'Corporate', 'Recovery'],
         related: ['energy-iv', 'recovery-iv', 'nad-iv-250mg'],
       }),
@@ -101,7 +101,7 @@ export const productsByCategory = {
       namedSession(byKey.recovery, 'Food Poisoning Recovery IV', {
         desc: 'Hydration and electrolyte support commonly selected after GI distress. Anti-nausea support may be considered when clinically appropriate.',
         benefitStatement: 'Hydration support after GI distress, subject to clinical review.',
-        image: '/bags/food-poisoning.png',
+        image: '/bags/food-poisoning.webp',
         idealFor: ['Recovery', 'Travel', 'Wellness'],
         related: ['hydration-iv', 'recovery-iv', 'post-night-out-iv'],
       }),

@@ -25,14 +25,14 @@ const HOW_IT_WORKS = [
 const OCCASIONS = ['Birthday', 'Recovery Gift', 'New Parent', 'Thank You', 'Just Because', 'Post-Race', 'Wedding', 'Graduation'];
 
 const OCCASION_MESSAGES = {
-  'Birthday': 'Happy birthday! Treat yourself to an Avalon recovery session — you deserve it.',
-  'Recovery Gift': 'Hope this helps you feel your best. Enjoy your Avalon session.',
-  'New Parent': "You've earned some recovery time. Enjoy this Avalon session, on me.",
-  'Thank You': 'Thank you for everything. Here\'s a little something to help you recharge.',
-  'Just Because': "Just thinking of you. Book whenever you're ready.",
-  'Post-Race': 'Incredible effort. Now it\'s time to recover right.',
-  'Wedding': 'Wishing you a beautiful start. Here\'s to feeling your absolute best.',
-  'Graduation': 'Congratulations! Time to celebrate and recover.',
+  'Birthday': 'Happy birthday — enjoy a session, on me.',
+  'Recovery Gift': 'Feel your best. Enjoy your Avalon session.',
+  'New Parent': "You've earned this. Recover whenever you're ready.",
+  'Thank You': 'Thank you for everything — recharge on me.',
+  'Just Because': "Thinking of you. Book whenever you're ready.",
+  'Post-Race': 'Incredible effort — now recover right.',
+  'Wedding': 'To a beautiful start, and feeling your best.',
+  'Graduation': 'Congratulations — celebrate, then recover.',
 };
 
 export default function Gift() {
@@ -127,7 +127,7 @@ export default function Gift() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
               className="text-center py-8 border border-foreground/[0.08] rounded-2xl bg-foreground/[0.02] mb-6"
             >
-              <p className="font-body text-[10px] tracking-[0.35em] uppercase text-foreground/30 mb-2">Gift Value</p>
+              <p className="font-body text-[13px] tracking-[0.35em] uppercase text-foreground/30 mb-2">Gift Value</p>
               <motion.p
                 key={displayAmount}
                 initial={{ opacity: 0, y: 8 }}
@@ -182,7 +182,7 @@ export default function Gift() {
                 transition={{ duration: 0.4, ease: EASE }}
                 className="mt-4"
               >
-                <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
                   Custom Amount
                 </label>
                 <div className="relative max-w-xs">
@@ -251,7 +251,7 @@ export default function Gift() {
                 <div className="rounded-2xl border border-accent/30 bg-accent/[0.04] p-8 space-y-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-body text-[8px] tracking-[0.4em] uppercase text-foreground/40 mb-1">Gift Certificate</p>
+                      <p className="font-body text-[11px] tracking-[0.4em] uppercase text-foreground/40 mb-1">Gift Certificate</p>
                       <p className="font-heading text-2xl text-foreground uppercase tracking-wide">Avalon Vitality</p>
                     </div>
                     <p className="font-heading text-4xl text-accent leading-none">
@@ -276,11 +276,11 @@ export default function Gift() {
                   </div>
 
                   <div className="border-t border-foreground/[0.08] pt-4 space-y-1">
-                    <p className="font-body text-[10px] tracking-[0.2em] uppercase text-accent">
+                    <p className="font-body text-[13px] tracking-[0.2em] uppercase text-accent">
                       {certCode}
                     </p>
-                    <p className="font-body text-[10px] text-foreground/40">Valid 12 months from purchase</p>
-                    <p className="font-body text-[10px] text-foreground/40">Redeem at avalonvitality.co</p>
+                    <p className="font-body text-[13px] text-foreground/40">Valid 12 months from purchase</p>
+                    <p className="font-body text-[13px] text-foreground/40">Redeem at avalonvitality.co</p>
                   </div>
                 </div>
 
@@ -307,7 +307,7 @@ export default function Gift() {
               >
                 {/* Occasion chips */}
                 <div className="mb-8">
-                  <p className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 mb-3">Occasion</p>
+                  <p className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 mb-3">Occasion</p>
                   <div className="flex flex-wrap gap-2">
                     {OCCASIONS.map((occasion) => {
                       const isActive = selectedOccasion === occasion;
@@ -316,7 +316,7 @@ export default function Gift() {
                           key={occasion}
                           type="button"
                           onClick={() => handleOccasion(occasion)}
-                          className={`min-h-[44px] px-3 py-1.5 rounded-full font-body text-[10px] tracking-[0.1em] border transition-all duration-200 ${
+                          className={`min-h-[44px] px-3 py-1.5 rounded-full font-body text-[13px] tracking-[0.1em] border transition-all duration-200 ${
                             isActive
                               ? 'bg-accent/15 text-accent border-accent/40'
                               : 'border-foreground/15 text-foreground/50 hover:border-foreground/30'
@@ -331,12 +331,12 @@ export default function Gift() {
 
                 {/* Live preview card */}
                 <div className="rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] p-6 md:p-8 mb-8">
-                  <p className="font-body text-[9px] tracking-[0.35em] uppercase text-foreground/30 mb-4">Preview</p>
+                  <p className="font-body text-[12px] tracking-[0.35em] uppercase text-foreground/30 mb-4">Preview</p>
                   <div className="border border-accent/20 bg-accent/[0.03] rounded-2xl p-6 space-y-4">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-heading text-lg text-foreground uppercase tracking-wide">Avalon Vitality</p>
-                        <p className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40 mt-0.5">Gift Certificate</p>
+                        <p className="font-body text-[13px] tracking-[0.2em] uppercase text-foreground/40 mt-0.5">Gift Certificate</p>
                       </div>
                       <motion.p
                         key={displayAmount}
@@ -361,7 +361,7 @@ export default function Gift() {
                         "{formData.message}"
                       </p>
                     )}
-                    <p className="font-body text-[9px] text-foreground/30 tracking-wide border-t border-foreground/[0.06] pt-3">
+                    <p className="font-body text-[12px] text-foreground/30 tracking-wide border-t border-foreground/[0.06] pt-3">
                       Valid 12 months · No expiration on credit · SF Bay Area
                     </p>
                   </div>
@@ -374,7 +374,7 @@ export default function Gift() {
                 >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                      <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
                         Recipient Name
                       </label>
                       <input
@@ -387,7 +387,7 @@ export default function Gift() {
                       />
                     </div>
                     <div>
-                      <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                      <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
                         Recipient Email
                       </label>
                       <input
@@ -402,7 +402,7 @@ export default function Gift() {
                   </div>
 
                   <div>
-                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                    <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
                       Your Name
                     </label>
                     <input
@@ -417,11 +417,11 @@ export default function Gift() {
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">
+                      <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40">
                         Personal Message (optional)
                       </label>
                       {selectedOccasion && (
-                        <span className="font-body text-[9px] tracking-[0.1em] uppercase text-accent/70">
+                        <span className="font-body text-[12px] tracking-[0.1em] uppercase text-accent/70">
                           {selectedOccasion} template applied
                         </span>
                       )}
@@ -441,7 +441,7 @@ export default function Gift() {
                   </div>
 
                   <div>
-                    <label className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                    <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
                       Send Date
                     </label>
                     <input
@@ -450,7 +450,7 @@ export default function Gift() {
                       onChange={(e) => setFormData({ ...formData, sendDate: e.target.value })}
                       className="w-full bg-foreground/[0.04] border border-foreground/[0.12] rounded-xl px-4 py-3 font-body text-foreground text-sm focus:outline-none focus:border-accent/60 transition-colors"
                     />
-                    <p className="font-body text-[11px] text-foreground/35 mt-1.5">Leave blank to send immediately.</p>
+                    <p className="font-body text-[14px] text-foreground/35 mt-1.5">Leave blank to send immediately.</p>
                   </div>
 
                   <button

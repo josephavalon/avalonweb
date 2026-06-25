@@ -164,7 +164,7 @@ function QtyStepper({ label, price, value, max, onChange, img }) {
         <AddonThumb img={img} />
         <div className="min-w-0">
           <p className="truncate font-body text-[13px] font-black text-foreground md:text-sm">{label}</p>
-          <p className="mt-0.5 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50">{money(price)} / mo</p>
+          <p className="mt-0.5 font-body text-[14px] font-bold uppercase tracking-[0.06em] text-foreground/50">{money(price)} / mo</p>
         </div>
       </div>
       <Stepper label={label} value={value} max={max} onChange={onChange} />
@@ -220,7 +220,7 @@ function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
               value={selKey}
               onChange={(e) => setSelKey(e.target.value)}
               aria-label={`${family} strength`}
-              className="appearance-none rounded-lg border border-foreground/18 bg-background/60 py-1 pl-2.5 pr-7 font-body text-[12px] font-bold text-foreground focus:border-foreground/40 focus:outline-none"
+              className="appearance-none rounded-lg border border-foreground/18 bg-background/60 py-1 pl-2.5 pr-7 font-body text-[15px] font-bold text-foreground focus:border-foreground/40 focus:outline-none"
             >
               {variants.map((v) => (
                 <option key={v.key} value={v.key} className="bg-background text-foreground">
@@ -231,7 +231,7 @@ function AddonFamilyRow({ family, variants, qtyMap, onQty }) {
             <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/50" />
           </div>
           {otherActive.length > 0 && (
-            <span className="font-body text-[10px] font-bold uppercase tracking-[0.04em] text-foreground/44">
+            <span className="font-body text-[13px] font-bold uppercase tracking-[0.04em] text-foreground/44">
               + {otherActive.map((v) => `${v.variant}×${qtyMap[v.key]}`).join(', ')}
             </span>
           )}
@@ -256,7 +256,7 @@ function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE })
           </option>
         ))}
       </PlanSelect>
-      <p className="mt-2 font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/60">
+      <p className="mt-2 font-body text-[15px] font-black uppercase tracking-[0.06em] text-foreground/60">
         From {money(perIvPrice * sessions)}/mo
       </p>
     </div>
@@ -290,7 +290,7 @@ function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart
   return (
     <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-foreground/10 bg-background/92 px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 backdrop-blur-xl md:hidden">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate font-body text-[12px] font-bold text-foreground/64">
+        <p className="min-w-0 truncate font-body text-[15px] font-bold text-foreground/64">
           {therapyLabel} · {sessions}×/mo · {money(monthly)}/mo
         </p>
         <p className="shrink-0 font-body text-sm font-black text-foreground" aria-live="polite">
@@ -338,7 +338,7 @@ function StepTherapy({ therapyKey, onSelect }) {
         </div>
       </div>
       {activeCat?.gated && (
-        <span className="inline-flex w-fit items-center rounded-full border border-amber-300/22 bg-amber-300/[0.07] px-2.5 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em] text-amber-100">
+        <span className="inline-flex w-fit items-center rounded-full border border-amber-300/22 bg-amber-300/[0.07] px-2.5 py-1 font-body text-[13px] font-black uppercase tracking-[0.08em] text-amber-100">
           Clinician-reviewed · dose at consult
         </span>
       )}
@@ -372,11 +372,11 @@ function StepAddons({ ivQty, imQty, onIv, onIm }) {
   return (
     <div className="grid gap-3">
       <div>
-        <p className="mb-1.5 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">IV add-ons</p>
+        <p className="mb-1.5 font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/46">IV add-ons</p>
         <AddonRows rows={IV_ADDON_ROWS} qtyMap={ivQty} onQty={onIv} />
       </div>
       <div>
-        <p className="mb-1.5 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/46">IM shots</p>
+        <p className="mb-1.5 font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/46">IM shots</p>
         <AddonRows rows={IM_ADDON_ROWS} qtyMap={imQty} onQty={onIm} />
       </div>
     </div>
@@ -395,7 +395,7 @@ function StepTerm({ monthly, termKey, onTerm, upfrontTotal, perMonth }) {
           </option>
         ))}
       </PlanSelect>
-      <p className="mt-2 font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/52">
+      <p className="mt-2 font-body text-[14px] font-bold uppercase tracking-[0.06em] text-foreground/52">
         {isMonthly ? `${money(monthly)}/mo · 3-month minimum` : `${money(upfrontTotal)} today · ${money(perMonth)}/mo effective`}
       </p>
     </div>
@@ -419,7 +419,7 @@ function RailLine({ label, value, muted }) {
 // price, what's included, and the upfront savings.
 function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItems, monthly, term, perMonth, upfrontTotal, onStart, showStart = true, peopleBreakdown = [], peopleCount = 1 }) {
   const isMonthly = term.key === 'monthly';
-  const bag = therapyOption?.image || '/bags/dehydration.png';
+  const bag = therapyOption?.image || '/bags/dehydration.webp';
   const saving = Math.round(monthly * term.months - upfrontTotal);
   const isMultiPerson = peopleCount > 1;
   // Billing model (must match PlanCheckout + /api/create-checkout-session):
@@ -432,8 +432,8 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
       <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-3">
-        <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/48">Your plan</p>
-        <p className="font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/40">{sessions}× / month</p>
+        <p className="font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/48">Your plan</p>
+        <p className="font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/40">{sessions}× / month</p>
       </div>
 
       <div className="flex items-center gap-3.5 px-4 pt-4">
@@ -444,7 +444,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
           <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
             {isMultiPerson ? `${peopleCount} patients` : (therapyLabel || '—')}
           </p>
-          <p className="mt-1 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/52">
+          <p className="mt-1 font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/52">
             {isMultiPerson ? `${sessions} visits/mo · one household` : 'One IV per visit'}
           </p>
         </div>
@@ -461,13 +461,13 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
           the full plan every period. Same numbers PlanCheckout charges. */}
       <div className="mx-4 mt-3 rounded-xl border border-foreground/12 bg-foreground/[0.04] px-3 py-2.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/74">Due today</span>
+          <span className="font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/74">Due today</span>
           <span className="font-heading text-[1.3rem] leading-none text-foreground tabular-nums">{money(depositToday)}</span>
         </div>
-        <p className="mt-0.5 font-body text-[10px] font-bold uppercase tracking-[0.06em] text-foreground/42">
+        <p className="mt-0.5 font-body text-[13px] font-bold uppercase tracking-[0.06em] text-foreground/42">
           $50 deposit{peopleCount > 1 ? ` · ${peopleCount} people` : ' to start'}
         </p>
-        <div className="mt-2 space-y-1 border-t border-foreground/10 pt-2 font-body text-[11px] font-semibold text-foreground/60">
+        <div className="mt-2 space-y-1 border-t border-foreground/10 pt-2 font-body text-[14px] font-semibold text-foreground/60">
           <div className="flex items-center justify-between gap-2">
             <span>Balance after 1st visit</span>
             <span className="text-foreground/80 tabular-nums">{money(firstVisitBalance)}</span>
@@ -480,7 +480,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
       </div>
 
       <div className="mt-4 grid gap-1.5 border-t border-foreground/10 px-4 pt-3.5">
-        <p className="mb-0.5 font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/40">Included</p>
+        <p className="mb-0.5 font-body text-[13px] font-black uppercase tracking-[0.16em] text-foreground/40">Included</p>
         {isMultiPerson ? (
           peopleBreakdown.map((row) => (
             <RailLine
@@ -503,8 +503,8 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
 
       {!isMonthly && saving > 0 && (
         <div className="mx-4 mt-4 rounded-lg border border-foreground/14 bg-foreground/[0.06] px-3 py-2">
-          <p className="font-body text-[12px] font-black text-foreground">You save {money(saving)}</p>
-          <p className="font-body text-[11px] font-semibold text-foreground/52">vs. paying monthly over {term.label}</p>
+          <p className="font-body text-[15px] font-black text-foreground">You save {money(saving)}</p>
+          <p className="font-body text-[14px] font-semibold text-foreground/52">vs. paying monthly over {term.label}</p>
         </div>
       )}
 
@@ -518,8 +518,8 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
             Start plan <ArrowRight className="h-4 w-4" />
           </button>
         )}
-        <p className={`text-center font-body text-[11px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2.5' : ''}`}>
-          Licensed RN visits · cancel anytime after the 3-month minimum
+        <p className={`text-center font-body text-[14px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2.5' : ''}`}>
+          Cancel anytime after the 3-month minimum
         </p>
       </div>
     </div>

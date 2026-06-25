@@ -53,7 +53,7 @@ function SectionHead({ icon: Icon, title, hint }) {
       </span>
       <div className="min-w-0">
         <p className="font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground">{title}</p>
-        {hint && <p className="font-body text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/46">{hint}</p>}
+        {hint && <p className="font-body text-[14px] font-bold uppercase tracking-[0.06em] text-foreground/46">{hint}</p>}
       </div>
     </div>
   );
@@ -62,7 +62,7 @@ function SectionHead({ icon: Icon, title, hint }) {
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="mb-1 block font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/56">{label}</span>
+      <span className="mb-1 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/56">{label}</span>
       {children}
     </label>
   );
@@ -227,7 +227,7 @@ export default function PlanCheckout() {
         <button
           type="button"
           onClick={() => navigate('/subscription')}
-          className="mb-3 inline-flex items-center gap-1.5 self-start font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/55 hover:text-foreground"
+          className="mb-3 inline-flex items-center gap-1.5 self-start font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/55 hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to plan
         </button>
@@ -245,7 +245,7 @@ export default function PlanCheckout() {
         >
           {isMultiPerson && peopleManifest.length > 0 && (
             <div className="mb-4 rounded-xl border border-foreground/12 bg-foreground/[0.04] p-3">
-              <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/52">
+              <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/52">
                 On this plan
               </p>
               <div className="mt-2 space-y-1.5">
@@ -259,7 +259,7 @@ export default function PlanCheckout() {
                   </div>
                 ))}
               </div>
-              <p className="mt-2 font-body text-[11px] font-semibold text-foreground/52">
+              <p className="mt-2 font-body text-[14px] font-semibold text-foreground/52">
                 One nurse visit treats everyone on the plan.
               </p>
             </div>
@@ -333,21 +333,21 @@ export default function PlanCheckout() {
         <div className="sticky bottom-0 z-10 -mx-4 mt-3 bg-gradient-to-t from-background via-background/92 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 md:static md:bottom-auto md:mx-0 md:bg-transparent md:px-0 md:pb-0 md:pt-2">
           <div className="mb-2.5 rounded-xl border border-foreground/12 bg-background/82 px-3.5 py-2.5 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
-              <span className="min-w-0 truncate font-body text-[12px] font-black uppercase tracking-[0.08em] text-foreground/82">{planLabel}</span>
+              <span className="min-w-0 truncate font-body text-[15px] font-black uppercase tracking-[0.08em] text-foreground/82">{planLabel}</span>
               <button
                 type="button"
                 onClick={() => navigate('/subscription')}
-                className="shrink-0 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85"
+                className="shrink-0 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85"
               >
                 Change
               </button>
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-3 border-t border-foreground/10 pt-1.5">
-              <span className="font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/70">Deposit today</span>
+              <span className="font-body text-[15px] font-black uppercase tracking-[0.06em] text-foreground/70">Deposit today</span>
               <span className="font-body text-sm font-black text-foreground tabular-nums">{money(depositToday)}</span>
             </div>
-            <p className="mt-1 font-body text-[11px] font-semibold leading-snug text-foreground/52 tabular-nums">
-              {money(firstVisitBalance)} balance after your first visit · then {money(perPeriodTotal)} {renews}
+            <p className="mt-1 font-body text-[14px] font-semibold leading-snug text-foreground/52 tabular-nums">
+              {money(perPeriodTotal)} {renews} after your first visit · balance {money(firstVisitBalance)}
             </p>
           </div>
           <button
@@ -358,7 +358,7 @@ export default function PlanCheckout() {
           >
             {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Start plan · {money(depositToday)} deposit <ArrowRight className="h-4 w-4" /></>)}
           </button>
-          <p className="mt-2 text-center font-body text-[11px] font-semibold text-foreground/44">Secure checkout · licensed RN · cancel after the 3-month minimum</p>
+          <p className="mt-2 text-center font-body text-[14px] font-semibold text-foreground/44">Secure checkout · cancel after the 3-month minimum</p>
         </div>
       </main>
     </div>

@@ -184,7 +184,7 @@ function InboxPanel({ address, onReset }) {
       <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
         <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
         <p className="font-body text-sm font-medium leading-relaxed">
-          Check your inbox — we sent a secure sign-in link to <span className="font-bold">{address}</span>. Open it on this device to finish signing in.
+          Check your inbox — we sent a secure sign-in link to <span className="font-bold">{address}</span>. Open it on this device to finish.
         </p>
       </div>
       <button
