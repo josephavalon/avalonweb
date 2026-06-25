@@ -71,8 +71,11 @@ export default async function handler(req, res) {
     try {
       const { data, error } = await db.auth.admin.generateLink({
         type: 'recovery',
+        // Must land on the page that PROCESSES the recovery token and lets the
+        // user set a new password. /admin/login is just the sign-in form — it
+        // can't consume a recovery session, so the link dead-ends there.
         email: target.email,
-        options: { redirectTo: `${siteUrl()}/admin/login` },
+        options: { redirectTo: `${siteUrl()}/account/new-password` },
       });
       if (error) throw error;
       const recoveryUrl = data?.properties?.action_link;
