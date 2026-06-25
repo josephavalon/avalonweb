@@ -78,7 +78,16 @@ export default async function handler(req, res) {
         options: { redirectTo: `${siteUrl()}/account/new-password` },
       });
       if (error) throw error;
-      const recoveryUrl = data?.properties?.action_link;
+      // Build a token_hash link straight to the set-password page rather than
+      // using action_link (.../auth/v1/verify?...). The /verify hop redirects
+      // with a PKCE code that needs the SAME browser's code_verifier, so it
+      // breaks from a different device or an incognito window. A token_hash link
+      // is verified by /account/new-password (verifyOtp) with no verifier, so it
+      // works from anywhere. Falls back to action_link if hashed_token is absent.
+      const hashedToken = data?.properties?.hashed_token;
+      const recoveryUrl = hashedToken
+        ? `${siteUrl()}/account/new-password?token_hash=${encodeURIComponent(hashedToken)}&type=recovery`
+        : data?.properties?.action_link;
       if (!recoveryUrl) throw new Error('No recovery link returned');
       await sendStaffRecoveryEmail({ to: target.email, recoveryUrl });
 
