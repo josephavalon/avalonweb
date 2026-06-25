@@ -18,6 +18,7 @@
 
 import crypto from 'crypto';
 import { getAppointment } from '../../_acuity.js';
+import { gfeSyncAndAssign } from '../../_lib/gfe-core.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
@@ -365,6 +366,21 @@ export default async function handler(req, res) {
         entityType: 'appointment', entityId: appointmentRecordId, phiTouched: true,
         payload: { acuityAppointmentId: String(apptId), webhookEventHash: hash },
       });
+
+      // GFE: sync any GFE on the Acuity form → patient profile, and auto-assign
+      // a Qualiphy exam when the category toggle is on. Best-effort — wrapped so
+      // it can never break the canonical appointment sync above.
+      try {
+        const { data: row } = await db.from('appointments')
+          .select('id, tenant_id, acuity_appointment_id, external_payload')
+          .eq('id', appointmentRecordId).maybeSingle();
+        if (row) {
+          const baseUrl = (process.env.PUBLIC_SITE_URL || 'https://snooches.avalonvitality.co').replace(/\/$/, '');
+          await gfeSyncAndAssign({ db, appt, appointmentRow: row, tenantId, baseUrl, action });
+        }
+      } catch (gfeErr) {
+        console.warn('[acuity/webhook] gfe sync/assign failed', safeLogContext(gfeErr, 'gfe_sync_assign_failed'));
+      }
     }
 
     // CRM sync — non-blocking, contact only (no clinical detail).
