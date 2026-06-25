@@ -128,7 +128,7 @@ const CARD_REVEAL = {
 };
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Choose Your Therapy', 'Choose Your Add-ons', 'Date & Time', 'Your Location', 'Review'];
+const STEPS = ['Therapy', 'Add-ons', 'When', 'Where', 'Review'];
 const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
@@ -245,7 +245,7 @@ const THERAPY_GROUPS = [
     key: 'vitamin',
     label: 'IV Therapy',
     sub: '9 therapies',
-    desc: 'Hydration, recovery, energy, and immunity drips.',
+    desc: 'Hydration · energy · immunity',
     duration: '60 min',
     icon: Droplets,
     keys: ['hydration', 'myers', 'postnight', 'immunity', 'energy', 'recovery', 'performance', 'jetlag', 'food-poisoning'],
@@ -254,7 +254,7 @@ const THERAPY_GROUPS = [
     key: 'cbd',
     label: 'IV CBD Therapy',
     sub: '5 therapies',
-    desc: 'Calm infusion with zero THC.',
+    desc: 'Calm · zero THC',
     duration: '60 min',
     icon: CannabisLeaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-vitality', 'cbd-99mg', 'cbd-132mg'],
@@ -263,7 +263,7 @@ const THERAPY_GROUPS = [
     key: 'nad',
     label: 'IV NAD+ Therapy',
     sub: '7 therapies',
-    desc: 'Cellular energy and longevity protocols.',
+    desc: 'Energy · longevity',
     duration: '1–4 hr',
     badge: 'Most booked',
     icon: FlaskConical,
@@ -1012,12 +1012,14 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   return (
     <div className="relative mb-1 shrink-0 px-1 pt-0 md:mb-3 md:pt-1">
       <div className="relative md:hidden">
-        <p className="font-body text-[8px] font-black uppercase tracking-[0.28em] text-foreground/62">
-          Step {displayStepIndex + 1} of {STEPS.length}
-        </p>
-        <p className="mt-0.5 font-heading text-[1.34rem] leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.48rem]">
-          {displayTitle}
-        </p>
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foreground/35 bg-background/30 text-foreground">
+            <CurrentIcon className="h-3.5 w-3.5" strokeWidth={2.7} />
+          </span>
+          <p className="font-heading text-[1.34rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.48rem]">
+            {displayTitle}
+          </p>
+        </div>
         <div className="relative mt-2 h-2.5">
           <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2 bg-foreground/[0.28]" />
           {STEPS.map((item, index) => (
@@ -1047,7 +1049,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
             </motion.span>
             <div className="min-w-0">
               <p className="font-heading text-[1.3rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.42rem] md:text-[1.55rem]">
-                STEP {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+                {displayTitle}
               </p>
             </div>
           </div>
@@ -1529,7 +1531,7 @@ function DesktopBookingFrame({
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(248px,300px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,310px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
-            STEP {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+            {displayTitle}
           </h1>
           <DesktopStepRail displayStepIndex={displayStepIndex} />
           <div className="my-3 h-px bg-foreground/10 2xl:my-5" />
@@ -2326,44 +2328,58 @@ function inputIdForLabel(label) {
   return `booking-${String(label || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'field'}`;
 }
 
-function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
+function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy, icon: Icon }) {
   const inputId = inputIdForLabel(label);
+  // When an icon is supplied we drop the visible text label (the icon +
+  // placeholder carry it) to stay lean; aria-label keeps it accessible.
+  const showLabelRow = !Icon || (actionLabel && onAction && !value);
   return (
     <div className="block">
-      <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
-        <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</label>
-        {actionLabel && onAction && !value && (
-          <button
-            type="button"
-            onClick={(event) => {
-              onAction();
-            }}
-            className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72"
-          >
-            {actionLabel}
-          </button>
+      {showLabelRow && (
+        <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
+          {!Icon && <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</label>}
+          {actionLabel && onAction && !value && (
+            <button
+              type="button"
+              onClick={(event) => {
+                onAction();
+              }}
+              className="ml-auto rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72"
+            >
+              {actionLabel}
+            </button>
+          )}
+        </div>
+      )}
+      <div className="relative">
+        {Icon && (
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/55 md:left-4">
+            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+          </span>
         )}
+        <input
+          id={inputId}
+          name={inputId}
+          aria-label={label}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          type={type}
+          required={required}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          autoFocus={autoFocus}
+          style={{ scrollMarginTop: '6rem', scrollMarginBottom: 'var(--av-booking-footer-reserve, 6rem)' }}
+          className={`mt-0.5 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:text-lg ${
+            Icon ? 'pl-11 pr-3.5 md:pl-12 md:pr-4' : 'px-3.5 md:px-4'
+          } ${
+            compact ? 'min-h-[40px] text-sm md:min-h-[44px] md:text-base' : 'min-h-[52px] text-lg'
+          }`}
+        />
       </div>
-      <input
-        id={inputId}
-        name={inputId}
-        aria-label={label}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        type={type}
-        required={required}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        autoFocus={autoFocus}
-        style={{ scrollMarginTop: '6rem', scrollMarginBottom: 'var(--av-booking-footer-reserve, 6rem)' }}
-        className={`mt-0.5 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-3.5 font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:px-4 md:text-lg ${
-          compact ? 'min-h-[40px] text-sm md:min-h-[44px] md:text-base' : 'min-h-[52px] text-lg'
-        }`}
-      />
     </div>
   );
 }
@@ -2375,7 +2391,7 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
 function StructuredAddressFields({ street, city, addrState, zip, onChangePart }) {
   return (
     <div className="grid gap-2.5">
-      <TextInput label="Street address" value={street} onChange={(v) => onChangePart('street', v)} placeholder="123 Main St" autoComplete="address-line1" required />
+      <TextInput label="Street" value={street} onChange={(v) => onChangePart('street', v)} placeholder="123 Main St" autoComplete="address-line1" required />
       <TextInput label="City" value={city} onChange={(v) => onChangePart('city', v)} placeholder="City" autoComplete="address-level2" required />
       <div className="grid grid-cols-2 gap-2.5">
         <TextInput label="State" value={addrState} onChange={(v) => onChangePart('state', v)} placeholder="CA" autoComplete="address-level1" required />
@@ -5552,11 +5568,7 @@ export default function BookNow() {
           : step === 3
             ? 3
             : 4,
-    title: step === 0
-      ? 'Choose Your Therapy'
-      : step === 1
-        ? 'Choose Your Add-ons'
-      : STEPS[step].toUpperCase(),
+    title: STEPS[step].toUpperCase(),
   };
   const canGoBack = step > 0;
 
@@ -5919,20 +5931,13 @@ export default function BookNow() {
           </div>
           <div className={`${panelCardClass} p-3 md:p-4`}>
             <TextInput
-              label="Location note (optional)"
+              label="Note"
+              icon={Pencil}
               value={state.notes}
               onChange={(value) => setValue('notes', value)}
-              placeholder="Apt / unit, gate code, parking, where to find you"
+              placeholder="Apt, gate code, parking"
               autoComplete="off"
             />
-          </div>
-          <div className={`${panelCardClass} flex items-center gap-2.5 p-3`}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground/80">
-              <MapPin className="h-[18px] w-[18px]" strokeWidth={2.2} />
-            </span>
-            <p className="font-body text-[11px] font-semibold leading-snug text-foreground/62 md:text-xs">
-              ZIP is required for scheduling and billing. Service-area review happens after checkout when needed.
-            </p>
           </div>
         </div>
       );
@@ -6101,6 +6106,7 @@ export default function BookNow() {
             <div className="col-span-2">
               <TextInput
                 label="Name"
+                icon={User}
                 value={state.name}
                 onChange={(value) => updateInlineContactField('name', value)}
                 placeholder="Full name"
@@ -6112,9 +6118,10 @@ export default function BookNow() {
             </div>
             <TextInput
               label="Phone"
+              icon={Phone}
               value={state.phone}
               onChange={(value) => updateInlineContactField('phone', value)}
-              placeholder="Phone number"
+              placeholder="Phone"
               autoComplete="tel"
               inputMode="tel"
               type="tel"
@@ -6122,6 +6129,7 @@ export default function BookNow() {
             />
             <TextInput
               label="DOB"
+              icon={Calendar}
               value={state.dob}
               onChange={(value) => setValue('dob', formatDobInput(value))}
               placeholder="MM/DD/YYYY"
@@ -6132,6 +6140,7 @@ export default function BookNow() {
             <div className="col-span-2">
               <TextInput
                 label="Email"
+                icon={Mail}
                 value={state.email}
                 onChange={(value) => updateInlineContactField('email', value)}
                 placeholder="Email"
@@ -6163,7 +6172,7 @@ export default function BookNow() {
             />
           </div>
           <p className="rounded-xl border border-foreground/10 bg-background/30 px-3 py-2.5 font-body text-[11px] font-semibold leading-snug text-foreground/60 md:text-xs">
-            By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
+            By paying, you consent to intake, privacy & clinical review.
           </p>
         </div>
       </div>
