@@ -3810,6 +3810,16 @@ export default function BookNow() {
   const [useMemberCredit, setUseMemberCredit] = useState(false);
   const clientProfile = useMemo(() => readClientProfile(), []);
   const lastBooking = useMemo(() => readLastBooking(), []);
+  // Fast checkout: the server-synced GFE + saved address (populated from Acuity
+  // by the GFE sync). Used to prefill the address and treat a cleared GFE as on
+  // file. No-ops gracefully when there's nothing on file yet.
+  const [serverProfile, setServerProfile] = useState(null);
+  useEffect(() => {
+    if (!signedInClient) return undefined;
+    let active = true;
+    apiGet('/api/me/profile').then((d) => { if (active) setServerProfile(d || null); }).catch(() => {});
+    return () => { active = false; };
+  }, [signedInClient]);
   const savedContactProfile = useMemo(() => {
     const savedContact = lastBooking?.contact || {};
     const profileSource = signedInClient ? clientProfile : {};
@@ -3829,21 +3839,22 @@ export default function BookNow() {
   const savedVisitAddress = useMemo(() => {
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
-    const address = realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
+    const serverAddr = serverProfile?.savedAddress || {};
+    const address = realAddress(lastBooking?.address) || realAddress(serverAddr.raw) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
     if (!address) return null;
     return {
       label: 'Saved address',
       address,
-      zip: realValue(lastBooking?.zip) || realValue(profileSource.zip) || fallback.zip || '',
+      zip: realValue(lastBooking?.zip) || realValue(serverAddr.zip) || realValue(profileSource.zip) || fallback.zip || '',
       locationType: lastBooking?.locationType || profileSource.locationType || fallback.locationType || 'home',
     };
-  }, [clientProfile, lastBooking, signedInClient]);
+  }, [clientProfile, lastBooking, signedInClient, serverProfile]);
   const profileGfe = useMemo(() => resolveGfeRequirement({
     isNewClient: false,
     visitCount: Math.max(1, Number(clientProfile.visitCount || 1)),
-    gfe: clientProfile.gfe,
-    gfeExpiresAt: clientProfile.gfe?.validUntil,
-  }), [clientProfile]);
+    gfe: serverProfile?.gfe || clientProfile.gfe,
+    gfeExpiresAt: serverProfile?.gfe?.expiresAt || clientProfile.gfe?.validUntil,
+  }), [clientProfile, serverProfile]);
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
   const reduceMotion = useReducedMotion();
   const shouldResetDraft = searchParams.get('reset') === '1';
