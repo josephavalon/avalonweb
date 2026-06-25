@@ -89,7 +89,7 @@ function StepBar({ current }) {
           <React.Fragment key={label}>
             <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-400 ${
-                done ? 'bg-accent border-accent' :
+                done ? 'bg-foreground border-foreground' :
                 active ? 'border-foreground bg-foreground/10' :
                 'border-foreground/20 bg-transparent'
               }`}>
@@ -99,12 +99,12 @@ function StepBar({ current }) {
                 }
               </div>
               <span className={`font-body text-[9px] tracking-[0.2em] uppercase hidden sm:block ${
-                active ? 'text-foreground' : done ? 'text-accent' : 'text-foreground/45'
+                active ? 'text-foreground' : done ? 'text-foreground' : 'text-foreground/45'
               }`}>{label}</span>
             </div>
             {i < STEPS.length - 1 && (
               <div className={`flex-1 h-px mx-2 transition-colors duration-400 ${
-                i < current ? 'bg-accent' : 'bg-foreground/15'
+                i < current ? 'bg-foreground' : 'bg-foreground/15'
               }`} />
             )}
           </React.Fragment>
@@ -149,13 +149,13 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
-      className="mb-7 grid grid-cols-1 md:grid-cols-2 gap-2 rounded-[1.35rem] border border-accent/20 bg-accent/[0.055] p-2 shadow-[0_18px_70px_hsl(var(--accent)/0.08)] backdrop-blur-xl"
+      className="mb-6 grid grid-cols-2 gap-2"
     >
       {rail.map(({ icon: Icon, label, value, active }) => (
         <div key={label} className={`rounded-xl border px-2 py-2.5 text-center transition-colors ${
-          active ? 'border-accent/24 bg-background/55' : 'border-foreground/[0.08] bg-background/30'
+          active ? 'border-foreground/20 bg-foreground/[0.05]' : 'border-foreground/[0.08] bg-background/30'
         }`}>
-          <Icon className={`mx-auto h-3.5 w-3.5 ${active ? 'text-accent' : 'text-foreground/45'}`} strokeWidth={1.6} />
+          <Icon className={`mx-auto h-3.5 w-3.5 ${active ? 'text-foreground' : 'text-foreground/40'}`} strokeWidth={1.6} />
           <p className="mt-1 font-body text-[8px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
           <p className="mt-0.5 truncate font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
         </div>
@@ -205,10 +205,10 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
           <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Visit</p>
           {items.map((item) => (
             <div key={item.cartKey} className="flex items-center gap-3 p-3.5 rounded-2xl border border-white/10 bg-white/[0.03]">
-              <div className="p-2 rounded-xl bg-accent/10 shrink-0">
+              <div className="p-2 rounded-xl bg-foreground/[0.08] shrink-0">
                 {item.type === 'im'
-                  ? <Syringe className="w-4 h-4 text-accent" strokeWidth={1.5} />
-                  : <Droplets className="w-4 h-4 text-accent" strokeWidth={1.5} />
+                  ? <Syringe className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+                  : <Droplets className="w-4 h-4 text-foreground" strokeWidth={1.5} />
                 }
               </div>
               <div className="flex-1 min-w-0">
@@ -234,9 +234,9 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
       {membership && (
         <div className="space-y-2 mt-4">
           <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Plan</p>
-          <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-accent/20 bg-accent/[0.05]">
-            <div className="p-2 rounded-xl bg-accent/10 shrink-0">
-              <Sparkles className="w-4 h-4 text-accent" strokeWidth={1.5} />
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-foreground/12 bg-foreground/[0.04]">
+            <div className="p-2 rounded-xl bg-foreground/[0.08] shrink-0">
+              <Sparkles className="w-4 h-4 text-foreground" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-body text-xs tracking-widest uppercase text-foreground">{membershipTitle}</p>
@@ -469,7 +469,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                     setNextAvailLoading(false);
                   }}
                   disabled={nextAvailLoading}
-                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-accent hover:text-accent/70 transition-colors shrink-0 disabled:opacity-50"
+                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground hover:text-foreground/70 transition-colors shrink-0 disabled:opacity-50"
                 >
                   {nextAvailLoading
                     ? <><Loader2 className="w-3 h-3 animate-spin" strokeWidth={2} /> Searching…</>
@@ -497,8 +497,8 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                       })}
                       className={`py-3.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
                         active
-                          ? 'bg-accent text-background shadow-[0_0_10px_-2px_hsl(var(--accent)/0.5)]'
-                          : 'border border-white/15 text-foreground/70 hover:border-accent/50 hover:text-foreground'
+                          ? 'bg-foreground text-background'
+                          : 'border border-foreground/15 text-foreground/70 hover:border-foreground/50 hover:text-foreground'
                       }`}
                     >
                       {label}
@@ -918,8 +918,8 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             className="fixed inset-0 z-[120] flex min-h-[100svh] items-center justify-center bg-background/92 px-6 text-center backdrop-blur-xl"
           >
             <div className="max-w-sm">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-accent" strokeWidth={2.2} />
-              <p className="mt-6 font-body text-[11px] font-black uppercase tracking-[0.22em] text-accent">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-foreground" strokeWidth={2.2} />
+              <p className="mt-6 font-body text-[11px] font-black uppercase tracking-[0.22em] text-foreground">
                 Redirecting to secure checkout...
               </p>
               <p className="mt-3 font-body text-sm font-semibold leading-relaxed text-foreground/62">
@@ -934,8 +934,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       {/* Order summary */}
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl space-y-3">
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
+      <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl space-y-3">
         <p className={`${labelClass} relative`}>Total</p>
         {items.map((item) => (
           <div key={item.cartKey} className="relative flex justify-between items-center">
@@ -961,11 +960,11 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </span>
         </div>
         {hasItems && (
-          <div className="relative rounded-2xl border border-amber-300/28 bg-amber-300/[0.09] px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
+          <div className="relative rounded-2xl border border-foreground/12 bg-foreground/[0.04] px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
             <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-100" strokeWidth={2} />
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground/70" strokeWidth={2} />
               <div>
-                <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-amber-100">
+                <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/70">
                   Paid in full
                 </p>
               </div>
@@ -981,9 +980,8 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       {!contactReady && (
-        <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
-          <p className={`${labelClass} relative`}>You</p>
+        <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl">
+            <p className={`${labelClass} relative`}>You</p>
           <div className="relative mt-3 grid gap-3">
             <input
               aria-label="Full name"
@@ -1020,8 +1018,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         </div>
       )}
 
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
+      <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl">
         <p className={`${labelClass} relative`}>Pay with</p>
         <div className="relative mt-3 flex min-h-[72px] items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-background/[0.18] p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-foreground/[0.08] text-foreground">
@@ -1231,10 +1228,8 @@ export default function Checkout() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="relative overflow-hidden rounded-[2rem] border border-foreground/[0.13] bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_32px_120px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl sm:p-5"
+          className="relative"
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          {hasCheckoutSelection && <CheckoutTrustConsole current={step} items={items} membership={membership} appointment={appointment} />}
           {hasCheckoutSelection && step !== 3 && <StepBar current={step} />}
           <div className="relative px-1 sm:px-2">
             <AnimatePresence mode="wait" custom={dir}>

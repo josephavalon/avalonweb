@@ -490,7 +490,7 @@ function splitName(name = '') {
 function realValue(value) {
   const text = String(value || '').trim();
   if (!text) return '';
-  if (/pending|unknown|missing|preview|avalon\.local/i.test(text)) return '';
+  if (/pending|unknown|missing|preview|avalon\.local|redacted/i.test(text)) return '';
   return text;
 }
 
