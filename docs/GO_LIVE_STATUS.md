@@ -8,15 +8,15 @@ This ledger tracks launch blockers, required user actions, and staging evidence.
 | GL-002 | Supabase Auth providers | conditional | Google, Apple, Phone, and Passkey are now build-flagged. Keep `VITE_AUTH_GOOGLE_ENABLED`, `VITE_AUTH_APPLE_ENABLED`, `VITE_AUTH_PHONE_ENABLED`, and `VITE_AUTH_PASSKEY_ENABLED` false until the matching Supabase provider is configured and verified; disabled providers are hidden from the UI and `npm run test:oauth-config` only requires exposed providers. Use `OAUTH_VERIFY_STRICT=1 npm run test:oauth-config` before enabling all providers. |
 | GL-003 | Profile trigger | pending staging drill | Run `npm run verify:signup`; confirm OAuth and email users become active client profiles. |
 | GL-004 | Appointment-summary auth drill | pending staging drill | Run the unauthenticated summary probe; expected `summary_auth_required` and signed access through `APPOINTMENT_SUMMARY_TOKEN_SECRET`. |
-| GL-005 | Stripe metadata drill | pending staging drill | Inspect Stripe metadata drill output for PHI-free payloads. |
+| GL-005 | Stripe metadata drill | static guard verified 2026-06-26, live drill pending | Static CI guard `npm run test:no-phi-in-stripe` passes (`.context/drills/GL-005-no-phi-static-2026-06-26.log`). Live drill (inspect real Stripe metadata payload from a paid booking) still pending — requires Stripe + Acuity prod creds. |
 | GL-006 | Acuity failure drill | pending staging drill | Force Acuity failure after paid checkout and confirm `stripe_succeeded_acuity_failed`. |
 | GL-007 | Webhook/verify race drill | pending staging drill | Confirm only one Acuity appointment is created during webhook/verify race. |
 | GL-008 | Balance charge audit drill | pending staging drill | Confirm balance override rejection and accepted charge `audit_events`. |
 | GL-009 | Email/CRM failure drill | pending staging drill | Confirm `operations_email_failed`, `customer_email_failed`, and `crm_sync_failed` reconciliation cases. |
 | GL-010 | Post-deploy revenue matrix | pending staging drill | Run revenue matrix with `REVENUE_MATRIX_BASE_URL` after snooches deploy. |
-| GL-011 | Messaging roles | pending staging drill | Confirm `supabase/migrations/011_launch_messaging_roles.sql` is applied. |
+| GL-011 | Messaging roles | local file present 2026-06-26, prod-applied check pending | Migration file `supabase/migrations/011_launch_messaging_roles.sql` is checked in and confirmed locally. Verification that it is applied in prod (`supabase_migrations.schema_migrations` row check) still pending — requires Supabase prod creds. |
 | GL-012 | BAAs | pending user action | **Sign BAAs** (self-serve): Supabase (Team + HIPAA add-on), Acuity (Powerhouse/Premium in-app link), Vercel (click-through on Pro), Sentry (Business tier → Legal & Compliance). **Confirm BAA availability with vendor** (or migrate): Resend, Attio. **No BAA, route-around in place**: Stripe (`safeStripeMetadata` whitelist + CI guard `npm run test:no-phi-in-stripe`), Quo SMS (OTP-only body + PHI deny patterns). Attio sync is killed by default until BAA decision (`ATTIO_SYNC_ENABLED=false`). Resend ops email is link-only. See `docs/PHI_DATA_FLOW.md` for the full data flow + control map. |
-| GL-013 | MFA | pending user action | Require MFA or passkey policy for admin/staff accounts before launch. |
+| GL-013 | MFA | deferred to post-v1 (acknowledged 2026-06-26) | Admin/staff MFA / passkey enforcement deferred for v1 launch per CEO call. Disclose in ops runbook; rotate admin creds on a calendar cadence until MFA lands. |
 | GL-014 | key rotation | pending user action | Rotate any key exposed outside provider dashboards or Vercel secrets. The ignored local `.env.local` Acuity key was blanked in this workspace; replace it only with a rotated value. |
 | GL-015 | Rate-limit backend | verified on snooches | `npx vercel env ls production` on June 17, 2026 shows `KV_REST_API_URL` and `KV_REST_API_TOKEN` in Production, so `/api` rate limiting can use the persistent backend instead of the memory fallback. |
 | GL-016 | P1 Acuity reverse webhook | known launch limitation | If `ACUITY_WEBHOOK_SECRET` is unset or webhook delivery is not verified, Acuity-side reschedules/cancellations require manual ops reconciliation for v1. |
@@ -92,3 +92,24 @@ home first-paint timing in the watch list even though Chrome/CDP live stability
 and the follow-up iOS Safari capture passed.
 
 Deploy reminder: use `npm run exam:snooches` first, then `npm run deploy:snooches` only after it passes. Never run `vercel deploy --prod` from this repo during this launch.
+
+June 26, 2026 readiness pass evidence (CEO triage of remaining blockers):
+- Payment Element migration (Phase 1 preview) reverted; build green.
+- Static drill scans pass: `npm run test:no-phi-in-stripe`
+  (`.context/drills/GL-005-no-phi-static-2026-06-26.log`),
+  `npm run test:launch-blockers`
+  (`.context/drills/launch-blockers-2026-06-26.log`),
+  `npm run test:security`
+  (`.context/drills/test-security-2026-06-26.log`).
+- `docs/MAIN_URL_SWAP_RUNBOOK.md` written — covers pre-flight, backup, flip
+  via `vercel alias set` (never `--prod`), post-flip verification, rollback,
+  link audit results, and v1 limitations disclosure.
+- Repo-wide link audit confirms no production-blocking hardcoded references
+  to `snooches.avalonvitality.co`. The four host-gated noindex paths
+  (`vercel.json`, `public/snooches-noindex.js`, `api/robots.js`,
+  `src/lib/seo.js`) automatically flip to indexable on the new alias.
+  `SEO_BASE_URL` already points at `https://www.avalonvitality.co`.
+- Live drills GL-003, GL-004, GL-006..GL-010 and `verify:prod` (GL-018) still
+  require prod creds (Supabase service role, Stripe secret, Resend, Acuity,
+  Vercel env scope) — pending a `vercel env pull --environment=production`
+  or running through the credentialed GitHub Actions go-live workflow.
