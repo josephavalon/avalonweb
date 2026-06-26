@@ -445,7 +445,7 @@ async function runCdpEnvironment(chromePath, env, index) {
     await clickAnyText(cdp, ['Recovery', 'Hydration']);
     await assertStickyBookBar(cdp, env);
     await clickText(cdp, 'Next');
-    await clickText(cdp, 'No Add-Ons');
+    await clickText(cdp, 'No extras');
     await assertStickyBookBar(cdp, env);
     await clickText(cdp, 'Next');
     await clickText(cdp, 'Next');
@@ -696,7 +696,7 @@ async function runWebKitEnvironment(webkit, env) {
     await playwrightClickAnyText(page, ['Recovery', 'Hydration']);
     await playwrightAssertStickyBookBar(page, env);
     await playwrightClickText(page, 'Next');
-    await playwrightClickText(page, 'No Add-Ons');
+    await playwrightClickText(page, 'No extras');
     await playwrightAssertStickyBookBar(page, env);
     await playwrightClickText(page, 'Next');
     await playwrightClickText(page, 'Next');
