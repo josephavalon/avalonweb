@@ -169,9 +169,9 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
   const Sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-4 py-5">
-        <Link to="/" className="flex items-baseline gap-2">
-          <AvalonMark className="h-[22px] w-[14px] text-foreground" />
-          <span className="font-body text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/40">Admin</span>
+        <Link to="/admin" className="flex items-center gap-2.5">
+          <AvalonMark className="h-9 w-[22px] text-foreground" />
+          <span className="font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground">Admin</span>
         </Link>
         <button type="button" onClick={() => setDrawer(false)} className="text-foreground/50 md:hidden" aria-label="Close menu">
           <X className="h-5 w-5" strokeWidth={1.8} />
