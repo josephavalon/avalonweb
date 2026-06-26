@@ -159,6 +159,7 @@ const AdminClientDetail = lazyRoute(() => import('./pages/admin/ClientDetail'));
 const AdminMemberships = lazyRoute(() => import('./pages/admin/Memberships'));
 const AdminMessages = lazyRoute(() => import('./pages/admin/Messages'));
 const AdminInbox = lazyRoute(() => import('./pages/admin/Inbox'));
+const AdminTeamInbox = lazyRoute(() => import('./pages/admin/TeamInbox'));
 const AdminGfeSettings = lazyRoute(() => import('./pages/admin/GfeSettings'));
 const AdminFinanceControl = lazyRoute(() => import('./pages/admin/FinanceControl'));
 const AdminCredentialControl = lazyRoute(() => import('./pages/admin/CredentialControl'));
@@ -377,6 +378,7 @@ function AppRoutes() {
             <Route path="/admin/memberships" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminMemberships /></RequireAuth>} />
             <Route path="/admin/messages" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminMessages /></RequireAuth>} />
             <Route path="/admin/inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInbox /></RequireAuth>} />
+            <Route path="/admin/team-inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamInbox /></RequireAuth>} />
             <Route path="/admin/gfe" element={<RequireAuth allowedRoles={['admin']}><AdminGfeSettings /></RequireAuth>} />
             <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminAttioControl /></RequireAuth>} />
             <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />

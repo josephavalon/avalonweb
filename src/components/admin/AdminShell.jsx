@@ -11,14 +11,17 @@ import {
   CreditCard,
   Crown,
   ExternalLink,
+  Inbox,
   LayoutGrid,
   LogOut,
   Menu,
   MessageSquare,
   Package,
+  Palette,
   Settings,
   ShieldCheck,
   Stethoscope,
+  User,
   Users,
   UserCog,
   Wrench,
@@ -26,6 +29,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
+import { useMessages } from '@/hooks/useMessages';
+import { cycleTheme, getThemeLabel, readStoredTheme } from '@/lib/theme';
 
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
 const ACUITY_URL = 'https://avalonvitality.as.me';
@@ -372,10 +377,29 @@ function ToggleRow({ on, onToggle, label, hint, disabled }) {
   );
 }
 
+// Row inside the profile menu: a left icon+label and an optional right slot
+// (unread badge, theme name, chevron). Renders as a Link or a button.
+function MenuRow({ icon: Icon, label, to, onClick, right, danger }) {
+  const cls = `flex w-full items-center justify-between px-4 py-2.5 text-left font-body text-xs font-semibold transition-colors hover:bg-foreground/[0.04] ${danger ? 'text-foreground/60 hover:text-foreground' : 'text-foreground'}`;
+  const inner = (
+    <>
+      <span className="flex items-center gap-2.5">
+        <Icon className="h-3.5 w-3.5" strokeWidth={1.9} />
+        {label}
+      </span>
+      {right != null ? <span className="flex items-center gap-1.5">{right}</span> : null}
+    </>
+  );
+  if (to) return <Link to={to} onClick={onClick} className={cls}>{inner}</Link>;
+  return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
+}
+
 function AdminProfileMenu({ user, onSignOut }) {
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState(() => readNotifPrefs());
+  const [themeLabel, setThemeLabel] = useState(() => getThemeLabel(readStoredTheme()));
   const wrapRef = useRef(null);
+  const { unreadCount } = useMessages();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -390,8 +414,13 @@ function AdminProfileMenu({ user, onSignOut }) {
     writeNotifPrefs(next);
   };
 
+  // Cycle the theme in place; keep the menu open so the change is visible.
+  const onCycleTheme = () => { setThemeLabel(getThemeLabel(cycleTheme())); };
+
   const name = user?.name || user?.fullName || user?.email?.split('@')[0] || 'Admin';
   const role = roleLabel(user?.role);
+  const isAdmin = user?.role === 'admin';
+  const close = () => setOpen(false);
 
   return (
     <div ref={wrapRef} className="relative">
@@ -412,21 +441,34 @@ function AdminProfileMenu({ user, onSignOut }) {
           className="absolute right-0 top-full z-40 mt-2 w-72 overflow-hidden rounded-xl border border-foreground/[0.10] bg-background shadow-[0_18px_60px_rgba(0,0,0,0.6)]"
         >
           <div className="border-b border-foreground/[0.08] px-4 py-3">
-            <p className="font-heading text-lg uppercase leading-none">{name}</p>
-            <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/45">{role}</p>
-            {user?.email ? <p className="mt-1.5 truncate font-body text-xs text-foreground/60">{user.email}</p> : null}
+            <div className="flex items-center gap-2">
+              <p className="font-heading text-lg uppercase leading-none">{name}</p>
+              <span className="rounded-md border border-foreground/[0.18] px-1.5 py-0.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-foreground/55">{role}</span>
+            </div>
+            {user?.email ? <p className="mt-1.5 truncate font-body text-xs text-foreground/55">{user.email}</p> : null}
           </div>
-          <Link
-            to="/admin/soon?feature=Personal%20Inbox"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-between border-b border-foreground/[0.06] px-4 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-foreground/[0.04]"
-          >
-            <span className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5" strokeWidth={1.9} />My inbox</span>
-            <span className="inline-flex items-center gap-1.5 text-foreground/40">
-              <span className="rounded-full border border-foreground/[0.18] px-1.5 py-0.5 font-body text-[9px] font-bold uppercase tracking-[0.14em]">Soon</span>
-              <ChevronDown className="h-3.5 w-3.5 -rotate-90" strokeWidth={2} />
-            </span>
-          </Link>
+
+          <div className="border-b border-foreground/[0.06] py-1">
+            <MenuRow
+              icon={Inbox}
+              label="My inbox"
+              to="/admin/team-inbox"
+              onClick={close}
+              right={unreadCount > 0
+                ? <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-foreground px-1 font-body text-[9px] font-bold text-background">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                : <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-foreground/35" strokeWidth={2} />}
+            />
+            <MenuRow icon={User} label="Profile" to="/admin/soon?feature=Profile" onClick={close} />
+            <MenuRow
+              icon={Palette}
+              label="Appearance"
+              onClick={onCycleTheme}
+              right={<span className="font-body text-[11px] text-foreground/45">{themeLabel}</span>}
+            />
+            {isAdmin ? <MenuRow icon={Users} label="Team & access" to="/admin/team" onClick={close} /> : null}
+            <MenuRow icon={Activity} label="Activity" to="/admin/soon?feature=Activity" onClick={close} />
+          </div>
+
           <div className="border-b border-foreground/[0.06] px-2 py-2">
             <p className="px-2 pb-1.5 font-body text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/40">
               <Bell className="-mt-0.5 mr-1 inline h-3 w-3" strokeWidth={2.2} />
@@ -447,16 +489,11 @@ function AdminProfileMenu({ user, onSignOut }) {
               disabled={!user?.phone}
             />
             <p className="px-2 pt-1 font-body text-[10px] text-foreground/40">
-              Turn either off to stop getting pinged when a patient messages you.
+              Turn either off to stop getting pinged about new messages.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => { setOpen(false); onSignOut(); }}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-body text-xs font-semibold text-foreground/60 transition-colors hover:bg-foreground/[0.04] hover:text-foreground"
-          >
-            <LogOut className="h-3.5 w-3.5" strokeWidth={1.9} /> Sign out
-          </button>
+
+          <MenuRow icon={LogOut} label="Sign out" onClick={() => { close(); onSignOut(); }} danger />
         </div>
       )}
     </div>
