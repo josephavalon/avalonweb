@@ -34,6 +34,7 @@ const NAV_LIVE = [
   { label: 'Patients', icon: Users, to: '/admin/clients' },
   { label: 'Messages', icon: MessageSquare, to: '/admin/messages' },
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
+  { label: 'GFE', icon: ClipboardList, to: '/admin/gfe' },
   { label: 'Acuity', icon: CalendarCheck, href: ACUITY_URL, external: true },
   { label: 'Users', icon: UserCog, to: '/admin/team' },
   // Coming-soon placeholders — listed below the working links, all route to the
@@ -41,7 +42,6 @@ const NAV_LIVE = [
   { label: 'Inventory', icon: Package, to: '/admin/soon?feature=Inventory' },
   { label: 'Events', icon: CalendarDays, to: '/admin/soon?feature=Events' },
   { label: 'Clinical Staff', icon: Stethoscope, to: '/admin/soon?feature=Clinical%20Staff' },
-  { label: 'GFE', icon: ClipboardList, to: '/admin/gfe' },
   { label: 'Tools', icon: Wrench, to: '/admin/soon?feature=Tools' },
   { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
 ];
