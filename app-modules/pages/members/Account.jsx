@@ -18,6 +18,7 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { readClientProfile, saveClientProfile } from '@/lib/platformOps';
 import { authProviderConfig } from '@/lib/authProviderConfig';
+import { apiGet, apiPatch } from '@/lib/apiClient';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -35,6 +36,85 @@ const PHI_POLICY_OPTIONS = ['Appointment time only', 'Time + service name', 'Ful
 const COVID_OPTIONS = ['Yes', 'No', 'Prefer not to say'];
 const INFECTIOUS_OPTIONS = ['Yes', 'No'];
 const IV_HISTORY_OPTIONS = ['Yes, several times', 'Once or twice', 'Never'];
+
+// Merge a server-side /api/me/profile payload into the localStorage-style shape
+// readClientProfile() returns. Server values win over locally cached ones for
+// the fields the server is now authoritative for (identity + PHI + comms);
+// anything the server doesn't track (e.g. subscription stub) falls through.
+function mergeServerProfile(local, server) {
+  if (!server) return local;
+  const merged = { ...(local || {}) };
+  const phi = server.phi || {};
+  const ec = server.emergencyContact || {};
+  const cp = server.commPrefs || {};
+  if (server.fullName != null) {
+    const parts = String(server.fullName).trim().split(/\s+/);
+    if (parts.length) {
+      merged.firstName = parts[0] || merged.firstName || '';
+      merged.lastName = parts.slice(1).join(' ') || merged.lastName || '';
+    }
+  }
+  if (server.preferredName != null) merged.preferredName = server.preferredName || '';
+  if (server.email != null) merged.email = server.email || merged.email || '';
+  if (server.phone != null) merged.phone = server.phone || merged.phone || '';
+  if (server.dateOfBirth != null) merged.dob = server.dateOfBirth || merged.dob || '';
+  if (server.address != null) merged.defaultAddress = server.address || merged.defaultAddress || '';
+  if (ec.name != null) merged.emergencyName = ec.name || '';
+  if (ec.relationship != null) merged.emergencyRelationship = ec.relationship || '';
+  if (ec.phone != null) merged.emergencyContact = ec.phone || '';
+  if (phi.allergies != null) merged.allergies = phi.allergies;
+  if (phi.medications != null) merged.medications = phi.medications;
+  if (phi.conditions != null) merged.medicalConditions = phi.conditions;
+  if (phi.covidRecent != null) merged.covidStatus = phi.covidRecent;
+  if (phi.infectiousIllness != null) merged.infectiousStatus = phi.infectiousIllness;
+  if (phi.ivHistory != null) merged.ivHistory = phi.ivHistory;
+  if (phi.nurseNotes != null) merged.nurseNotes = phi.nurseNotes;
+  if (cp.channel != null) merged.smsPreference = cp.channel;
+  if (cp.hipaaMention != null) merged.phiPolicy = cp.hipaaMention;
+  if (cp.smsReminders != null) merged.appointmentReminders = cp.smsReminders;
+  if (cp.emailSummaries != null) merged.visitSummaries = cp.emailSummaries;
+  if (cp.marketing != null) merged.wellnessTips = cp.marketing;
+  if (cp.quietHours != null) merged.quietHours = cp.quietHours;
+  return merged;
+}
+
+// Map the form (group/key shape) back to the snake-flavoured camelCase the
+// /api/me/profile PATCH endpoint accepts.
+function formToServerPayload(form) {
+  const allergies = form.health.allergies ? form.health.allergies.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+  const medications = form.health.medications ? form.health.medications.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+  const conditions = form.health.conditions ? form.health.conditions.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
+  const fullName = [form.identity.firstName, form.identity.lastName].map((s) => (s || '').trim()).filter(Boolean).join(' ');
+  return {
+    fullName,
+    preferredName: form.identity.preferredName || '',
+    address: form.identity.serviceAddress || '',
+    dateOfBirth: form.identity.dob || null,
+    phone: form.identity.mobile || '',
+    emergencyContact: {
+      name: form.emergency.name || '',
+      relationship: form.emergency.relationship || '',
+      phone: form.emergency.phone || '',
+    },
+    phi: {
+      allergies,
+      medications,
+      conditions,
+      covidRecent: form.health.covid || null,
+      infectiousIllness: form.health.infectious || null,
+      ivHistory: form.health.ivHistory || null,
+      nurseNotes: form.health.nurseNotes || '',
+    },
+    commPrefs: {
+      channel: form.comms.channel,
+      hipaaMention: form.comms.phiPolicy,
+      smsReminders: !!form.comms.appointmentReminders,
+      emailSummaries: !!form.comms.visitSummaries,
+      marketing: !!form.comms.wellnessTips,
+      quietHours: !!form.comms.quietHours,
+    },
+  };
+}
 
 // Build the local form state from the saved client profile (and reasonable stubs).
 function buildInitialState(profile, user) {
@@ -244,6 +324,27 @@ export default function MemberAccount() {
   const [passkeyState, setPasskeyState] = useState({ busy: false, message: '', error: '' });
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
 
+  // Hydrate from /api/me/profile when we're on the real auth backend so the
+  // form reflects the patient's server-side record (the localStorage cache is
+  // best-effort — it can be wiped or stale across devices). Demo / passwordless
+  // sessions skip this and stay on localStorage only.
+  useEffect(() => {
+    if (authBackend !== 'supabase') return;
+    let cancelled = false;
+    apiGet('/api/me/profile')
+      .then((res) => {
+        if (cancelled) return;
+        const server = res?.profile;
+        if (!server) return;
+        const merged = mergeServerProfile(readClientProfile(), server);
+        const next = buildInitialState(merged, user);
+        initialRef.current = JSON.stringify(next);
+        setForm(next);
+      })
+      .catch(() => { /* keep the localStorage fallback already in state */ });
+    return () => { cancelled = true; };
+  }, [authBackend, user]);
+
   const isDirty = useMemo(() => initialRef.current !== JSON.stringify(form), [form]);
 
   // For change-counter shown in the savebar.
@@ -267,9 +368,10 @@ export default function MemberAccount() {
     setForm((prev) => ({ ...prev, [group]: { ...prev[group], [key]: value } }));
   };
 
-  const handleSave = () => {
-    // TODO(snooches): wire to Supabase profiles + phi_record tables — for now persist
-    // to localStorage via saveClientProfile so the rest of the demo surface stays consistent.
+  // Persist a local cache no matter which backend we're on — keeps BookNow's
+  // returning-client prefill working offline, and is the source of truth for
+  // demo / passwordless sessions that don't have a Supabase row to PATCH.
+  const persistLocal = () => {
     const allergies = form.health.allergies ? form.health.allergies.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
     const medications = form.health.medications ? form.health.medications.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
     const medicalConditions = form.health.conditions ? form.health.conditions.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
@@ -298,9 +400,32 @@ export default function MemberAccount() {
       wellnessTips: form.comms.wellnessTips,
       quietHours: form.comms.quietHours,
     });
-    initialRef.current = JSON.stringify(form);
-    setSaveState({ status: 'ok', message: 'Saved.' });
-    setTimeout(() => setSaveState({ status: 'idle', message: '' }), 1800);
+  };
+
+  const handleSave = async () => {
+    // Demo / passwordless sessions never had a Supabase row — keep them on the
+    // localStorage path so the demo surface stays editable without a backend.
+    if (authBackend !== 'supabase') {
+      persistLocal();
+      initialRef.current = JSON.stringify(form);
+      setSaveState({ status: 'ok', message: 'Saved.' });
+      setTimeout(() => setSaveState({ status: 'idle', message: '' }), 1800);
+      return;
+    }
+    setSaveState({ status: 'saving', message: 'Saving…' });
+    try {
+      const payload = formToServerPayload(form);
+      await apiPatch('/api/me/profile', payload);
+      // Mirror to localStorage so BookNow / consumerTruth still see the fresh
+      // data without re-fetching, and so the form stays populated if the user
+      // navigates away before the next mount fetch resolves.
+      persistLocal();
+      initialRef.current = JSON.stringify(form);
+      setSaveState({ status: 'ok', message: 'Saved.' });
+      setTimeout(() => setSaveState({ status: 'idle', message: '' }), 1800);
+    } catch (err) {
+      setSaveState({ status: 'error', message: err?.message || 'Could not save changes. Please try again.' });
+    }
   };
 
   const handleDiscard = () => {
@@ -521,15 +646,17 @@ export default function MemberAccount() {
           style={{ background: 'hsl(var(--background) / 0.92)', borderColor: BORDER, paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3 md:px-6">
-            <p className="min-w-0 truncate font-body text-[12px]" style={{ color: MUTED }}>
-              You have <span className="font-semibold" style={{ color: TEXT }}>{changeCount} unsaved change{changeCount === 1 ? '' : 's'}</span>.
+            <p className="min-w-0 truncate font-body text-[12px]" style={{ color: saveState.status === 'error' ? BAD : MUTED }}>
+              {saveState.status === 'error'
+                ? saveState.message
+                : (<>You have <span className="font-semibold" style={{ color: TEXT }}>{changeCount} unsaved change{changeCount === 1 ? '' : 's'}</span>.</>)}
             </p>
             <div className="flex shrink-0 items-center gap-2">
-              <button type="button" onClick={handleDiscard} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
+              <button type="button" onClick={handleDiscard} disabled={saveState.status === 'saving'} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-45" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
                 Discard
               </button>
-              <button type="button" onClick={handleSave} className="rounded-xl px-4 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: TEXT, color: INVERT }}>
-                Save changes
+              <button type="button" onClick={handleSave} disabled={saveState.status === 'saving'} className="rounded-xl px-4 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-45" style={{ background: TEXT, color: INVERT }}>
+                {saveState.status === 'saving' ? 'Saving…' : 'Save changes'}
               </button>
             </div>
           </div>

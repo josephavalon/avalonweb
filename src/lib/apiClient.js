@@ -100,3 +100,4 @@ export async function authedFetch(path, options = {}, _retried = false) {
 
 export const apiGet = (path) => authedFetch(path, { method: 'GET' });
 export const apiPost = (path, payload) => authedFetch(path, { method: 'POST', body: JSON.stringify(payload || {}) });
+export const apiPatch = (path, payload) => authedFetch(path, { method: 'PATCH', body: JSON.stringify(payload || {}) });
