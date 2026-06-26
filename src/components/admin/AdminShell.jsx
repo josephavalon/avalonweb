@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AvalonMark from '@/components/AvalonMark';
 import {
   Activity,
+  Bell,
   CalendarCheck,
   CalendarDays,
   ChevronDown,
@@ -157,6 +158,148 @@ function NavGroup({ item, pathname, onNavigate }) {
   );
 }
 
+// Top-right profile menu: name + role + Messages link + per-channel
+// notification toggles. Persists toggles to localStorage for now — the
+// server-side dispatch hook reads from the same key when alerting on a new
+// admin message.
+const ADMIN_NOTIF_KEY = 'av:admin:notif-prefs:v1';
+const DEFAULT_NOTIF_PREFS = { email: true, sms: false };
+
+function readNotifPrefs() {
+  try {
+    if (typeof localStorage === 'undefined') return { ...DEFAULT_NOTIF_PREFS };
+    const raw = localStorage.getItem(ADMIN_NOTIF_KEY);
+    if (!raw) return { ...DEFAULT_NOTIF_PREFS };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_NOTIF_PREFS, ...parsed };
+  } catch { return { ...DEFAULT_NOTIF_PREFS }; }
+}
+
+function writeNotifPrefs(prefs) {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(ADMIN_NOTIF_KEY, JSON.stringify(prefs));
+  } catch { /* ignore */ }
+}
+
+function roleLabel(role) {
+  if (!role) return 'Team';
+  return role
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function ToggleRow({ on, onToggle, label, hint, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={disabled}
+      className="flex w-full items-start justify-between gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-foreground/[0.04] disabled:opacity-50"
+    >
+      <span className="min-w-0">
+        <span className="block font-body text-xs font-semibold text-foreground">{label}</span>
+        {hint ? <span className="mt-0.5 block font-body text-[10px] text-foreground/45">{hint}</span> : null}
+      </span>
+      <span
+        className={`mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors ${on ? 'border-foreground bg-foreground' : 'border-foreground/30 bg-foreground/[0.06]'}`}
+        aria-pressed={on}
+      >
+        <span
+          className={`block h-3.5 w-3.5 rounded-full transition-transform ${on ? 'translate-x-[18px] bg-background' : 'translate-x-[3px] bg-foreground/60'}`}
+        />
+      </span>
+    </button>
+  );
+}
+
+function AdminProfileMenu({ user, onSignOut }) {
+  const [open, setOpen] = useState(false);
+  const [prefs, setPrefs] = useState(() => readNotifPrefs());
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDoc = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const toggle = (key) => {
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    writeNotifPrefs(next);
+  };
+
+  const name = user?.name || user?.fullName || user?.email?.split('@')[0] || 'Admin';
+  const role = roleLabel(user?.role);
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground transition-colors hover:text-foreground/80"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {name.split(' ')[0]}
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-40 mt-2 w-72 overflow-hidden rounded-xl border border-foreground/[0.10] bg-background shadow-[0_18px_60px_rgba(0,0,0,0.6)]"
+        >
+          <div className="border-b border-foreground/[0.08] px-4 py-3">
+            <p className="font-heading text-lg uppercase leading-none">{name}</p>
+            <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/45">{role}</p>
+            {user?.email ? <p className="mt-1.5 truncate font-body text-xs text-foreground/60">{user.email}</p> : null}
+          </div>
+          <Link
+            to="/admin/messages"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between border-b border-foreground/[0.06] px-4 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-foreground/[0.04]"
+          >
+            <span className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5" strokeWidth={1.9} />Messages</span>
+            <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-foreground/35" strokeWidth={2} />
+          </Link>
+          <div className="border-b border-foreground/[0.06] px-2 py-2">
+            <p className="px-2 pb-1.5 font-body text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/40">
+              <Bell className="-mt-0.5 mr-1 inline h-3 w-3" strokeWidth={2.2} />
+              New-message alerts
+            </p>
+            <ToggleRow
+              on={prefs.email}
+              onToggle={() => toggle('email')}
+              label="Email"
+              hint={user?.email || 'No email on file'}
+              disabled={!user?.email}
+            />
+            <ToggleRow
+              on={prefs.sms}
+              onToggle={() => toggle('sms')}
+              label="SMS"
+              hint={user?.phone || 'No phone on file'}
+              disabled={!user?.phone}
+            />
+            <p className="px-2 pt-1 font-body text-[10px] text-foreground/40">
+              Turn either off to stop getting pinged when a patient messages you.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setOpen(false); onSignOut(); }}
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-body text-xs font-semibold text-foreground/60 transition-colors hover:bg-foreground/[0.04] hover:text-foreground"
+          >
+            <LogOut className="h-3.5 w-3.5" strokeWidth={1.9} /> Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminShell({ title = 'Dashboard', actions, children, fullBleed = false }) {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
@@ -225,7 +368,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
           </div>
           <div className="flex items-center gap-3">
             {actions}
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.05] text-foreground/80"><AvalonMark className="h-[15px] w-[10px]" /></span>
+            <AdminProfileMenu user={user} onSignOut={handleSignOut} />
           </div>
         </header>
         <main className={fullBleed
