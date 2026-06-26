@@ -264,11 +264,12 @@ function AdminProfileMenu({ user, onSignOut }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 font-heading text-xl uppercase leading-none tracking-[0.04em] text-foreground transition-colors hover:text-foreground/80"
+        className="inline-flex items-center gap-1.5 text-foreground transition-opacity hover:opacity-80"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label="Open profile menu"
       >
-        {name.split(' ')[0]}
+        <AvalonMark className="h-7 w-[18px] text-foreground" />
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
       </button>
       {open && (
