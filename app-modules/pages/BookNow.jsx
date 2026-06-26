@@ -252,7 +252,7 @@ const THERAPY_GROUPS = [
   },
   {
     key: 'cbd',
-    label: 'IV CBD Therapy',
+    label: 'IV CBD',
     sub: '5 therapies',
     desc: 'Calm · zero THC',
     duration: '60 min',
@@ -5741,7 +5741,7 @@ export default function BookNow() {
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
     ? 'IV THERAPY'
     : activeTherapyGroupData?.key === 'cbd'
-      ? 'IV CBD THERAPY'
+      ? 'IV CBD'
       : 'IV NAD+ THERAPY';
   const isIvTherapyMenuStep = step === 0 && !therapyCategoryScreen && activeTherapyGroupData?.key === 'vitamin';
   const progressDisplay = {

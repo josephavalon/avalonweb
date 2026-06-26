@@ -285,7 +285,7 @@ export default function Menu() {
   const vitaminCount = useMemo(() => protocolItems(vitaminSessions).length, [vitaminSessions]);
   const nadCount = useMemo(() => protocolItems(nadSessions, true).length, [nadSessions]);
   const cbdCount = useMemo(() => protocolItems(cbdSessions, true).length, [cbdSessions]);
-  const allCount = useMemo(() => protocolItems(filtered).length, [filtered]);
+  const allCount = useMemo(() => protocolItems(filtered, true).length, [filtered]);
   const drips = (n) => `${n} drip${n === 1 ? '' : 's'}`;
   const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
 
@@ -315,7 +315,7 @@ export default function Menu() {
             </Foldout>
           </div>
           <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="IV CBD Therapy" icon={CannabisLeaf} meta={drips(cbdCount)} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+            <Foldout title="IV CBD" icon={CannabisLeaf} meta={drips(cbdCount)} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
               <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} expandDoses />
             </Foldout>
           </div>
