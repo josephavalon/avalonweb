@@ -30,22 +30,31 @@ import { canAccessAdminRoute } from '@/lib/adminAccess';
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
 const ACUITY_URL = 'https://avalonvitality.as.me';
 
+// 8 top-level items with detail nested beneath. Keeps the sidebar shallow at
+// the top level (Stripe/Shopify/Linear pattern) — every existing route is still
+// reachable, just grouped by the work they support.
 const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
-  { label: 'Appointments', icon: CalendarCheck, to: '/admin/bookings' },
-  { label: 'Patients', icon: Users, to: '/admin/clients' },
-  { label: 'Memberships', icon: Crown, to: '/admin/memberships' },
-  { label: 'Messages', icon: MessageSquare, to: '/admin/messages' },
+  { label: 'Bookings', icon: CalendarCheck, to: '/admin/bookings' },
+  {
+    label: 'Patients', icon: Users, children: [
+      { label: 'Patient records', to: '/admin/clients' },
+      { label: 'Memberships', to: '/admin/memberships' },
+    ],
+  },
+  { label: 'Communications', icon: MessageSquare, to: '/admin/messages' },
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
-  { label: 'GFE', icon: ClipboardList, to: '/admin/gfe' },
-  { label: 'Acuity', icon: CalendarCheck, href: ACUITY_URL, external: true },
-  { label: 'Users', icon: UserCog, to: '/admin/team' },
-  // Coming-soon placeholders — listed below the working links, all route to the
-  // shared /admin/soon page (?feature names what's coming).
-  { label: 'Inventory', icon: Package, to: '/admin/soon?feature=Inventory' },
-  { label: 'Events', icon: CalendarDays, to: '/admin/soon?feature=Events' },
-  { label: 'Clinical Staff', icon: Stethoscope, to: '/admin/soon?feature=Clinical%20Staff' },
-  { label: 'Tools', icon: Wrench, to: '/admin/soon?feature=Tools' },
+  {
+    label: 'Operations', icon: ShieldCheck, children: [
+      { label: 'GFE policy', to: '/admin/gfe' },
+      { label: 'Acuity', href: ACUITY_URL, external: true },
+      { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
+      { label: 'Events', to: '/admin/soon?feature=Events' },
+      { label: 'Clinical staff', to: '/admin/soon?feature=Clinical%20Staff' },
+      { label: 'Tools', to: '/admin/soon?feature=Tools' },
+    ],
+  },
+  { label: 'Team', icon: UserCog, to: '/admin/team' },
   { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
 ];
 
@@ -72,7 +81,7 @@ function filterNav(nav, role) {
   return nav
     .map((item) => {
       if (item.children) {
-        const children = item.children.filter((c) => canAccessAdminRoute(role, c.to));
+        const children = item.children.filter((c) => c.external || canAccessAdminRoute(role, c.to));
         return children.length ? { ...item, children } : null;
       }
       if (item.external) return item;
@@ -108,6 +117,20 @@ function NavGroup({ item, pathname, onNavigate }) {
           <div className="overflow-hidden">
             <div className="ml-[1.55rem] mt-0.5 grid gap-0.5 border-l border-foreground/12 pl-3">
               {item.children.map((c) => {
+                if (c.external) {
+                  return (
+                    <a
+                      key={c.label}
+                      href={c.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="relative flex items-center justify-between rounded-lg px-3 py-2 font-body text-[12px] font-semibold text-foreground/50 transition-colors hover:text-foreground"
+                    >
+                      {c.label}
+                      <ExternalLink className="h-3 w-3 text-foreground/30" strokeWidth={2} />
+                    </a>
+                  );
+                }
                 const active = pathname === c.to;
                 return (
                   <Link
