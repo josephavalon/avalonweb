@@ -43,7 +43,58 @@ const NAV_LIVE = [
     ],
   },
   { label: 'Communications', icon: MessageSquare, to: '/admin/messages' },
-  { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
+  {
+    label: 'Finance', icon: CreditCard, children: [
+      {
+        label: 'Revenue', children: [
+          { label: 'Revenue Dashboard', to: '/admin/finance' },
+          { label: 'Sales', to: '/admin/soon?feature=Sales' },
+          { label: 'Memberships', to: '/admin/memberships' },
+          { label: 'Analytics', to: '/admin/soon?feature=Revenue%20Analytics' },
+        ],
+      },
+      {
+        label: 'Payments', children: [
+          { label: 'Deposits', to: '/admin/soon?feature=Deposits' },
+          { label: 'Outstanding Balances', to: '/admin/soon?feature=Outstanding%20Balances' },
+          { label: 'Refunds', to: '/admin/soon?feature=Refunds' },
+          { label: 'Transactions', to: '/admin/soon?feature=Transactions' },
+        ],
+      },
+      {
+        label: 'Accounting', children: [
+          { label: 'QuickBooks', to: '/admin/soon?feature=QuickBooks' },
+          { label: 'Reconciliation', to: '/admin/soon?feature=Reconciliation' },
+          { label: 'P&L', to: '/admin/soon?feature=P%26L' },
+          { label: 'Expenses', to: '/admin/soon?feature=Expenses' },
+        ],
+      },
+      {
+        label: 'Banking', children: [
+          { label: 'Mercury', to: '/admin/soon?feature=Mercury' },
+          { label: 'Accounts', to: '/admin/soon?feature=Accounts' },
+          { label: 'Cash Flow', to: '/admin/soon?feature=Cash%20Flow' },
+          { label: 'Transfers', to: '/admin/soon?feature=Transfers' },
+        ],
+      },
+      {
+        label: 'Payroll', children: [
+          { label: 'Gusto', to: '/admin/soon?feature=Gusto' },
+          { label: 'Contractors', to: '/admin/soon?feature=Contractors' },
+          { label: 'Payroll Runs', to: '/admin/soon?feature=Payroll%20Runs' },
+          { label: 'Tax Documents', to: '/admin/soon?feature=Tax%20Documents' },
+        ],
+      },
+      {
+        label: 'Reports', children: [
+          { label: 'Executive Dashboard', to: '/admin/soon?feature=Executive%20Dashboard' },
+          { label: 'Financial Reports', to: '/admin/soon?feature=Financial%20Reports' },
+          { label: 'Forecasting', to: '/admin/soon?feature=Forecasting' },
+          { label: 'Export', to: '/admin/soon?feature=Export' },
+        ],
+      },
+    ],
+  },
   {
     label: 'Operations', icon: ShieldCheck, children: [
       { label: 'Team', to: '/admin/team' },
@@ -81,7 +132,9 @@ function filterNav(nav, role) {
   return nav
     .map((item) => {
       if (item.children) {
-        const children = item.children.filter((c) => c.external || canAccessAdminRoute(role, c.to));
+        // Recursively filter so nested groups (e.g. Finance → Revenue → items)
+        // strip leaves the role can't reach AND drop empty subgroups.
+        const children = filterNav(item.children, role);
         return children.length ? { ...item, children } : null;
       }
       if (item.external) return item;
@@ -91,8 +144,71 @@ function filterNav(nav, role) {
     .filter(Boolean);
 }
 
+// Deep-active = any descendant route (Finance → Revenue → Revenue Dashboard) matches.
+function isItemActive(item, pathname) {
+  if (item.children) return item.children.some((c) => isItemActive(c, pathname));
+  if (!item.to) return false;
+  return pathname === item.to || pathname.startsWith(`${item.to}/`);
+}
+
+function NestedGroup({ item, pathname, onNavigate }) {
+  const childActive = item.children?.some((c) => isItemActive(c, pathname));
+  const [open, setOpen] = useState(Boolean(childActive));
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-colors ${
+          childActive ? 'text-foreground' : 'text-foreground/55 hover:text-foreground'
+        }`}
+      >
+        {item.label}
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+      </button>
+      <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden">
+          <div className="ml-3 mt-0.5 grid gap-px border-l border-foreground/10 pl-2">
+            {item.children.map((c) => <ChildLeaf key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChildLeaf({ item, pathname, onNavigate }) {
+  if (item.external) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noreferrer"
+        className="relative flex items-center justify-between rounded-lg px-3 py-1.5 font-body text-[11px] font-medium text-foreground/45 transition-colors hover:text-foreground"
+      >
+        {item.label}
+        <ExternalLink className="h-3 w-3 text-foreground/30" strokeWidth={2} />
+      </a>
+    );
+  }
+  const active = pathname === item.to;
+  return (
+    <Link
+      to={item.to}
+      onClick={onNavigate}
+      className={`relative rounded-lg px-3 py-1.5 font-body text-[11px] font-medium transition-colors ${
+        active ? 'bg-foreground/[0.08] text-foreground' : 'text-foreground/45 hover:text-foreground'
+      }`}
+    >
+      {active && <span className="absolute -left-[calc(0.5rem+1px)] top-1/2 h-3.5 w-px -translate-y-1/2 bg-foreground" />}
+      {item.label}
+    </Link>
+  );
+}
+
 function NavGroup({ item, pathname, onNavigate }) {
-  const childActive = item.children?.some((c) => pathname === c.to || pathname.startsWith(`${c.to}/`));
+  const childActive = item.children?.some((c) => isItemActive(c, pathname));
   const [open, setOpen] = useState(Boolean(childActive));
   const Icon = item.icon;
 
@@ -116,36 +232,11 @@ function NavGroup({ item, pathname, onNavigate }) {
         <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
             <div className="ml-[1.55rem] mt-0.5 grid gap-0.5 border-l border-foreground/12 pl-3">
-              {item.children.map((c) => {
-                if (c.external) {
-                  return (
-                    <a
-                      key={c.label}
-                      href={c.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="relative flex items-center justify-between rounded-lg px-3 py-2 font-body text-[12px] font-semibold text-foreground/50 transition-colors hover:text-foreground"
-                    >
-                      {c.label}
-                      <ExternalLink className="h-3 w-3 text-foreground/30" strokeWidth={2} />
-                    </a>
-                  );
-                }
-                const active = pathname === c.to;
-                return (
-                  <Link
-                    key={c.label}
-                    to={c.to}
-                    onClick={onNavigate}
-                    className={`relative rounded-lg px-3 py-2 font-body text-[12px] font-semibold transition-colors ${
-                      active ? 'bg-foreground/[0.08] text-foreground' : 'text-foreground/50 hover:text-foreground'
-                    }`}
-                  >
-                    {active && <span className="absolute -left-[calc(0.75rem+1px)] top-1/2 h-4 w-px -translate-y-1/2 bg-foreground" />}
-                    {c.label}
-                  </Link>
-                );
-              })}
+              {item.children.map((c) => (
+                c.children
+                  ? <NestedGroup key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
+                  : <ChildLeaf key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
+              ))}
             </div>
           </div>
         </div>
