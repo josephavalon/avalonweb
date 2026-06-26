@@ -35,6 +35,9 @@ import { cycleTheme, getThemeLabel, readStoredTheme } from '@/lib/theme';
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
 const ACUITY_URL = 'https://avalonvitality.as.me';
 
+// Roadmap leaves that aren't built yet route to the shared coming-soon stub.
+const soon = (feature) => `/admin/soon?feature=${encodeURIComponent(feature)}`;
+
 // 8 top-level items with detail nested beneath. Keeps the sidebar shallow at
 // the top level (Stripe/Shopify/Linear pattern) — every existing route is still
 // reachable, just grouped by the work they support.
@@ -57,51 +60,108 @@ const NAV_LIVE = [
   {
     label: 'Finance', icon: CreditCard, children: [
       {
-        label: 'Revenue', children: [
-          { label: 'Revenue Dashboard', to: '/admin/finance' },
-          { label: 'Sales', to: '/admin/soon?feature=Sales' },
-          { label: 'Memberships', to: '/admin/memberships' },
-          { label: 'Analytics', to: '/admin/soon?feature=Revenue%20Analytics' },
+        label: 'Executive', children: [
+          { label: 'Dashboard', to: '/admin/finance' },
+          { label: 'KPI Scorecard', to: soon('KPI Scorecard') },
+          { label: 'Cash Position', to: soon('Cash Position') },
+          { label: 'Runway', to: soon('Runway') },
+          { label: 'Financial Calendar', to: soon('Financial Calendar') },
         ],
       },
       {
-        label: 'Payments', children: [
-          { label: 'Deposits', to: '/admin/soon?feature=Deposits' },
-          { label: 'Outstanding Balances', to: '/admin/soon?feature=Outstanding%20Balances' },
-          { label: 'Refunds', to: '/admin/soon?feature=Refunds' },
-          { label: 'Transactions', to: '/admin/soon?feature=Transactions' },
+        label: 'Revenue & Payments', children: [
+          { label: 'Revenue Dashboard', to: soon('Revenue Dashboard') },
+          { label: 'Sales', to: soon('Sales') },
+          { label: 'Memberships', to: soon('Memberships') },
+          { label: 'Packages', to: soon('Packages') },
+          { label: 'Gift Cards', to: soon('Gift Cards') },
+          { label: 'Discounts', to: soon('Discounts') },
+          { label: 'Transactions', to: soon('Transactions') },
+          { label: 'Deposits', to: soon('Deposits') },
+          { label: 'Outstanding Balances', to: soon('Outstanding Balances') },
+          { label: 'Invoices', to: soon('Invoices') },
+          { label: 'Refunds', to: soon('Refunds') },
+          { label: 'Chargebacks', to: soon('Chargebacks') },
         ],
       },
       {
-        label: 'Accounting', children: [
-          { label: 'QuickBooks', to: '/admin/soon?feature=QuickBooks' },
-          { label: 'Reconciliation', to: '/admin/soon?feature=Reconciliation' },
-          { label: 'P&L', to: '/admin/soon?feature=P%26L' },
-          { label: 'Expenses', to: '/admin/soon?feature=Expenses' },
+        label: 'Banking & Accounting', children: [
+          { label: 'Cash Flow', to: soon('Cash Flow') },
+          { label: 'Bank Accounts', to: soon('Bank Accounts') },
+          { label: 'Transfers', to: soon('Transfers') },
+          { label: 'Bank Reconciliation', to: soon('Bank Reconciliation') },
+          { label: 'Profit & Loss', to: soon('Profit & Loss') },
+          { label: 'Balance Sheet', to: soon('Balance Sheet') },
+          { label: 'Cash Flow Statement', to: soon('Cash Flow Statement') },
+          { label: 'General Ledger', to: soon('General Ledger') },
+          { label: 'Journal Entries', to: soon('Journal Entries') },
+          { label: 'Chart of Accounts', to: soon('Chart of Accounts') },
+          { label: 'Closing Periods', to: soon('Closing Periods') },
+          { label: 'Mercury', to: soon('Mercury') },
+          { label: 'QuickBooks', to: soon('QuickBooks') },
         ],
       },
       {
-        label: 'Banking', children: [
-          { label: 'Mercury', to: '/admin/soon?feature=Mercury' },
-          { label: 'Accounts', to: '/admin/soon?feature=Accounts' },
-          { label: 'Cash Flow', to: '/admin/soon?feature=Cash%20Flow' },
-          { label: 'Transfers', to: '/admin/soon?feature=Transfers' },
+        label: 'Expenses & Payroll', children: [
+          { label: 'Operating Expenses', to: soon('Operating Expenses') },
+          { label: 'Vendor Bills', to: soon('Vendor Bills') },
+          { label: 'Employee Reimbursements', to: soon('Employee Reimbursements') },
+          { label: 'Mileage', to: soon('Mileage') },
+          { label: 'Corporate Cards', to: soon('Corporate Cards') },
+          { label: 'Employees', to: soon('Employees') },
+          { label: 'Contractors', to: soon('Contractors') },
+          { label: 'Payroll Runs', to: soon('Payroll Runs') },
+          { label: 'Benefits', to: soon('Benefits') },
+          { label: 'Payroll Taxes', to: soon('Payroll Taxes') },
+          { label: 'Tax Documents', to: soon('Tax Documents') },
+          { label: 'Gusto', to: soon('Gusto') },
         ],
       },
       {
-        label: 'Payroll', children: [
-          { label: 'Gusto', to: '/admin/soon?feature=Gusto' },
-          { label: 'Contractors', to: '/admin/soon?feature=Contractors' },
-          { label: 'Payroll Runs', to: '/admin/soon?feature=Payroll%20Runs' },
-          { label: 'Tax Documents', to: '/admin/soon?feature=Tax%20Documents' },
+        label: 'Inventory Finance', children: [
+          { label: 'Inventory Value', to: soon('Inventory Value') },
+          { label: 'COGS', to: soon('COGS') },
+          { label: 'Purchase Orders', to: soon('Purchase Orders') },
+          { label: 'Vendor Spend', to: soon('Vendor Spend') },
+          { label: 'Inventory Turnover', to: soon('Inventory Turnover') },
+          { label: 'Expired Inventory', to: soon('Expired Inventory') },
+          { label: 'Shrinkage', to: soon('Shrinkage') },
+          { label: 'Cost Analysis', to: soon('Cost Analysis') },
         ],
       },
       {
-        label: 'Reports', children: [
-          { label: 'Executive Dashboard', to: '/admin/soon?feature=Executive%20Dashboard' },
-          { label: 'Financial Reports', to: '/admin/soon?feature=Financial%20Reports' },
-          { label: 'Forecasting', to: '/admin/soon?feature=Forecasting' },
-          { label: 'Export', to: '/admin/soon?feature=Export' },
+        label: 'Planning & Metrics', children: [
+          { label: 'Financial Metrics', to: soon('Financial Metrics') },
+          { label: 'Growth Metrics', to: soon('Growth Metrics') },
+          { label: 'Unit Economics', to: soon('Unit Economics') },
+          { label: 'Revenue per Nurse', to: soon('Revenue per Nurse') },
+          { label: 'Revenue per Visit', to: soon('Revenue per Visit') },
+          { label: 'Gross Margin by Service', to: soon('Gross Margin by Service') },
+          { label: 'Gross Margin by Market', to: soon('Gross Margin by Market') },
+          { label: 'Revenue Forecast', to: soon('Revenue Forecast') },
+          { label: 'Cash Forecast', to: soon('Cash Forecast') },
+          { label: 'Budget', to: soon('Budget') },
+          { label: 'Budget vs Actual', to: soon('Budget vs Actual') },
+          { label: 'Hiring Forecast', to: soon('Hiring Forecast') },
+          { label: 'Scenario Planning', to: soon('Scenario Planning') },
+        ],
+      },
+      {
+        label: 'Reports & Fundraising', children: [
+          { label: 'Executive Reports', to: soon('Executive Reports') },
+          { label: 'Financial Statements', to: soon('Financial Statements') },
+          { label: 'Revenue Reports', to: soon('Revenue Reports') },
+          { label: 'Expense Reports', to: soon('Expense Reports') },
+          { label: 'Payroll Reports', to: soon('Payroll Reports') },
+          { label: 'Inventory Reports', to: soon('Inventory Reports') },
+          { label: 'Tax Reports', to: soon('Tax Reports') },
+          { label: 'Custom Reports', to: soon('Custom Reports') },
+          { label: 'Financial Model', to: soon('Financial Model') },
+          { label: 'Cap Table', to: soon('Cap Table') },
+          { label: 'SAFE Notes', to: soon('SAFE Notes') },
+          { label: 'Investors', to: soon('Investors') },
+          { label: 'Data Room', to: soon('Data Room') },
+          { label: 'Board Reports', to: soon('Board Reports') },
         ],
       },
     ],
