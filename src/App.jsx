@@ -156,6 +156,7 @@ const AdminAcuityControl = lazyRoute(() => import('./pages/admin/AcuityControl')
 const AdminAttioControl = lazyRoute(() => import('./pages/admin/AttioControl'));
 const AdminPatientRecords = lazyRoute(() => import('./pages/admin/PatientRecords'));
 const AdminClientDetail = lazyRoute(() => import('./pages/admin/ClientDetail'));
+const AdminMemberships = lazyRoute(() => import('./pages/admin/Memberships'));
 const AdminMessages = lazyRoute(() => import('./pages/admin/Messages'));
 const AdminInbox = lazyRoute(() => import('./pages/admin/Inbox'));
 const AdminGfeSettings = lazyRoute(() => import('./pages/admin/GfeSettings'));
@@ -373,6 +374,7 @@ function AppRoutes() {
             <Route path="/admin/acuity" element={<RequireAuth allowedRoles={['admin']}><AdminAcuityControl /></RequireAuth>} />
             <Route path="/admin/clients" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminPatientRecords /></RequireAuth>} />
             <Route path="/admin/clients/:id" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminClientDetail /></RequireAuth>} />
+            <Route path="/admin/memberships" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminMemberships /></RequireAuth>} />
             <Route path="/admin/messages" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminMessages /></RequireAuth>} />
             <Route path="/admin/inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInbox /></RequireAuth>} />
             <Route path="/admin/gfe" element={<RequireAuth allowedRoles={['admin']}><AdminGfeSettings /></RequireAuth>} />
