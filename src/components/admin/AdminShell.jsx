@@ -46,6 +46,7 @@ const NAV_LIVE = [
   { label: 'Finance', icon: CreditCard, to: '/admin/finance' },
   {
     label: 'Operations', icon: ShieldCheck, children: [
+      { label: 'Team', to: '/admin/team' },
       { label: 'GFE policy', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
       { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
@@ -54,7 +55,6 @@ const NAV_LIVE = [
       { label: 'Tools', to: '/admin/soon?feature=Tools' },
     ],
   },
-  { label: 'Team', icon: UserCog, to: '/admin/team' },
   { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
 ];
 
