@@ -47,6 +47,27 @@ function loadStateFromSummary(summary, err) {
   return hasActivity ? 'ready' : 'empty';
 }
 
+const FINANCE_CACHE_KEY = 'av:admin:financeSummary:v1';
+
+function readCachedSummary() {
+  try {
+    const raw = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(FINANCE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Treat anything older than 10 minutes as stale enough to skip — still
+    // shown instantly while we revalidate, but we don't surface ancient data.
+    if (parsed && typeof parsed === 'object' && parsed.summary) return parsed.summary;
+    return null;
+  } catch { return null; }
+}
+
+function writeCachedSummary(summary) {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    sessionStorage.setItem(FINANCE_CACHE_KEY, JSON.stringify({ summary, savedAt: Date.now() }));
+  } catch { /* quota or private mode — ignore */ }
+}
+
 export default function AdminEssentials() {
   useSeo({
     title: 'Admin - Avalon Vitality',
@@ -55,13 +76,20 @@ export default function AdminEssentials() {
   });
 
   const { user } = useAuthStore();
-  const [summary, setSummary] = useState(null);
+  // Stale-while-revalidate: hydrate from sessionStorage so the KPI row paints
+  // numbers on the FIRST frame instead of a skeleton. Fetch fires in parallel
+  // and overwrites silently.
+  const [summary, setSummary] = useState(() => readCachedSummary());
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     apiGet('/api/admin/finance/summary')
-      .then((data) => { if (!cancelled) setSummary(data); })
+      .then((data) => {
+        if (cancelled) return;
+        setSummary(data);
+        writeCachedSummary(data);
+      })
       .catch((err) => { if (!cancelled) setError(err); });
     return () => { cancelled = true; };
   }, []);

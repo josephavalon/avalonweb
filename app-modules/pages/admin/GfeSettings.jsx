@@ -94,15 +94,6 @@ export default function GfeSettings() {
     <AdminShell title="GFE">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
         <div className="mx-auto max-w-3xl px-4 py-6 md:px-8 md:py-10">
-          <div className="mb-6 flex items-start gap-3 rounded-2xl px-4 py-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
-            <Stethoscope className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} style={{ color: MUTED }} />
-            <p className="font-body text-xs leading-relaxed" style={{ color: MUTED }}>
-              Turn a category <span style={{ color: TEXT }}>ON</span> and Qualiphy auto-conducts the Good Faith Exam for patients
-              who book in it (skipped if they already have a valid GFE on file). <span style={{ color: TEXT }}>OFF</span> → an Avalon
-              NP does the GFE in Acuity. Either way it lands on the Acuity appointment and syncs to the patient profile.
-            </p>
-          </div>
-
           {loading ? (
             <div className="flex items-center gap-3 rounded-2xl px-4 py-4" style={{ background: CARD, border: `1px solid ${BORDER}`, color: MUTED }}>
               <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Loading…
@@ -140,6 +131,15 @@ export default function GfeSettings() {
                   <span className="font-body text-sm">{result.message}</span>
                 </div>
               ) : null}
+
+              <div className="mt-6 flex items-start gap-3 rounded-2xl px-4 py-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+                <Stethoscope className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} style={{ color: MUTED }} />
+                <p className="font-body text-xs leading-relaxed" style={{ color: MUTED }}>
+                  Turn a category <span style={{ color: TEXT }}>ON</span> and Qualiphy auto-conducts the Good Faith Exam for patients
+                  who book in it (skipped if they already have a valid GFE on file). <span style={{ color: TEXT }}>OFF</span> → an Avalon
+                  NP does the GFE in Acuity. Either way it lands on the Acuity appointment and syncs to the patient profile.
+                </p>
+              </div>
             </>
           ) : (
             <div className="rounded-2xl px-4 py-10 text-center" style={{ background: CARD, border: `1px solid ${BORDER}` }}>

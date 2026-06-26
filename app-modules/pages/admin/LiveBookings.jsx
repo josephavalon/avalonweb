@@ -177,7 +177,7 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
   const needsScheduling = booking.reconciliationStatus === 'action_required' && !booking.acuityAppointmentId;
 
   return (
-    <div className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+    <div className="rounded-2xl px-4 py-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 border-t pt-3 sm:grid-cols-3" style={{ borderColor: BORDER }}>
+      <div className="mt-3 grid gap-2 border-t pt-2.5 sm:grid-cols-3" style={{ borderColor: BORDER }}>
         <div>
           <p className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Visit Total</p>
           <p className="mt-1 font-body text-sm font-semibold">{money(booking.visitSubtotal || 0)}</p>
@@ -235,7 +235,7 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
       </div>
 
       {(collectable || needsScheduling) ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
           {needsScheduling ? (
             <button
               type="button"
@@ -279,58 +279,57 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
         </div>
       ) : null}
 
-      {/* SMS reminders — gated on the client's opt-in (45 CFR §164.522). */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: BORDER }}>
+      {/* SMS reminders (45 CFR §164.522) + edit/delete — single tight action row */}
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t pt-2.5" style={{ borderColor: BORDER }}>
         <span className="inline-flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: booking.smsConsent ? 'hsl(150 60% 45%)' : DIM }}>
           <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
-          {booking.smsConsent ? 'Text reminders: opted in' : 'Text reminders: not consented'}
+          {booking.smsConsent ? 'SMS: opted in' : 'SMS: no consent'}
         </span>
         <button
           type="button"
           disabled={consentBusy || !booking.customerPhone}
           onClick={() => onToggleConsent(booking, !booking.smsConsent)}
           title={!booking.customerPhone ? 'No phone number on file' : undefined}
-          className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-opacity hover:opacity-80 disabled:opacity-40"
+          className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-40"
           style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
         >
           {consentBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : null}
-          {booking.smsConsent ? 'Revoke consent' : 'Record consent'}
+          {booking.smsConsent ? 'Revoke' : 'Record'}
         </button>
         {booking.smsConsent && booking.customerPhone ? (
           <button
             type="button"
             disabled={reminderBusy}
             onClick={() => onSendReminder(booking)}
-            className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-opacity hover:opacity-80 disabled:opacity-40"
+            className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-40"
             style={{ background: TEXT, color: INVERT }}
           >
             {reminderBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <BellRing className="h-3.5 w-3.5" strokeWidth={2} />}
-            Send reminder
+            Remind
           </button>
         ) : null}
-      </div>
-
-      <div className="mt-3 flex items-center justify-end gap-1 border-t pt-3" style={{ borderColor: BORDER }}>
-        <button
-          type="button"
-          disabled={saveBusy}
-          onClick={() => (editing ? onCancelEdit() : onEdit(booking))}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity hover:opacity-80 disabled:opacity-50"
-          style={{ color: MUTED }}
-        >
-          {editing ? <X className="h-3.5 w-3.5" strokeWidth={2} /> : <Pencil className="h-3.5 w-3.5" strokeWidth={2} />}
-          {editing ? 'Close' : 'Edit'}
-        </button>
-        <button
-          type="button"
-          disabled={deleteBusy}
-          onClick={() => onDelete(booking)}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-opacity hover:opacity-80 disabled:opacity-50"
-          style={{ color: 'hsl(0 70% 62%)' }}
-        >
-          {deleteBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />}
-          Delete
-        </button>
+        <span className="ml-auto inline-flex items-center gap-1">
+          <button
+            type="button"
+            disabled={saveBusy}
+            onClick={() => (editing ? onCancelEdit() : onEdit(booking))}
+            className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-50"
+            style={{ color: MUTED }}
+          >
+            {editing ? <X className="h-3.5 w-3.5" strokeWidth={2} /> : <Pencil className="h-3.5 w-3.5" strokeWidth={2} />}
+            {editing ? 'Close' : 'Edit'}
+          </button>
+          <button
+            type="button"
+            disabled={deleteBusy}
+            onClick={() => onDelete(booking)}
+            className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-50"
+            style={{ color: 'hsl(0 70% 62%)' }}
+          >
+            {deleteBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />}
+            Delete
+          </button>
+        </span>
       </div>
 
       {editing ? <EditForm booking={booking} busy={saveBusy} onSave={onSave} onCancel={onCancelEdit} /> : null}
