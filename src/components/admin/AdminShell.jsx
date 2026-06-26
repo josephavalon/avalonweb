@@ -181,28 +181,31 @@ function isItemActive(item, pathname) {
   return pathname === item.to || pathname.startsWith(`${item.to}/`);
 }
 
-function NestedGroup({ item, pathname, onNavigate }) {
+function NestedGroup({ item, pathname, onNavigate, depth = 1 }) {
   const childActive = item.children?.some((c) => isItemActive(c, pathname));
   const [open, setOpen] = useState(Boolean(childActive));
+  // Uppercase at every level; hierarchy reads through opacity + indentation,
+  // not casing or size. Deeper group headers sit one step quieter.
+  const idleColor = depth >= 2 ? 'text-foreground/45' : 'text-foreground/65';
   return (
     <div>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-colors ${
-          childActive ? 'text-foreground' : 'text-foreground/55 hover:text-foreground'
+        className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
+          childActive ? 'text-foreground' : `${idleColor} hover:text-foreground`
         }`}
       >
         {item.label}
-        <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.2} />
       </button>
       <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
         <div className="overflow-hidden">
-          <div className="ml-3 mt-0.5 grid gap-px border-l border-foreground/10 pl-2">
+          <div className="ml-3 mt-0.5 grid gap-0.5 border-l border-foreground/10 pl-3">
             {item.children.map((c) => (
               c.children
-                ? <NestedGroup key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
+                ? <NestedGroup key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} depth={depth + 1} />
                 : <ChildLeaf key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
             ))}
           </div>
@@ -219,10 +222,10 @@ function ChildLeaf({ item, pathname, onNavigate }) {
         href={item.href}
         target="_blank"
         rel="noreferrer"
-        className="relative flex items-center justify-between rounded-lg px-3 py-1.5 font-body text-[11px] font-medium text-foreground/45 transition-colors hover:text-foreground"
+        className="relative flex items-center justify-between rounded-lg px-3 py-1.5 font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground"
       >
         {item.label}
-        <ExternalLink className="h-3 w-3 text-foreground/30" strokeWidth={2} />
+        <ExternalLink className="h-3 w-3 shrink-0 text-foreground/30" strokeWidth={2} />
       </a>
     );
   }
@@ -231,11 +234,11 @@ function ChildLeaf({ item, pathname, onNavigate }) {
     <Link
       to={item.to}
       onClick={onNavigate}
-      className={`relative rounded-lg px-3 py-1.5 font-body text-[11px] font-medium transition-colors ${
+      className={`relative rounded-lg px-3 py-1.5 font-body text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
         active ? 'bg-foreground/[0.08] text-foreground' : 'text-foreground/45 hover:text-foreground'
       }`}
     >
-      {active && <span className="absolute -left-[calc(0.5rem+1px)] top-1/2 h-3.5 w-px -translate-y-1/2 bg-foreground" />}
+      {active && <span className="absolute -left-[calc(0.75rem+1px)] top-1/2 h-3.5 w-px -translate-y-1/2 bg-foreground" />}
       {item.label}
     </Link>
   );
@@ -265,10 +268,10 @@ function NavGroup({ item, pathname, onNavigate }) {
         </button>
         <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
-            <div className="ml-[1.55rem] mt-0.5 grid gap-0.5 border-l border-foreground/12 pl-3">
+            <div className="ml-3 mt-0.5 grid gap-0.5 border-l border-foreground/10 pl-3">
               {item.children.map((c) => (
                 c.children
-                  ? <NestedGroup key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
+                  ? <NestedGroup key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} depth={1} />
                   : <ChildLeaf key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
               ))}
             </div>

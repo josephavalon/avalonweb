@@ -15,11 +15,12 @@ function fmtMoney(amount) {
 }
 
 function Kpi({ label, value, loading }) {
+  // Ledger cell: borderless, centered — the band's hairlines do the separating.
   return (
-    <div className="rounded-2xl border border-foreground/[0.10] bg-foreground/[0.04] px-4 py-3.5">
+    <div className="px-4 py-5 text-center">
       <p className="font-body text-[9px] font-bold uppercase tracking-[0.2em] text-foreground/40">{label}</p>
       {loading ? (
-        <div className="mt-2 h-7 w-16 animate-pulse rounded bg-foreground/[0.08]" />
+        <div className="mx-auto mt-2.5 h-7 w-14 animate-pulse rounded bg-foreground/[0.08]" />
       ) : (
         <p className="mt-2 font-heading text-3xl uppercase leading-none md:text-4xl">{value}</p>
       )}
@@ -106,7 +107,7 @@ export default function AdminEssentials() {
           context="admin"
           source="Admin portal"
           triggerLabel="Add Patient"
-          triggerClassName="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl border border-foreground bg-foreground px-5 font-body text-xs font-black uppercase tracking-[0.14em] text-background transition-transform active:scale-[0.99]"
+          triggerClassName="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl border border-foreground/70 bg-foreground/[0.06] px-5 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground active:scale-[0.99]"
         />
         <Link
           to="/admin/bookings"
@@ -118,7 +119,7 @@ export default function AdminEssentials() {
 
       {/* KPIs — skeleton while loading, real data when ready, hidden on welcome states */}
       {(state === 'loading' || state === 'ready') && (
-        <div className="mt-4 grid grid-cols-2 gap-2.5 md:grid-cols-4" data-testid="admin-kpis" data-state={state}>
+        <div className="mt-4 grid grid-cols-2 divide-x divide-y divide-foreground/[0.08] border-y border-foreground/[0.10] md:grid-cols-4 md:divide-y-0" data-testid="admin-kpis" data-state={state}>
           {state === 'loading'
             ? ['Revenue 30d', 'Balances Due', 'Outstanding Visits', 'Active Plans'].map((label) => (
                 <Kpi key={label} label={label} loading />
@@ -129,7 +130,7 @@ export default function AdminEssentials() {
 
       {/* Ready to collect — real outstanding rows when present */}
       {state === 'ready' && outstandingRows.length > 0 && (
-        <section className="mt-6 overflow-hidden rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.03]">
+        <section className="mt-6 overflow-hidden rounded-[1.4rem] border border-foreground/[0.10]">
           <div className="flex items-center justify-between border-b border-foreground/[0.08] px-5 py-4">
             <h2 className="font-heading text-2xl uppercase leading-none">Ready to Collect</h2>
             <Link to="/admin/bookings" className="inline-flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50 transition-colors hover:text-foreground">
@@ -147,7 +148,7 @@ export default function AdminEssentials() {
                 <p className="font-heading text-lg leading-none text-foreground">{fmtMoney(r.balanceDue)}</p>
                 <Link
                   to="/admin/bookings"
-                  className="justify-self-start whitespace-nowrap rounded-xl border border-foreground/82 bg-foreground px-3.5 py-2 font-body text-[10px] font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] md:justify-self-end"
+                  className="justify-self-start whitespace-nowrap rounded-xl border border-foreground/70 px-3.5 py-2 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-foreground hover:text-background md:justify-self-end"
                 >
                   Complete &amp; Collect
                 </Link>
