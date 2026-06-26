@@ -140,7 +140,7 @@ const NAV_LIVE = [
           { label: 'Clinical Inventory', to: '/admin/soon?feature=Clinical%20Inventory' },
         ],
       },
-      { label: 'GFE policy', to: '/admin/gfe' },
+      { label: 'GFE', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
       { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
       { label: 'Events', to: '/admin/soon?feature=Events' },

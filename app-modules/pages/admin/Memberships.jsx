@@ -329,11 +329,13 @@ export default function AdminMemberships() {
     <AdminShell title="Memberships">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>God-view</p>
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>All plan-holders</p>
           <div className="mt-1 flex items-center gap-2.5">
             <Crown className="h-5 w-5" strokeWidth={1.8} style={{ color: TEXT }} />
             <h2 className="font-heading text-2xl uppercase leading-none md:text-3xl" style={{ color: TEXT }}>
-              {summary ? `${summary.count} active ${summary.count === 1 ? 'plan' : 'plans'}` : 'Loading…'}
+              {summary
+                ? `${summary.count} active ${summary.count === 1 ? 'plan' : 'plans'}`
+                : (loading ? 'Loading…' : '0 active plans')}
             </h2>
             {summary && (
               <span className="font-body text-sm" style={{ color: MUTED }}>· {fmtMoney(summary.mrr)}/mo MRR</span>

@@ -10,7 +10,7 @@
 export const STAFF_ROUTES = Object.freeze([
   '/admin', // dashboard
   '/admin/clients', // patient records (live, derived from bookings)
-  '/admin/memberships', // god-view of every active plan-holder
+  '/admin/memberships', // master list of every active plan-holder
   '/admin/inbox', // two-way client message threads
   '/admin/messages', // PHI-free client texting (Quo)
   '/admin/crm', // preview-only patients/customer surface

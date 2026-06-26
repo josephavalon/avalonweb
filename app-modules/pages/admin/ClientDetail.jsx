@@ -1,7 +1,7 @@
 /**
  * Patient detail — /admin/clients/:id
  *
- * Staff/admin "god view" of a single patient. Mirrors the look-and-feel of the
+ * Staff/admin full view of a single patient. Mirrors the look-and-feel of the
  * member Account page (so the form maps 1:1 between what the patient sees and
  * what staff edits) and adds admin-only sections: plan & credits, payment
  * methods, appointment history, and the audit trail.
