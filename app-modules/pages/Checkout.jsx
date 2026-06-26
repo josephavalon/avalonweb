@@ -19,6 +19,7 @@ import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
 import { hasValidCheckoutContact } from '@/lib/checkoutValidation';
 import { extractZip } from '@/lib/serviceArea';
+import { useAuthStore } from '@/lib/useAuthStore';
 
 function hasCompleteContact(contact = {}) {
   return hasValidCheckoutContact(contact);
@@ -769,6 +770,29 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   };
   const contactReady = hasCompleteContact(checkoutContact);
 
+  // Wave-3: account intent on checkout.
+  // - Plans REQUIRE an account: if not signed in, we collect name+email up
+  //   front and bundle it as `signupIntent`; the API provisions an auth user
+  //   so the welcome email is a real magic link.
+  // - One-time checkouts get a tiny opt-in checkbox — if checked, we also
+  //   send `signupIntent` so the recipient can sign in immediately. If not,
+  //   the welcome email still goes out post-fulfillment (CTA → /signup with
+  //   the email pre-filled).
+  const { user: authedUser } = useAuthStore();
+  const isSignedIn = Boolean(authedUser);
+  const planAccountRequired = Boolean(membership) && !isSignedIn;
+  const [createAccountOptIn, setCreateAccountOptIn] = useState(false);
+  // For the plan-gate we ALWAYS need an account on submit, so signupIntent is
+  // implicit when membership is set and the user is not signed in.
+  const signupIntent = (planAccountRequired || (!membership && createAccountOptIn))
+    ? {
+        email: checkoutContact.email,
+        name: checkoutContact.name,
+        firstName: checkoutContact.firstName,
+        lastName: checkoutContact.lastName,
+      }
+    : null;
+
   const itemsTotal = cartItemsTotal(items);
   const hasMembership = !!membership;
   const hasItems = items.length > 0;
@@ -833,6 +857,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             phone: checkoutContact.phone,
           },
           paymentMethod,
+          ...(signupIntent ? { signupIntent } : {}),
           appointment: appointment
             ? {
                 address: appointment.address,
@@ -864,7 +889,11 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Something went wrong');
+      if (!res.ok) {
+        const err = new Error(data.error || 'Something went wrong');
+        err.code = data.code;
+        throw err;
+      }
       orchestrateOrderHandoff({
         id: `CHK-${Date.now().toString().slice(-6)}`,
         service: membership ? membershipTitle : (items[0]?.label || 'Avalon visit'),
@@ -908,7 +937,13 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       setLoading(false);
     } catch (err) {
       checkoutInFlightRef.current = false;
-      setError('Checkout could not be started. Please try again or contact Avalon.');
+      if (err?.code === 'plan_requires_account') {
+        setError('Plan purchases require an account. Add your name and email above, or sign in first.');
+      } else if (err?.code === 'signup_intent_failed') {
+        setError('We could not finish setting up your account. Please try again or contact Avalon.');
+      } else {
+        setError(err?.message || 'Checkout could not be started. Please try again or contact Avalon.');
+      }
       setLoading(false);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'legacy_checkout',
@@ -1034,6 +1069,47 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Wave-3 account intent — plan gate or one-time opt-in */}
+      {hasMembership && isSignedIn && (
+        <div className="rounded-2xl border border-foreground/10 bg-background/32 px-4 py-3 backdrop-blur-xl flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-body text-[12px] tracking-[0.22em] uppercase text-foreground/45">Signed in</p>
+            <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">{authedUser?.email || authedUser?.username || 'Your account'}</p>
+          </div>
+          <Link to="/login?next=/checkout" className="shrink-0 font-body text-[12px] tracking-widest uppercase text-foreground/55 hover:text-foreground underline-offset-4 hover:underline">
+            Use different
+          </Link>
+        </div>
+      )}
+      {planAccountRequired && (
+        <div className="rounded-2xl border border-foreground/20 bg-foreground/[0.05] px-4 py-4 backdrop-blur-xl space-y-2">
+          <p className="font-body text-[12px] tracking-[0.22em] uppercase text-foreground/55">Membership requires an account</p>
+          <p className="font-body text-[13px] leading-relaxed text-foreground/72">
+            We'll set up your account using the name and email above and email you a one-tap sign-in link after payment.
+          </p>
+          <p className="font-body text-[12px] text-foreground/55">
+            Already have an account?{' '}
+            <Link to="/login?next=/checkout" className="text-foreground underline underline-offset-4 hover:no-underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      )}
+      {!hasMembership && !isSignedIn && contactReady && (
+        <label className="flex gap-3 rounded-2xl border border-foreground/10 bg-background/32 px-4 py-3 backdrop-blur-xl cursor-pointer hover:border-foreground/24 transition-colors">
+          <input
+            type="checkbox"
+            checked={createAccountOptIn}
+            onChange={(event) => setCreateAccountOptIn(event.target.checked)}
+            disabled={loading}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+          />
+          <span className="font-body text-[13px] leading-relaxed text-foreground/72">
+            Create an account so I can see this order, book again faster, and message my nurse.
+          </span>
+        </label>
       )}
 
       <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl">

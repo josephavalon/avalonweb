@@ -9,6 +9,8 @@ import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
 import { readCheckoutStoreRecord } from '../../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
+import { sendWelcomeEmail } from '../../_welcome-email.js';
+import { signWelcomeToken, isMagicLinkWelcomeEnabled } from '../../_lib/welcome-token.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import {
@@ -50,6 +52,142 @@ function safeLogContext(err, fallback) {
     code: safeErrorCode(err, fallback),
     status: err?.statusCode || err?.status || null,
   };
+}
+
+// Escape LIKE wildcards so an email containing `_` or `%` matches literally.
+function likeLiteral(value) {
+  return String(value || '').replace(/([\\%_])/g, '\\$1');
+}
+
+function welcomeEmailOnCheckoutEnabled() {
+  return String(process.env.WELCOME_EMAIL_ON_CHECKOUT_ENABLED || '').trim().toLowerCase() !== 'false';
+}
+
+function firstNameFromContact(contact = {}) {
+  const first = String(contact.firstName || '').trim();
+  if (first) return first;
+  const full = String(contact.name || '').trim();
+  if (full) return full.split(/\s+/)[0];
+  return '';
+}
+
+// "First paid appointment for this email?" — used as the idempotency guard for
+// the post-checkout welcome email. We look for ANY other appointment row tied
+// to this contact email with a paid payment_status. If one already exists, the
+// caller is a repeat customer and the welcome has either already been sent (or
+// is moot because they've been around long enough to know us). Excludes the
+// current record so the call site can run AFTER its own patch lands.
+async function isFirstPaidAppointmentForEmail(db, { email, currentRecordId, tenantId }) {
+  if (!db || !email) return false;
+  const normalized = String(email).trim().toLowerCase();
+  if (!normalized) return false;
+  try {
+    let query = db
+      .from('appointments')
+      .select('id, payment_status')
+      .ilike('external_payload->contact->>email', likeLiteral(normalized))
+      .in('payment_status', ['paid_in_full', 'partial_payment']);
+    if (tenantId) query = query.eq('tenant_id', tenantId);
+    if (currentRecordId) query = query.neq('id', currentRecordId);
+    const { data, error } = await query.limit(1);
+    if (error) {
+      console.warn('[stripe/webhook] welcome-email first-paid lookup failed', safeLogContext(error, 'welcome_first_paid_lookup_failed'));
+      // Fail closed: if we can't tell, don't send (avoids spamming repeat buyers).
+      return false;
+    }
+    return !(Array.isArray(data) && data.length > 0);
+  } catch (err) {
+    console.warn('[stripe/webhook] welcome-email first-paid lookup threw', safeLogContext(err, 'welcome_first_paid_lookup_failed'));
+    return false;
+  }
+}
+
+// Best-effort welcome-email send after a paid checkout. Never throws — webhook
+// MUST keep returning 200 even when Resend is down. Idempotent via
+// audit_events (matches /api/auth/welcome-email's dedupe contract). Looks up
+// the auth user by email so the magic-link CTA can carry a signed token if the
+// caller wants to drop the recipient straight into /members/dashboard.
+async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId, sessionId }) {
+  if (!welcomeEmailOnCheckoutEnabled()) {
+    console.log('[stripe/webhook] welcome-email skipped (flag off)', safeLogContext({ code: 'welcome_email_flag_off' }, 'welcome_email_flag_off'));
+    return { sent: false, reason: 'flag_off' };
+  }
+  const recipient = String(contact?.email || '').trim();
+  if (!recipient) return { sent: false, reason: 'no_recipient' };
+
+  const isFirst = await isFirstPaidAppointmentForEmail(db, {
+    email: recipient,
+    currentRecordId,
+    tenantId,
+  });
+  if (!isFirst) {
+    console.log('[stripe/webhook] welcome-email skipped (not first paid)', { event: 'welcome_email_skipped', reason: 'repeat_customer' });
+    return { sent: false, reason: 'repeat_customer' };
+  }
+
+  // Resolve the auth user (if any) so dedupe + magic-link share their contract
+  // with /api/auth/welcome-email. We use the service-role list-users by email.
+  let userId = null;
+  try {
+    if (db) {
+      const { data: profileRow } = await db
+        .from('profiles')
+        .select('id')
+        .ilike('email', likeLiteral(recipient))
+        .maybeSingle();
+      userId = profileRow?.id || null;
+    }
+  } catch (err) {
+    console.warn('[stripe/webhook] welcome-email profile lookup failed', safeLogContext(err, 'welcome_profile_lookup_failed'));
+  }
+
+  // Dedupe with the existing post-signup welcome path.
+  if (db && userId) {
+    try {
+      const { data: prior } = await db
+        .from('audit_events')
+        .select('id')
+        .eq('action', 'welcome_email_sent')
+        .eq('entity_type', 'profiles')
+        .eq('entity_id', userId)
+        .limit(1);
+      if (Array.isArray(prior) && prior.length > 0) {
+        return { sent: false, reason: 'already_sent' };
+      }
+    } catch (err) {
+      // Default to send rather than skip — better at-most-twice than never.
+      console.warn('[stripe/webhook] welcome-email dedupe check failed', safeLogContext(err, 'welcome_email_dedupe_failed'));
+    }
+  }
+
+  let magicToken;
+  if (userId && isMagicLinkWelcomeEnabled()) {
+    try {
+      magicToken = signWelcomeToken({ userId });
+    } catch (err) {
+      console.warn('[stripe/webhook] welcome-email token sign failed', safeLogContext(err, 'welcome_email_token_sign_failed'));
+    }
+  }
+
+  const name = firstNameFromContact(contact);
+  try {
+    const result = await sendWelcomeEmail({ to: recipient, name, magicToken });
+    if (db && userId) {
+      await writeAuditEvent(db, {
+        tenantId,
+        actorProfileId: userId,
+        action: 'welcome_email_sent',
+        entityType: 'profiles',
+        entityId: userId,
+        phiTouched: false,
+        payload: { provider: 'resend', source: 'checkout', message_id: result?.id || null, stripeSessionId: sessionId || null },
+      });
+    }
+    return { sent: true, messageId: result?.id || null };
+  } catch (err) {
+    console.warn('[stripe/webhook] welcome-email send failed', safeLogContext(err, 'welcome_email_send_failed'));
+    return { sent: false, reason: 'send_failed' };
+  }
 }
 
 function readRawBody(req, maxBytes = STRIPE_WEBHOOK_MAX_BODY_BYTES) {
@@ -853,6 +991,15 @@ export async function handleCheckoutCompleted(stripe, db, session) {
         },
       }));
     }
+    // Post-checkout welcome email — best-effort, idempotent, never blocks the
+    // webhook. Sends on the FIRST paid appointment for this email (one-time or
+    // plan). Repeat customers are skipped via the appointments lookup.
+    await sendCheckoutWelcomeEmail(db, {
+      contact: checkout.contact || {},
+      currentRecordId: record.id,
+      tenantId: fulfillmentTenantId,
+      sessionId: session.id,
+    });
     return {
       action: fulfillmentError ? 'deposit_paid_acuity_failed' : 'deposit_paid_acuity_created',
       matched: true,
@@ -907,6 +1054,12 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
       session,
       md,
+    });
+    await sendCheckoutWelcomeEmail(db, {
+      contact: checkout.contact || {},
+      currentRecordId: insertedRecord.id,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      sessionId: session.id,
     });
   }
   return { action: 'deposit_paid', matched: false };

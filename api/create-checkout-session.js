@@ -6,6 +6,7 @@ import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 import { resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
 import { getAuthedUser } from './_lib/supabase-auth.js';
+import { writeAuditEvent } from './_lib/audit-events.js';
 import { getMemberCreditBalance, resolveCreditMember } from './_lib/member-credits.js';
 import { checkoutStoreAvailable, writeCheckoutStoreRecord } from './_lib/checkout-store.js';
 import {
@@ -77,6 +78,95 @@ const CHECKOUT_INPUT_LIMITS = {
 
 function httpError(message, status = 500, code = 'server_error') {
   return Object.assign(new Error(message), { status, code });
+}
+
+function normalizeSignupIntent(raw, contact = {}) {
+  if (!raw || typeof raw !== 'object') return null;
+  const email = normalizeEmail(raw.email || contact.email || '');
+  const name = String(
+    raw.name
+    || [raw.firstName, raw.lastName].filter(Boolean).join(' ')
+    || contact.name
+    || [contact.firstName, contact.lastName].filter(Boolean).join(' ')
+    || '',
+  ).trim();
+  if (!email || !name) return null;
+  return { email, name };
+}
+
+// Provision an auth user + profile for the post-purchase account. Passwordless
+// — confirmation arrives via the welcome email. Idempotent on `already_registered`
+// so a returning email can complete checkout without losing its payment intent.
+// Returns { ok, userId|null, status: 'created'|'exists'|'error' }.
+async function ensureAuthUserForCheckout(db, { email, name, tenantId, source }) {
+  if (!db || !email) return { ok: false, status: 'error', code: 'supabase_unavailable' };
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return { ok: false, status: 'error', code: 'email_invalid' };
+
+  try {
+    // Already a user? Skip creation, return the existing id so we can write a
+    // profile row + welcome email keyed off the same identity.
+    const { data: existingList } = await db.auth.admin.listUsers({ page: 1, perPage: 1, email: normalizedEmail });
+    const existing = Array.isArray(existingList?.users) ? existingList.users[0] : null;
+    if (existing?.id) {
+      // Best-effort: backfill the name + tenant on an existing profile row.
+      try {
+        await db.from('profiles').upsert({
+          id: existing.id,
+          email: normalizedEmail,
+          full_name: name || null,
+          tenant_id: tenantId || null,
+          role: 'client',
+          status: 'active',
+        }, { onConflict: 'id' });
+      } catch (_) { /* best-effort */ }
+      return { ok: true, status: 'exists', userId: existing.id };
+    }
+
+    const created = await db.auth.admin.createUser({
+      email: normalizedEmail,
+      email_confirm: false,
+      user_metadata: { full_name: name, signup_source: source || 'checkout' },
+    });
+    const newUser = created?.data?.user || null;
+    if (created?.error) {
+      const message = String(created.error.message || '').toLowerCase();
+      if (message.includes('already') || message.includes('registered') || message.includes('exists')) {
+        return { ok: true, status: 'exists', userId: null };
+      }
+      throw created.error;
+    }
+    if (!newUser?.id) {
+      return { ok: false, status: 'error', code: 'auth_create_no_user' };
+    }
+    // Profile row — the 007 trigger may have already created one, but upsert
+    // makes this safe whether the trigger fired or not.
+    try {
+      await db.from('profiles').upsert({
+        id: newUser.id,
+        email: normalizedEmail,
+        full_name: name || null,
+        tenant_id: tenantId || null,
+        role: 'client',
+        status: 'active',
+      }, { onConflict: 'id' });
+    } catch (err) {
+      console.warn('[create-checkout-session] profile upsert after signup failed', safeLogContext(err, 'signup_profile_upsert_failed'));
+    }
+    await writeAuditEvent(db, {
+      tenantId,
+      actorProfileId: newUser.id,
+      action: 'checkout_signup_created',
+      entityType: 'profiles',
+      entityId: newUser.id,
+      phiTouched: false,
+      payload: { source: source || 'checkout' },
+    });
+    return { ok: true, status: 'created', userId: newUser.id };
+  } catch (err) {
+    console.warn('[create-checkout-session] auth user creation failed', safeLogContext(err, 'signup_intent_create_failed'));
+    return { ok: false, status: 'error', code: safeErrorCode(err, 'signup_intent_create_failed') };
+  }
 }
 
 function supabaseRuntimeDiagnostic() {
@@ -351,6 +441,7 @@ export default async function handler(req, res) {
     paymentMethod = 'card',
     checkoutUiMode = 'hosted',
     creditRedemption: rawCreditRedemption = null,
+    signupIntent: rawSignupIntent = null,
   } = req.body || {};
 
   const {
@@ -419,6 +510,37 @@ export default async function handler(req, res) {
       throw httpError('Booking storage is unavailable. Please try again shortly.', 503, 'appointment_record_unavailable');
     }
     const tenantId = await getDefaultTenantId(db);
+
+    // Wave-3: forced account creation at plan checkout, opt-in for one-time.
+    // Plans must end up at a real user — either an authed session OR a
+    // signupIntent we can provision into auth.users. One-time checkouts may
+    // attach a signupIntent (opt-in checkbox) to pre-create the account so
+    // the welcome email is a real magic-link the moment the deposit clears.
+    const signupIntent = normalizeSignupIntent(rawSignupIntent, contact);
+    const isPlanCheckout = Boolean(rawMembership);
+    if (isPlanCheckout) {
+      const authed = await getAuthedUser(req);
+      if (!authed && !signupIntent) {
+        return res.status(400).json({
+          error: 'Plan purchases require an account. Sign up or sign in first.',
+          code: 'plan_requires_account',
+        });
+      }
+    }
+    if (signupIntent) {
+      const provisioned = await ensureAuthUserForCheckout(db, {
+        email: signupIntent.email,
+        name: signupIntent.name,
+        tenantId,
+        source: isPlanCheckout ? 'plan_checkout' : 'one_time_checkout_optin',
+      });
+      if (!provisioned.ok) {
+        return res.status(500).json({
+          error: 'We could not finish setting up your account. Please try again or contact Avalon.',
+          code: 'signup_intent_failed',
+        });
+      }
+    }
 
     const visitSubtotal = items.reduce((sum, item) => sum + Number(item.price || 0) * checkoutItemQuantity(item), 0);
     const hasVisitItems = items.length > 0;
