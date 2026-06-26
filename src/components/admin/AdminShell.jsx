@@ -42,7 +42,13 @@ const NAV_LIVE = [
       { label: 'Memberships', to: '/admin/memberships' },
     ],
   },
-  { label: 'Communications', icon: MessageSquare, to: '/admin/messages' },
+  {
+    label: 'Communications', icon: MessageSquare, children: [
+      { label: 'Client inbox', to: '/admin/messages' },
+      { label: 'Broadcasts', to: '/admin/soon?feature=Broadcasts' },
+      { label: 'SMS templates', to: '/admin/soon?feature=SMS%20Templates' },
+    ],
+  },
   {
     label: 'Finance', icon: CreditCard, children: [
       {
@@ -411,12 +417,15 @@ function AdminProfileMenu({ user, onSignOut }) {
             {user?.email ? <p className="mt-1.5 truncate font-body text-xs text-foreground/60">{user.email}</p> : null}
           </div>
           <Link
-            to="/admin/messages"
+            to="/admin/soon?feature=Personal%20Inbox"
             onClick={() => setOpen(false)}
             className="flex items-center justify-between border-b border-foreground/[0.06] px-4 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-foreground/[0.04]"
           >
-            <span className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5" strokeWidth={1.9} />Messages</span>
-            <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-foreground/35" strokeWidth={2} />
+            <span className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5" strokeWidth={1.9} />My inbox</span>
+            <span className="inline-flex items-center gap-1.5 text-foreground/40">
+              <span className="rounded-full border border-foreground/[0.18] px-1.5 py-0.5 font-body text-[9px] font-bold uppercase tracking-[0.14em]">Soon</span>
+              <ChevronDown className="h-3.5 w-3.5 -rotate-90" strokeWidth={2} />
+            </span>
           </Link>
           <div className="border-b border-foreground/[0.06] px-2 py-2">
             <p className="px-2 pb-1.5 font-body text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/40">
