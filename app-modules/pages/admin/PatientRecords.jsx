@@ -156,7 +156,7 @@ export default function PatientRecords() {
   return (
     <AdminShell title="Patients">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
-        <div className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
+        <div className="mx-auto max-w-5xl px-4 py-2 md:px-8 md:py-3">
           <div className="flex items-end justify-between gap-3">
             <p className="font-body text-sm" style={{ color: MUTED }}>
               {loading ? 'Loading…' : `${patients.length} patient${patients.length === 1 ? '' : 's'} · ${bookings.length} visit${bookings.length === 1 ? '' : 's'} on record`}

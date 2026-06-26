@@ -466,7 +466,7 @@ export default function LiveAdminBookings() {
   return (
     <AdminShell title="Live Bookings">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
-        <div className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
+        <div className="mx-auto max-w-5xl px-4 py-2 md:px-8 md:py-3">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="font-body text-sm" style={{ color: MUTED }}>

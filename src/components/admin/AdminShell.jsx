@@ -536,7 +536,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
         </header>
         <main className={fullBleed
           ? 'flex min-h-0 flex-1 flex-col md:overflow-hidden'
-          : 'mx-auto w-full max-w-6xl flex-1 px-4 py-5 md:px-7 md:py-7'}
+          : 'mx-auto w-full max-w-6xl flex-1 px-4 py-4 md:px-7 md:py-5'}
         >{children}</main>
       </div>
     </div>

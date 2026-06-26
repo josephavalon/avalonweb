@@ -121,7 +121,7 @@ export default function Messages() {
   return (
     <AdminShell title="Communications">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
-        <div className={`mx-auto px-4 py-6 md:px-8 md:py-10 ${channel === 'inbox' ? 'max-w-6xl' : 'max-w-3xl'}`}>
+        <div className={`mx-auto px-4 py-2 md:px-8 md:py-3 ${channel === 'inbox' ? 'max-w-6xl' : 'max-w-3xl'}`}>
           {/* Tabs: Text / Email compose, Inbox conversations */}
           <div className="mb-5 flex gap-2">
             <ChannelBtn id="sms" icon={MessageSquare} label="Text" />

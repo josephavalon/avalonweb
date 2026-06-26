@@ -93,7 +93,7 @@ export default function GfeSettings() {
   return (
     <AdminShell title="GFE">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
-        <div className="mx-auto max-w-3xl px-4 py-6 md:px-8 md:py-10">
+        <div className="mx-auto max-w-3xl px-4 py-2 md:px-8 md:py-3">
           {loading ? (
             <div className="flex items-center gap-3 rounded-2xl px-4 py-4" style={{ background: CARD, border: `1px solid ${BORDER}`, color: MUTED }}>
               <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Loading…
