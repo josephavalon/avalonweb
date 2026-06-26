@@ -15,7 +15,7 @@ import {
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { readLastBooking } from '@/lib/localOs';
-import { apiGet } from '@/lib/apiClient';
+import { apiGet, apiPost } from '@/lib/apiClient';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
 import { authProviderConfig } from '@/lib/authProviderConfig';
@@ -150,7 +150,28 @@ function PlanCard({ hasPlan, creditsAvailable, creditsTotal }) {
   );
 }
 
-function BalanceCard({ amount }) {
+function BalanceCard({ amount, appointmentId, onPaid }) {
+  const [state, setState] = useState({ status: 'idle', message: '' });
+  const handlePay = async () => {
+    if (!appointmentId) {
+      setState({ status: 'error', message: 'No payable appointment found.' });
+      return;
+    }
+    setState({ status: 'busy', message: 'Charging your saved card.' });
+    try {
+      await apiPost('/api/me/pay-balance', { appointmentId });
+      setState({ status: 'ok', message: 'Balance paid.' });
+      onPaid?.();
+    } catch (err) {
+      const body = err?.body || {};
+      const code = body?.code || '';
+      let msg = body?.error || err?.message || 'Could not charge the balance.';
+      if (code === 'no_saved_card') msg = 'Add a card first via the billing portal.';
+      else if (code === 'requires_action') msg = 'Your bank needs to verify this charge — please try again from a desktop browser, or contact Avalon.';
+      else if (code === 'no_balance_due') msg = 'No outstanding balance on this appointment.';
+      setState({ status: 'error', message: msg });
+    }
+  };
   return (
     <div className="rounded-[24px] p-5" style={{ background: 'linear-gradient(160deg, hsl(0 70% 62% / 0.06), hsl(var(--foreground) / 0.045) 60%)', border: `1px solid hsl(0 70% 62% / 0.30)` }}>
       <div className="flex items-center justify-between">
@@ -162,13 +183,27 @@ function BalanceCard({ amount }) {
         Posted after your provider reviewed and discharged you. Pay now or apply credits.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => { /* stub: wire pay-balance flow */ }} className="flex min-h-[44px] items-center justify-center rounded-xl font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: TEXT, color: INVERT }}>
-          Pay {money(amount)} now
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={state.status === 'busy' || !appointmentId}
+          className="flex min-h-[44px] items-center justify-center rounded-xl font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+          style={{ background: TEXT, color: INVERT }}
+        >
+          {state.status === 'busy' ? 'Charging.' : state.status === 'ok' ? 'Paid' : `Pay ${money(amount)} now`}
         </button>
         <button type="button" onClick={() => { /* stub: wire credit redemption */ }} className="flex min-h-[44px] items-center justify-center rounded-xl font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
           Use credits
         </button>
       </div>
+      {state.message ? (
+        <p
+          className="mt-3 font-body text-[12px]"
+          style={{ color: state.status === 'error' ? BAD : state.status === 'ok' ? GOOD : MUTED }}
+        >
+          {state.message}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -304,6 +339,8 @@ function DashboardBody({
   hasPlan,
   creditsAvailable,
   creditsTotal,
+  balanceAppointmentId,
+  onBalancePaid,
 }) {
   const visitStatus = primary ? 'Confirming after clinical review' : 'No visit scheduled';
   return (
@@ -384,7 +421,7 @@ function DashboardBody({
         {/* Plan + Balance */}
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <PlanCard hasPlan={hasPlan} creditsAvailable={creditsAvailable} creditsTotal={creditsTotal} />
-          {balanceTotal > 0 ? <BalanceCard amount={balanceTotal} /> : (
+          {balanceTotal > 0 ? <BalanceCard amount={balanceTotal} appointmentId={balanceAppointmentId} onPaid={onBalancePaid} /> : (
             <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
               <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Account standing</p>
               <h3 className="mt-3 font-heading text-3xl uppercase leading-none md:text-4xl">All clear</h3>
@@ -461,6 +498,11 @@ function LiveClientDashboard() {
       : { tone: 'err', text: result.error || 'Could not add a passkey.' });
   };
 
+  const refetchVisits = () => {
+    apiGet('/api/me/appointments')
+      .then((data) => setState({ loading: false, error: '', visits: Array.isArray(data?.appointments) ? data.appointments : [] }))
+      .catch(() => setState((s) => ({ ...s, loading: false, error: 'Could not load your visits.' })));
+  };
   useEffect(() => {
     let active = true;
     apiGet('/api/me/appointments')
@@ -479,6 +521,10 @@ function LiveClientDashboard() {
   const upcoming = visits.filter((v) => v.startsAt && new Date(v.startsAt).getTime() >= now).sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
   const next = upcoming[0] || null;
   const balanceTotal = visits.reduce((sum, v) => sum + (v.balanceDue || 0), 0);
+  // Pay-balance is single-appointment: pick the first visit with a balance.
+  // Until we surface a per-visit picker, this matches the "Pay $X now" CTA
+  // which shows the combined total but charges the oldest open balance.
+  const payableAppointment = visits.find((v) => Number(v.balanceDue || 0) > 0) || null;
   const hasPlan = visits.some((v) => v.isMembership);
   // stub: tier-derived totals — plan tier should drive this once subscription record is wired
   const creditsTotal = hasPlan ? 4 : 0;
@@ -525,6 +571,8 @@ function LiveClientDashboard() {
       hasPlan={hasPlan}
       creditsAvailable={creditsAvailable}
       creditsTotal={creditsTotal || 4}
+      balanceAppointmentId={payableAppointment?.id || null}
+      onBalancePaid={refetchVisits}
     />
   );
 }

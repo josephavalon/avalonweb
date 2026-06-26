@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSeo } from '@/lib/seo';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { applyTheme } from '@/lib/theme';
-import { apiGet } from '@/lib/apiClient';
+import { apiGet, apiPost } from '@/lib/apiClient';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
 
@@ -131,7 +131,7 @@ function CreditsRing({ used = 2, total = 4 }) {
   );
 }
 
-function TierCard({ tier, currentId, onSwitch }) {
+function TierCard({ tier, currentId, busy, onSwitch }) {
   const isCurrent = tier.id === currentId;
   return (
     <article className="flex flex-col rounded-[24px] p-5" style={{ background: isCurrent ? CARD_STRONG : CARD, border: `1px solid ${isCurrent ? TEXT : BORDER}` }}>
@@ -150,7 +150,7 @@ function TierCard({ tier, currentId, onSwitch }) {
       </ul>
       <button
         type="button"
-        disabled={isCurrent}
+        disabled={isCurrent || busy}
         onClick={() => onSwitch?.(tier.id)}
         className="mt-5 flex min-h-[44px] items-center justify-center rounded-xl px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-50"
         style={{
@@ -159,7 +159,7 @@ function TierCard({ tier, currentId, onSwitch }) {
           border: `1px solid ${isCurrent ? BORDER : TEXT}`,
         }}
       >
-        {isCurrent ? 'Your current plan' : `Switch to ${tier.name}`}
+        {isCurrent ? 'Your current plan' : busy ? 'Working.' : `Switch to ${tier.name}`}
       </button>
     </article>
   );
@@ -186,6 +186,111 @@ export default function Memberships() {
   const { signOut } = useAuthStore();
   const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, error: '', balance: 0, ledger: [] });
+  const [portalBusy, setPortalBusy] = useState(false);
+  const [toast, setToast] = useState(null); // { tone: 'ok' | 'err' | 'busy', text }
+  const [preview, setPreview] = useState(null); // { targetPlan, proration, status }
+  const [changeBusy, setChangeBusy] = useState(null); // target plan id while previewing/committing
+  const [pauseBusy, setPauseBusy] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+
+  const showToast = (tone, text) => {
+    setToast({ tone, text });
+    if (tone !== 'busy') {
+      setTimeout(() => setToast((t) => (t?.text === text ? null : t)), 6000);
+    }
+  };
+
+  const openBillingPortal = async () => {
+    if (portalBusy) return;
+    setPortalBusy(true);
+    showToast('busy', 'Opening secure billing portal.');
+    try {
+      const data = await apiPost('/api/me/billing-portal');
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setPortalBusy(false);
+        showToast('err', 'Could not open the billing portal.');
+      }
+    } catch (err) {
+      setPortalBusy(false);
+      const code = err?.body?.code || '';
+      if (code === 'no_customer') {
+        showToast('err', 'Make your first purchase to enable the billing portal.');
+      } else {
+        showToast('err', err?.body?.error || err?.message || 'Could not open the billing portal.');
+      }
+    }
+  };
+
+  const previewSwitch = async (targetPlan) => {
+    setChangeBusy(targetPlan);
+    setPreview({ targetPlan, status: 'loading', proration: null });
+    try {
+      const data = await apiPost('/api/me/subscription/change', { targetPlan, action: 'preview' });
+      setPreview({ targetPlan, status: 'ready', proration: data?.proration || null });
+    } catch (err) {
+      const code = err?.body?.code || '';
+      if (code === 'no_subscription' || code === 'no_customer') {
+        setPreview(null);
+        showToast('err', 'You need an active plan first — start one from Book.');
+      } else {
+        setPreview({ targetPlan, status: 'error', proration: null });
+        showToast('err', err?.body?.error || err?.message || 'Could not preview the change.');
+      }
+    } finally {
+      setChangeBusy(null);
+    }
+  };
+
+  const commitSwitch = async () => {
+    if (!preview?.targetPlan) return;
+    setChangeBusy(preview.targetPlan);
+    try {
+      await apiPost('/api/me/subscription/change', { targetPlan: preview.targetPlan, action: 'commit' });
+      showToast('ok', 'Plan updated.');
+      setPreview(null);
+      // Hard reload so derived "current plan" copy reflects the new tier.
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      showToast('err', err?.body?.error || err?.message || 'Could not change the plan.');
+    } finally {
+      setChangeBusy(null);
+    }
+  };
+
+  const pauseOneCycle = async () => {
+    if (pauseBusy) return;
+    setPauseBusy(true);
+    try {
+      const data = await apiPost('/api/me/subscription/pause', { cycles: 1 });
+      const when = data?.resumesAt ? new Date(data.resumesAt).toLocaleDateString() : 'one cycle from today';
+      showToast('ok', `Paused — resumes ${when}.`);
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      showToast('err', err?.body?.error || err?.message || 'Could not pause the plan.');
+    } finally {
+      setPauseBusy(false);
+    }
+  };
+
+  const cancelPlan = async () => {
+    if (cancelBusy) return;
+    if (typeof window !== 'undefined' && !window.confirm("You'll keep your remaining credits until your next renewal date. No fee to cancel. Continue?")) {
+      return;
+    }
+    setCancelBusy(true);
+    try {
+      const data = await apiPost('/api/me/subscription/cancel', { atPeriodEnd: true });
+      const when = data?.currentPeriodEnd ? new Date(data.currentPeriodEnd).toLocaleDateString() : 'your next renewal';
+      showToast('ok', `Plan will end on ${when}.`);
+      setTimeout(() => window.location.reload(), 900);
+    } catch (err) {
+      showToast('err', err?.body?.error || err?.message || 'Could not cancel the plan.');
+    } finally {
+      setCancelBusy(false);
+    }
+  };
 
   useEffect(() => { try { applyTheme(); } catch { /* noop */ } }, []);
   useEffect(() => {
@@ -318,8 +423,9 @@ export default function Memberships() {
             <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Total on Jul 8</span><b className="font-semibold" style={{ color: TEXT }}>$320</b></div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Change card</button>
-            <button type="button" className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Change billing date</button>
+            <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>{portalBusy ? 'Opening.' : 'Manage plan'}</button>
+            <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Change card</button>
+            <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Change billing date</button>
           </div>
         </div>
       </section>
@@ -332,35 +438,72 @@ export default function Memberships() {
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {TIERS.map((t) => (
-            <TierCard key={t.id} tier={t} currentId={currentTierId} onSwitch={() => { /* stub: open Stripe checkout for tier change */ }} />
+            <TierCard
+              key={t.id}
+              tier={t}
+              currentId={currentTierId}
+              busy={changeBusy === t.id}
+              onSwitch={previewSwitch}
+            />
           ))}
         </div>
 
-        {/* Proration preview */}
-        <div className="mt-4 rounded-[24px] p-5 md:p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-          <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>If you upgrade to Concierge today (Jun 25)</p>
-          <div className="mt-3 grid gap-2 font-body text-[13px]">
-            <div className="flex items-baseline justify-between gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
-              <span style={{ color: MUTED }}>Unused Vitality (Jun 25 → Jul 8, 13 days)</span>
-              <b className="font-semibold" style={{ color: TEXT }}>− $86.67</b>
-            </div>
-            <div className="flex items-baseline justify-between gap-3 pt-1.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
-              <span style={{ color: MUTED }}>Concierge prorate (Jun 25 → Jul 8, 13 days)</span>
-              <b className="font-semibold" style={{ color: TEXT }}>+ $184.17</b>
-            </div>
-            <div className="flex items-baseline justify-between gap-3 pt-1.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
-              <span style={{ color: MUTED }}>Credits carried over (2 Vitality → 5 Concierge)</span>
-              <b className="font-semibold" style={{ color: TEXT }}>+ 3 bonus credits</b>
-            </div>
-            <div className="flex items-baseline justify-between gap-3 pt-2">
-              <span className="font-heading text-2xl uppercase" style={{ color: TEXT }}>Charged today</span>
-              <b className="font-heading text-2xl uppercase" style={{ color: TEXT }}>$97.50</b>
-            </div>
+        {/* Proration preview — live from Stripe once a tier is selected */}
+        {preview ? (
+          <div className="mt-4 rounded-[24px] p-5 md:p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+            <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>
+              {preview.status === 'loading' ? 'Calculating proration.' :
+               preview.status === 'error' ? 'Could not calculate proration' :
+               `If you switch to ${(TIERS.find((t) => t.id === preview.targetPlan)?.name) || preview.targetPlan} today`}
+            </p>
+            {preview.status === 'ready' && preview.proration ? (
+              <>
+                <div className="mt-3 grid gap-2 font-body text-[13px]">
+                  {(preview.proration.items || []).map((line, idx) => (
+                    <div key={idx} className="flex items-baseline justify-between gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
+                      <span style={{ color: MUTED }}>{line.description || (line.proration ? 'Proration' : 'Line item')}</span>
+                      <b className="font-semibold" style={{ color: TEXT }}>
+                        {line.amount < 0 ? '− ' : '+ '}${Math.abs(line.amount).toFixed(2)}
+                      </b>
+                    </div>
+                  ))}
+                  <div className="flex items-baseline justify-between gap-3 pt-2">
+                    <span className="font-heading text-2xl uppercase" style={{ color: TEXT }}>Charged today</span>
+                    <b className="font-heading text-2xl uppercase" style={{ color: TEXT }}>
+                      ${Math.max(0, preview.proration.amountDue).toFixed(2)}
+                    </b>
+                  </div>
+                </div>
+                <p className="mt-3 font-body text-[12px]" style={{ color: MUTED }}>
+                  Then full monthly rate at your next renewal. You can downgrade or cancel any time.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={commitSwitch}
+                    disabled={changeBusy === preview.targetPlan}
+                    className="rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+                    style={{ background: TEXT, color: INVERT }}
+                  >
+                    {changeBusy === preview.targetPlan ? 'Confirming.' : 'Confirm change'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreview(null)}
+                    className="rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+                    style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+                  >
+                    Keep current plan
+                  </button>
+                </div>
+              </>
+            ) : preview.status === 'loading' ? (
+              <p className="mt-3 font-body text-sm" style={{ color: MUTED }}>One moment.</p>
+            ) : (
+              <p className="mt-3 font-body text-sm" style={{ color: BAD }}>Something went wrong. Try again or contact Avalon.</p>
+            )}
           </div>
-          <p className="mt-3 font-body text-[12px]" style={{ color: MUTED }}>
-            Then $425 on Jul 8 and every month after. You can downgrade or cancel at any time.
-          </p>
-        </div>
+        ) : null}
       </section>
 
       {/* Payment methods */}
@@ -368,7 +511,7 @@ export default function Memberships() {
         <div className="rounded-[24px] p-5 md:p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-2xl uppercase leading-none">Payment methods</h2>
-            <button type="button" className="inline-flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: TEXT }}>
+            <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="inline-flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ color: TEXT }}>
               <Plus className="h-3.5 w-3.5" strokeWidth={2} /> Add card
             </button>
           </div>
@@ -457,8 +600,8 @@ export default function Memberships() {
               <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>Pause your plan</p>
               <p className="mt-1 font-body text-[12px]" style={{ color: MUTED }}>Skip 1 or 2 cycles. Your unused credits are held and your next charge is deferred. You can resume any time.</p>
             </div>
-            <button type="button" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
-              <PauseCircle className="h-3.5 w-3.5" strokeWidth={1.8} /> Pause for 1 cycle
+            <button type="button" onClick={pauseOneCycle} disabled={pauseBusy} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
+              <PauseCircle className="h-3.5 w-3.5" strokeWidth={1.8} /> {pauseBusy ? 'Pausing.' : 'Pause for 1 cycle'}
             </button>
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3" style={{ borderTop: `1px solid hsl(0 70% 62% / 0.15)`, paddingTop: '1rem' }}>
@@ -466,8 +609,8 @@ export default function Memberships() {
               <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>Cancel membership</p>
               <p className="mt-1 font-body text-[12px]" style={{ color: MUTED }}>You keep your remaining credits until Jul 8. After that, your plan ends and you'll return to per-visit pricing. No fee to cancel.</p>
             </div>
-            <button type="button" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}>
-              <XCircle className="h-3.5 w-3.5" strokeWidth={1.8} /> Cancel plan
+            <button type="button" onClick={cancelPlan} disabled={cancelBusy} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}>
+              <XCircle className="h-3.5 w-3.5" strokeWidth={1.8} /> {cancelBusy ? 'Cancelling.' : 'Cancel plan'}
             </button>
           </div>
         </div>
@@ -479,6 +622,25 @@ export default function Memberships() {
           <CreditCard className="h-3.5 w-3.5" strokeWidth={1.8} /> Billing & statements <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
         </Link>
       </section>
+
+      {toast ? (
+        <div
+          className="fixed inset-x-0 bottom-24 z-50 mx-auto max-w-md px-4"
+          role="status"
+          aria-live="polite"
+        >
+          <div
+            className="rounded-2xl px-4 py-3 font-body text-sm shadow-lg"
+            style={{
+              background: toast.tone === 'err' ? 'hsl(0 70% 62% / 0.16)' : toast.tone === 'ok' ? 'hsl(140 30% 60% / 0.16)' : CARD_STRONG,
+              color: toast.tone === 'err' ? BAD : toast.tone === 'ok' ? GOOD : TEXT,
+              border: `1px solid ${toast.tone === 'err' ? 'hsl(0 70% 62% / 0.40)' : toast.tone === 'ok' ? 'hsl(140 30% 60% / 0.40)' : BORDER}`,
+            }}
+          >
+            {toast.text}
+          </div>
+        </div>
+      ) : null}
 
       <MemberBottomNav />
     </main>
