@@ -44,16 +44,24 @@ function adminPreviewEnabled() {
   return import.meta.env?.VITE_ADMIN_PREVIEW === '1';
 }
 
+// Match a path against an allow-list. A path counts as allowed if it equals an
+// entry exactly OR begins with one followed by `/` (so `/admin/clients/abc`
+// inherits permission from `/admin/clients`).
+function matchesAllowList(path, allowList) {
+  if (allowList.includes(path)) return true;
+  return allowList.some((entry) => path.startsWith(`${entry}/`));
+}
+
 /** Can a given role open a given admin path? */
 export function canAccessAdminRoute(role, path) {
   const normalized = normalizeAdminPath(path);
-  if (!adminPreviewEnabled() && !LIVE_ADMIN_ROUTES.includes(normalized)) return false;
+  if (!adminPreviewEnabled() && !matchesAllowList(normalized, LIVE_ADMIN_ROUTES)) return false;
   if (role === 'admin') return true;
-  if (role === 'staff') return STAFF_ROUTES.includes(normalized);
+  if (role === 'staff') return matchesAllowList(normalized, STAFF_ROUTES);
   return false;
 }
 
 /** allowedRoles array for a route guard: staff-allowed routes include staff. */
 export function allowedRolesForRoute(path) {
-  return STAFF_ROUTES.includes(normalizeAdminPath(path)) ? ['admin', 'staff'] : ['admin'];
+  return matchesAllowList(normalizeAdminPath(path), STAFF_ROUTES) ? ['admin', 'staff'] : ['admin'];
 }

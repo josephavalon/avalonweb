@@ -10,7 +10,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { RefreshCw, Phone, Mail, Calendar, AlertCircle, ChevronDown, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { RefreshCw, Phone, Mail, Calendar, AlertCircle, ChevronDown, Users, ArrowUpRight } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet } from '@/lib/apiClient';
 
@@ -76,19 +77,34 @@ function buildPatients(bookings) {
 
 function PatientCard({ patient }) {
   const [open, setOpen] = useState(false);
+  // Detail page accepts either a profile id or an email — the bookings-derived
+  // rollup only has the email, so we route by that. /api/admin/clients/[id]
+  // falls back to email lookup.
+  const detailKey = patient.email || patient.key;
   return (
     <div className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-      <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-start justify-between gap-3 text-left">
-        <div className="min-w-0">
-          <h3 className="truncate font-heading text-xl uppercase leading-none">{patient.name}</h3>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-xs" style={{ color: DIM }}>
-            {patient.email ? <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" strokeWidth={1.7} />{patient.email}</span> : null}
-            {patient.phone ? <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" strokeWidth={1.7} />{patient.phone}</span> : null}
-            <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" strokeWidth={1.7} />Last visit {fmtDate(patient.lastVisit)}</span>
+      <div className="flex w-full items-start justify-between gap-3">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-start gap-3 text-left">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-heading text-xl uppercase leading-none">{patient.name}</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-xs" style={{ color: DIM }}>
+              {patient.email ? <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" strokeWidth={1.7} />{patient.email}</span> : null}
+              {patient.phone ? <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" strokeWidth={1.7} />{patient.phone}</span> : null}
+              <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" strokeWidth={1.7} />Last visit {fmtDate(patient.lastVisit)}</span>
+            </div>
           </div>
-        </div>
-        <ChevronDown className={`mt-1 h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} style={{ color: DIM }} />
-      </button>
+          <ChevronDown className={`mt-1 h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} style={{ color: DIM }} />
+        </button>
+        {detailKey ? (
+          <Link
+            to={`/admin/clients/${encodeURIComponent(detailKey)}`}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em]"
+            style={{ background: CARD_STRONG, color: 'hsl(var(--foreground))', border: `1px solid ${BORDER}` }}
+          >
+            Open <ArrowUpRight className="h-3 w-3" strokeWidth={2} />
+          </Link>
+        ) : null}
+      </div>
 
       <div className="mt-4 grid gap-2 border-t pt-3 sm:grid-cols-3" style={{ borderColor: BORDER }}>
         <div>
