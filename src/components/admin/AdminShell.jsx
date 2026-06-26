@@ -98,11 +98,41 @@ const NAV_LIVE = [
   {
     label: 'Operations', icon: ShieldCheck, children: [
       { label: 'Team', to: '/admin/team' },
+      {
+        label: 'Clinical', children: [
+          {
+            label: 'Staff', children: [
+              { label: 'Clinical Staff', to: '/admin/soon?feature=Clinical%20Staff' },
+              { label: 'Nurse Records', to: '/admin/soon?feature=Nurse%20Records' },
+              { label: 'Credentialing', to: '/admin/soon?feature=Credentialing' },
+              { label: 'Contracts', to: '/admin/soon?feature=Contracts' },
+              { label: 'Insurance', to: '/admin/soon?feature=Insurance' },
+            ],
+          },
+          {
+            label: 'Documentation', children: [
+              { label: 'Nursing Manual', to: '/admin/soon?feature=Nursing%20Manual' },
+              { label: 'SOPs', to: '/admin/soon?feature=SOPs' },
+              { label: 'Standing Orders', to: '/admin/soon?feature=Standing%20Orders' },
+              { label: 'Policies', to: '/admin/soon?feature=Policies' },
+              { label: 'Forms & Templates', to: '/admin/soon?feature=Forms%20%26%20Templates' },
+            ],
+          },
+          {
+            label: 'Quality', children: [
+              { label: 'Quality Assurance', to: '/admin/soon?feature=Quality%20Assurance' },
+              { label: 'Incident Reports', to: '/admin/soon?feature=Incident%20Reports' },
+              { label: 'Audits', to: '/admin/soon?feature=Audits' },
+              { label: 'Training', to: '/admin/soon?feature=Training' },
+            ],
+          },
+          { label: 'Clinical Inventory', to: '/admin/soon?feature=Clinical%20Inventory' },
+        ],
+      },
       { label: 'GFE policy', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
       { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
       { label: 'Events', to: '/admin/soon?feature=Events' },
-      { label: 'Clinical staff', to: '/admin/soon?feature=Clinical%20Staff' },
       { label: 'Tools', to: '/admin/soon?feature=Tools' },
     ],
   },
@@ -170,7 +200,11 @@ function NestedGroup({ item, pathname, onNavigate }) {
       <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
         <div className="overflow-hidden">
           <div className="ml-3 mt-0.5 grid gap-px border-l border-foreground/10 pl-2">
-            {item.children.map((c) => <ChildLeaf key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />)}
+            {item.children.map((c) => (
+              c.children
+                ? <NestedGroup key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
+                : <ChildLeaf key={c.label} item={c} pathname={pathname} onNavigate={onNavigate} />
+            ))}
           </div>
         </div>
       </div>
