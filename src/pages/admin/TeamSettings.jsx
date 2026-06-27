@@ -129,6 +129,11 @@ export default function TeamSettings() {
     () => members.filter((m) => m.role === 'admin' && m.status === 'active').length,
     [members],
   );
+  // Deactivated members drop out of the main roster (deactivating = removing
+  // access should clear them from view) and live in a separate, reversible
+  // "Deactivated" section.
+  const activeMembers = useMemo(() => members.filter((m) => m.status !== 'inactive'), [members]);
+  const deactivatedMembers = useMemo(() => members.filter((m) => m.status === 'inactive'), [members]);
 
   const actions = canManageTeam ? (
     <Button onClick={() => setInviteOpen(true)} className="gap-2">
@@ -160,13 +165,13 @@ export default function TeamSettings() {
                 <p className="font-body text-sm text-foreground/55">No {group === 'avalon' ? 'Avalon' : 'Clinical'} staff yet.</p>
                 <p className="mt-1 font-body text-[12px] text-foreground/35">You'll be able to add them here later.</p>
               </div>
-            ) : members.length === 0 ? (
+            ) : activeMembers.length === 0 ? (
               <div className="rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02] px-5 py-12 text-center font-body text-sm text-foreground/50">
                 No staff yet. Invite your first teammate.
               </div>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
-                {members.map((m) => (
+                {activeMembers.map((m) => (
                   <div key={m.id} className="rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02] p-5">
                     <div className="flex items-center gap-3.5">
                       <Monogram name={m.full_name || m.email} />
@@ -213,6 +218,30 @@ export default function TeamSettings() {
                         <div className="flex items-center gap-2">
                           <InviteRowActions invite={inv} isDemo={isDemo} onDone={(msg) => { setNotice(msg); load(); }} onErr={setError} />
                         </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Deactivated members — out of the main roster, still reactivatable */}
+            {group === 'admin' && deactivatedMembers.length > 0 && (
+              <div className="mt-7">
+                <h3 className="mb-3 font-heading text-xl uppercase tracking-[0.04em] text-foreground/55">Deactivated</h3>
+                <div className="overflow-hidden rounded-[1.4rem] border border-foreground/[0.10] bg-foreground/[0.02] divide-y divide-foreground/[0.06]">
+                  {deactivatedMembers.map((m) => (
+                    <div key={m.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                      <div className="min-w-0">
+                        <p className="truncate font-body text-sm font-semibold text-foreground/65">{m.full_name || m.email}</p>
+                        <p className="truncate font-body text-[12px] text-foreground/40">
+                          {m.email} · {m.role === 'admin' ? 'Full Admin' : 'Staff'} · access removed
+                        </p>
+                      </div>
+                      {canManageTeam && (
+                        <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setManage(m)}>
+                          <UserCheck className="h-4 w-4" /> Manage
+                        </Button>
                       )}
                     </div>
                   ))}
