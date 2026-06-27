@@ -7,6 +7,7 @@ import {
   ChevronDown,
   CreditCard,
   Droplets,
+  Info,
   Minus,
   Plus,
   Sparkles,
@@ -313,7 +314,7 @@ function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE })
 // Collapsed by default; tapping the header toggles the EXISTING control open via
 // SmoothDisclosure. The `value` is a live summary string read from existing
 // builder state (no new value state is introduced).
-function BuilderRow({ title, value, icon: Icon, open, onToggle, children }) {
+function BuilderRow({ title, value, hint, icon: Icon, open, onToggle, children }) {
   return (
     <div className={`av-treatment-card relative overflow-hidden rounded-[1.05rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}>
       <button
@@ -328,7 +329,12 @@ function BuilderRow({ title, value, icon: Icon, open, onToggle, children }) {
               <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
             </span>
           )}
-          <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
+          <span className="flex min-w-0 flex-col">
+            <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
+            {hint && (
+              <span className="mt-1 truncate font-body text-[12px] font-semibold normal-case tracking-normal text-foreground/45 md:text-[13px]">{hint}</span>
+            )}
+          </span>
         </div>
         <div className="flex min-w-0 shrink items-center justify-end gap-3">
           {value && (
@@ -590,14 +596,14 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
   const renews = isMonthly ? 'every month' : `every ${term.label.toLowerCase()}`;
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
-      <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-3">
+      <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-2.5">
         <p className="font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/48">Your plan</p>
         <p className="font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/40">{sessions} {sessions === 1 ? 'visit' : 'visits'} / month</p>
       </div>
 
-      <div className="flex items-center gap-3.5 px-4 pt-4">
-        <div className="flex h-[6.5rem] w-20 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-background/40">
-          <img src={bag} alt="" className="h-[5.6rem] w-auto object-contain" />
+      <div className="flex items-center gap-3.5 px-4 pt-3.5">
+        <div className="flex h-[5.4rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-background/40">
+          <img src={bag} alt="" className="h-[4.6rem] w-auto object-contain" />
         </div>
         <div className="min-w-0">
           <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
@@ -609,7 +615,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-3">
         <div className="flex items-baseline justify-between gap-2">
           <span className="font-heading text-[2.7rem] leading-none text-foreground">{money(isMonthly ? monthly : perMonth)}</span>
           <span className="font-body text-sm font-bold text-foreground/52">/mo</span>
@@ -618,7 +624,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
 
       {/* How billing works — deposit today, balance after the first visit, then
           the full plan every period. Same numbers PlanCheckout charges. */}
-      <div className="mx-4 mt-3 rounded-xl border border-foreground/12 bg-foreground/[0.04] px-3 py-2.5">
+      <div className="mx-4 mt-2 rounded-xl border border-foreground/12 bg-foreground/[0.04] px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/74">Due today</span>
           <span className="font-heading text-[1.3rem] leading-none text-foreground tabular-nums">{money(depositToday)}</span>
@@ -626,7 +632,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
         <p className="mt-0.5 font-body text-[13px] font-bold uppercase tracking-[0.06em] text-foreground/42">
           $50 deposit{peopleCount > 1 ? ` · ${peopleCount} people` : ' to start'}
         </p>
-        <div className="mt-2 space-y-1 border-t border-foreground/10 pt-2 font-body text-[14px] font-semibold text-foreground/60">
+        <div className="mt-1.5 space-y-1 border-t border-foreground/10 pt-1.5 font-body text-[14px] font-semibold text-foreground/60">
           <div className="flex items-center justify-between gap-2">
             <span>Balance after 1st visit</span>
             <span className="text-foreground/80 tabular-nums">{money(firstVisitBalance)}</span>
@@ -638,7 +644,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
         </div>
       </div>
 
-      <div className="mt-4 grid gap-1.5 border-t border-foreground/10 px-4 pt-3.5">
+      <div className="mt-2.5 grid gap-1 border-t border-foreground/10 px-4 pt-2.5">
         <p className="mb-0.5 font-body text-[13px] font-black uppercase tracking-[0.16em] text-foreground/40">
           {sessions} {sessions === 1 ? 'visit' : 'visits'} / month
         </p>
@@ -676,18 +682,18 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
         </div>
       )}
 
-      <div className="px-4 pb-4 pt-4">
+      <div className="px-4 pb-3.5 pt-2.5">
         {showStart && (
           <button
             type="button"
             onClick={onStart}
-            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
           >
             Start plan <ArrowRight className="h-4 w-4" />
           </button>
         )}
-        <p className={`text-center font-body text-[14px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2.5' : ''}`}>
-          Cancel anytime after the 3-month minimum
+        <p className={`text-center font-body text-[14px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2' : ''}`}>
+          Secure checkout. Cancel anytime after the 3-month minimum.
         </p>
       </div>
     </div>
@@ -942,6 +948,7 @@ export default function Subscription() {
       perMonth={perMonth}
       upfrontTotal={upfrontTotal}
       onStart={startPlan}
+      showStart={false}
       peopleBreakdown={peopleBreakdown}
       peopleCount={peopleCount}
     />
@@ -952,8 +959,8 @@ export default function Subscription() {
       <header>
         <Navbar />
       </header>
-      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-28">
-        <div className="mb-4 text-center md:mb-7 md:text-left">
+      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
+        <div className="mb-4 text-center md:mb-4 md:text-left">
           <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Choose your plan</h1>
           <p className="mt-1.5 font-body text-sm font-semibold text-foreground/68 md:text-base">Up to 4 people on one plan. Cancel anytime.</p>
         </div>
@@ -970,6 +977,7 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.sessions}
                 value={sessionsSummary}
+                hint="Choose how many visits per month."
                 icon={CalendarClock}
                 open={openStep === 'sessions'}
                 onToggle={() => toggleStep('sessions')}
@@ -980,6 +988,7 @@ export default function Subscription() {
               <BuilderRow
                 title="Who's on it"
                 value={peopleSummary}
+                hint="Add up to 3 more people."
                 icon={Users}
                 open={openStep === 'people'}
                 onToggle={() => toggleStep('people')}
@@ -997,6 +1006,7 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.therapy}
                 value={therapySummary}
+                hint="Change your therapy for any visit."
                 icon={Droplets}
                 open={openStep === 'therapy'}
                 onToggle={() => toggleStep('therapy')}
@@ -1016,6 +1026,7 @@ export default function Subscription() {
                 <BuilderRow
                   title={STEP_TITLES.addons}
                   value={addonsSummary}
+                  hint="Pay only the difference for premium services."
                   icon={Sparkles}
                   open={openStep === 'addons'}
                   onToggle={() => toggleStep('addons')}
@@ -1032,6 +1043,7 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.term}
                 value={termSummary}
+                hint="Cancel or change anytime."
                 icon={CreditCard}
                 open={openStep === 'term'}
                 onToggle={() => toggleStep('term')}
@@ -1039,6 +1051,28 @@ export default function Subscription() {
                 <StepTerm monthly={monthly} termKey={termKey} onTerm={setTermKey} upfrontTotal={upfrontTotal} perMonth={perMonth} />
               </BuilderRow>
             </motion.div>
+
+            {/* Desktop: a quiet "how it works" explainer, then the primary CTA at
+                the foot of the builder column (mobile uses the sticky bar below). */}
+            <div className="mt-2.5 hidden items-start gap-3 rounded-[1.05rem] border border-foreground/10 bg-foreground/[0.03] px-4 py-3 md:flex">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.05]">
+                <Info className="h-[17px] w-[17px] text-foreground/55" strokeWidth={2} />
+              </span>
+              <div className="min-w-0">
+                <p className="font-heading text-base uppercase leading-none tracking-normal text-foreground">How it works</p>
+                <p className="mt-1.5 font-body text-[13px] font-semibold leading-snug text-foreground/55">
+                  Each visit includes any service up to {money(VISIT_CREDIT)}. Pay only the difference for premium services.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={startPlan}
+              className="mt-2.5 hidden min-h-[54px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] md:flex"
+            >
+              Continue to checkout <ArrowRight className="h-4 w-4" />
+            </button>
 
             {/* Mobile: full plan rail (info only), then a sticky price + Start plan bar */}
             <div className="mt-5 md:hidden">
@@ -1071,7 +1105,7 @@ export default function Subscription() {
           </div>
 
           {/* Right — the persistent "Your Plan" rail (desktop only) */}
-          <aside className="hidden md:sticky md:top-28 md:block">{rail}</aside>
+          <aside className="hidden md:sticky md:top-[5.75rem] md:block">{rail}</aside>
         </div>
       </main>
     </div>
