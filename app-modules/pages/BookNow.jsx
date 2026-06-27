@@ -6957,6 +6957,10 @@ export default function BookNow() {
                 {step === 4 && (
                   <>
                     <SectionTitle icon={Check} title={fastMode ? 'Patient' : 'Confirm'} sub={fastMode ? 'Required before payment.' : ''} />
+                    {/* Mobile: drop the product+price receipt to the bottom (just above the
+                        sticky CTA). Desktop keeps the original order — receipt on top. */}
+                    <div className="flex flex-col">
+                    <div className="order-last md:order-first">
                     <ConfirmSummary
                       state={state}
                       product={product}
@@ -6965,6 +6969,8 @@ export default function BookNow() {
                       dueNow={dueNowAmount}
                       balanceDue={balanceDue}
                     />
+                    </div>
+                    <div className="order-first md:order-last">
                     {canUseClinicalReviewOnFile && (
 	                    <ClinicalReviewChoice
 	                      value={state.clinicalReviewOnFile}
@@ -7011,6 +7017,8 @@ export default function BookNow() {
                         By paying, I consent to telehealth review, medical intake, and privacy terms. Treatment is subject to clinical approval.
                       </p>
                     )}
+                    </div>
+                    </div>
                   </>
                 )}
               </div>
