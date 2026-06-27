@@ -32,6 +32,12 @@ const EASE = [0.16, 1, 0.3, 1];
 // months to save. Add-ons use full catalog price; the term discount applies to
 // the whole plan.
 const VITAMIN_IV_PRICE = 250;
+// ── Visit Credit membership model ─────────────────────────────────────────
+// We sell VISITS (capacity), not IVs. Each visit carries a $250 "Visit Credit"
+// of appointment value. Any service plugs into a visit: cart ≤ credit =
+// Included; cart > credit = pay only the difference. This is the extensible
+// engine future TRT / exosomes / supplements / labs will plug into.
+const VISIT_CREDIT = 250;
 const SESSION_OPTIONS = [1, 2, 3, 4];
 
 // Terms. Monthly is the low-friction default; 6mo (-8%) and 12mo (-15%) come
@@ -111,6 +117,21 @@ function visitPrice(visit) {
   const ivAdd = IV_ADDON_ITEMS.reduce((sum, item) => sum + (visit.ivQty?.[item.key] || 0) * item.price, 0);
   const imAdd = IM_ADDON_ITEMS.reduce((sum, item) => sum + (visit.imQty?.[item.key] || 0) * item.price, 0);
   return iv + ivAdd + imAdd;
+}
+
+// Visit Credit math for ONE visit. `cart` is the raw appointment value
+// (visitPrice). The member pays at least the $250 credit; anything over the
+// credit is the `upgrade` (the difference they actually pay extra). Below the
+// credit the upgrade is $0 → the visit reads "Included".
+function visitCredit(visit) {
+  const cart = visitPrice(visit);
+  const upgrade = Math.max(0, cart - VISIT_CREDIT);
+  return {
+    cart,
+    upgrade,
+    included: cart <= VISIT_CREDIT,
+    total: VISIT_CREDIT + upgrade, // = max(VISIT_CREDIT, cart)
+  };
 }
 
 // Collapse dose variants ("Vitamin C IV Push · 5g / 10g / 15g") into one row
@@ -384,15 +405,24 @@ function VisitRow({ index, visit, onTherapy, onIv, onIm }) {
   const addonCount =
     IV_ADDON_ITEMS.reduce((s, i) => s + (visit.ivQty?.[i.key] || 0), 0) +
     IM_ADDON_ITEMS.reduce((s, i) => s + (visit.imQty?.[i.key] || 0), 0);
+  // Visit Credit framing: show "Included" when the cart fits the $250 credit,
+  // or "+$<difference>" when it spills over — never the raw IV price.
+  const { included, upgrade } = visitCredit(visit);
   return (
     <div className="av-treatment-card rounded-xl border p-2.5 md:p-3">
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <span className="font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/52">
           Visit {index + 1}
         </span>
-        <span className="font-body text-[13px] font-bold uppercase tracking-[0.06em] text-foreground/44 tabular-nums">
-          {money(visitPrice(visit))}
-        </span>
+        {included ? (
+          <span className="font-body text-[13px] font-black uppercase tracking-[0.08em] text-emerald-300/90 tabular-nums">
+            Included
+          </span>
+        ) : (
+          <span className="font-body text-[13px] font-black uppercase tracking-[0.06em] text-foreground/72 tabular-nums">
+            +{money(upgrade)}
+          </span>
+        )}
       </div>
       <PlanSelect value={visit.therapyKey} onChange={onTherapy} ariaLabel={`Visit ${index + 1} therapy`} icon={Droplets}>
         {CATEGORIES.map((cat) => (
@@ -438,14 +468,28 @@ function VisitRow({ index, visit, onTherapy, onIv, onIm }) {
 // Therapy step. 1 session → a single grouped IV picker. 2+ sessions → one dense
 // VisitRow per visit (each its own IV + add-ons). Defaults are uniform: every
 // visit seeds from visit 0, so it reads as "same IV every visit" until edited.
+function CreditNote() {
+  return (
+    <p className="font-body text-[13px] font-semibold leading-snug text-foreground/55">
+      Each visit includes any service up to {money(VISIT_CREDIT)}. Premium services — you only pay the difference.
+    </p>
+  );
+}
+
 function StepVisits({ sessions, visits, onVisitTherapy, onVisitIv, onVisitIm }) {
   if (sessions <= 1) {
-    return <StepTherapy therapyKey={visits[0]?.therapyKey} onSelect={(key) => onVisitTherapy(0, key)} />;
+    return (
+      <div className="grid gap-2">
+        <CreditNote />
+        <StepTherapy therapyKey={visits[0]?.therapyKey} onSelect={(key) => onVisitTherapy(0, key)} />
+      </div>
+    );
   }
   return (
     <div className="grid gap-2">
+      <CreditNote />
       <p className="font-body text-[13px] font-semibold leading-snug text-foreground/52">
-        Each visit can be a different IV. They start matched — change any visit to mix it up.
+        Each visit can be a different service. They start matched — change any visit to mix it up.
       </p>
       {visits.map((visit, i) => (
         <VisitRow
@@ -532,7 +576,7 @@ function RailLine({ label, value, muted }) {
 // The persistent "Your Plan" rail — mirrors the one-time-visit store's order
 // rail (dark glass aside) but adopts the builder's live summary: bag, monthly
 // price, what's included, and the upfront savings.
-function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLineItems = [], visitsDiffer = false, monthly, term, perMonth, upfrontTotal, onStart, showStart = true, peopleBreakdown = [], peopleCount = 1 }) {
+function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLineItems = [], visitsDiffer = false, monthly, planBase = 0, upgradesTotal = 0, term, perMonth, upfrontTotal, onStart, showStart = true, peopleBreakdown = [], peopleCount = 1 }) {
   const isMonthly = term.key === 'monthly';
   const bag = therapyOption?.image || '/bags/dehydration.webp';
   const saving = Math.round(monthly * term.months - upfrontTotal);
@@ -548,7 +592,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
     <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
       <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-3">
         <p className="font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/48">Your plan</p>
-        <p className="font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/40">{sessions}× / month</p>
+        <p className="font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/40">{sessions} {sessions === 1 ? 'visit' : 'visits'} / month</p>
       </div>
 
       <div className="flex items-center gap-3.5 px-4 pt-4">
@@ -595,22 +639,32 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
       </div>
 
       <div className="mt-4 grid gap-1.5 border-t border-foreground/10 px-4 pt-3.5">
-        <p className="mb-0.5 font-body text-[13px] font-black uppercase tracking-[0.16em] text-foreground/40">Included</p>
+        <p className="mb-0.5 font-body text-[13px] font-black uppercase tracking-[0.16em] text-foreground/40">
+          {sessions} {sessions === 1 ? 'visit' : 'visits'} / month
+        </p>
+        <RailLine label={`Includes any service up to ${money(VISIT_CREDIT)}/visit`} value={money(planBase)} />
         {isMultiPerson ? (
           peopleBreakdown.map((row) => (
             <RailLine
               key={row.person.id}
-              label={`${row.label} · ${row.therapy?.label || 'IV pending'}`}
-              value={money(row.total)}
+              label={`${row.label} · ${row.therapy?.label || 'service pending'}`}
+              value={row.upgrades > 0 ? `+${money(row.upgrades)}` : 'Included'}
+              muted={row.upgrades <= 0}
             />
           ))
-        ) : visitsDiffer ? (
-          // Mixed plan: one line per visit so the per-visit IVs are legible.
-          visitLineItems.map((li) => (
-            <RailLine key={li.index} label={`Visit ${li.index + 1} · ${li.label}`} value={money(li.price)} />
-          ))
         ) : (
-          <RailLine label={`${sessions}× ${therapyLabel}`} value={money(baseMonthly)} />
+          // One line per visit, framed by the credit: Included or +$difference.
+          visitLineItems.map((li) => (
+            <RailLine
+              key={li.index}
+              label={`Visit ${li.index + 1} · ${li.label}`}
+              value={li.included ? 'Included' : `+${money(li.upgrade)}`}
+              muted={li.included}
+            />
+          ))
+        )}
+        {upgradesTotal > 0 && (
+          <RailLine label="Premium upgrades" value={`+${money(upgradesTotal)}`} />
         )}
         <RailLine label="Concierge mobile visits" />
         <RailLine label="Clinical review each visit" />
@@ -734,11 +788,14 @@ export default function Subscription() {
   const { option: therapyOption } = findTherapy(visits[0]?.therapyKey);
   const perIvPrice = Number(therapyOption?.price || VITAMIN_IV_PRICE);
 
-  // Per-visit line breakdown for the active person (one row per visit).
+  // Per-visit line breakdown for the active person (one row per visit). Each
+  // line carries the Visit Credit verdict so the rail can render "Included" or
+  // "+$<difference>" instead of the raw price.
   const visitLineItems = useMemo(
     () => visits.map((v, i) => {
       const { option } = findTherapy(v.therapyKey);
-      return { index: i, label: option?.label || '—', price: visitPrice(v) };
+      const { included, upgrade } = visitCredit(v);
+      return { index: i, label: option?.label || '—', included, upgrade };
     }),
     [visits]
   );
@@ -747,14 +804,17 @@ export default function Subscription() {
     return visits.some((v) => sig(v) !== sig(visits[0]));
   }, [visits]);
 
-  // personMonthly = SUM of visitPrice over a person's visits (the visits array
-  // length already IS sessions). Plan monthly = sum across all people. The term
-  // discount applies to that whole summed monthly.
+  // personMonthly under the Visit Credit model: each visit is floored at the
+  // $250 credit, so `total` = Σ max(VISIT_CREDIT, cart) = base + upgrades. The
+  // visits array length IS sessions, so base = sessions × $250 per person.
+  // Plan monthly = sum across all people; the term discount applies to that.
   const personMonthly = (person) => {
     const pv = resizeVisits(person, sessions);
-    const total = pv.reduce((sum, v) => sum + visitPrice(v), 0);
+    const base = pv.length * VISIT_CREDIT;
+    const total = pv.reduce((sum, v) => sum + visitCredit(v).total, 0);
+    const upgrades = total - base;
     const { option } = findTherapy(pv[0]?.therapyKey);
-    return { therapy: option, visits: pv, total };
+    return { therapy: option, visits: pv, total, base, upgrades };
   };
   // Snapshot the OTHER people's stashed selections + the active person's live
   // visits to compute total monthly.
@@ -764,7 +824,13 @@ export default function Subscription() {
     return { ...m, person: p, index, label: personLabelFor(p, index) };
   });
   const peopleCount = peopleBreakdown.length;
+  // Plan economics under the Visit Credit model:
+  //   planBase     = Σ (people's visits × $250)  — the membership price.
+  //   monthly      = Σ max(VISIT_CREDIT, cart)    — base + premium upgrades.
+  //   upgradesTotal= monthly − planBase           — extra paid above credits.
   const monthly = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
+  const planBase = peopleBreakdown.reduce((sum, row) => sum + row.base, 0);
+  const upgradesTotal = monthly - planBase;
   const baseMonthly = peopleBreakdown.find((r) => r.person.id === activePersonId)?.total || 0;
   // Roster rows for the "YOUR SESSION" builder. Plans show a per-person monthly.
   const sessionPeople = peopleBreakdown.map((row) => ({
@@ -819,6 +885,9 @@ export default function Subscription() {
         therapyLabel: v0opt?.label || '',
         ivPrice: Number(v0opt?.price || VITAMIN_IV_PRICE),
         monthly: row.total,
+        // Visit Credit economics for this person (membership base vs upgrades).
+        base: row.base,
+        upgrades: row.upgrades,
         ivQty: v0.ivQty || {},
         imQty: v0.imQty || {},
         visits: row.visits.map((v) => {
@@ -829,10 +898,16 @@ export default function Subscription() {
             ...IV_ADDON_ITEMS.filter((it) => (v.ivQty?.[it.key] || 0) > 0).map((it) => ({ label: it.label, qty: v.ivQty[it.key] })),
             ...IM_ADDON_ITEMS.filter((it) => (v.imQty?.[it.key] || 0) > 0).map((it) => ({ label: it.label, qty: v.imQty[it.key] })),
           ];
+          // Per-visit Visit Credit verdict so checkout can show Included vs the
+          // premium difference without re-deriving the credit math.
+          const { included, upgrade } = visitCredit(v);
           return {
             therapyKey: v.therapyKey,
             therapyLabel: option?.label || '',
             ivPrice: Number(option?.price || VITAMIN_IV_PRICE),
+            credit: VISIT_CREDIT,
+            included,
+            upgrade,
             ivQty: v.ivQty || {},
             imQty: v.imQty || {},
             addons,
@@ -862,6 +937,8 @@ export default function Subscription() {
       visitLineItems={visitLineItems}
       visitsDiffer={visitsDiffer}
       monthly={monthly}
+      planBase={planBase}
+      upgradesTotal={upgradesTotal}
       term={term}
       perMonth={perMonth}
       upfrontTotal={upfrontTotal}
@@ -974,6 +1051,8 @@ export default function Subscription() {
                 visitLineItems={visitLineItems}
                 visitsDiffer={visitsDiffer}
                 monthly={monthly}
+                planBase={planBase}
+                upgradesTotal={upgradesTotal}
                 term={term}
                 perMonth={perMonth}
                 upfrontTotal={upfrontTotal}
