@@ -263,30 +263,23 @@ function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE })
   );
 }
 
-// A V2 section card on the one-screen builder. Matches the landing
-// `av-treatment-card` row pattern: an `av-treatment-icon` badge, a font-heading
-// title, a right-aligned chevron to signal interactivity, then the body below a
-// hairline divider. Title only — no sub-paragraph, to keep the screen scannable.
-function Section({ title, action, children, icon: Icon }) {
+// A compact section block on the one-screen builder. Dividers separate
+// decisions. Title only — no sub-paragraph, to keep the screen scannable.
+function Section({ title, action, children, first, icon: Icon }) {
   return (
-    <section className="av-treatment-card relative overflow-hidden rounded-[1.05rem] border">
-      <div className="flex items-center justify-between gap-3 px-4 py-3.5 md:px-5">
-        <h2 className="flex min-w-0 items-center gap-3 font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.8rem]">
+    <section className={first ? '' : 'mt-5 border-t border-foreground/10 pt-5 md:mt-6 md:pt-6'}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2.5 font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.8rem]">
           {Icon && (
-            <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
               <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
             </span>
           )}
           {title}
         </h2>
-        <div className="flex shrink-0 items-center gap-4">
-          {action}
-          <ChevronDown className="h-4 w-4 shrink-0 text-foreground/55" strokeWidth={2} aria-hidden="true" />
-        </div>
+        {action}
       </div>
-      <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3.5 md:px-5">
-        {children}
-      </div>
+      {children}
     </section>
   );
 }
@@ -296,14 +289,9 @@ function Section({ title, action, children, icon: Icon }) {
 function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart }) {
   return (
     <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-foreground/10 bg-background/92 px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 backdrop-blur-xl md:hidden">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate font-body text-[15px] font-bold text-foreground/64">
-          {therapyLabel} · {sessions}×/mo · {money(monthly)}/mo
-        </p>
-        <p className="shrink-0 font-body text-sm font-black text-foreground" aria-live="polite">
-          {money(depositToday)}<span className="text-foreground/50"> today</span>
-        </p>
-      </div>
+      <p className="mb-2 truncate font-body text-[13px] font-bold uppercase tracking-[0.08em] text-foreground/55" aria-live="polite">
+        {therapyLabel} · {sessions}×/mo · {money(monthly)}/mo
+      </p>
       <button
         type="button"
         onClick={onStart}
@@ -437,7 +425,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, lineItem
   const firstVisitBalance = Math.max(0, periodTotal - depositToday);
   const renews = isMonthly ? 'every month' : `every ${term.label.toLowerCase()}`;
   return (
-    <div className="overflow-hidden rounded-[1.05rem] border border-foreground/10 bg-background">
+    <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
       <div className="flex items-center justify-between gap-2 border-b border-foreground/10 px-4 py-3">
         <p className="font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/48">Your plan</p>
         <p className="font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/40">{sessions}× / month</p>
@@ -729,7 +717,7 @@ export default function Subscription() {
       </header>
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-28">
         <div className="mb-4 text-center md:mb-7 md:text-left">
-          <h1 className="whitespace-nowrap font-heading text-[2.15rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Choose your plan</h1>
+          <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Choose your plan</h1>
           <p className="mt-1.5 font-body text-sm font-semibold text-foreground/68 md:text-base">Up to 4 people on one plan. Cancel anytime.</p>
         </div>
 
@@ -740,9 +728,9 @@ export default function Subscription() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, ease: EASE }}
-              className="flex flex-col gap-3 md:gap-3.5"
+              className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
             >
-              <Section title={STEP_TITLES.sessions} icon={CalendarClock}>
+              <Section title={STEP_TITLES.sessions} icon={CalendarClock} first>
                 <SessionSegment sessions={sessions} onSessions={setSessions} perIvPrice={perIvPrice} />
               </Section>
 
