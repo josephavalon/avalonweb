@@ -187,13 +187,18 @@ export default function PlanCheckout() {
     setSubmitting(true);
     setError('');
     try {
+      // Total visits the plan grants each cycle = sum of every person's monthly
+      // visits. Falls back to sessions × people when no per-person manifest.
+      const visitsPerCycle = peopleManifest.length
+        ? peopleManifest.reduce((sum, person) => sum + (Array.isArray(person.visits) ? person.visits.length : 0), 0)
+        : sessions * peopleCount;
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'payment',
           checkoutUiMode: 'hosted',
-          membership: { name: 'custom', price: perPeriodTotal, billing: term.billing },
+          membership: { name: 'custom', price: perPeriodTotal, billing: term.billing, visitsPerCycle },
           contact: {
             firstName: contact.firstName.trim(),
             lastName: contact.lastName.trim(),

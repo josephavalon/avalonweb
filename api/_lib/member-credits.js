@@ -82,6 +82,8 @@ export async function grantMembershipCredit(db, {
   stripeInvoiceId = null,
   source = 'membership_initial_grant',
   description = 'Membership IV credit',
+  units = 1,
+  creditValueCents = 0,
   externalPayload = {},
 } = {}) {
   if (!db || !tenantId) return null;
@@ -96,8 +98,8 @@ export async function grantMembershipCredit(db, {
     stripe_subscription_id: stripeSubscriptionId || null,
     stripe_invoice_id: stripeInvoiceId || null,
     source,
-    units: 1,
-    credit_value_cents: 0,
+    units: Math.max(1, Math.floor(Number(units) || 1)),
+    credit_value_cents: Math.max(0, Math.round(Number(creditValueCents) || 0)),
     currency: 'usd',
     description,
     external_payload: externalPayload || {},

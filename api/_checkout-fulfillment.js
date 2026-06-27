@@ -400,6 +400,7 @@ export async function createDeferredPlanSubscription(stripe, { session, md, paym
         appointmentRecordId: recordId || '',
         stripeCheckoutSessionId: session.id,
         planName,
+        visits_per_cycle: String(md.planVisitsPerCycle || 1),
       }),
     },
     { idempotencyKey: `plan-sub:${scope}` },
@@ -579,6 +580,7 @@ export function buildStripeCheckoutMetadata({
     // later). Empty for one-time visits.
     planSignup: membership ? 'true' : '',
     planMonthlyPriceCents: membership ? String(Math.round(Number(membership.price || 0) * 100)) : '',
+    planVisitsPerCycle: membership ? String(Math.max(1, Math.floor(Number(membership.visitsPerCycle) || 1))) : '',
     planFirstVisitDate: appointment.acuityDatetime,
     peopleCount: String(appointment.peopleCount || 1),
   });

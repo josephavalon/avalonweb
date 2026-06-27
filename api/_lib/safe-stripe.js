@@ -57,6 +57,8 @@ const STRIPE_METADATA_ALLOWED_KEYS = new Set([
   'planSignup',
   'planName',
   'planMonthlyPriceCents',
+  'planVisitsPerCycle',
+  'visits_per_cycle',
   'planFirstVisitDate',
   'stripeCheckoutSessionId',
   // Fulfillment-state breadcrumbs written back to PaymentIntent metadata

@@ -35,6 +35,9 @@ export const config = {
   },
 };
 
+// Dollar value (cents) attributed to each granted membership visit-credit.
+const VISIT_CREDIT_CENTS = 25000;
+
 const STRIPE_WEBHOOK_MAX_BODY_BYTES = Number.parseInt(process.env.STRIPE_WEBHOOK_MAX_BODY_BYTES || String(512 * 1024), 10);
 const STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS = Number.parseInt(process.env.STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS || '10000', 10);
 
@@ -486,6 +489,8 @@ async function recordMembershipInitialCredit(db, {
       stripeSubscriptionId: planSubscriptionId || null,
       source: 'membership_initial_grant',
       description: 'Membership IV credit',
+      units: Math.max(1, Number(checkout.membership?.visitsPerCycle || 1)),
+      creditValueCents: VISIT_CREDIT_CENTS,
       externalPayload: {
         membershipName: checkout.membership?.name || '',
         membershipBilling: checkout.membership?.billing || '',
@@ -1127,6 +1132,8 @@ async function handleInvoicePaid(stripe, db, invoice) {
     stripeInvoiceId: invoice.id,
     source: 'membership_renewal_grant',
     description: 'Membership renewal IV credit',
+    units: Math.max(1, Number(subscription?.metadata?.visits_per_cycle || 1)),
+    creditValueCents: VISIT_CREDIT_CENTS,
     externalPayload: {
       membershipName: checkout?.membership?.name || md.planName || '',
       invoiceBillingReason: invoice.billing_reason || '',
