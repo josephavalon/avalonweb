@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
-import { useMessages } from '@/hooks/useMessages';
+import { apiGet } from '@/lib/apiClient';
 import { cycleTheme, getThemeLabel, readStoredTheme } from '@/lib/theme';
 
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
@@ -462,7 +462,24 @@ function AdminProfileMenu({ user, onSignOut }) {
   const [themeLabel, setThemeLabel] = useState(() => getThemeLabel(readStoredTheme()));
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
-  const { unreadCount } = useMessages();
+
+  // Team-inbox unread badge — lightweight poll on the new service-role API
+  // (replaces the old realtime useMessages() hook). Fails closed to 0.
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const fetchUnread = async () => {
+      try {
+        const data = await apiGet('/api/admin/team-messages/unread');
+        if (alive) setUnreadCount(Number(data?.unread) || 0);
+      } catch {
+        if (alive) setUnreadCount(0);
+      }
+    };
+    fetchUnread();
+    const t = setInterval(fetchUnread, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
 
   // Anchor the menu to the trigger with FIXED positioning, rendered through a
   // portal on document.body. The admin header uses backdrop-filter, which
