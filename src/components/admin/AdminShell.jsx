@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AvalonMark from '@/components/AvalonMark';
 import {
@@ -456,17 +457,41 @@ function MenuRow({ icon: Icon, label, to, onClick, right, danger }) {
 
 function AdminProfileMenu({ user, onSignOut }) {
   const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState(null);
   const [prefs, setPrefs] = useState(() => readNotifPrefs());
   const [themeLabel, setThemeLabel] = useState(() => getThemeLabel(readStoredTheme()));
-  const wrapRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
   const { unreadCount } = useMessages();
+
+  // Anchor the menu to the trigger with FIXED positioning, rendered through a
+  // portal on document.body. The admin header uses backdrop-filter, which
+  // establishes a containing block + stacking context that was swallowing the
+  // absolutely-positioned menu (it never appeared). A body portal escapes it.
+  const place = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const r = el.getBoundingClientRect();
+    setCoords({ top: Math.round(r.bottom + 8), right: Math.round(Math.max(8, window.innerWidth - r.right)) });
+  }, []);
 
   useEffect(() => {
     if (!open) return undefined;
-    const onDoc = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    place();
+    const onDoc = (e) => {
+      if (triggerRef.current?.contains(e.target) || menuRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onReflow = () => place();
     document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
+    window.addEventListener('resize', onReflow);
+    window.addEventListener('scroll', onReflow, true);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('resize', onReflow);
+      window.removeEventListener('scroll', onReflow, true);
+    };
+  }, [open, place]);
 
   const toggle = (key) => {
     const next = { ...prefs, [key]: !prefs[key] };
@@ -482,23 +507,13 @@ function AdminProfileMenu({ user, onSignOut }) {
   const isAdmin = user?.role === 'admin';
   const close = () => setOpen(false);
 
-  return (
-    <div ref={wrapRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 text-foreground transition-opacity hover:opacity-80"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Open profile menu"
-      >
-        <AvalonMark className="h-7 w-[18px] text-foreground" />
-        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
-      </button>
-      {open && (
+  const menu = open && coords && typeof document !== 'undefined'
+    ? createPortal(
         <div
+          ref={menuRef}
           role="menu"
-          className="absolute right-0 top-full z-40 mt-2 w-72 overflow-hidden rounded-xl border border-foreground/[0.10] bg-background shadow-[0_18px_60px_rgba(0,0,0,0.6)]"
+          style={{ position: 'fixed', top: coords.top, right: coords.right, zIndex: 9999 }}
+          className="w-72 overflow-hidden rounded-xl border border-foreground/[0.10] bg-background shadow-[0_18px_60px_rgba(0,0,0,0.6)]"
         >
           <div className="border-b border-foreground/[0.08] px-4 py-3">
             <div className="flex items-center gap-2">
@@ -554,8 +569,26 @@ function AdminProfileMenu({ user, onSignOut }) {
           </div>
 
           <MenuRow icon={LogOut} label="Sign out" onClick={() => { close(); onSignOut(); }} danger />
-        </div>
-      )}
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 text-foreground transition-opacity hover:opacity-80"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Open profile menu"
+      >
+        <AvalonMark className="h-7 w-[18px] text-foreground" />
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
+      </button>
+      {menu}
     </div>
   );
 }
