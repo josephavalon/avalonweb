@@ -19,6 +19,7 @@ import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
 import { PEOPLE_MAX, createPerson, personLabel as personLabelFor } from '@/lib/peopleState';
 import SessionBuilder from '@/components/store/SessionBuilder';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -263,24 +264,45 @@ function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE })
   );
 }
 
-// A compact section block on the one-screen builder. Dividers separate
-// decisions. Title only — no sub-paragraph, to keep the screen scannable.
-function Section({ title, action, children, first, icon: Icon }) {
+// A compact, single-line collapsible builder row — mirrors the landing
+// "How it works" StepCard grammar: [icon badge] LABEL ........ <value> [chevron].
+// Collapsed by default; tapping the header toggles the EXISTING control open via
+// SmoothDisclosure. The `value` is a live summary string read from existing
+// builder state (no new value state is introduced).
+function BuilderRow({ title, value, icon: Icon, open, onToggle, children }) {
   return (
-    <section className={first ? '' : 'mt-5 border-t border-foreground/10 pt-5 md:mt-6 md:pt-6'}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2.5 font-heading text-[1.5rem] uppercase leading-[0.95] tracking-normal text-foreground md:text-[1.8rem]">
+    <div className={`av-treatment-card relative overflow-hidden rounded-[1.05rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-base ease-editorial md:px-5"
+      >
+        <div className="flex min-w-0 items-center gap-3">
           {Icon && (
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
+            <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
               <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
             </span>
           )}
-          {title}
-        </h2>
-        {action}
-      </div>
-      {children}
-    </section>
+          <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
+        </div>
+        <div className="flex min-w-0 shrink items-center justify-end gap-3">
+          {value && (
+            <span className="truncate text-right font-body text-[13px] font-semibold text-foreground/64 md:text-sm">{value}</span>
+          )}
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-foreground/70 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+            strokeWidth={2}
+          />
+        </div>
+      </button>
+
+      <SmoothDisclosure open={open}>
+        <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3.5 md:px-5">
+          {children}
+        </div>
+      </SmoothDisclosure>
+    </div>
   );
 }
 
@@ -539,6 +561,10 @@ export default function Subscription() {
   // Switching active person swaps those two columns.
   const [people, setPeople] = useState(() => [createPerson(0)]);
   const [activePersonId, setActivePersonId] = useState(() => people[0].id);
+  // Which builder row is expanded. Sessions opens first (matches the mockup);
+  // tapping a row toggles it, one open at a time. Visual-only — no plan state.
+  const [openStep, setOpenStep] = useState('sessions');
+  const toggleStep = (key) => setOpenStep((current) => (current === key ? null : key));
 
   const switchActivePerson = (nextId) => {
     if (!nextId || nextId === activePersonId) return;
@@ -649,6 +675,14 @@ export default function Subscription() {
   const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
   const perMonth = Math.round(upfrontTotal / term.months);
   const addOnCount = lineItems.reduce((sum, li) => sum + li.qty, 0);
+
+  // Collapsed-row summary strings — each reads existing builder state, no new
+  // value state. Mirrors the labels shown in the target mockup.
+  const sessionsSummary = `${sessions}× / Month · ${sessions} IV ${sessions === 1 ? 'Visit' : 'Visits'}`;
+  const peopleSummary = peopleCount > 1 ? `${peopleCount} people` : 'Just me';
+  const therapySummary = therapyOption?.label || '—';
+  const addonsSummary = addOnCount > 0 ? `${addOnCount} selected` : 'None selected';
+  const termSummary = term.label;
   // $50/person deposit due today (matches PlanRail + PlanCheckout).
   const depositToday = Math.min(50 * peopleCount, term.key === 'monthly' ? monthly : upfrontTotal);
 
@@ -717,13 +751,25 @@ export default function Subscription() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, ease: EASE }}
-              className="av-glass-card rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
+              className="av-glass-card flex flex-col gap-2 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5"
             >
-              <Section title={STEP_TITLES.sessions} icon={CalendarClock} first>
+              <BuilderRow
+                title={STEP_TITLES.sessions}
+                value={sessionsSummary}
+                icon={CalendarClock}
+                open={openStep === 'sessions'}
+                onToggle={() => toggleStep('sessions')}
+              >
                 <SessionSegment sessions={sessions} onSessions={setSessions} perIvPrice={perIvPrice} />
-              </Section>
+              </BuilderRow>
 
-              <Section title="Who's on it" icon={Users}>
+              <BuilderRow
+                title="Who's on it"
+                value={peopleSummary}
+                icon={Users}
+                open={openStep === 'people'}
+                onToggle={() => toggleStep('people')}
+              >
                 <SessionBuilder
                   people={sessionPeople}
                   activePersonId={activePersonId}
@@ -732,32 +778,42 @@ export default function Subscription() {
                   onRemove={deletePerson}
                   addLabel="Add another person"
                 />
-              </Section>
+              </BuilderRow>
 
-              <Section title={STEP_TITLES.therapy} icon={Droplets}>
+              <BuilderRow
+                title={STEP_TITLES.therapy}
+                value={therapySummary}
+                icon={Droplets}
+                open={openStep === 'therapy'}
+                onToggle={() => toggleStep('therapy')}
+              >
                 <StepTherapy therapyKey={therapyKey} onSelect={selectTherapyOption} />
-              </Section>
+              </BuilderRow>
 
-              <Section title={STEP_TITLES.addons} icon={Sparkles}>
-                <details className="group av-treatment-card rounded-xl border px-3.5 py-3">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-body text-sm font-black text-foreground [&::-webkit-details-marker]:hidden">
-                    <span>{addOnCount > 0 ? `${addOnCount} add-on${addOnCount > 1 ? 's' : ''} added` : 'Add a boost'}</span>
-                    <Plus className="h-4 w-4 shrink-0 text-foreground/60 transition-transform group-open:rotate-45" />
-                  </summary>
-                  <div className="mt-3">
-                    <StepAddons
-                      ivQty={ivQty}
-                      imQty={imQty}
-                      onIv={(key, v) => setIvQty((c) => ({ ...c, [key]: v }))}
-                      onIm={(key, v) => setImQty((c) => ({ ...c, [key]: v }))}
-                    />
-                  </div>
-                </details>
-              </Section>
+              <BuilderRow
+                title={STEP_TITLES.addons}
+                value={addonsSummary}
+                icon={Sparkles}
+                open={openStep === 'addons'}
+                onToggle={() => toggleStep('addons')}
+              >
+                <StepAddons
+                  ivQty={ivQty}
+                  imQty={imQty}
+                  onIv={(key, v) => setIvQty((c) => ({ ...c, [key]: v }))}
+                  onIm={(key, v) => setImQty((c) => ({ ...c, [key]: v }))}
+                />
+              </BuilderRow>
 
-              <Section title={STEP_TITLES.term} icon={CreditCard}>
+              <BuilderRow
+                title={STEP_TITLES.term}
+                value={termSummary}
+                icon={CreditCard}
+                open={openStep === 'term'}
+                onToggle={() => toggleStep('term')}
+              >
                 <StepTerm monthly={monthly} termKey={termKey} onTerm={setTermKey} upfrontTotal={upfrontTotal} perMonth={perMonth} />
-              </Section>
+              </BuilderRow>
             </motion.div>
 
             {/* Mobile: full plan rail (info only), then a sticky price + Start plan bar */}
