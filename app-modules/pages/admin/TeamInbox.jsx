@@ -27,7 +27,7 @@ const MUTED = 'hsl(var(--foreground) / 0.62)';
 const DIM = 'hsl(var(--foreground) / 0.4)';
 const CARD_STRONG = 'hsl(var(--foreground) / 0.08)';
 const BORDER = 'hsl(var(--foreground) / 0.1)';
-const ACCENT = 'hsl(150 60% 42%)';
+const ACCENT = 'hsl(211 100% 52%)'; // iMessage blue (sent bubble + send button)
 
 function fmtTime(iso) {
   if (!iso) return '';
@@ -334,7 +334,7 @@ export default function TeamInbox() {
                       onClick={send}
                       disabled={!reply.trim() || sending}
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-40"
-                      style={{ background: TEXT, color: INVERT }}
+                      style={{ background: ACCENT, color: '#fff' }}
                       aria-label="Send"
                     >
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Send className="h-4 w-4" strokeWidth={2} />}

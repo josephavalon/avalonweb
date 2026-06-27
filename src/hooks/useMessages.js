@@ -67,6 +67,12 @@ export function useMessages(activeConversationId = null) {
   const [error, setError] = useState(null);
 
   const channelRef = useRef(null);
+  // Unique per hook instance: a page can mount useMessages more than once (e.g.
+  // the profile-dropdown unread badge + the inbox page). Two channels with the
+  // same topic make Supabase realtime throw "subscribe multiple times" → the
+  // page crashes. A per-instance suffix keeps each subscription distinct.
+  const instanceRef = useRef(null);
+  if (instanceRef.current === null) instanceRef.current = Math.random().toString(36).slice(2);
 
   // Load conversations list
   const loadConversations = useCallback(async () => {
@@ -104,15 +110,18 @@ export function useMessages(activeConversationId = null) {
 
   // Realtime subscription
   useEffect(() => {
-    if (!userId || !supabase) return;
+    if (!userId || !supabase) return undefined;
 
     // Unsubscribe previous channel
     if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
+      try { supabase.removeChannel(channelRef.current); } catch { /* ignore */ }
+      channelRef.current = null;
     }
 
-    const channel = supabase
-      .channel(`avalon-messages-${userId}`)
+    let channel;
+    try {
+      channel = supabase
+      .channel(`avalon-messages-${userId}-${instanceRef.current}`)
       .on(
         'postgres_changes',
         {
@@ -142,11 +151,14 @@ export function useMessages(activeConversationId = null) {
         () => loadConversations()
       )
       .subscribe();
-
-    channelRef.current = channel;
+      channelRef.current = channel;
+    } catch (err) {
+      // Realtime is best-effort; a subscribe error must never crash the page.
+      return undefined;
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      try { if (channel) supabase.removeChannel(channel); } catch { /* ignore */ }
     };
   }, [userId, activeConversationId, loadConversations]);
 
