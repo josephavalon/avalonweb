@@ -92,7 +92,7 @@ export default function HowItWorks() {
       <div className="max-w-6xl mx-auto">
 
         <ScrollParallax className="mb-6 md:mb-10">
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92]">
+          <h2 className="whitespace-nowrap font-heading text-[8vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92]">
             How it works
           </h2>
         </ScrollParallax>
