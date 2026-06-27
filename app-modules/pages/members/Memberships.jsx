@@ -315,9 +315,12 @@ export default function Memberships() {
   // stub: derived plan facts — replace with real subscription record
   const currentTierId = 'vitality';
   const currentTier = TIERS.find((t) => t.id === currentTierId);
-  const creditsTotal = 4;
-  const creditsRemaining = state.loading ? 0 : Math.min(state.balance, creditsTotal);
-  const creditsUsed = creditsTotal - creditsRemaining;
+  // Credits remaining is the real ledger balance from /api/me/credits (1 credit
+  // = one $250 visit). The ring's "total" is the larger of the plan grant (4)
+  // and the live balance, so rolled-over/banked credits never clip the display.
+  const creditsRemaining = state.loading ? 0 : state.balance;
+  const creditsTotal = Math.max(4, creditsRemaining);
+  const creditsUsed = Math.max(0, creditsTotal - creditsRemaining);
   const history = buildHistory(state.ledger);
   const handleSignOut = () => { signOut(); navigate('/login', { replace: true }); };
 

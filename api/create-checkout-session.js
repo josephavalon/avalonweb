@@ -44,9 +44,20 @@ function requestedCreditUnits(value = {}) {
   return Number.isFinite(units) ? Math.min(1, Math.max(0, Math.floor(units))) : 0;
 }
 
+// A redeemed Visit Credit is worth a flat $250 of appointment value (1 credit =
+// $250), capped at the visit subtotal so it never exceeds the cart. We still
+// require at least one paid IV item in the cart (credits are IV-only): if there
+// is no IV item this returns 0 and the caller rejects the redemption. Net: the
+// member pays max(0, cart − $250) when redeeming a credit.
+const VISIT_CREDIT_CENTS = 25000;
 function firstIvCreditValueCents(items = []) {
-  const iv = items.find((item) => item.type === 'iv' && Number(item.price || 0) > 0);
-  return iv ? dollarsToCents(iv.price) : 0;
+  const hasIv = items.some((item) => item.type === 'iv' && Number(item.price || 0) > 0);
+  if (!hasIv) return 0;
+  const visitSubtotalCents = items.reduce(
+    (sum, item) => sum + dollarsToCents(item.price) * checkoutItemQuantity(item),
+    0,
+  );
+  return Math.min(visitSubtotalCents, VISIT_CREDIT_CENTS);
 }
 
 const BOOKING_DEPOSIT_CENTS = dollarsToCents(process.env.BOOKING_DEPOSIT_DOLLARS || ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS);

@@ -85,6 +85,7 @@ const Nurses = lazyRoute(() => import('./pages/Nurses'));
 const ManageOrder = lazyRoute(() => import('./pages/ManageOrder'));
 const AdminLogin = lazyRoute(() => import('./pages/AdminLogin'));
 const MemberDashboard = lazyRoute(() => import('./pages/members/Dashboard'));
+const MemberBook = lazyRoute(() => import('./pages/members/Book'));
 const MemberAccount = lazyRoute(() => import('./pages/members/Account'));
 const MemberMessages = lazyRoute(() => import('./pages/members/Messages'));
 const MemberBookings = lazyRoute(() => import('./pages/members/Bookings'));
@@ -343,6 +344,7 @@ function AppRoutes() {
             <Route path="/account/new-password" element={<NewPassword />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
+            <Route path="/members/book" element={<RequireAuth allowedRoles={['client', 'admin', 'staff']}><MemberBook /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
             <Route path="/members/messages" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMessages /></RequireAuth>} />
             <Route path="/members/bookings" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBookings /></RequireAuth>} />

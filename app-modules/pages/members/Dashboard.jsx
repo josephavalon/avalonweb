@@ -325,6 +325,42 @@ function QuickBookStrip({ creditsRemaining }) {
   );
 }
 
+// Prominent "you have N visits to use" banner + Book a visit CTA. When the
+// member has 0 credits the CTA routes to /subscription ("Get more visits")
+// instead of the booking flow.
+function VisitsCreditBanner({ visitsRemaining, loading }) {
+  const hasVisits = visitsRemaining > 0;
+  const ctaTo = hasVisits ? '/members/book' : '/subscription';
+  const ctaLabel = hasVisits ? 'Book a visit' : 'Get more visits';
+  return (
+    <div
+      className="mt-3 overflow-hidden rounded-[24px] p-5"
+      style={{ background: 'linear-gradient(160deg, hsl(var(--foreground) / 0.10) 0%, hsl(var(--foreground) / 0.045) 60%)', border: `1px solid ${BORDER}` }}
+    >
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Visit credits</p>
+          <h3 className="mt-1 font-heading text-4xl uppercase leading-none md:text-5xl">
+            {loading ? '—' : `${visitsRemaining} visit${visitsRemaining === 1 ? '' : 's'} remaining`}
+          </h3>
+          <p className="mt-2 font-body text-[12px]" style={{ color: MUTED }}>
+            {hasVisits
+              ? 'Each credit covers up to $250 of a visit. Book now and use one.'
+              : 'No visit credits left — add a plan to bank more visits.'}
+          </p>
+        </div>
+        <Link
+          to={ctaTo}
+          className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl px-5 font-body text-[11px] font-bold uppercase tracking-[0.18em] sm:w-auto"
+          style={{ background: TEXT, color: INVERT, border: `1px solid ${TEXT}` }}
+        >
+          {ctaLabel} <ArrowRight className="h-4 w-4" strokeWidth={2} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 // Shared dashboard body — expanded portal layout.
 function DashboardBody({
   primary,
@@ -339,6 +375,8 @@ function DashboardBody({
   hasPlan,
   creditsAvailable,
   creditsTotal,
+  visitsRemaining,
+  creditsLoading,
   balanceAppointmentId,
   onBalancePaid,
 }) {
@@ -407,9 +445,12 @@ function DashboardBody({
           </div>
         </div>
 
+        {/* Visit credits — N visits remaining + Book a visit CTA */}
+        <VisitsCreditBanner visitsRemaining={visitsRemaining} loading={creditsLoading} />
+
         {/* Primary actions */}
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Action to="/book" icon={Calendar} label="Book" primary />
+          <Action to={visitsRemaining > 0 ? '/members/book' : '/subscription'} icon={Calendar} label="Book" primary />
           <Action to="/members/messages" icon={MessageCircle} label="Message" />
         </div>
 
@@ -571,6 +612,8 @@ function LiveClientDashboard() {
       hasPlan={hasPlan}
       creditsAvailable={creditsAvailable}
       creditsTotal={creditsTotal || 4}
+      visitsRemaining={credits.loading ? 0 : credits.balance}
+      creditsLoading={credits.loading}
       balanceAppointmentId={payableAppointment?.id || null}
       onBalancePaid={refetchVisits}
     />
@@ -627,6 +670,8 @@ function DemoClientDashboard() {
       hasPlan
       creditsAvailable={2}
       creditsTotal={4}
+      visitsRemaining={2}
+      creditsLoading={false}
     />
   );
 }
