@@ -666,8 +666,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
         {upgradesTotal > 0 && (
           <RailLine label="Premium upgrades" value={`+${money(upgradesTotal)}`} />
         )}
-        <RailLine label="Concierge mobile visits" />
-        <RailLine label="Clinical review each visit" />
+        <RailLine label="Clinical review once a year" />
       </div>
 
       {!isMonthly && saving > 0 && (
