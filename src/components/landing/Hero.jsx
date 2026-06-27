@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Zap } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import MagneticButton from '@/components/ui/MagneticButton';
 
@@ -11,6 +11,7 @@ const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'IV Therapy', icon: Droplet },
   { to: '/subscription', label: 'Plans', icon: Diamond },
+  { to: '/subscription', label: 'Custom Plans', icon: Sparkles },
 ];
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },

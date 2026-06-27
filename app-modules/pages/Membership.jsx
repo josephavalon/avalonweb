@@ -727,7 +727,7 @@ export default function Subscription() {
   const [activePersonId, setActivePersonId] = useState(() => people[0].id);
   // Which builder row is expanded. Sessions opens first (matches the mockup);
   // tapping a row toggles it, one open at a time. Visual-only — no plan state.
-  const [openStep, setOpenStep] = useState('sessions');
+  const [openStep, setOpenStep] = useState(null); // load with every step collapsed
   const toggleStep = (key) => setOpenStep((current) => (current === key ? null : key));
 
   // Sessions/month resizes the ACTIVE person's visits array (grow = copy visit 0
