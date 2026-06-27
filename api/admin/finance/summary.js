@@ -17,16 +17,6 @@ function sumCents(rows = [], key) {
   return rows.reduce((total, row) => total + Number(row?.[key] || 0), 0);
 }
 
-function paidTimestamp(row = {}) {
-  return row.balance_paid_at || row.deposit_paid_at || row.updated_at || row.created_at || null;
-}
-
-function isWithinWindow(iso, sinceMs) {
-  if (!iso) return false;
-  const time = new Date(iso).getTime();
-  return Number.isFinite(time) && time >= sinceMs;
-}
-
 async function activeSubscriptionCount(stripe) {
   let count = 0;
   let startingAfter = undefined;
@@ -40,6 +30,36 @@ async function activeSubscriptionCount(stripe) {
     if (!page.has_more || !page.data.length) return count;
     startingAfter = page.data[page.data.length - 1].id;
   }
+}
+
+// Net cash collected via Stripe in the window, across every source — visit
+// charges, subscription invoices, plan deposits, anything that hits the
+// balance. Refunds in the window subtract, so this is true net revenue.
+async function stripeRevenueInWindow(stripe, sinceSec) {
+  let grossCents = 0;
+  let refundCents = 0;
+  let chargeCount = 0;
+  let startingAfter = undefined;
+  for (;;) {
+    const page = await stripe.balanceTransactions.list({
+      created: { gte: sinceSec },
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    });
+    for (const tx of page.data) {
+      const amount = Number(tx.amount || 0);
+      if (tx.type === 'charge' || tx.type === 'payment') {
+        grossCents += amount;
+        chargeCount += 1;
+      } else if (tx.type === 'refund' || tx.type === 'payment_refund') {
+        // Stripe encodes refunds as negative amounts already.
+        refundCents += amount;
+      }
+    }
+    if (!page.has_more || !page.data.length) break;
+    startingAfter = page.data[page.data.length - 1].id;
+  }
+  return { netCents: grossCents + refundCents, grossCents, chargeCount };
 }
 
 function shapePayout(payout) {
@@ -81,13 +101,9 @@ export default async function handler(req, res) {
   const { db, tenantId } = authed;
   const sinceMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
   const since = new Date(sinceMs).toISOString();
+  const sinceSec = Math.floor(sinceMs / 1000);
 
   try {
-    let paidQuery = db.from('appointments')
-      .select('id, tenant_id, visit_subtotal_cents, deposit_paid_at, balance_paid_at, updated_at, created_at')
-      .eq('payment_status', 'paid_in_full')
-      .order('updated_at', { ascending: false, nullsFirst: false })
-      .limit(1000);
     let outstandingQuery = db.from('appointments')
       .select('id, tenant_id, starts_at, protocol_key, payment_status, balance_due_cents, external_payload')
       .eq('payment_status', 'partial_payment')
@@ -101,24 +117,24 @@ export default async function handler(req, res) {
       .not('deposit_paid_at', 'is', null)
       .limit(2000);
     if (tenantId) {
-      paidQuery = paidQuery.eq('tenant_id', tenantId);
       outstandingQuery = outstandingQuery.eq('tenant_id', tenantId);
       depositsQuery = depositsQuery.eq('tenant_id', tenantId);
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const [paidResult, outstandingResult, depositsResult, payouts, activeSubscriptions] = await Promise.all([
-      paidQuery,
+    // Revenue is sourced from Stripe — every successful charge across visits,
+    // subscriptions, plan deposits, products, anything — minus refunds. Single
+    // source of truth keeps the number honest no matter which surface booked it.
+    const [outstandingResult, depositsResult, payouts, activeSubscriptions, stripeRevenue] = await Promise.all([
       outstandingQuery,
       depositsQuery,
       stripe.payouts.list({ limit: 5 }),
       activeSubscriptionCount(stripe),
+      stripeRevenueInWindow(stripe, sinceSec),
     ]);
 
-    if (paidResult.error) throw paidResult.error;
     if (outstandingResult.error) throw outstandingResult.error;
 
-    const paidRows = (paidResult.data || []).filter((row) => isWithinWindow(paidTimestamp(row), sinceMs));
     const outstandingRows = outstandingResult.data || [];
     const depositRows = depositsResult?.error ? [] : (depositsResult?.data || []);
     const depositsTakenCents = sumCents(depositRows, 'deposit_amount_cents');
@@ -131,7 +147,7 @@ export default async function handler(req, res) {
       phiTouched: true,
       payload: {
         route: 'api/admin/finance/summary',
-        paidCount: paidRows.length,
+        paidCount: stripeRevenue.chargeCount,
         outstandingCount: outstandingRows.length,
         payoutCount: payouts.data.length,
       },
@@ -139,8 +155,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       last30Days: {
-        count: paidRows.length,
-        amount: centsToDollars(sumCents(paidRows, 'visit_subtotal_cents')),
+        count: stripeRevenue.chargeCount,
+        amount: centsToDollars(stripeRevenue.netCents),
+        grossAmount: centsToDollars(stripeRevenue.grossCents),
         since,
       },
       depositsTaken: {

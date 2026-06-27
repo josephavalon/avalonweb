@@ -154,7 +154,7 @@ export default function FinanceControl() {
           <Metric
             label="Last 30 Days"
             value={money(data.last30Days?.amount)}
-            detail={`${data.last30Days?.count || 0} paid-in-full appointment${data.last30Days?.count === 1 ? '' : 's'}`}
+            detail={`${data.last30Days?.count || 0} charge${data.last30Days?.count === 1 ? '' : 's'} across all sources`}
             icon={TrendingUp}
           />
           <Metric
