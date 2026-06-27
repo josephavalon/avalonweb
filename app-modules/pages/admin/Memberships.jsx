@@ -187,7 +187,7 @@ function MembershipRow({ row, refetch }) {
 
   return (
     <div
-      className="grid grid-cols-1 gap-2 px-4 py-4 md:grid-cols-[1.4fr_1.6fr_0.7fr_0.6fr_0.7fr_0.9fr_auto] md:items-center md:gap-3"
+      className="grid grid-cols-1 gap-2 px-4 py-4 md:grid-cols-[1.4fr_1.5fr_0.7fr_0.8fr_1.1fr_0.9fr_auto] md:items-center md:gap-3"
       style={{ borderTop: `1px solid ${BORDER}` }}
     >
       <div>
@@ -202,11 +202,20 @@ function MembershipRow({ row, refetch }) {
       <div className="flex items-center gap-2"><TierBadge tier={row.tier} /></div>
       <div>
         <p className="font-heading text-xl leading-none" style={{ color: tierAccent }}>{balance}</p>
-        <p className="font-body text-[10px] uppercase tracking-[0.14em]" style={{ color: DIM }}>credits</p>
+        <p className="font-body text-[10px] uppercase tracking-[0.14em]" style={{ color: DIM }}>visits left</p>
+        <p className="mt-0.5 font-body text-[10px] tracking-[0.04em]" style={{ color: FAINT }}>
+          {fmtMoney(row.creditValueDollars ?? 250)}/visit
+        </p>
       </div>
       <div>
-        <p className="font-heading text-base leading-none" style={{ color: TEXT }}>+{row.monthlyGrant}/mo</p>
-        <p className="font-body text-[10px] uppercase tracking-[0.14em]" style={{ color: DIM }}>{fmtMoney(row.monthlyAmount)}/mo</p>
+        <p className="font-heading text-base leading-none" style={{ color: TEXT }}>
+          {row.visitsGrantedCycle ?? 0} <span style={{ color: DIM }}>/</span>{' '}
+          <span style={{ color: MUTED }}>{row.visitsUsedCycle ?? 0}</span>
+        </p>
+        <p className="font-body text-[10px] uppercase tracking-[0.14em]" style={{ color: DIM }}>granted / used</p>
+        <p className="mt-0.5 font-body text-[10px] tracking-[0.04em]" style={{ color: FAINT }}>
+          {row.visitsPerCycle ?? row.monthlyGrant}/cycle · {fmtMoney(row.monthlyAmount)}/mo
+        </p>
       </div>
       <div>
         <p className="font-body text-sm" style={{ color: TEXT }}>{fmtDate(row.nextRenewal)}</p>
@@ -262,14 +271,14 @@ function MembershipRow({ row, refetch }) {
 function HeaderRow() {
   return (
     <div
-      className="hidden grid-cols-[1.4fr_1.6fr_0.7fr_0.6fr_0.7fr_0.9fr_auto] gap-3 px-4 py-2.5 font-body text-[9px] font-bold uppercase tracking-[0.16em] md:grid"
+      className="hidden grid-cols-[1.4fr_1.5fr_0.7fr_0.8fr_1.1fr_0.9fr_auto] gap-3 px-4 py-2.5 font-body text-[9px] font-bold uppercase tracking-[0.16em] md:grid"
       style={{ color: DIM }}
     >
       <span>Name</span>
       <span>Email</span>
       <span>Tier</span>
-      <span>Credits</span>
-      <span>Monthly</span>
+      <span>Visits left</span>
+      <span>This cycle</span>
       <span>Next renewal</span>
       <span className="text-right">Actions</span>
     </div>
@@ -378,7 +387,8 @@ export default function AdminMemberships() {
 
       <p className="mt-5 font-body text-[11px]" style={{ color: FAINT }}>
         Source of truth: Stripe subscriptions joined to <code>profiles.stripe_customer_id</code>.
-        Credit balance sums <code>member_credit_ledger.units</code> per profile.
+        Visits left sums all-time <code>member_credit_ledger.units</code> (1 unit = 1 visit = $250).
+        This-cycle granted / used aggregate the ledger since the subscription's current period start.
       </p>
     </AdminShell>
   );

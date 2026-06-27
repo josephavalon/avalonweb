@@ -44,13 +44,24 @@ async function listAllActiveSubscriptions(stripe) {
   }
 }
 
-function shapeRow({ sub, profile, creditsBalance, lastRenewal }) {
+// Per-visit credit value: 1 ledger unit = 1 visit-credit = $250.
+const CREDIT_VALUE_DOLLARS = 250;
+
+function shapeRow({ sub, profile, creditsBalance, lastRenewal, cycle }) {
   const item = sub.items?.data?.[0];
   const unitAmount = item?.price?.unit_amount ?? 0;
   const { tier, monthlyGrant } = tierFromAmount(unitAmount);
   const nextRenewal = sub.current_period_end
     ? new Date(sub.current_period_end * 1000).toISOString()
     : null;
+  const currentPeriodStart = sub.current_period_start
+    ? new Date(sub.current_period_start * 1000).toISOString()
+    : null;
+  // visits_per_cycle is stamped into the subscription metadata at checkout
+  // (Phase 1). Fall back to the tier-derived monthly grant for back-compat with
+  // subscriptions created before the metadata existed.
+  const metaVpc = Number(sub.metadata?.visits_per_cycle);
+  const visitsPerCycle = Number.isFinite(metaVpc) && metaVpc > 0 ? metaVpc : monthlyGrant;
   return {
     profileId: profile?.id || null,
     fullName: profile?.full_name || profile?.preferred_name || null,
@@ -61,6 +72,11 @@ function shapeRow({ sub, profile, creditsBalance, lastRenewal }) {
     creditsBalance: Number(creditsBalance || 0),
     lastRenewal,
     nextRenewal,
+    currentPeriodStart,
+    visitsPerCycle,
+    visitsGrantedCycle: cycle?.granted || 0,
+    visitsUsedCycle: cycle?.used || 0,
+    creditValueDollars: CREDIT_VALUE_DOLLARS,
     stripeSubscriptionId: sub.id,
     stripeCustomerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id || null,
     status: sub.status,
@@ -110,8 +126,13 @@ export default async function handler(req, res) {
     }
 
     // Bulk-fetch credit ledger rows for the matched profiles in one query.
+    // Balance + last-renewal are profile-scoped (all-time), but the per-cycle
+    // granted/used aggregation depends on each subscription's current period
+    // start, so we retain the raw rows per profile and aggregate the cycle
+    // window later, inside the per-subscription map.
     const balanceByProfile = new Map();
     const lastRenewalByProfile = new Map();
+    const ledgerByProfile = new Map();
     if (profileIds.length) {
       let lq = db.from('member_credit_ledger')
         .select('profile_id, units, source, created_at')
@@ -123,6 +144,8 @@ export default async function handler(req, res) {
         const pid = row.profile_id;
         if (!pid) return;
         balanceByProfile.set(pid, (balanceByProfile.get(pid) || 0) + Number(row.units || 0));
+        if (!ledgerByProfile.has(pid)) ledgerByProfile.set(pid, []);
+        ledgerByProfile.get(pid).push(row);
         if (row.source === 'membership_initial_grant' || row.source === 'membership_renewal_grant') {
           const prior = lastRenewalByProfile.get(pid);
           if (!prior || (row.created_at && row.created_at > prior)) {
@@ -132,12 +155,45 @@ export default async function handler(req, res) {
       });
     }
 
+    // Sum grant-source units (initial/renewal grant + positive admin
+    // adjustments) and used units (redemptions + any negative units) within the
+    // billing cycle window. Falls back to the last 31 days when the
+    // subscription has no current_period_start.
+    const FALLBACK_WINDOW_MS = 31 * 24 * 60 * 60 * 1000;
+    function cycleStats(rows, periodStartIso) {
+      const since = periodStartIso
+        ? new Date(periodStartIso).getTime()
+        : Date.now() - FALLBACK_WINDOW_MS;
+      let granted = 0;
+      let used = 0;
+      (rows || []).forEach((row) => {
+        const ts = row.created_at ? new Date(row.created_at).getTime() : NaN;
+        if (!Number.isFinite(ts) || ts < since) return;
+        const units = Number(row.units || 0);
+        const isGrant = row.source === 'membership_initial_grant'
+          || row.source === 'membership_renewal_grant'
+          || (row.source === 'admin_adjustment' && units > 0);
+        if (isGrant && units > 0) {
+          granted += units;
+        } else if (units < 0) {
+          used += Math.abs(units);
+        }
+      });
+      return { granted, used };
+    }
+
     const rows = subs.map((sub) => {
       const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
       const profile = customerId ? profilesByCustomerId.get(customerId) : null;
       const creditsBalance = profile ? (balanceByProfile.get(profile.id) || 0) : 0;
       const lastRenewal = profile ? (lastRenewalByProfile.get(profile.id) || null) : null;
-      return shapeRow({ sub, profile, creditsBalance, lastRenewal });
+      const periodStartIso = sub.current_period_start
+        ? new Date(sub.current_period_start * 1000).toISOString()
+        : null;
+      const cycle = profile
+        ? cycleStats(ledgerByProfile.get(profile.id), periodStartIso)
+        : { granted: 0, used: 0 };
+      return shapeRow({ sub, profile, creditsBalance, lastRenewal, cycle });
     });
 
     await writeAuditEvent(db, {
