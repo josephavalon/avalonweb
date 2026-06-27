@@ -823,12 +823,19 @@ export default function Subscription() {
         imQty: v0.imQty || {},
         visits: row.visits.map((v) => {
           const { option } = findTherapy(v.therapyKey);
+          // Resolve add-on labels here (the builder has the catalog) so checkout
+          // + the nurse-facing Acuity note can itemize without re-importing it.
+          const addons = [
+            ...IV_ADDON_ITEMS.filter((it) => (v.ivQty?.[it.key] || 0) > 0).map((it) => ({ label: it.label, qty: v.ivQty[it.key] })),
+            ...IM_ADDON_ITEMS.filter((it) => (v.imQty?.[it.key] || 0) > 0).map((it) => ({ label: it.label, qty: v.imQty[it.key] })),
+          ];
           return {
             therapyKey: v.therapyKey,
             therapyLabel: option?.label || '',
             ivPrice: Number(option?.price || VITAMIN_IV_PRICE),
             ivQty: v.ivQty || {},
             imQty: v.imQty || {},
+            addons,
           };
         }),
       };

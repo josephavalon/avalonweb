@@ -97,6 +97,26 @@ export default function PlanCheckout() {
   }, [searchParams]);
   const isMultiPerson = peopleCount > 1;
 
+  // Per-visit breakdown (mixed-IV plans). Each person's monthly visits, itemized
+  // so the nurse sees exactly what to administer each visit. This string is sent
+  // as appointment.notes and flows untouched into the Acuity appointment notes.
+  const visitBreakdown = useMemo(() => peopleManifest
+    .map((person) => ({ label: person.label, visits: Array.isArray(person.visits) ? person.visits : [] }))
+    .filter((p) => p.visits.length), [peopleManifest]);
+  const hasVisitDetail = visitBreakdown.some((p) => p.visits.length > 1
+    || p.visits.some((v) => (v.addons || []).length));
+  const planNote = useMemo(() => {
+    if (!visitBreakdown.length) return '';
+    const lines = visitBreakdown.map(({ label, visits }) => {
+      const vs = visits.map((v, i) => {
+        const adds = (v.addons || []).map((a) => `${a.qty}× ${a.label}`).join(', ');
+        return `Visit ${i + 1}: ${v.therapyLabel || 'IV'}${adds ? ` + ${adds}` : ''}`;
+      }).join('; ');
+      return (isMultiPerson ? `${label} — ` : '') + vs;
+    });
+    return `PLAN VISITS (per month)\n${lines.join('\n')}`;
+  }, [visitBreakdown, isMultiPerson]);
+
   // Per-period charge: monthly × term months × (1 − discount). Monthly = monthly.
   const perPeriodTotal = Math.round(monthly * term.months * (1 - term.discount));
 
@@ -191,6 +211,7 @@ export default function PlanCheckout() {
             dob: contact.dob.trim(),
             emergencyContact: contact.emergencyContact.trim(),
             protocol,
+            notes: planNote,
             recurring: true,
             recurringTerm: term.billing,
             peopleCount,
@@ -261,6 +282,39 @@ export default function PlanCheckout() {
               </div>
               <p className="mt-2 font-body text-[14px] font-semibold text-foreground/52">
                 One nurse visit treats everyone on the plan.
+              </p>
+            </div>
+          )}
+
+          {hasVisitDetail && (
+            <div className="mb-4 rounded-xl border border-foreground/12 bg-foreground/[0.04] p-3">
+              <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/52">
+                Your visits this month
+              </p>
+              <div className="mt-2 space-y-2.5">
+                {visitBreakdown.map(({ label, visits }, pi) => (
+                  <div key={pi}>
+                    {isMultiPerson && (
+                      <p className="font-body text-[12px] font-black uppercase tracking-[0.06em] text-foreground/45">{label}</p>
+                    )}
+                    <div className="mt-1 space-y-1">
+                      {visits.map((v, i) => (
+                        <div key={i} className="flex items-start justify-between gap-2 font-body text-sm">
+                          <span className="text-foreground/82">
+                            <span className="font-black uppercase tracking-[0.06em] text-foreground/55 mr-2">Visit {i + 1}</span>
+                            {v.therapyLabel || 'IV'}
+                            {(v.addons || []).length > 0 && (
+                              <span className="text-foreground/55"> · {(v.addons).map((a) => `${a.qty}× ${a.label}`).join(', ')}</span>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 font-body text-[13px] font-semibold text-foreground/45">
+                Your nurse administers each visit's IV as listed.
               </p>
             </div>
           )}
