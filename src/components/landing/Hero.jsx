@@ -11,7 +11,6 @@ const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'IV Therapy', icon: Droplet },
   { to: '/subscription', label: 'Plans', icon: Diamond },
-  { to: '/subscription', label: 'Custom Plans', icon: Sparkles },
 ];
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },
@@ -19,6 +18,7 @@ const HERO_PROOF_POINTS = [
   { label: 'Same Day Service', icon: Clock },
   { label: '60 Second Checkout', icon: Zap },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
+  { label: 'Custom Plans', icon: Sparkles, to: '/subscription' },
 ];
 
 export default function Hero() {
@@ -118,12 +118,25 @@ export default function Hero() {
             transition={{ duration: 0.48, delay: 0.32, ease: EASE }}
             className="mt-5 grid gap-2 font-body text-[13px] uppercase leading-relaxed tracking-[0.06em] text-foreground md:mt-6 md:text-sm"
           >
-            {HERO_PROOF_POINTS.map(({ label, icon: Icon }) => (
-              <li key={label} className="flex items-start gap-3">
-                <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
-                <span>{label}</span>
-              </li>
-            ))}
+            {HERO_PROOF_POINTS.map(({ label, icon: Icon, to }) => {
+              const content = (
+                <>
+                  <Icon className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.15} aria-hidden="true" />
+                  <span>{label}</span>
+                </>
+              );
+              return (
+                <li key={label} className="flex items-start gap-3">
+                  {to ? (
+                    <Link to={to} className="flex items-start gap-3 transition-opacity hover:opacity-70">
+                      {content}
+                    </Link>
+                  ) : (
+                    content
+                  )}
+                </li>
+              );
+            })}
           </motion.ul>
         </motion.div>
         </div>
