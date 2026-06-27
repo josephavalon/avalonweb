@@ -310,17 +310,8 @@ function StepTherapy({ therapyKey, onSelect }) {
   const activeOpt = activeCat?.options.find((o) => o.key === therapyKey);
   return (
     <div className="grid gap-2">
-      <div className="flex items-center gap-3">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-gradient-to-b from-foreground/[0.08] to-transparent">
-          {activeOpt?.image ? (
-            <img src={activeOpt.image} alt="" className="h-[3.4rem] w-auto object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
-          ) : (
-            <Droplets className="h-5 w-5 text-foreground/55" strokeWidth={1.8} />
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          <PlanSelect value={therapyKey} onChange={onSelect} ariaLabel="Therapy">
-            {CATEGORIES.map((cat) => (
+      <PlanSelect value={therapyKey} onChange={onSelect} ariaLabel="Therapy" icon={Droplets}>
+        {CATEGORIES.map((cat) => (
           <optgroup key={cat.key} label={cat.label} className="bg-background text-foreground">
             {cat.options.map((opt) => (
               <option key={opt.key} value={opt.key} className="bg-background text-foreground">
@@ -329,9 +320,7 @@ function StepTherapy({ therapyKey, onSelect }) {
             ))}
           </optgroup>
         ))}
-          </PlanSelect>
-        </div>
-      </div>
+      </PlanSelect>
       {activeCat?.gated && (
         <span className="inline-flex w-fit items-center rounded-full border border-amber-300/22 bg-amber-300/[0.07] px-2.5 py-1 font-body text-[13px] font-black uppercase tracking-[0.08em] text-amber-100">
           Clinician-reviewed · dose at consult
