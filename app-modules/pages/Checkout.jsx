@@ -20,6 +20,7 @@ import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEP
 import { hasValidCheckoutContact } from '@/lib/checkoutValidation';
 import { extractZip } from '@/lib/serviceArea';
 import { useAuthStore } from '@/lib/useAuthStore';
+import AddressAutocomplete from '@/components/store/AddressAutocomplete';
 
 function hasCompleteContact(contact = {}) {
   return hasValidCheckoutContact(contact);
@@ -315,6 +316,11 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
 
   const selectedDate = watch('date');
 
+  // Register the address field for required-validation. The visible control is a
+  // controlled AddressAutocomplete (no DOM ref), so we drive its value through
+  // watch/setValue below rather than RHF's input ref.
+  register('address', { required: 'Address needed' });
+
   // Derive ZIP from the address so the user never types it twice. We take the
   // last 5-digit run in the address (ZIP sits at the end of US addresses) and
   // only fall back to a manual ZIP field when none can be parsed.
@@ -410,13 +416,21 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Visit</h1>
 
-      {/* Address */}
+      {/* Address — autocomplete via the keyless /api/address-search endpoint. */}
       <div>
         <label htmlFor="co-service-address" className={labelClass}>Address *</label>
-        <input
+        <AddressAutocomplete
           id="co-service-address"
+          name="address"
           autoComplete="street-address"
-          {...register('address', { required: 'Address needed' })}
+          value={addressValue}
+          onChange={(text) => setValue('address', text, { shouldValidate: true })}
+          onSelect={(sel) => {
+            // Compose the full single-line address so the ZIP auto-derives.
+            const composed = [sel.street, sel.city, [sel.state, sel.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+            setValue('address', composed || sel.street || '', { shouldValidate: true });
+            if (sel.zip) setValue('zip', sel.zip.replace(/\D/g, '').slice(0, 5), { shouldValidate: true });
+          }}
           placeholder="Street, unit, city, ZIP"
           className={fieldClass}
         />

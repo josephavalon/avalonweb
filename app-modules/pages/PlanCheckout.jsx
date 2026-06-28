@@ -7,6 +7,7 @@ import { useSeo } from '@/lib/seo';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { apiGet } from '@/lib/apiClient';
 import { resolveGfeRequirement } from '@/lib/bookingLifecycle';
+import AddressAutocomplete from '@/components/store/AddressAutocomplete';
 
 // Dedicated membership checkout — intentionally separate from the one-time
 // 5-step /book flow. The customer picks one recurring day/time (their standing
@@ -587,7 +588,7 @@ export default function PlanCheckout() {
                 <div className="mt-6 border-t border-foreground/10 pt-5">
                   <SectionHead icon={MapPin} title="Where" />
                   <div className="grid gap-2.5 sm:grid-cols-[1fr_7rem]">
-                    <Field label="Service address"><input className={inputClass} value={address.line1} onChange={(e) => setAddress((a) => ({ ...a, line1: e.target.value }))} autoComplete="address-line1" autoCapitalize="words" placeholder="Street address" /></Field>
+                    <Field label="Service address"><AddressAutocomplete className={inputClass} value={address.line1} onChange={(text) => setAddress((a) => ({ ...a, line1: text }))} onSelect={(sel) => setAddress((a) => ({ line1: sel.street || a.line1, zip: sel.zip ? sel.zip.replace(/\D/g, '').slice(0, 5) : a.zip }))} autoComplete="address-line1" autoCapitalize="words" placeholder="Street address" /></Field>
                     <Field label="ZIP"><input className={inputClass} value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value.replace(/\D/g, '').slice(0, 5) }))} autoComplete="postal-code" inputMode="numeric" pattern="[0-9]*" maxLength={5} /></Field>
                   </div>
                 </div>

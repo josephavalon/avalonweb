@@ -1,4 +1,18 @@
 import { Resend } from 'resend';
+import { getTemplateOverride, renderTemplate } from '../admin/email-templates.js';
+
+// Resolve a DB-backed override for one of the known customer-email keys. Returns
+// the override's subject/body (placeholders already substituted with the
+// PHI-free vars) or null so callers fall back to their hardcoded default.
+// Never throws — getTemplateOverride is already best-effort.
+async function resolveTemplate(key, vars = {}) {
+  const override = await getTemplateOverride(key);
+  if (!override) return null;
+  return {
+    subject: renderTemplate(override.subject || '', vars),
+    bodyHtml: renderTemplate(override.body_html || '', vars),
+  };
+}
 
 // Customer-facing billing emails (confirmation, receipt, renewal, failed
 // payment). ALL are PHI-FREE per docs/PHI_DATA_FLOW.md — Resend has no executed
@@ -154,7 +168,15 @@ export async function sendBookingConfirmedEmail({
   const when = formatDateTime(dateTimeIso);
   const paid = formatUsd(amountCents);
   const balance = formatUsd(balanceDueCents);
-  const bodyHtml = `
+  const override = await resolveTemplate('booking_confirmed', {
+    firstName: firstName(name),
+    date: when,
+    amount: paid,
+    planName: serviceLabel || 'Avalon visit',
+  });
+  const bodyHtml = override
+    ? override.bodyHtml
+    : `
     <p style="font-size:15px;line-height:1.55;color:#333;margin:0 0 18px;">
       Hi ${escapeHtml(firstName(name))}, your Avalon visit is confirmed. A registered nurse will arrive at your scheduled time.
     </p>
@@ -171,7 +193,7 @@ export async function sendBookingConfirmedEmail({
   const result = await resend.emails.send({
     from: fromAddress(),
     to: recipient,
-    subject: 'Your Avalon visit is confirmed',
+    subject: override?.subject || 'Your Avalon visit is confirmed',
     html: shell({ heading: 'Your visit is confirmed', bodyHtml }),
   });
   if (result?.error) {
@@ -201,7 +223,15 @@ export async function sendPaymentReceiptEmail({
   const resend = resendClient();
 
   const when = formatDateTime(dateIso) || formatDateTime(new Date().toISOString());
-  const bodyHtml = `
+  const override = await resolveTemplate('payment_receipt', {
+    firstName: firstName(name),
+    amount,
+    date: when,
+    planName: label || 'Avalon visit',
+  });
+  const bodyHtml = override
+    ? override.bodyHtml
+    : `
     <p style="font-size:15px;line-height:1.55;color:#333;margin:0 0 18px;">
       Hi ${escapeHtml(firstName(name))}, thank you. This confirms your payment to Avalon Vitality.
     </p>
@@ -217,7 +247,7 @@ export async function sendPaymentReceiptEmail({
   const result = await resend.emails.send({
     from: fromAddress(),
     to: recipient,
-    subject: `Your Avalon receipt — ${amount}`,
+    subject: override?.subject || `Your Avalon receipt — ${amount}`,
     html: shell({ heading: 'Payment receipt', bodyHtml, cta: { href: billingUrl(), label: 'View billing' } }),
   });
   if (result?.error) {
@@ -248,7 +278,14 @@ export async function sendPlanRenewedEmail({
   const credits = Math.max(1, Math.floor(Number(visitCredits) || 1));
   const creditLabel = `${credits} visit credit${credits === 1 ? '' : 's'}`;
   const safePlan = planName || 'Avalon';
-  const bodyHtml = `
+  const override = await resolveTemplate('plan_renewed', {
+    firstName: firstName(name),
+    planName: safePlan,
+    amount,
+  });
+  const bodyHtml = override
+    ? override.bodyHtml
+    : `
     <p style="font-size:15px;line-height:1.55;color:#333;margin:0 0 18px;">
       Hi ${escapeHtml(firstName(name))}, your <strong>${escapeHtml(safePlan)}</strong> plan renewed.
       We've added ${escapeHtml(creditLabel)} to your account${amount ? ` · ${escapeHtml(amount)}` : ''}.
@@ -262,7 +299,7 @@ export async function sendPlanRenewedEmail({
   const result = await resend.emails.send({
     from: fromAddress(),
     to: recipient,
-    subject: `Your ${safePlan} plan renewed — ${creditLabel} added`,
+    subject: override?.subject || `Your ${safePlan} plan renewed — ${creditLabel} added`,
     html: shell({ heading: 'Your plan renewed', bodyHtml, cta: { href: billingUrl(), label: 'View billing' } }),
   });
   if (result?.error) {
@@ -289,7 +326,14 @@ export async function sendPaymentFailedEmail({
 
   const amount = formatUsd(amountCents);
   const safePlan = planName || 'Avalon';
-  const bodyHtml = `
+  const override = await resolveTemplate('payment_failed', {
+    firstName: firstName(name),
+    planName: safePlan,
+    amount,
+  });
+  const bodyHtml = override
+    ? override.bodyHtml
+    : `
     <p style="font-size:15px;line-height:1.55;color:#333;margin:0 0 18px;">
       Hi ${escapeHtml(firstName(name))}, we tried to process your payment for your
       <strong>${escapeHtml(safePlan)}</strong> plan${amount ? ` (${escapeHtml(amount)})` : ''} and it didn't go through.
@@ -302,7 +346,7 @@ export async function sendPaymentFailedEmail({
   const result = await resend.emails.send({
     from: fromAddress(),
     to: recipient,
-    subject: "Your payment didn't go through — update your card",
+    subject: override?.subject || "Your payment didn't go through — update your card",
     html: shell({
       heading: "Update your card",
       bodyHtml,

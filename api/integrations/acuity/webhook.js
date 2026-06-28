@@ -23,6 +23,8 @@ import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
+import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
+import { findRedemptionForAppointment, refundMemberCredit } from '../../_lib/member-credits.js';
 
 // bodyParser is disabled so we can HMAC over the exact bytes Acuity signed.
 // Re-stringifying a parsed body breaks the signature compare every time (and
@@ -237,6 +239,115 @@ async function upsertAppointment(db, appt, action) {
   return null;
 }
 
+// ── PHI-free transactional SMS (best-effort, idempotent) ─────────────────────
+//
+// Quo's BAA does NOT cover SMS, so these bodies must stay PHI-free: a generic
+// "Avalon visit" line plus a non-clinical date/time only. No name, address,
+// service/protocol, dosage, or the word "appointment" (the phi-guard block-list
+// rejects it). See api/_lib/phi-guard.js + docs/PHI_DATA_FLOW.md.
+
+const SMS_TZ = process.env.AVALON_SMS_TZ || 'America/Los_Angeles';
+
+// "Sat, Jul 12 at 2:30 PM" — date/time is non-clinical and allowed PHI-free.
+function formatVisitWhen(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  try {
+    // e.g. "Sat, Jul 12, 2:30 PM" — non-clinical date/time only.
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: SMS_TZ,
+      weekday: 'short', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    }).format(d);
+  } catch {
+    return '';
+  }
+}
+
+function smsBodyForAction(action, whenLabel) {
+  const when = whenLabel ? ` for ${whenLabel}` : '';
+  if (action === 'scheduled') {
+    return `Your Avalon visit is confirmed${when}. Reply STOP to opt out.`;
+  }
+  if (action === 'rescheduled' || action === 'changed') {
+    return `Your Avalon visit has been updated${when}. Reply STOP to opt out.`;
+  }
+  if (action === 'canceled') {
+    return 'Your Avalon visit has been canceled. Questions? Just reply here. Reply STOP to opt out.';
+  }
+  return '';
+}
+
+// Pull a phone from whatever we have: the freshly-fetched Acuity appt
+// (scheduled/rescheduled) or the stored canonical row (canceled).
+function phoneFromAppt(appt = {}) {
+  return appt.phone || '';
+}
+function phoneFromStoredRow(payload = {}) {
+  return payload?.acuity?.contact?.phone
+    || payload?.acuity?.appointment?.phone
+    || payload?.contact?.phone
+    || '';
+}
+function whenFromAppt(appt = {}) {
+  return appt.datetime || appt.date || '';
+}
+function whenFromStoredRow(payload = {}) {
+  return payload?.acuity?.appointment?.datetime
+    || payload?.acuity?.appointment?.date
+    || payload?.appointment?.acuityDatetime
+    || '';
+}
+
+// Idempotent, best-effort. Dedupe via an audit_events row keyed on
+// (action, appointment record id); never throws out of the webhook.
+async function sendTransactionalSms(db, {
+  tenantId,
+  appointmentRecordId,
+  acuityAppointmentId,
+  action,
+  phone,
+  whenLabel,
+}) {
+  try {
+    if (!isSmsConfigured()) return; // QUO_API_KEY/FROM missing → graceful no-op
+    if (!phone) return;
+    const auditAction = `acuity_sms_${action}_sent`;
+
+    // Dedupe: if we already logged a send for this appointment+action, skip.
+    if (appointmentRecordId) {
+      const { data: prior } = await db.from('audit_events')
+        .select('id')
+        .eq('action', auditAction)
+        .eq('entity_id', appointmentRecordId)
+        .limit(1)
+        .maybeSingle();
+      if (prior?.id) return;
+    }
+
+    const body = smsBodyForAction(action, whenLabel);
+    if (!body) return;
+
+    const result = await sendSms({ to: phone, body });
+    if (!result?.ok) {
+      console.warn('[acuity/webhook] sms send not ok', { action, code: result?.code || 'unknown' });
+      return; // don't log a "sent" audit row on failure → safe to retry
+    }
+    await writeAuditEvent(db, {
+      tenantId,
+      action: auditAction,
+      entityType: 'appointment',
+      entityId: appointmentRecordId || null,
+      phiTouched: false, // PHI-free body by construction
+      payload: { acuityAppointmentId: String(acuityAppointmentId), channel: 'sms' },
+    });
+  } catch (err) {
+    // Never let SMS break the webhook.
+    console.warn('[acuity/webhook] transactional sms failed', safeLogContext(err, 'acuity_sms_failed'));
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -320,18 +431,71 @@ export default async function handler(req, res) {
     const { data: eventRow } = await eventWrite.select().single();
     const eventId = eventRow?.id;
 
-    // 2. canceled — flip status on the canonical row, done.
+    // 2. canceled — flip status on the canonical row, refund any redeemed
+    //    visit credit, and send a PHI-free cancellation SMS. Done (no Acuity
+    //    fetch needed; the canonical row already has contact/time in payload).
     if (action === 'canceled') {
+      // Load the canonical row first so we can: (a) refund a redeemed credit
+      // tied to it, and (b) pull a phone/time for the SMS.
+      const { data: canceledRow } = await db.from('appointments')
+        .select('id, external_payload')
+        .eq('acuity_appointment_id', String(apptId))
+        .maybeSingle();
+
       await db.from('appointments')
         .update({ status: 'canceled', updated_at: new Date().toISOString() })
         .eq('acuity_appointment_id', String(apptId));
+
+      // Refund a redeemed visit credit, if this visit consumed one. The
+      // redemption ledger row is linked by appointment_id (set at fulfillment
+      // in stripe/webhook.js → redeemMemberCredit). Idempotent per appointment.
+      if (canceledRow?.id) {
+        try {
+          const redemption = await findRedemptionForAppointment(db, {
+            tenantId, appointmentId: canceledRow.id,
+          });
+          if (redemption) {
+            const refundUnits = Math.abs(Number(redemption.units || 0)) || 1;
+            await refundMemberCredit(db, {
+              tenantId,
+              profileId: redemption.profile_id || null,
+              email: redemption.member_email || '',
+              appointmentId: canceledRow.id,
+              units: refundUnits,
+              creditValueCents: Number(redemption.credit_value_cents || 0),
+              source: 'credit_refund_cancellation',
+              description: 'Visit credit refunded (canceled visit)',
+              externalPayload: { acuityAppointmentId: String(apptId), redemptionLedgerId: redemption.id },
+            });
+            await writeAuditEvent(db, {
+              tenantId, action: 'member_credit_refunded_cancellation',
+              entityType: 'appointment', entityId: canceledRow.id, phiTouched: false,
+              payload: { acuityAppointmentId: String(apptId), units: refundUnits },
+            });
+          }
+        } catch (refundErr) {
+          console.warn('[acuity/webhook] credit refund on cancel failed', safeLogContext(refundErr, 'credit_refund_failed'));
+        }
+      }
+
       if (eventId) await db.from('acuity_events')
         .update({ processed_status: 'processed', processed_at: new Date().toISOString() }).eq('id', eventId);
       await writeAuditEvent(db, {
         tenantId, action: 'acuity_webhook_appointment_canceled',
-        entityType: 'appointment', phiTouched: true,
+        entityType: 'appointment', entityId: canceledRow?.id || null, phiTouched: true,
         payload: { acuityAppointmentId: String(apptId), webhookEventHash: hash },
       });
+
+      // PHI-free cancellation SMS (best-effort, idempotent, never throws).
+      await sendTransactionalSms(db, {
+        tenantId,
+        appointmentRecordId: canceledRow?.id || null,
+        acuityAppointmentId: apptId,
+        action: 'canceled',
+        phone: phoneFromStoredRow(canceledRow?.external_payload || {}),
+        whenLabel: '', // no time in cancellation copy
+      });
+
       return res.status(200).json({ ok: true, action: 'canceled' });
     }
 
@@ -408,6 +572,20 @@ export default async function handler(req, res) {
         } catch (err) {
           console.warn('[acuity/webhook] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
         }
+      });
+    }
+
+    // PHI-free transactional SMS on scheduled / rescheduled (changed = silent;
+    // it's an internal edit, not a member-facing time change). Best-effort,
+    // idempotent per (appointment + action), never throws.
+    if (action === 'scheduled' || action === 'rescheduled') {
+      await sendTransactionalSms(db, {
+        tenantId,
+        appointmentRecordId,
+        acuityAppointmentId: apptId,
+        action,
+        phone: phoneFromAppt(appt),
+        whenLabel: formatVisitWhen(whenFromAppt(appt)),
       });
     }
 

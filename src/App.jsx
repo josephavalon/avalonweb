@@ -176,6 +176,7 @@ const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
 const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
 const AdminTeamSettings = lazyRoute(() => import('./pages/admin/TeamSettings'));
+const AdminEmailTemplates = lazyRoute(() => import('./pages/admin/EmailTemplates'));
 const InviteAccept = lazyRoute(() => import('./pages/InviteAccept'));
 const NewPassword = lazyRoute(() => import('./pages/NewPassword'));
 
@@ -397,6 +398,7 @@ function AppRoutes() {
             <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInventory /></RequireAuth>} />
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
             <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamSettings /></RequireAuth>} />
+            <Route path="/admin/email-templates" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEmailTemplates /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />

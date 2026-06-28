@@ -18,6 +18,7 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/finance', // billing — payments
   '/admin/inventory',
   '/admin/team',
+  '/admin/email-templates', // editable customer email templates
   '/admin/soon', // coming-soon placeholders (Inventory/Events/Clinical/GFE/Tools/Settings)
 ]);
 
@@ -34,6 +35,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/inventory',
   '/admin/team',
   '/admin/gfe', // GFE policy toggles (admin-only)
+  '/admin/email-templates', // editable customer email templates
   '/admin/soon', // coming-soon placeholders
 ]);
 

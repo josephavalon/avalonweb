@@ -180,9 +180,22 @@ export default function Billing() {
           Your receipts, the card we keep on file, and what's coming up next. Card changes happen in the secure Stripe portal.
         </p>
         {error ? (
-          <p className="mt-4 rounded-2xl px-4 py-3 font-body text-sm" style={{ background: 'hsl(0 70% 62% / 0.10)', color: BAD, border: '1px solid hsl(0 70% 62% / 0.30)' }}>
-            {error}
-          </p>
+          <div
+            className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
+            style={{ background: 'hsl(0 70% 62% / 0.10)', border: '1px solid hsl(0 70% 62% / 0.30)' }}
+            role="alert"
+          >
+            <p className="font-body text-sm" style={{ color: BAD }}>{error}</p>
+            <button
+              type="button"
+              onClick={load}
+              disabled={loading}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+              style={{ background: TEXT, color: INVERT }}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} /> Try again
+            </button>
+          </div>
         ) : null}
       </section>
 

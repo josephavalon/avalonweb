@@ -20,6 +20,7 @@ import { apiGet } from '@/lib/apiClient';
 import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
+import AddressAutocomplete from '@/components/store/AddressAutocomplete';
 
 // A member redeems one Visit Credit (worth $250 of appointment value) toward a
 // visit they assemble here. The cart is priced live against the $250 credit:
@@ -619,7 +620,7 @@ export default function MemberBook() {
               <div className="mt-5 border-t border-foreground/10 pt-5">
                 <SectionHead icon={MapPin} title="Where" />
                 <div className="grid gap-2.5 sm:grid-cols-[1fr_7rem]">
-                  <Field label="Service address"><input className={inputClass} value={address.line1} onChange={(e) => setAddress((a) => ({ ...a, line1: e.target.value }))} autoComplete="address-line1" autoCapitalize="words" placeholder="Street address" /></Field>
+                  <Field label="Service address"><AddressAutocomplete className={inputClass} value={address.line1} onChange={(text) => setAddress((a) => ({ ...a, line1: text }))} onSelect={(sel) => setAddress((a) => ({ line1: sel.street || a.line1, zip: sel.zip ? sel.zip.replace(/\D/g, '').slice(0, 5) : a.zip }))} autoComplete="address-line1" autoCapitalize="words" placeholder="Street address" /></Field>
                   <Field label="ZIP"><input className={inputClass} value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value.replace(/\D/g, '').slice(0, 5) }))} autoComplete="postal-code" inputMode="numeric" pattern="[0-9]*" maxLength={5} /></Field>
                 </div>
               </div>

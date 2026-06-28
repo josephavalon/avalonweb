@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, CreditCard, ExternalLink, Loader2, MapPin, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, CreditCard, ExternalLink, Loader2, MapPin, RefreshCw, Undo2 } from 'lucide-react';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
-import { apiGet } from '@/lib/apiClient';
+import { apiGet, apiPost } from '@/lib/apiClient';
 import { useSeo } from '@/lib/seo';
+
+const QUICK_REASONS = [
+  'Need to cancel this visit',
+  'Booked the wrong service',
+  'Schedule conflict',
+  'Charged the wrong amount',
+];
 
 const BG = 'hsl(var(--background))';
 const CARD = 'hsl(var(--foreground) / 0.045)';
@@ -38,6 +45,110 @@ function statusLabel(status) {
   if (status === 'partial_payment') return 'Balance due';
   if (status === 'pending') return 'Pending';
   return status ? String(status).replace(/_/g, ' ') : 'Pending';
+}
+
+function RefundRequest({ appointment }) {
+  // Eligible: the member has actually paid something, and there isn't already a
+  // refund in flight. This is a REQUEST only — staff action the refund.
+  const paidSomething = Number(appointment.depositPaid || 0) > 0 || appointment.paymentStatus === 'paid_in_full' || appointment.paymentStatus === 'partial_payment';
+  const alreadyResolved = appointment.refundStatus && appointment.refundStatus !== '';
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [phase, setPhase] = useState(alreadyResolved ? 'requested' : 'idle'); // idle | submitting | requested | error
+  const [error, setError] = useState('');
+
+  if (!paidSomething) return null;
+
+  if (phase === 'requested') {
+    return (
+      <p className="mt-3 flex items-center gap-2 font-body text-[11px]" style={{ color: 'hsl(152 60% 55%)' }}>
+        <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+        Refund requested — our team will follow up.
+      </p>
+    );
+  }
+
+  async function submit() {
+    const trimmed = reason.trim();
+    if (!trimmed) { setError('Please add a quick reason.'); return; }
+    setPhase('submitting');
+    setError('');
+    try {
+      const res = await apiPost('/api/me/refund-request', { appointmentId: appointment.id, reason: trimmed });
+      if (res?.ok) { setPhase('requested'); return; }
+      throw new Error('failed');
+    } catch {
+      setPhase('error');
+      setError('Could not submit. Please try again or contact Avalon.');
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 inline-flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+        style={{ color: DIM }}
+      >
+        <Undo2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+        Request refund
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-2xl p-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+      <p className="font-body text-[9px] uppercase tracking-[0.18em]" style={{ color: DIM }}>Request a refund</p>
+      <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>Refunds are reviewed by our team — submitting this does not charge or refund anything automatically.</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {QUICK_REASONS.map((q) => (
+          <button
+            key={q}
+            type="button"
+            onClick={() => setReason(q)}
+            className="rounded-full px-2.5 py-1 font-body text-[10px]"
+            style={reason === q
+              ? { color: INVERT, background: TEXT, border: `1px solid ${TEXT}` }
+              : { color: MUTED, background: CARD, border: `1px solid ${BORDER}` }}
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        rows={2}
+        maxLength={2000}
+        placeholder="Tell us what happened (optional detail)…"
+        className="mt-2 w-full resize-none rounded-xl px-3 py-2 font-body text-[12px] outline-none"
+        style={{ background: CARD, border: `1px solid ${BORDER}`, color: TEXT }}
+      />
+      {error ? <p className="mt-1.5 font-body text-[11px]" style={{ color: 'hsl(0 70% 72%)' }}>{error}</p> : null}
+      <div className="mt-2 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={submit}
+          disabled={phase === 'submitting'}
+          className="inline-flex min-h-[36px] items-center gap-2 rounded-full px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-50"
+          style={{ background: TEXT, color: INVERT }}
+        >
+          {phase === 'submitting' ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : null}
+          Submit request
+        </button>
+        <button
+          type="button"
+          onClick={() => { setOpen(false); setError(''); }}
+          disabled={phase === 'submitting'}
+          className="inline-flex min-h-[36px] items-center rounded-full px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-50"
+          style={{ color: MUTED, background: CARD, border: `1px solid ${BORDER}` }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function BookingCard({ appointment }) {
@@ -108,6 +219,8 @@ function BookingCard({ appointment }) {
           </span>
         )}
       </div>
+
+      <RefundRequest appointment={appointment} />
     </article>
   );
 }

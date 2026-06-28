@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { getTemplateOverride, renderTemplate } from './admin/email-templates.js';
 
 // Welcome email sent once after a new client confirms their account (Supabase
 // email confirmation or first OAuth sign-in). Best-effort: signup MUST succeed
@@ -54,16 +55,23 @@ function firstName(name) {
   return trimmed.split(/\s+/)[0];
 }
 
-function welcomeHtml({ greetingName, ctaHref }) {
+// `overrideBodyHtml`, when present, replaces ONLY the body paragraph (the
+// admin-editable copy from the email_templates store). The eyebrow, greeting
+// heading, CTA, and footer stay code-owned so an override can't break the
+// branded shell. The body is rendered with placeholders already substituted.
+function welcomeHtml({ greetingName, ctaHref, overrideBodyHtml = '' }) {
   const safeName = escapeHtml(greetingName);
   const safeCta = escapeHtml(ctaHref);
+  const bodyBlock = overrideBodyHtml
+    ? overrideBodyHtml
+    : `<p style="font-size: 15px; line-height: 1.55; color: #333; margin: 0 0 18px;">
+        Your account is live. From your dashboard you can book a visit, view your plan, and message the clinical team. We are glad you are here.
+      </p>`;
   return `
     <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 28px 24px; color: #111;">
       <p style="font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin: 0 0 14px;">Avalon Vitality</p>
       <h1 style="font-size: 28px; line-height: 1.15; margin: 0 0 14px;">Welcome, ${safeName}.</h1>
-      <p style="font-size: 15px; line-height: 1.55; color: #333; margin: 0 0 18px;">
-        Your account is live. From your dashboard you can book a visit, view your plan, and message the clinical team. We are glad you are here.
-      </p>
+      ${bodyBlock}
       <p style="margin: 0 0 28px;">
         <a href="${safeCta}" style="display: inline-block; background: #111; color: #fff; padding: 12px 22px; border-radius: 999px; text-decoration: none; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700;">
           Open your dashboard
@@ -100,7 +108,7 @@ Questions? Reply to this email or write to support@avalonvitality.co.`;
  *   uses the plain dashboard link.
  * @returns {Promise<{ id?: string }>}
  */
-export async function sendWelcomeEmail({ to, name, magicToken } = {}) {
+export async function sendWelcomeEmail({ to, name, magicToken, planSignup = false } = {}) {
   const recipient = String(to || '').trim();
   if (!recipient) {
     throw Object.assign(new Error('Welcome email recipient missing'), {
@@ -115,11 +123,29 @@ export async function sendWelcomeEmail({ to, name, magicToken } = {}) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const greetingName = firstName(name);
   const ctaHref = ctaUrl({ magicToken });
+
+  // DB-backed override (admin-editable). PHI-free vars only. The override
+  // supplies the subject + the body paragraph; the branded shell stays
+  // code-owned. Falls back silently to the hardcoded copy when there is no
+  // enabled override or the template store is unavailable. `planSignup` is
+  // accepted so callers can route plan welcomes through the same path without
+  // a second function.
+  let overrideSubject = '';
+  let overrideBodyHtml = '';
+  try {
+    const override = await getTemplateOverride('welcome');
+    if (override) {
+      const vars = { firstName: greetingName };
+      overrideSubject = renderTemplate(override.subject || '', vars);
+      overrideBodyHtml = renderTemplate(override.body_html || '', vars);
+    }
+  } catch { /* override lookup is best-effort; fall back to defaults */ }
+
   const result = await resend.emails.send({
     from: fromAddress(),
     to: recipient,
-    subject: 'Welcome to Avalon Vitality',
-    html: welcomeHtml({ greetingName, ctaHref }),
+    subject: overrideSubject || 'Welcome to Avalon Vitality',
+    html: welcomeHtml({ greetingName, ctaHref, overrideBodyHtml }),
     text: welcomeText({ greetingName, ctaHref }),
   });
   if (result?.error) {
@@ -129,4 +155,19 @@ export async function sendWelcomeEmail({ to, name, magicToken } = {}) {
     });
   }
   return { id: result?.data?.id };
+}
+
+/**
+ * Should a post-checkout welcome fire? The original rule only welcomed a
+ * customer's FIRST paid appointment, which silently skipped plan signups by
+ * repeat one-time buyers. A plan signup is a new relationship worth welcoming,
+ * so it gets a welcome regardless of prior one-time visits. The audit_events
+ * `welcome_email_sent` dedupe (checked by the caller) still guards against a
+ * true double-send, so this can never welcome the same plan member twice.
+ *
+ * @param {{ planSignup?: boolean, isFirstPaid?: boolean }} args
+ * @returns {boolean}
+ */
+export function shouldSendCheckoutWelcome({ planSignup = false, isFirstPaid = false } = {}) {
+  return Boolean(planSignup) || Boolean(isFirstPaid);
 }

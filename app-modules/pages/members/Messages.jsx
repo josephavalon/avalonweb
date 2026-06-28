@@ -4,6 +4,8 @@ import AvalonMark from '@/components/AvalonMark';
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
+  ImagePlus,
   LogOut,
   MessageCircle,
   Plus,
@@ -28,7 +30,57 @@ const CARD_STRONG = 'hsl(var(--foreground) / 0.075)';
 const BORDER = 'hsl(var(--foreground) / 0.10)';
 const BAD = 'hsl(0 70% 62%)';
 
+// Storage bucket for member-uploaded message images. Must exist + carry the
+// member-scoped policies from migration 022 (see REPORT). Mirrors team-inbox.
+const MSG_IMAGE_BUCKET = 'member-messages';
+// Max attachment size we'll accept client-side (bucket also enforces 10 MB).
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
 // --- Helpers --------------------------------------------------------------
+
+// Normalize whatever the messages row carries for attachments into an array of
+// { url, name } objects. Tolerates: a jsonb `attachments` array, or a single
+// `image_url` text column — whichever the deployed schema actually has. Guards
+// for legacy rows with neither (returns []).
+function attachmentsFor(m) {
+  if (!m) return [];
+  const raw = m.attachments;
+  if (Array.isArray(raw)) {
+    return raw
+      .map((a) => (typeof a === 'string' ? { url: a } : a))
+      .filter((a) => a && a.url);
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((a) => a && a.url);
+    } catch {
+      /* not JSON — fall through to image_url */
+    }
+  }
+  if (m.image_url) return [{ url: m.image_url }];
+  return [];
+}
+
+// Run a messages select that first tries to include the attachment columns
+// (`attachments`, `image_url`) and transparently falls back to the base columns
+// if the deployed schema doesn't have them yet (PostgREST 42703 / "column ...
+// does not exist"). `build` receives the query and applies filters/order/limit.
+// `baseCols` is the column list known to exist on every deploy.
+async function selectMessages(build, baseCols) {
+  const richCols = `${baseCols}, attachments, image_url`;
+  let res = await build(supabase.from('messages').select(richCols));
+  if (res.error) {
+    const msg = String(res.error.message || '').toLowerCase();
+    const missingCol =
+      res.error.code === '42703' || msg.includes('column') || msg.includes('does not exist');
+    if (!missingCol) throw res.error;
+    // Retry with just the columns guaranteed to exist.
+    res = await build(supabase.from('messages').select(baseCols));
+    if (res.error) throw res.error;
+  }
+  return res.data || [];
+}
 
 function initialsFor(name) {
   if (!name) return 'SN';
@@ -250,6 +302,21 @@ function LiveMessages() {
 
   const userId = user?.id || null;
 
+  // Care-team's read cursor for the active thread (the counterparty's
+  // last_read_at). Drives the "Seen" receipt on the member's sent messages.
+  const [otherReadAt, setOtherReadAt] = useState(null);
+  // Pending image attachment for the next sent message: { url, name } | null.
+  const [pendingImage, setPendingImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  // Whether the care team is currently typing (ephemeral, via Realtime).
+  const [careTyping, setCareTyping] = useState(false);
+  const fileRef = useRef(null);
+  // Realtime channel + typing-broadcast throttle bookkeeping (refs so the
+  // keystroke handler doesn't re-subscribe the channel).
+  const presenceChannelRef = useRef(null);
+  const lastTypingSentRef = useRef(0);
+  const careTypingTimerRef = useRef(null);
+
   const handleSignOut = () => {
     signOut();
     navigate('/login', { replace: true });
@@ -284,13 +351,10 @@ function LiveMessages() {
       if (opErr) throw opErr;
 
       // 3) Latest message body per conversation (fetch recent slice; pick latest per id).
-      const { data: recentMessages, error: rmErr } = await supabase
-        .from('messages')
-        .select('id, conversation_id, body, created_at, sender_id')
-        .in('conversation_id', convoIds)
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (rmErr) throw rmErr;
+      const recentMessages = await selectMessages((q) =>
+        q.in('conversation_id', convoIds).order('created_at', { ascending: false }).limit(200),
+        'id, conversation_id, body, created_at, sender_id',
+      );
 
       const latestByConvo = new Map();
       const allByConvo = new Map();
@@ -318,6 +382,10 @@ function LiveMessages() {
         const last = latestByConvo.get(mp.conversation_id) || null;
         const lastAt = last?.created_at || c.updated_at || null;
         const lastReadAt = mp.last_read_at || null;
+        const lastHasImage = last ? attachmentsFor(last).length > 0 : false;
+        const lastPreview = last
+          ? (last.body && last.body.trim() ? last.body : lastHasImage ? 'Sent an image' : '')
+          : '';
         const unread =
           !!last &&
           last.sender_id !== userId &&
@@ -325,7 +393,7 @@ function LiveMessages() {
         return {
           id: mp.conversation_id,
           counterpartyName,
-          lastBody: last?.body || (c.subject ? '' : ''),
+          lastBody: lastPreview,
           lastAt,
           unread,
           lastReadAt,
@@ -351,13 +419,29 @@ function LiveMessages() {
     if (!supabase || !conversationId) return;
     setThreadState({ loading: true, error: '', messages: [] });
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('id, conversation_id, sender_id, body, created_at')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      setThreadState({ loading: false, error: '', messages: data || [] });
+      const data = await selectMessages((q) =>
+        q.eq('conversation_id', conversationId).order('created_at', { ascending: true }),
+        'id, conversation_id, sender_id, body, created_at',
+      );
+      setThreadState({ loading: false, error: '', messages: data });
+
+      // Read-receipt source: the care-team participant's last_read_at. Used to
+      // render "Seen" on the member's own sent messages. Best-effort.
+      try {
+        const { data: others } = await supabase
+          .from('conversation_participants')
+          .select('user_id, last_read_at')
+          .eq('conversation_id', conversationId)
+          .neq('user_id', userId);
+        const latest = (others || [])
+          .map((o) => o.last_read_at)
+          .filter(Boolean)
+          .sort()
+          .pop();
+        setOtherReadAt(latest || null);
+      } catch {
+        setOtherReadAt(null);
+      }
 
       // Mark read: update participant row's last_read_at to now.
       try {
@@ -380,11 +464,13 @@ function LiveMessages() {
   }, [userId]);
 
   useEffect(() => {
+    setOtherReadAt(null);
+    setCareTyping(false);
     if (activeThreadId) loadThreadMessages(activeThreadId);
     else setThreadState({ loading: false, error: '', messages: [] });
   }, [activeThreadId, loadThreadMessages]);
 
-  // -- Realtime: subscribe to inserts on the active thread -----------------
+  // -- Realtime: inserts + the care team's read cursor on the active thread -
   useEffect(() => {
     if (!supabase || !activeThreadId) return undefined;
     const channel = supabase
@@ -399,9 +485,74 @@ function LiveMessages() {
           });
         },
       )
+      // The care team marking the thread read bumps their participant row's
+      // last_read_at — surface it live so "Seen" appears without a reload.
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'conversation_participants', filter: `conversation_id=eq.${activeThreadId}` },
+        (payload) => {
+          if (payload.new?.user_id === userId) return; // ignore my own cursor
+          const next = payload.new?.last_read_at;
+          if (!next) return;
+          setOtherReadAt((prev) => (!prev || new Date(next) > new Date(prev) ? next : prev));
+        },
+      )
       .subscribe();
     return () => { try { supabase.removeChannel(channel); } catch { /* noop */ } };
-  }, [activeThreadId]);
+  }, [activeThreadId, userId]);
+
+  // -- Realtime: ephemeral typing indicator (broadcast, NO DB writes) -------
+  // A SEPARATE channel from the postgres_changes one above (unique name) to
+  // avoid the "tried to subscribe multiple times" Supabase crash.
+  useEffect(() => {
+    if (!supabase || !activeThreadId) return undefined;
+    const channel = supabase.channel(`typing-${activeThreadId}`, {
+      config: { broadcast: { self: false } },
+    });
+    channel
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        // Only react to the OTHER side typing.
+        if (payload?.payload?.userId && payload.payload.userId === userId) return;
+        setCareTyping(true);
+        clearTimeout(careTypingTimerRef.current);
+        // Auto-clear if no further keystroke broadcast arrives.
+        careTypingTimerRef.current = setTimeout(() => setCareTyping(false), 4000);
+      })
+      .on('broadcast', { event: 'stop_typing' }, (payload) => {
+        if (payload?.payload?.userId && payload.payload.userId === userId) return;
+        clearTimeout(careTypingTimerRef.current);
+        setCareTyping(false);
+      })
+      .subscribe();
+    presenceChannelRef.current = channel;
+    return () => {
+      clearTimeout(careTypingTimerRef.current);
+      presenceChannelRef.current = null;
+      try { supabase.removeChannel(channel); } catch { /* noop */ }
+    };
+  }, [activeThreadId, userId]);
+
+  // Broadcast that the member is typing (throttled to ~1/2s). Ephemeral only.
+  const broadcastTyping = useCallback(() => {
+    const channel = presenceChannelRef.current;
+    if (!channel) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2000) return;
+    lastTypingSentRef.current = now;
+    try {
+      channel.send({ type: 'broadcast', event: 'typing', payload: { userId } });
+    } catch { /* noop */ }
+  }, [userId]);
+
+  // Tell the other side we stopped (composer blur / after send).
+  const broadcastStopTyping = useCallback(() => {
+    const channel = presenceChannelRef.current;
+    if (!channel) return;
+    lastTypingSentRef.current = 0;
+    try {
+      channel.send({ type: 'broadcast', event: 'stop_typing', payload: { userId } });
+    } catch { /* noop */ }
+  }, [userId]);
 
   // -- Auto-scroll on new messages ----------------------------------------
   useEffect(() => {
@@ -410,40 +561,101 @@ function LiveMessages() {
     el.scrollTop = el.scrollHeight;
   }, [threadState.messages.length, activeThreadId]);
 
+  // -- Attach an image: upload to member-scoped Storage, hold the URL -------
+  const handlePickImage = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file || !supabase || !userId) return;
+    if (!file.type.startsWith('image/')) {
+      setSendError('Only image files can be attached.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setSendError('Image is too large (max 10 MB).');
+      return;
+    }
+    setUploading(true);
+    setSendError('');
+    try {
+      // Member-scoped path: storage RLS (migration 022) restricts writes to a
+      // folder named after the member's auth uid, so a member can only write
+      // under their own prefix.
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `${userId}/${activeThreadId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from(MSG_IMAGE_BUCKET)
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from(MSG_IMAGE_BUCKET).getPublicUrl(path);
+      if (!pub?.publicUrl) throw new Error('Could not resolve image URL.');
+      setPendingImage({ url: pub.publicUrl, name: file.name });
+    } catch (err) {
+      setSendError(err?.message || 'Could not upload image.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // -- Send a message ------------------------------------------------------
   const handleSend = async (e) => {
     e?.preventDefault?.();
     const body = draft.trim();
-    if (!body || !activeThreadId || !supabase || !userId) return;
+    const image = pendingImage;
+    // Allow a send when there's text OR an attached image.
+    if ((!body && !image) || !activeThreadId || !supabase || !userId) return;
     setSending(true);
     setSendError('');
+    broadcastStopTyping();
     const tempId = `tmp-${Date.now()}`;
+    const attachments = image ? [{ url: image.url, name: image.name }] : [];
     const optimistic = {
       id: tempId,
       conversation_id: activeThreadId,
       sender_id: userId,
       body,
+      attachments,
       created_at: new Date().toISOString(),
       _optimistic: true,
     };
     setThreadState((s) => ({ ...s, messages: [...s.messages, optimistic] }));
     setDraft('');
+    setPendingImage(null);
     try {
-      const { data, error } = await supabase
+      // The body column has a NOT NULL + 1..4000 check, so when only an image is
+      // sent we store a single space as the body.
+      const row = { conversation_id: activeThreadId, body: body || ' ', sender_id: userId };
+      if (image) row.attachments = attachments; // dropped via retry if column absent (see below)
+      let res = await supabase
         .from('messages')
-        .insert({ conversation_id: activeThreadId, body, sender_id: userId })
-        .select('id, conversation_id, sender_id, body, created_at')
+        .insert(row)
+        .select('id, conversation_id, sender_id, body, created_at, attachments, image_url')
         .single();
-      if (error) throw error;
+      // If the attachments/image_url columns aren't deployed yet, retry text-only
+      // so sending never hard-breaks before migration 022 lands.
+      if (res.error) {
+        const msg = String(res.error.message || '').toLowerCase();
+        const missingCol =
+          res.error.code === '42703' || msg.includes('column') || msg.includes('does not exist');
+        if (missingCol) {
+          res = await supabase
+            .from('messages')
+            .insert({ conversation_id: activeThreadId, body: body || ' ', sender_id: userId })
+            .select('id, conversation_id, sender_id, body, created_at')
+            .single();
+        }
+      }
+      if (res.error) throw res.error;
+      const data = res.data;
       setThreadState((s) => ({
         ...s,
         messages: s.messages.map((m) => (m.id === tempId ? data : m)),
       }));
       // Bump the thread preview locally.
+      const preview = body || (image ? 'Sent an image' : '');
       setThreadsState((s) => ({
         ...s,
         threads: s.threads.map((t) =>
-          t.id === activeThreadId ? { ...t, lastBody: body, lastAt: data.created_at, unread: false } : t,
+          t.id === activeThreadId ? { ...t, lastBody: preview, lastAt: data.created_at, unread: false } : t,
         ),
       }));
     } catch (err) {
@@ -451,6 +663,7 @@ function LiveMessages() {
       // Roll back the optimistic message.
       setThreadState((s) => ({ ...s, messages: s.messages.filter((m) => m.id !== tempId) }));
       setDraft(body);
+      setPendingImage(image);
     } finally {
       setSending(false);
     }
@@ -492,6 +705,22 @@ function LiveMessages() {
     () => threadsState.threads.find((t) => t.id === activeThreadId) || null,
     [threadsState.threads, activeThreadId],
   );
+
+  // "Seen" receipt: the id of the LAST message the member sent that the care
+  // team's last_read_at is at/after. We show "Seen" only on that single bubble
+  // (the latest read one), iMessage-style. Optimistic temp rows never qualify.
+  const lastSeenMessageId = useMemo(() => {
+    if (!otherReadAt) return null;
+    const readMs = new Date(otherReadAt).getTime();
+    if (Number.isNaN(readMs)) return null;
+    let id = null;
+    for (const m of threadState.messages) {
+      if (m._optimistic) continue;
+      if (m.sender_id !== userId) continue;
+      if (new Date(m.created_at).getTime() <= readMs) id = m.id;
+    }
+    return id;
+  }, [otherReadAt, threadState.messages, userId]);
 
   // SEO
   useSeo({
@@ -540,6 +769,9 @@ function LiveMessages() {
                 const prev = threadState.messages[i - 1];
                 const showBucket = !prev || hourBucket(prev.created_at) !== hourBucket(m.created_at);
                 const mine = m.sender_id === userId;
+                const atts = attachmentsFor(m);
+                // Body may be a placeholder space for image-only messages.
+                const hasText = m.body && m.body.trim();
                 return (
                   <li key={m.id} className="flex flex-col">
                     {showBucket ? (
@@ -551,14 +783,36 @@ function LiveMessages() {
                       </p>
                     ) : null}
                     <div
-                      className="max-w-[82%] rounded-2xl px-3.5 py-2.5 font-body text-[13px] leading-snug"
+                      className="max-w-[82%] overflow-hidden rounded-2xl px-3.5 py-2.5 font-body text-[13px] leading-snug"
                       style={
                         mine
                           ? { alignSelf: 'flex-end', background: TEXT, color: INVERT, opacity: m._optimistic ? 0.7 : 1 }
                           : { alignSelf: 'flex-start', background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }
                       }
                     >
-                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                      {atts.length ? (
+                        <div className="mb-1.5 flex flex-col gap-1.5">
+                          {atts.map((att, ai) => (
+                            <a
+                              key={att.url || ai}
+                              href={att.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block"
+                            >
+                              <img
+                                src={att.url}
+                                alt={att.name || 'attachment'}
+                                className="max-h-60 max-w-full rounded-xl object-cover"
+                                style={{ border: `1px solid ${BORDER}` }}
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
+                      {hasText ? (
+                        <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                      ) : null}
                       <p
                         className="mt-1 font-body text-[10px]"
                         style={{ color: mine ? 'hsl(var(--background) / 0.6)' : DIM, textAlign: mine ? 'right' : 'left' }}
@@ -566,6 +820,14 @@ function LiveMessages() {
                         {relativeTime(m.created_at)}
                       </p>
                     </div>
+                    {mine && !m._optimistic && m.id === lastSeenMessageId ? (
+                      <span
+                        className="mt-0.5 inline-flex items-center gap-1 self-end font-body text-[10px] font-bold uppercase tracking-[0.14em]"
+                        style={{ color: DIM }}
+                      >
+                        <Check className="h-3 w-3" strokeWidth={2.4} /> Seen
+                      </span>
+                    ) : null}
                   </li>
                 );
               })}
@@ -573,35 +835,87 @@ function LiveMessages() {
           )}
         </div>
 
+        {/* Ephemeral typing indicator (broadcast-driven; never persisted). */}
+        {careTyping ? (
+          <p className="mt-2 px-1 font-body text-[11px] italic" style={{ color: MUTED }} aria-live="polite">
+            Care team is typing…
+          </p>
+        ) : null}
+
         {/* Composer */}
         <form
           onSubmit={handleSend}
           className="mt-3 rounded-2xl p-2"
           style={{ background: CARD, border: `1px solid ${BORDER}` }}
         >
-          <label className="sr-only" htmlFor="message-draft">Write a message</label>
-          <textarea
-            id="message-draft"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Type a message…"
-            rows={2}
-            className="block w-full resize-none rounded-xl bg-transparent px-3 py-2 font-body text-[13px] leading-snug outline-none"
-            style={{ color: TEXT }}
-          />
+          {/* Pending image preview (clears after send). */}
+          {pendingImage ? (
+            <div className="mb-2 px-1">
+              <span className="relative inline-block">
+                <img
+                  src={pendingImage.url}
+                  alt={pendingImage.name || 'attachment'}
+                  className="h-16 w-16 rounded-lg object-cover"
+                  style={{ border: `1px solid ${BORDER}` }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPendingImage(null)}
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full"
+                  style={{ background: BG, border: `1px solid ${BORDER}`, color: TEXT }}
+                  aria-label="Remove image"
+                >
+                  <X className="h-3 w-3" strokeWidth={2.4} />
+                </button>
+              </span>
+            </div>
+          ) : null}
+
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl disabled:opacity-50"
+              style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: MUTED }}
+              aria-label="Attach image"
+            >
+              <ImagePlus className="h-4 w-4" strokeWidth={1.9} />
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePickImage}
+            />
+            <label className="sr-only" htmlFor="message-draft">Write a message</label>
+            <textarea
+              id="message-draft"
+              value={draft}
+              onChange={(e) => { setDraft(e.target.value); broadcastTyping(); }}
+              onBlur={broadcastStopTyping}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Type a message…"
+              rows={2}
+              className="block w-full flex-1 resize-none rounded-xl bg-transparent px-3 py-2 font-body text-[13px] leading-snug outline-none"
+              style={{ color: TEXT }}
+            />
+          </div>
           <div className="mt-1 flex items-center justify-between gap-2">
             <p className="font-body text-[10px]" style={{ color: sendError ? BAD : DIM }}>
-              {sendError || 'Enter to send · Shift+Enter for newline'}
+              {uploading
+                ? 'Uploading image…'
+                : sendError || 'Enter to send · Shift+Enter for newline'}
             </p>
             <button
               type="submit"
-              disabled={sending || !draft.trim()}
+              disabled={sending || uploading || (!draft.trim() && !pendingImage)}
               className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.18em] disabled:opacity-50"
               style={{ background: TEXT, color: INVERT }}
             >

@@ -15,7 +15,7 @@ import {
   sendPlanRenewedEmail,
   sendPaymentFailedEmail,
 } from '../../_lib/billing-emails.js';
-import { sendWelcomeEmail } from '../../_welcome-email.js';
+import { sendWelcomeEmail, shouldSendCheckoutWelcome } from '../../_welcome-email.js';
 import { signWelcomeToken, isMagicLinkWelcomeEnabled } from '../../_lib/welcome-token.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
@@ -116,7 +116,7 @@ async function isFirstPaidAppointmentForEmail(db, { email, currentRecordId, tena
 // audit_events (matches /api/auth/welcome-email's dedupe contract). Looks up
 // the auth user by email so the magic-link CTA can carry a signed token if the
 // caller wants to drop the recipient straight into /members/dashboard.
-async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId, sessionId }) {
+async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId, sessionId, planSignup = false }) {
   if (!welcomeEmailOnCheckoutEnabled()) {
     console.log('[stripe/webhook] welcome-email skipped (flag off)', safeLogContext({ code: 'welcome_email_flag_off' }, 'welcome_email_flag_off'));
     return { sent: false, reason: 'flag_off' };
@@ -129,7 +129,10 @@ async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId
     currentRecordId,
     tenantId,
   });
-  if (!isFirst) {
+  // Plan signups always get a welcome (new contract), even for a repeat
+  // customer; one-time visits only welcome on the first paid appointment.
+  // The audit-event dedupe below still prevents any double-send.
+  if (!shouldSendCheckoutWelcome({ planSignup, isFirstPaid: isFirst })) {
     console.log('[stripe/webhook] welcome-email skipped (not first paid)', { event: 'welcome_email_skipped', reason: 'repeat_customer' });
     return { sent: false, reason: 'repeat_customer' };
   }
@@ -180,7 +183,7 @@ async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId
 
   const name = firstNameFromContact(contact);
   try {
-    const result = await sendWelcomeEmail({ to: recipient, name, magicToken });
+    const result = await sendWelcomeEmail({ to: recipient, name, magicToken, planSignup });
     if (db && userId) {
       await writeAuditEvent(db, {
         tenantId,
@@ -1163,6 +1166,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       currentRecordId: record.id,
       tenantId: fulfillmentTenantId,
       sessionId: session.id,
+      planSignup: md.planSignup === 'true',
     });
     // Customer booking-confirmation + receipt (PHI-free, deduped per session).
     await sendCheckoutConfirmationEmails(db, {
@@ -1231,6 +1235,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       currentRecordId: insertedRecord.id,
       tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
       sessionId: session.id,
+      planSignup: md.planSignup === 'true',
     });
     await sendCheckoutConfirmationEmails(db, {
       checkout,

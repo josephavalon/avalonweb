@@ -54,6 +54,7 @@ const NAV_LIVE = [
   {
     label: 'Communications', icon: MessageSquare, children: [
       { label: 'Client inbox', to: '/admin/messages' },
+      { label: 'Email templates', to: '/admin/email-templates' },
       { label: 'Broadcasts', to: '/admin/soon?feature=Broadcasts' },
       { label: 'SMS templates', to: '/admin/soon?feature=SMS%20Templates' },
     ],

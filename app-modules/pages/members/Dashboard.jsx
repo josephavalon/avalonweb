@@ -66,6 +66,18 @@ const GOOD = 'hsl(140 30% 60%)';
 const WARN = 'hsl(38 70% 60%)';
 const BAD = 'hsl(0 70% 62%)';
 
+// Pulsing muted bar used as a loading placeholder. Purely visual — shaped to
+// roughly match the text it stands in for so the layout doesn't jump.
+function SkeletonBar({ className = '', style }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`block animate-pulse rounded-md ${className}`}
+      style={{ background: CARD_STRONG, ...style }}
+    />
+  );
+}
+
 function Action({ to, href, icon: Icon, label, primary = false }) {
   const className = 'flex min-h-[58px] items-center justify-between rounded-2xl px-4 font-body text-[11px] font-bold uppercase tracking-[0.18em] transition-transform active:scale-[0.98]';
   const style = {
@@ -83,10 +95,14 @@ function Action({ to, href, icon: Icon, label, primary = false }) {
   return <Link to={to} className={className} style={style}>{body}</Link>;
 }
 
-function StatCol({ label, value, divider }) {
+function StatCol({ label, value, divider, loading }) {
   return (
     <div className="px-2 py-3.5 text-center" style={divider ? { borderRight: `1px solid ${BORDER}` } : undefined}>
-      <p className="truncate font-heading text-2xl uppercase leading-none md:text-3xl">{value}</p>
+      {loading ? (
+        <SkeletonBar className="mx-auto h-7 w-10 md:h-8" />
+      ) : (
+        <p className="truncate font-heading text-2xl uppercase leading-none md:text-3xl">{value}</p>
+      )}
       <p className="mt-1.5 font-body text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: DIM }}>{label}</p>
     </div>
   );
@@ -125,13 +141,24 @@ function PlanCard({ sub, subState, creditsAvailable, creditsTotal }) {
   const loading = subState?.loading;
   const hasPlan = !!sub?.hasPlan;
 
-  // Loading skeleton — show dashes, never stale/fake content.
+  // Loading skeleton — pulsing muted bars shaped like the loaded card, never
+  // stale/fake content.
   if (loading) {
     return (
-      <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+      <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }} aria-busy="true">
         <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Active Plan</p>
-        <h3 className="mt-3 font-heading text-3xl uppercase leading-none md:text-4xl" style={{ color: DIM }}>—</h3>
-        <p className="mt-4 font-body text-[12px]" style={{ color: MUTED }}>Loading your plan…</p>
+        <SkeletonBar className="mt-3 h-8 w-2/3" />
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div>
+            <SkeletonBar className="h-2.5 w-12" />
+            <SkeletonBar className="mt-2 h-6 w-3/4" />
+          </div>
+          <div>
+            <SkeletonBar className="h-2.5 w-16" />
+            <SkeletonBar className="mt-2 h-6 w-3/4" />
+          </div>
+        </div>
+        <SkeletonBar className="mt-4 h-11 w-full rounded-xl" />
       </div>
     );
   }
@@ -320,13 +347,22 @@ function DocumentsCard({ docsState }) {
       </div>
 
       {loading ? (
-        <p className="mt-4 font-body text-[12px]" style={{ color: MUTED }}>Loading your documents…</p>
+        <div className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }} aria-busy="true">
+          <SkeletonBar className="h-10 w-8 shrink-0 rounded" />
+          <div className="min-w-0 flex-1">
+            <SkeletonBar className="h-3.5 w-2/3" />
+            <SkeletonBar className="mt-2 h-2.5 w-1/2" />
+          </div>
+        </div>
       ) : error ? (
-        <Link to="/members/documents" className="mt-4 flex items-center gap-3 rounded-xl px-3 py-3.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+        <Link to="/members/documents" className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
           <span className="grid h-10 w-8 shrink-0 place-items-center rounded" style={{ background: CARD, color: DIM }}>
             <FileText className="h-4 w-4" strokeWidth={1.6} />
           </span>
-          <p className="min-w-0 flex-1 font-body text-[12px]" style={{ color: MUTED }}>Open your documents</p>
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>Couldn't load documents</p>
+            <p className="mt-0.5 font-body text-[11px]" style={{ color: MUTED }}>Tap to open your documents and try again.</p>
+          </div>
           <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2} style={{ color: MUTED }} />
         </Link>
       ) : pendingCount > 0 ? (
@@ -455,13 +491,19 @@ function VisitsCreditBanner({ visitsRemaining, loading }) {
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Visit credits</p>
-          <h3 className="mt-1 font-heading text-4xl uppercase leading-none md:text-5xl">
-            {loading ? '—' : `${visitsRemaining} visit${visitsRemaining === 1 ? '' : 's'} remaining`}
-          </h3>
+          {loading ? (
+            <SkeletonBar className="mt-2 h-9 w-3/4 md:h-11" />
+          ) : (
+            <h3 className="mt-1 font-heading text-4xl uppercase leading-none md:text-5xl">
+              {`${visitsRemaining} visit${visitsRemaining === 1 ? '' : 's'} remaining`}
+            </h3>
+          )}
           <p className="mt-2 font-body text-[12px]" style={{ color: MUTED }}>
-            {hasVisits
-              ? 'Each credit covers up to $250 of a visit. Book now and use one.'
-              : 'No visit credits left — add a plan to bank more visits.'}
+            {loading
+              ? 'Checking your visit credits…'
+              : hasVisits
+                ? 'Each credit covers up to $250 of a visit. Book now and use one.'
+                : 'No visit credits left — add a plan to bank more visits.'}
           </p>
         </div>
         <Link
@@ -498,6 +540,9 @@ function DashboardBody({
   docsState,
   profileState,
   messagesUnread = null,
+  summaryLoading = false,
+  visitsError = '',
+  onRetryVisits,
 }) {
   const visitStatus = primary ? 'Confirming after clinical review' : 'No visit scheduled';
   const profileStats = profileCompleteness(profileState?.profile);
@@ -533,6 +578,27 @@ function DashboardBody({
           <ProfileCompleteness percent={profileStats.percent} nextField={profileStats.nextField} loading={profileState?.loading} />
         </div>
 
+        {/* Visits load error — non-blocking banner with a retry affordance. */}
+        {visitsError ? (
+          <div
+            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
+            style={{ background: 'hsl(0 70% 62% / 0.08)', border: '1px solid hsl(0 70% 62% / 0.30)' }}
+            role="alert"
+          >
+            <p className="font-body text-[12px]" style={{ color: BAD }}>{visitsError}</p>
+            {onRetryVisits ? (
+              <button
+                type="button"
+                onClick={onRetryVisits}
+                className="inline-flex min-h-[36px] items-center justify-center rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+                style={{ background: TEXT, color: INVERT }}
+              >
+                Try again
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* Next visit + summary rail */}
         <div className="overflow-hidden rounded-[30px]" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-5 md:p-7">
@@ -559,9 +625,9 @@ function DashboardBody({
             />
           </div>
           <div className="grid grid-cols-3" style={{ borderTop: `1px solid ${BORDER}` }}>
-            <StatCol label="Balance" value={balanceLabel} divider />
-            <StatCol label="Plan" value={planLabel} divider />
-            <StatCol label="Visits" value={visitsCount} />
+            <StatCol label="Balance" value={balanceLabel} divider loading={summaryLoading} />
+            <StatCol label="Plan" value={planLabel} divider loading={summaryLoading} />
+            <StatCol label="Visits" value={visitsCount} loading={summaryLoading} />
           </div>
         </div>
 
@@ -663,6 +729,7 @@ function LiveClientDashboard() {
   };
 
   const refetchVisits = () => {
+    setState((s) => ({ ...s, loading: true, error: '' }));
     apiGet('/api/me/appointments')
       .then((data) => setState({ loading: false, error: '', visits: Array.isArray(data?.appointments) ? data.appointments : [] }))
       .catch(() => setState((s) => ({ ...s, loading: false, error: 'Could not load your visits.' })));
@@ -691,7 +758,7 @@ function LiveClientDashboard() {
 
   const handleSignOut = () => { signOut(); navigate('/login', { replace: true }); };
 
-  const { loading, visits } = state;
+  const { loading, error: visitsError, visits } = state;
   const now = Date.now();
   const upcoming = visits.filter((v) => v.startsAt && new Date(v.startsAt).getTime() >= now).sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
   const next = upcoming[0] || null;
@@ -758,6 +825,9 @@ function LiveClientDashboard() {
       subState={subState}
       docsState={docsState}
       profileState={profileState}
+      summaryLoading={loading}
+      visitsError={loading ? '' : visitsError}
+      onRetryVisits={refetchVisits}
     />
   );
 }

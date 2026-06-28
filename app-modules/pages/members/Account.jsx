@@ -807,7 +807,18 @@ export default function MemberAccount() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               {paymentMethod.status === 'loading' ? (
-                <p className="font-body text-[13px]" style={{ color: MUTED }}>Loading saved card…</p>
+                <div aria-busy="true">
+                  <span
+                    aria-hidden="true"
+                    className="block h-4 w-40 animate-pulse rounded-md"
+                    style={{ background: CARD_STRONG }}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 block h-3 w-56 animate-pulse rounded-md"
+                    style={{ background: CARD_STRONG }}
+                  />
+                </div>
               ) : paymentMethod.status === 'ready' ? (
                 <>
                   <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>
@@ -825,6 +836,11 @@ export default function MemberAccount() {
                   ) : (
                     <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>Used for plan renewals and visit balances</p>
                   )}
+                </>
+              ) : paymentMethod.status === 'unavailable' ? (
+                <>
+                  <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>Couldn't load your card</p>
+                  <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>We hit a snag fetching your saved card. Check it on the Billing tab.</p>
                 </>
               ) : (
                 <>
