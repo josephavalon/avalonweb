@@ -120,6 +120,17 @@ export default function Memberships() {
   const [toast, setToast] = useState(null); // { tone: 'ok' | 'err' | 'busy', text }
   const [pauseBusy, setPauseBusy] = useState(false);
   const [cancelBusy, setCancelBusy] = useState(false);
+  // Cancel reason picker (optional — cancel still works with no reason).
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonText, setCancelReasonText] = useState('');
+  // Inline plan-change confirm: preview the proration → show the plain-English
+  // explanation → commit. Keeps the builder ("/subscription?change=1") intact
+  // as the full editor; this is the quick tier-switch path.
+  const [changeOpen, setChangeOpen] = useState(false);
+  const [changeTarget, setChangeTarget] = useState(''); // tier id
+  const [changePreview, setChangePreview] = useState({ loading: false, error: '', explanation: '', amountDue: null });
+  const [changeBusy, setChangeBusy] = useState(false);
 
   const showToast = (tone, text) => {
     setToast({ tone, text });
@@ -166,21 +177,63 @@ export default function Memberships() {
     }
   };
 
-  const cancelPlan = async () => {
+  const confirmCancel = async () => {
     if (cancelBusy) return;
-    if (typeof window !== 'undefined' && !window.confirm("You'll keep your remaining credits until your next renewal date. No fee to cancel. Continue?")) {
-      return;
-    }
     setCancelBusy(true);
     try {
-      const data = await apiPost('/api/me/subscription/cancel', { atPeriodEnd: true });
+      // Reason is OPTIONAL. Send the safe category enum + (for "other") the
+      // free-text detail; the API keeps free text out of Stripe.
+      const payload = { atPeriodEnd: true };
+      if (cancelReason) payload.reason = cancelReason;
+      if (cancelReason === 'other' && cancelReasonText.trim()) payload.reasonText = cancelReasonText.trim();
+      const data = await apiPost('/api/me/subscription/cancel', payload);
       const when = data?.currentPeriodEnd ? new Date(data.currentPeriodEnd).toLocaleDateString() : 'your next renewal';
       showToast('ok', `Plan will end on ${when}.`);
+      setCancelOpen(false);
       setTimeout(() => window.location.reload(), 900);
     } catch (err) {
       showToast('err', err?.body?.error || err?.message || 'Could not cancel the plan.');
     } finally {
       setCancelBusy(false);
+    }
+  };
+
+  // Quick tier change: preview proration (shows plain-English explanation),
+  // then commit on confirm.
+  const openChange = async (tierId) => {
+    setChangeTarget(tierId);
+    setChangeOpen(true);
+    setChangePreview({ loading: true, error: '', explanation: '', amountDue: null });
+    try {
+      const data = await apiPost('/api/me/subscription/change', { targetPlan: tierId, action: 'preview' });
+      setChangePreview({
+        loading: false,
+        error: '',
+        explanation: data?.explanation || '',
+        amountDue: data?.proration?.amountDue ?? null,
+      });
+    } catch (err) {
+      setChangePreview({
+        loading: false,
+        error: err?.body?.error || err?.message || 'Could not preview the plan change.',
+        explanation: '',
+        amountDue: null,
+      });
+    }
+  };
+
+  const confirmChange = async () => {
+    if (changeBusy || !changeTarget) return;
+    setChangeBusy(true);
+    try {
+      await apiPost('/api/me/subscription/change', { targetPlan: changeTarget, action: 'commit' });
+      showToast('ok', 'Plan updated.');
+      setChangeOpen(false);
+      setTimeout(() => window.location.reload(), 900);
+    } catch (err) {
+      showToast('err', err?.body?.error || err?.message || 'Could not change the plan.');
+    } finally {
+      setChangeBusy(false);
     }
   };
 
@@ -410,9 +463,32 @@ export default function Memberships() {
               className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
               style={{ background: TEXT, color: INVERT }}
             >
-              {hasPlan ? 'Change plan' : 'Build a plan'} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+              {hasPlan ? 'Customize plan' : 'Build a plan'} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
           </div>
+          {hasPlan ? (
+            <div className="mt-5" style={{ borderTop: `1px solid ${BORDER}`, paddingTop: '1.25rem' }}>
+              <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Quick switch to a tier</p>
+              <p className="mt-1 font-body text-[12px]" style={{ color: MUTED }}>We'll show you exactly what's charged today before anything changes.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  { id: 'essentials', label: 'Essentials' },
+                  { id: 'vitality', label: 'Vitality' },
+                  { id: 'concierge', label: 'Concierge' },
+                ].map((tier) => (
+                  <button
+                    key={tier.id}
+                    type="button"
+                    onClick={() => openChange(tier.id)}
+                    className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+                    style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+                  >
+                    {tier.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -515,7 +591,7 @@ export default function Memberships() {
               <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>Cancel membership</p>
               <p className="mt-1 font-body text-[12px]" style={{ color: MUTED }}>You keep your remaining credits until Jul 8. After that, your plan ends and you'll return to per-visit pricing. No fee to cancel.</p>
             </div>
-            <button type="button" onClick={cancelPlan} disabled={cancelBusy} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}>
+            <button type="button" onClick={() => { setCancelReason(''); setCancelReasonText(''); setCancelOpen(true); }} disabled={cancelBusy} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}>
               <XCircle className="h-3.5 w-3.5" strokeWidth={1.8} /> {cancelBusy ? 'Cancelling.' : 'Cancel plan'}
             </button>
           </div>
@@ -528,6 +604,117 @@ export default function Memberships() {
           <CreditCard className="h-3.5 w-3.5" strokeWidth={1.8} /> Billing & statements <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
         </Link>
       </section>
+
+      {/* Cancel reason picker — optional; cancel works with nothing selected */}
+      {cancelOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4" style={{ background: 'hsl(var(--background) / 0.72)', backdropFilter: 'blur(8px)' }} role="dialog" aria-modal="true" aria-label="Cancel membership">
+          <div className="w-full max-w-md rounded-[24px] p-6" style={{ background: BG, border: `1px solid hsl(0 70% 62% / 0.30)`, boxShadow: '0 24px 60px hsl(0 0% 0% / 0.45)' }}>
+            <h2 className="font-heading text-3xl uppercase leading-none" style={{ color: BAD }}>Cancel membership</h2>
+            <p className="mt-3 font-body text-[13px]" style={{ color: MUTED }}>
+              You'll keep your remaining credits until your next renewal date. No fee to cancel.
+            </p>
+            <p className="mt-5 font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>Why are you leaving? <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optional)</span></p>
+            <div className="mt-2 grid gap-2">
+              {[
+                { id: 'too_expensive', label: 'Too expensive' },
+                { id: 'not_using', label: 'Not using it' },
+                { id: 'switching', label: 'Switching providers' },
+                { id: 'other', label: 'Other' },
+              ].map((opt) => {
+                const selected = cancelReason === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setCancelReason(selected ? '' : opt.id)}
+                    className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-left font-body text-[13px]"
+                    style={{
+                      background: selected ? CARD_STRONG : CARD,
+                      color: TEXT,
+                      border: `1px solid ${selected ? 'hsl(0 70% 62% / 0.40)' : BORDER}`,
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                    {selected ? <Check className="h-4 w-4 shrink-0" strokeWidth={2} style={{ color: BAD }} /> : null}
+                  </button>
+                );
+              })}
+            </div>
+            {cancelReason === 'other' ? (
+              <textarea
+                value={cancelReasonText}
+                onChange={(e) => setCancelReasonText(e.target.value)}
+                rows={3}
+                maxLength={1000}
+                placeholder="Tell us more (optional)"
+                className="mt-2 w-full rounded-xl px-4 py-3 font-body text-[13px] outline-none"
+                style={{ background: CARD, color: TEXT, border: `1px solid ${BORDER}` }}
+              />
+            ) : null}
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCancelOpen(false)}
+                disabled={cancelBusy}
+                className="rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+                style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+              >
+                Keep my plan
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancel}
+                disabled={cancelBusy}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+                style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}
+              >
+                <XCircle className="h-3.5 w-3.5" strokeWidth={1.8} /> {cancelBusy ? 'Cancelling.' : 'Confirm cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Change-confirm: plain-English proration before committing */}
+      {changeOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4" style={{ background: 'hsl(var(--background) / 0.72)', backdropFilter: 'blur(8px)' }} role="dialog" aria-modal="true" aria-label="Confirm plan change">
+          <div className="w-full max-w-md rounded-[24px] p-6" style={{ background: BG, border: `1px solid ${BORDER}`, boxShadow: '0 24px 60px hsl(0 0% 0% / 0.45)' }}>
+            <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Confirm change</p>
+            <h2 className="mt-1 font-heading text-3xl uppercase leading-none">Switch to {changeTarget}</h2>
+            <div className="mt-4 rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              {changePreview.loading ? (
+                <p className="font-body text-[13px]" style={{ color: MUTED }}>Calculating your charge.</p>
+              ) : changePreview.error ? (
+                <p className="font-body text-[13px]" style={{ color: BAD }}>{changePreview.error}</p>
+              ) : (
+                <p className="font-body text-[14px] leading-relaxed" style={{ color: TEXT }}>
+                  {changePreview.explanation || 'Your plan change is ready to confirm.'}
+                </p>
+              )}
+            </div>
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setChangeOpen(false)}
+                disabled={changeBusy}
+                className="rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+                style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={confirmChange}
+                disabled={changeBusy || changePreview.loading || !!changePreview.error}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+                style={{ background: TEXT, color: INVERT }}
+              >
+                {changeBusy ? 'Updating.' : 'Confirm change'} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {toast ? (
         <div

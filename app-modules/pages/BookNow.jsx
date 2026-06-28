@@ -3930,6 +3930,19 @@ export default function BookNow() {
     title: 'Book — Avalon Vitality',
     description: 'Book mobile IV therapy with licensed clinicians and clinical review.',
     path: '/book',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: 'Mobile IV Therapy',
+      serviceType: 'Mobile IV therapy',
+      description: 'Book mobile IV therapy with licensed registered nurses after clinical clearance and eligibility review.',
+      areaServed: 'San Francisco Bay Area',
+      provider: {
+        '@type': 'MedicalBusiness',
+        name: 'Avalon Vitality',
+        areaServed: 'San Francisco Bay Area',
+      },
+    },
   });
 
   const [searchParams] = useSearchParams();

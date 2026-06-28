@@ -323,7 +323,7 @@ function BuilderRow({ title, value, hint, icon: Icon, open, onToggle, children }
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-base ease-editorial md:px-5"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors duration-base ease-editorial md:px-5"
       >
         <div className="flex min-w-0 items-center gap-3">
           {Icon && (
@@ -605,7 +605,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
 
       <div className="flex items-center gap-3.5 px-4 pt-3.5">
         <div className="flex h-[5.4rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-background/40">
-          <img src={bag} alt="" className="h-[4.6rem] w-auto object-contain" />
+          <img src={bag} alt={therapyOption?.image && therapyLabel ? `${therapyLabel} IV therapy` : ''} className="h-[4.6rem] w-auto object-contain" />
         </div>
         <div className="min-w-0">
           <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">
@@ -709,6 +709,24 @@ export default function Subscription() {
     title: 'Plans - Avalon Vitality',
     description: 'Build a monthly Avalon IV therapy plan one step at a time: choose how often, your therapy, add-ons, and pay monthly or upfront for 3, 6, or 12 months to save.',
     path: '/subscription',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Avalon Vitality IV Therapy Membership',
+      description: 'A monthly mobile IV therapy plan: each visit includes any service up to a $250 visit credit, with 1–4 visits per month and up to 4 people on one plan.',
+      brand: {
+        '@type': 'Brand',
+        name: 'Avalon Vitality',
+      },
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'USD',
+        // Single-person baseline: 1 visit/mo ($250) up to 4 visits/mo ($1,000).
+        lowPrice: VITAMIN_IV_PRICE * SESSION_OPTIONS[0],
+        highPrice: VITAMIN_IV_PRICE * SESSION_OPTIONS[SESSION_OPTIONS.length - 1],
+        offerCount: SESSION_OPTIONS.length,
+      },
+    },
   });
 
   const navigate = useNavigate();
@@ -1021,19 +1039,29 @@ export default function Subscription() {
         <Navbar />
       </header>
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
-        <div className="mb-4 text-center md:mb-4 md:text-left">
-          <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[3.4rem]">Choose your plan</h1>
-          <p className="mt-1.5 font-body text-sm font-semibold text-foreground/68 md:text-base">Up to 4 people on one plan. Cancel anytime.</p>
+        <div className="mb-3 text-center md:mb-3 md:text-left">
+          <h1 className="font-heading text-[2.3rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[2.8rem]">Choose your plan</h1>
+          <p className="mt-1 font-body text-sm font-semibold text-foreground/68">Up to 4 people on one plan. Cancel anytime.</p>
         </div>
 
         <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
           {/* Left — the one-screen builder: every decision stacked as a section */}
           <div className="flex flex-1 flex-col">
+            {/* How it works — compact intro at the very top of the builder. */}
+            <div className="mb-2.5 flex items-center gap-2.5 rounded-[1.05rem] border border-foreground/10 bg-foreground/[0.03] px-3.5 py-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.05]">
+                <Info className="h-4 w-4 text-foreground/55" strokeWidth={2} />
+              </span>
+              <p className="min-w-0 font-body text-[13px] font-semibold leading-snug text-foreground/60">
+                <span className="font-black uppercase tracking-[0.06em] text-foreground/80">How it works · </span>
+                Each visit includes any service up to {money(VISIT_CREDIT)} — pay only the difference for premium services.
+              </p>
+            </div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, ease: EASE }}
-              className="av-glass-card flex flex-col gap-2 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-5"
+              className="av-glass-card flex flex-col gap-1.5 rounded-[1.3rem] border bg-background/82 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
             >
               <BuilderRow
                 title={STEP_TITLES.sessions}
@@ -1113,24 +1141,11 @@ export default function Subscription() {
               </BuilderRow>
             </motion.div>
 
-            {/* Desktop: a quiet "how it works" explainer, then the primary CTA at
-                the foot of the builder column (mobile uses the sticky bar below). */}
-            <div className="mt-2.5 hidden items-start gap-3 rounded-[1.05rem] border border-foreground/10 bg-foreground/[0.03] px-4 py-3 md:flex">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.05]">
-                <Info className="h-[17px] w-[17px] text-foreground/55" strokeWidth={2} />
-              </span>
-              <div className="min-w-0">
-                <p className="font-heading text-base uppercase leading-none tracking-normal text-foreground">How it works</p>
-                <p className="mt-1.5 font-body text-[13px] font-semibold leading-snug text-foreground/55">
-                  Each visit includes any service up to {money(VISIT_CREDIT)}. Pay only the difference for premium services.
-                </p>
-              </div>
-            </div>
-
+            {/* Desktop primary CTA at the foot of the builder column. */}
             <button
               type="button"
               onClick={onPrimaryCta}
-              className="mt-2.5 hidden min-h-[54px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] md:flex"
+              className="mt-2 hidden min-h-[50px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] md:flex"
             >
               {primaryCtaLabel} <ArrowRight className="h-4 w-4" />
             </button>

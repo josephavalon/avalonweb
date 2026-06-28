@@ -243,7 +243,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
                 )}
               </div>
               <span className="font-heading text-xl text-foreground tracking-wide">${cartItemTotal(item).toLocaleString()}</span>
-              <button type="button" onClick={() => onRemoveItem(item.cartKey)} aria-label={`Remove ${item.label}`} className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
+              <button type="button" onClick={() => onRemoveItem(item.cartKey)} aria-label={`Remove ${item.label}`} className="rounded-full text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40">
                 <X className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </div>
@@ -271,7 +271,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
               <span className="font-heading text-xl text-foreground tracking-wide">${membership.price.toLocaleString()}</span>
               <p className="font-body text-[13px] text-foreground/40">/{membership.billing === 'annual' ? 'yr' : 'mo'}</p>
             </div>
-            <button type="button" onClick={onClearMembership} aria-label="Remove subscription from cart" className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
+            <button type="button" onClick={onClearMembership} aria-label="Remove subscription from cart" className="rounded-full text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40">
               <X className="w-4 h-4" strokeWidth={1.8} />
             </button>
           </div>
@@ -508,7 +508,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                     setNextAvailLoading(false);
                   }}
                   disabled={nextAvailLoading}
-                  className="flex items-center gap-1.5 font-body text-[13px] tracking-widest uppercase text-foreground hover:text-foreground/70 transition-colors shrink-0 disabled:opacity-50"
+                  className="flex items-center gap-1.5 font-body text-[13px] tracking-widest uppercase text-foreground hover:text-foreground/70 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {nextAvailLoading
                     ? <><Loader2 className="w-3 h-3 animate-spin" strokeWidth={2} /> Searching…</>
@@ -1069,7 +1069,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
               disabled={loading}
               placeholder="Full name"
               autoComplete="name"
-              className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
+              className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36 focus-visible:ring-2 focus-visible:ring-foreground/40"
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <input
@@ -1080,7 +1080,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 placeholder="Phone"
                 autoComplete="tel"
                 inputMode="tel"
-                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
+                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36 focus-visible:ring-2 focus-visible:ring-foreground/40"
               />
               <input
                 aria-label="Email"
@@ -1090,7 +1090,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 placeholder="Email"
                 autoComplete="email"
                 inputMode="email"
-                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
+                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36 focus-visible:ring-2 focus-visible:ring-foreground/40"
               />
             </div>
           </div>
@@ -1158,14 +1158,14 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       )}
 
       <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
-        <button type="button" onClick={onBack} disabled={loading} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 disabled:opacity-50 transition-colors">
+        <button type="button" onClick={onBack} disabled={loading} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
         <button
           type="button"
           onClick={handleCheckout}
           disabled={loading}
-          className="flex min-h-[58px] flex-1 items-center justify-center gap-2.5 rounded-full bg-foreground px-5 font-body text-sm font-extrabold tracking-widest uppercase text-background shadow-[0_24px_80px_hsl(var(--foreground)/0.16)] hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+          className="flex min-h-[58px] flex-1 items-center justify-center gap-2.5 rounded-full bg-foreground px-5 font-body text-sm font-extrabold tracking-widest uppercase text-background shadow-[0_24px_80px_hsl(var(--foreground)/0.16)] hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
             <span className="flex items-center gap-2">

@@ -96,7 +96,7 @@ function RecentRow({ service, when, status }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl px-3 py-2.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
       <span className="flex h-12 w-9 shrink-0 items-center justify-center">
-        <img src={bagForService(service)} alt="" loading="lazy" className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
+        <img src={bagForService(service)} alt={service ? `${service} IV therapy` : ''} loading="lazy" className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-heading text-lg uppercase leading-none">{service}</p>
@@ -245,7 +245,7 @@ function BalanceCard({ amount, appointmentId, onPaid }) {
           type="button"
           onClick={handlePay}
           disabled={state.status === 'busy' || !appointmentId}
-          className="flex min-h-[44px] items-center justify-center rounded-xl font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+          className="flex min-h-[44px] items-center justify-center rounded-xl font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ background: TEXT, color: INVERT }}
         >
           {state.status === 'busy' ? 'Charging.' : state.status === 'ok' ? 'Paid' : `Pay ${money(amount)} now`}
@@ -552,7 +552,7 @@ function DashboardBody({
             </div>
             <img
               src={primary ? primary.img : '/bags/dehydration.webp'}
-              alt=""
+              alt={primary ? `${primary.service} IV therapy` : ''}
               loading="lazy"
               className="h-28 w-auto object-contain drop-shadow-[0_12px_28px_rgba(0,0,0,0.6)] md:h-36"
               style={primary ? undefined : { opacity: 0.5 }}

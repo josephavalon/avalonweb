@@ -40,6 +40,54 @@ function shapeProration(invoice) {
   };
 }
 
+function fmtUsd(dollars) {
+  const n = Number(dollars || 0);
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function fmtDateUsd(iso) {
+  if (!iso) return 'your next renewal date';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'your next renewal date';
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+/**
+ * Plain-English version of the proration so members understand the charge
+ * BEFORE they commit. Upgrade (positive amount due today) reads "charged $X
+ * now (prorated)… renews at $Y on <date>"; downgrade / lateral with no charge
+ * reads "takes effect <date>; no charge now". The renewal amount comes from the
+ * resolved target price when we built it inline; otherwise we fall back to the
+ * recurring (non-proration) line on the upcoming invoice.
+ */
+function prorationExplanation(proration, resolved, invoice) {
+  if (!proration) return '';
+  const chargeNow = Number(proration.amountDue || 0);
+  const renewalDate = fmtDateUsd(proration.periodEnd);
+
+  // Renewal amount: prefer the inline price we just built, else the largest
+  // forward-looking non-proration line on the upcoming invoice.
+  let renewalCents = null;
+  if (resolved?.priceData?.unit_amount != null) {
+    renewalCents = Number(resolved.priceData.unit_amount);
+  } else {
+    const recurringLine = (invoice?.lines?.data || []).find((l) => !l.proration && Number(l.amount) > 0);
+    if (recurringLine) renewalCents = Number(recurringLine.amount);
+  }
+  const renewalStr = renewalCents != null ? fmtUsd(renewalCents / 100) : null;
+
+  if (chargeNow > 0.005) {
+    const base = `You'll be charged ${fmtUsd(chargeNow)} now (prorated for the rest of this cycle)`;
+    return renewalStr
+      ? `${base}; your plan then renews at ${renewalStr} on ${renewalDate}.`
+      : `${base}. Your new rate applies on ${renewalDate}.`;
+  }
+  // No charge today (downgrade or even swap). Stripe banks any credit toward
+  // future invoices, so we don't promise a refund.
+  const base = `No charge today — your new plan takes effect on ${renewalDate}`;
+  return renewalStr ? `${base}, when it renews at ${renewalStr}.` : `${base}.`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -106,10 +154,12 @@ export default async function handler(req, res) {
           code: safeErrorCode(err, 'subscription_preview_failed'),
         });
       }
+      const proration = shapeProration(invoice);
       return res.status(200).json({
         ok: true,
         targetPlan: plan.id,
-        proration: shapeProration(invoice),
+        proration,
+        explanation: prorationExplanation(proration, resolved, invoice),
       });
     }
 

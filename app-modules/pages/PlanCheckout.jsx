@@ -114,8 +114,6 @@ function SummaryLine({ title, value, sub, emphasize }) {
 }
 
 export default function PlanCheckout() {
-  useSeo({ title: 'Start your plan - Avalon Vitality', description: 'Schedule your recurring membership visit and start your Avalon IV therapy plan.', path: '/plan' });
-
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -161,6 +159,27 @@ export default function PlanCheckout() {
 
   // Per-period charge: monthly × term months × (1 − discount). Monthly = monthly.
   const perPeriodTotal = Math.round(monthly * term.months * (1 - term.discount));
+
+  useSeo({
+    title: 'Start your plan - Avalon Vitality',
+    description: 'Schedule your recurring membership visit and start your Avalon IV therapy plan.',
+    path: '/plan',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Offer',
+      name: 'Avalon Vitality IV Therapy Membership',
+      description: 'Recurring mobile IV therapy membership with monthly visit credits, billed monthly or upfront for 3, 6, or 12 months.',
+      category: 'Membership',
+      priceCurrency: 'USD',
+      price: perPeriodTotal || monthly,
+      availability: 'https://schema.org/InStock',
+      offeredBy: {
+        '@type': 'MedicalBusiness',
+        name: 'Avalon Vitality',
+        areaServed: 'San Francisco Bay Area',
+      },
+    },
+  });
 
   const dates = useMemo(() => upcomingDates(14), []);
   const [date, setDate] = useState(dates[0]?.iso || '');

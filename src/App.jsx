@@ -16,6 +16,7 @@ import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
 import MfaGate from '@/components/auth/MfaGate';
+import IdleWarning from '@/components/auth/IdleWarning';
 
 // Operator-tier MFA enforcement. Off by default; flip VITE_MFA_ENFORCED=true
 // (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
@@ -435,6 +436,7 @@ function App() {
           <AppRoutes />
           <StickyBookBar />
           <CookieConsent />
+          <IdleWarning />
         </Router>
         <Toaster />
       </CartProvider>

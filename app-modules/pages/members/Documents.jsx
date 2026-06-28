@@ -13,6 +13,45 @@ import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
 import { useSeo } from '@/lib/seo';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { supabase, hasSupabase } from '@/lib/supabase';
+
+// Open the signed-consent HTML in a new tab. The endpoint is auth-gated by a
+// Bearer token, which a plain link/window.open can't carry — so we fetch it with
+// the session token (same scheme as apiClient) and open the result as a blob URL.
+// The browser's own print engine handles "Save as PDF" from there.
+async function openSignedDoc(doc) {
+  if (!doc?.signatureId) throw new Error('This document has no signature on file yet.');
+  const params = new URLSearchParams({ signatureId: doc.signatureId });
+  if (doc.id) params.set('documentId', doc.id);
+  const url = `/api/me/documents/pdf?${params.toString()}`;
+
+  const headers = {};
+  if (hasSupabase) {
+    let token = null;
+    try {
+      const { data } = await supabase.auth.getSession();
+      token = data?.session?.access_token || null;
+    } catch { /* fall through — server returns 401 we surface below */ }
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    let msg = `Could not open document (${res.status}).`;
+    try { const b = await res.json(); if (b?.error) msg = b.error; } catch { /* non-JSON */ }
+    throw new Error(msg);
+  }
+  const html = await res.text();
+  const blob = new Blob([html], { type: 'text/html' });
+  const blobUrl = URL.createObjectURL(blob);
+  const win = window.open(blobUrl, '_blank', 'noopener,noreferrer');
+  if (!win) {
+    // Popup blocked — navigate the blob in this tab instead of silently failing.
+    window.location.href = blobUrl;
+  }
+  // Revoke after the tab has had time to load the blob.
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+}
 
 // Strict B/W tokens — same block used in Dashboard.jsx / Account.jsx.
 const BG = 'hsl(var(--background))';
@@ -141,10 +180,14 @@ function StatusBadge({ status }) {
   );
 }
 
-function DocCard({ doc, expanded, onToggle, onSign, signingState }) {
+function DocCard({ doc, expanded, onToggle, onSign, signingState, onDownload, downloadState }) {
   const isPending = doc.status === 'pending' || doc.status === 'outdated';
   const isSigned = doc.status === 'signed';
   const isHistorical = doc.status === 'historical';
+  const canDownload = (isSigned || isHistorical) && !!doc.signatureId;
+  const downloading = downloadState?.id === doc.signatureId && downloadState?.status === 'loading';
+  const downloadError = downloadState?.id === doc.signatureId && downloadState?.status === 'error'
+    ? downloadState.message : '';
 
   return (
     <article
@@ -189,19 +232,25 @@ function DocCard({ doc, expanded, onToggle, onSign, signingState }) {
                 ? <ChevronDown className="h-3.5 w-3.5 rotate-180 transition-transform" strokeWidth={2} />
                 : <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />}
             </button>
-          ) : (
+          ) : canDownload ? (
             <button
               type="button"
-              disabled
-              title="PDF download coming soon"
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] opacity-50"
-              style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}`, cursor: 'not-allowed' }}
+              onClick={() => onDownload(doc)}
+              disabled={downloading}
+              title="Open a printable copy you can save as PDF"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
+              style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
             >
-              <Download className="h-3.5 w-3.5" strokeWidth={1.8} /> PDF · coming soon
+              <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
+              {downloading ? 'Opening…' : 'View / Download'}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
+
+      {downloadError ? (
+        <p className="mt-3 font-body text-[12px]" style={{ color: BAD }}>{downloadError}</p>
+      ) : null}
 
       {/* Inline sign expansion — kept inline (not a modal) for mobile. */}
       {isPending && expanded ? (
@@ -312,6 +361,7 @@ export default function MemberDocuments() {
   const [documents, setDocuments] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [signState, setSignState] = useState({ status: 'idle', documentId: null, message: '' });
+  const [downloadState, setDownloadState] = useState({ status: 'idle', id: null, message: '' });
   const [toast, setToast] = useState('');
 
   const refresh = async ({ silent = false } = {}) => {
@@ -336,6 +386,16 @@ export default function MemberDocuments() {
   }), [documents]);
 
   const handleToggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
+
+  const handleDownload = async (doc) => {
+    setDownloadState({ status: 'loading', id: doc.signatureId, message: '' });
+    try {
+      await openSignedDoc(doc);
+      setDownloadState({ status: 'idle', id: null, message: '' });
+    } catch (err) {
+      setDownloadState({ status: 'error', id: doc.signatureId, message: err?.message || 'Could not open document.' });
+    }
+  };
 
   const handleSign = async ({ documentId, typedName, agree }) => {
     setSignState({ status: 'submitting', documentId, message: '' });
@@ -460,6 +520,8 @@ export default function MemberDocuments() {
                       onToggle={() => handleToggle(doc.id)}
                       onSign={handleSign}
                       signingState={signState}
+                      onDownload={handleDownload}
+                      downloadState={downloadState}
                     />
                   ))}
                 </div>
@@ -478,6 +540,8 @@ export default function MemberDocuments() {
                       onToggle={() => {}}
                       onSign={handleSign}
                       signingState={signState}
+                      onDownload={handleDownload}
+                      downloadState={downloadState}
                     />
                   ))}
                 </div>
@@ -496,6 +560,8 @@ export default function MemberDocuments() {
                       onToggle={() => {}}
                       onSign={handleSign}
                       signingState={signState}
+                      onDownload={handleDownload}
+                      downloadState={downloadState}
                     />
                   ))}
                 </div>

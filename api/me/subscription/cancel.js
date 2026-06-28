@@ -13,13 +13,33 @@ import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
 import { authAndActiveSubscription } from './_helpers.js';
 
+// Known, non-PHI cancellation categories the portal surfaces. The category
+// (an enum, never free text) is the only piece allowed onto Stripe metadata,
+// because Stripe has no BAA — any free-text the member types in "Other" could
+// contain PHI and must stay in our Supabase audit log, never in Stripe.
+const REASON_CATEGORIES = new Set(['too_expensive', 'not_using', 'switching', 'other']);
+
+function normalizeReasonCategory(value) {
+  const v = String(value || '').trim().toLowerCase();
+  return REASON_CATEGORIES.has(v) ? v : null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  const { atPeriodEnd = true } = (req.body && typeof req.body === 'object') ? req.body : {};
+  const body = (req.body && typeof req.body === 'object') ? req.body : {};
+  const { atPeriodEnd = true } = body;
   const cancelAtEnd = atPeriodEnd !== false;
+
+  // Cancellation reason is OPTIONAL — cancel must still work with none.
+  // `reasonCategory` is a safe enum (goes to Stripe metadata + audit);
+  // `reasonText` is free text (audit ONLY, never Stripe — possible PHI).
+  const reasonCategory = normalizeReasonCategory(body.reason || body.reasonCategory);
+  const reasonText = typeof body.reasonText === 'string'
+    ? body.reasonText.trim().slice(0, 1000)
+    : '';
 
   const ctx = await authAndActiveSubscription(req, res, Stripe);
   if (!ctx) return;
@@ -30,8 +50,19 @@ export default async function handler(req, res) {
     if (cancelAtEnd) {
       updated = await stripe.subscriptions.update(subscription.id, {
         cancel_at_period_end: true,
+        // Only the safe category reaches Stripe; never the free text.
+        ...(reasonCategory
+          ? { metadata: { ...(subscription.metadata || {}), cancellation_reason: reasonCategory } }
+          : {}),
       });
     } else {
+      // Stripe's cancel() accepts a structured cancellation_details.comment, but
+      // we keep PHI out of Stripe: stamp the safe category onto metadata first.
+      if (reasonCategory) {
+        await stripe.subscriptions.update(subscription.id, {
+          metadata: { ...(subscription.metadata || {}), cancellation_reason: reasonCategory },
+        });
+      }
       updated = await stripe.subscriptions.cancel(subscription.id);
     }
 
@@ -45,6 +76,8 @@ export default async function handler(req, res) {
       payload: {
         atPeriodEnd: cancelAtEnd,
         cancelAt: updated.cancel_at || null,
+        cancellationReason: reasonCategory || null,
+        cancellationReasonText: reasonText || null,
       },
     });
 

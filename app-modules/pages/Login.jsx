@@ -187,6 +187,9 @@ function InboxPanel({ address, onReset }) {
           Check your inbox — we sent a secure sign-in link to <span className="font-bold">{address}</span>. Open it on this device to finish.
         </p>
       </div>
+      <p className="font-body text-[12px] leading-relaxed text-foreground/55">
+        The link expires in about an hour. If it&rsquo;s expired, just request a new one below.
+      </p>
       <button
         type="button"
         onClick={onReset}
@@ -225,6 +228,11 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  // Phone OTP resend: a 30s cooldown after each send so the button can't be
+  // hammered, plus busy/sent states for inline feedback.
+  const [resendOtpCooldown, setResendOtpCooldown] = useState(0);
+  const [resendOtpBusy, setResendOtpBusy] = useState(false);
+  const [resendOtpDone, setResendOtpDone] = useState(false);
   const [linkSent, setLinkSent] = useState('');
   const [resetSent, setResetSent] = useState('');
   const [fieldError, setFieldError] = useState('');
@@ -254,6 +262,15 @@ export default function Login({ defaultAudience = 'patient' }) {
     }
   }, []);
 
+  // Tick down the phone-OTP resend cooldown once per second while it's running.
+  useEffect(() => {
+    if (resendOtpCooldown <= 0) return undefined;
+    const id = setInterval(() => {
+      setResendOtpCooldown((value) => (value <= 1 ? 0 : value - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [resendOtpCooldown]);
+
   const destinationFor = (sessionUser) => {
     const localPath = safeLoginRedirectPath(searchParams.get('redirect'));
     if (localPath && sessionUser?.role === 'client') return localPath;
@@ -272,6 +289,8 @@ export default function Login({ defaultAudience = 'patient' }) {
     setResetSent('');
     setOtpSent(false);
     setOtp('');
+    setResendOtpCooldown(0);
+    setResendOtpDone(false);
     setPassword('');
     clearUnconfirmed();
   };
@@ -288,6 +307,8 @@ export default function Login({ defaultAudience = 'patient' }) {
     setResetSent('');
     setOtpSent(false);
     setOtp('');
+    setResendOtpCooldown(0);
+    setResendOtpDone(false);
     setPassword('');
     clearUnconfirmed();
   };
@@ -399,13 +420,26 @@ export default function Login({ defaultAudience = 'patient' }) {
     if (!otpSent) {
       if (!phone.trim()) { setFieldError('Enter your phone number.'); return; }
       const result = await signInWithPhone(phone.trim());
-      if (result.ok) setOtpSent(true);
+      if (result.ok) { setOtpSent(true); setResendOtpDone(false); setResendOtpCooldown(30); }
       else setFieldError(result.error || 'Could not send the code.');
       return;
     }
     if (!otp.trim()) { setFieldError('Enter the 6-digit code we texted you.'); return; }
     const result = await verifyPhoneOtp(phone.trim(), otp.trim());
     if (!result.ok) setFieldError(result.error || 'That code was not valid.');
+  };
+
+  // Re-send the SMS code (re-uses the send-OTP path). Guarded by the 30s
+  // cooldown so it can't be spammed; shows busy → "sent ✓" inline.
+  const handleResendOtp = async () => {
+    if (resendOtpCooldown > 0 || resendOtpBusy) return;
+    setFieldError('');
+    setResendOtpDone(false);
+    setResendOtpBusy(true);
+    const result = await signInWithPhone(phone.trim());
+    setResendOtpBusy(false);
+    if (result.ok) { setResendOtpDone(true); setResendOtpCooldown(30); }
+    else setFieldError(result.error || 'Could not resend the code.');
   };
 
   const handlePasskey = async () => {
@@ -534,13 +568,40 @@ export default function Login({ defaultAudience = 'patient' }) {
       <ErrorBanner message={displayError} />
       <SubmitButton loading={loading} idle={otpSent ? 'Verify & Sign In' : 'Text Me A Code'} busy={otpSent ? 'Verifying' : 'Sending Code'} />
       {otpSent && (
-        <button
-          type="button"
-          onClick={() => { setOtpSent(false); setOtp(''); setFieldError(''); }}
-          className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
-        >
-          Use a different number
-        </button>
+        <div className="flex flex-col items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={resendOtpBusy || resendOtpCooldown > 0}
+            className="inline-flex min-h-[40px] items-center justify-center gap-2 font-body text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/55 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-foreground/55"
+          >
+            {resendOtpBusy ? (
+              <>
+                <span className="h-3.5 w-3.5 rounded-full border-2 border-foreground/25 border-t-foreground animate-spin" />
+                Resending
+              </>
+            ) : resendOtpCooldown > 0 ? (
+              <>Resend code in {resendOtpCooldown}s</>
+            ) : resendOtpDone ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-300" strokeWidth={2.4} />
+                Code sent — resend
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} />
+                Resend code
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setOtpSent(false); setOtp(''); setFieldError(''); setResendOtpCooldown(0); setResendOtpBusy(false); setResendOtpDone(false); }}
+            className="inline-flex min-h-[34px] items-center justify-center font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/45 transition-colors hover:text-foreground"
+          >
+            Use a different number
+          </button>
+        </div>
       )}
     </form>
   );
@@ -627,6 +688,9 @@ export default function Login({ defaultAudience = 'patient' }) {
           Check your inbox — we sent a password reset link to <span className="font-bold">{resetSent}</span>. Open it on this device to choose a new password.
         </p>
       </div>
+      <p className="font-body text-[12px] leading-relaxed text-foreground/55">
+        The link expires in about an hour. If it&rsquo;s expired, request a new one below.
+      </p>
       <button
         type="button"
         onClick={() => { setResetSent(''); setEmail(''); setView('methods'); }}
@@ -673,7 +737,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   } else if (view === 'phone') {
     body = (
       <div className="space-y-4 md:space-y-3">
-        <BackRow label="All sign-in options" onClick={() => { setView('methods'); setOtpSent(false); setOtp(''); setFieldError(''); }} />
+        <BackRow label="All sign-in options" onClick={() => { setView('methods'); setOtpSent(false); setOtp(''); setResendOtpCooldown(0); setResendOtpDone(false); setFieldError(''); }} />
         {phoneForm}
       </div>
     );

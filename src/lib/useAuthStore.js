@@ -21,6 +21,13 @@ const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const IDLE_KEY = 'av.lastActivity';
 const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
 const IDLE_ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+// Show a "you'll be signed out" warning this long before the hard logoff so the
+// user can choose to stay. Kept under one check interval so the warning can't be
+// skipped entirely between ticks. Does NOT change IDLE_TIMEOUT_MS.
+const IDLE_WARNING_MS = 60 * 1000;
+// While the warning banner is up we need to notice a "stay signed in" click (or
+// any other activity) faster than the 30s coarse tick, or the banner could lag.
+const IDLE_WARNING_TICK_MS = 1000;
 
 function noteActivity() {
   try { sessionStorage.setItem(IDLE_KEY, String(Date.now())); } catch { /* private mode */ }
@@ -182,6 +189,10 @@ export function AuthStoreProvider({ children }) {
   const [user, setUser]       = useState(() => (hasSupabase ? null : readSession()));
   const [loading, setLoading] = useState(hasSupabase);
   const [error, setError]     = useState(null);
+  // Idle-logoff warning. null when not warning; otherwise { secondsLeft } so the
+  // banner can show a live countdown. Surfaced through the context so a single
+  // mounted <IdleWarning/> can render it. dismissIdleWarning() resets the clock.
+  const [idleWarning, setIdleWarning] = useState(null);
 
   const refreshSupabaseSession = useCallback(async () => {
     if (!hasSupabase) return null;
@@ -521,27 +532,65 @@ export function AuthStoreProvider({ children }) {
     if (hasSupabase) { supabase.auth.signOut().catch(() => { /* best-effort */ }); }
   }, [user]);
 
+  // "Stay signed in" — reset the idle clock and dismiss the warning banner.
+  const dismissIdleWarning = useCallback(() => {
+    noteActivity();
+    setIdleWarning(null);
+  }, []);
+
   // Idle auto-logoff. While a user is signed in, track activity and force
   // sign-out after IDLE_TIMEOUT_MS of inactivity. The timestamp lives in
-  // sessionStorage so a page refresh doesn't reset the clock.
+  // sessionStorage so a page refresh doesn't reset the clock. ~IDLE_WARNING_MS
+  // before the hard logoff we surface idleWarning so a banner can offer "stay
+  // signed in"; while that banner is up we poll every second so the countdown is
+  // smooth and any activity (or the Stay button) clears it promptly.
   useEffect(() => {
-    if (!user) { clearLastActivity(); return undefined; }
+    if (!user) { clearLastActivity(); setIdleWarning(null); return undefined; }
     noteActivity();
-    const onActivity = () => noteActivity();
+    setIdleWarning(null);
+    const onActivity = () => {
+      noteActivity();
+      // Real interaction means they're back — drop any pending warning. State is
+      // only updated when it was set, so this stays cheap on the common path.
+      setIdleWarning((prev) => (prev ? null : prev));
+    };
     IDLE_ACTIVITY_EVENTS.forEach((evt) => window.addEventListener(evt, onActivity, { passive: true }));
-    const onVisibility = () => { if (document.visibilityState === 'visible') noteActivity(); };
+    const onVisibility = () => { if (document.visibilityState === 'visible') onActivity(); };
     document.addEventListener('visibilitychange', onVisibility);
-    const tick = setInterval(() => {
+
+    let timer = null;
+    let warning = false;
+    const evaluate = () => {
       const last = readLastActivity();
       if (last == null) { noteActivity(); return; }
-      if (Date.now() - last >= IDLE_TIMEOUT_MS) {
-        clearInterval(tick);
+      const idleFor = Date.now() - last;
+      if (idleFor >= IDLE_TIMEOUT_MS) {
+        if (timer) clearInterval(timer);
+        setIdleWarning(null);
         appendActivity('Session idle timeout', { role: user.role, username: user.username });
         signOut();
+        return;
       }
-    }, IDLE_CHECK_INTERVAL_MS);
+      if (idleFor >= IDLE_TIMEOUT_MS - IDLE_WARNING_MS) {
+        const secondsLeft = Math.max(1, Math.ceil((IDLE_TIMEOUT_MS - idleFor) / 1000));
+        setIdleWarning({ secondsLeft });
+        if (!warning) {
+          // Speed up the poll so the countdown ticks per-second while warning.
+          warning = true;
+          if (timer) clearInterval(timer);
+          timer = setInterval(evaluate, IDLE_WARNING_TICK_MS);
+        }
+      } else if (warning) {
+        // Activity pushed us back out of the warning window — slow the poll again.
+        warning = false;
+        setIdleWarning(null);
+        if (timer) clearInterval(timer);
+        timer = setInterval(evaluate, IDLE_CHECK_INTERVAL_MS);
+      }
+    };
+    timer = setInterval(evaluate, IDLE_CHECK_INTERVAL_MS);
     return () => {
-      clearInterval(tick);
+      if (timer) clearInterval(timer);
       IDLE_ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, onActivity));
       document.removeEventListener('visibilitychange', onVisibility);
     };
@@ -555,6 +604,7 @@ export function AuthStoreProvider({ children }) {
         signIn, signInWithEmail, signInWithPassword, updatePassword, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
         signInWithPasskey, registerPasskey, signInWithOAuth, resendConfirmationEmail,
         signOut, requestPasswordReset, refreshSupabaseSession,
+        idleWarning, dismissIdleWarning,
         authBackend: hasSupabase ? 'supabase' : 'demo',
       },
     },
