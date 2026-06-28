@@ -16,9 +16,10 @@
  * the deferred plan subscription at signup).
  */
 
-import { Stripe, resolvePortalPlan, resolveTargetPrice, subscriptionItemsPatch, upcomingInvoiceItems } from '../_subscription-plans.js';
+import { Stripe, resolvePortalPlan, resolveTargetPrice, subscriptionItemsPatch, upcomingInvoiceItems, normalizeCustomPlan } from '../_subscription-plans.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
+import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
 import { authAndActiveSubscription } from './_helpers.js';
 
 function shapeProration(invoice) {
@@ -45,14 +46,31 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { targetPlan, action = 'preview' } = (req.body && typeof req.body === 'object') ? req.body : {};
-  const plan = resolvePortalPlan(targetPlan);
-  if (!plan) {
-    return res.status(400).json({
-      error: 'Unknown plan.',
-      code: 'plan_unknown',
-      allowed: ['essentials', 'vitality', 'concierge'],
-    });
+  const { targetPlan, action = 'preview', custom } = (req.body && typeof req.body === 'object') ? req.body : {};
+  const isCustom = String(targetPlan || '').trim().toLowerCase() === 'custom';
+
+  // Resolve to a plan descriptor: either a fixed portal tier OR a custom plan
+  // (custom-priced subscription created at signup). The custom branch trusts
+  // the client price the same way create-checkout-session does, but bounds it.
+  let plan;
+  if (isCustom) {
+    try {
+      plan = normalizeCustomPlan(custom);
+    } catch (err) {
+      return res.status(err?.status || 400).json({
+        error: err?.message || 'Invalid custom plan.',
+        code: err?.code || 'custom_plan_invalid',
+      });
+    }
+  } else {
+    plan = resolvePortalPlan(targetPlan);
+    if (!plan) {
+      return res.status(400).json({
+        error: 'Unknown plan.',
+        code: 'plan_unknown',
+        allowed: ['essentials', 'vitality', 'concierge', 'custom'],
+      });
+    }
   }
   if (action !== 'preview' && action !== 'commit') {
     return res.status(400).json({ error: 'action must be "preview" or "commit"', code: 'action_invalid' });
@@ -96,11 +114,24 @@ export default async function handler(req, res) {
     }
 
     // action === 'commit'
+    // For a custom plan, persist the visits_per_cycle + planName onto the
+    // subscription metadata so the credit-grant webhook keeps granting the
+    // right number of visit credits per renewal. Route the new keys through
+    // safeStripeMetadata (HIPAA chokepoint); preserve existing metadata too.
+    const customMetadata = plan.custom
+      ? safeStripeMetadata({
+          kind: 'plan_recurring',
+          planName: plan.planName,
+          visits_per_cycle: String(plan.visitsPerCycle),
+          membershipBilling: plan.billing,
+        })
+      : {};
     const updated = await stripe.subscriptions.update(subscription.id, {
       items: subscriptionItemsPatch({ itemId: item.id, resolved }),
       proration_behavior: 'create_prorations',
       metadata: {
         ...(subscription.metadata || {}),
+        ...customMetadata,
         portalPlanId: plan.id,
         portalPlanChangedAt: new Date().toISOString(),
       },
@@ -116,6 +147,12 @@ export default async function handler(req, res) {
       payload: {
         targetPlan: plan.id,
         subscriptionId: subscription.id,
+        ...(plan.custom ? {
+          custom: true,
+          monthlyCents: plan.monthlyCents,
+          visitsPerCycle: plan.visitsPerCycle,
+          billing: plan.billing,
+        } : {}),
       },
     });
 

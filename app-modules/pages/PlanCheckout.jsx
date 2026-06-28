@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Check, CalendarClock, ChevronDown, Loader2, Lock, MapPin, Pencil, ShieldCheck, User, Users } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, ArrowLeft, Check, CalendarClock, ChevronDown, Loader2, Lock, MapPin, Pencil, ShieldCheck, User, UserPlus, Users } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
@@ -308,6 +308,19 @@ export default function PlanCheckout() {
             dob: contact.dob.trim(),
             emergencyContact: contact.emergencyContact.trim(),
           },
+          // Plans require an account. A signed-in patient already has one (and an
+          // authed session the backend reads); a logged-out buyer's account is
+          // provisioned from the email/name they just entered via signupIntent
+          // (normalizeSignupIntent → { email, name }). Without this, the backend
+          // rejects logged-out plan checkout with `plan_requires_account`.
+          ...(loggedIn ? {} : {
+            signupIntent: {
+              email: contact.email.trim(),
+              name: `${contact.firstName.trim()} ${contact.lastName.trim()}`.trim(),
+              firstName: contact.firstName.trim(),
+              lastName: contact.lastName.trim(),
+            },
+          }),
           appointment: {
             acuityDatetime: slot, // offset-aware ISO from availability — no tz ambiguity
             acuityTimezone: TZ,
@@ -395,6 +408,31 @@ export default function PlanCheckout() {
 
             <h1 className="font-heading text-[2.4rem] uppercase leading-[0.88] tracking-normal text-foreground md:text-[2.9rem]">Checkout</h1>
             <p className="mt-1 font-body text-sm font-semibold text-foreground/60">Start your Avalon membership today.</p>
+
+            {/* Logged-out nudge — plans require an account, so we either sign them
+                in (autofill) or create one for them on purchase. Hidden once
+                authed (the fast path already prefills + collapses details). */}
+            {!loggedIn && (
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-foreground/14 bg-foreground/[0.05] px-3.5 py-3">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03]">
+                  <UserPlus className="h-4 w-4 text-foreground/82" strokeWidth={2} />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-body text-sm font-bold text-foreground/85">
+                    Have an account?{' '}
+                    <Link
+                      to={`/login?next=${encodeURIComponent(`/plan?${searchParams.toString()}`)}`}
+                      className="text-foreground underline underline-offset-4 hover:no-underline"
+                    >
+                      Sign in to autofill
+                    </Link>
+                  </p>
+                  <p className="mt-0.5 font-body text-[13px] font-semibold leading-snug text-foreground/55">
+                    We'll create your account so you can manage bookings &amp; plans.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* YOUR MEMBERSHIP */}
             <p className="mt-6 font-body text-[13px] font-black uppercase tracking-[0.16em] text-foreground/42">Your membership</p>

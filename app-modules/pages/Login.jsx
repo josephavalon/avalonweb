@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle, ArrowLeft, ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint,
-  LockKeyhole, Mail, MailCheck, ShieldCheck, Smartphone, Stethoscope, UserPlus,
+  AlertCircle, ArrowLeft, ArrowRight, Check, ChevronRight, Eye, EyeOff, Fingerprint,
+  LockKeyhole, Mail, MailCheck, RefreshCw, ShieldCheck, Smartphone, Stethoscope, UserPlus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -203,7 +203,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [searchParams] = useSearchParams();
   const {
     user, signIn, signInWithEmail, signInWithPhone, verifyPhoneOtp, signInWithPasskey,
-    signInWithOAuth, signOut, requestPasswordReset, authBackend, loading, error,
+    signInWithOAuth, signOut, requestPasswordReset, resendConfirmationEmail, authBackend, loading, error,
   } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
   const demoAuthAvailable = isDemoAuthAllowed();
@@ -230,6 +230,12 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [fieldError, setFieldError] = useState('');
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [oauthBusy, setOauthBusy] = useState('');
+  // Set when a password sign-in fails specifically because the email is not yet
+  // confirmed — holds the address so the resend affordance knows where to send.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
+  const [resendError, setResendError] = useState('');
 
   useSeo({
     title: isAdmin ? 'Admin Sign In - Avalon Vitality' : 'Client Sign In - Avalon Vitality',
@@ -267,6 +273,7 @@ export default function Login({ defaultAudience = 'patient' }) {
     setOtpSent(false);
     setOtp('');
     setPassword('');
+    clearUnconfirmed();
   };
 
   // Patient tab switch. Every tab — including 'nurse' (an in-card coming-soon
@@ -282,6 +289,25 @@ export default function Login({ defaultAudience = 'patient' }) {
     setOtpSent(false);
     setOtp('');
     setPassword('');
+    clearUnconfirmed();
+  };
+
+  // Reset the unconfirmed-email affordance (the resend button + its states).
+  const clearUnconfirmed = () => {
+    setUnconfirmedEmail('');
+    setResendBusy(false);
+    setResendDone(false);
+    setResendError('');
+  };
+
+  const handleResendConfirmation = async () => {
+    setResendError('');
+    setResendDone(false);
+    setResendBusy(true);
+    const result = await resendConfirmationEmail(unconfirmedEmail);
+    setResendBusy(false);
+    if (result.ok) setResendDone(true);
+    else setResendError(result.error || 'Could not resend the confirmation email.');
   };
 
   // Single redirect authority for every backend/audience combination. Admin
@@ -330,6 +356,8 @@ export default function Login({ defaultAudience = 'patient' }) {
     }
     const result = await signIn({ email: identifier.trim(), password });
     if (!result.ok) {
+      if (result.emailUnconfirmed) setUnconfirmedEmail(identifier.trim());
+      else clearUnconfirmed();
       setFieldError(result.error || (isAdmin ? 'Invalid operator ID or passcode.' : 'Those credentials did not match.'));
     }
     // success → redirect effect handles routing (and admin role bounce)
@@ -342,7 +370,11 @@ export default function Login({ defaultAudience = 'patient' }) {
     setFieldError('');
     if (!email.trim() || !password) { setFieldError('Enter your email and password.'); return; }
     const result = await signIn({ email: email.trim(), password });
-    if (!result.ok) setFieldError(result.error || 'That email or password was not correct.');
+    if (!result.ok) {
+      if (result.emailUnconfirmed) setUnconfirmedEmail(email.trim());
+      else clearUnconfirmed();
+      setFieldError(result.error || 'That email or password was not correct.');
+    }
     // success → redirect effect handles routing
   };
 
@@ -425,6 +457,42 @@ export default function Login({ defaultAudience = 'patient' }) {
     </div>
   );
 
+  // Shown under the sign-in error when the failure was specifically an
+  // unconfirmed email. Lets the user resend the Supabase confirmation link
+  // without leaving the login screen. Loading / "sent ✓" / error states inline.
+  const resendConfirmationRow = unconfirmedEmail ? (
+    <div className="space-y-2 rounded-2xl border border-amber-400/22 bg-amber-500/[0.07] px-4 py-3">
+      <p className="font-body text-[12px] font-medium leading-relaxed text-amber-100/90">
+        Your email isn’t confirmed yet. We can send a fresh confirmation link to{' '}
+        <span className="font-bold">{unconfirmedEmail}</span>. The link can expire, so use the newest one.
+      </p>
+      {resendError ? <ErrorBanner message={resendError} /> : null}
+      <button
+        type="button"
+        onClick={handleResendConfirmation}
+        disabled={resendBusy}
+        className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-full border border-foreground/[0.18] bg-foreground/[0.05] font-body text-[10px] font-bold uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-foreground/[0.09] disabled:cursor-wait disabled:opacity-60"
+      >
+        {resendBusy ? (
+          <>
+            <span className="h-4 w-4 rounded-full border-2 border-foreground/25 border-t-foreground animate-spin" />
+            Sending
+          </>
+        ) : resendDone ? (
+          <>
+            <Check className="h-4 w-4 text-emerald-300" strokeWidth={2.4} />
+            Sent ✓
+          </>
+        ) : (
+          <>
+            <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} />
+            Resend confirmation email
+          </>
+        )}
+      </button>
+    </div>
+  ) : null;
+
   const emailForm = (
     <form onSubmit={handleEmailLink} className="space-y-4 md:space-y-3" noValidate>
       <Field
@@ -487,7 +555,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         label={isAdmin ? 'Operator ID' : 'Client ID or Email'}
         type="text"
         value={identifier}
-        onChange={(event) => { setIdentifier(event.target.value); setFieldError(''); }}
+        onChange={(event) => { setIdentifier(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="username"
         autoCapitalize={isAdmin ? 'characters' : 'none'}
         placeholder={isAdmin ? 'ADMIN001' : 'CLIENT0001'}
@@ -511,6 +579,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         </button>
       </Field>
       <ErrorBanner message={displayError} />
+      {resendConfirmationRow}
       <SubmitButton loading={loading} idle={isAdmin ? 'Enter Operations' : 'Sign In'} busy="Signing In" />
     </form>
   );
@@ -522,7 +591,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         label="Email"
         type="email"
         value={email}
-        onChange={(event) => { setEmail(event.target.value); setFieldError(''); }}
+        onChange={(event) => { setEmail(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="email"
         placeholder={isAdmin ? 'you@avalonvitality.co' : 'you@email.com'}
       />
@@ -545,6 +614,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         </button>
       </Field>
       <ErrorBanner message={displayError} />
+      {resendConfirmationRow}
       <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
     </form>
   );

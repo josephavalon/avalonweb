@@ -109,17 +109,75 @@ function RecentRow({ service, when, status }) {
 
 // --- Expanded portal cards -------------------------------------------------
 
-function PlanCard({ hasPlan, creditsAvailable, creditsTotal }) {
-  // stub: tier + next charge — wire to Stripe subscription record later
-  const tier = hasPlan ? 'Vitality Monthly' : 'No active plan';
-  const nextCharge = hasPlan ? 'Jul 8 · $200' : '—';
+// Format an ISO date as a short "Jul 8" style label (no fabrication — returns
+// '' when the date is missing/invalid so the caller can show a dash).
+function formatChargeDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// Real plan card driven by GET /api/me/subscription/status. `sub` is the
+// fetched status object (or null), `subState` carries loading/error so we can
+// render a skeleton / fall back without ever inventing a tier or amount.
+function PlanCard({ sub, subState, creditsAvailable, creditsTotal }) {
+  const loading = subState?.loading;
+  const hasPlan = !!sub?.hasPlan;
+
+  // Loading skeleton — show dashes, never stale/fake content.
+  if (loading) {
+    return (
+      <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+        <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Active Plan</p>
+        <h3 className="mt-3 font-heading text-3xl uppercase leading-none md:text-4xl" style={{ color: DIM }}>—</h3>
+        <p className="mt-4 font-body text-[12px]" style={{ color: MUTED }}>Loading your plan…</p>
+      </div>
+    );
+  }
+
+  // No active plan (either explicitly !hasPlan, or the status call failed/404'd
+  // and we have no plan record to trust) → CTA to explore plans.
+  if (!hasPlan) {
+    return (
+      <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+        <div className="flex items-center justify-between">
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Active Plan</p>
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: CARD_STRONG, color: MUTED, border: `1px solid ${BORDER}` }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: DIM }} />
+            Inactive
+          </span>
+        </div>
+        <h3 className="mt-3 font-heading text-3xl uppercase leading-none md:text-4xl">No active plan</h3>
+        <p className="mt-3 font-body text-[12px]" style={{ color: MUTED }}>
+          Add a plan to bank visit credits each cycle and lock in member pricing.
+        </p>
+        <Link to="/subscription" className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: TEXT, color: INVERT }}>
+          Explore plans <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        </Link>
+      </div>
+    );
+  }
+
+  const tier = sub.name || 'Active plan';
+  const active = !sub.status || sub.status === 'active' || sub.status === 'trialing';
+  const chargeDate = formatChargeDate(sub.nextChargeIso);
+  const chargeAmount = sub.nextChargeAmountDollars != null ? money(sub.nextChargeAmountDollars) : '';
+  const nextCharge = chargeDate && chargeAmount ? `${chargeDate} · ${chargeAmount}`
+    : chargeDate || chargeAmount || '—';
+  const pm = sub.defaultPaymentMethod || null;
+  const cardLine = pm?.last4
+    ? `${pm.brand ? `${pm.brand} ` : 'card '}ending ${pm.last4}`
+    : 'No card on file';
+  const cycleLabel = sub.cancelAtPeriodEnd ? 'ends this cycle' : 'remaining this cycle';
+
   return (
     <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between">
         <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Active Plan</p>
-        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: hasPlan ? 'hsl(140 30% 60% / 0.12)' : CARD_STRONG, color: hasPlan ? GOOD : MUTED, border: `1px solid ${hasPlan ? 'hsl(140 30% 60% / 0.25)' : BORDER}` }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: hasPlan ? GOOD : DIM }} />
-          {hasPlan ? 'Active' : 'Inactive'}
+        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: active ? 'hsl(140 30% 60% / 0.12)' : CARD_STRONG, color: active ? GOOD : MUTED, border: `1px solid ${active ? 'hsl(140 30% 60% / 0.25)' : BORDER}` }}>
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: active ? GOOD : DIM }} />
+          {sub.cancelAtPeriodEnd ? 'Ending' : active ? 'Active' : (sub.status || 'Inactive')}
         </span>
       </div>
       <h3 className="mt-3 font-heading text-3xl uppercase leading-none md:text-4xl">{tier}</h3>
@@ -127,12 +185,12 @@ function PlanCard({ hasPlan, creditsAvailable, creditsTotal }) {
         <div>
           <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: DIM }}>Credits</p>
           <p className="mt-1 font-heading text-2xl uppercase leading-none">{creditsAvailable} of {creditsTotal}</p>
-          <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>remaining this cycle</p>
+          <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>{cycleLabel}</p>
         </div>
         <div>
           <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: DIM }}>Next charge</p>
           <p className="mt-1 font-heading text-2xl uppercase leading-none">{nextCharge}</p>
-          <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>card ending 4242</p>
+          <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>{cardLine}</p>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -208,96 +266,153 @@ function BalanceCard({ amount, appointmentId, onPaid }) {
   );
 }
 
-// stub: real inbox unread/preview will be wired once messaging service exists
-const MESSAGE_STUBS = [
-  { id: 'm1', initials: 'JO', who: 'Jules, your RN', body: "Just confirming Thursday's visit. Any new meds since May?", when: '2h', unread: true },
-  { id: 'm2', initials: 'SN', who: 'Snooches', body: 'Your June statement is ready. You used 2 of 4 credits this cycle.', when: '1d', unread: true },
-  { id: 'm3', initials: 'JO', who: 'Jules, your RN', body: 'Hydration tip: 80 oz water + electrolytes the day before.', when: '3d', unread: false },
-];
-
-function MessagesCard() {
-  const unread = MESSAGE_STUBS.filter((m) => m.unread).length;
+// Messages preview. There is no lightweight unread API — the Messages page
+// reads Supabase conversation tables directly. To avoid fabricating any
+// names/previews (PHI + trust), the Dashboard shows a real entry that links to
+// the inbox and only surfaces an unread count when one is actually known
+// (`unread` is a number) — otherwise it shows a neutral "Open inbox" prompt.
+function MessagesCard({ unread = null }) {
+  const hasCount = typeof unread === 'number';
   return (
     <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between">
         <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Messages</p>
-        <span className="font-body text-[10px]" style={{ color: MUTED }}>{unread} unread</span>
+        {hasCount && unread > 0 ? (
+          <span className="font-body text-[10px]" style={{ color: MUTED }}>{unread} unread</span>
+        ) : null}
       </div>
-      <div className="mt-3 grid gap-2">
-        {MESSAGE_STUBS.map((m) => (
-          <div key={m.id} className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
-            <span className="grid h-9 w-9 place-items-center rounded-full font-heading text-sm uppercase" style={{ background: 'hsl(var(--foreground) / 0.12)', color: TEXT }}>{m.initials}</span>
-            <div className="min-w-0">
-              <p className="truncate font-body text-[12px] font-semibold" style={{ color: TEXT }}>
-                {m.who}{m.unread ? <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full align-middle" style={{ background: TEXT }} /> : null}
-              </p>
-              <p className="mt-0.5 truncate font-body text-[11px]" style={{ color: MUTED }}>{m.body}</p>
-            </div>
-            <span className="shrink-0 font-body text-[10px]" style={{ color: DIM }}>{m.when}</span>
-          </div>
-        ))}
-      </div>
-      <Link to="/members/messages" className="mt-3 inline-flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: TEXT }}>
-        Open inbox <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+      <Link
+        to="/members/messages"
+        className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3.5"
+        style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: 'hsl(var(--foreground) / 0.12)', color: TEXT }}>
+          <MessageCircle className="h-5 w-5" strokeWidth={1.7} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>
+            {hasCount && unread > 0 ? `${unread} new message${unread === 1 ? '' : 's'}` : 'Your care team inbox'}
+          </p>
+          <p className="mt-0.5 font-body text-[11px]" style={{ color: MUTED }}>
+            {hasCount && unread > 0 ? 'Tap to read and reply.' : 'Message your RN, scheduling, and clinical follow-ups.'}
+          </p>
+        </div>
+        <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2} style={{ color: MUTED }} />
       </Link>
     </div>
   );
 }
 
-// stub: real documents list will come from /api/me/documents
-const DOC_STUBS = [
-  { id: 'd1', name: '2026 Consent Renewal', meta: 'Annual · required before next visit', badge: 'Sign' },
-  { id: 'd2', name: 'HIPAA Privacy Notice', meta: 'Signed Jan 14, 2026', badge: 'PDF' },
-  { id: 'd3', name: 'Treatment Summary — May 12', meta: 'From Jules Ortega, RN', badge: 'PDF' },
-];
+// Documents preview driven by GET /api/me/documents. We only surface the
+// pending-signature count + the top pending title (real titles from the API),
+// and otherwise reassure "All documents signed". No fabricated doc names.
+function DocumentsCard({ docsState }) {
+  const { loading, error, documents } = docsState;
+  const pending = (documents || []).filter((d) => d.status === 'pending' || d.status === 'outdated');
+  const pendingCount = pending.length;
+  const topPending = pending[0] || null;
 
-function DocumentsCard() {
   return (
     <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between">
         <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Documents</p>
         <Link to="/members/documents" className="font-body text-[10px] underline underline-offset-4" style={{ color: MUTED }}>View all</Link>
       </div>
-      <div className="mt-3 divide-y" style={{ borderColor: BORDER }}>
-        {DOC_STUBS.map((d) => {
-          const isSign = d.badge === 'Sign';
-          return (
-            <div key={d.id} className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-3 py-3" style={{ borderTop: `1px solid ${BORDER}` }}>
-              <span className="grid h-10 w-8 place-items-center rounded" style={{ background: CARD_STRONG, color: DIM }}>
-                <FileText className="h-4 w-4" strokeWidth={1.6} />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-body text-[13px] font-semibold" style={{ color: TEXT }}>{d.name}</p>
-                <p className="mt-0.5 truncate font-body text-[11px]" style={{ color: DIM }}>{d.meta}</p>
-              </div>
-              <span className="shrink-0 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{
-                background: isSign ? 'hsl(38 70% 60% / 0.14)' : CARD_STRONG,
-                color: isSign ? WARN : MUTED,
-                border: `1px solid ${isSign ? 'hsl(38 70% 60% / 0.30)' : BORDER}`,
-              }}>{d.badge}</span>
-            </div>
-          );
-        })}
-      </div>
+
+      {loading ? (
+        <p className="mt-4 font-body text-[12px]" style={{ color: MUTED }}>Loading your documents…</p>
+      ) : error ? (
+        <Link to="/members/documents" className="mt-4 flex items-center gap-3 rounded-xl px-3 py-3.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+          <span className="grid h-10 w-8 shrink-0 place-items-center rounded" style={{ background: CARD, color: DIM }}>
+            <FileText className="h-4 w-4" strokeWidth={1.6} />
+          </span>
+          <p className="min-w-0 flex-1 font-body text-[12px]" style={{ color: MUTED }}>Open your documents</p>
+          <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2} style={{ color: MUTED }} />
+        </Link>
+      ) : pendingCount > 0 ? (
+        <Link
+          to="/members/documents"
+          className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3.5"
+          style={{ background: 'hsl(38 70% 60% / 0.08)', border: `1px solid hsl(38 70% 60% / 0.30)` }}
+        >
+          <span className="grid h-10 w-8 shrink-0 place-items-center rounded" style={{ background: CARD_STRONG, color: WARN }}>
+            <FileText className="h-4 w-4" strokeWidth={1.6} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-body text-[13px] font-semibold" style={{ color: TEXT }}>{topPending?.title || 'Consent document'}</p>
+            <p className="mt-0.5 font-body text-[11px]" style={{ color: MUTED }}>
+              {pendingCount === 1 ? '1 document needs your signature' : `${pendingCount} documents need your signature`}
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: 'hsl(38 70% 60% / 0.14)', color: WARN, border: `1px solid hsl(38 70% 60% / 0.30)` }}>Sign</span>
+        </Link>
+      ) : (
+        <div className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3.5" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+          <span className="grid h-10 w-8 shrink-0 place-items-center rounded" style={{ background: CARD, color: GOOD }}>
+            <FileText className="h-4 w-4" strokeWidth={1.6} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>All documents signed</p>
+            <p className="mt-0.5 font-body text-[11px]" style={{ color: MUTED }}>Nothing needs your signature right now.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ProfileCompleteness({ percent = 80 }) {
+// Profile completeness computed from the real profile (see profileCompleteness
+// below). `nextField` is the first missing key's friendly label, or null when
+// the profile is complete. While loading we show a dash, not a fake number.
+function ProfileCompleteness({ percent, nextField, loading }) {
+  const shownPercent = loading || percent == null ? null : percent;
   return (
     <div className="rounded-2xl p-3.5 sm:min-w-[260px]" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>
         <span>Profile</span>
-        <span style={{ color: TEXT }}>{percent}%</span>
+        <span style={{ color: TEXT }}>{shownPercent == null ? '—' : `${shownPercent}%`}</span>
       </div>
       <div className="mt-2 h-1 overflow-hidden rounded-full" style={{ background: CARD_STRONG }}>
-        <div className="h-full" style={{ width: `${percent}%`, background: TEXT }} />
+        <div className="h-full" style={{ width: `${shownPercent == null ? 0 : shownPercent}%`, background: TEXT }} />
       </div>
-      <Link to="/members/account" className="mt-2 inline-flex items-center gap-1 font-body text-[11px] underline underline-offset-4" style={{ color: TEXT, textDecorationColor: DIM }}>
-        Add emergency contact <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-      </Link>
+      {!loading && nextField ? (
+        <Link to="/members/account" className="mt-2 inline-flex items-center gap-1 font-body text-[11px] underline underline-offset-4" style={{ color: TEXT, textDecorationColor: DIM }}>
+          Add {nextField} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        </Link>
+      ) : !loading ? (
+        <Link to="/members/account" className="mt-2 inline-flex items-center gap-1 font-body text-[11px] underline underline-offset-4" style={{ color: MUTED, textDecorationColor: DIM }}>
+          Manage profile <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        </Link>
+      ) : null}
     </div>
   );
+}
+
+// Compute real profile completeness from GET /api/me/profile fields. Returns
+// { percent, nextField } — nextField is the friendly label of the first
+// missing key, or null when complete.
+const PROFILE_FIELDS = [
+  { key: 'fullName', label: 'your name' },
+  { key: 'phone', label: 'a phone number' },
+  { key: 'dateOfBirth', label: 'date of birth' },
+  { key: 'emergencyContact', label: 'emergency contact' },
+  { key: 'address', label: 'an address' },
+];
+function profileCompleteness(profile) {
+  if (!profile) return { percent: 0, nextField: PROFILE_FIELDS[0].label };
+  const present = (v) => {
+    if (v == null) return false;
+    if (typeof v === 'string') return v.trim().length > 0;
+    if (typeof v === 'object') return Object.keys(v).length > 0;
+    return true;
+  };
+  let filled = 0;
+  let nextField = null;
+  for (const f of PROFILE_FIELDS) {
+    if (present(profile[f.key])) filled += 1;
+    else if (!nextField) nextField = f.label;
+  }
+  return { percent: Math.round((filled / PROFILE_FIELDS.length) * 100), nextField };
 }
 
 function QuickBookStrip({ creditsRemaining }) {
@@ -372,15 +487,20 @@ function DashboardBody({
   emptyText,
   onSignOut,
   footer,
-  hasPlan,
   creditsAvailable,
   creditsTotal,
   visitsRemaining,
   creditsLoading,
   balanceAppointmentId,
   onBalancePaid,
+  sub,
+  subState,
+  docsState,
+  profileState,
+  messagesUnread = null,
 }) {
   const visitStatus = primary ? 'Confirming after clinical review' : 'No visit scheduled';
+  const profileStats = profileCompleteness(profileState?.profile);
   return (
     <main className="min-h-dvh pb-[calc(7.5rem+env(safe-area-inset-bottom))] font-body" style={{ background: BG, color: TEXT }}>
       <header className="sticky top-0 z-40 border-b border-foreground/[0.08] bg-background/86 px-4 py-3 backdrop-blur-2xl">
@@ -410,7 +530,7 @@ function DashboardBody({
             <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Welcome back</p>
             <h1 className="mt-1 font-heading text-4xl uppercase leading-none md:text-5xl">Your portal</h1>
           </div>
-          <ProfileCompleteness percent={80} />
+          <ProfileCompleteness percent={profileStats.percent} nextField={profileStats.nextField} loading={profileState?.loading} />
         </div>
 
         {/* Next visit + summary rail */}
@@ -461,7 +581,7 @@ function DashboardBody({
 
         {/* Plan + Balance */}
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <PlanCard hasPlan={hasPlan} creditsAvailable={creditsAvailable} creditsTotal={creditsTotal} />
+          <PlanCard sub={sub} subState={subState} creditsAvailable={creditsAvailable} creditsTotal={creditsTotal} />
           {balanceTotal > 0 ? <BalanceCard amount={balanceTotal} appointmentId={balanceAppointmentId} onPaid={onBalancePaid} /> : (
             <div className="rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
               <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Account standing</p>
@@ -478,8 +598,8 @@ function DashboardBody({
 
         {/* Messages + Documents */}
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <MessagesCard />
-          <DocumentsCard />
+          <MessagesCard unread={messagesUnread} />
+          <DocumentsCard docsState={docsState} />
         </div>
 
         {/* Recent visits */}
@@ -529,6 +649,9 @@ function LiveClientDashboard() {
   const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, error: '', visits: [] });
   const [credits, setCredits] = useState({ loading: true, balance: 0 });
+  const [subState, setSubState] = useState({ loading: true, error: '', sub: null });
+  const [docsState, setDocsState] = useState({ loading: true, error: '', documents: [] });
+  const [profileState, setProfileState] = useState({ loading: true, error: '', profile: null });
   const [passkeyMsg, setPasskeyMsg] = useState(null);
 
   const addPasskey = async () => {
@@ -552,6 +675,17 @@ function LiveClientDashboard() {
     apiGet('/api/me/credits')
       .then((data) => { if (active) setCredits({ loading: false, balance: Math.max(0, Number(data?.balance || 0)) }); })
       .catch(() => { if (active) setCredits({ loading: false, balance: 0 }); });
+    // Subscription status drives the Plan card. Endpoint may not exist yet
+    // (built by a parallel agent) — a 404/failure degrades to "no plan" CTA.
+    apiGet('/api/me/subscription/status')
+      .then((data) => { if (active) setSubState({ loading: false, error: '', sub: data || null }); })
+      .catch(() => { if (active) setSubState({ loading: false, error: 'unavailable', sub: null }); });
+    apiGet('/api/me/documents')
+      .then((data) => { if (active) setDocsState({ loading: false, error: '', documents: Array.isArray(data?.documents) ? data.documents : [] }); })
+      .catch(() => { if (active) setDocsState({ loading: false, error: 'unavailable', documents: [] }); });
+    apiGet('/api/me/profile')
+      .then((data) => { if (active) setProfileState({ loading: false, error: '', profile: data?.profile || null }); })
+      .catch(() => { if (active) setProfileState({ loading: false, error: 'unavailable', profile: null }); });
     return () => { active = false; };
   }, []);
 
@@ -566,9 +700,14 @@ function LiveClientDashboard() {
   // Until we surface a per-visit picker, this matches the "Pay $X now" CTA
   // which shows the combined total but charges the oldest open balance.
   const payableAppointment = visits.find((v) => Number(v.balanceDue || 0) > 0) || null;
-  const hasPlan = visits.some((v) => v.isMembership);
-  // stub: tier-derived totals — plan tier should drive this once subscription record is wired
-  const creditsTotal = hasPlan ? 4 : 0;
+  const sub = subState.sub;
+  // Source of truth for "has a plan" is the subscription status; while it's
+  // loading or unavailable we fall back to the appointment-derived membership
+  // flag so the summary rail doesn't flap to "no plan" then back.
+  const hasPlan = sub?.hasPlan ?? visits.some((v) => v.isMembership);
+  // Credits-per-cycle comes from the real plan when known; otherwise we display
+  // out of the live balance so we never show a fabricated "/ 4".
+  const creditsTotal = sub?.visitsPerCycle ?? (hasPlan ? Math.max(credits.balance, 0) : 0);
   const creditsAvailable = credits.loading ? 0 : Math.min(credits.balance, creditsTotal || credits.balance);
 
   const primary = next ? {
@@ -609,13 +748,16 @@ function LiveClientDashboard() {
       emptyText={loading ? 'Loading your visits…' : 'Book your next visit'}
       onSignOut={handleSignOut}
       footer={footer}
-      hasPlan={hasPlan}
       creditsAvailable={creditsAvailable}
-      creditsTotal={creditsTotal || 4}
+      creditsTotal={creditsTotal || credits.balance || 0}
       visitsRemaining={credits.loading ? 0 : credits.balance}
       creditsLoading={credits.loading}
       balanceAppointmentId={payableAppointment?.id || null}
       onBalancePaid={refetchVisits}
+      sub={sub}
+      subState={subState}
+      docsState={docsState}
+      profileState={profileState}
     />
   );
 }
@@ -633,13 +775,11 @@ function MemberDashboard() {
 
 export default MemberDashboard;
 
-// Demo dashboard (local/beta simulation) — uses the last local booking plus a
-// small sample history so the layout reads as a real, populated portal.
-const DEMO_RECENT = [
-  { service: 'Immunity IV', when: 'Thu, May 28 · 3:00 PM', status: 'Completed' },
-  { service: 'Hydration IV', when: 'Wed, May 14 · 2:00 PM', status: 'Completed' },
-];
-
+// Demo dashboard (local/beta simulation, non-Supabase auth only). Reflects only
+// the last LOCAL booking the visitor actually made — NO fabricated balances,
+// plans, credits, messages, or documents. Production runs on Supabase auth and
+// never reaches this path, but we keep it free of fake customer-facing content
+// so a stray demo session can't leak invented amounts/names.
 function DemoClientDashboard() {
   const { signOut } = useAuthStore();
   const navigate = useNavigate();
@@ -652,26 +792,28 @@ function DemoClientDashboard() {
     location: booking.address || 'Home, hotel, office, or event',
     img: bagForService(booking.service),
   } : null;
-
-  // stub: demo dashboard always shows an active plan with sample credits + balance
-  const balanceTotal = 120;
-  const balanceLabel = money(balanceTotal);
+  const recent = booking
+    ? [{ service: booking.service || 'Hydration IV', when: [booking.date, booking.time].filter(Boolean).join(' · ') || 'Recently', status: paymentLabel(booking.paymentStatus) }]
+    : [];
 
   return (
     <DashboardBody
       primary={primary}
-      balanceLabel={balanceLabel}
-      balanceTotal={balanceTotal}
-      planLabel="Active"
-      visitsCount={String(DEMO_RECENT.length + (booking ? 1 : 0))}
-      recent={DEMO_RECENT}
+      balanceLabel="$0"
+      balanceTotal={0}
+      planLabel="—"
+      visitsCount={String(booking ? 1 : 0)}
+      recent={recent}
       emptyText="Book your next visit — we come to you."
       onSignOut={handleSignOut}
-      hasPlan
-      creditsAvailable={2}
-      creditsTotal={4}
-      visitsRemaining={2}
+      creditsAvailable={0}
+      creditsTotal={0}
+      visitsRemaining={0}
       creditsLoading={false}
+      sub={null}
+      subState={{ loading: false, error: '', sub: null }}
+      docsState={{ loading: false, error: '', documents: [] }}
+      profileState={{ loading: false, error: '', profile: null }}
     />
   );
 }

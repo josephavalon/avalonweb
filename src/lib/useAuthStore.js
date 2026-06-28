@@ -286,10 +286,51 @@ export function AuthStoreProvider({ children }) {
       if (err) throw err;
       return { ok: true }; // onAuthStateChange sets the user
     } catch (err) {
+      // Supabase tags an unverified inbox with code 'email_not_confirmed'
+      // (auth-js AuthApiError). Surface that distinctly so the login screen can
+      // offer a "resend confirmation" affordance instead of a dead-end
+      // "wrong password" message. Older servers used the message string only.
+      const code = String(err?.code || '').toLowerCase();
+      const rawMessage = String(err?.message || '').toLowerCase();
+      const emailUnconfirmed = code === 'email_not_confirmed'
+        || rawMessage.includes('email not confirmed')
+        || rawMessage.includes('not confirmed');
+      if (emailUnconfirmed) {
+        const msg = customerSafeAuthError('Your email isn’t confirmed yet. Check your inbox for the confirmation link.');
+        setError(msg);
+        return { ok: false, error: msg, code: 'email_not_confirmed', emailUnconfirmed: true };
+      }
       const msg = customerSafeAuthError('That email or password was not correct.');
       setError(msg);
       return { ok: false, error: msg };
     } finally { setLoading(false); }
+  }, []);
+
+  // Resend the signup confirmation email for an address that has registered but
+  // not yet verified. Uses Supabase `auth.resend({ type: 'signup' })` (auth-js
+  // 2.x ResendParams). No-ops gracefully in demo / pre-API mode so callers don't
+  // have to guard the backend. Does NOT set the shared loading/error state — the
+  // calling button tracks its own busy/sent/error so it can sit alongside a
+  // separate sign-in flow.
+  const resendConfirmationEmail = useCallback(async (email) => {
+    const cleanEmail = String(email || '').trim();
+    if (!cleanEmail) return { ok: false, error: 'Enter your email address first.' };
+    if (!hasSupabase) {
+      // Demo / pre-API mode: nothing to send, but report a friendly no-op so the
+      // UI can still show a confirmation without erroring.
+      return { ok: true, pending: false, noop: true, message: 'Confirmation emails are not available in this mode.' };
+    }
+    try {
+      const { error: err } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (err) throw err;
+      return { ok: true, pending: true, message: 'Confirmation email sent — check your inbox.' };
+    } catch (err) {
+      return { ok: false, error: customerSafeAuthError('Could not resend the confirmation email.') };
+    }
   }, []);
 
   // Update the signed-in user's password (used to clear must_change_password
@@ -512,7 +553,7 @@ export function AuthStoreProvider({ children }) {
       value: {
         user, loading, error,
         signIn, signInWithEmail, signInWithPassword, updatePassword, signUpWithEmail, signInWithPhone, verifyPhoneOtp,
-        signInWithPasskey, registerPasskey, signInWithOAuth,
+        signInWithPasskey, registerPasskey, signInWithOAuth, resendConfirmationEmail,
         signOut, requestPasswordReset, refreshSupabaseSession,
         authBackend: hasSupabase ? 'supabase' : 'demo',
       },

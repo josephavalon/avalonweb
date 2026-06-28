@@ -44,6 +44,69 @@ export function resolvePortalPlan(targetPlan) {
 }
 
 /**
+ * Recurring-interval mapping for a custom plan's billing term. MUST mirror
+ * api/_checkout-fulfillment.js#planRecurringInterval so a self-serve change
+ * keeps the same cadence the signup subscription was created with:
+ *   monthly      → { interval: 'month' }
+ *   three-month  → { interval: 'month', interval_count: 3 }
+ *   six-month    → { interval: 'month', interval_count: 6 }
+ *   annual       → { interval: 'year' }
+ */
+export function customPlanRecurringInterval(billing) {
+  switch (String(billing || '').trim().toLowerCase()) {
+    case 'annual': return { interval: 'year' };
+    case 'six-month': return { interval: 'month', interval_count: 6 };
+    case 'three-month': return { interval: 'month', interval_count: 3 };
+    default: return { interval: 'month' };
+  }
+}
+
+/**
+ * Validate + normalize a client-supplied custom plan body. Mirrors the trust
+ * model in /api/create-checkout-session (the price is client-supplied and
+ * trusted, but bounded/sanitized). Returns a normalized plan descriptor or
+ * throws an Error with .code/.status for the endpoint to surface as a 400.
+ */
+export function normalizeCustomPlan(custom = {}) {
+  const c = (custom && typeof custom === 'object') ? custom : {};
+
+  // Price: accept either priceDollars or priceCents. Bound to a sane range so a
+  // bad client can't create a $0 or absurd subscription.
+  let cents = null;
+  if (Number.isFinite(Number(c.priceCents))) {
+    cents = Math.round(Number(c.priceCents));
+  } else if (Number.isFinite(Number(c.priceDollars))) {
+    cents = Math.round(Number(c.priceDollars) * 100);
+  }
+  if (!Number.isFinite(cents) || cents <= 0) {
+    throw Object.assign(new Error('priceDollars must be greater than 0'), { code: 'price_invalid', status: 400 });
+  }
+  // Cap at $100,000/period — a guard rail, not a business limit.
+  cents = Math.min(cents, 100000 * 100);
+
+  const visitsPerCycle = Math.max(1, Math.floor(Number(c.visitsPerCycle) || 0));
+  if (!(visitsPerCycle >= 1)) {
+    throw Object.assign(new Error('visitsPerCycle must be at least 1'), { code: 'visits_invalid', status: 400 });
+  }
+
+  const billing = String(c.billing || 'monthly').trim().toLowerCase();
+  const allowedBilling = new Set(['monthly', 'three-month', 'six-month', 'annual']);
+  const safeBilling = allowedBilling.has(billing) ? billing : 'monthly';
+
+  const name = String(c.name || 'Custom').trim().slice(0, 80) || 'Custom';
+
+  return {
+    custom: true,
+    id: 'custom',
+    monthlyCents: cents,
+    visitsPerCycle,
+    billing: safeBilling,
+    displayName: `${name} Plan`,
+    planName: `${name} Plan`,
+  };
+}
+
+/**
  * Resolve the Stripe price (id) for a portal plan. If env var is set, return
  * { priceId }. Otherwise create (or reuse) a product and return { priceData }
  * suitable for subscriptions.create({ items: [{ price_data }] }) and
@@ -53,6 +116,33 @@ export function resolvePortalPlan(targetPlan) {
  * pre-provisioned Price IDs and still let ops swap in real Prices later.
  */
 export async function resolveTargetPrice(stripe, plan) {
+  // ── Custom-priced plan branch ────────────────────────────────────────────
+  // Signup creates custom subscriptions (inline price_data, custom monthly
+  // price + visits_per_cycle). A custom-plan member changing their plan can't
+  // map onto the 3 fixed tiers, so we build a fresh inline price here. The
+  // recurring interval is derived the SAME way fulfillment builds it at signup
+  // (api/_checkout-fulfillment.js#planRecurringInterval).
+  if (plan.custom) {
+    const monthlyCents = Math.round(plan.monthlyCents);
+    const recurring = customPlanRecurringInterval(plan.billing);
+    const product = await stripe.products.create(
+      {
+        name: plan.displayName || 'Custom Plan',
+        metadata: safeStripeMetadata({ kind: 'plan_recurring' }),
+      },
+      // Idempotent per price+cadence so retries don't spawn duplicate products.
+      { idempotencyKey: `portal-custom-product:${monthlyCents}:${recurring.interval}:${recurring.interval_count || 1}` },
+    );
+    return {
+      priceData: {
+        currency: 'usd',
+        product: product.id,
+        unit_amount: monthlyCents,
+        recurring,
+      },
+    };
+  }
+
   const envId = (process.env[plan.envPriceVar] || '').trim();
   if (envId) return { priceId: envId };
 

@@ -18,7 +18,7 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { readClientProfile, saveClientProfile } from '@/lib/platformOps';
 import { authProviderConfig } from '@/lib/authProviderConfig';
-import { apiGet, apiPatch } from '@/lib/apiClient';
+import { apiGet, apiPatch, apiPost } from '@/lib/apiClient';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -69,6 +69,9 @@ function mergeServerProfile(local, server) {
   if (phi.infectiousIllness != null) merged.infectiousStatus = phi.infectiousIllness;
   if (phi.ivHistory != null) merged.ivHistory = phi.ivHistory;
   if (phi.nurseNotes != null) merged.nurseNotes = phi.nurseNotes;
+  // Clinical-review metadata is set by the RN/admin side, not editable here.
+  if (phi.lastReviewedBy != null) merged.lastReviewedBy = phi.lastReviewedBy;
+  if (phi.lastReviewedAt != null) merged.lastReviewedAt = phi.lastReviewedAt;
   if (cp.channel != null) merged.smsPreference = cp.channel;
   if (cp.hipaaMention != null) merged.phiPolicy = cp.hipaaMention;
   if (cp.smsReminders != null) merged.appointmentReminders = cp.smsReminders;
@@ -154,12 +157,21 @@ function buildInitialState(profile, user) {
       wellnessTips: profile.wellnessTips ?? false,
       quietHours: profile.quietHours ?? true,
     },
-    // surfaced read-only signals (not persisted from this form)
+    // surfaced read-only signals (not persisted from this form). These come from
+    // the real record when present; the UI hides any line we don't actually have
+    // rather than showing a placeholder.
     plan: subscription.plan || 'Vitality Monthly',
-    paymentCard: 'Visa ending 4242 · default',
-    lastReviewedBy: 'Jules Ortega, RN',
-    lastReviewedOn: 'May 12, 2026',
+    lastReviewedBy: profile.lastReviewedBy || '',
+    lastReviewedAt: profile.lastReviewedAt || '',
   };
+}
+
+// Format an ISO date (or pass-through string) for the "last reviewed" line.
+function formatReviewDate(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 // --- Small primitives -----------------------------------------------------
@@ -324,6 +336,17 @@ export default function MemberAccount() {
   const [passkeyState, setPasskeyState] = useState({ busy: false, message: '', error: '' });
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
 
+  // Default payment method, fetched from /api/me/payment-methods if that
+  // endpoint exists. status: 'loading' | 'ready' | 'none' | 'unavailable'.
+  const [paymentMethod, setPaymentMethod] = useState({ status: 'loading', card: null });
+
+  // Set-a-password flow (passwordless members can add a fallback password).
+  const [pwState, setPwState] = useState({ open: false, value: '', confirm: '', busy: false, message: '', error: '' });
+  // Unlink Google identity.
+  const [unlinkState, setUnlinkState] = useState({ busy: false, done: false, message: '', error: '' });
+  // Account-deletion request.
+  const [deleteState, setDeleteState] = useState({ busy: false, done: false, message: '', error: '' });
+
   // Hydrate from /api/me/profile when we're on the real auth backend so the
   // form reflects the patient's server-side record (the localStorage cache is
   // best-effort — it can be wiped or stale across devices). Demo / passwordless
@@ -342,6 +365,32 @@ export default function MemberAccount() {
         setForm(next);
       })
       .catch(() => { /* keep the localStorage fallback already in state */ });
+    return () => { cancelled = true; };
+  }, [authBackend, user]);
+
+  // Fetch the default saved card. /api/me/payment-methods is owned by another
+  // surface and may not exist yet — degrade gracefully on 404 to "No card on
+  // file" with a link to Billing. Demo sessions skip it entirely.
+  useEffect(() => {
+    if (authBackend !== 'supabase') { setPaymentMethod({ status: 'unavailable', card: null }); return; }
+    let cancelled = false;
+    apiGet('/api/me/payment-methods')
+      .then((res) => {
+        if (cancelled) return;
+        const methods = res?.paymentMethods || res?.methods || (res?.card ? [res.card] : []);
+        const def = (Array.isArray(methods) ? methods : []).find((m) => m?.isDefault || m?.default) || (Array.isArray(methods) ? methods[0] : null);
+        if (def) {
+          setPaymentMethod({ status: 'ready', card: def });
+        } else {
+          setPaymentMethod({ status: 'none', card: null });
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // 404 (endpoint not built yet) or any other failure → show the safe
+        // "no card on file" state rather than a fake card.
+        setPaymentMethod({ status: err?.status === 404 ? 'none' : 'unavailable', card: null });
+      });
     return () => { cancelled = true; };
   }, [authBackend, user]);
 
@@ -445,7 +494,68 @@ export default function MemberAccount() {
     });
   };
 
+  // --- Set a password -----------------------------------------------------
+  const handleSetPassword = async () => {
+    if (authBackend !== 'supabase') {
+      setPwState((s) => ({ ...s, error: 'Available once you sign in with your real account.' }));
+      return;
+    }
+    const value = pwState.value || '';
+    if (value.length < 8) {
+      setPwState((s) => ({ ...s, error: 'Password must be at least 8 characters.', message: '' }));
+      return;
+    }
+    if (value !== pwState.confirm) {
+      setPwState((s) => ({ ...s, error: 'Passwords do not match.', message: '' }));
+      return;
+    }
+    setPwState((s) => ({ ...s, busy: true, error: '', message: '' }));
+    try {
+      await apiPost('/api/me/account/password', { password: value, mode: 'set' });
+      setPwState({ open: false, value: '', confirm: '', busy: false, message: 'Password set. You can now sign in with it.', error: '' });
+    } catch (err) {
+      setPwState((s) => ({ ...s, busy: false, error: err?.message || 'Could not set your password.', message: '' }));
+    }
+  };
+
+  // --- Unlink Google ------------------------------------------------------
+  const handleUnlinkGoogle = async () => {
+    if (authBackend !== 'supabase') {
+      setUnlinkState({ busy: false, done: false, message: '', error: 'Available once you sign in with your real account.' });
+      return;
+    }
+    if (!window.confirm('Unlink Google sign-in from your account? You’ll need your magic link or password to sign in next time.')) return;
+    setUnlinkState({ busy: true, done: false, message: '', error: '' });
+    try {
+      await apiPost('/api/me/account/unlink', { provider: 'google' });
+      setUnlinkState({ busy: false, done: true, message: 'Google sign-in unlinked.', error: '' });
+    } catch (err) {
+      setUnlinkState({ busy: false, done: false, message: '', error: err?.message || 'Could not unlink Google.' });
+    }
+  };
+
+  // --- Delete-account request --------------------------------------------
+  const handleDeleteAccount = async () => {
+    if (authBackend !== 'supabase') {
+      setDeleteState({ busy: false, done: false, message: '', error: 'Available once you sign in with your real account.' });
+      return;
+    }
+    if (!window.confirm('Request deletion of your account? Your clinical records are retained as required by law; our team will follow up to confirm what can be removed.')) return;
+    setDeleteState({ busy: true, done: false, message: '', error: '' });
+    try {
+      const res = await apiPost('/api/me/account/delete-request', {});
+      setDeleteState({ busy: false, done: true, message: res?.message || 'Your deletion request has been received.', error: '' });
+    } catch (err) {
+      setDeleteState({ busy: false, done: false, message: '', error: err?.message || 'Could not submit your request.' });
+    }
+  };
+
   const greetingName = form.identity.preferredName || form.identity.firstName || 'Member';
+
+  // Real "last reviewed" line, only when the record actually has it.
+  const reviewedBy = form.lastReviewedBy || '';
+  const reviewedOn = formatReviewDate(form.lastReviewedAt);
+  const hasReviewLine = Boolean(reviewedBy && reviewedOn);
 
   return (
     <main className="min-h-dvh pb-[calc(9rem+env(safe-area-inset-bottom))] font-body" style={{ background: BG, color: TEXT }}>
@@ -515,14 +625,22 @@ export default function MemberAccount() {
           desc="Your screening answers, kept on file so we don't ask again every visit. Updates are reviewed by your RN before your next appointment."
           phi
         >
-          <div className="mb-5 rounded-2xl p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
-            <p className="font-body text-[12px]" style={{ color: TEXT }}>
-              <span className="font-semibold">Last reviewed by {form.lastReviewedBy} on {form.lastReviewedOn}.</span>
-            </p>
-            <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>
-              If any answer below has changed since then, edit it and your provider will be notified.
-            </p>
-          </div>
+          {hasReviewLine ? (
+            <div className="mb-5 rounded-2xl p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+              <p className="font-body text-[12px]" style={{ color: TEXT }}>
+                <span className="font-semibold">Last reviewed by {reviewedBy} on {reviewedOn}.</span>
+              </p>
+              <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>
+                If any answer below has changed since then, edit it and your provider will be notified.
+              </p>
+            </div>
+          ) : (
+            <div className="mb-5 rounded-2xl p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+              <p className="font-body text-[11px]" style={{ color: MUTED }}>
+                Your RN reviews this record once a year and before your next visit. Keep your answers current — edits are flagged for your provider.
+              </p>
+            </div>
+          )}
 
           <Field label="Known allergies" hint="drug, food, environmental">
             <TextArea value={form.health.allergies} onChange={(v) => update('health', 'allergies', v)} placeholder="Penicillin (hives, age 22). Latex (skin contact)." />
@@ -606,34 +724,117 @@ export default function MemberAccount() {
           <AuthRow
             icon={<Mail className="h-4 w-4" strokeWidth={1.8} />}
             name="Google · one-tap sign-in"
-            desc="Linked for faster return visits."
-            action={<button type="button" className="font-body text-[11px] underline underline-offset-4" style={{ color: MUTED }}>Unlink</button>}
+            desc={unlinkState.done ? 'Unlinked.' : (unlinkState.error || unlinkState.message || 'Linked for faster return visits.')}
+            action={unlinkState.done ? (
+              <span className="font-body text-[11px]" style={{ color: MUTED }}>Removed</span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleUnlinkGoogle}
+                disabled={unlinkState.busy}
+                className="font-body text-[11px] underline underline-offset-4 disabled:opacity-45"
+                style={{ color: unlinkState.error ? BAD : MUTED }}
+              >
+                {unlinkState.busy ? 'Unlinking…' : 'Unlink'}
+              </button>
+            )}
           />
-          <AuthRow
-            icon={<span className="font-heading text-[14px]">·</span>}
-            name="Set a password"
-            desc="Optional fallback if email and passkey are both unavailable while traveling."
-            action={<button type="button" className="rounded-full px-3.5 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Set password</button>}
-          />
+          <div style={{ borderTop: `1px solid ${BORDER}` }}>
+            <AuthRow
+              icon={<span className="font-heading text-[14px]">·</span>}
+              name="Set a password"
+              desc={pwState.message || pwState.error || 'Optional fallback if email and passkey are both unavailable while traveling.'}
+              action={
+                <button
+                  type="button"
+                  onClick={() => setPwState((s) => ({ ...s, open: !s.open, error: '', message: '' }))}
+                  className="rounded-full px-3.5 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+                  style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+                >
+                  {pwState.open ? 'Cancel' : 'Set password'}
+                </button>
+              }
+            />
+            {pwState.open ? (
+              <div className="mb-1 ml-12 mr-1 rounded-2xl p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="New password">
+                    <Text type="password" value={pwState.value} onChange={(v) => setPwState((s) => ({ ...s, value: v }))} placeholder="At least 8 characters" />
+                  </Field>
+                  <Field label="Confirm password">
+                    <Text type="password" value={pwState.confirm} onChange={(v) => setPwState((s) => ({ ...s, confirm: v }))} placeholder="Re-enter password" />
+                  </Field>
+                </div>
+                {pwState.error ? <p className="mt-2 font-body text-[11px]" style={{ color: BAD }}>{pwState.error}</p> : null}
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={handleSetPassword}
+                    disabled={pwState.busy}
+                    className="rounded-xl px-4 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-45"
+                    style={{ background: TEXT, color: INVERT }}
+                  >
+                    {pwState.busy ? 'Saving…' : 'Save password'}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <button type="button" onClick={handleSignOut} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[11px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
               <LogOut className="h-3.5 w-3.5" strokeWidth={1.8} /> Sign out everywhere
             </button>
-            <button type="button" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[11px] font-bold uppercase tracking-[0.16em]" style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}>
-              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} /> Delete account
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={deleteState.busy || deleteState.done}
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[11px] font-bold uppercase tracking-[0.16em] disabled:opacity-45"
+              style={{ background: 'transparent', color: BAD, border: `1px solid hsl(0 70% 62% / 0.40)` }}
+            >
+              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} /> {deleteState.busy ? 'Requesting…' : deleteState.done ? 'Request received' : 'Delete account'}
             </button>
           </div>
+          {deleteState.message ? (
+            <p className="mt-3 font-body text-[11px]" style={{ color: MUTED }}>{deleteState.message}</p>
+          ) : null}
+          {deleteState.error ? (
+            <p className="mt-3 font-body text-[11px]" style={{ color: BAD }}>{deleteState.error}</p>
+          ) : null}
         </Section>
 
         {/* Payment quicklink */}
         <Section title="Payment" desc="Manage saved cards and plan billing on the Billing tab.">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>{form.paymentCard}</p>
-              <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>Expires 09/27 · used for plan renewals and visit balances</p>
+              {paymentMethod.status === 'loading' ? (
+                <p className="font-body text-[13px]" style={{ color: MUTED }}>Loading saved card…</p>
+              ) : paymentMethod.status === 'ready' ? (
+                <>
+                  <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>
+                    {[
+                      paymentMethod.card?.brand || paymentMethod.card?.cardBrand || 'Card',
+                      'ending',
+                      paymentMethod.card?.last4 || paymentMethod.card?.last_four || '••••',
+                    ].join(' ')}
+                    {(paymentMethod.card?.isDefault || paymentMethod.card?.default) ? ' · default' : ''}
+                  </p>
+                  {(paymentMethod.card?.expMonth || paymentMethod.card?.exp_month) ? (
+                    <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>
+                      Expires {String(paymentMethod.card.expMonth || paymentMethod.card.exp_month).padStart(2, '0')}/{String(paymentMethod.card.expYear || paymentMethod.card.exp_year || '').slice(-2)} · used for plan renewals and visit balances
+                    </p>
+                  ) : (
+                    <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>Used for plan renewals and visit balances</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>No card on file</p>
+                  <p className="mt-1 font-body text-[11px]" style={{ color: MUTED }}>Add a card on the Billing tab to cover plan renewals and visit balances.</p>
+                </>
+              )}
             </div>
             <Link to="/members/billing" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-body text-[11px] font-bold uppercase tracking-[0.16em]" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
-              <CreditCard className="h-3.5 w-3.5" strokeWidth={1.8} /> Manage payment methods <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+              <CreditCard className="h-3.5 w-3.5" strokeWidth={1.8} /> {paymentMethod.status === 'ready' ? 'Manage payment methods' : 'Add a card'} <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
             </Link>
           </div>
         </Section>

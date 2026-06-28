@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -21,6 +22,7 @@ import { IV_SESSIONS, IV_ADDONS, IM_SHOTS } from '@/data/catalog';
 import { PEOPLE_MAX, createPerson, personLabel as personLabelFor, makeVisit, resizeVisits } from '@/lib/peopleState';
 import SessionBuilder from '@/components/store/SessionBuilder';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
+import { apiPost } from '@/lib/apiClient';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -358,7 +360,7 @@ function BuilderRow({ title, value, hint, icon: Icon, open, onToggle, children }
 
 // Sticky mobile CTA: deposit-today + monthly + Start plan. Leads with the $50
 // deposit (what they actually pay now), monthly as the secondary number.
-function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart }) {
+function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart, changeMode = false }) {
   return (
     <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-foreground/10 bg-background/92 px-4 pb-[max(env(safe-area-inset-bottom),0.85rem)] pt-3 backdrop-blur-xl md:hidden">
       <p className="mb-2 truncate font-body text-[13px] font-bold uppercase tracking-[0.08em] text-foreground/55" aria-live="polite">
@@ -369,7 +371,7 @@ function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart
         onClick={onStart}
         className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
       >
-        Start plan · {money(depositToday)} today <ArrowRight className="h-4 w-4" />
+        {changeMode ? 'Update my plan' : `Start plan · ${money(depositToday)} today`} <ArrowRight className="h-4 w-4" />
       </button>
     </div>
   );
@@ -711,6 +713,14 @@ export default function Subscription() {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // Change mode: the portal Memberships page deep-links here as ?change=1 to let
+  // an existing member re-open the builder and self-serve a plan change. In this
+  // mode the CTA becomes "Update my plan" and Start runs the proration
+  // preview/commit flow against /api/me/subscription/change instead of going to
+  // the /plan checkout. Normal (signup) flow is untouched.
+  const isChangeMode = searchParams.get('change') === '1';
+  // change panel: { status:'preview'|'committing'|'error', proration } | null
+  const [changePanel, setChangePanel] = useState(null);
   // Sessions/month and term apply to the whole household. Therapy + add-ons +
   // IM shots are PER PERSON — each patient on the plan picks their own protocol.
   // Landing-page tier CTAs deep-link as ?sessions=N (1–4) so the builder opens on
@@ -933,6 +943,57 @@ export default function Subscription() {
     navigate(`/plan?${params.toString()}`);
   };
 
+  // ── Change-mode: proration preview + commit ───────────────────────────────
+  // The custom plan the builder describes (computed monthly + total visits per
+  // cycle + term) is sent to /api/me/subscription/change as targetPlan:'custom'.
+  // Total visits per cycle = sessions × people on the plan (matches the
+  // per-cycle credit grant). The recurring price the change uses is the SAME
+  // periodic charge PlanRail shows: monthly for monthly term, the upfront total
+  // for committed terms.
+  const visitsPerCycle = Math.max(1, sessions * peopleCount);
+  const changePriceDollars = term.key === 'monthly' ? Math.round(monthly) : Math.round(upfrontTotal);
+  const planNameForChange = `${peopleCount > 1 ? `${peopleCount}-person` : 'Custom'} ${sessions}×`;
+
+  const buildCustomBody = () => ({
+    priceDollars: changePriceDollars,
+    visitsPerCycle,
+    name: planNameForChange,
+    billing: term.key,
+  });
+
+  const previewChange = async () => {
+    setChangePanel({ status: 'loading', proration: null });
+    try {
+      const data = await apiPost('/api/me/subscription/change', {
+        targetPlan: 'custom',
+        action: 'preview',
+        custom: buildCustomBody(),
+      });
+      setChangePanel({ status: 'preview', proration: data?.proration || null });
+    } catch (err) {
+      setChangePanel({ status: 'error', error: err?.body?.error || err?.message || 'Could not preview the change.' });
+    }
+  };
+
+  const commitChange = async () => {
+    setChangePanel((p) => ({ ...(p || {}), status: 'committing' }));
+    try {
+      await apiPost('/api/me/subscription/change', {
+        targetPlan: 'custom',
+        action: 'commit',
+        custom: buildCustomBody(),
+      });
+      navigate('/members/memberships');
+    } catch (err) {
+      setChangePanel({ status: 'error', error: err?.body?.error || err?.message || 'Could not update the plan.' });
+    }
+  };
+
+  // In change mode the primary CTA opens the proration preview; otherwise it's
+  // the normal checkout hand-off.
+  const onPrimaryCta = isChangeMode ? previewChange : startPlan;
+  const primaryCtaLabel = isChangeMode ? 'Update my plan' : 'Continue to checkout';
+
   const rail = (
     <PlanRail
       therapyOption={therapyOption}
@@ -1068,10 +1129,10 @@ export default function Subscription() {
 
             <button
               type="button"
-              onClick={startPlan}
+              onClick={onPrimaryCta}
               className="mt-2.5 hidden min-h-[54px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] md:flex"
             >
-              Continue to checkout <ArrowRight className="h-4 w-4" />
+              {primaryCtaLabel} <ArrowRight className="h-4 w-4" />
             </button>
 
             {/* Mobile: full plan rail (info only), then a sticky price + Start plan bar */}
@@ -1100,7 +1161,8 @@ export default function Subscription() {
               sessions={sessions}
               monthly={monthly}
               depositToday={depositToday}
-              onStart={startPlan}
+              onStart={onPrimaryCta}
+              changeMode={isChangeMode}
             />
           </div>
 
@@ -1108,6 +1170,92 @@ export default function Subscription() {
           <aside className="hidden md:sticky md:top-[5.75rem] md:block">{rail}</aside>
         </div>
       </main>
+
+      {/* Change-mode confirm panel: shows the live Stripe proration before the
+          member commits the plan change. Portaled so it overlays the builder. */}
+      {isChangeMode && changePanel && typeof document !== 'undefined'
+        ? createPortal(
+            <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/55 p-4 backdrop-blur-sm sm:items-center">
+              <div className="w-full max-w-md overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/95 shadow-[0_28px_110px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+                <div className="border-b border-foreground/10 px-5 py-4">
+                  <p className="font-heading text-xl uppercase leading-none tracking-normal text-foreground">Update your plan</p>
+                  <p className="mt-1.5 font-body text-[13px] font-semibold text-foreground/55">
+                    {planNameForChange} · {visitsPerCycle} {visitsPerCycle === 1 ? 'visit' : 'visits'} / cycle · {money(changePriceDollars)}{term.key === 'monthly' ? '/mo' : ` per ${term.label.toLowerCase()}`}
+                  </p>
+                </div>
+
+                <div className="px-5 py-4">
+                  {changePanel.status === 'loading' ? (
+                    <p className="font-body text-sm font-semibold text-foreground/60">Calculating proration.</p>
+                  ) : changePanel.status === 'error' ? (
+                    <p className="font-body text-sm font-semibold text-rose-300">
+                      {changePanel.error || 'Something went wrong. Try again or contact Avalon.'}
+                    </p>
+                  ) : (
+                    <>
+                      <div className="grid gap-2 font-body text-[13px]">
+                        {(changePanel.proration?.items || []).map((line, idx) => (
+                          <div key={idx} className="flex items-baseline justify-between gap-3 border-b border-foreground/10 pb-1.5">
+                            <span className="text-foreground/55">{line.description || (line.proration ? 'Proration' : 'Line item')}</span>
+                            <span className="font-bold tabular-nums text-foreground/80">
+                              {line.amount < 0 ? '− ' : '+ '}{money(Math.abs(line.amount))}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="flex items-baseline justify-between gap-3 pt-1">
+                          <span className="font-heading text-lg uppercase text-foreground">Charged today</span>
+                          <span className="font-heading text-lg uppercase tabular-nums text-foreground">
+                            {money(Math.max(0, changePanel.proration?.amountDue || 0))}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="mt-3 font-body text-[12px] font-semibold text-foreground/52">
+                        Then {money(changePriceDollars)}{term.key === 'monthly' ? '/mo' : ` per ${term.label.toLowerCase()}`} at your next renewal. Cancel or change anytime.
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 border-t border-foreground/10 px-5 py-4">
+                  {changePanel.status === 'preview' ? (
+                    <button
+                      type="button"
+                      onClick={commitChange}
+                      className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.12em] text-background"
+                    >
+                      Confirm change
+                    </button>
+                  ) : changePanel.status === 'committing' ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-foreground/40 bg-foreground/70 px-4 font-body text-[11px] font-black uppercase tracking-[0.12em] text-background opacity-70"
+                    >
+                      Updating.
+                    </button>
+                  ) : changePanel.status === 'error' ? (
+                    <button
+                      type="button"
+                      onClick={previewChange}
+                      className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-foreground/82 bg-foreground px-4 font-body text-[11px] font-black uppercase tracking-[0.12em] text-background"
+                    >
+                      Try again
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setChangePanel(null)}
+                    disabled={changePanel.status === 'committing'}
+                    className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.05] px-4 font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

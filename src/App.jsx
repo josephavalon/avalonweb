@@ -92,6 +92,7 @@ const MemberBookings = lazyRoute(() => import('./pages/members/Bookings'));
 const MemberMemberships = lazyRoute(() => import('./pages/members/Memberships'));
 const MemberBilling = lazyRoute(() => import('./pages/members/Billing'));
 const MemberDocuments = lazyRoute(() => import('./pages/members/Documents'));
+const MembersSupport = lazyRoute(() => import('./pages/members/Support'));
 const ProviderAccounting = lazyRoute(() => import('./pages/provider/Accounting'));
 const ProviderAppointments = lazyRoute(() => import('./pages/provider/Appointments'));
 const ProviderClients = lazyRoute(() => import('./pages/provider/Clients'));
@@ -351,6 +352,7 @@ function AppRoutes() {
             <Route path="/members/memberships" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMemberships /></RequireAuth>} />
             <Route path="/members/billing" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBilling /></RequireAuth>} />
             <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
+            <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
             <Route path="/provider" element={<Navigate to="/login" replace />} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'admin']}><NurseDashboard /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderAppointments /></RequireAuth>} />

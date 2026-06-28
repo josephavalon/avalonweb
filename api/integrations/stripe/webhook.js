@@ -9,6 +9,12 @@ import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
 import { readCheckoutStoreRecord } from '../../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
+import {
+  sendBookingConfirmedEmail,
+  sendPaymentReceiptEmail,
+  sendPlanRenewedEmail,
+  sendPaymentFailedEmail,
+} from '../../_lib/billing-emails.js';
 import { sendWelcomeEmail } from '../../_welcome-email.js';
 import { signWelcomeToken, isMagicLinkWelcomeEnabled } from '../../_lib/welcome-token.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
@@ -190,6 +196,121 @@ async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId
   } catch (err) {
     console.warn('[stripe/webhook] welcome-email send failed', safeLogContext(err, 'welcome_email_send_failed'));
     return { sent: false, reason: 'send_failed' };
+  }
+}
+
+// Idempotent customer-email send, deduped via audit_events on a stable key
+// (e.g. the Stripe session/invoice id) so webhook retries never double-send.
+// Mirrors the welcome-email dedupe contract: check for a prior audit row with
+// the same action+entity, send, then record. Never throws — billing emails are
+// best-effort and the webhook MUST keep returning 200. The action string is the
+// dedupe namespace; entityId is the stable per-event key.
+async function sendCustomerEmailOnce(db, {
+  action,
+  entityId,
+  tenantId = null,
+  send,
+  auditPayload = {},
+}) {
+  if (typeof send !== 'function') return { sent: false, reason: 'no_sender' };
+  const dedupeKey = String(entityId || '').trim();
+
+  if (db && dedupeKey) {
+    try {
+      const { data: prior } = await db
+        .from('audit_events')
+        .select('id')
+        .eq('action', action)
+        .eq('entity_type', 'stripe_billing_email')
+        .eq('entity_id', dedupeKey)
+        .limit(1);
+      if (Array.isArray(prior) && prior.length > 0) {
+        return { sent: false, reason: 'already_sent' };
+      }
+    } catch (err) {
+      // Fail open (at-most-twice beats never) — same posture as welcome email.
+      console.warn('[stripe/webhook] billing-email dedupe check failed', safeLogContext(err, `${action}_dedupe_failed`));
+    }
+  }
+
+  try {
+    const result = await send();
+    if (db && dedupeKey) {
+      await writeAuditEvent(db, {
+        tenantId,
+        action,
+        entityType: 'stripe_billing_email',
+        entityId: dedupeKey,
+        phiTouched: false,
+        payload: { provider: 'resend', message_id: result?.id || null, ...auditPayload },
+      });
+    }
+    return { sent: true, messageId: result?.id || null };
+  } catch (err) {
+    // skipped (no Resend key / no recipient) is expected in some envs; log soft.
+    if (err?.code === 'email_delivery_skipped') {
+      console.log('[stripe/webhook] billing-email skipped', { action, reason: err.reason || 'skipped' });
+      return { sent: false, reason: err.reason || 'skipped' };
+    }
+    console.warn('[stripe/webhook] billing-email send failed', safeLogContext(err, `${action}_send_failed`));
+    return { sent: false, reason: 'send_failed' };
+  }
+}
+
+// #10 Customer booking-confirmation + receipt sends. PHI-FREE: first name,
+// date/time, generic service label, amounts only — never items/protocol/medical
+// detail. Deduped per checkout session via sendCustomerEmailOnce (audit_events),
+// so webhook retries / the parallel return-page path can't double-send.
+async function sendCheckoutConfirmationEmails(db, { checkout, session, tenantId, acuityCreated }) {
+  const contact = checkout?.contact || {};
+  const to = String(contact.email || '').trim();
+  if (!to || !session?.id) return;
+  const name = firstNameFromContact(contact);
+  const amounts = checkout?.amounts || {};
+  const depositCents = Number(amounts.depositAmountCents || 0) || Number(session.amount_total || 0);
+  const balanceDueCents = Number(amounts.balanceDueCents || 0);
+  // Generic, PHI-free service label. Plan name OR a generic "Avalon visit" — the
+  // specific protocol/IV is intentionally omitted from anything Resend touches.
+  const serviceLabel = checkout?.membership?.name
+    ? `${checkout.membership.name} plan`
+    : 'Avalon visit';
+  const dateTimeIso = checkout?.appointment?.acuityDatetime || '';
+
+  // Booking confirmed — only once the visit is actually scheduled in Acuity.
+  if (acuityCreated) {
+    await sendCustomerEmailOnce(db, {
+      action: 'booking_confirmed_email_sent',
+      entityId: session.id,
+      tenantId,
+      auditPayload: { stripeSessionId: session.id, channel: 'booking_confirmed' },
+      send: () => sendBookingConfirmedEmail({
+        to,
+        name,
+        dateTimeIso,
+        serviceLabel,
+        amountCents: depositCents,
+        balanceDueCents,
+      }),
+    });
+  }
+
+  // Payment receipt — gated by the same flag as the post-checkout welcome email
+  // so envs can disable customer-facing checkout mail wholesale. Deduped on the
+  // session id so retries don't re-receipt.
+  if (welcomeEmailOnCheckoutEnabled() && depositCents > 0) {
+    await sendCustomerEmailOnce(db, {
+      action: 'payment_receipt_email_sent',
+      entityId: session.id,
+      tenantId,
+      auditPayload: { stripeSessionId: session.id, channel: 'payment_receipt' },
+      send: () => sendPaymentReceiptEmail({
+        to,
+        name,
+        amountCents: depositCents,
+        dateIso: new Date().toISOString(),
+        label: serviceLabel,
+      }),
+    });
   }
 }
 
@@ -827,6 +948,44 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   // period after the first visit. Idempotent, so safe on webhook retries.
   let planSubscriptionId = null;
   let planSubscriptionDeferredReason = null;
+
+  // #8 PAYMENT-METHOD-MISSING FALLBACK. The deferred plan subscription needs a
+  // saved card. Normally paymentMethodId comes off the deposit PaymentIntent
+  // (read above). If that came back null but this is a real plan signup with a
+  // paid deposit, take a loud last chance: re-retrieve the PaymentIntent
+  // (session.payment_intent), expanding latest_charge, and recover the card from
+  // pi.payment_method or the charge's payment_method. A non-comped paid deposit
+  // ALWAYS leaves a card on the customer, so a null here is an anomaly worth a
+  // recovery attempt + a loud log before we open a reconciliation case.
+  if (md.planSignup === 'true' && !fullComp && !paymentMethodId && paymentIntentId) {
+    try {
+      const recoveredPi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ['latest_charge'],
+      });
+      const fromPi = recoveredPi?.payment_method || null;
+      const charge = typeof recoveredPi?.latest_charge === 'object' ? recoveredPi.latest_charge : null;
+      const fromCharge = charge?.payment_method || null;
+      const recovered = stripeObjectId(fromPi) || stripeObjectId(fromCharge);
+      if (recovered) {
+        paymentMethodId = recovered;
+        console.warn('[stripe/webhook] plan payment_method recovered via PaymentIntent fallback', {
+          event: 'plan_payment_method_recovered',
+          source: fromPi ? 'payment_intent.payment_method' : 'latest_charge.payment_method',
+          stripeSessionId: session.id,
+          paymentIntentId,
+        });
+      } else {
+        console.error('[stripe/webhook] plan payment_method missing AND unrecoverable from PaymentIntent', {
+          event: 'plan_payment_method_unrecoverable',
+          stripeSessionId: session.id,
+          paymentIntentId,
+        });
+      }
+    } catch (err) {
+      console.error('[stripe/webhook] plan payment_method PaymentIntent fallback failed', safeLogContext(err, 'plan_payment_method_fallback_failed'));
+    }
+  }
+
   if (md.planSignup === 'true' && fullComp) {
     planSubscriptionDeferredReason = 'full_discount_no_payment_method';
   } else if (md.planSignup === 'true' && !paymentMethodId) {
@@ -1005,6 +1164,13 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       tenantId: fulfillmentTenantId,
       sessionId: session.id,
     });
+    // Customer booking-confirmation + receipt (PHI-free, deduped per session).
+    await sendCheckoutConfirmationEmails(db, {
+      checkout,
+      session,
+      tenantId: fulfillmentTenantId,
+      acuityCreated: Boolean(acuityAppointment?.id) && !fulfillmentError && !schedulingDeferred,
+    });
     return {
       action: fulfillmentError ? 'deposit_paid_acuity_failed' : 'deposit_paid_acuity_created',
       matched: true,
@@ -1066,6 +1232,12 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
       sessionId: session.id,
     });
+    await sendCheckoutConfirmationEmails(db, {
+      checkout,
+      session,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      acuityCreated: Boolean(acuityAppointment?.id) && !fulfillmentError && !schedulingDeferred,
+    });
   }
   return { action: 'deposit_paid', matched: false };
 }
@@ -1123,6 +1295,7 @@ async function handleInvoicePaid(stripe, db, invoice) {
   if (!record) return { action: 'membership_credit_record_missing' };
   const checkout = checkoutPayloadFromRecord(record);
   const tenantId = record.tenant_id || await getDefaultTenantId(db);
+  const visitCredits = Math.max(1, Number(subscription?.metadata?.visits_per_cycle || 1));
   await grantMembershipCredit(db, {
     tenantId,
     email: checkout?.contact?.email || '',
@@ -1132,14 +1305,109 @@ async function handleInvoicePaid(stripe, db, invoice) {
     stripeInvoiceId: invoice.id,
     source: 'membership_renewal_grant',
     description: 'Membership renewal IV credit',
-    units: Math.max(1, Number(subscription?.metadata?.visits_per_cycle || 1)),
+    units: visitCredits,
     creditValueCents: VISIT_CREDIT_CENTS,
     externalPayload: {
       membershipName: checkout?.membership?.name || md.planName || '',
       invoiceBillingReason: invoice.billing_reason || '',
     },
   });
+
+  // #10 Subscription-renewal email — PHI-free (first name, plan name, credit
+  // count, amount). Deduped per invoice id so a redelivered invoice.paid can't
+  // re-send. Best-effort; never blocks the 200 ack.
+  await sendCustomerEmailOnce(db, {
+    action: 'plan_renewed_email_sent',
+    entityId: invoice.id,
+    tenantId,
+    auditPayload: { stripeInvoiceId: invoice.id, stripeSubscriptionId: subscriptionId },
+    send: () => sendPlanRenewedEmail({
+      to: checkout?.contact?.email || '',
+      name: firstNameFromContact(checkout?.contact || {}),
+      planName: checkout?.membership?.name || subscription?.metadata?.planName || md.planName || 'Avalon',
+      visitCredits,
+      amountCents: Number(invoice.amount_paid || 0),
+    }),
+  });
   return { action: 'membership_renewal_credit_granted', matched: true, persisted: true };
+}
+
+// #7 FAILED-PAYMENT RECOVERY. On invoice.payment_failed for a recurring plan,
+// open a reconciliation case (so ops can recover the payment) and send the
+// customer a PHI-free "update your card" email deep-linking to /members/billing.
+// Idempotent: the reconciliation case dedupes on (case_type, provider, invoice
+// id) and the email dedupes per invoice id via sendCustomerEmailOnce.
+async function handleInvoicePaymentFailed(stripe, db, invoice) {
+  if (!db) return { action: 'payment_failed_skipped_db_not_configured' };
+  const subscriptionId = stripeObjectId(invoice.subscription);
+  if (!subscriptionId || !invoice.id) return { action: 'ignored_invoice_without_subscription' };
+
+  let subscription = typeof invoice.subscription === 'object' ? invoice.subscription : null;
+  if (!subscription) {
+    try {
+      subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    } catch (err) {
+      console.warn('[stripe/webhook] subscription retrieve failed for payment_failed', safeLogContext(err, 'stripe_subscription_retrieve_failed'));
+    }
+  }
+
+  const md = subscription?.metadata || {};
+  // Only act on Avalon recurring plans; ignore unrelated subscriptions.
+  if (md.kind !== 'plan_recurring') return { action: 'ignored_non_membership_payment_failed' };
+
+  const appointmentRecordId = md.appointmentRecordId || null;
+  const record = appointmentRecordId
+    ? await findAppointmentRecord(db, { appointmentRecordId })
+    : null;
+  const checkout = record ? checkoutPayloadFromRecord(record) : null;
+  const tenantId = record?.tenant_id || await getDefaultTenantId(db);
+  const planName = checkout?.membership?.name || md.planName || 'Avalon';
+  const amountCents = Number(invoice.amount_due || invoice.amount_remaining || 0);
+
+  // Reconciliation case — recover the payment by hand if auto-retry fails.
+  // acuity_succeeded_stripe_failed is the closest existing case type (critical,
+  // ops_manager, "recover payment, cancel, or manually reconcile"). See report
+  // note: a dedicated 'subscription_payment_failed' type would be cleaner but
+  // lives in _reconciliation.js, which is outside this change's file lane.
+  await insertOperationalFailureCase(db, {
+    caseType: 'acuity_succeeded_stripe_failed',
+    provider: 'stripe',
+    externalReference: invoice.id,
+    tenantId,
+    payload: {
+      appointmentRecordId: record?.id || null,
+      stripeInvoiceId: invoice.id,
+      stripeSubscriptionId: subscriptionId,
+      stripeCustomerId: stripeObjectId(invoice.customer),
+      reason: 'subscription_payment_failed',
+      attemptCount: invoice.attempt_count || null,
+      nextPaymentAttempt: unixToIso(invoice.next_payment_attempt),
+      amountDueCents: amountCents,
+      planName,
+      local_contract: 'plan_recurring_payment_recovery_v1',
+    },
+  });
+
+  // Customer "update your card" email — PHI-free, deduped per invoice id.
+  const recipient = String(checkout?.contact?.email || invoice.customer_email || '').trim();
+  if (recipient) {
+    await sendCustomerEmailOnce(db, {
+      action: 'payment_failed_email_sent',
+      entityId: invoice.id,
+      tenantId,
+      auditPayload: { stripeInvoiceId: invoice.id, stripeSubscriptionId: subscriptionId },
+      send: () => sendPaymentFailedEmail({
+        to: recipient,
+        name: firstNameFromContact(checkout?.contact || {}),
+        planName,
+        amountCents,
+      }),
+    });
+  } else {
+    console.warn('[stripe/webhook] payment_failed: no recipient email', { stripeInvoiceId: invoice.id });
+  }
+
+  return { action: 'subscription_payment_failed_recovered', matched: Boolean(record), persisted: true };
 }
 
 export default async function handler(req, res) {
@@ -1263,6 +1531,12 @@ export default async function handler(req, res) {
         result = await withTimeout(
           handleInvoicePaid(stripe, db, event.data.object),
           'stripe membership invoice credit'
+        );
+        break;
+      case 'invoice.payment_failed':
+        result = await withTimeout(
+          handleInvoicePaymentFailed(stripe, db, event.data.object),
+          'stripe invoice payment failed recovery'
         );
         break;
       case 'checkout.session.expired':

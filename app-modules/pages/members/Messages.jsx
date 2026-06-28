@@ -6,11 +6,14 @@ import {
   ArrowRight,
   LogOut,
   MessageCircle,
+  Plus,
   Send,
+  X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { supabase, hasSupabase } from '@/lib/supabase';
+import { apiPost } from '@/lib/apiClient';
 import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
 
@@ -144,6 +147,83 @@ function DemoMessages() {
   );
 }
 
+// --- New-conversation composer (member → care team) -----------------------
+
+function NewConversationComposer({
+  subject,
+  body,
+  starting,
+  error,
+  onSubject,
+  onBody,
+  onSubmit,
+  onCancel,
+}) {
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="mb-4 rounded-[24px] p-4 md:p-5"
+      style={{ background: CARD, border: `1px solid ${BORDER}` }}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>
+            New message
+          </p>
+          <h2 className="mt-0.5 font-heading text-xl uppercase leading-none">Message your care team</h2>
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex h-9 w-9 items-center justify-center rounded-full"
+          style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: MUTED }}
+          aria-label="Cancel new conversation"
+        >
+          <X className="h-4 w-4" strokeWidth={1.8} />
+        </button>
+      </div>
+
+      <label className="sr-only" htmlFor="new-subject">Subject (optional)</label>
+      <input
+        id="new-subject"
+        type="text"
+        value={subject}
+        onChange={(e) => onSubject(e.target.value)}
+        placeholder="Subject (optional)"
+        maxLength={200}
+        className="mb-2 block w-full rounded-xl px-3 py-2.5 font-body text-[13px] outline-none"
+        style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: TEXT }}
+      />
+
+      <label className="sr-only" htmlFor="new-body">Message</label>
+      <textarea
+        id="new-body"
+        value={body}
+        onChange={(e) => onBody(e.target.value)}
+        placeholder="What can your care team help with?"
+        rows={4}
+        maxLength={4000}
+        className="block w-full resize-none rounded-xl px-3 py-2.5 font-body text-[13px] leading-snug outline-none"
+        style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: TEXT }}
+      />
+
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <p className="font-body text-[10px]" style={{ color: error ? BAD : DIM }}>
+          {error || 'Your RN reviews every message — not for emergencies.'}
+        </p>
+        <button
+          type="submit"
+          disabled={starting || !body.trim()}
+          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.18em] disabled:opacity-50"
+          style={{ background: TEXT, color: INVERT }}
+        >
+          {starting ? 'Sending…' : 'Send'} <Send className="h-3.5 w-3.5" strokeWidth={2} />
+        </button>
+      </div>
+    </form>
+  );
+}
+
 // --- Live Messages --------------------------------------------------------
 
 function LiveMessages() {
@@ -160,6 +240,13 @@ function LiveMessages() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const scrollerRef = useRef(null);
+
+  // New-conversation composer (member → care team).
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [newSubject, setNewSubject] = useState('');
+  const [newBody, setNewBody] = useState('');
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState('');
 
   const userId = user?.id || null;
 
@@ -369,6 +456,37 @@ function LiveMessages() {
     }
   };
 
+  // -- Start a new conversation with the care team -------------------------
+  const handleStartConversation = async (e) => {
+    e?.preventDefault?.();
+    const body = newBody.trim();
+    if (!body || starting) return;
+    setStarting(true);
+    setStartError('');
+    try {
+      const res = await apiPost('/api/me/conversations/create', {
+        body,
+        subject: newSubject.trim() || undefined,
+      });
+      const newId = res?.conversation?.id;
+      // Reset + close the composer, refresh the inbox, then open the new thread.
+      setComposerOpen(false);
+      setNewSubject('');
+      setNewBody('');
+      await loadThreads();
+      if (newId) setSearchParams({ thread: newId });
+    } catch (err) {
+      setStartError(err?.message || 'Could not start the conversation. Try again.');
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const openComposer = () => {
+    setStartError('');
+    setComposerOpen(true);
+  };
+
   // -- Computed bits -------------------------------------------------------
   const activeThread = useMemo(
     () => threadsState.threads.find((t) => t.id === activeThreadId) || null,
@@ -506,10 +624,38 @@ function LiveMessages() {
           </p>
           <h1 className="mt-1 font-heading text-4xl uppercase leading-none md:text-5xl">Messages</h1>
         </div>
-        <p className="font-body text-[10px]" style={{ color: MUTED }}>
-          {loading ? '—' : `${threads.filter((t) => t.unread).length} unread`}
-        </p>
+        <div className="flex shrink-0 items-center gap-3">
+          <p className="font-body text-[10px]" style={{ color: MUTED }}>
+            {loading ? '—' : `${threads.filter((t) => t.unread).length} unread`}
+          </p>
+          {!composerOpen ? (
+            <button
+              type="button"
+              onClick={openComposer}
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3.5 font-body text-[10px] font-bold uppercase tracking-[0.18em]"
+              style={{ background: TEXT, color: INVERT }}
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.2} /> New
+            </button>
+          ) : null}
+        </div>
       </div>
+
+      {composerOpen ? (
+        <NewConversationComposer
+          subject={newSubject}
+          body={newBody}
+          starting={starting}
+          error={startError}
+          onSubject={setNewSubject}
+          onBody={setNewBody}
+          onSubmit={handleStartConversation}
+          onCancel={() => {
+            setComposerOpen(false);
+            setStartError('');
+          }}
+        />
+      ) : null}
 
       {loading ? (
         <div
@@ -533,21 +679,15 @@ function LiveMessages() {
           <MessageCircle className="mx-auto h-7 w-7" strokeWidth={1.6} style={{ color: DIM }} />
           <h2 className="mt-4 font-heading text-2xl uppercase leading-none">Message your care team</h2>
           <p className="mx-auto mt-3 max-w-sm font-body text-[12px] leading-snug" style={{ color: MUTED }}>
-            Your inbox is empty. Your Avalon RN will start a thread before your next visit.
+            Your inbox is empty. Start a thread with your Avalon care team — your RN reviews every message.
           </p>
           <button
             type="button"
-            disabled
-            className="mt-5 inline-flex min-h-[44px] cursor-not-allowed items-center justify-center gap-2 rounded-xl px-5 font-body text-[10px] font-bold uppercase tracking-[0.18em] opacity-50"
-            style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+            onClick={openComposer}
+            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 font-body text-[10px] font-bold uppercase tracking-[0.18em]"
+            style={{ background: TEXT, color: INVERT }}
           >
-            New conversation
-            <span
-              className="ml-1 rounded-full px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-[0.14em]"
-              style={{ background: 'hsl(var(--foreground) / 0.12)', color: TEXT }}
-            >
-              Coming soon
-            </span>
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.2} /> New conversation
           </button>
         </div>
       ) : (

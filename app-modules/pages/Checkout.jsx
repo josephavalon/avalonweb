@@ -6,7 +6,7 @@ import {
   Droplets, Syringe, ArrowRight, ArrowLeft,
   Check, X, CreditCard,
   Sparkles, Loader2, RefreshCw, Calendar,
-  ShieldCheck,
+  ShieldCheck, UserPlus,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
@@ -168,6 +168,8 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
 
 /* ─── Step 0: Review ─────────────────────────────────────────── */
 function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext }) {
+  const { user: reviewUser } = useAuthStore();
+  const isSignedIn = Boolean(reviewUser);
   const itemsTotal = cartItemsTotal(items);
   const hasItems = items.length > 0 || membership;
   const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
@@ -200,6 +202,27 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
   return (
     <div className="space-y-4">
       <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Review</h1>
+
+      {/* Logged-out nudge — autofill via sign-in, or we create an account on
+          purchase (the opt-in on the pay step sends signupIntent by default). */}
+      {!isSignedIn && (
+        <div className="flex items-start gap-3 rounded-2xl border border-foreground/12 bg-foreground/[0.05] px-4 py-3.5">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.08]">
+            <UserPlus className="h-4 w-4 text-foreground" strokeWidth={1.8} />
+          </span>
+          <div className="min-w-0">
+            <p className="font-body text-sm font-semibold text-foreground/85">
+              Have an account?{' '}
+              <Link to="/login?next=/checkout" className="text-foreground underline underline-offset-4 hover:no-underline">
+                Sign in to autofill
+              </Link>
+            </p>
+            <p className="mt-0.5 font-body text-[13px] leading-snug text-foreground/55">
+              We'll create your account so you can manage bookings &amp; plans.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* One-time items */}
       {items.length > 0 && (
@@ -781,7 +804,10 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   const { user: authedUser } = useAuthStore();
   const isSignedIn = Boolean(authedUser);
   const planAccountRequired = Boolean(membership) && !isSignedIn;
-  const [createAccountOptIn, setCreateAccountOptIn] = useState(false);
+  // Default ON for logged-out one-time buyers so the top-of-form nudge's promise
+  // ("we'll create your account") holds — signupIntent is sent using the email
+  // they entered. They can still opt out via the checkbox below.
+  const [createAccountOptIn, setCreateAccountOptIn] = useState(!membership && !isSignedIn);
   // For the plan-gate we ALWAYS need an account on submit, so signupIntent is
   // implicit when membership is set and the user is not signed in.
   const signupIntent = (planAccountRequired || (!membership && createAccountOptIn))

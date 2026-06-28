@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowRight, MailCheck, UserPlus } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check, MailCheck, RefreshCw, UserPlus } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
@@ -99,7 +99,7 @@ export default function Signup() {
   });
 
   const navigate = useNavigate();
-  const { user, signUpWithEmail, signInWithOAuth, authBackend, loading, error } = useAuthStore();
+  const { user, signUpWithEmail, signInWithOAuth, resendConfirmationEmail, authBackend, loading, error } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -107,6 +107,10 @@ export default function Signup() {
   const [fieldError, setFieldError] = useState('');
   const [sentTo, setSentTo] = useState('');
   const [oauthBusy, setOauthBusy] = useState('');
+  // Resend-confirmation state for the "check your email" screen.
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
+  const [resendError, setResendError] = useState('');
 
   useEffect(() => { try { applyTheme(); } catch { /* noop */ } }, []);
 
@@ -146,6 +150,16 @@ export default function Signup() {
     }
   };
 
+  const handleResend = async () => {
+    setResendError('');
+    setResendDone(false);
+    setResendBusy(true);
+    const result = await resendConfirmationEmail(sentTo);
+    setResendBusy(false);
+    if (result.ok) setResendDone(true);
+    else setResendError(result.error || 'Could not resend the confirmation email.');
+  };
+
   const displayError = fieldError || error;
 
   return (
@@ -175,10 +189,46 @@ export default function Signup() {
             <div className="space-y-5">
               <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
                 <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
-                <p className="font-body text-sm font-medium leading-relaxed">
-                  Account requested — we sent a confirmation link to <span className="font-bold">{sentTo}</span>. Open it on this device to finish.
-                </p>
+                <div className="space-y-1.5">
+                  <p className="font-body text-sm font-bold uppercase tracking-[0.14em] text-emerald-50">
+                    Check your email to confirm your account
+                  </p>
+                  <p className="font-body text-sm font-medium leading-relaxed">
+                    We sent a confirmation link to <span className="font-bold">{sentTo}</span>. Open it to verify your address and finish setting up your account.
+                  </p>
+                </div>
               </div>
+
+              <p className="font-body text-[11px] font-medium leading-relaxed text-foreground/45">
+                Didn’t get it? Check your spam folder. The link can expire — if it’s been a while, send a fresh one below.
+              </p>
+
+              {resendError ? <ErrorBanner message={resendError} /> : null}
+
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendBusy}
+                className="flex min-h-[50px] w-full items-center justify-center gap-2.5 rounded-full border border-foreground/[0.16] bg-foreground/[0.04] font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground transition-colors hover:bg-foreground/[0.08] disabled:cursor-wait disabled:opacity-60"
+              >
+                {resendBusy ? (
+                  <>
+                    <span className="h-4 w-4 rounded-full border-2 border-foreground/25 border-t-foreground animate-spin" />
+                    Sending
+                  </>
+                ) : resendDone ? (
+                  <>
+                    <Check className="h-4 w-4 text-emerald-300" strokeWidth={2.4} />
+                    Sent ✓
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" strokeWidth={2} />
+                    Resend confirmation email
+                  </>
+                )}
+              </button>
+
               <Link
                 to="/login"
                 className="inline-flex min-h-[44px] items-center justify-center font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"

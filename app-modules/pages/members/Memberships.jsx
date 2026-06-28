@@ -50,48 +50,11 @@ function formatShortDate(value) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
 }
 
-// stub: tier catalog — replace with Stripe-driven product list when ready
-const TIERS = [
-  {
-    id: 'essentials',
-    name: 'Essentials',
-    price: 95,
-    perks: ['1 credit / month', '10% off add-ons', 'Standard scheduling', 'Credits roll over 1 cycle'],
-  },
-  {
-    id: 'vitality',
-    name: 'Vitality',
-    price: 200,
-    perks: ['4 credits / month', '15% off add-ons', 'Priority scheduling', 'Free shipping over $40', 'Annual consult included'],
-  },
-  {
-    id: 'concierge',
-    name: 'Concierge',
-    price: 425,
-    perks: ['10 credits / month', '25% off add-ons + store', 'Same-day priority', 'Dedicated RN', 'Quarterly labs included', 'Unlimited B12 / push add-ons'],
-  },
-];
-
-// stub: payment methods — replace with Stripe customer.sources / payment_methods
-const PAYMENT_METHODS = [
-  { id: 'pm_1', brand: 'VISA', last4: '4242', exp: '09 / 2027', label: 'Joseph Marsalis', isDefault: true },
-  { id: 'pm_2', brand: 'MC', last4: '8821', exp: '04 / 2028', label: 'backup', isDefault: false },
-  { id: 'pm_3', brand: 'HSA', last4: '0317', exp: '11 / 2026', label: 'used for eligible visits only', isDefault: false },
-];
-
-// stub: ledger entries that combine plan charges + balance posts + credit grants/redemptions
-const BILLING_HISTORY_STUB = [
-  { id: 'h1', date: 'JUN 8', label: 'Renewal grant', who: 'Vitality Monthly · 4 credits', delta: '+4', kind: 'credit-plus', balance: 'Bal 4' },
-  { id: 'h2', date: 'MAY 12', label: "IV Hydration — Myers' Cocktail", who: 'Jules Ortega, RN · 1 credit redeemed', delta: '−1', kind: 'credit-minus', balance: 'Bal 3' },
-  { id: 'h3', date: 'MAY 12', label: 'Visit balance posted', who: '$170 visit · $50 deposit applied · $120 owed', delta: '$120', kind: 'balance-due', balance: 'Open' },
-  { id: 'h4', date: 'MAY 8', label: 'Plan charge', who: 'Vitality Monthly · Visa 4242', delta: '$200', kind: 'plan-charge', balance: 'Paid' },
-  { id: 'h5', date: 'APR 28', label: 'Wellness Consult', who: 'Dr. Mara Cho, NP · 1 credit redeemed', delta: '−1', kind: 'credit-minus', balance: 'Bal 2' },
-  { id: 'h6', date: 'APR 8', label: 'Renewal grant', who: 'Vitality Monthly · 4 credits', delta: '+4', kind: 'credit-plus', balance: 'Bal 4' },
-];
-
-// Mix the live ledger from /api/me/credits with the stubbed plan/balance entries.
+// Real credit/billing history, built entirely from the live /api/me/credits
+// ledger (grants + redemptions). No stub rows — an empty ledger renders the
+// empty state below.
 function buildHistory(liveLedger) {
-  const live = (liveLedger || []).map((row) => {
+  return (liveLedger || []).map((row) => {
     const units = Number(row.units || 0);
     return {
       id: row.id,
@@ -103,9 +66,6 @@ function buildHistory(liveLedger) {
       balance: '',
     };
   });
-  // If we have a real ledger, merge it on top of stub plan/balance posts for richness.
-  if (live.length) return [...live, ...BILLING_HISTORY_STUB.filter((r) => r.kind === 'plan-charge' || r.kind === 'balance-due')];
-  return BILLING_HISTORY_STUB;
 }
 
 // --- Pieces ---------------------------------------------------------------
@@ -131,40 +91,6 @@ function CreditsRing({ used = 2, total = 4 }) {
   );
 }
 
-function TierCard({ tier, currentId, busy, onSwitch }) {
-  const isCurrent = tier.id === currentId;
-  return (
-    <article className="flex flex-col rounded-[24px] p-5" style={{ background: isCurrent ? CARD_STRONG : CARD, border: `1px solid ${isCurrent ? TEXT : BORDER}` }}>
-      <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>{isCurrent ? 'Your plan' : 'Plan'}</p>
-      <h3 className="mt-1 font-heading text-3xl uppercase leading-none">{tier.name}</h3>
-      <p className="mt-2 font-body text-sm" style={{ color: MUTED }}>
-        <span className="font-heading text-2xl uppercase" style={{ color: TEXT }}>${tier.price}</span> / month
-      </p>
-      <ul className="mt-4 grid gap-2">
-        {tier.perks.map((p) => (
-          <li key={p} className="flex items-start gap-2 font-body text-[12px]" style={{ color: TEXT }}>
-            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2.2} style={{ color: MUTED }} />
-            <span>{p}</span>
-          </li>
-        ))}
-      </ul>
-      <button
-        type="button"
-        disabled={isCurrent || busy}
-        onClick={() => onSwitch?.(tier.id)}
-        className="mt-5 flex min-h-[44px] items-center justify-center rounded-xl px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-50"
-        style={{
-          background: isCurrent ? CARD_STRONG : TEXT,
-          color: isCurrent ? MUTED : INVERT,
-          border: `1px solid ${isCurrent ? BORDER : TEXT}`,
-        }}
-      >
-        {isCurrent ? 'Your current plan' : busy ? 'Working.' : `Switch to ${tier.name}`}
-      </button>
-    </article>
-  );
-}
-
 function PerkRow({ children }) {
   return (
     <li className="flex items-start gap-2.5 font-body text-[13px]" style={{ color: TEXT }}>
@@ -186,10 +112,12 @@ export default function Memberships() {
   const { signOut } = useAuthStore();
   const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, error: '', balance: 0, ledger: [] });
+  // Real subscription record from Stripe (replaces the hardcoded plan stubs).
+  // { loading, plan } where plan is the /api/me/subscription/status payload or
+  // { hasPlan:false }.
+  const [planState, setPlanState] = useState({ loading: true, plan: null });
   const [portalBusy, setPortalBusy] = useState(false);
   const [toast, setToast] = useState(null); // { tone: 'ok' | 'err' | 'busy', text }
-  const [preview, setPreview] = useState(null); // { targetPlan, proration, status }
-  const [changeBusy, setChangeBusy] = useState(null); // target plan id while previewing/committing
   const [pauseBusy, setPauseBusy] = useState(false);
   const [cancelBusy, setCancelBusy] = useState(false);
 
@@ -220,42 +148,6 @@ export default function Memberships() {
       } else {
         showToast('err', err?.body?.error || err?.message || 'Could not open the billing portal.');
       }
-    }
-  };
-
-  const previewSwitch = async (targetPlan) => {
-    setChangeBusy(targetPlan);
-    setPreview({ targetPlan, status: 'loading', proration: null });
-    try {
-      const data = await apiPost('/api/me/subscription/change', { targetPlan, action: 'preview' });
-      setPreview({ targetPlan, status: 'ready', proration: data?.proration || null });
-    } catch (err) {
-      const code = err?.body?.code || '';
-      if (code === 'no_subscription' || code === 'no_customer') {
-        setPreview(null);
-        showToast('err', 'You need an active plan first — start one from Book.');
-      } else {
-        setPreview({ targetPlan, status: 'error', proration: null });
-        showToast('err', err?.body?.error || err?.message || 'Could not preview the change.');
-      }
-    } finally {
-      setChangeBusy(null);
-    }
-  };
-
-  const commitSwitch = async () => {
-    if (!preview?.targetPlan) return;
-    setChangeBusy(preview.targetPlan);
-    try {
-      await apiPost('/api/me/subscription/change', { targetPlan: preview.targetPlan, action: 'commit' });
-      showToast('ok', 'Plan updated.');
-      setPreview(null);
-      // Hard reload so derived "current plan" copy reflects the new tier.
-      setTimeout(() => window.location.reload(), 700);
-    } catch (err) {
-      showToast('err', err?.body?.error || err?.message || 'Could not change the plan.');
-    } finally {
-      setChangeBusy(null);
     }
   };
 
@@ -312,9 +204,44 @@ export default function Memberships() {
     return () => { active = false; };
   }, []);
 
-  // stub: derived plan facts — replace with real subscription record
-  const currentTierId = 'vitality';
-  const currentTier = TIERS.find((t) => t.id === currentTierId);
+  // Real current plan from Stripe. A clean { hasPlan:false } (or any error)
+  // simply leaves the plan unset; the UI falls back to an empty state.
+  useEffect(() => {
+    let active = true;
+    apiGet('/api/me/subscription/status')
+      .then((data) => {
+        if (!active) return;
+        setPlanState({ loading: false, plan: data || { hasPlan: false } });
+      })
+      .catch(() => {
+        if (!active) return;
+        setPlanState({ loading: false, plan: { hasPlan: false } });
+      });
+    return () => { active = false; };
+  }, []);
+
+  // Real derived plan facts from /api/me/subscription/status.
+  const plan = planState.plan;
+  const hasPlan = Boolean(plan?.hasPlan);
+  const planLoading = planState.loading;
+  const billingLabel = (b) => ({
+    monthly: 'Monthly', 'three-month': 'Every 3 months', 'six-month': 'Every 6 months', annual: 'Annual',
+  }[b] || 'Monthly');
+  const billingShort = (b) => ({
+    monthly: 'monthly', 'three-month': 'every 3 mo', 'six-month': 'every 6 mo', annual: 'annual',
+  }[b] || 'monthly');
+  const planName = hasPlan ? (plan.name || 'Your plan') : '—';
+  const planPriceDollars = hasPlan ? Number(plan.priceDollars || 0) : 0;
+  const planVisitsPerCycle = hasPlan ? Math.max(1, Number(plan.visitsPerCycle || 1)) : 0;
+  const nextChargeDate = hasPlan && plan.nextChargeIso ? formatDate(plan.nextChargeIso) : '';
+  const nextChargeAmount = hasPlan ? Number(plan.nextChargeAmountDollars ?? plan.priceDollars ?? 0) : 0;
+  const card = hasPlan ? plan.defaultPaymentMethod : null;
+  const cardBrandLabel = card?.brand
+    ? card.brand.charAt(0).toUpperCase() + card.brand.slice(1)
+    : '';
+  const cardLine = card?.last4 ? `${cardBrandLabel} ending ${card.last4}` : 'No card on file';
+  const cancelAtPeriodEnd = Boolean(hasPlan && plan.cancelAtPeriodEnd);
+  const fmtMoney = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   // Credits remaining is the real ledger balance from /api/me/credits (1 credit
   // = one $250 visit). The ring's "total" is the larger of the plan grant (4)
   // and the live balance, so rolled-over/banked credits never clip the display.
@@ -364,24 +291,47 @@ export default function Memberships() {
         <div className="rounded-[28px] p-6 md:p-8" style={{ background: 'linear-gradient(160deg, hsl(var(--foreground) / 0.075) 0%, hsl(var(--foreground) / 0.045) 60%)', border: `1px solid ${BORDER}` }}>
           <div className="flex items-center justify-between gap-3">
             <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Current Plan</p>
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: 'hsl(140 30% 60% / 0.14)', color: GOOD, border: `1px solid hsl(140 30% 60% / 0.30)` }}>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: GOOD }} /> Active · billed monthly
-            </span>
+            {hasPlan ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: 'hsl(140 30% 60% / 0.14)', color: GOOD, border: `1px solid hsl(140 30% 60% / 0.30)` }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: GOOD }} /> {cancelAtPeriodEnd ? 'Ending soon' : `${plan.status === 'trialing' ? 'Trial' : 'Active'} · billed ${billingShort(plan.billing)}`}
+              </span>
+            ) : null}
           </div>
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <h2 className="font-heading text-[3rem] uppercase leading-[0.86] md:text-[4.25rem]">{currentTier.name} Monthly</h2>
-            <p className="font-body text-sm" style={{ color: MUTED }}>
-              <span className="font-heading text-3xl uppercase" style={{ color: TEXT }}>${currentTier.price}</span> / month
-            </p>
-          </div>
-          <ul className="mt-6 grid gap-2.5 md:grid-cols-2">
-            <PerkRow><b className="font-semibold">4 visit credits</b> each month (in-home IV, B12, or wellness consult)</PerkRow>
-            <PerkRow><b className="font-semibold">15% off</b> all add-ons and store purchases</PerkRow>
-            <PerkRow><b className="font-semibold">Priority</b> same-week scheduling</PerkRow>
-            <PerkRow><b className="font-semibold">Free shipping</b> on supplement orders over $40</PerkRow>
-            <PerkRow><b className="font-semibold">Unused credits</b> roll over up to 2 cycles</PerkRow>
-            <PerkRow><b className="font-semibold">Annual</b> wellness consult included</PerkRow>
-          </ul>
+          {planLoading ? (
+            <p className="mt-6 font-body text-sm" style={{ color: MUTED }}>Loading your plan.</p>
+          ) : hasPlan ? (
+            <>
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <h2 className="font-heading text-[3rem] uppercase leading-[0.86] md:text-[4.25rem]">{planName}</h2>
+                <p className="font-body text-sm" style={{ color: MUTED }}>
+                  <span className="font-heading text-3xl uppercase" style={{ color: TEXT }}>{fmtMoney(planPriceDollars)}</span> / {billingShort(plan.billing)}
+                </p>
+              </div>
+              <ul className="mt-6 grid gap-2.5 md:grid-cols-2">
+                <PerkRow><b className="font-semibold">{planVisitsPerCycle} visit {planVisitsPerCycle === 1 ? 'credit' : 'credits'}</b> each cycle (in-home IV, B12, or wellness consult)</PerkRow>
+                <PerkRow>Each visit covers any service up to <b className="font-semibold">$250</b> — pay only the difference</PerkRow>
+                <PerkRow><b className="font-semibold">Priority</b> same-week scheduling</PerkRow>
+                <PerkRow><b className="font-semibold">{billingLabel(plan.billing)}</b> billing</PerkRow>
+                <PerkRow><b className="font-semibold">Clinical review</b> included once a year</PerkRow>
+                <PerkRow><b className="font-semibold">Cancel or change</b> any time</PerkRow>
+              </ul>
+            </>
+          ) : (
+            <div className="mt-4">
+              <h2 className="font-heading text-[2.5rem] uppercase leading-[0.86] md:text-[3.25rem]">No active plan</h2>
+              <p className="mt-3 max-w-xl font-body text-sm" style={{ color: MUTED }}>
+                You don't have a membership yet. Build a plan to get monthly visit credits and member pricing.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/subscription')}
+                className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+                style={{ background: TEXT, color: INVERT }}
+              >
+                Build a plan <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -417,96 +367,53 @@ export default function Memberships() {
 
         <div className="rounded-[24px] p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
           <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Next charge</p>
-          <h3 className="mt-3 font-heading text-5xl uppercase leading-none">$200.00</h3>
-          <p className="mt-2 font-body text-[12px]" style={{ color: MUTED }}>Jul 8, 2026 · Visa ending 4242</p>
-          <div className="mt-4 grid gap-2 font-body text-[12px]">
-            <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Plan</span><b className="font-semibold" style={{ color: TEXT }}>Vitality Monthly</b></div>
-            <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Cycle</span><span style={{ color: TEXT }}>Jul 8 — Aug 7</span></div>
-            <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Outstanding balances</span><b className="font-semibold" style={{ color: BAD }}>+ $120</b></div>
-            <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Total on Jul 8</span><b className="font-semibold" style={{ color: TEXT }}>$320</b></div>
-          </div>
+          {planLoading ? (
+            <p className="mt-3 font-body text-sm" style={{ color: MUTED }}>Loading.</p>
+          ) : hasPlan ? (
+            <>
+              <h3 className="mt-3 font-heading text-5xl uppercase leading-none">{cancelAtPeriodEnd ? '—' : fmtMoney(nextChargeAmount)}</h3>
+              <p className="mt-2 font-body text-[12px]" style={{ color: MUTED }}>
+                {cancelAtPeriodEnd
+                  ? `Plan ends ${nextChargeDate || 'at period end'}`
+                  : `${nextChargeDate || 'Next renewal'} · ${cardLine}`}
+              </p>
+              <div className="mt-4 grid gap-2 font-body text-[12px]">
+                <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Plan</span><b className="font-semibold" style={{ color: TEXT }}>{planName}</b></div>
+                <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Billing</span><span style={{ color: TEXT }}>{billingLabel(plan.billing)}</span></div>
+                <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Visits / cycle</span><span style={{ color: TEXT }}>{planVisitsPerCycle}</span></div>
+                <div className="flex items-baseline justify-between gap-3"><span style={{ color: DIM }}>Payment</span><span style={{ color: TEXT }}>{cardLine}</span></div>
+              </div>
+            </>
+          ) : (
+            <p className="mt-3 font-body text-sm" style={{ color: MUTED }}>No upcoming charge — you don't have an active plan.</p>
+          )}
           <div className="mt-5 flex flex-wrap gap-2">
             <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>{portalBusy ? 'Opening.' : 'Manage plan'}</button>
             <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Change card</button>
-            <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="rounded-xl px-3.5 py-2 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>Change billing date</button>
           </div>
         </div>
       </section>
 
-      {/* Change plan */}
+      {/* Change plan — re-open the builder in change mode (proration handled there) */}
       <section className="mx-auto mt-8 w-full max-w-5xl px-4 md:px-6">
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="font-heading text-3xl uppercase leading-none md:text-4xl">Change your plan</h2>
-          <p className="font-body text-[12px]" style={{ color: MUTED }}>Switch any time. Upgrades prorate against your current cycle. Downgrades take effect on Jul 8.</p>
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {TIERS.map((t) => (
-            <TierCard
-              key={t.id}
-              tier={t}
-              currentId={currentTierId}
-              busy={changeBusy === t.id}
-              onSwitch={previewSwitch}
-            />
-          ))}
-        </div>
-
-        {/* Proration preview — live from Stripe once a tier is selected */}
-        {preview ? (
-          <div className="mt-4 rounded-[24px] p-5 md:p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-            <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>
-              {preview.status === 'loading' ? 'Calculating proration.' :
-               preview.status === 'error' ? 'Could not calculate proration' :
-               `If you switch to ${(TIERS.find((t) => t.id === preview.targetPlan)?.name) || preview.targetPlan} today`}
-            </p>
-            {preview.status === 'ready' && preview.proration ? (
-              <>
-                <div className="mt-3 grid gap-2 font-body text-[13px]">
-                  {(preview.proration.items || []).map((line, idx) => (
-                    <div key={idx} className="flex items-baseline justify-between gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{ color: MUTED }}>{line.description || (line.proration ? 'Proration' : 'Line item')}</span>
-                      <b className="font-semibold" style={{ color: TEXT }}>
-                        {line.amount < 0 ? '− ' : '+ '}${Math.abs(line.amount).toFixed(2)}
-                      </b>
-                    </div>
-                  ))}
-                  <div className="flex items-baseline justify-between gap-3 pt-2">
-                    <span className="font-heading text-2xl uppercase" style={{ color: TEXT }}>Charged today</span>
-                    <b className="font-heading text-2xl uppercase" style={{ color: TEXT }}>
-                      ${Math.max(0, preview.proration.amountDue).toFixed(2)}
-                    </b>
-                  </div>
-                </div>
-                <p className="mt-3 font-body text-[12px]" style={{ color: MUTED }}>
-                  Then full monthly rate at your next renewal. You can downgrade or cancel any time.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={commitSwitch}
-                    disabled={changeBusy === preview.targetPlan}
-                    className="rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-60"
-                    style={{ background: TEXT, color: INVERT }}
-                  >
-                    {changeBusy === preview.targetPlan ? 'Confirming.' : 'Confirm change'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreview(null)}
-                    className="rounded-xl px-4 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
-                    style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
-                  >
-                    Keep current plan
-                  </button>
-                </div>
-              </>
-            ) : preview.status === 'loading' ? (
-              <p className="mt-3 font-body text-sm" style={{ color: MUTED }}>One moment.</p>
-            ) : (
-              <p className="mt-3 font-body text-sm" style={{ color: BAD }}>Something went wrong. Try again or contact Avalon.</p>
-            )}
+        <div className="rounded-[24px] p-5 md:p-6" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="font-heading text-3xl uppercase leading-none md:text-4xl">Change your plan</h2>
+              <p className="mt-2 max-w-xl font-body text-[12px]" style={{ color: MUTED }}>
+                Adjust visits per cycle, therapy, add-ons, or your billing term. We'll show you exactly what's charged today before anything changes. Changes prorate from today.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/subscription?change=1')}
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em]"
+              style={{ background: TEXT, color: INVERT }}
+            >
+              {hasPlan ? 'Change plan' : 'Build a plan'} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
           </div>
-        ) : null}
+        </div>
       </section>
 
       {/* Payment methods */}
@@ -519,32 +426,28 @@ export default function Memberships() {
             </button>
           </div>
           <div className="mt-3">
-            {PAYMENT_METHODS.map((pm, idx) => (
-              <div
-                key={pm.id}
-                className="flex flex-wrap items-center gap-3 py-3.5"
-                style={{ borderTop: idx === 0 ? 'none' : `1px solid ${BORDER}` }}
-              >
+            {planLoading ? (
+              <p className="py-4 font-body text-sm" style={{ color: MUTED }}>Loading.</p>
+            ) : card?.last4 ? (
+              <div className="flex flex-wrap items-center gap-3 py-3.5">
                 <span className="grid h-8 w-12 shrink-0 place-items-center rounded font-heading text-[11px] uppercase tracking-[0.12em]" style={{ background: CARD_STRONG, color: MUTED, border: `1px solid ${BORDER}` }}>
-                  {pm.brand}
+                  {cardBrandLabel.slice(0, 4)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>{pm.brand === 'HSA' ? 'HSA' : pm.brand === 'MC' ? 'Mastercard' : 'Visa'} ending {pm.last4}</p>
-                  <p className="mt-0.5 font-body text-[11px]" style={{ color: MUTED }}>Expires {pm.exp} · {pm.label}</p>
+                  <p className="font-body text-[13px] font-semibold" style={{ color: TEXT }}>{cardBrandLabel} ending {card.last4}</p>
+                  <p className="mt-0.5 font-body text-[11px]" style={{ color: MUTED }}>Default payment method</p>
                 </div>
-                {pm.isDefault ? (
-                  <span className="rounded-full px-2.5 py-0.5 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: CARD_STRONG, color: MUTED, border: `1px solid ${BORDER}` }}>
-                    Default
-                  </span>
-                ) : (
-                  <button type="button" className="font-body text-[11px] underline underline-offset-4" style={{ color: MUTED }}>Make default</button>
-                )}
-                <button type="button" className="font-body text-[11px] underline underline-offset-4" style={{ color: MUTED }}>Edit</button>
-                {!pm.isDefault ? (
-                  <button type="button" className="font-body text-[11px] underline underline-offset-4" style={{ color: BAD }}>Remove</button>
-                ) : null}
+                <span className="rounded-full px-2.5 py-0.5 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: CARD_STRONG, color: MUTED, border: `1px solid ${BORDER}` }}>
+                  Default
+                </span>
+                <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="font-body text-[11px] underline underline-offset-4 disabled:opacity-60" style={{ color: MUTED }}>Manage</button>
               </div>
-            ))}
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
+                <p className="font-body text-[13px]" style={{ color: MUTED }}>No card on file.</p>
+                <button type="button" onClick={openBillingPortal} disabled={portalBusy} className="font-body text-[11px] underline underline-offset-4 disabled:opacity-60" style={{ color: TEXT }}>Add a card</button>
+              </div>
+            )}
           </div>
         </div>
       </section>
