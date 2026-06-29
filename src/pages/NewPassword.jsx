@@ -128,8 +128,10 @@ export default function NewPassword() {
         ) : (
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Choose a new password</h1>
-            <p className="mt-1 font-body text-sm text-foreground/55">Your account is using a temporary password. Set your own to continue.</p>
+            <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Set your new password</h1>
+            <p className="mt-1 font-body text-sm leading-relaxed text-foreground/62">
+              Pick something you'll remember. We sign you in automatically once it's saved, so you won't need to re-enter the link.
+            </p>
           </div>
           <div>
             <label className={LABEL}>New password</label>

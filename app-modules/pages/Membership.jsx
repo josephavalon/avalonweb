@@ -23,6 +23,7 @@ import { PEOPLE_MAX, createPerson, personLabel as personLabelFor, makeVisit, res
 import SessionBuilder from '@/components/store/SessionBuilder';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { apiPost } from '@/lib/apiClient';
+import { SUBSCRIPTION_COMMITMENT_SHORT } from '@/lib/subscription';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -563,7 +564,7 @@ function StepTerm({ monthly, termKey, onTerm, upfrontTotal, perMonth }) {
         ))}
       </PlanSelect>
       <p className="mt-2 font-body text-[14px] font-bold uppercase tracking-[0.06em] text-foreground/52">
-        {isMonthly ? `${money(monthly)}/mo · 3-month minimum` : `${money(upfrontTotal)} today · ${money(perMonth)}/mo effective`}
+        {isMonthly ? `${money(monthly)}/mo · ${SUBSCRIPTION_COMMITMENT_SHORT}` : `${money(upfrontTotal)} today · ${money(perMonth)}/mo effective`}
       </p>
     </div>
   );

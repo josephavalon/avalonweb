@@ -45,6 +45,7 @@
     "verify:welcome-email": "node scripts/verify-welcome-email.mjs",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:hosted-admin-endpoints": "node scripts/verify-hosted-admin-endpoints.mjs",
+    "a11y:scan": "node scripts/a11y-axe-scan.mjs",
     "exam:snooches": "node scripts/snooches-production-exam.mjs",
     "deploy:snooches": "node scripts/snooches-safe-deploy.mjs",
     "assets:audit": "node scripts/asset-audit.mjs",
@@ -101,6 +102,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^9.19.0",
     "@types/node": "^22.13.5",
     "@types/react": "^18.2.66",

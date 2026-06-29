@@ -276,11 +276,43 @@ export default function OurTeam() {
             <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
               Registered Nurse Roster
             </p>
-            <h3 className="font-heading text-2xl md:text-3xl text-foreground/55 tracking-wide leading-none">
-              Coming soon
+            <h3 className="font-heading text-2xl md:text-3xl text-foreground tracking-wide leading-tight">
+              California-licensed. IV-certified. Personally trained on the Avalon standard.
             </h3>
             <p className="mt-4 max-w-2xl font-body text-sm md:text-base text-foreground/65 leading-relaxed">
-              Avalon is finalizing the registered nurse roster for public display. Every visit is administered by a California-licensed registered nurse after intake and clinical review.
+              Every visit is administered by a California-licensed registered nurse after intake and clinical review. Below is a preview of the roster — full bios and photos go live as nurses sign release forms.
+            </p>
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+              {[
+                { initials: 'SK', credential: 'BSN, RN · IV Certified', focus: 'Critical Care + IV Therapy', years: '8+ years' },
+                { initials: 'MR', credential: 'BSN, RN · IV Certified', focus: 'Infusion Therapy', years: '6+ years' },
+                { initials: 'JT', credential: 'BSN, RN · IV Certified', focus: 'Emergency + Mobile Health', years: '10+ years' },
+              ].map((nurse) => (
+                <div
+                  key={nurse.initials}
+                  className="flex flex-col gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/15 bg-foreground/8 font-heading text-[12px] font-black uppercase tracking-[0.06em] text-foreground"
+                    >
+                      {nurse.initials}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-body text-[12px] font-black uppercase tracking-[0.08em] text-foreground">
+                        Registered Nurse
+                      </p>
+                      <p className="font-body text-[11px] text-foreground/56">{nurse.years}</p>
+                    </div>
+                  </div>
+                  <p className="font-body text-[12px] font-semibold text-foreground/72">{nurse.credential}</p>
+                  <p className="font-body text-[12px] text-foreground/56">{nurse.focus}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 font-body text-[12px] leading-snug text-foreground/52">
+              Your nurse is assigned after clinical review and confirmed by text before your visit.
             </p>
           </motion.div>
         </div>

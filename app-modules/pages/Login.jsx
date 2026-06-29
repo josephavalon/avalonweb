@@ -483,10 +483,10 @@ export default function Login({ defaultAudience = 'patient' }) {
         <Stethoscope className="h-6 w-6" strokeWidth={1.8} />
       </span>
       <p className="font-body text-[11px] font-semibold uppercase tracking-[0.28em] text-foreground/55">
-        Coming Soon
+        Nurse Portal — Coming Soon
       </p>
-      <p className="mx-auto max-w-[30ch] font-body text-sm font-medium leading-relaxed text-foreground/55">
-        The Avalon Vitality nurse portal is on the way. Registered nurses will manage visits, kits, and clinical reviews from here.
+      <p className="mx-auto max-w-[34ch] font-body text-sm font-medium leading-relaxed text-foreground/65">
+        Schedule, kit checkout, and clinical reviews will live here. Already credentialed? Watch your invite email — onboarding goes out by name.
       </p>
     </div>
   );
@@ -890,11 +890,15 @@ export default function Login({ defaultAudience = 'patient' }) {
                 <h1 className="font-heading text-[1.9rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.65rem]">
                   {heading[0]} {heading[1]}
                 </h1>
-                {supabaseMode && isAdmin && (
+                {supabaseMode && isAdmin ? (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
                     Sign in with your staff email and password.
                   </p>
-                )}
+                ) : !isAdmin && !isNurse && !isNew ? (
+                  <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
+                    Your visits, your nurse, your records. Sign in to manage clinically reviewed sessions on your own time.
+                  </p>
+                ) : null}
               </div>
 
               {isNew ? <NewCustomerPanel showHeading={false} bordered={false} embedded /> : isNurse ? nursePanel : body}

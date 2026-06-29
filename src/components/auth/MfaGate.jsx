@@ -99,7 +99,14 @@ export default function MfaGate() {
             </p>
             {qr && (
               <div className="flex justify-center rounded-2xl bg-white p-3">
-                <img src={qr} alt="MFA QR code" className="h-44 w-44" />
+                <img
+                  src={qr}
+                  alt="MFA QR code"
+                  className="h-44 w-44"
+                  fetchpriority="high"
+                  loading="eager"
+                  decoding="sync"
+                />
               </div>
             )}
             {secret && (

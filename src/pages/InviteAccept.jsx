@@ -82,14 +82,14 @@ export default function InviteAccept() {
         </div>
 
         {phase === 'validating' && (
-          <div className="flex items-center gap-2 py-10 text-foreground/60"><Loader2 className="h-4 w-4 animate-spin" /> Checking your invite…</div>
+          <div className="flex items-center gap-2 py-10 text-foreground/60"><Loader2 className="h-4 w-4 animate-spin" /> Verifying your invite…</div>
         )}
 
         {phase === 'done' && (
           <div className="py-6 text-center">
             <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-emerald-400" strokeWidth={1.6} />
-            <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">You're all set</h1>
-            <p className="mt-2 font-body text-sm text-foreground/55">Taking you to sign in…</p>
+            <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Welcome to Avalon</h1>
+            <p className="mt-2 font-body text-sm leading-relaxed text-foreground/62">Account ready. Routing you to sign in now.</p>
             <Link to="/admin/login" className="mt-4 inline-block font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground">Go to sign in</Link>
           </div>
         )}
@@ -97,8 +97,10 @@ export default function InviteAccept() {
         {phase === 'enter-code' && (
           <form onSubmit={validateCode} className="space-y-4">
             <div>
-              <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Enter your code</h1>
-              <p className="mt-1 font-body text-sm text-foreground/55">Use the email and 6-digit code we sent you.</p>
+              <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Confirm it's you</h1>
+              <p className="mt-1 font-body text-sm leading-relaxed text-foreground/62">
+                We sent a 6-digit code to your invite email. Enter both to claim your Avalon account.
+              </p>
             </div>
             <div><label className={LABEL}>Email</label><input className={FIELD} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@avalon.co" /></div>
             <div><label className={LABEL}>6-digit code</label><input className={FIELD} value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" inputMode="numeric" /></div>
@@ -111,8 +113,8 @@ export default function InviteAccept() {
           <form onSubmit={submitPassword} className="space-y-4">
             <div>
               <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Set your password</h1>
-              <p className="mt-1 font-body text-sm text-foreground/55">
-                {invite?.email} · {ROLE_LABEL[invite?.role] || invite?.role}
+              <p className="mt-1 font-body text-sm leading-relaxed text-foreground/62">
+                Signing in as <span className="font-bold text-foreground/80">{invite?.email}</span> · {ROLE_LABEL[invite?.role] || invite?.role}. Pick a password you'll use to access the {ROLE_LABEL[invite?.role] || 'admin'} console.
               </p>
             </div>
             <div>

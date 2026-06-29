@@ -8,6 +8,7 @@ import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS } from '@/config/verticals';
 import GlassCard from '@/components/ui/GlassCard';
 import PremiumButton from '@/components/ui/PremiumButton';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
@@ -116,6 +117,10 @@ export default function ProtocolPage() {
               <p className="mt-4 truncate font-heading text-4xl uppercase leading-none text-foreground capitalize">{protocol.category || 'IV'}</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Type</p>
             </GlassCard>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.38)} className="mb-5 max-w-md">
+            <ClinicalTrustStrip variant="compact" />
           </motion.div>
 
           <motion.div {...fadeUp(0.4)} className="mb-14 max-w-md">

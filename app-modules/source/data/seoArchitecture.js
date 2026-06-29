@@ -810,14 +810,9 @@ export const publicStaticRoutes = [
     priority: '0.9',
     changefreq: 'weekly',
   },
-  {
-    path: '/menu',
-    title: 'IV Menu and Protocols | Avalon Vitality',
-    description: 'Review Avalon mobile recovery protocols, IV therapy, NAD+, IM shots, packages, and recovery support options subject to clinical approval.',
-    h1: 'Avalon Protocols',
-    priority: '0.9',
-    changefreq: 'weekly',
-  },
+  // /menu canonicalized to /protocols at the router level (App.jsx).
+  // Intentionally excluded from the sitemap / SEO architecture so crawlers
+  // don't index the redirect.
   {
     path: '/subscription',
     title: 'Subscriptions | Avalon Vitality',

@@ -64,6 +64,8 @@ import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout 
 import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
+import { SUBSCRIPTION_COMMITMENT_COPY } from '@/lib/subscription';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { apiGet } from '@/lib/apiClient';
@@ -1360,7 +1362,10 @@ function DesktopOrderRail({
   const hasTherapySelection = Boolean(product);
   const displaySubtotal = hasTherapySelection ? subtotal : 0;
   const displayDueNow = hasTherapySelection ? dueNow : BOOKING_DEPOSIT_AMOUNT;
-  const displayBalanceDue = hasTherapySelection ? balanceDue : 200;
+  // Don't fabricate a $200 balance when nothing is selected — it confuses the
+  // summary card ("Total $0 · Deposit $50 · Balance $200" doesn't add up). The
+  // placeholder block below shows only Deposit + the selection prompt instead.
+  const displayBalanceDue = hasTherapySelection ? balanceDue : 0;
   const selectedIvAddons = selectedAddons.filter((item) => item.type !== 'im');
   const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
   const dateLabel = bookingDateLabel(state);
@@ -1368,7 +1373,7 @@ function DesktopOrderRail({
   // One-time visits show the total on the line below already, so the "Total $X"
   // receipt line is redundant — only subscriptions carry a billing note here.
   const receiptLine = state.visitType === 'subscription'
-    ? 'Billed monthly · cancel anytime'
+    ? `Billed monthly · ${SUBSCRIPTION_COMMITMENT_COPY}`
     : '';
 
   const rows = [
@@ -1443,20 +1448,34 @@ function DesktopOrderRail({
           </div>
         )}
         <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Total</p>
-            <p className="font-body text-sm font-black text-foreground 2xl:text-base">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
-          </div>
-          {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
-          <div className="mt-2.5 2xl:mt-3">
-            <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit</p>
-            <p className="mt-1 font-body text-[1.85rem] font-black leading-none text-foreground 2xl:text-[2.15rem]">{currency(displayDueNow)}</p>
-            {displayBalanceDue > 0 && <p className="mt-1 font-body text-[14px] font-bold text-foreground/52 2xl:text-xs">Balance {currency(displayBalanceDue)}</p>}
-          </div>
+          {hasTherapySelection ? (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Total</p>
+                <p className="font-body text-sm font-black text-foreground 2xl:text-base">{totalLabel || currency(displaySubtotal)}</p>
+              </div>
+              {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
+              <div className="mt-2.5 2xl:mt-3">
+                <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit today</p>
+                <p className="mt-1 font-body text-[1.85rem] font-black leading-none text-foreground 2xl:text-[2.15rem]">{currency(displayDueNow)}</p>
+                {displayBalanceDue > 0 && <p className="mt-1 font-body text-[14px] font-bold text-foreground/52 2xl:text-xs">Balance after visit {currency(displayBalanceDue)}</p>}
+              </div>
+            </>
+          ) : (
+            <div>
+              <p className="font-body text-[13px] font-bold leading-snug text-foreground/58 2xl:text-[14px]">
+                Select a therapy to see your total.
+              </p>
+              <p className="mt-2 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
+                Deposit today {currency(BOOKING_DEPOSIT_AMOUNT)} · balance depends on therapy
+              </p>
+            </div>
+          )}
         </div>
         <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[12px] font-black leading-snug text-foreground/64 2xl:text-[13px]">
           {CLINICAL_REVIEW_NOTICE}
         </p>
+        <ClinicalTrustStrip variant="inline" className="mt-2" linkToTeam={false} />
         <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[70px_1fr] 2xl:grid-cols-[76px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button

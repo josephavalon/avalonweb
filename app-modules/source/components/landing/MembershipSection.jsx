@@ -6,6 +6,7 @@ import { EASE, premiumExpandTransition, premiumHover, premiumTap } from '@/lib/m
 import { BOOKABLE_SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import ScrollParallax from '@/components/ui/ScrollParallax';
+import { SUBSCRIPTION_COMMITMENT_COPY } from '@/lib/subscription';
 
 const MotionLink = motion.create(Link);
 
@@ -144,7 +145,7 @@ export default function MembershipSection() {
         </div>
 
         <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4">
-          3-month minimum · then pause or cancel
+          {SUBSCRIPTION_COMMITMENT_COPY}
         </p>
 
       </div>

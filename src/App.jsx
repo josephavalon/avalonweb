@@ -177,6 +177,8 @@ const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend')
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
 const AdminTeamSettings = lazyRoute(() => import('./pages/admin/TeamSettings'));
 const AdminEmailTemplates = lazyRoute(() => import('./pages/admin/EmailTemplates'));
+const AdminPromoCodes = lazyRoute(() => import('./pages/admin/PromoCodes'));
+const AdminShiftMarketplace = lazyRoute(() => import('./pages/admin/ShiftMarketplace'));
 const InviteAccept = lazyRoute(() => import('./pages/InviteAccept'));
 const NewPassword = lazyRoute(() => import('./pages/NewPassword'));
 
@@ -326,9 +328,21 @@ function AppRoutes() {
             <Route path="/booking" element={<Navigate to="/book" replace />} />
             <Route path="/book-now" element={<Navigate to="/book" replace />} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
+            {/* Common URL guesses → canonical routes. Captures muscle memory
+                and competitor patterns that would otherwise hit the 404. */}
+            <Route path="/signin" element={<Navigate to="/login" replace />} />
+            <Route path="/sign-in" element={<Navigate to="/login" replace />} />
+            <Route path="/services" element={<Navigate to="/protocols" replace />} />
+            <Route path="/providers" element={<Navigate to="/nurses" replace />} />
+            <Route path="/provider/login" element={<Navigate to="/login" replace />} />
+            <Route path="/plans" element={<Navigate to="/subscription" replace />} />
+            <Route path="/plans/checkout" element={<Navigate to="/plan" replace />} />
+            <Route path="/plan-checkout" element={<Navigate to="/plan" replace />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
-            <Route path="/menu" element={<Menu />} />
+            {/* /menu canonicalized to /protocols — both surfaces served the
+                same component, splitting SEO equity between two URLs. */}
+            <Route path="/menu" element={<Navigate to="/protocols" replace />} />
             <Route path="/store" element={<Navigate to="/protocols" replace />} />
             <Route path="/store/confirmation" element={<Navigate to="/protocols" replace />} />
             <Route path="/booking/confirmation" element={<BookingConfirmation />} />
@@ -399,6 +413,8 @@ function AppRoutes() {
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
             <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamSettings /></RequireAuth>} />
             <Route path="/admin/email-templates" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEmailTemplates /></RequireAuth>} />
+            <Route path="/admin/promo-codes" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminPromoCodes /></RequireAuth>} />
+            <Route path="/admin/shift-marketplace" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminShiftMarketplace /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />

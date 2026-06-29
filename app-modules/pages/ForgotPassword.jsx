@@ -82,8 +82,8 @@ export default function ForgotPassword() {
             <h1 className="font-heading text-[3.15rem] uppercase leading-[0.86] tracking-tight text-foreground sm:text-[4rem]">
               Reset<br />Password
             </h1>
-            <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
-              Enter your email and open the reset link on this device to choose a new password.
+            <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/62">
+              Forgot it happens. Drop your email and we'll send a one-time reset link. Open it on the same device you'll sign in from so your session sticks.
             </p>
           </div>
 
@@ -92,7 +92,7 @@ export default function ForgotPassword() {
               <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
                 <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
                 <p className="font-body text-sm font-medium leading-relaxed">
-                  Check your inbox. We sent a password reset link to <span className="font-bold">{sentTo}</span>.
+                  Sent. Check the inbox for <span className="font-bold">{sentTo}</span> — the link lands within a minute and expires after an hour. Spam folder if it's not there.
                 </p>
               </div>
               <Link

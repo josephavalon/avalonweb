@@ -112,11 +112,19 @@ export default function Hero() {
         {/* Layer 2 — proof points (medium parallax).
             Same split: outer carries scroll parallax, inner carries mount fade-up. */}
         <motion.div style={proofStyle}>
+          <motion.p
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.48, delay: 0.26, ease: EASE }}
+            className="mt-5 max-w-[34rem] font-body text-[12px] uppercase leading-relaxed tracking-[0.14em] text-foreground/70 md:mt-6 md:text-[13px]"
+          >
+            Physician-supervised · RN-administered · Clinically reviewed before every appointment
+          </motion.p>
           <motion.ul
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.48, delay: 0.32, ease: EASE }}
-            className="mt-5 grid gap-2 font-body text-[13px] uppercase leading-relaxed tracking-[0.06em] text-foreground md:mt-6 md:text-sm"
+            className="mt-4 grid gap-2 font-body text-[13px] uppercase leading-relaxed tracking-[0.06em] text-foreground md:mt-5 md:text-sm"
           >
             {HERO_PROOF_POINTS.map(({ label, icon: Icon, to }) => {
               const content = (

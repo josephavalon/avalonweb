@@ -21,6 +21,7 @@ import { hasValidCheckoutContact } from '@/lib/checkoutValidation';
 import { extractZip } from '@/lib/serviceArea';
 import { useAuthStore } from '@/lib/useAuthStore';
 import AddressAutocomplete from '@/components/store/AddressAutocomplete';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 
 function hasCompleteContact(contact = {}) {
   return hasValidCheckoutContact(contact);
@@ -163,6 +164,9 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
           <p className="mt-0.5 truncate font-body text-[13px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
         </div>
       ))}
+      <div className="col-span-2 mt-1">
+        <ClinicalTrustStrip variant="inline" linkToTeam={false} />
+      </div>
     </motion.div>
   );
 }

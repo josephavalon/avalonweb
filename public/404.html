@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Page Not Found — Avalon Vitality</title>
+    <meta name="description" content="The page you were looking for could not be found. Explore Avalon Vitality mobile IV therapy across the SF Bay Area." />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
+    <link rel="icon" type="image/png" href="/favicon.png?v=4" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" />
+    <link rel="preload" href="/fonts/bebas-neue-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/bebas-neue-400.woff2') format('woff2');}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/inter-400.woff2') format('woff2');}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/inter-600.woff2') format('woff2');}
+      html, body { background-color: #000; color: #f4f4f1; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: 'Inter', system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+      }
+      .av-404-eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: rgba(244, 244, 241, 0.55);
+        margin: 0 0 1.25rem;
+      }
+      .av-404-mark {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(5rem, 16vw, 11rem);
+        line-height: 0.82;
+        letter-spacing: 0.04em;
+        margin: 0 0 1.25rem;
+        text-transform: uppercase;
+      }
+      .av-404-headline {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0 0 1rem;
+      }
+      .av-404-body {
+        max-width: 32rem;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: rgba(244, 244, 241, 0.66);
+        margin: 0 0 2rem;
+      }
+      .av-404-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      }
+      .av-404-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        min-height: 48px;
+        padding: 0 1.25rem;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+      }
+      .av-404-cta.primary {
+        background: #f4f4f1;
+        color: #000;
+      }
+      .av-404-cta.secondary {
+        border: 1px solid rgba(244, 244, 241, 0.32);
+        color: #f4f4f1;
+      }
+      .av-404-cta:hover { opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <p class="av-404-eyebrow">Avalon Vitality</p>
+    <h1 class="av-404-mark">404</h1>
+    <h2 class="av-404-headline">This page could not be found.</h2>
+    <p class="av-404-body">
+      The link may be broken, the page may have moved, or it may never have existed. Pick a path below to keep going.
+    </p>
+    <nav class="av-404-actions">
+      <a class="av-404-cta primary" href="/">Back to Avalon</a>
+      <a class="av-404-cta secondary" href="/book">Book a Session</a>
+      <a class="av-404-cta secondary" href="/protocols">IV Therapy</a>
+    </nav>
+  </body>
+</html>

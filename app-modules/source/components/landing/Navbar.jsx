@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { cycleTheme } from '@/lib/theme';
 import { useIsMobile } from '@/hooks/use-mobile';
+import useNavHiddenOnScrollDown from '@/hooks/useNavHiddenOnScrollDown';
 import { useAuthStore } from '@/lib/useAuthStore';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -34,10 +35,74 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const isMobile = useIsMobile();
   const tapState = useRef({ count: 0, timer: null });
   const { user, signOut } = useAuthStore();
+  const mobilePanelRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [location]);
+
+  // Mobile menu accessibility: Escape closes, focus trap stays inside the
+  // panel while open, focus returns to the trigger on close, and body scroll
+  // locks so the menu feels modal. Native dialog semantics would be cleaner
+  // but the panel is a sibling animated element rather than a real <dialog>,
+  // so we wire ARIA + key handling by hand.
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null;
+    const body = typeof document !== 'undefined' ? document.body : null;
+    const previousOverflow = body?.style.overflow || '';
+    if (body) body.style.overflow = 'hidden';
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMobileOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const panel = mobilePanelRef.current;
+      if (!panel) return;
+      const focusables = panel.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"]), input, select, textarea'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    // Focus the first interactive element on open. Defer one frame so the
+    // panel is fully mounted (SmoothDisclosure animates open).
+    const focusTimer = window.setTimeout(() => {
+      const panel = mobilePanelRef.current;
+      const firstFocusable = panel?.querySelector(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    }, 60);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      window.clearTimeout(focusTimer);
+      if (body) body.style.overflow = previousOverflow;
+      // Restore focus to the toggle button so screen reader users don't lose
+      // their place.
+      if (mobileMenuButtonRef.current) {
+        mobileMenuButtonRef.current.focus();
+      } else if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+        previouslyFocused.focus();
+      }
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -118,34 +183,45 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   // marketing bar must not render over them — it crowds the card on desktop.
   const authRoute = ['/login', '/signup', '/nurses', '/forgot', '/forgot-password']
     .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
-  const navVisible = true;
+  // (navVisible is computed below from scroll direction on mobile.)
   const mobileLinks = [
     { to: BOOK_URL, label: 'Book', primary: true },
     ...mainLinks,
     ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
   ];
 
-  // Single persistent instance: <Navbar globalShell/> renders the bar for ALL
-  // viewports from MobileShell — which sits OUTSIDE the page transition — so the bar
-  // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
-  // scattered across pages now draw nothing.
-  if (!globalShell) return null;
   // Sign-in / sign-up screens (customer + admin) intentionally DO show the
   // marketing bar — users mid-funnel need to get back to Plans / Book Now
   // without having to navigate out of the auth card first.
   const loginRoute = location.pathname === '/login'
     || location.pathname === '/admin/login'
     || location.pathname === '/signup';
+  const internalChrome = !loginRoute && (internalToolRoute || authRoute);
+
+  // Hide top nav on scroll-down (mobile only). The bottom BOOK bar is the
+  // conversion anchor and stays pinned; hiding the top bar buys back ~64px
+  // of viewport. iOS Safari pattern: scroll up by >8px or reach top → show.
+  // Hook must run before any early return to keep Rules of Hooks compliant.
+  const navHiddenByScroll = useNavHiddenOnScrollDown({
+    enabled: globalShell && !internalChrome && isMobile && !mobileOpen && !focusMode,
+  });
+  const navVisible = !navHiddenByScroll;
+
+  // Single persistent instance: <Navbar globalShell/> renders the bar for ALL
+  // viewports from MobileShell — which sits OUTSIDE the page transition — so the bar
+  // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
+  // scattered across pages now draw nothing.
+  if (!globalShell) return null;
   // Admin / provider / member areas own their chrome — no marketing bar there.
-  if (!loginRoute && (internalToolRoute || authRoute)) return null;
+  if (internalChrome) return null;
 
   return (
     <motion.nav
       aria-hidden={!navVisible}
       inert={!navVisible ? '' : undefined}
       initial={false}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: EASE }}
+      animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -120 }}
+      transition={{ duration: 0.32, ease: EASE }}
       className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'
@@ -175,8 +251,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
           )}
-          <Link to="/" onClick={handleLogoClick} className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}>
+          <Link
+            to="/"
+            onClick={handleLogoClick}
+            aria-label="Avalon Vitality — home"
+            className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}
+          >
             <AvalonMark className="h-[30px] w-[19px] text-foreground md:h-[40px] md:w-[26px]" />
+            <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
 
@@ -253,8 +335,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             </button>
           )}
-          <Link to="/" onClick={handleMarkTap} className={logoClass}>
+          <Link
+            to="/"
+            onClick={handleMarkTap}
+            aria-label="Avalon Vitality — home"
+            className={logoClass}
+          >
             <AvalonMark className="h-[28px] w-[18px] text-foreground" />
+            <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
         <div className="absolute right-2 top-1/2 flex -translate-y-1/2 shrink-0 items-center gap-0.5">
@@ -275,11 +363,13 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                 <MessageCircle className="h-5 w-5" strokeWidth={2} />
               </a>
               <motion.button
+                ref={mobileMenuButtonRef}
                 onClick={() => setMobileOpen(!mobileOpen)}
                 whileTap={premiumTap}
                 className="mobile-menu-btn flex h-10 w-10 items-center justify-center rounded-full text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileOpen}
+                aria-controls="mobile-nav-panel"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
@@ -299,17 +389,44 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         </div>
       </div>
 
+      {/* Dimmed backdrop — blocks clicks to the page beneath while the menu is
+          open, and clicking it closes the menu. The mobile menu is below lg,
+          so we hide the backdrop above lg too. */}
+      {!focusMode && (
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.button
+              type="button"
+              key="mobile-nav-backdrop"
+              aria-label="Close menu"
+              tabIndex={-1}
+              onClick={close}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: EASE }}
+              className="fixed inset-0 z-30 bg-black/55 backdrop-blur-sm lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+      )}
+
       {/* Mobile + tablet dropdown (below lg) */}
       {!focusMode && <div className="lg:hidden overflow-hidden px-2">
         <SmoothDisclosure open={mobileOpen} snapClosed className="pb-2" innerClassName="pb-0">
               <motion.div
+                id="mobile-nav-panel"
+                ref={mobilePanelRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Mobile navigation"
                 initial={false}
                 animate={mobileOpen ? 'visible' : 'hidden'}
                 variants={{
                   hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
                   visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
                 }}
-                className="av-mobile-dropdown-panel av-glass-menu relative grid gap-1.5 overflow-visible rounded-[1.35rem] border p-2"
+                className="av-mobile-dropdown-panel av-glass-menu relative z-40 grid gap-1.5 overflow-visible rounded-[1.35rem] border p-2"
               >
                 {showBack && !compact && (
                   <motion.div
