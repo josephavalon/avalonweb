@@ -36,12 +36,27 @@ export default async function handler(req, res) {
     // → falsy, and the entire roster disappears from the picker.
     const roster = (members || [])
       .filter((m) => m.status === 'active' && m.id !== actor.profileId)
-      .map((m) => ({ id: m.id, profileId: m.id, email: m.email, name: m.full_name || m.email, role: m.role }));
+      .map((m) => ({
+        id: m.id,
+        profileId: m.id,
+        email: m.email,
+        // Emit both `name` and `full_name` so the composer's display +
+        // search work whether it reads either field.
+        name: m.full_name || m.email,
+        full_name: m.full_name || m.email,
+        role: m.role,
+      }));
 
     return res.status(200).json({
       threads,
       roster,
-      me: { id: actor.profileId, profileId: actor.profileId, email: actor.email, name: actor.name },
+      me: {
+        id: actor.profileId,
+        profileId: actor.profileId,
+        email: actor.email,
+        name: actor.name,
+        full_name: actor.name,
+      },
     });
   } catch (err) {
     console.warn('[team-messages/threads] failed', safeLogContext(err, 'team_threads_failed'));

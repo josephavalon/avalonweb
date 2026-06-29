@@ -287,12 +287,17 @@ function NewComposer({ roster, me, onSent, onCancel }) {
 
   const isGroup = recipients.length >= 2;
 
+  // Helper: roster entries may carry `name` (current API), `full_name`
+  // (legacy), or just `email`. Normalize once so both search + display
+  // work whichever shape the API emits.
+  const displayName = (m) => m?.name || m?.full_name || m?.email || '';
+
   const pickList = useMemo(() => {
     const q = query.trim().toLowerCase();
     const chosen = new Set(recipients.map((r) => r.id));
     return (roster || [])
       .filter((m) => m.id !== me?.id && !chosen.has(m.id))
-      .filter((m) => !q || (m.full_name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q));
+      .filter((m) => !q || displayName(m).toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q));
   }, [roster, query, recipients, me]);
 
   const addRecipient = (m) => { setRecipients((r) => [...r, m]); setQuery(''); };
@@ -364,7 +369,7 @@ function NewComposer({ roster, me, onSent, onCancel }) {
           <span className="font-body text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: DIM }}>To:</span>
           {recipients.map((r) => (
             <span key={r.id} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-body text-xs" style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}>
-              {r.full_name || r.email}
+              {displayName(r)}
               <button type="button" onClick={() => removeRecipient(r.id)} aria-label="Remove"><X className="h-3 w-3" strokeWidth={2.2} /></button>
             </span>
           ))}
@@ -381,8 +386,10 @@ function NewComposer({ roster, me, onSent, onCancel }) {
         </div>
       </div>
 
-      {/* Dropdown of matches */}
-      {query.trim() && pickList.length > 0 ? (
+      {/* Dropdown of matches — auto-shows the full team roster as soon as
+          the composer opens (no need to type first). Hidden only when the
+          roster is empty or fully exhausted by current recipients. */}
+      {pickList.length > 0 ? (
         <div className="max-h-44 overflow-y-auto border-b" style={{ borderColor: BORDER }}>
           {pickList.map((m) => (
             <button
@@ -391,15 +398,25 @@ function NewComposer({ roster, me, onSent, onCancel }) {
               onClick={() => addRecipient(m)}
               className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-foreground/[0.04]"
             >
-              <Avatar name={m.full_name || m.email} size={28} />
+              <Avatar name={displayName(m)} size={28} />
               <span className="min-w-0">
-                <span className="block truncate font-body text-sm font-semibold" style={{ color: TEXT }}>{m.full_name || m.email}</span>
+                <span className="block truncate font-body text-sm font-semibold" style={{ color: TEXT }}>{displayName(m)}</span>
                 <span className="block truncate font-body text-[10px] uppercase tracking-[0.12em]" style={{ color: DIM }}>{m.role}</span>
               </span>
             </button>
           ))}
         </div>
-      ) : null}
+      ) : (
+        roster && roster.length > 0 ? (
+          <div className="border-b px-4 py-3" style={{ borderColor: BORDER }}>
+            <p className="font-body text-xs" style={{ color: DIM }}>No teammates match "{query}".</p>
+          </div>
+        ) : (
+          <div className="border-b px-4 py-3" style={{ borderColor: BORDER }}>
+            <p className="font-body text-xs" style={{ color: DIM }}>No other teammates on this account yet.</p>
+          </div>
+        )
+      )}
 
       {/* Group name (only when 2+ recipients) */}
       {isGroup ? (
