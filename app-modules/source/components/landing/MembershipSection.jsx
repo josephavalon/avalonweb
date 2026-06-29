@@ -10,12 +10,12 @@ import { SUBSCRIPTION_COMMITMENT_COPY } from '@/lib/subscription';
 
 const MotionLink = motion.create(Link);
 
-// Per-IV pricing so the home teaser matches the /subscription builder
-// ($250 per vitamin IV x sessions/month). Avoids showing stale tier prices.
-const VITAMIN_IV_PRICE = 250;
+// subscriptionTiers.js is the single source of truth for visit-credit
+// pricing now (sessions × $250). Just format the numeric price for display
+// and add the deep-link to the /subscription builder.
 const TIERS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
   ...tier,
-  price: `$${(tier.sessions * VITAMIN_IV_PRICE).toLocaleString()}`,
+  price: typeof tier.price === 'number' ? `$${tier.price.toLocaleString()}` : tier.price,
   href: '/subscription',
 }));
 

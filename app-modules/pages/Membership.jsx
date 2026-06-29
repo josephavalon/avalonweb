@@ -24,6 +24,7 @@ import SessionBuilder from '@/components/store/SessionBuilder';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { apiPost } from '@/lib/apiClient';
 import { SUBSCRIPTION_COMMITMENT_SHORT } from '@/lib/subscription';
+import { PLAN_VISIT_CREDIT } from '@/config/subscriptionTiers';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -35,13 +36,16 @@ const EASE = [0.16, 1, 0.3, 1];
 // Billing term: pay monthly (3-month minimum) or commit upfront for 3 / 6 / 12
 // months to save. Add-ons use full catalog price; the term discount applies to
 // the whole plan.
-const VITAMIN_IV_PRICE = 250;
+// Both pull from the shared PLAN_VISIT_CREDIT constant — see
+// src/config/subscriptionTiers.js. Keeping local aliases for readability.
+const VITAMIN_IV_PRICE = PLAN_VISIT_CREDIT;
 // ── Visit Credit membership model ─────────────────────────────────────────
-// We sell VISITS (capacity), not IVs. Each visit carries a $250 "Visit Credit"
-// of appointment value. Any service plugs into a visit: cart ≤ credit =
-// Included; cart > credit = pay only the difference. This is the extensible
-// engine future TRT / exosomes / supplements / labs will plug into.
-const VISIT_CREDIT = 250;
+// We sell VISITS (capacity), not IVs. Each visit carries a "Visit Credit"
+// of appointment value (currently $250). Any service plugs into a visit:
+// cart ≤ credit = Included; cart > credit = pay only the difference. This
+// is the extensible engine future TRT / exosomes / supplements / labs will
+// plug into.
+const VISIT_CREDIT = PLAN_VISIT_CREDIT;
 const SESSION_OPTIONS = [1, 2, 3, 4];
 
 // Terms. Monthly is the low-friction default; 6mo (-8%) and 12mo (-15%) come
