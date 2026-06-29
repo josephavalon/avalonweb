@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Printer } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
@@ -14,12 +14,12 @@ const REVEAL = {
   transition: { duration: 0.7, ease: EASE },
 };
 
-const PRESETS = [50, 100, 150, 200, 250, 350, 500];
+const PRESETS = [50, 100, 250, 500];
 
 const HOW_IT_WORKS = [
   { step: '01', title: 'Choose Amount', desc: 'Select a preset gift or enter a custom dollar amount.' },
   { step: '02', title: 'Enter Recipient Info', desc: 'Add their name, email, and a personal message.' },
-  { step: '03', title: 'We Handle the Rest', desc: 'Our team issues the certificate manually and sends it to the recipient within 24 hours. You\'ll get a confirmation too.' },
+  { step: '03', title: "We'll Email the Code", desc: "Pay through Stripe — the recipient gets the gift code by email the moment your payment clears. They redeem it from their member account." },
 ];
 
 const OCCASIONS = ['Birthday', 'Recovery Gift', 'New Parent', 'Thank You', 'Just Because', 'Post-Race', 'Wedding', 'Graduation'];
@@ -37,7 +37,7 @@ const OCCASION_MESSAGES = {
 
 export default function Gift() {
   useSeo({ title: 'Gift an IV Session — Avalon Vitality', description: 'Give the gift of recovery. Send an Avalon IV therapy session to someone you care about.', path: '/gift' });
-  const [selectedAmount, setSelectedAmount] = useState(150);
+  const [selectedAmount, setSelectedAmount] = useState(250);
   const [customMode, setCustomMode] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [selectedOccasion, setSelectedOccasion] = useState(null);
@@ -45,13 +45,35 @@ export default function Gift() {
     recipientName: '',
     recipientEmail: '',
     senderName: '',
+    senderEmail: '',
     message: '',
-    sendDate: '',
   });
-  const [submitted, setSubmitted] = useState(false);
-  const certCode = useMemo(() => `AVLN-${Math.random().toString(36).slice(2, 10).toUpperCase()}`, []);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  // Detect a Stripe-success redirect (the server sets ?purchase=success on the
+  // hosted Checkout success_url). We show a friendly post-purchase confirmation
+  // so the buyer knows the recipient email is on its way.
+  const [purchaseConfirmed, setPurchaseConfirmed] = useState(false);
 
-  const displayAmount = customMode ? (customValue || null) : selectedAmount;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('purchase') === 'success') {
+      setPurchaseConfirmed(true);
+    }
+  }, []);
+
+  // The effective amount to charge (dollars). Custom mode reads the typed
+  // input; otherwise the selected preset. Used by both the preview card and
+  // the purchase POST.
+  const effectiveAmount = useMemo(() => {
+    if (customMode) {
+      const n = Number(customValue);
+      return Number.isFinite(n) && n >= 25 ? n : null;
+    }
+    return selectedAmount;
+  }, [customMode, customValue, selectedAmount]);
+  const displayAmount = effectiveAmount;
 
   const handlePreset = (amount) => {
     setSelectedAmount(amount);
@@ -73,9 +95,48 @@ export default function Gift() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    if (!effectiveAmount || effectiveAmount < 25) {
+      setError('Please choose a gift amount of $25 or more.');
+      return;
+    }
+    if (!formData.recipientName.trim() || !formData.recipientEmail.trim()) {
+      setError('Recipient name and email are required.');
+      return;
+    }
+    if (!formData.senderName.trim() || !formData.senderEmail.trim()) {
+      setError('Your name and email are required so we can send your receipt.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      // Public endpoint — no Bearer header needed. Server validates everything
+      // and returns the Stripe Checkout URL. We do a full-page redirect (vs
+      // window.open) so Apple/Google Pay express buttons render in their own
+      // origin, matching the rest of the checkout flow.
+      const res = await fetch('/api/gift-cards/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: effectiveAmount,
+          recipientEmail: formData.recipientEmail.trim(),
+          recipientName: formData.recipientName.trim(),
+          senderEmail: formData.senderEmail.trim(),
+          senderName: formData.senderName.trim(),
+          message: formData.message.trim(),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.url) {
+        throw new Error(body?.error || 'Could not start checkout. Please try again.');
+      }
+      window.location.href = body.url;
+    } catch (err) {
+      setError(err?.message || 'Could not start checkout. Please try again.');
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -240,64 +301,23 @@ export default function Gift() {
               Gift Details
             </motion.h2>
 
-            {submitted ? (
+            {purchaseConfirmed ? (
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: EASE }}
                 className="max-w-lg space-y-6"
               >
-                {/* Gift Certificate Card */}
                 <div className="rounded-2xl border border-accent/30 bg-accent/[0.04] p-8 space-y-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-body text-[11px] tracking-[0.4em] uppercase text-foreground/40 mb-1">Gift Certificate</p>
-                      <p className="font-heading text-2xl text-foreground uppercase tracking-wide">Avalon Vitality</p>
-                    </div>
-                    <p className="font-heading text-4xl text-accent leading-none">
-                      {displayAmount ? `$${displayAmount}` : '—'}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-foreground/[0.08] pt-5 space-y-1.5">
-                    {formData.recipientName && (
-                      <p className="font-body text-xs text-foreground/60">
-                        To: <span className="text-foreground">{formData.recipientName}</span>
-                      </p>
-                    )}
-                    {formData.senderName && (
-                      <p className="font-body text-xs text-foreground/60">
-                        From: <span className="text-foreground">{formData.senderName}</span>
-                      </p>
-                    )}
-                    {formData.message && (
-                      <p className="font-body text-xs text-foreground/50 italic pt-1">"{formData.message}"</p>
-                    )}
-                  </div>
-
-                  <div className="border-t border-foreground/[0.08] pt-4 space-y-1">
-                    <p className="font-body text-[13px] tracking-[0.2em] uppercase text-accent">
-                      {certCode}
-                    </p>
-                    <p className="font-body text-[13px] text-foreground/40">Valid 12 months from purchase</p>
-                    <p className="font-body text-[13px] text-foreground/40">Redeem at avalonvitality.co</p>
-                  </div>
+                  <p className="font-body text-[11px] tracking-[0.4em] uppercase text-foreground/40 mb-1">Gift Sent</p>
+                  <h3 className="font-heading text-3xl md:text-4xl text-foreground uppercase leading-[0.95]">Your gift is on its way</h3>
+                  <p className="font-body text-sm text-foreground/70 leading-relaxed">
+                    Thank you. We've emailed your recipient a one-time redemption code and instructions for applying the credit to their Avalon account. You'll receive a Stripe receipt at the email you provided.
+                  </p>
+                  <p className="font-body text-xs text-foreground/40 leading-relaxed">
+                    Codes can only be redeemed once and are tied to the recipient's email above. If they need help, reply to the email or write to support@avalonvitality.co.
+                  </p>
                 </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    className="flex items-center gap-2 px-5 py-3 rounded-xl border border-foreground/20 font-body text-xs tracking-[0.15em] uppercase text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-colors"
-                  >
-                    <Printer className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    Print
-                  </button>
-                </div>
-
-                <p className="font-body text-xs text-foreground/40 leading-relaxed">
-                  Our team will send the certificate to the recipient within 24 hours. Check your inbox for a confirmation.
-                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -401,18 +421,33 @@ export default function Gift() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
-                      Your Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Your name"
-                      value={formData.senderName}
-                      onChange={(e) => setFormData({ ...formData, senderName: e.target.value })}
-                      className="w-full bg-foreground/[0.04] border border-foreground/[0.12] rounded-xl px-4 py-3 font-body text-foreground text-sm focus:outline-none focus:border-accent/60 transition-colors placeholder:text-foreground/25"
-                    />
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Your name"
+                        value={formData.senderName}
+                        onChange={(e) => setFormData({ ...formData, senderName: e.target.value })}
+                        className="w-full bg-foreground/[0.04] border border-foreground/[0.12] rounded-xl px-4 py-3 font-body text-foreground text-sm focus:outline-none focus:border-accent/60 transition-colors placeholder:text-foreground/25"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
+                        Your Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="you@email.com"
+                        value={formData.senderEmail}
+                        onChange={(e) => setFormData({ ...formData, senderEmail: e.target.value })}
+                        className="w-full bg-foreground/[0.04] border border-foreground/[0.12] rounded-xl px-4 py-3 font-body text-foreground text-sm focus:outline-none focus:border-accent/60 transition-colors placeholder:text-foreground/25"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -440,25 +475,30 @@ export default function Gift() {
                     />
                   </div>
 
-                  <div>
-                    <label className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40 block mb-2">
-                      Send Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.sendDate}
-                      onChange={(e) => setFormData({ ...formData, sendDate: e.target.value })}
-                      className="w-full bg-foreground/[0.04] border border-foreground/[0.12] rounded-xl px-4 py-3 font-body text-foreground text-sm focus:outline-none focus:border-accent/60 transition-colors"
-                    />
-                    <p className="font-body text-[14px] text-foreground/35 mt-1.5">Leave blank to send immediately.</p>
-                  </div>
+                  {error && (
+                    <p role="alert" className="font-body text-sm text-red-400/90 bg-red-500/[0.06] border border-red-500/30 rounded-xl px-4 py-3">
+                      {error}
+                    </p>
+                  )}
 
                   <button
                     type="submit"
-                    className="w-full bg-accent text-background font-body text-sm tracking-[0.15em] uppercase py-4 rounded-xl hover:bg-accent/90 transition-colors duration-200 flex items-center justify-center gap-2"
+                    disabled={submitting}
+                    className="w-full bg-accent text-background font-body text-sm tracking-[0.15em] uppercase py-4 rounded-xl hover:bg-accent/90 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Submit Gift Request <ArrowRight className="w-4 h-4" />
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Redirecting to Stripe…
+                      </>
+                    ) : (
+                      <>
+                        Pay {effectiveAmount ? `$${effectiveAmount}` : ''} & Send Gift <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
+                  <p className="font-body text-[12px] text-foreground/40 leading-relaxed text-center">
+                    Secured by Stripe. Your card is charged once. The recipient gets their code by email the moment payment clears.
+                  </p>
                 </form>
               </motion.div>
             )}

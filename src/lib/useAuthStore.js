@@ -7,7 +7,7 @@
 import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import { appendActivity, clearAllAvLocal } from './localOs';
 import { seedDemoState } from './platformOps';
-import { isDemoAuthAllowed, PRE_API_SECURITY_MODE } from './preApiSecurity';
+import { isDemoAuthAllowed, demoAuthLockReason, PRE_API_SECURITY_MODE } from './preApiSecurity';
 import { supabase, hasSupabase } from './supabase';
 import { authProviderConfig } from './authProviderConfig';
 
@@ -18,6 +18,11 @@ const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 // industry default for clinical workstations. Tracked in sessionStorage so a
 // page reload doesn't reset the clock.
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+// Periodic Supabase session re-check. A long-running admin tab may persist past
+// AAL2 expiry, an admin-side deactivation, or a forced sign-out elsewhere; we
+// poll getSession() and rebuild the user so RequireAuth re-renders the MfaGate
+// or kicks them to /login as needed. Also re-checked on tab-visibility.
+const SESSION_RECHECK_INTERVAL_MS = 5 * 60 * 1000;
 const IDLE_KEY = 'av.lastActivity';
 const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
 const IDLE_ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll'];
@@ -235,6 +240,62 @@ export function AuthStoreProvider({ children }) {
     });
     return () => { active = false; clearTimeout(loadingSafety); listener?.subscription?.unsubscribe?.(); };
   }, [refreshSupabaseSession]);
+
+  // Periodic + visibility-driven Supabase session re-check. Without this, a tab
+  // left open for hours keeps using the in-memory user even after the access
+  // token would have rotated (or the AAL2 step-up expired, or the user was
+  // remotely deactivated). Re-resolving rebuilds the user from the current
+  // session — RequireAuth then re-evaluates and either re-renders MfaGate (when
+  // AAL2 drops) or redirects to /login (when the session is gone).
+  //
+  // Cheap: getSession() is a local read for the in-memory client; only the
+  // profile lookup hits Postgres, and that's already what buildSupabaseUser does
+  // on initial load. Skipped when there is no signed-in user.
+  useEffect(() => {
+    if (!hasSupabase || !user) return undefined;
+    let cancelled = false;
+    let inFlight = false;
+    const recheck = async (trigger) => {
+      if (cancelled || inFlight) return;
+      inFlight = true;
+      try {
+        const { data } = await supabase.auth.getSession();
+        const next = await buildSupabaseUser(data?.session?.user || null);
+        if (cancelled) return;
+        setUser((prev) => {
+          // Avoid a render storm when nothing material changed. Compare the few
+          // bits that gate RequireAuth (id, role, mustChangePassword, mfa).
+          if (!prev && !next) return prev;
+          if (!prev || !next) return next;
+          const sameMfa = prev.mfa?.verified === next.mfa?.verified
+            && prev.mfa?.status === next.mfa?.status;
+          if (prev.id === next.id
+            && prev.role === next.role
+            && prev.mustChangePassword === next.mustChangePassword
+            && sameMfa) return prev;
+          return next;
+        });
+        // Surface a single warn for the most security-relevant transition so
+        // it shows up in a recording when an admin gets re-gated mid-session.
+        if (trigger && data?.session && user?.mfa?.verified && !(next?.mfa?.verified)) {
+          try { console.warn('[auth] mfa state dropped on session re-check', { trigger }); } catch { /* ignore */ }
+        }
+      } catch { /* leave the in-memory user alone on transient failures */ }
+      finally { inFlight = false; }
+    };
+    const interval = setInterval(() => recheck('interval'), SESSION_RECHECK_INTERVAL_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') recheck('visibility');
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+    // user.id is the stable handle — we don't want to re-arm this every time
+    // any user field changes, only when the signed-in identity flips.
+  }, [user?.id]);
 
   // Email magic-link (Supabase). Returns { ok, pending }; the user clicks the
   // emailed link, lands back on /login, and onAuthStateChange sets the session.
@@ -458,8 +519,22 @@ export function AuthStoreProvider({ children }) {
     // when Supabase is configured — a simulation backdoor gated by isDemoAuthAllowed().
     // Anything that isn't a known roster ID falls through to Supabase magic-link.
     const identifier = normalizeLoginIdentifier(email);
-    const isDemoAccount = isDemoAuthAllowed()
-      && Object.keys(DEMO_USERS).some((k) => normalizeLoginIdentifier(k) === identifier);
+    const matchesDemoRoster = Object.keys(DEMO_USERS).some((k) => normalizeLoginIdentifier(k) === identifier);
+    // If someone submits a demo roster ID where demo auth is disallowed (i.e.
+    // production), short-circuit rather than letting it fall through to Supabase
+    // signInWithEmail (which would treat "ADMIN001" as a malformed email).
+    if (matchesDemoRoster && !isDemoAuthAllowed()) {
+      try {
+        console.warn('[auth] demo identifier rejected outside simulation', {
+          reason: demoAuthLockReason() || 'demo_auth_host_not_allowed',
+          host: typeof window !== 'undefined' ? window.location.hostname : '',
+        });
+      } catch { /* ignore */ }
+      const msg = 'That account is not available in this environment.';
+      setError(msg);
+      return { ok: false, error: msg, code: 'demo_auth_disabled' };
+    }
+    const isDemoAccount = isDemoAuthAllowed() && matchesDemoRoster;
     // Staff with a password sign in directly; passwordless customers (no
     // password supplied) get a magic link as before.
     if (hasSupabase && !isDemoAccount && String(password || '').length > 0) return signInWithPassword({ email, password });
@@ -468,7 +543,19 @@ export function AuthStoreProvider({ children }) {
     setLoading(true); setError(null);
     try {
       await new Promise((r) => setTimeout(r, 600));
-      if (!isDemoAuthAllowed()) throw new Error('Local demo auth is disabled outside Avalon simulation mode.');
+      if (!isDemoAuthAllowed()) {
+        // Structured warn so a prod attempt shows up in the browser console with
+        // enough context to spot from a session recording / Sentry breadcrumb.
+        // Fail-closed: refuse, never fall through to a Supabase password attempt.
+        const reason = demoAuthLockReason() || 'demo_auth_host_not_allowed';
+        try {
+          console.warn('[auth] demo sign-in refused', {
+            reason,
+            host: typeof window !== 'undefined' ? window.location.hostname : '',
+          });
+        } catch { /* console may be locked down */ }
+        throw new Error('Local demo auth is disabled outside Avalon simulation mode.');
+      }
       if (!DEMO_PASSWORD) throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
       const submittedUsername = normalizeLoginIdentifier(email);
       const usernameKey = Object.keys(DEMO_USERS).find((k) => normalizeLoginIdentifier(k) === submittedUsername);

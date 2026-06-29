@@ -4,7 +4,10 @@ import AvalonMark from '@/components/AvalonMark';
 import {
   ArrowRight,
   Calendar,
+  Check,
+  Copy,
   Fingerprint,
+  Gift,
   LogOut,
   MessageCircle,
   FileText,
@@ -451,6 +454,101 @@ function profileCompleteness(profile) {
   return { percent: Math.round((filled / PROFILE_FIELDS.length) * 100), nextField };
 }
 
+// Share & earn — referral card. Reads /api/me/referral once on mount (mints
+// the code on first call if missing) and shows the member their share link +
+// running counts. Copy uses the modern clipboard API with a fallback so the
+// button works on iOS Safari too.
+function ShareAndEarnCard({ referral }) {
+  const { loading, error, code, referLink, totalReferred, totalCredited, creditPerSideDollars } = referral;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!referLink) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(referLink);
+      } else {
+        // Legacy fallback for non-secure contexts / older iOS.
+        const ta = document.createElement('textarea');
+        ta.value = referLink;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch { /* if copy fails, the link is still visible and selectable */ }
+  };
+
+  const blurb = `Friends get $${creditPerSideDollars}, you get $${creditPerSideDollars} after their first visit.`;
+
+  return (
+    <div className="mt-4 rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+      <div className="flex items-center justify-between">
+        <p className="font-body text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: DIM }}>Share &amp; earn</p>
+        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ background: CARD_STRONG, color: MUTED, border: `1px solid ${BORDER}` }}>
+          <Gift className="h-3 w-3" strokeWidth={2} />
+          ${creditPerSideDollars} each
+        </span>
+      </div>
+      <h3 className="mt-3 font-heading text-3xl uppercase leading-none md:text-4xl">Give $50, get $50</h3>
+      <p className="mt-2 font-body text-[12px]" style={{ color: MUTED }}>{blurb}</p>
+
+      {loading ? (
+        <SkeletonBar className="mt-4 h-12 w-full rounded-xl" />
+      ) : error ? (
+        <p className="mt-4 font-body text-[12px]" style={{ color: BAD }}>
+          Couldn’t load your referral link. Refresh to try again.
+        </p>
+      ) : code ? (
+        <>
+          <div
+            className="mt-4 flex items-center gap-3 rounded-xl px-3 py-3"
+            style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="font-body text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: DIM }}>Your code</p>
+              <p className="mt-1 truncate font-heading text-xl uppercase leading-none">{code}</p>
+              {referLink ? (
+                <p className="mt-1 truncate font-body text-[11px]" style={{ color: MUTED }}>{referLink}</p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!referLink}
+              aria-label="Copy referral link"
+              className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-50"
+              style={{ background: TEXT, color: INVERT, border: `1px solid ${TEXT}` }}
+            >
+              {copied ? <Check className="h-3.5 w-3.5" strokeWidth={2.4} /> : <Copy className="h-3.5 w-3.5" strokeWidth={2} />}
+              {copied ? 'Copied' : 'Copy link'}
+            </button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-xl px-3 py-2.5 text-center" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+              <p className="font-heading text-xl uppercase leading-none">{totalReferred}</p>
+              <p className="mt-1 font-body text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: DIM }}>Referred</p>
+            </div>
+            <div className="rounded-xl px-3 py-2.5 text-center" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+              <p className="font-heading text-xl uppercase leading-none">{totalCredited}</p>
+              <p className="mt-1 font-body text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: DIM }}>Credited</p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p className="mt-4 font-body text-[12px]" style={{ color: MUTED }}>
+          Your referral link will appear here once your profile is set up.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function QuickBookStrip({ creditsRemaining }) {
   return (
     <div className="mt-6 rounded-[24px] p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
@@ -543,6 +641,7 @@ function DashboardBody({
   summaryLoading = false,
   visitsError = '',
   onRetryVisits,
+  referral = { loading: false, error: '', code: null, referLink: null, totalReferred: 0, totalCredited: 0, creditPerSideDollars: 50 },
 }) {
   const visitStatus = primary ? 'Confirming after clinical review' : 'No visit scheduled';
   const profileStats = profileCompleteness(profileState?.profile);
@@ -690,6 +789,9 @@ function DashboardBody({
           )}
         </div>
 
+        {/* Share & earn referral card */}
+        <ShareAndEarnCard referral={referral} />
+
         {/* Quick-book strip */}
         <QuickBookStrip creditsRemaining={creditsAvailable} />
 
@@ -718,6 +820,7 @@ function LiveClientDashboard() {
   const [subState, setSubState] = useState({ loading: true, error: '', sub: null });
   const [docsState, setDocsState] = useState({ loading: true, error: '', documents: [] });
   const [profileState, setProfileState] = useState({ loading: true, error: '', profile: null });
+  const [referral, setReferral] = useState({ loading: true, error: '', code: null, referLink: null, totalReferred: 0, totalCredited: 0, creditPerSideDollars: 50 });
   const [passkeyMsg, setPasskeyMsg] = useState(null);
 
   const addPasskey = async () => {
@@ -753,6 +856,39 @@ function LiveClientDashboard() {
     apiGet('/api/me/profile')
       .then((data) => { if (active) setProfileState({ loading: false, error: '', profile: data?.profile || null }); })
       .catch(() => { if (active) setProfileState({ loading: false, error: 'unavailable', profile: null }); });
+
+    // Referral attribution + share card. We first redeem any code the user
+    // carried through signup (stashed in localStorage by Signup.jsx), then
+    // load the share-card data. Both are best-effort — failures degrade the
+    // card to its empty state but never block the dashboard.
+    let storedRef = '';
+    try { storedRef = window.localStorage.getItem('avalon.referralCode') || ''; } catch { /* ignore */ }
+    const loadReferral = () => apiGet('/api/me/referral')
+      .then((data) => {
+        if (!active) return;
+        setReferral({
+          loading: false,
+          error: '',
+          code: data?.code || null,
+          referLink: data?.referLink || null,
+          totalReferred: Number(data?.totalReferred || 0),
+          totalCredited: Number(data?.totalCredited || 0),
+          creditPerSideDollars: Number(data?.creditPerSideDollars || 50),
+        });
+      })
+      .catch(() => { if (active) setReferral((s) => ({ ...s, loading: false, error: 'unavailable' })); });
+    if (storedRef) {
+      apiPost('/api/me/redeem-referral', { code: storedRef })
+        .catch(() => { /* invalid/expired code is fine — server is idempotent */ })
+        .finally(() => {
+          // Whether attributed or already-attributed, the code has done its
+          // job; clear it so a future referral link can take its place.
+          try { window.localStorage.removeItem('avalon.referralCode'); } catch { /* ignore */ }
+          loadReferral();
+        });
+    } else {
+      loadReferral();
+    }
     return () => { active = false; };
   }, []);
 
@@ -828,6 +964,7 @@ function LiveClientDashboard() {
       summaryLoading={loading}
       visitsError={loading ? '' : visitsError}
       onRetryVisits={refetchVisits}
+      referral={referral}
     />
   );
 }

@@ -10,6 +10,8 @@
  */
 
 let _svc = null;
+let _defaultTenantId = null;
+let _defaultTenantLookupAt = 0;
 
 // Service-role client (bypasses RLS — server only). Null until envs are set.
 export async function getServiceClient() {
@@ -20,6 +22,82 @@ export async function getServiceClient() {
   const { createClient } = await import('@supabase/supabase-js');
   _svc = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   return _svc;
+}
+
+// Default tenant id, cached for 5 minutes. The auth bootstrap trigger
+// (009_private_auth_profile_trigger.sql) seeds profiles with the
+// 'avalon-vitality' tenant; the synchronous fallback below must match so
+// idempotent re-seeds don't churn tenant_id.
+async function getDefaultTenantId(db) {
+  if (_defaultTenantId && Date.now() - _defaultTenantLookupAt < 5 * 60 * 1000) {
+    return _defaultTenantId;
+  }
+  try {
+    const { data } = await db.from('tenants').select('id').eq('slug', 'avalon-vitality').maybeSingle();
+    if (data?.id) {
+      _defaultTenantId = data.id;
+      _defaultTenantLookupAt = Date.now();
+    }
+  } catch { /* tenants RLS / missing table → leave null and the caller skips tenant_id */ }
+  return _defaultTenantId;
+}
+
+/**
+ * Idempotent profile seed. The auth.users → profiles trigger normally lands a
+ * row, but it can race with the first authed API request (especially after an
+ * OAuth signup, where Supabase fires the redirect immediately after creating
+ * the auth user). Without a row, every protected endpoint that does
+ * `profiles.select(...).eq(id, user.id)` returns no data and the caller falls
+ * back to anonymous/default — or worse, 404s.
+ *
+ * This helper writes the missing row using the same defaults as the trigger,
+ * keyed by auth user id. It is safe to call from inside getAuthedUser (which
+ * runs on every API request) — the upsert is conditional on a profile lookup
+ * having returned nothing, so the steady-state cost is one extra SELECT.
+ *
+ * Returns the profile row (role, tenant_id, status) the caller should use.
+ */
+export async function upsertProfileForUser(db, authUser, { source = 'auth_first_touch' } = {}) {
+  if (!db || !authUser?.id) return null;
+  const tenantId = await getDefaultTenantId(db);
+  const meta = authUser.user_metadata || {};
+  const fullName = String(meta.full_name || meta.name || '').trim() || null;
+  const row = {
+    id: authUser.id,
+    email: (authUser.email || '').trim() || null,
+    phone: (authUser.phone || '').trim() || null,
+    full_name: fullName,
+    role: 'client',
+    status: 'active',
+    tenant_id: tenantId,
+  };
+  try {
+    // onConflict 'id' makes this a true no-op when the trigger already seeded
+    // the row; we only fill in NULLs we're authoritative for. Do NOT overwrite
+    // role here — an admin/staff promotion may have landed via a different code
+    // path (invite-accept) before this helper runs.
+    const { data, error } = await db.from('profiles')
+      .upsert(row, { onConflict: 'id', ignoreDuplicates: false })
+      .select('role, tenant_id, status')
+      .maybeSingle();
+    if (error) throw error;
+    // Best-effort: surface the seed so we can spot churn / unexpected first-touches.
+    try {
+      console.warn('[supabase-auth] profile seeded on auth first-touch', {
+        userId: authUser.id, source,
+      });
+    } catch { /* ignore */ }
+    return data || null;
+  } catch (err) {
+    // Don't block the request — the caller will degrade to the default client
+    // role, which is the same behaviour as before this helper existed.
+    try {
+      console.warn('[supabase-auth] profile seed failed', {
+        userId: authUser.id, code: err?.code || err?.name || 'profile_seed_failed',
+      });
+    } catch { /* ignore */ }
+    return null;
+  }
 }
 
 function bearerToken(req) {
@@ -65,12 +143,23 @@ export async function getAuthedUser(req) {
   let role = 'client';
   let tenantId = null;
   let status = 'active';
+  let profileRow = null;
   try {
     const { data: profile } = await db.from('profiles').select('role, tenant_id, status').eq('id', user.id).maybeSingle();
-    if (profile?.role) role = profile.role;
-    if (profile?.tenant_id) tenantId = profile.tenant_id;
-    if (profile?.status) status = profile.status;
-  } catch { /* no profile row → default client */ }
+    profileRow = profile || null;
+  } catch { /* no profile row → fall through to seed below */ }
+  // Profile-seeding race: the auth.users trigger that seeds public.profiles can
+  // be slightly behind the first authed API request after an OAuth signup. If
+  // we got here with no row, synchronously upsert one so the rest of this
+  // request — and every protected endpoint that joins on profiles — sees a
+  // valid identity. Idempotent: a steady-state miss is rare and the upsert is
+  // ON CONFLICT (id) DO UPDATE on null-able cols only.
+  if (!profileRow) {
+    profileRow = await upsertProfileForUser(db, user, { source: 'getAuthedUser' });
+  }
+  if (profileRow?.role) role = profileRow.role;
+  if (profileRow?.tenant_id) tenantId = profileRow.tenant_id;
+  if (profileRow?.status) status = profileRow.status;
   // A deactivated member's JWT remains valid until exp; reject it here so the
   // ban is effective immediately for the API. (The browser will redirect to
   // /admin/login on the next 401.)

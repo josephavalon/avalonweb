@@ -19,6 +19,8 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/inventory',
   '/admin/team',
   '/admin/email-templates', // editable customer email templates
+  '/admin/promo-codes', // Stripe-of-record promo code management
+  '/admin/shift-marketplace', // read-only nurse shift offer board (preview mode)
   '/admin/soon', // coming-soon placeholders (Inventory/Events/Clinical/GFE/Tools/Settings)
 ]);
 
@@ -36,6 +38,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/team',
   '/admin/gfe', // GFE policy toggles (admin-only)
   '/admin/email-templates', // editable customer email templates
+  '/admin/promo-codes', // Stripe-of-record promo code management
   '/admin/soon', // coming-soon placeholders
 ]);
 

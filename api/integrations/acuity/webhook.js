@@ -25,6 +25,7 @@ import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_re
 import { upsertAttioPerson } from '../../_attio.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { findRedemptionForAppointment, refundMemberCredit } from '../../_lib/member-credits.js';
+import { decrementForAppointment } from '../../_lib/inventory-burndown.js';
 
 // bodyParser is disabled so we can HMAC over the exact bytes Acuity signed.
 // Re-stringifying a parsed body breaks the signature compare every time (and
@@ -573,6 +574,31 @@ export default async function handler(req, res) {
           console.warn('[acuity/webhook] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
         }
       });
+    }
+
+    // Inventory burndown — decrement stock for the IV/add-ons this visit
+    // consumed. Acuity doesn't fire a discrete `completed` event in our
+    // current setup, so we treat "scheduled/rescheduled/changed AND the
+    // appointment start time has already passed" as the completion signal.
+    // Idempotent (keyed by appointment_id in inventory_consumption_events) so
+    // re-fires are safe. Wrapped — must never break the webhook.
+    if (appointmentRecordId) {
+      try {
+        const startIso = appt.datetime || appt.date || null;
+        const startMs = startIso ? new Date(startIso).getTime() : NaN;
+        const startHasPassed = Number.isFinite(startMs) && startMs <= Date.now();
+        if (startHasPassed) {
+          const { data: apptRow } = await db.from('appointments')
+            .select('id, tenant_id, external_payload')
+            .eq('id', appointmentRecordId)
+            .maybeSingle();
+          if (apptRow) {
+            await decrementForAppointment({ db, appointment: apptRow });
+          }
+        }
+      } catch (burndownErr) {
+        console.warn('[acuity/webhook] inventory burndown failed', safeLogContext(burndownErr, 'inventory_burndown_failed'));
+      }
     }
 
     // PHI-free transactional SMS on scheduled / rescheduled (changed = silent;

@@ -77,7 +77,7 @@ const NAV_LIVE = [
           { label: 'Memberships', to: soon('Memberships') },
           { label: 'Packages', to: soon('Packages') },
           { label: 'Gift Cards', to: soon('Gift Cards') },
-          { label: 'Discounts', to: soon('Discounts') },
+          { label: 'Promo codes', to: '/admin/promo-codes' },
           { label: 'Transactions', to: soon('Transactions') },
           { label: 'Deposits', to: soon('Deposits') },
           { label: 'Outstanding Balances', to: soon('Outstanding Balances') },

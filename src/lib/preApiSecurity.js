@@ -13,6 +13,14 @@ const BETA_HOST_PATTERNS = [
   /^snooches\.avalonvitality\.co$/i,
 ];
 
+// Production-only hosts. Demo auth MUST be impossible here even if a build
+// accidentally ships with VITE_AVALON_DEMO_PASSWORD or someone forgets to set
+// VITE_AVALON_DEMO_AUTH=false. Apex + www are the launch-marketing surfaces.
+const PRODUCTION_HOST_PATTERNS = [
+  /^avalonvitality\.co$/i,
+  /^www\.avalonvitality\.co$/i,
+];
+
 function currentHost() {
   if (typeof window === 'undefined') return '';
   return window.location.hostname || '';
@@ -26,15 +34,39 @@ export function isBetaSimulationHost(host = currentHost()) {
   return BETA_HOST_PATTERNS.some((pattern) => pattern.test(String(host)));
 }
 
+export function isProductionHost(host = currentHost()) {
+  return PRODUCTION_HOST_PATTERNS.some((pattern) => pattern.test(String(host)));
+}
+
 export function isLiveApiArmed() {
   const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
   return env.VITE_AVALON_ENABLE_LIVE_API === 'true';
 }
 
-export function isDemoAuthAllowed() {
+// Single source of truth for the prod refusal. Used by both the demo gate AND
+// by sign-in call sites so we can warn + log a structured refusal without
+// silently falling through to a "wrong password" error.
+export function demoAuthLockReason() {
   const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
-  if (env.VITE_AVALON_DEMO_AUTH === 'false') return false;
-  return !isLiveApiArmed() && (isLocalSimulationHost() || isBetaSimulationHost());
+  if (env.VITE_AVALON_DEMO_AUTH === 'false') return 'demo_auth_env_disabled';
+  // Vite's PROD flag is set during a production build. We require BOTH
+  // build-time PROD and a non-simulation host before we'll fall open; a prod
+  // build that ships to snooches (beta) must keep demo auth working.
+  const isProdBuild = Boolean(env.PROD) && env.MODE !== 'development';
+  if (isProdBuild && isProductionHost()) return 'demo_auth_production_host';
+  // Catch-all: any avalonvitality.co host that isn't explicitly whitelisted as
+  // beta. This is the belt to the PROD-build-flag suspenders — it fires even on
+  // a non-PROD build (e.g. a preview alias accidentally pointing at apex).
+  if (!isLocalSimulationHost() && !isBetaSimulationHost() && isProductionHost()) {
+    return 'demo_auth_production_host';
+  }
+  if (isLiveApiArmed()) return 'live_api_armed';
+  return '';
+}
+
+export function isDemoAuthAllowed() {
+  if (demoAuthLockReason()) return false;
+  return isLocalSimulationHost() || isBetaSimulationHost();
 }
 
 export const PRE_API_SECURITY_MODE = {

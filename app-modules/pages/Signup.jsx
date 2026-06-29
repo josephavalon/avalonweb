@@ -114,6 +114,23 @@ export default function Signup() {
 
   useEffect(() => { try { applyTheme(); } catch { /* noop */ } }, []);
 
+  // Referral capture: a `?ref=<code>` in the landing URL means the visitor
+  // came via someone's share link. We stash the code in localStorage so it
+  // survives the email-confirmation round-trip; the Dashboard posts it to
+  // /api/me/redeem-referral on first authed load to record the attribution.
+  // Idempotent on the server (unique on referee_profile_id) so a stale code
+  // can only ever attribute once.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get('ref');
+      if (!raw) return;
+      const code = raw.trim().toUpperCase().slice(0, 32);
+      if (!code) return;
+      window.localStorage.setItem('avalon.referralCode', code);
+    } catch { /* localStorage may be unavailable (private mode) — referrals are best-effort */ }
+  }, []);
+
   useEffect(() => {
     if (user) navigate(user.redirect || '/members/dashboard', { replace: true });
   }, [user, navigate]);
