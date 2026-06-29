@@ -240,6 +240,18 @@ async function clickText(cdp, text) {
   await wait(650);
 }
 
+// Non-throwing variant — clicks if a match is visible, returns false if not.
+// Used for steps that may or may not be present depending on flow changes (e.g.
+// the post-category person-count step added between Therapy and Add-ons).
+async function clickIfPresent(cdp, text) {
+  try {
+    await clickText(cdp, text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function clickAnyText(cdp, labels) {
   const failures = [];
   for (const label of labels) {
@@ -444,7 +456,12 @@ async function runCdpEnvironment(chromePath, env, index) {
     await wait(500);
     await clickAnyText(cdp, ['Recovery', 'Hydration']);
     await assertStickyBookBar(cdp, env);
+    // Person-count step sits between category and add-ons in the current flow
+    // (per GL-010 note). Use the present-or-skip helper so the step works
+    // whether or not the standalone person picker is present.
+    await clickIfPresent(cdp, 'Just me');
     await clickText(cdp, 'Next');
+    await clickIfPresent(cdp, 'Next');
     await clickText(cdp, 'No extras');
     await assertStickyBookBar(cdp, env);
     await clickText(cdp, 'Next');
@@ -522,6 +539,15 @@ async function playwrightClickText(page, text) {
     throw new Error(`Could not click "${text}". Visible controls: ${controls.join(' | ')}`);
   }
   await page.waitForTimeout(650);
+}
+
+async function playwrightClickIfPresent(page, text) {
+  try {
+    await playwrightClickText(page, text);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function playwrightClickAnyText(page, labels) {
@@ -695,7 +721,11 @@ async function runWebKitEnvironment(webkit, env) {
     await page.waitForTimeout(500);
     await playwrightClickAnyText(page, ['Recovery', 'Hydration']);
     await playwrightAssertStickyBookBar(page, env);
+    // Person-count step (see GL-010): present-or-skip handler covers both
+    // the legacy and the post-person-step flows.
+    await playwrightClickIfPresent(page, 'Just me');
     await playwrightClickText(page, 'Next');
+    await playwrightClickIfPresent(page, 'Next');
     await playwrightClickText(page, 'No extras');
     await playwrightAssertStickyBookBar(page, env);
     await playwrightClickText(page, 'Next');

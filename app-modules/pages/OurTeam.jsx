@@ -234,6 +234,9 @@ export default function OurTeam() {
     <div className="av-page-surface min-h-screen">
       <Navbar />
 
+      <main id="main-content">
+        <h1 className="sr-only">Our team — clinicians and operators</h1>
+
       {/* Clinical Team */}
       <section className="pt-32 md:pt-40 pb-8 md:pb-12 px-6 md:px-16">
         <div className="max-w-6xl mx-auto">
@@ -370,6 +373,7 @@ export default function OurTeam() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

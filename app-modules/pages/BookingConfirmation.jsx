@@ -461,7 +461,7 @@ export default function BookingConfirmation() {
     <div className="av-page-surface min-h-screen">
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-24 space-y-5">
+      <main id="main-content" className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-24 space-y-5">
 
         {/* ── 1. Hero ─────────────────────────────────────────── */}
         <motion.div
@@ -605,7 +605,7 @@ export default function BookingConfirmation() {
           </Link>
         </motion.div>
 
-      </div>
+      </main>
     </div>
   );
 }

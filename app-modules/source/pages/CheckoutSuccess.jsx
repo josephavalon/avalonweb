@@ -88,7 +88,7 @@ export default function CheckoutSuccess() {
   return (
     <div className="av-page-surface min-h-screen">
       <Navbar />
-      <div className="max-w-xl mx-auto px-4 pt-32 pb-20 text-center">
+      <main id="main-content" className="max-w-xl mx-auto px-4 pt-32 pb-20 text-center">
         <motion.div
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -154,7 +154,7 @@ export default function CheckoutSuccess() {
             )}
           </div>
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }
