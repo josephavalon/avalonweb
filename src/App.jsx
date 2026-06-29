@@ -265,7 +265,11 @@ function AppRoutes() {
   const location = useLocation();
   return (
     <>
-      <a href="#main-content" className="skip-to-content" data-mobile-qa-ignore>Skip to content</a>
+      {/* Skip link inside a labeled <nav> so axe-core's region check sees it
+          as content inside a landmark instead of a loose <a> at the root. */}
+      <nav aria-label="Skip navigation">
+        <a href="#main-content" className="skip-to-content" data-mobile-qa-ignore>Skip to content</a>
+      </nav>
       <div id="main-content" tabIndex={-1} className="relative z-10 outline-none">
         {/* mode="wait" → outgoing page fully crossfades out before the next fades in
             (avoids two stacked pages / two fixed navbars). initial={false} → no fade
