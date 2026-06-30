@@ -363,6 +363,36 @@ function BuilderRow({ title, value, hint, icon: Icon, open, onToggle, children }
   );
 }
 
+// Minimalist mobile row: label · right-aligned value · chevron, with a
+// transparent native <select> overlaid so a tap on anywhere in the row opens
+// the OS picker. Keeps the row visually quiet — no inline disclosure body.
+function MobileSelectRow({ icon: Icon, label, value, selectValue, onSelectChange, ariaLabel, children }) {
+  return (
+    <div className="relative flex items-center justify-between gap-3 border-b border-foreground/10 px-4 py-3.5 last:border-b-0">
+      <div className="flex items-center gap-3">
+        {Icon && (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-foreground/12 bg-foreground/[0.05]">
+            <Icon className="h-4 w-4 text-foreground/80" strokeWidth={2} />
+          </span>
+        )}
+        <span className="font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/82">{label}</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground/55">{value}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-foreground/50" strokeWidth={2.4} />
+      </div>
+      <select
+        value={selectValue}
+        onChange={(e) => onSelectChange(e.target.value)}
+        aria-label={ariaLabel || label}
+        className="absolute inset-0 h-full w-full cursor-pointer appearance-none bg-transparent opacity-0"
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
+
 // Sticky mobile CTA: deposit-today + monthly + Start plan. Leads with the $50
 // deposit (what they actually pay now), monthly as the secondary number.
 function MobileStartBar({ therapyLabel, sessions, monthly, depositToday, onStart, changeMode = false }) {
@@ -797,6 +827,39 @@ export default function Subscription() {
     setVisits(resizeVisits(fresh, sessions));
   };
 
+  // Minimalist mobile People picker: snap roster size to N (add new people
+   // at default Hydration, or trim from the end). Active person preserved when
+   // possible; otherwise falls through to the first remaining person.
+  const setPeopleCount = (n) => {
+    const target = Math.max(1, Math.min(PEOPLE_MAX, Number(n) || 1));
+    if (target === people.length) return;
+    if (target > people.length) {
+      const additions = Array.from({ length: target - people.length }, (_, i) => {
+        const p = createPerson(people.length + i);
+        p.visits = resizeVisits({ visits: [makeVisit({ categoryKey: 'iv-vitamins', therapyKey: 'hydration' })] }, sessions);
+        return p;
+      });
+      setPeople((prev) => {
+        const stashed = prev.map((p) => p.id === activePersonId ? { ...p, visits } : p);
+        return [...stashed, ...additions];
+      });
+      return;
+    }
+    const next = people.slice(0, target);
+    if (!next.some((p) => p.id === activePersonId)) {
+      setActivePersonId(next[0].id);
+      setVisits(resizeVisits(next[0], sessions));
+    }
+    setPeople(next);
+  };
+
+  // Minimalist mobile Therapy picker: set the SAME therapy on every visit for
+   // the active person (no per-visit mixing on mobile — that's a desktop feature).
+  const setUniformTherapy = (optKey) => {
+    const cat = CATEGORIES.find((c) => c.options.some((o) => o.key === optKey)) || CATEGORIES[0];
+    setVisits((prev) => prev.map((v) => ({ ...v, categoryKey: cat.key, therapyKey: optKey })));
+  };
+
   const deletePerson = (idToRemove) => {
     if (people.length <= 1) return;
     const filtered = people.filter((p) => p.id !== idToRemove);
@@ -1044,12 +1107,122 @@ export default function Subscription() {
         <Navbar />
       </header>
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
-        <div className="mb-3 text-center md:mb-3 md:text-left">
+        <div className="mb-3 hidden text-center md:mb-3 md:block md:text-left">
           <h1 className="font-heading text-[2.3rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[2.8rem]">Choose your plan</h1>
           <p className="mt-1 font-body text-sm font-semibold text-foreground/68">Up to 4 people on one plan. 3-month minimum, then cancel anytime.</p>
         </div>
 
-        <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
+        {/* ───────── Minimalist mobile builder ───────── */}
+        <div className="flex flex-col gap-4 md:hidden">
+          <div className="text-center">
+            <h1 className="font-heading text-[2.4rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose plan</h1>
+            <p className="mt-1 font-body text-[13px] font-semibold text-foreground/60">Up to 4 people. Cancel anytime.</p>
+          </div>
+
+          <div className="flex items-center justify-center rounded-full border border-foreground/16 bg-foreground/[0.04] px-3 py-2 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/72">
+            Up to {money(VISIT_CREDIT)} value per visit
+          </div>
+
+          <div className="overflow-hidden rounded-[1.05rem] border border-foreground/10 bg-background/72 backdrop-blur-xl">
+            <MobileSelectRow
+              icon={CalendarClock}
+              label="Sessions"
+              value={`${sessions} / Month`}
+              selectValue={String(sessions)}
+              onSelectChange={(v) => changeSessions(Number(v))}
+              ariaLabel="Sessions per month"
+            >
+              {SESSION_OPTIONS.map((n) => (
+                <option key={n} value={n} className="bg-background text-foreground">{n} / Month</option>
+              ))}
+            </MobileSelectRow>
+
+            <MobileSelectRow
+              icon={Users}
+              label="People"
+              value={peopleCount === 1 ? 'Just me' : `${peopleCount} people`}
+              selectValue={String(peopleCount)}
+              onSelectChange={(v) => setPeopleCount(Number(v))}
+              ariaLabel="People on plan"
+            >
+              <option value={1} className="bg-background text-foreground">Just me</option>
+              <option value={2} className="bg-background text-foreground">2 people</option>
+              <option value={3} className="bg-background text-foreground">3 people</option>
+              <option value={4} className="bg-background text-foreground">4 people</option>
+            </MobileSelectRow>
+
+            <MobileSelectRow
+              icon={Droplets}
+              label="Therapy"
+              value={therapyOption?.label || '—'}
+              selectValue={visits[0]?.therapyKey || 'hydration'}
+              onSelectChange={setUniformTherapy}
+              ariaLabel="Therapy"
+            >
+              {CATEGORIES.map((cat) => (
+                <optgroup key={cat.key} label={cat.label} className="bg-background text-foreground">
+                  {cat.options.map((opt) => (
+                    <option key={opt.key} value={opt.key} className="bg-background text-foreground">{opt.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </MobileSelectRow>
+
+            <MobileSelectRow
+              icon={CreditCard}
+              label="Term"
+              value={term.label}
+              selectValue={termKey}
+              onSelectChange={setTermKey}
+              ariaLabel="Billing term"
+            >
+              {TERMS.map((t) => (
+                <option key={t.key} value={t.key} className="bg-background text-foreground">{t.label}</option>
+              ))}
+            </MobileSelectRow>
+          </div>
+
+          {/* YOUR PLAN — compact mobile summary */}
+          <div className="overflow-hidden rounded-[1.05rem] border border-foreground/10 bg-background/72 backdrop-blur-xl">
+            <div className="flex items-center justify-between border-b border-foreground/10 px-4 py-2.5">
+              <p className="font-body text-[11px] font-black uppercase tracking-[0.2em] text-foreground/55">Your plan</p>
+              <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/55">{sessions} / Month</p>
+            </div>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex h-[4.6rem] w-[3.6rem] shrink-0 items-center justify-center">
+                <img
+                  src={therapyOption?.image || '/bags/dehydration.webp'}
+                  alt=""
+                  className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">{therapyOption?.label || '—'}</p>
+                <p className="mt-1 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/55">1 IV per visit</p>
+              </div>
+            </div>
+            <div className="border-t border-foreground/10 px-4 py-2.5">
+              <p className="font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground/82">
+                {(therapyOption?.label || '—')} — {sessions}/MO — {money(monthly)}/MO
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onPrimaryCta}
+            className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-foreground/82 bg-foreground px-4 font-heading text-[1rem] uppercase leading-none tracking-[0.08em] text-background transition-transform active:scale-[0.99]"
+          >
+            {isChangeMode ? 'Update my plan' : `Start plan — ${money(depositToday)} today`}
+          </button>
+
+          <p className="text-center font-body text-[12px] font-semibold text-foreground/50">
+            Secure checkout. Cancel anytime after the 3-month minimum.
+          </p>
+        </div>
+
+        {/* ───────── Desktop builder (md+ only) ───────── */}
+        <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
           {/* Left — the one-screen builder: every decision stacked as a section */}
           <div className="flex flex-1 flex-col">
             {/* How it works — compact intro at the very top of the builder. */}
