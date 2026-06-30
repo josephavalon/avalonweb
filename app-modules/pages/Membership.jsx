@@ -1106,10 +1106,10 @@ export default function Subscription() {
       <header>
         <Navbar />
       </header>
-      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
-        <div className="mb-3 hidden text-center md:mb-3 md:block md:text-left">
-          <h1 className="font-heading text-[2.3rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[2.8rem]">Choose your plan</h1>
-          <p className="mt-1 font-body text-sm font-semibold text-foreground/68">Up to 4 people on one plan. 3-month minimum, then cancel anytime.</p>
+      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-4xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
+        <div className="mb-5 hidden text-center md:block">
+          <h1 className="font-heading text-[2.8rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose your plan</h1>
+          <p className="mt-2 font-body text-sm font-semibold text-foreground/60">Up to 4 people. Cancel anytime.</p>
         </div>
 
         {/* ───────── Minimalist mobile builder ───────── */}
@@ -1222,19 +1222,9 @@ export default function Subscription() {
         </div>
 
         {/* ───────── Desktop builder (md+ only) ───────── */}
-        <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
+        <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_20rem] md:items-start md:gap-6">
           {/* Left — the one-screen builder: every decision stacked as a section */}
           <div className="flex flex-1 flex-col">
-            {/* How it works — compact intro at the very top of the builder. */}
-            <div className="mb-2.5 flex items-center gap-2.5 rounded-[1.05rem] border border-foreground/10 bg-foreground/[0.03] px-3.5 py-2.5">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground/[0.05]">
-                <Info className="h-4 w-4 text-foreground/55" strokeWidth={2} />
-              </span>
-              <p className="min-w-0 font-body text-[13px] font-semibold leading-snug text-foreground/60">
-                <span className="font-black uppercase tracking-[0.06em] text-foreground/80">How it works · </span>
-                Each visit includes any service up to {money(VISIT_CREDIT)} — pay only the difference for premium services.
-              </p>
-            </div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1244,7 +1234,6 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.sessions}
                 value={sessionsSummary}
-                hint="Choose how many visits per month."
                 icon={CalendarClock}
                 open={openStep === 'sessions'}
                 onToggle={() => toggleStep('sessions')}
@@ -1253,9 +1242,8 @@ export default function Subscription() {
               </BuilderRow>
 
               <BuilderRow
-                title="Who's on it"
+                title="People"
                 value={peopleSummary}
-                hint="Add up to 3 more people."
                 icon={Users}
                 open={openStep === 'people'}
                 onToggle={() => toggleStep('people')}
@@ -1273,7 +1261,6 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.therapy}
                 value={therapySummary}
-                hint="Change your therapy for any visit."
                 icon={Droplets}
                 open={openStep === 'therapy'}
                 onToggle={() => toggleStep('therapy')}
@@ -1287,13 +1274,10 @@ export default function Subscription() {
                 />
               </BuilderRow>
 
-              {/* Single-visit plans keep a standalone Add-ons row (edits visit 0).
-                  Multi-visit plans fold add-ons INTO each visit row above. */}
               {sessions <= 1 && (
                 <BuilderRow
                   title={STEP_TITLES.addons}
                   value={addonsSummary}
-                  hint="Pay only the difference for premium services."
                   icon={Sparkles}
                   open={openStep === 'addons'}
                   onToggle={() => toggleStep('addons')}
@@ -1310,7 +1294,6 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.term}
                 value={termSummary}
-                hint="Cancel or change anytime."
                 icon={CreditCard}
                 open={openStep === 'term'}
                 onToggle={() => toggleStep('term')}
@@ -1323,44 +1306,39 @@ export default function Subscription() {
             <button
               type="button"
               onClick={onPrimaryCta}
-              className="mt-2 hidden min-h-[50px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] md:flex"
+              className="mt-3 hidden min-h-[52px] w-full items-center justify-center rounded-xl border border-foreground/82 bg-foreground px-4 font-heading text-base uppercase leading-none tracking-[0.08em] text-background transition-transform active:scale-[0.99] md:flex"
             >
-              {primaryCtaLabel} <ArrowRight className="h-4 w-4" />
+              {isChangeMode ? 'Update my plan' : `Start plan — ${money(depositToday)} today`}
             </button>
-
-            {/* Mobile: full plan rail (info only), then a sticky price + Start plan bar */}
-            <div className="mt-5 md:hidden">
-              <PlanRail
-                therapyOption={therapyOption}
-                therapyLabel={therapyOption?.label}
-                sessions={sessions}
-                baseMonthly={baseMonthly}
-                visitLineItems={visitLineItems}
-                visitsDiffer={visitsDiffer}
-                monthly={monthly}
-                planBase={planBase}
-                upgradesTotal={upgradesTotal}
-                term={term}
-                perMonth={perMonth}
-                upfrontTotal={upfrontTotal}
-                onStart={startPlan}
-                showStart={false}
-                peopleBreakdown={peopleBreakdown}
-                peopleCount={peopleCount}
-              />
-            </div>
-            <MobileStartBar
-              therapyLabel={therapyOption?.label}
-              sessions={sessions}
-              monthly={monthly}
-              depositToday={depositToday}
-              onStart={onPrimaryCta}
-              changeMode={isChangeMode}
-            />
           </div>
 
-          {/* Right — the persistent "Your Plan" rail (desktop only) */}
-          <aside className="hidden md:sticky md:top-[5.75rem] md:block">{rail}</aside>
+          {/* Right — compact YOUR PLAN card (desktop only), mirrors mobile */}
+          <aside className="hidden md:sticky md:top-[5.75rem] md:block">
+            <div className="overflow-hidden rounded-[1.05rem] border border-foreground/10 bg-background/72 backdrop-blur-xl">
+              <div className="flex items-center justify-between border-b border-foreground/10 px-4 py-2.5">
+                <p className="font-body text-[11px] font-black uppercase tracking-[0.2em] text-foreground/55">Your plan</p>
+                <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/55">{sessions} / Month</p>
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="flex h-[4.6rem] w-[3.6rem] shrink-0 items-center justify-center">
+                  <img
+                    src={therapyOption?.image || '/bags/dehydration.webp'}
+                    alt=""
+                    className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">{therapyOption?.label || '—'}</p>
+                  <p className="mt-1 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/55">1 IV per visit</p>
+                </div>
+              </div>
+              <div className="border-t border-foreground/10 px-4 py-2.5">
+                <p className="font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground/82">
+                  {(therapyOption?.label || '—')} — {sessions}/MO — {money(monthly)}/MO
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
       </main>
 
