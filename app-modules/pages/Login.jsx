@@ -685,11 +685,11 @@ export default function Login({ defaultAudience = 'patient' }) {
       <div className="flex items-start gap-3 rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.08] px-4 py-4 text-emerald-100">
         <MailCheck className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
         <p className="font-body text-sm font-medium leading-relaxed">
-          Check your inbox — we sent a password reset link to <span className="font-bold">{resetSent}</span>. Open it on this device to choose a new password.
+          Sent. Check the inbox for <span className="font-bold">{resetSent}</span> — the link lands within a minute. <span className="text-emerald-50/85">Open it on this same device</span> so your session sticks.
         </p>
       </div>
       <p className="font-body text-[12px] leading-relaxed text-foreground/55">
-        The link expires in about an hour. If it&rsquo;s expired, request a new one below.
+        Expires in about an hour. Check spam if it&rsquo;s not there in a few minutes — or request a new one below.
       </p>
       <button
         type="button"

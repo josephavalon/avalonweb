@@ -16,11 +16,27 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.9, delay, ease: EASE },
 });
 
+// Common slug variants that should resolve to a canonical IV_SESSIONS key.
+// Customers / SEO links arrive with NAD spelled "nad-plus", category-style
+// "iv-vitamins" etc. — match them rather than 404.
+const SLUG_ALIASES = {
+  'nad-plus': 'nad',
+  'nad+': 'nad',
+  'nadplus': 'nad',
+  'iv-vitamins': 'hydration',
+  'vitamins': 'hydration',
+  'myers-cocktail': 'myers',
+  'jet-lag': 'jetlag',
+  'post-night': 'postnight',
+  'cbd-iv': 'cbd',
+};
+
 export default function ProtocolPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const protocol = IV_SESSIONS.find((s) => s.key === slug);
+  const resolvedSlug = SLUG_ALIASES[String(slug || '').toLowerCase()] || slug;
+  const protocol = IV_SESSIONS.find((s) => s.key === resolvedSlug);
   const price = priceForProtocol(protocol);
   const ingredients = getComposition(protocol);
   const mechanism = getMechanism(protocol);
@@ -78,6 +94,16 @@ export default function ProtocolPage() {
           </motion.button>
 
           {/* Tag + label */}
+
+          {/* Clinician-reviewed reassurance pill — visible above the fold on every
+              protocol so customers see the safety frame before the marketing copy. */}
+          <motion.div
+            {...fadeUp(0.12)}
+            className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/22 bg-emerald-500/[0.08] px-3.5 py-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100"
+          >
+            <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />
+            Clinician-reviewed · Administered by a registered nurse
+          </motion.div>
 
           <motion.h1
             {...fadeUp(0.18)}

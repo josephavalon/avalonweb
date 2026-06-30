@@ -1046,7 +1046,7 @@ export default function Subscription() {
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
         <div className="mb-3 text-center md:mb-3 md:text-left">
           <h1 className="font-heading text-[2.3rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[2.8rem]">Choose your plan</h1>
-          <p className="mt-1 font-body text-sm font-semibold text-foreground/68">Up to 4 people on one plan. Cancel anytime.</p>
+          <p className="mt-1 font-body text-sm font-semibold text-foreground/68">Up to 4 people on one plan. 3-month minimum, then cancel anytime.</p>
         </div>
 
         <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr)_21rem] md:items-start md:gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
