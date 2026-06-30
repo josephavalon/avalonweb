@@ -1475,7 +1475,6 @@ function DesktopOrderRail({
         <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[12px] font-black leading-snug text-foreground/64 2xl:text-[13px]">
           {CLINICAL_REVIEW_NOTICE}
         </p>
-        <ClinicalTrustStrip variant="inline" className="mt-2" linkToTeam={false} />
         <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[70px_1fr] 2xl:grid-cols-[76px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
