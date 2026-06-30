@@ -34,7 +34,8 @@ function IVTherapyHover({ link, linkClassName }) {
     top: '100%',
     zIndex: 50,
     width: '280px',
-    paddingTop: '14px',
+    // No paddingTop — wrapper's padding-bottom (16px) provides the visual gap
+    // AND the hit area bridge so the cursor never leaves the wrapper.
     transform: open ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-4px)',
     opacity: open ? 1 : 0,
     pointerEvents: open ? 'auto' : 'none',
@@ -43,6 +44,11 @@ function IVTherapyHover({ link, linkClassName }) {
   return (
     <div
       className="relative"
+      // padding-bottom extends the hit area to cover the 14px gap between the link
+      // and the panel's visual top; margin-bottom -16 cancels the padding for layout
+      // so adjacent nav links don't shift. Without this, the cursor briefly leaves
+      // the wrapper while crossing toward the panel and onMouseLeave slams it shut.
+      style={{ paddingBottom: '16px', marginBottom: '-16px' }}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onFocusCapture={() => setOpen(true)}
