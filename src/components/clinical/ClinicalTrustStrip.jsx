@@ -68,7 +68,7 @@ export default function ClinicalTrustStrip({ variant = 'compact', className = ''
           <p className="mt-0.5 font-body text-[11px] leading-snug text-foreground/56">
             Every visit clinically reviewed before nurse dispatch.{' '}
             {linkToTeam && (
-              <Link to="/team" className="text-foreground/72 underline-offset-2 hover:underline">
+              <Link to="/team" className="inline-flex min-h-[44px] items-center text-foreground/72 underline-offset-2 hover:underline">
                 Meet the team
               </Link>
             )}
@@ -101,7 +101,7 @@ export default function ClinicalTrustStrip({ variant = 'compact', className = ''
           <ShieldCheck className="mr-1.5 inline-block h-3.5 w-3.5 align-[-2px] text-foreground/72" strokeWidth={2} aria-hidden="true" />
           Every visit is clinically reviewed before a nurse is dispatched.{' '}
           {linkToTeam && (
-            <Link to="/team" className="text-foreground/82 underline-offset-2 hover:underline">
+            <Link to="/team" className="inline-flex min-h-[44px] items-center text-foreground/82 underline-offset-2 hover:underline">
               Meet the team
             </Link>
           )}

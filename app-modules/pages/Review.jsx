@@ -119,7 +119,7 @@ export default function Review() {
           <div className="py-2">
             <h1 className="mb-3 font-heading text-3xl uppercase tracking-[0.04em] text-foreground">This link isn't valid</h1>
             <p className="font-body text-sm text-foreground/70">
-              The review link is invalid or has expired. If you'd still like to share feedback, write to <a className="underline" href="mailto:support@avalonvitality.co">support@avalonvitality.co</a>.
+              The review link is invalid or has expired. If you'd still like to share feedback, write to <a className="inline-flex min-h-[44px] items-center underline" href="mailto:support@avalonvitality.co">support@avalonvitality.co</a>.
             </p>
           </div>
         )}
@@ -128,7 +128,7 @@ export default function Review() {
           <div className="py-2">
             <h1 className="mb-3 font-heading text-3xl uppercase tracking-[0.04em] text-foreground">You already responded</h1>
             <p className="font-body text-sm text-foreground/70">
-              Thanks — we've got your review on file. If something's changed, write to <a className="underline" href="mailto:support@avalonvitality.co">support@avalonvitality.co</a>.
+              Thanks — we've got your review on file. If something's changed, write to <a className="inline-flex min-h-[44px] items-center underline" href="mailto:support@avalonvitality.co">support@avalonvitality.co</a>.
             </p>
           </div>
         )}
