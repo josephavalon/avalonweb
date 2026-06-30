@@ -26,14 +26,25 @@ const IV_TILES = [
 
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
-  // Pure-CSS reveal — no motion/AnimatePresence dependency, no Safari-event flakiness.
-  // Panel is always mounted; visibility is toggled via `open` class. A pointerenter
-  // listener on the wrapper opens; pointerleave closes. Works the same everywhere.
+  // Inline styles for the reveal — no Tailwind JIT or motion library dependency.
+  // onMouseEnter/Leave (universally supported) + onFocus/Blur for keyboard.
+  const panelStyle = {
+    position: 'absolute',
+    left: '50%',
+    top: '100%',
+    zIndex: 50,
+    width: '280px',
+    paddingTop: '14px',
+    transform: open ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-4px)',
+    opacity: open ? 1 : 0,
+    pointerEvents: open ? 'auto' : 'none',
+    transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+  };
   return (
     <div
       className="relative"
-      onPointerEnter={() => setOpen(true)}
-      onPointerLeave={() => setOpen(false)}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
       onFocusCapture={() => setOpen(true)}
       onBlurCapture={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
@@ -46,9 +57,7 @@ function IVTherapyHover({ link, linkClassName }) {
         role="menu"
         aria-label="IV Therapy categories"
         aria-hidden={!open}
-        className={`absolute left-1/2 top-full z-50 w-[280px] -translate-x-1/2 pt-3.5 transition-[opacity,transform] duration-[320ms] ease-editorial ${
-          open ? 'opacity-100 translate-y-0 pointer-events-auto' : 'pointer-events-none -translate-y-1 opacity-0'
-        }`}
+        style={panelStyle}
       >
         <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
           <div className="flex flex-col gap-0.5 p-2">
@@ -73,7 +82,7 @@ function IVTherapyHover({ link, linkClassName }) {
                     src={tile.img}
                     alt=""
                     loading="lazy"
-                    className="h-full w-auto object-contain scale-[0.96] transition-transform duration-500 ease-editorial group-hover:scale-[1.06]"
+                    style={{ height: '100%', width: 'auto', objectFit: 'contain', transform: 'scale(0.96)', transition: 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1)' }}
                   />
                 </span>
               </Link>
