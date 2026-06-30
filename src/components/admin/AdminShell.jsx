@@ -215,10 +215,12 @@ const NAV_LIVE = [
   },
   {
     label: 'Events', icon: CalendarDays, children: [
-      { label: 'Proposals', to: soon('Event Proposals') },
       { label: 'Upcoming', to: soon('Upcoming Events') },
+      { label: 'Service', to: soon('Event Service') },
+      { label: 'GFE queue', to: soon('Event GFE Queue') },
+      { label: 'Orders', to: soon('Event Orders') },
+      { label: 'Proposals', to: soon('Event Proposals') },
       { label: 'Past', to: soon('Past Events') },
-      { label: 'Tickets', to: soon('Event Tickets') },
     ],
   },
   { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
