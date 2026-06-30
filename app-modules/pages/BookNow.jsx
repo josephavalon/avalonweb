@@ -12,6 +12,7 @@ import {
   BatteryCharging,
   FlaskConical,
   Building2,
+  AlertCircle,
   Calendar,
   Check,
   ChevronDown,
@@ -1143,11 +1144,9 @@ function UniversalBookingFrame({
         progressIndex={progressIndex}
       />
       {error && (
-        <div role="alert" className="mb-2 flex min-h-[42px] items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
+        <div role="alert" className="mb-2 flex min-h-[42px] items-center gap-2.5 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
+          <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
           <p className="truncate font-body text-sm font-black">{error}</p>
-          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-2.5 py-1 font-body text-[13px] font-black uppercase tracking-[0.08em]">
-            Text
-          </a>
         </div>
       )}
       <motion.div
@@ -1551,11 +1550,9 @@ function DesktopBookingFrame({
           <DesktopStepRail displayStepIndex={displayStepIndex} />
           <div className="my-3 h-px bg-foreground/10 2xl:my-5" />
           {error && (
-            <div role="alert" className="mb-4 flex min-h-[42px] items-center justify-between gap-3 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
+            <div role="alert" className="mb-4 flex min-h-[42px] items-center gap-2.5 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
+              <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
               <p className="font-body text-sm font-black">{error}</p>
-              <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1 font-body text-[13px] font-black uppercase tracking-[0.08em]">
-                Text
-              </a>
             </div>
           )}
           <motion.div
@@ -3345,11 +3342,9 @@ function FastReviewSurface({
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
       {error && (
-        <div role="alert" id="booking-visit-error" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+        <div role="alert" id="booking-visit-error" className="mb-3 flex items-center gap-2.5 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+          <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
           <p className="font-body text-sm font-black">{error}</p>
-          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.08em]">
-            Text us
-          </a>
         </div>
       )}
 
@@ -6469,9 +6464,12 @@ export default function BookNow() {
                   </div>
                   {checkoutMountError && (
                     <div role="alert" className="m-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
-                      <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
+                      <div className="flex items-center gap-2.5">
+                        <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+                        <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
+                      </div>
                       <div className="mt-3 flex flex-wrap gap-2">
-                      <button
+                        <button
                           type="button"
                           onClick={() => {
                             setCheckoutMountError('');
@@ -6481,9 +6479,6 @@ export default function BookNow() {
                         >
                           Retry payment
                         </button>
-                        <a href="sms:+14159807708" className="inline-flex min-h-[40px] items-center rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]">
-                          Text Avalon
-                        </a>
                       </div>
                     </div>
                   )}
@@ -6630,11 +6625,9 @@ export default function BookNow() {
               </>
             ) : null}
             {error && (
-              <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+              <div role="alert" className="mb-3 flex items-center gap-2.5 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+                <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
                 <p className="font-body text-sm font-black">{error}</p>
-                <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.08em]">
-                  Text us
-                </a>
               </div>
             )}
             <motion.div

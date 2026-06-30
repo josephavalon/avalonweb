@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
+  AlertCircle,
   Droplets, Syringe, ArrowRight, ArrowLeft,
   Check, X, CreditCard,
   Sparkles, Loader2, RefreshCw, Calendar,
@@ -1170,8 +1171,9 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
-          <p className="font-body text-xs text-red-400">{error}</p>
+        <div role="alert" className="flex items-center gap-2.5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+          <p className="font-body text-xs">{error}</p>
         </div>
       )}
 
