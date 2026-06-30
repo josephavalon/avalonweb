@@ -52,44 +52,27 @@ const SPECIALTY_IVS = [
   },
 ];
 
+const VITAMIN_DRIPS = [
+  { icon: Droplets,     img: '/bags/dehydration.webp', label: 'Hydration IV',    price: 200, categoryKey: 'vitamins' },
+  { icon: Zap,          img: '/bags/energy.webp',      label: 'Energy IV',       price: 250, categoryKey: 'vitamins' },
+  { icon: ShieldCheck,  img: '/bags/immunity.webp',    label: 'Immunity IV',     price: 250, categoryKey: 'vitamins' },
+  { icon: Sparkles,     img: '/bags/beauty.webp',      label: 'Beauty IV',       price: 250, categoryKey: 'vitamins' },
+  { icon: FlaskConical, img: '/bags/myers.webp',       label: "Myers' Cocktail", price: 250, categoryKey: 'vitamins' },
+  { icon: Droplets,     img: '/bags/recovery.webp',    label: 'Recovery IV',     price: 250, categoryKey: 'vitamins' },
+  { icon: Sparkles,     img: '/bags/jet-lag.webp',     label: 'Travel IV',       price: 250, categoryKey: 'vitamins' },
+  { icon: Droplets,     img: '/bags/night-out.webp',   label: 'Night Out IV',    price: 250, categoryKey: 'vitamins' },
+];
+const CBD_DRIPS = ((SPECIALTY_IVS.find((s) => s.label === 'CBD') || {}).treatments || [])
+  .map((t) => ({ ...t, categoryKey: 'cbd' }));
+const NAD_DRIPS = ((SPECIALTY_IVS.find((s) => s.label === 'NAD+') || {}).treatments || [])
+  .map((t) => ({ ...t, categoryKey: 'nad' }));
+const ALL_DRIPS = [...VITAMIN_DRIPS, ...CBD_DRIPS, ...NAD_DRIPS];
+
 const TOP_CATEGORIES = [
-  {
-    key: 'vitamins',
-    label: 'IV VITAMINS',
-    icon: Droplets,
-    type: 'flat-treatments',
-    data: [
-      { icon: Droplets,     img: '/bags/dehydration.webp', label: 'Hydration IV',    price: 200 },
-      { icon: Zap,          img: '/bags/energy.webp',      label: 'Energy IV',       price: 250 },
-      { icon: ShieldCheck,  img: '/bags/immunity.webp',    label: 'Immunity IV',     price: 250 },
-      { icon: Sparkles,     img: '/bags/beauty.webp',      label: 'Beauty IV',       price: 250 },
-      { icon: FlaskConical, img: '/bags/myers.webp',       label: "Myers' Cocktail", price: 250 },
-      { icon: Droplets,     img: '/bags/recovery.webp',    label: 'Recovery IV',     price: 250 },
-      { icon: Sparkles,     img: '/bags/jet-lag.webp',     label: 'Travel IV',       price: 250 },
-      { icon: Droplets,     img: '/bags/night-out.webp',   label: 'Night Out IV',    price: 250 },
-    ],
-  },
-  {
-    key: 'cbd',
-    label: 'IV CBD',
-    icon: CannabisLeaf,
-    type: 'flat-treatments',
-    data: (SPECIALTY_IVS.find((s) => s.label === 'CBD') || {}).treatments || [],
-  },
-  {
-    key: 'nad',
-    label: 'IV NAD+',
-    icon: FlaskConical,
-    type: 'flat-treatments',
-    data: (SPECIALTY_IVS.find((s) => s.label === 'NAD+') || {}).treatments || [],
-  },
-  {
-    key: 'all',
-    label: 'VIEW ALL',
-    icon: ArrowRight,
-    type: 'link',
-    href: '/protocols',
-  },
+  { key: 'vitamins', label: 'IV VITAMINS', icon: Droplets,      type: 'flat-treatments', data: VITAMIN_DRIPS },
+  { key: 'cbd',      label: 'IV CBD',      icon: CannabisLeaf,  type: 'flat-treatments', data: CBD_DRIPS },
+  { key: 'nad',      label: 'IV NAD+',     icon: FlaskConical,  type: 'flat-treatments', data: NAD_DRIPS },
+  { key: 'all',      label: 'VIEW ALL',    icon: ArrowRight,    type: 'flat-treatments', data: ALL_DRIPS },
 ];
 
 // ── Sub-category row (inside Vitamin / Specialty) ─────────────────────────────
@@ -250,7 +233,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
                   {cat.data.map((addon) => (
                     <MotionLink
                       key={addon.label}
-                      to={productHrefFor(cat.key, addon.label)}
+                      to={productHrefFor(addon.categoryKey || cat.key, addon.label)}
                       variants={premiumListItem}
                       whileHover={premiumHover}
                       whileTap={premiumTap}
