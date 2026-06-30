@@ -26,59 +26,61 @@ const IV_TILES = [
 
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
+  // Pure-CSS reveal — no motion/AnimatePresence dependency, no Safari-event flakiness.
+  // Panel is always mounted; visibility is toggled via `open` class. A pointerenter
+  // listener on the wrapper opens; pointerleave closes. Works the same everywhere.
   return (
     <div
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onPointerEnter={() => setOpen(true)}
+      onPointerLeave={() => setOpen(false)}
+      onFocusCapture={() => setOpen(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
     >
       <Link to={link.to} className={linkClassName} aria-haspopup="menu" aria-expanded={open}>
         <span className="relative z-10">{link.label}</span>
       </Link>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="iv-megamenu"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            className="absolute left-1/2 top-full z-50 w-[280px] -translate-x-1/2 pt-3.5"
-            role="menu"
-            aria-label="IV Therapy categories"
-          >
-            <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
-              <div className="flex flex-col gap-0.5 p-2">
-                {IV_TILES.map((tile) => (
-                  <Link
-                    key={tile.href}
-                    to={tile.href}
-                    role="menuitem"
-                    className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5"
-                    onClick={() => setOpen(false)}
-                  >
-                    <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
-                      <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
-                      <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
-                    </span>
-                    <span
-                      className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
-                      style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
-                    >
-                      <img
-                        src={tile.img}
-                        alt=""
-                        loading="lazy"
-                        className="h-full w-auto object-contain scale-[0.96] transition-transform duration-500 ease-editorial group-hover:scale-[1.06]"
-                      />
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div
+        role="menu"
+        aria-label="IV Therapy categories"
+        aria-hidden={!open}
+        className={`absolute left-1/2 top-full z-50 w-[280px] -translate-x-1/2 pt-3.5 transition-[opacity,transform] duration-[320ms] ease-editorial ${
+          open ? 'opacity-100 translate-y-0 pointer-events-auto' : 'pointer-events-none -translate-y-1 opacity-0'
+        }`}
+      >
+        <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
+          <div className="flex flex-col gap-0.5 p-2">
+            {IV_TILES.map((tile) => (
+              <Link
+                key={tile.href}
+                to={tile.href}
+                role="menuitem"
+                tabIndex={open ? 0 : -1}
+                className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5 focus:outline-none focus-visible:bg-foreground/5"
+                onClick={() => setOpen(false)}
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
+                  <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
+                  <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
+                </span>
+                <span
+                  className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
+                  style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
+                >
+                  <img
+                    src={tile.img}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-auto object-contain scale-[0.96] transition-transform duration-500 ease-editorial group-hover:scale-[1.06]"
+                  />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
