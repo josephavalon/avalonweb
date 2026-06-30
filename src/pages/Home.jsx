@@ -4,7 +4,6 @@ import React, { lazy, Suspense } from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
-import ClinicalTrustStrip from '../components/clinical/ClinicalTrustStrip';
 
 const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
 const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
@@ -33,9 +32,6 @@ export default function Home() {
 
         {/* ── Below fold — per-card whileInView animations handle entrance ── */}
         <div className="relative z-10">
-          <section aria-label="Clinical trust" className="mx-auto w-full max-w-5xl px-5 pt-8 md:px-12 md:pt-12">
-            <ClinicalTrustStrip variant="full" />
-          </section>
           <Suspense fallback={null}>
             <HowItWorks />
             <TreatmentsTeaser />

@@ -14,10 +14,10 @@ const HERO_ACTIONS = [
 ];
 const HERO_PROOF_POINTS = [
   { label: 'SF Bay Area', icon: MapPin },
-  { label: 'Registered Nurses', icon: ShieldPlus },
   { label: 'Same Day Service', icon: Clock },
-  { label: '60 Second Checkout', icon: Zap },
+  { label: 'Registered Nurses', icon: ShieldPlus },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
+  { label: '60 Second Checkout', icon: Zap },
   { label: 'Custom Plans', icon: Sparkles, to: '/subscription' },
 ];
 
@@ -112,14 +112,6 @@ export default function Hero() {
         {/* Layer 2 — proof points (medium parallax).
             Same split: outer carries scroll parallax, inner carries mount fade-up. */}
         <motion.div style={proofStyle}>
-          <motion.p
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.48, delay: 0.26, ease: EASE }}
-            className="mt-5 max-w-[34rem] font-body text-[12px] uppercase leading-relaxed tracking-[0.14em] text-foreground/70 md:mt-6 md:text-[13px]"
-          >
-            Physician-supervised · RN-administered · Clinically reviewed before every appointment
-          </motion.p>
           <motion.ul
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}

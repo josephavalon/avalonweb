@@ -210,8 +210,15 @@ const NAV_LIVE = [
       { label: 'Acuity', href: ACUITY_URL, external: true },
       { label: 'Shift marketplace', to: '/admin/shift-marketplace' },
       { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
-      { label: 'Events', to: '/admin/soon?feature=Events' },
       { label: 'Tools', to: '/admin/soon?feature=Tools' },
+    ],
+  },
+  {
+    label: 'Events', icon: CalendarDays, children: [
+      { label: 'Proposals', to: soon('Event Proposals') },
+      { label: 'Upcoming', to: soon('Upcoming Events') },
+      { label: 'Past', to: soon('Past Events') },
+      { label: 'Tickets', to: soon('Event Tickets') },
     ],
   },
   { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
