@@ -24,7 +24,7 @@ import SessionBuilder from '@/components/store/SessionBuilder';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { apiPost } from '@/lib/apiClient';
 import { SUBSCRIPTION_COMMITMENT_SHORT } from '@/lib/subscription';
-import { PLAN_VISIT_CREDIT } from '@/config/subscriptionTiers';
+import { PLAN_VISIT_CREDIT, PLAN_ADDON_DISCOUNT, planTierDiscountRate } from '@/config/subscriptionTiers';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -926,12 +926,18 @@ export default function Subscription() {
   });
   const peopleCount = peopleBreakdown.length;
   // Plan economics under the Visit Credit model:
-  //   planBase     = Σ (people's visits × $250)  — the membership price.
-  //   monthly      = Σ max(VISIT_CREDIT, cart)    — base + premium upgrades.
-  //   upgradesTotal= monthly − planBase           — extra paid above credits.
-  const monthly = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
+  //   planBase      = Σ (people's visits × $250)  — the membership price.
+  //   monthlyRetail = Σ max(VISIT_CREDIT, cart)   — base + premium upgrades.
+  //   upgradesTotal = monthlyRetail − planBase    — extra paid above credits.
+  // PLAN INCENTIVE on top: tier discount scales with sessions (10/15/20%)
+  // applied to planBase; flat PLAN_ADDON_DISCOUNT on upgrades/add-ons. The
+  // discounted `monthly` is what we show, deposit from, and bill via Stripe.
+  const monthlyRetail = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
   const planBase = peopleBreakdown.reduce((sum, row) => sum + row.base, 0);
-  const upgradesTotal = monthly - planBase;
+  const upgradesTotal = monthlyRetail - planBase;
+  const tierDiscountRate = planTierDiscountRate(sessions);
+  const planSavings = Math.round(planBase * tierDiscountRate + upgradesTotal * PLAN_ADDON_DISCOUNT);
+  const monthly = Math.max(0, monthlyRetail - planSavings);
   const baseMonthly = peopleBreakdown.find((r) => r.person.id === activePersonId)?.total || 0;
   // Roster rows for the "YOUR SESSION" builder. Plans show a per-person monthly.
   const sessionPeople = peopleBreakdown.map((row) => ({
@@ -977,6 +983,11 @@ export default function Subscription() {
     const planManifest = peopleBreakdown.map((row) => {
       const v0 = row.visits[0] || makeVisit();
       const { option: v0opt } = findTherapy(v0.therapyKey);
+      // Per-person discount mirrors the plan-level math: tier % on credit base,
+      // PLAN_ADDON_DISCOUNT on the rest. Keeps PlanCheckout's per-person sum
+      // consistent with the discounted total Stripe charges.
+      const personSavings = Math.round(row.base * tierDiscountRate + (row.total - row.base) * PLAN_ADDON_DISCOUNT);
+      const personMonthly = Math.max(0, row.total - personSavings);
       return {
         id: row.person.id,
         label: row.label,
@@ -985,7 +996,9 @@ export default function Subscription() {
         therapyKey: v0.therapyKey,
         therapyLabel: v0opt?.label || '',
         ivPrice: Number(v0opt?.price || VITAMIN_IV_PRICE),
-        monthly: row.total,
+        monthly: personMonthly,
+        monthlyRetail: row.total,
+        savings: personSavings,
         // Visit Credit economics for this person (membership base vs upgrades).
         base: row.base,
         upgrades: row.upgrades,
@@ -1205,6 +1218,11 @@ export default function Subscription() {
               <p className="font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground/82">
                 {(therapyOption?.label || '—')} — {sessions}/MO — {money(monthly)}/MO
               </p>
+              {planSavings > 0 && (
+                <p className="mt-1 font-body text-[11px] font-black uppercase tracking-[0.12em] text-emerald-300/90">
+                  Save {money(planSavings)}/mo with plan
+                </p>
+              )}
             </div>
           </div>
 

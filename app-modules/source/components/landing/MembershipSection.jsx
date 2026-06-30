@@ -15,7 +15,8 @@ const MotionLink = motion.create(Link);
 // and add the deep-link to the /subscription builder.
 const TIERS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
   ...tier,
-  price: typeof tier.price === 'number' ? `$${tier.price.toLocaleString()}` : tier.price,
+  priceLabel: typeof tier.price === 'number' ? `$${tier.price.toLocaleString()}` : tier.price,
+  originalPriceLabel: typeof tier.originalPrice === 'number' ? `$${tier.originalPrice.toLocaleString()}` : null,
   href: '/subscription',
 }));
 
@@ -61,8 +62,15 @@ function TierRow({ tier, index, open, onToggle }) {
 
         <div className="flex shrink-0 items-center gap-3 text-right">
           <div>
-            <span className="block font-body text-[11px] uppercase tracking-[0.12em] text-foreground/38">From</span>
-            <span className="font-heading text-2xl leading-none tracking-wide tabular-nums text-foreground/72">{tier.price}</span>
+            <span className="block font-body text-[11px] uppercase tracking-[0.12em] text-foreground/38">
+              {tier.discountPercent ? `Save ${tier.discountPercent}%` : 'From'}
+            </span>
+            <span className="flex items-baseline justify-end gap-1.5">
+              {tier.originalPriceLabel && (
+                <span className="font-body text-[13px] tabular-nums text-foreground/35 line-through">{tier.originalPriceLabel}</span>
+              )}
+              <span className="font-heading text-2xl leading-none tracking-wide tabular-nums text-foreground/82">{tier.priceLabel}</span>
+            </span>
             {tier.unit && <span className="ml-0.5 font-body text-[11px] tabular-nums text-foreground/32">{tier.unit}</span>}
           </div>
           <motion.span
