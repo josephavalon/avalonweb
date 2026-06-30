@@ -21,6 +21,11 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/email-templates', // editable customer email templates
   '/admin/promo-codes', // Stripe-of-record promo code management
   '/admin/shift-marketplace', // read-only nurse shift offer board (preview mode)
+  '/admin/refunds', // member refund requests — Stripe-issued
+  '/admin/deletion-requests', // member account-deletion requests (anonymize)
+  '/admin/expiring-credits', // members with visit credits about to expire
+  '/admin/reviews', // post-visit NPS + review moderation
+  '/admin/reconciliation', // renewals / acuity sync / payment failures
   '/admin/soon', // coming-soon placeholders (Inventory/Events/Clinical/GFE/Tools/Settings)
 ]);
 
@@ -39,6 +44,12 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/gfe', // GFE policy toggles (admin-only)
   '/admin/email-templates', // editable customer email templates
   '/admin/promo-codes', // Stripe-of-record promo code management
+  '/admin/shift-marketplace', // read-only nurse shift offer board
+  '/admin/refunds', // member refund requests
+  '/admin/deletion-requests', // member account-deletion requests
+  '/admin/expiring-credits', // members with credits about to expire
+  '/admin/reviews', // post-visit NPS + review moderation
+  '/admin/reconciliation', // renewals / acuity sync / payment failures
   '/admin/soon', // coming-soon placeholders
 ]);
 

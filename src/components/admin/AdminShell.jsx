@@ -49,12 +49,15 @@ const NAV_LIVE = [
     label: 'Patients', icon: Users, children: [
       { label: 'Patient records', to: '/admin/clients' },
       { label: 'Memberships', to: '/admin/memberships' },
+      { label: 'Expiring credits', to: '/admin/expiring-credits' },
+      { label: 'Deletion requests', to: '/admin/deletion-requests' },
     ],
   },
   {
     label: 'Communications', icon: MessageSquare, children: [
       { label: 'Client inbox', to: '/admin/messages' },
       { label: 'Email templates', to: '/admin/email-templates' },
+      { label: 'Reviews', to: '/admin/reviews' },
       { label: 'Broadcasts', to: '/admin/soon?feature=Broadcasts' },
       { label: 'SMS templates', to: '/admin/soon?feature=SMS%20Templates' },
     ],
@@ -64,6 +67,7 @@ const NAV_LIVE = [
       {
         label: 'Executive', children: [
           { label: 'Dashboard', to: '/admin/finance' },
+          { label: 'Reconciliation', to: '/admin/reconciliation' },
           { label: 'KPI Scorecard', to: soon('KPI Scorecard') },
           { label: 'Cash Position', to: soon('Cash Position') },
           { label: 'Runway', to: soon('Runway') },
@@ -82,7 +86,7 @@ const NAV_LIVE = [
           { label: 'Deposits', to: soon('Deposits') },
           { label: 'Outstanding Balances', to: soon('Outstanding Balances') },
           { label: 'Invoices', to: soon('Invoices') },
-          { label: 'Refunds', to: soon('Refunds') },
+          { label: 'Refunds', to: '/admin/refunds' },
           { label: 'Chargebacks', to: soon('Chargebacks') },
         ],
       },
@@ -204,6 +208,7 @@ const NAV_LIVE = [
       },
       { label: 'GFE', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
+      { label: 'Shift marketplace', to: '/admin/shift-marketplace' },
       { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
       { label: 'Events', to: '/admin/soon?feature=Events' },
       { label: 'Tools', to: '/admin/soon?feature=Tools' },

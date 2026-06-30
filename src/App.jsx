@@ -179,6 +179,13 @@ const AdminTeamSettings = lazyRoute(() => import('./pages/admin/TeamSettings'));
 const AdminEmailTemplates = lazyRoute(() => import('./pages/admin/EmailTemplates'));
 const AdminPromoCodes = lazyRoute(() => import('./pages/admin/PromoCodes'));
 const AdminShiftMarketplace = lazyRoute(() => import('./pages/admin/ShiftMarketplace'));
+const AdminRefunds = lazyRoute(() => import('./pages/admin/Refunds'));
+const AdminDeletionRequests = lazyRoute(() => import('./pages/admin/DeletionRequests'));
+const AdminExpiringCredits = lazyRoute(() => import('./pages/admin/ExpiringCredits'));
+const AdminReviews = lazyRoute(() => import('./pages/admin/Reviews'));
+const AdminReconciliation = lazyRoute(() => import('./pages/admin/Reconciliation'));
+const Review = lazyRoute(() => import('./pages/Review'));
+const MemberRedeemGift = lazyRoute(() => import('./pages/members/RedeemGift'));
 const InviteAccept = lazyRoute(() => import('./pages/InviteAccept'));
 const NewPassword = lazyRoute(() => import('./pages/NewPassword'));
 
@@ -419,6 +426,11 @@ function AppRoutes() {
             <Route path="/admin/email-templates" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEmailTemplates /></RequireAuth>} />
             <Route path="/admin/promo-codes" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminPromoCodes /></RequireAuth>} />
             <Route path="/admin/shift-marketplace" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminShiftMarketplace /></RequireAuth>} />
+            <Route path="/admin/refunds" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminRefunds /></RequireAuth>} />
+            <Route path="/admin/deletion-requests" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminDeletionRequests /></RequireAuth>} />
+            <Route path="/admin/expiring-credits" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminExpiringCredits /></RequireAuth>} />
+            <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
+            <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
@@ -426,6 +438,8 @@ function AppRoutes() {
             <Route path="/safety" element={<Safety />} />
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/gift" element={<Gift />} />
+            <Route path="/review" element={<Review />} />
+            <Route path="/members/redeem" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberRedeemGift /></RequireAuth>} />
             <Route path="/athlete" element={<Athlete />} />
             <Route path="/hangover" element={<Hangover />} />
             <Route path="/jet-lag" element={<JetLag />} />

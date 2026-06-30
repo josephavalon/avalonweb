@@ -16,6 +16,8 @@ import {
   sendPaymentFailedEmail,
 } from '../../_lib/billing-emails.js';
 import { sendWelcomeEmail, shouldSendCheckoutWelcome } from '../../_welcome-email.js';
+import { creditReferralOnFirstPaid } from '../../_lib/referrals.js';
+import { fulfillGiftCard } from '../../_lib/gift-cards.js';
 import { signWelcomeToken, isMagicLinkWelcomeEnabled } from '../../_lib/welcome-token.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
@@ -698,6 +700,18 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     return { action: 'ignored_unpaid_checkout', paymentStatus: session.payment_status };
   }
 
+  // Gift-card purchases short-circuit before the appointment-shaped flow runs.
+  // fulfillGiftCard never throws and no-ops when the session isn't a gift card.
+  if (md.kind === 'gift_card') {
+    try {
+      const result = await fulfillGiftCard(db, { session });
+      return { action: 'gift_card_fulfilled', ...result };
+    } catch (err) {
+      console.warn('[stripe/webhook] gift card fulfill failed', safeLogContext(err, 'gift_card_fulfill_failed'));
+      return { action: 'gift_card_fulfill_failed' };
+    }
+  }
+
   const appointmentRecordId = md.appointmentRecordId || null;
   let record = db
     ? await findAppointmentRecord(db, {
@@ -1144,6 +1158,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       session,
       md,
     });
+    try { await creditReferralOnFirstPaid(db, { refereeProfileId: checkout.creditRedemption?.memberProfileId || null, refereeEmail: checkout.contact?.email || '', appointmentId: record.id, tenantId }); } catch (err) { console.warn('[stripe/webhook] referral credit failed', safeLogContext(err, 'referral_credit_failed')); }
     if (fulfillmentError) {
       await insertReconciliationCase(db, buildReconciliationCase({
         caseType: 'stripe_succeeded_acuity_failed',
@@ -1230,6 +1245,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       session,
       md,
     });
+    try { await creditReferralOnFirstPaid(db, { refereeProfileId: checkout.creditRedemption?.memberProfileId || null, refereeEmail: checkout.contact?.email || '', appointmentId: insertedRecord.id, tenantId: insertedRecord.tenant_id || fulfillmentTenantId }); } catch (err) { console.warn('[stripe/webhook] referral credit failed', safeLogContext(err, 'referral_credit_failed')); }
     await sendCheckoutWelcomeEmail(db, {
       contact: checkout.contact || {},
       currentRecordId: insertedRecord.id,
