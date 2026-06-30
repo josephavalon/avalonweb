@@ -16,6 +16,73 @@ const mainLinks = [
   { to: '/subscription', label: 'Plans' },
   { to: '/launches', label: 'Launches' },
 ];
+
+// Desktop hover-dropdown payload for "IV Therapy" — three categories with bag graphics.
+const IV_TILES = [
+  { title: 'IV Vitamins', desc: '8 hydration & wellness protocols', img: '/bags/energy.webp', href: '/protocols' },
+  { title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       img: '/bags/cbd.webp',    href: '/services/cbd' },
+  { title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     img: '/bags/nad.webp',    href: '/services/nad' },
+];
+
+function IVTherapyHover({ link, linkClassName }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <Link to={link.to} className={linkClassName} aria-haspopup="menu" aria-expanded={open}>
+        <span className="relative z-10">{link.label}</span>
+      </Link>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="iv-megamenu"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.32, ease: EASE }}
+            className="absolute left-1/2 top-full z-50 w-[280px] -translate-x-1/2 pt-3.5"
+            role="menu"
+            aria-label="IV Therapy categories"
+          >
+            <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
+              <div className="flex flex-col gap-0.5 p-2">
+                {IV_TILES.map((tile) => (
+                  <Link
+                    key={tile.href}
+                    to={tile.href}
+                    role="menuitem"
+                    className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5"
+                    onClick={() => setOpen(false)}
+                  >
+                    <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
+                      <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
+                      <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
+                    </span>
+                    <span
+                      className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
+                      style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
+                    >
+                      <img
+                        src={tile.img}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-auto object-contain scale-[0.96] transition-transform duration-500 ease-editorial group-hover:scale-[1.06]"
+                      />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 const BOOK_URL = '/book';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
@@ -267,13 +334,18 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           <div className="flex items-center justify-center gap-7">
             {mainLinks.map((link) => {
               const active = isActiveLink(link.to);
+              const linkClassName = `relative inline-flex min-h-10 items-center justify-center px-1 text-center font-body text-[11px] uppercase leading-none tracking-[0.24em] transition-colors ${
+                active ? 'text-foreground' : 'text-foreground/62 hover:text-foreground'
+              }`;
+              // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
+              if (link.to === '/protocols') {
+                return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
+              }
               return (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`relative inline-flex min-h-10 items-center justify-center px-1 text-center font-body text-[11px] uppercase leading-none tracking-[0.24em] transition-colors ${
-                    active ? 'text-foreground' : 'text-foreground/62 hover:text-foreground'
-                  }`}
+                  className={linkClassName}
                 >
                   <span className="relative z-10">{link.label}</span>
                 </Link>
