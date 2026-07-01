@@ -1121,7 +1121,7 @@ export default function Subscription() {
       <header>
         <Navbar />
       </header>
-      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-4xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem]">
+      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem] md:px-8">
         <div className="mb-5 hidden text-center md:block">
           <h1 className="font-heading text-[2.8rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose your plan</h1>
           <p className="mt-2 font-body text-sm font-semibold text-foreground/60">Up to 4 people. Cancel anytime.</p>
@@ -1242,7 +1242,7 @@ export default function Subscription() {
         </div>
 
         {/* ───────── Desktop builder (md+ only) ───────── */}
-        <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_20rem] md:items-start md:gap-6">
+        <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_22rem] md:items-start md:gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-10">
           {/* Left — the one-screen builder: every decision stacked as a section */}
           <div className="flex flex-1 flex-col">
             <motion.div

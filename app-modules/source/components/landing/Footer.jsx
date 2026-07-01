@@ -223,7 +223,7 @@ export default function Footer() {
 
           {/* Services */}
           <FooterDesktopGroup title="Services" icon={Layers}>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 gap-1.5">
               {SERVICES.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}
