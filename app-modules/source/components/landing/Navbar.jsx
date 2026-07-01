@@ -26,39 +26,67 @@ const IV_TILES = [
 
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
-  // Inline styles for the reveal — no Tailwind JIT or motion library dependency.
-  // onMouseEnter/Leave (universally supported) + onFocus/Blur for keyboard.
+  const wrapperRef = useRef(null);
+
+  // Global click-outside listener when open — reliable across all browsers.
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleDocClick = (e) => {
+      if (!wrapperRef.current?.contains(e.target)) setOpen(false);
+    };
+    const handleEsc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', handleDocClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleDocClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [open]);
+
   const panelStyle = {
     position: 'absolute',
     left: '50%',
     top: '100%',
     zIndex: 50,
     width: '280px',
-    // No paddingTop — wrapper's padding-bottom (16px) provides the visual gap
-    // AND the hit area bridge so the cursor never leaves the wrapper.
     transform: open ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-4px)',
     opacity: open ? 1 : 0,
     pointerEvents: open ? 'auto' : 'none',
     transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
   };
+  const chevronStyle = {
+    display: 'inline-block',
+    marginLeft: '6px',
+    fontSize: '9px',
+    lineHeight: 1,
+    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+    transition: 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+    opacity: 0.6,
+  };
   return (
     <div
+      ref={wrapperRef}
       className="relative"
-      // padding-bottom extends the hit area to cover the 14px gap between the link
-      // and the panel's visual top; margin-bottom -16 cancels the padding for layout
-      // so adjacent nav links don't shift. Without this, the cursor briefly leaves
-      // the wrapper while crossing toward the panel and onMouseLeave slams it shut.
+      // Extend hit area 16px below to cover the gap between link and panel.
       style={{ paddingBottom: '16px', marginBottom: '-16px' }}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      onFocusCapture={() => setOpen(true)}
-      onBlurCapture={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
-      }}
     >
-      <Link to={link.to} className={linkClassName} aria-haspopup="menu" aria-expanded={open}>
+      {/* Button (not Link) — click OPENS the menu instead of navigating.
+          Users can still reach /protocols by clicking "IV Vitamins" inside the menu. */}
+      <button
+        type="button"
+        className={linkClassName}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen((s) => !s);
+        }}
+      >
         <span className="relative z-10">{link.label}</span>
-      </Link>
+        <span aria-hidden="true" style={chevronStyle}>▾</span>
+      </button>
       <div
         role="menu"
         aria-label="IV Therapy categories"
