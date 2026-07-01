@@ -1455,9 +1455,14 @@ function DesktopOrderRail({
               </div>
               {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
               <div className="mt-2.5 2xl:mt-3">
-                <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit today</p>
-                <p className="mt-1 font-body text-[1.85rem] font-black leading-none text-foreground 2xl:text-[2.15rem]">{currency(displayDueNow)}</p>
-                {displayBalanceDue > 0 && <p className="mt-1 font-body text-[14px] font-bold text-foreground/52 2xl:text-xs">Balance after visit {currency(displayBalanceDue)}</p>}
+                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
+                  Deposit today {currency(displayDueNow)}
+                </p>
+                {displayBalanceDue > 0 && (
+                  <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/52 2xl:text-[13px]">
+                    Balance after visit {currency(displayBalanceDue)}
+                  </p>
+                )}
               </div>
             </>
           ) : (
@@ -1466,11 +1471,8 @@ function DesktopOrderRail({
                 Select a therapy to see your total.
               </p>
               <div className="mt-2.5">
-                <p className="font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-[13px]">
-                  Deposit today
-                </p>
-                <p className="mt-1 font-heading text-[1.85rem] leading-none tracking-normal text-foreground 2xl:text-[2.15rem]">
-                  {currency(BOOKING_DEPOSIT_AMOUNT)}
+                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
+                  Deposit today {currency(BOOKING_DEPOSIT_AMOUNT)}
                 </p>
                 <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
                   Balance depends on therapy
