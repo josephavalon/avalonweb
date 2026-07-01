@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Mail, Phone, Clock, MapPin, ChevronDown, Layers, Building2, Scale } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
-import LanguageSelect from '@/components/landing/LanguageSelect';
+// LanguageSelect intentionally removed — coming back later.
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const SERVICES = [
@@ -85,25 +85,43 @@ function FooterContactLink({ href, icon: Icon, children }) {
 // surface), so on desktop they stay visible rather than hidden behind a click.
 // The mobile footer keeps its compact accordion (FooterGroup) below.
 function FooterDesktopGroup({ title, icon: Icon, children }) {
+  // Collapsible accordion — header is a click target, children reveal below.
+  // Reduces desktop footer height by ~60%; matches the mobile accordion pattern.
+  const [open, setOpen] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-32px' }}
       transition={{ duration: 0.55, ease: EASE }}
-        className="av-glass-card relative overflow-hidden rounded-[1.15rem] border transition-colors"
+      className={`av-glass-card relative overflow-hidden rounded-[1.15rem] border transition-colors ${open ? 'is-open' : ''}`}
     >
-      <div className="relative flex min-h-[54px] w-full items-center gap-2.5 px-3">
-            <span className="flex min-w-0 items-center gap-2.5">
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        aria-expanded={open}
+        className="relative flex min-h-[54px] w-full items-center justify-between gap-2.5 px-3 text-left transition-colors [@media(hover:hover)]:hover:bg-foreground/[0.025]"
+      >
+        <span className="flex min-w-0 items-center gap-2.5">
           {Icon && (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/80 text-foreground/58">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/80 text-foreground/58">
               <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
             </span>
           )}
           <span className="font-body text-[11px] uppercase tracking-[0.28em] text-foreground/62">{title}</span>
         </span>
-      </div>
-      <div className="relative grid gap-1 border-t border-foreground/[0.07] p-2">{children}</div>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.32, ease: EASE }}
+          className="shrink-0 text-foreground/45"
+          aria-hidden="true"
+        >
+          <ChevronDown className="h-4 w-4" strokeWidth={2} />
+        </motion.span>
+      </button>
+      <SmoothDisclosure open={open}>
+        <div className="relative grid gap-1 border-t border-foreground/[0.07] p-2">{children}</div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }
@@ -290,9 +308,6 @@ export default function Footer() {
             <p className="font-body text-[11px] text-foreground/58 leading-tight">
               © 2026 Avalon Vitality. All rights reserved.
             </p>
-            <div className="flex items-center gap-4">
-              <LanguageSelect />
-            </div>
           </div>
           <p className="font-body text-[11px] text-foreground/58 leading-tight">
             California wellness support only. Not emergency care or medical advice.

@@ -76,9 +76,10 @@ const CATEGORIES = [
     blurb: `$${VITAMIN_IV_PRICE} per IV`,
     // Each option carries the catalog content the "What's inside" disclosure
     // needs (desc / inside / features) so the tile face stays name + price only.
-    // price = the plan's per-visit credit ($250) used in plan math; displayPrice = the
-    // true catalog price shown to the customer in the picker (Hydration is $200, the rest $250).
-    options: IV_VITAMINS.map((s) => ({ key: s.key, label: s.label, price: VITAMIN_IV_PRICE, displayPrice: s.price, protocol: s.key, image: s.image, desc: s.desc || s.tagline, inside: s.inside, features: s.features })),
+    // Plan math now uses the true catalog price per IV (Hydration $200, others $250)
+    // so a Hydration subscriber pays $200/visit not $250/visit. Universal across
+    // picker display AND plan total math since `price` drives both.
+    options: IV_VITAMINS.map((s) => ({ key: s.key, label: s.label, price: s.price, protocol: s.key, image: s.image, desc: s.desc || s.tagline, inside: s.inside, features: s.features })),
   },
   {
     key: 'nad',
@@ -426,7 +427,7 @@ function StepTherapy({ therapyKey, onSelect }) {
           <optgroup key={cat.key} label={cat.label} className="bg-background text-foreground">
             {cat.options.map((opt) => (
               <option key={opt.key} value={opt.key} className="bg-background text-foreground">
-                {opt.label} — {money(opt.displayPrice ?? opt.price)}
+                {opt.label} — {money(opt.price)}
               </option>
             ))}
           </optgroup>
@@ -474,7 +475,7 @@ function VisitRow({ index, visit, onTherapy, onIv, onIm }) {
           <optgroup key={cat.key} label={cat.label} className="bg-background text-foreground">
             {cat.options.map((opt) => (
               <option key={opt.key} value={opt.key} className="bg-background text-foreground">
-                {opt.label} — {money(opt.displayPrice ?? opt.price)}
+                {opt.label} — {money(opt.price)}
               </option>
             ))}
           </optgroup>

@@ -243,6 +243,11 @@ const NAV = [
   ...(import.meta.env.VITE_ADMIN_PREVIEW === '1' ? NAV_PREVIEW : []),
 ];
 
+// Any leaf pointing at the shared coming-soon stub is unshipped — hide it from
+// the sidebar entirely so snooches.avalonvitality.co doesn't advertise pages
+// that don't exist yet. Re-enable by pointing the leaf's `to` at a real route.
+const isComingSoonLeaf = (item) => typeof item.to === 'string' && item.to.startsWith('/admin/soon');
+
 // Filter the nav to what the signed-in role may open. Staff see only the
 // customer / scheduling / billing sections; external links (Acuity) stay
 // visible to everyone on the team. Source of truth: src/lib/adminAccess.js.
@@ -256,6 +261,7 @@ function filterNav(nav, role) {
         return children.length ? { ...item, children } : null;
       }
       if (item.external) return item;
+      if (isComingSoonLeaf(item)) return null;
       if (item.to) return canAccessAdminRoute(role, item.to) ? item : null;
       return item;
     })

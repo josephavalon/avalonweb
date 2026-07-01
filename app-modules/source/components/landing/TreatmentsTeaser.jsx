@@ -142,7 +142,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
   const items = Array.isArray(cat.data) ? cat.data : [];
   const fromPrice = items.length ? Math.min(...items.map((t) => t.price)) : null;
   const rowMeta = items.length
-    ? `${items.length} drips${fromPrice ? ` · from $${fromPrice}` : ''}`
+    ? `${items.length} options${fromPrice ? ` · from $${fromPrice}` : ''}`
     : null;
 
   if (cat.type === 'link') {
