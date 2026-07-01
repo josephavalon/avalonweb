@@ -104,7 +104,11 @@ export function LearnHub() {
           {/* Start here — hand-picked on-ramp; hidden when the visitor is actively searching. */}
           {!isSearching && startHere.length > 0 && (
             <section className="mt-10">
-              <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Start here</p>
+              {/* h2 (not p) so the heading order is h1 → h2 (Start here) → h3
+                  (article titles) → h2 (cluster) → h3, matching the cluster
+                  sections below. Visual styling stays identical to the sibling
+                  cluster h2s (small caps eyebrow → then large title above card grid). */}
+              <h2 className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Start here</h2>
               <div className="mt-3 grid gap-4 md:grid-cols-3">
                 {startHere.map((item) => (
                   <Link

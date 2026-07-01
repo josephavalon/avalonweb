@@ -1488,6 +1488,7 @@ function DesktopOrderRail({
             type="button"
             onClick={onNext}
             disabled={!canGoNext || checkoutLoading}
+            aria-describedby={!canGoNext && !checkoutLoading ? 'book-next-hint' : undefined}
             className={`relative flex min-h-[44px] w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] transition-transform active:scale-[0.985] 2xl:min-h-[50px] 2xl:text-sm ${
               canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
             }`}
@@ -1504,6 +1505,16 @@ function DesktopOrderRail({
             <ArrowRight className="h-5 w-5 2xl:h-6 2xl:w-6" strokeWidth={2.6} />
           </button>
         </div>
+        {/* Hint appears when the primary CTA is disabled so users don't have to
+            infer why they can't advance. Generic across steps to stay accurate. */}
+        {!canGoNext && !checkoutLoading && (
+          <p
+            id="book-next-hint"
+            className="mt-1.5 text-center font-body text-[11px] font-semibold text-foreground/55"
+          >
+            Complete this step to continue.
+          </p>
+        )}
         <div className="mt-2 flex items-center justify-center gap-2 font-body text-[13px] font-semibold text-foreground/50 2xl:text-[14px]">
           <ShieldCheck className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
           Secure booking

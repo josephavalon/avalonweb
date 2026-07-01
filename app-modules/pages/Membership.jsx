@@ -1158,14 +1158,14 @@ export default function Subscription() {
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem] md:px-8">
         <div className="mb-5 hidden text-center md:block">
           <h1 className="font-heading text-[2.8rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose your plan</h1>
-          <p className="mt-2 font-body text-sm font-semibold text-foreground/60">Up to 4 people. Cancel anytime.</p>
+          <p className="mt-2 font-body text-sm font-semibold text-foreground/60">Up to 4 people. 3-month minimum, then cancel anytime.</p>
         </div>
 
         {/* ───────── Minimalist mobile builder ───────── */}
         <div className="flex flex-col gap-4 md:hidden">
           <div className="text-center">
             <h1 className="font-heading text-[2.4rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose plan</h1>
-            <p className="mt-1 font-body text-[13px] font-semibold text-foreground/60">Up to 4 people. Cancel anytime.</p>
+            <p className="mt-1 font-body text-[13px] font-semibold text-foreground/60">Up to 4 people. 3-month min, then cancel anytime.</p>
           </div>
 
           <div className="flex items-center justify-center rounded-full border border-foreground/16 bg-foreground/[0.04] px-3 py-2 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/72">

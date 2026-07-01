@@ -56,10 +56,10 @@ export function LocationsHub() {
       <main className="px-5 pb-16 pt-32 md:px-12 lg:px-20">
         <div className="mx-auto max-w-6xl">
           <h1 className="mt-5 max-w-4xl font-heading text-6xl uppercase leading-[0.88] tracking-tight text-foreground md:text-8xl">
-            Mobile Recovery City Index
+            Where Avalon comes to you
           </h1>
           <p className="mt-6 max-w-2xl font-body text-base leading-relaxed text-foreground/62 md:text-lg">
-            City-specific recovery pages for homes, hotels, offices, launches, private events, neighborhoods, and local things to do across the Bay Area.
+            Same-day mobile IV therapy across the Bay Area — homes, hotels, offices, and event venues. Pick your city to see how we serve it.
           </p>
           {(() => {
             // Group cities by region so users scan the geography that matters
