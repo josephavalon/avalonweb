@@ -430,7 +430,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
   const logoClass = "av-logo inline-flex min-h-11 min-w-11 shrink-0 flex-col items-center justify-center text-center leading-none";
   const linkClass = "inline-flex min-h-11 items-center justify-center text-center font-heading text-lg tracking-[0.06em] text-foreground hover:text-foreground transition-colors uppercase whitespace-nowrap leading-none";
-  const contactActionClass = "av-glass-widget inline-flex h-14 w-14 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
+  const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin')
     || location.pathname.startsWith('/provider')
@@ -513,7 +513,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             aria-label="Avalon Vitality — home"
             className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}
           >
-            <AvalonMark className="h-[30px] w-[19px] text-foreground md:h-[40px] md:w-[26px]" />
+            <AvalonMark className="h-[30px] w-[19px] text-foreground md:h-[46px] md:w-[30px]" />
             <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
@@ -549,12 +549,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               the logged-in nav (Sign Out + Dashboard + Book) from overflowing into
               the centered links. */}
           {!compact && !focusMode && !user && (
-            <div className="flex items-center gap-2" aria-label="Contact Avalon">
+            <div className="flex items-center gap-1.5" aria-label="Contact Avalon">
               <a href={PHONE_URL} className={contactActionClass} aria-label={`Call Avalon ${PHONE_DISPLAY}`} title={`Call ${PHONE_DISPLAY}`}>
-                <Phone className="h-5 w-5" strokeWidth={2} />
+                <Phone className="h-4 w-4" strokeWidth={2} />
               </a>
               <a href={TEXT_URL} className={contactActionClass} aria-label="Text Avalon" title="Text Avalon">
-                <MessageCircle className="h-5 w-5" strokeWidth={2} />
+                <MessageCircle className="h-4 w-4" strokeWidth={2} />
               </a>
             </div>
           )}
@@ -573,7 +573,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}
-            className="inline-flex min-h-11 items-center justify-center gap-2.5 rounded-full border border-foreground bg-foreground px-7 py-3 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
           >
             Book Now
             <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
