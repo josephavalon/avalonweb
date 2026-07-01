@@ -1465,15 +1465,31 @@ function DesktopOrderRail({
               <p className="font-body text-[13px] font-bold leading-snug text-foreground/58 2xl:text-[14px]">
                 Select a therapy to see your total.
               </p>
-              <p className="mt-2 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
-                Deposit today {currency(BOOKING_DEPOSIT_AMOUNT)} · balance depends on therapy
-              </p>
+              <div className="mt-2.5">
+                <p className="font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-[13px]">
+                  Deposit today
+                </p>
+                <p className="mt-1 font-heading text-[1.85rem] leading-none tracking-normal text-foreground 2xl:text-[2.15rem]">
+                  {currency(BOOKING_DEPOSIT_AMOUNT)}
+                </p>
+                <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
+                  Balance depends on therapy
+                </p>
+              </div>
             </div>
           )}
         </div>
-        <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[12px] font-black leading-snug text-foreground/64 2xl:text-[13px]">
-          {CLINICAL_REVIEW_NOTICE}
-        </p>
+        <div className="mt-2 flex items-start gap-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-2">
+          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/64 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
+          <div className="min-w-0">
+            <p className="font-body text-[12px] font-black leading-snug text-foreground/76 2xl:text-[13px]">
+              {CLINICAL_REVIEW_NOTICE}
+            </p>
+            <p className="mt-0.5 font-body text-[12px] font-semibold leading-snug text-foreground/54 2xl:text-[13px]">
+              A licensed provider will review your request.
+            </p>
+          </div>
+        </div>
         <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[70px_1fr] 2xl:grid-cols-[76px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
