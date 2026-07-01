@@ -131,17 +131,23 @@ function visitPrice(visit) {
 }
 
 // Visit Credit math for ONE visit. `cart` is the raw appointment value
-// (visitPrice). The member pays at least the $250 credit; anything over the
-// credit is the `upgrade` (the difference they actually pay extra). Below the
-// credit the upgrade is $0 → the visit reads "Included".
+// (visitPrice). The Visit Credit ($250) is a CEILING for "Included" framing:
+//   - cart <= credit → the visit reads "Included" (the plan absorbs it).
+//   - cart >  credit → the visit reads "+$<diff>" (the member pays the delta).
+// The plan's monthly cost tracks the ACTUAL cart totals (with tier discount on
+// top), so a Hydration ($200) plan is cheaper than a Beauty ($250) plan — not
+// floored to the credit. `covered` is the portion the plan base absorbs
+// (capped at the credit); `upgrade` is the premium paid on top.
 function visitCredit(visit) {
   const cart = visitPrice(visit);
+  const covered = Math.min(cart, VISIT_CREDIT);
   const upgrade = Math.max(0, cart - VISIT_CREDIT);
   return {
     cart,
+    covered,
     upgrade,
     included: cart <= VISIT_CREDIT,
-    total: VISIT_CREDIT + upgrade, // = max(VISIT_CREDIT, cart)
+    total: cart, // actual visit price — no artificial floor
   };
 }
 
@@ -929,15 +935,21 @@ export default function Subscription() {
     return visits.some((v) => sig(v) !== sig(visits[0]));
   }, [visits]);
 
-  // personMonthly under the Visit Credit model: each visit is floored at the
-  // $250 credit, so `total` = Σ max(VISIT_CREDIT, cart) = base + upgrades. The
-  // visits array length IS sessions, so base = sessions × $250 per person.
-  // Plan monthly = sum across all people; the term discount applies to that.
+  // personMonthly under the Visit Credit model: the plan monthly tracks the
+  // ACTUAL cart per visit (not a floor at the credit). Split for framing:
+  //   base     = Σ min(cart, VISIT_CREDIT)  — the "any service up to $250"
+  //              portion the plan base absorbs.
+  //   upgrades = Σ max(0, cart − VISIT_CREDIT) — premium delta paid on top.
+  //   total    = base + upgrades = Σ cart    — what the member owes pre-discount.
+  // A Hydration-only plan ($200/visit) therefore comes in below the credit
+  // ceiling, not artificially inflated to $250/visit. The term/tier discount
+  // still applies to the whole plan.
   const personMonthly = (person) => {
     const pv = resizeVisits(person, sessions);
-    const base = pv.length * VISIT_CREDIT;
-    const total = pv.reduce((sum, v) => sum + visitCredit(v).total, 0);
-    const upgrades = total - base;
+    const parts = pv.map((v) => visitCredit(v));
+    const base = parts.reduce((sum, p) => sum + p.covered, 0);
+    const upgrades = parts.reduce((sum, p) => sum + p.upgrade, 0);
+    const total = base + upgrades;
     const { option } = findTherapy(pv[0]?.therapyKey);
     return { therapy: option, visits: pv, total, base, upgrades };
   };
