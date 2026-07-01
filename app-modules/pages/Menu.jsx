@@ -301,10 +301,6 @@ export default function Menu() {
             <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
               IV Therapy
             </h1>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/22 bg-emerald-500/[0.08] px-3.5 py-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100">
-              <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />
-              Clinician-reviewed · Administered by a registered nurse
-            </div>
           </div>
 
           {/* Goal-first chip row — users scan for what they want fixed (tired,

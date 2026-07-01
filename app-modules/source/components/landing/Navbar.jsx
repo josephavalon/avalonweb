@@ -26,21 +26,43 @@ const IV_TILES = [
   { title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     img: '/bags/nad.webp',    href: '/services/nad' },
 ];
 
+// Width of the portal-side hover surface. Must be at least as wide as the
+// visible panel (280px) so diagonal cursor drift from the trigger toward the
+// panel's outer edges stays "inside" the hover region. Kept modest (320px) so
+// it doesn't intrude over adjacent nav links when the trigger is near a bar
+// end. The surface is portaled to <body>, so it does NOT collide with the
+// sibling flexbox nav-link hit areas — those live in the header.
+const IV_HOVER_SURFACE_WIDTH = 320;
+// Vertical bridge height between the trigger's bottom edge and the visible
+// panel's top edge. The surface starts at the trigger's TOP, extends over the
+// trigger, then continues past the button to give ~16px of transparent bridge
+// before the visible tile card, so diagonal exits are caught.
+const IV_BRIDGE_HEIGHT = 16;
+
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
-  const [anchor, setAnchor] = useState({ top: 0, left: 0 });
+  const [anchor, setAnchor] = useState({ top: 0, left: 0, height: 0 });
   const wrapperRef = useRef(null);
+  const triggerRef = useRef(null);
   const panelRef = useRef(null);
   const closeTimerRef = useRef(null);
+  // Guard against Safari's pointerdown → click double-fire that would toggle
+  // the menu twice on a single tap.
+  const pointerToggledRef = useRef(false);
 
-  // Recompute the portal panel's anchor from the trigger's client rect.
-  // Anchor sits FLUSH with the bottom of the trigger's hit area so the
-  // cursor moves from trigger → panel with zero dead space.
+  // Recompute the portal anchor from the trigger's client rect. The portal
+  // sits FLUSH against the trigger — its own bridge zone extends over the
+  // button, so there is zero dead space between hover surfaces.
   const updateAnchor = () => {
-    const el = wrapperRef.current;
+    const el = triggerRef.current || wrapperRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    setAnchor({ top: rect.bottom, left: rect.left + rect.width / 2 });
+    setAnchor({
+      // Portal surface top = trigger top (surface overlays the button too).
+      top: rect.top,
+      left: rect.left + rect.width / 2,
+      height: rect.height,
+    });
   };
 
   const cancelClose = () => {
@@ -50,7 +72,7 @@ function IVTherapyHover({ link, linkClassName }) {
     }
   };
   // 180ms grace period on close so the cursor can travel from trigger → panel
-  // (through the invisible padding bridge) without the panel snapping shut.
+  // (through the invisible portal-side bridge) without the panel snapping shut.
   const scheduleClose = () => {
     cancelClose();
     closeTimerRef.current = setTimeout(() => {
@@ -62,19 +84,20 @@ function IVTherapyHover({ link, linkClassName }) {
   useEffect(() => {
     if (!open) return undefined;
     updateAnchor();
-    const handleDocClick = (e) => {
+    const handleDocPointerDown = (e) => {
       if (wrapperRef.current?.contains(e.target)) return;
       if (panelRef.current?.contains(e.target)) return;
       setOpen(false);
     };
     const handleEsc = (e) => { if (e.key === 'Escape') setOpen(false); };
     const handleReflow = () => updateAnchor();
-    document.addEventListener('mousedown', handleDocClick);
+    // pointerdown (not mousedown) so touch closes on outside tap too.
+    document.addEventListener('pointerdown', handleDocPointerDown);
     document.addEventListener('keydown', handleEsc);
     window.addEventListener('resize', handleReflow);
     window.addEventListener('scroll', handleReflow, true);
     return () => {
-      document.removeEventListener('mousedown', handleDocClick);
+      document.removeEventListener('pointerdown', handleDocPointerDown);
       document.removeEventListener('keydown', handleEsc);
       window.removeEventListener('resize', handleReflow);
       window.removeEventListener('scroll', handleReflow, true);
@@ -84,101 +107,167 @@ function IVTherapyHover({ link, linkClassName }) {
   // Also cancel any pending close on unmount.
   useEffect(() => () => cancelClose(), []);
 
-  const panelStyle = {
+  // Portal surface: fixed rectangle anchored to the trigger. Contains both an
+  // invisible bridge zone (overlays the trigger + a 16px gap below it) and the
+  // visible tile panel. Because the surface itself owns the hover listeners,
+  // the cursor NEVER leaves it while traveling from trigger corner → panel
+  // corner from any diagonal — the whole rectangle is one hover region.
+  const surfaceStyle = {
     position: 'fixed',
     top: `${anchor.top}px`,
     left: `${anchor.left}px`,
     zIndex: 60,
-    width: '280px',
-    transform: open ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-4px)',
-    opacity: open ? 1 : 0,
+    width: `${IV_HOVER_SURFACE_WIDTH}px`,
+    // translateX(-50%) centers the surface on the trigger.
+    transform: 'translateX(-50%)',
+    // Surface itself has no visible geometry — only children do. But it must
+    // accept pointer events while open so the bridge zone works.
     pointerEvents: open ? 'auto' : 'none',
-    transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
-  const panel = (
+  // Visible panel sits at surface-top + trigger-height + bridge. That equals
+  // trigger.bottom + IV_BRIDGE_HEIGHT of transparent hover buffer.
+  const panelInnerStyle = {
+    position: 'absolute',
+    top: `${anchor.height + IV_BRIDGE_HEIGHT}px`,
+    left: '50%',
+    transform: open
+      ? 'translateX(-50%) translateY(0)'
+      : 'translateX(-50%) translateY(-4px)',
+    width: '280px',
+    opacity: open ? 1 : 0,
+    transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+    pointerEvents: open ? 'auto' : 'none',
+  };
+
+  const surface = (
     <div
       ref={panelRef}
-      role="menu"
-      aria-label="IV Therapy categories"
-      aria-hidden={!open}
-      style={panelStyle}
+      data-iv-therapy-surface=""
+      data-open={open ? '' : undefined}
+      style={surfaceStyle}
       onMouseEnter={() => { cancelClose(); setOpen(true); }}
       onMouseLeave={scheduleClose}
+      aria-hidden={!open}
     >
-      <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
-        <div className="flex flex-col gap-0.5 p-2">
-          {IV_TILES.map((tile) => (
-            <Link
-              key={tile.href}
-              to={tile.href}
-              role="menuitem"
-              tabIndex={open ? 0 : -1}
-              className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5 focus:outline-none focus-visible:bg-foreground/5"
-              onClick={() => setOpen(false)}
-            >
-              <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
-                <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
-                <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
-              </span>
-              <span
-                className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
-                style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
+      {/* Invisible bridge — spans from trigger-top down through the 16px gap.
+          Portal-side so it never collides with adjacent nav-link hit areas. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: `${anchor.height + IV_BRIDGE_HEIGHT}px`,
+          pointerEvents: 'auto',
+        }}
+      />
+      <div
+        role="menu"
+        aria-label="IV Therapy categories"
+        style={panelInnerStyle}
+      >
+        <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
+          <div className="flex flex-col gap-0.5 p-2">
+            {IV_TILES.map((tile) => (
+              <Link
+                key={tile.href}
+                to={tile.href}
+                role="menuitem"
+                tabIndex={open ? 0 : -1}
+                className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5 focus:outline-none focus-visible:bg-foreground/5"
+                onClick={() => setOpen(false)}
               >
-                <img
-                  src={tile.img}
-                  alt=""
-                  loading="lazy"
-                  style={{ height: '100%', width: 'auto', objectFit: 'contain', transform: 'scale(0.96)', transition: 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1)' }}
-                />
-              </span>
-            </Link>
-          ))}
+                <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
+                  <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
+                  <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
+                </span>
+                <span
+                  className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
+                  style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
+                >
+                  <img
+                    src={tile.img}
+                    alt=""
+                    loading="lazy"
+                    style={{ height: '100%', width: 'auto', objectFit: 'contain', transform: 'scale(0.96)', transition: 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                  />
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 
+  // Unified toggle — called from onPointerDown OR onClick, whichever wins the
+  // race. The pointerToggledRef guard prevents a Safari pointerdown+click
+  // sequence from double-firing.
+  const toggle = () => {
+    updateAnchor();
+    setOpen((s) => !s);
+  };
+
   return (
     <div
       ref={wrapperRef}
       className="relative"
+      data-iv-therapy-wrapper=""
+      data-open={open ? '' : undefined}
       onMouseEnter={() => { cancelClose(); updateAnchor(); setOpen(true); }}
       onMouseLeave={scheduleClose}
     >
-      {/* Invisible vertical bridge — 28px tall, same width as the button. Keeps
-          the cursor "inside" the wrapper on its way down to the panel. Does NOT
-          extend sideways so it can't overlap the neighboring nav links. */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          height: '28px',
-          pointerEvents: 'auto',
-        }}
-      />
-      {/* Button (not Link) — click OPENS the menu instead of navigating.
+      {/* Button (not Link) — tap OPENS/closes the menu instead of navigating.
           Users can still reach /protocols by clicking "IV Vitamins" inside the menu.
-          Reset user-agent button styles (background, border, font-family) so it
-          renders at the same baseline as the neighboring <Link> anchors. */}
+          Reset user-agent button styles so it renders at the same baseline as the
+          neighboring <Link> anchors. `position: relative; z-index: 2` guarantees
+          it always paints ABOVE any sibling absolutely-positioned bridge or halo,
+          so first-click is never swallowed. */}
       <button
+        ref={triggerRef}
         type="button"
         className={linkClassName}
-        style={{ background: 'transparent', border: 0, font: 'inherit', cursor: 'pointer', WebkitAppearance: 'none', appearance: 'none' }}
+        style={{
+          background: 'transparent',
+          border: 0,
+          font: 'inherit',
+          cursor: 'pointer',
+          WebkitAppearance: 'none',
+          appearance: 'none',
+          position: 'relative',
+          zIndex: 2,
+          // Ensure Safari doesn't route the first pointerdown to text-selection
+          // (which can swallow the click on iPadOS + trackpad edge cases).
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          touchAction: 'manipulation',
+        }}
         aria-haspopup="menu"
         aria-expanded={open}
+        onPointerDown={(e) => {
+          // Only handle primary button / touch / pen. Ignore secondary mouse
+          // buttons so right-click doesn't open the menu.
+          if (e.button !== 0 && e.pointerType === 'mouse') return;
+          pointerToggledRef.current = true;
+          // Reset the guard shortly after so the next real tap works.
+          window.setTimeout(() => { pointerToggledRef.current = false; }, 400);
+          toggle();
+        }}
         onClick={(e) => {
           e.preventDefault();
-          updateAnchor();
-          setOpen((s) => !s);
+          if (pointerToggledRef.current) {
+            // pointerdown already toggled — click is the follow-up event.
+            return;
+          }
+          toggle();
         }}
       >
         <span className="relative z-10">{link.label}</span>
       </button>
-      {typeof document !== 'undefined' && createPortal(panel, document.body)}
+      {typeof document !== 'undefined' && createPortal(surface, document.body)}
     </div>
   );
 }

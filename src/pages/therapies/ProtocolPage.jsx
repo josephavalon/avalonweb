@@ -90,16 +90,6 @@ export default function ProtocolPage() {
 
           {/* Tag + label */}
 
-          {/* Clinician-reviewed reassurance pill — visible above the fold on every
-              protocol so customers see the safety frame before the marketing copy. */}
-          <motion.div
-            {...fadeUp(0.12)}
-            className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/22 bg-emerald-500/[0.08] px-3.5 py-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100"
-          >
-            <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />
-            Clinician-reviewed · Administered by a registered nurse
-          </motion.div>
-
           <motion.h1
             {...fadeUp(0.18)}
             className="font-heading text-[14vw] sm:text-[10vw] md:text-[7rem] uppercase leading-[0.88] text-foreground mb-6"
