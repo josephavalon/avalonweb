@@ -6,7 +6,7 @@
 export const PLAN_VISIT_CREDIT = 250;
 
 // Plan-member pricing incentives. Apply on top of the per-visit cart:
-//   - tier discount scales with sessions (10/15/20%) on the visit-credit base
+//   - tier discount scales with sessions (10/15/17%) on the visit-credit base
 //   - addon discount is a flat 10% on every plan member's add-ons
 // Single source of truth — the marketing tier cards AND the /subscription
 // builder/Stripe flow both read from this. See planTierDiscountRate() below.
@@ -15,7 +15,7 @@ export function planTierDiscountRate(sessions) {
   const n = Number(sessions) || 0;
   if (n <= 1) return 0.10;
   if (n === 2) return 0.15;
-  return 0.20; // 3+ visits
+  return 0.17; // 3+ visits
 }
 
 export const SUBSCRIPTION_TIERS = [
@@ -65,16 +65,16 @@ export const SUBSCRIPTION_TIERS = [
     name: 'VIP',
     sessions: 4,
     tagline: 'Full access.',
-    price: 800,
+    price: 830,
     originalPrice: 1000,
-    discountPercent: 20,
+    discountPercent: 17,
     unit: '/mo',
-    perSessionNote: '$200 / visit',
+    perSessionNote: '$208 / visit',
     note: '4 visits monthly',
-    discount: '20% off',
+    discount: '17% off',
     shotCredit: '2 / mo',
     benefits: [
-      '4 visit credits per month (save 20%)',
+      '4 visit credits per month (save 17%)',
       '10% off all add-ons',
       '2 complimentary IM shots per month',
       'Dedicated registered nurse',
@@ -97,6 +97,7 @@ export const SUBSCRIPTION_TIERS = [
     benefits: [
       'Any protocol, any frequency',
       'Add IM shots a la carte',
+      '10% off all add-ons',
       'Designed with the clinical team',
       'Adjust anytime',
       'No commitment to inquire',

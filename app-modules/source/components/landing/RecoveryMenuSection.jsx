@@ -408,7 +408,7 @@ export default function RecoveryMenuSection() {
                   <ArrowRight className="w-4 h-4" strokeWidth={2} />
                 </motion.button>
                 <div className="flex items-center gap-2 px-1">
-                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save 20% ·</span>
+                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save up to 17% + 10% off add-ons ·</span>
                   <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View subscriptions →</Link>
                 </div>
               </div>
@@ -508,7 +508,7 @@ export default function RecoveryMenuSection() {
                 ))}
               </div>
               <div className="flex items-center gap-2 px-1 pt-1">
-                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save an additional 20% ·</span>
+                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save up to 17% + 10% off add-ons ·</span>
                 <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
               </div>
             </motion.div>

@@ -951,7 +951,7 @@ export default function Subscription() {
   //   planBase      = Σ (people's visits × $250)  — the membership price.
   //   monthlyRetail = Σ max(VISIT_CREDIT, cart)   — base + premium upgrades.
   //   upgradesTotal = monthlyRetail − planBase    — extra paid above credits.
-  // PLAN INCENTIVE on top: tier discount scales with sessions (10/15/20%)
+  // PLAN INCENTIVE on top: tier discount scales with sessions (10/15/17%)
   // applied to planBase; flat PLAN_ADDON_DISCOUNT on upgrades/add-ons. The
   // discounted `monthly` is what we show, deposit from, and bill via Stripe.
   const monthlyRetail = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
