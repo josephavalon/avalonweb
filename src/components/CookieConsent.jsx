@@ -45,9 +45,9 @@ export default function CookieConsent() {
           <div className="ml-auto border border-foreground/10 bg-background/82 backdrop-blur-2xl rounded-[0.9rem] p-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] pointer-events-auto">
             <div className="flex items-center gap-2">
               <div className="min-w-0">
-                <h2 className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
+                <p className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
                   Privacy
-                </h2>
+                </p>
                 <p className="font-body text-[11px] text-foreground/58 leading-snug mt-0.5 max-w-[13rem]">
                   Essential only unless allowed.
                 </p>
