@@ -429,8 +429,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   };
 
   const logoClass = "av-logo inline-flex min-h-11 min-w-11 shrink-0 flex-col items-center justify-center text-center leading-none";
-  const linkClass = "inline-flex min-h-11 items-center justify-center text-center text-xs tracking-[0.18em] text-foreground hover:text-foreground transition-colors font-body uppercase whitespace-nowrap leading-none";
-  const contactActionClass = "av-glass-widget inline-flex h-12 w-12 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
+  const linkClass = "inline-flex min-h-11 items-center justify-center text-center font-heading text-lg tracking-[0.06em] text-foreground hover:text-foreground transition-colors uppercase whitespace-nowrap leading-none";
+  const contactActionClass = "av-glass-widget inline-flex h-14 w-14 items-center justify-center rounded-full border text-foreground/74 transition-colors hover:text-foreground";
   const isActiveLink = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   const internalToolRoute = location.pathname.startsWith('/admin')
     || location.pathname.startsWith('/provider')
@@ -489,7 +489,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
         className={`av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
-        compact ? 'h-12 px-4' : 'h-16'
+        compact ? 'h-12 px-4' : 'h-20'
         }`}
         style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
       >
@@ -523,7 +523,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           <div className="flex items-center justify-center gap-7">
             {mainLinks.map((link) => {
               const active = isActiveLink(link.to);
-              const linkClassName = `relative inline-flex min-h-10 items-center justify-center px-1 text-center font-body text-[11px] uppercase leading-none tracking-[0.24em] transition-colors ${
+              const linkClassName = `relative inline-flex min-h-10 items-center justify-center px-1 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] transition-colors ${
                 active ? 'text-foreground' : 'text-foreground/62 hover:text-foreground'
               }`;
               // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
@@ -549,12 +549,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               the logged-in nav (Sign Out + Dashboard + Book) from overflowing into
               the centered links. */}
           {!compact && !focusMode && !user && (
-            <div className="flex items-center gap-1.5" aria-label="Contact Avalon">
+            <div className="flex items-center gap-2" aria-label="Contact Avalon">
               <a href={PHONE_URL} className={contactActionClass} aria-label={`Call Avalon ${PHONE_DISPLAY}`} title={`Call ${PHONE_DISPLAY}`}>
-                <Phone className="h-4 w-4" strokeWidth={2} />
+                <Phone className="h-5 w-5" strokeWidth={2} />
               </a>
               <a href={TEXT_URL} className={contactActionClass} aria-label="Text Avalon" title="Text Avalon">
-                <MessageCircle className="h-4 w-4" strokeWidth={2} />
+                <MessageCircle className="h-5 w-5" strokeWidth={2} />
               </a>
             </div>
           )}
@@ -573,10 +573,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2.5 text-center font-body text-[11px] font-black uppercase leading-none tracking-[0.22em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
+            className="inline-flex min-h-11 items-center justify-center gap-2.5 rounded-full border border-foreground bg-foreground px-7 py-3 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
           >
             Book Now
-            <ArrowLeft className="h-3.5 w-3.5 rotate-180" strokeWidth={2.2} />
+            <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
           </PremiumButton>}
         </div>
       </div>
