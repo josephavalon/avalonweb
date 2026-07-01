@@ -22,8 +22,8 @@ const mainLinks = [
 // Desktop hover-dropdown payload for "IV Therapy" — three categories with bag graphics.
 const IV_TILES = [
   { title: 'IV Vitamins', desc: '8 hydration & wellness protocols', img: '/bags/energy.webp', href: '/protocols' },
-  { title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       img: '/bags/cbd.webp',    href: '/services/cbd' },
   { title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     img: '/bags/nad.webp',    href: '/services/nad' },
+  { title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       img: '/bags/cbd.webp',    href: '/services/cbd' },
 ];
 
 // Width of the portal-side hover surface. Must be at least as wide as the
