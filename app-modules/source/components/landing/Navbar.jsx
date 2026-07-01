@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
@@ -26,50 +27,106 @@ const IV_TILES = [
 
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState({ top: 0, left: 0 });
   const wrapperRef = useRef(null);
+  const panelRef = useRef(null);
 
-  // Global click-outside listener when open — reliable across all browsers.
+  // Recompute the portal panel's anchor from the trigger's client rect.
+  // The trigger lives inside .av-motion-rail which has overflow:hidden, so
+  // an absolute-positioned dropdown gets clipped. Rendering the panel via a
+  // portal onto <body> and positioning it in fixed coordinates escapes the
+  // ancestor's clip entirely.
+  const updateAnchor = () => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setAnchor({ top: rect.bottom + 4, left: rect.left + rect.width / 2 });
+  };
+
   useEffect(() => {
     if (!open) return undefined;
+    updateAnchor();
     const handleDocClick = (e) => {
-      if (!wrapperRef.current?.contains(e.target)) setOpen(false);
+      if (wrapperRef.current?.contains(e.target)) return;
+      if (panelRef.current?.contains(e.target)) return;
+      setOpen(false);
     };
     const handleEsc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    const handleReflow = () => updateAnchor();
     document.addEventListener('mousedown', handleDocClick);
     document.addEventListener('keydown', handleEsc);
+    window.addEventListener('resize', handleReflow);
+    window.addEventListener('scroll', handleReflow, true);
     return () => {
       document.removeEventListener('mousedown', handleDocClick);
       document.removeEventListener('keydown', handleEsc);
+      window.removeEventListener('resize', handleReflow);
+      window.removeEventListener('scroll', handleReflow, true);
     };
   }, [open]);
 
   const panelStyle = {
-    position: 'absolute',
-    left: '50%',
-    top: '100%',
-    zIndex: 50,
+    position: 'fixed',
+    top: `${anchor.top}px`,
+    left: `${anchor.left}px`,
+    zIndex: 60,
     width: '280px',
     transform: open ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-4px)',
     opacity: open ? 1 : 0,
     pointerEvents: open ? 'auto' : 'none',
     transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
   };
-  const chevronStyle = {
-    display: 'inline-block',
-    marginLeft: '6px',
-    fontSize: '9px',
-    lineHeight: 1,
-    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-    transition: 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
-    opacity: 0.6,
-  };
+
+  const panel = (
+    <div
+      ref={panelRef}
+      role="menu"
+      aria-label="IV Therapy categories"
+      aria-hidden={!open}
+      style={panelStyle}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
+        <div className="flex flex-col gap-0.5 p-2">
+          {IV_TILES.map((tile) => (
+            <Link
+              key={tile.href}
+              to={tile.href}
+              role="menuitem"
+              tabIndex={open ? 0 : -1}
+              className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5 focus:outline-none focus-visible:bg-foreground/5"
+              onClick={() => setOpen(false)}
+            >
+              <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
+                <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
+                <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
+              </span>
+              <span
+                className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
+                style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
+              >
+                <img
+                  src={tile.img}
+                  alt=""
+                  loading="lazy"
+                  style={{ height: '100%', width: 'auto', objectFit: 'contain', transform: 'scale(0.96)', transition: 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div
       ref={wrapperRef}
       className="relative"
       // Extend hit area 16px below to cover the gap between link and panel.
       style={{ paddingBottom: '16px', marginBottom: '-16px' }}
-      onMouseEnter={() => setOpen(true)}
+      onMouseEnter={() => { updateAnchor(); setOpen(true); }}
       onMouseLeave={() => setOpen(false)}
     >
       {/* Button (not Link) — click OPENS the menu instead of navigating.
@@ -81,49 +138,13 @@ function IVTherapyHover({ link, linkClassName }) {
         aria-expanded={open}
         onClick={(e) => {
           e.preventDefault();
+          updateAnchor();
           setOpen((s) => !s);
         }}
       >
         <span className="relative z-10">{link.label}</span>
-        <span aria-hidden="true" style={chevronStyle}>▾</span>
       </button>
-      <div
-        role="menu"
-        aria-label="IV Therapy categories"
-        aria-hidden={!open}
-        style={panelStyle}
-      >
-        <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
-          <div className="flex flex-col gap-0.5 p-2">
-            {IV_TILES.map((tile) => (
-              <Link
-                key={tile.href}
-                to={tile.href}
-                role="menuitem"
-                tabIndex={open ? 0 : -1}
-                className="group flex min-h-[44px] items-center justify-between gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-foreground/5 focus:outline-none focus-visible:bg-foreground/5"
-                onClick={() => setOpen(false)}
-              >
-                <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
-                  <span className="font-body text-[13px] font-semibold leading-tight text-foreground">{tile.title}</span>
-                  <span className="font-body text-[10.5px] leading-snug text-foreground/55">{tile.desc}</span>
-                </span>
-                <span
-                  className="flex h-[34px] w-[24px] shrink-0 items-center justify-center"
-                  style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.45))' }}
-                >
-                  <img
-                    src={tile.img}
-                    alt=""
-                    loading="lazy"
-                    style={{ height: '100%', width: 'auto', objectFit: 'contain', transform: 'scale(0.96)', transition: 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1)' }}
-                  />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
+      {typeof document !== 'undefined' && createPortal(panel, document.body)}
     </div>
   );
 }
