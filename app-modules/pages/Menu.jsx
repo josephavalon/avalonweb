@@ -287,7 +287,7 @@ export default function Menu() {
   const nadCount = useMemo(() => protocolItems(nadSessions, true).length, [nadSessions]);
   const cbdCount = useMemo(() => protocolItems(cbdSessions, true).length, [cbdSessions]);
   const allCount = useMemo(() => protocolItems(filtered, true).length, [filtered]);
-  const drips = (n) => `${n} drip${n === 1 ? '' : 's'}`;
+  const drips = (n) => `${n} IV therap${n === 1 ? 'y' : 'ies'}`;
   const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
 
   return (

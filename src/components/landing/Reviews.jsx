@@ -5,7 +5,7 @@ import { EASE, premiumHover } from '@/lib/motion';
 // ── Featured (punchy / notable clients) — shown first ──────────────────────
 const FEATURED = [
   { name: 'J.G.', tag: 'NAD+ IV',       quote: 'Sharp, calm, ready.' },
-  { name: 'A.G.', tag: 'Beauty IV',     quote: 'Glutathione drip, every week.' },
+  { name: 'A.G.', tag: 'Beauty IV',     quote: 'Glutathione IV, every week.' },
   { name: 'C.D.', tag: 'Group Recovery', quote: 'Two nurses. Six guests. Effortless.' },
 ];
 
