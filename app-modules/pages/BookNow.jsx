@@ -1269,12 +1269,15 @@ function UniversalBookingFrame({
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
-            className={`relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
+            className={`av-book-next-cta relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
               canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/70 bg-foreground text-background/70 md:border-foreground/18 md:bg-background/42 md:text-foreground/58'
             }`}
+            // Force white pill + dark text so it reads consistently across themes.
+            // On dark theme, --foreground is already white so bg matches; on daytime,
+            // this override flips the dark grey CTA to a clean white pill.
             style={{
-              background: 'hsl(var(--foreground))',
-              borderColor: 'hsl(var(--foreground) / 0.82)',
+              background: '#ffffff',
+              borderColor: 'rgba(0,0,0,0.12)',
               color: '#050505',
             }}
           >
