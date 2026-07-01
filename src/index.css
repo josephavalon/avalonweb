@@ -1595,6 +1595,18 @@ html:not(.dark):not(.daytime):not(.golden-hour):not(.warriors):not(.pride):not(.
   border-color: var(--glass-border-hover);
 }
 
+/* Daytime: the hero action cards (IV Therapy, Plans) inherited a dark glass
+   overlay from --glass-bg (which stays dark across themes), rendering as a
+   gray-tinted card on the light background. Force a clean paper-white fill
+   with a subtle border so the CTA reads flat and light. Scoped to the hero
+   action rail so other .av-treatment-card usages (plan builder, footer) can
+   keep their own daytime treatment. */
+.daytime .av-hero-action.av-treatment-card {
+  background: hsl(var(--background));
+  border-color: hsl(var(--foreground) / 0.14);
+  box-shadow: 0 8px 22px hsl(var(--foreground) / 0.06);
+}
+
 /* ===== UX audit polish: subtle hover-lift on all glass cards =====
  * Scoped to .av-glass and .av-glass-heavy utility classes.
  * Cards that don't use those utilities won't be affected (yet).
