@@ -15,7 +15,8 @@ import AvalonMark from '@/components/AvalonMark';
 const mainLinks = [
   { to: '/protocols', label: 'IV Therapy' },
   { to: '/subscription', label: 'Plans' },
-  { to: '/launches', label: 'Launches' },
+  // Launches hidden from the main nav — it currently points to a "Coming Soon"
+  // placeholder page. Re-add when Events.jsx has real content.
 ];
 
 // Desktop hover-dropdown payload for "IV Therapy" — three categories with bag graphics.
@@ -160,10 +161,13 @@ function IVTherapyHover({ link, linkClassName }) {
         }}
       />
       {/* Button (not Link) — click OPENS the menu instead of navigating.
-          Users can still reach /protocols by clicking "IV Vitamins" inside the menu. */}
+          Users can still reach /protocols by clicking "IV Vitamins" inside the menu.
+          Reset user-agent button styles (background, border, font-family) so it
+          renders at the same baseline as the neighboring <Link> anchors. */}
       <button
         type="button"
         className={linkClassName}
+        style={{ background: 'transparent', border: 0, font: 'inherit', cursor: 'pointer', WebkitAppearance: 'none', appearance: 'none' }}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={(e) => {
