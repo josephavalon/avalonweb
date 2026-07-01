@@ -237,7 +237,7 @@ export default function Footer() {
         </div>
 
         {/* Desktop: hidden accordions */}
-        <div className="mb-3 hidden gap-2 md:grid md:grid-cols-4">
+        <div className="mb-3 hidden gap-2 md:grid md:grid-cols-4 md:items-start">
 
           {/* Services */}
           <FooterDesktopGroup title="Services" icon={Layers}>

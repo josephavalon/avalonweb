@@ -209,7 +209,7 @@ const NAV_LIVE = [
       },
       { label: 'GFE', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
-      { label: 'Shift marketplace', to: '/admin/shift-marketplace' },
+      // Shift marketplace removed from the admin sidebar per launch punch-list.
       { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
       { label: 'Tools', to: '/admin/soon?feature=Tools' },
     ],
