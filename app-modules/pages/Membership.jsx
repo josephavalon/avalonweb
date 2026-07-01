@@ -351,21 +351,7 @@ function BuilderRow({ title, value, hint, icon: Icon, image, open, onToggle, chi
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors duration-base ease-editorial md:px-5"
       >
-        <div className="flex min-w-0 items-center gap-3">
-          {image ? (
-            <span className="flex h-10 w-8 shrink-0 items-center justify-center">
-              <img
-                src={image}
-                alt=""
-                loading="lazy"
-                className="h-full w-auto object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.55)]"
-              />
-            </span>
-          ) : Icon ? (
-            <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
-              <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
-            </span>
-          ) : null}
+        <div className="flex min-w-0 items-center">
           <span className="flex min-w-0 flex-col">
             <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
             {hint && (
@@ -1155,10 +1141,10 @@ export default function Subscription() {
       <header>
         <Navbar />
       </header>
-      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem] md:px-8">
-        <div className="mb-5 hidden text-center md:block">
-          <h1 className="font-heading text-[2.8rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose your plan</h1>
-          <p className="mt-2 font-body text-sm font-semibold text-foreground/60">Up to 4 people. 3-month minimum, then cancel anytime.</p>
+      <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem] md:px-8">
+        <div className="mb-7 hidden text-center md:block">
+          <h1 className="font-heading text-[4.6rem] uppercase leading-[0.86] tracking-normal text-foreground lg:text-[5.4rem]">Choose your plan</h1>
+          <p className="mt-3 font-body text-[15px] font-semibold text-foreground/60">Up to 4 people. 3-month minimum, then cancel anytime.</p>
         </div>
 
         {/* ───────── Minimalist mobile builder ───────── */}
@@ -1361,34 +1347,39 @@ export default function Subscription() {
             <button
               type="button"
               onClick={onPrimaryCta}
-              className="mt-3 hidden min-h-[52px] w-full items-center justify-center rounded-xl border border-foreground/82 bg-foreground px-4 font-heading text-base uppercase leading-none tracking-[0.08em] text-background transition-transform active:scale-[0.99] md:flex"
+              className="mt-4 hidden min-h-[56px] w-full items-center justify-center rounded-full bg-white px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-black transition-transform hover:bg-white/95 active:scale-[0.99] md:flex"
             >
               {isChangeMode ? 'Update my plan' : `Start plan — ${money(depositToday)} today`}
             </button>
+            <p className="mt-2 hidden text-center font-body text-[12px] font-semibold text-foreground/50 md:block">
+              Secure checkout. Cancel anytime after the 3-month minimum.
+            </p>
           </div>
 
-          {/* Right — compact YOUR PLAN card (desktop only), mirrors mobile */}
+          {/* Right — YOUR PLAN rail (desktop only): big hero bag, mirrors mobile summary. */}
           <aside className="hidden md:sticky md:top-[5.75rem] md:block">
-            <div className="overflow-hidden rounded-[1.05rem] border border-foreground/10 bg-background/72 backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-foreground/10 px-4 py-2.5">
-                <p className="font-body text-[11px] font-black uppercase tracking-[0.2em] text-foreground/55">Your plan</p>
-                <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/55">{sessions} / Month</p>
+            <div className="overflow-hidden rounded-[1.25rem] border border-foreground/10 bg-background/72 backdrop-blur-xl">
+              <div className="flex items-center justify-between px-5 py-3">
+                <p className="font-body text-[11px] font-black uppercase tracking-[0.22em] text-foreground/60">Your plan</p>
+                <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/60">{sessions} / Month</p>
               </div>
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div className="flex h-[4.6rem] w-[3.6rem] shrink-0 items-center justify-center">
+              <div className="mx-5 border-t border-foreground/10" />
+              <div className="flex flex-col items-center gap-3 px-5 pt-5 pb-4">
+                <div className="flex h-[15rem] w-full items-center justify-center lg:h-[17rem]">
                   <img
                     src={therapyOption?.image || '/bags/dehydration.webp'}
                     alt=""
-                    className="h-full w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.5)]"
+                    className="h-full w-auto object-contain drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)]"
                   />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-heading text-[1.55rem] uppercase leading-[0.95] tracking-normal text-foreground">{therapyOption?.label || '—'}</p>
-                  <p className="mt-1 font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/55">1 IV per visit</p>
+                <div className="text-center">
+                  <p className="font-heading text-[2rem] uppercase leading-[0.95] tracking-normal text-foreground">{therapyOption?.label || '—'}</p>
+                  <p className="mt-1.5 font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/60">1 IV per visit</p>
                 </div>
               </div>
-              <div className="border-t border-foreground/10 px-4 py-2.5">
-                <p className="font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground/82">
+              <div className="mx-5 border-t border-foreground/10" />
+              <div className="px-5 py-3">
+                <p className="text-center font-body text-[12px] font-black uppercase tracking-[0.14em] text-foreground/82">
                   {(therapyOption?.label || '—')} — {sessions}/MO — {money(monthly)}/MO
                 </p>
               </div>
