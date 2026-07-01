@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Timer, Zap } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import MagneticButton from '@/components/ui/MagneticButton';
 
@@ -13,12 +13,12 @@ const HERO_ACTIONS = [
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_PROOF_POINTS = [
-  { label: 'SF Bay Area', icon: MapPin },
-  { label: 'Same Day Service', icon: Clock },
+  { label: 'Same Day', icon: Zap },
   { label: 'Registered Nurses', icon: ShieldPlus },
-  { label: 'No Hidden Fees', icon: BadgeDollarSign },
-  { label: '60 Second Checkout', icon: Zap },
   { label: 'Custom Plans', icon: Sparkles, to: '/subscription' },
+  { label: 'SF Bay Area', icon: MapPin },
+  { label: 'No Hidden Fees', icon: BadgeDollarSign },
+  { label: '60-Second Checkout', icon: Timer },
 ];
 
 export default function Hero() {
