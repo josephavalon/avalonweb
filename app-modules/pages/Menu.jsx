@@ -303,28 +303,6 @@ export default function Menu() {
             </h1>
           </div>
 
-          {/* Goal-first chip row — users scan for what they want fixed (tired,
-              hungover, jet-lagged), not which IV formula does it. These chips
-              route to existing goal pages and in-page section anchors. */}
-          <div className="mt-6 md:mt-8">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Pick by goal</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[
-                { label: 'Recovery', to: '/hangover' },
-                { label: 'Energy', to: '/athlete' },
-                { label: 'Travel', to: '/jet-lag' },
-                { label: 'Cognition', to: '#iv-nad' },
-              ].map((chip) => (
-                <Link
-                  key={chip.label}
-                  to={chip.to}
-                  className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-[12px] font-black uppercase tracking-[0.14em] text-foreground/82 transition-colors hover:border-foreground/30 hover:bg-foreground/[0.08] hover:text-foreground"
-                >
-                  {chip.label}
-                </Link>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section className="mt-8 grid gap-2 scroll-mt-44 md:mt-14 md:gap-3">
