@@ -12,10 +12,12 @@ const HERO_ACTIONS = [
   { to: '/protocols', label: 'IV Therapy', icon: Droplet },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
+// All 6 rows are non-clickable so structure is identical — no <Link> wrapper on
+// any row → uniform spacing (no baseline drift between the 3rd and 4th item).
 const HERO_PROOF_POINTS = [
   { label: 'Same Day', icon: Zap },
   { label: 'Registered Nurses', icon: ShieldPlus },
-  { label: 'Custom Plans', icon: Sparkles, to: '/subscription' },
+  { label: 'Custom Plans', icon: Sparkles },
   { label: 'SF Bay Area', icon: MapPin },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
   { label: '60-Second Checkout', icon: Timer },
