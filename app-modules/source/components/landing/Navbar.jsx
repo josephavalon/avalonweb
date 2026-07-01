@@ -41,7 +41,7 @@ const IV_BRIDGE_HEIGHT = 16;
 
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
-  const [anchor, setAnchor] = useState({ top: 0, left: 0, height: 0 });
+  const [anchor, setAnchor] = useState({ top: 0, left: 0, height: 0, width: 0 });
   const wrapperRef = useRef(null);
   const triggerRef = useRef(null);
   const panelRef = useRef(null);
@@ -62,6 +62,7 @@ function IVTherapyHover({ link, linkClassName }) {
       top: rect.top,
       left: rect.left + rect.width / 2,
       height: rect.height,
+      width: rect.width,
     });
   };
 
@@ -107,11 +108,16 @@ function IVTherapyHover({ link, linkClassName }) {
   // Also cancel any pending close on unmount.
   useEffect(() => () => cancelClose(), []);
 
-  // Portal surface: fixed rectangle anchored to the trigger. Contains both an
-  // invisible bridge zone (overlays the trigger + a 16px gap below it) and the
-  // visible tile panel. Because the surface itself owns the hover listeners,
-  // the cursor NEVER leaves it while traveling from trigger corner → panel
-  // corner from any diagonal — the whole rectangle is one hover region.
+  // Portal surface: a fixed positioning container centered on the trigger.
+  // The surface ITSELF is pointer-events: none so it never intercepts clicks
+  // on adjacent nav links (PLANS lives ~28px to the right and would otherwise
+  // be swallowed by a wide surface). Only its two child regions receive
+  // pointer events:
+  //   1. A NARROW bridge (button-width) that overlays the trigger + a 16px
+  //      transparent gap below it — catches straight-down cursor drift.
+  //   2. A WIDE panel zone (320px) that begins BELOW the bridge — catches
+  //      diagonal drift toward the mega-menu tiles.
+  // Neither region crosses horizontally into the sibling PLANS link.
   const surfaceStyle = {
     position: 'fixed',
     top: `${anchor.top}px`,
@@ -120,8 +126,23 @@ function IVTherapyHover({ link, linkClassName }) {
     width: `${IV_HOVER_SURFACE_WIDTH}px`,
     // translateX(-50%) centers the surface on the trigger.
     transform: 'translateX(-50%)',
-    // Surface itself has no visible geometry — only children do. But it must
-    // accept pointer events while open so the bridge zone works.
+    // Surface never receives events — only its two children do. This is the
+    // critical fix: PLANS lives inside this rectangle's right half but only
+    // sees pass-through pointer events, so clicks land on PLANS as expected.
+    pointerEvents: 'none',
+  };
+
+  // Bridge zone: narrow (trigger width + small buffer), spans trigger top
+  // through the 16px bridge below. Centered on the surface. Small ~12px per-
+  // side horizontal buffer for cursor slop without touching PLANS (which sits
+  // ~28px from the trigger's right edge).
+  const bridgeStyle = {
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: `${Math.max(anchor.width + 24, 80)}px`,
+    height: `${anchor.height + IV_BRIDGE_HEIGHT}px`,
     pointerEvents: open ? 'auto' : 'none',
   };
 
@@ -146,27 +167,23 @@ function IVTherapyHover({ link, linkClassName }) {
       data-iv-therapy-surface=""
       data-open={open ? '' : undefined}
       style={surfaceStyle}
-      onMouseEnter={() => { cancelClose(); setOpen(true); }}
-      onMouseLeave={scheduleClose}
       aria-hidden={!open}
     >
-      {/* Invisible bridge — spans from trigger-top down through the 16px gap.
-          Portal-side so it never collides with adjacent nav-link hit areas. */}
+      {/* Narrow bridge — trigger-width, catches straight-down drift only.
+          Owns its own hover listeners so it keeps the menu open while the
+          cursor is in the transparent gap between trigger and panel. */}
       <div
         aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: `${anchor.height + IV_BRIDGE_HEIGHT}px`,
-          pointerEvents: 'auto',
-        }}
+        style={bridgeStyle}
+        onMouseEnter={() => { cancelClose(); setOpen(true); }}
+        onMouseLeave={scheduleClose}
       />
       <div
         role="menu"
         aria-label="IV Therapy categories"
         style={panelInnerStyle}
+        onMouseEnter={() => { cancelClose(); setOpen(true); }}
+        onMouseLeave={scheduleClose}
       >
         <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
           <div className="flex flex-col gap-0.5 p-2">
@@ -523,9 +540,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           <div className="flex items-center justify-center gap-7">
             {mainLinks.map((link) => {
               const active = isActiveLink(link.to);
-              const linkClassName = `relative inline-flex min-h-10 items-center justify-center px-1 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] transition-colors ${
-                active ? 'text-foreground' : 'text-foreground/62 hover:text-foreground'
-              }`;
+              // All nav labels render at the same brightness regardless of which page
+              // is active — matches the intended visual reference. Hover still dims
+              // slightly for feedback.
+              const linkClassName = 'relative inline-flex min-h-10 items-center justify-center px-1 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-foreground transition-colors hover:text-foreground/82';
               // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
               if (link.to === '/protocols') {
                 return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
