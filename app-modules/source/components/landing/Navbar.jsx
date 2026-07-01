@@ -489,7 +489,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
         className={`av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
-        compact ? 'h-12 px-4' : 'h-20'
+        compact ? 'h-12 px-4' : 'h-16'
         }`}
         style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
       >
@@ -513,7 +513,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             aria-label="Avalon Vitality — home"
             className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}
           >
-            <AvalonMark className="h-[30px] w-[19px] text-foreground md:h-[46px] md:w-[30px]" />
+            <AvalonMark className="h-[30px] w-[19px] text-foreground md:h-[42px] md:w-[28px]" />
             <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
