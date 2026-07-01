@@ -58,6 +58,7 @@ const NAV_LIVE = [
       { label: 'Client inbox', to: '/admin/messages' },
       { label: 'Email templates', to: '/admin/email-templates' },
       { label: 'Reviews', to: '/admin/reviews' },
+      { label: 'Support tickets', to: '/admin/support-tickets' },
       { label: 'Broadcasts', to: '/admin/soon?feature=Broadcasts' },
       { label: 'SMS templates', to: '/admin/soon?feature=SMS%20Templates' },
     ],

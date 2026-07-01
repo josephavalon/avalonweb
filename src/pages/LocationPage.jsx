@@ -149,6 +149,8 @@ export default function LocationPage() {
     title: page?.title || 'Location Not Found | Avalon Vitality',
     description: page?.description || 'Avalon Vitality location page not found.',
     path: page?.path || `/locations/${slug || ''}`,
+    // Unknown slug → tell crawlers not to index; NotFound body renders below.
+    robots: page ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
     jsonLd: page ? {
       '@context': 'https://schema.org',
       '@graph': [

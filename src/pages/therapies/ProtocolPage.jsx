@@ -9,6 +9,7 @@ import { IV_SESSIONS } from '@/config/verticals';
 import GlassCard from '@/components/ui/GlassCard';
 import PremiumButton from '@/components/ui/PremiumButton';
 import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
+import NotFound from '@/pages/NotFound';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
@@ -46,6 +47,8 @@ export default function ProtocolPage() {
     title: protocol ? `${protocol.label} IV Therapy — Avalon Vitality` : 'Protocol Not Found — Avalon Vitality',
     description: protocol?.tagline || 'Explore Avalon Vitality mobile IV therapy protocols.',
     path: `/therapies/${slug}`,
+    // Unknown slug → tell crawlers not to index; branded 404 body follows.
+    robots: protocol ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
     jsonLd: protocol ? {
       '@context': 'https://schema.org',
       '@type': 'MedicalProcedure',
@@ -63,15 +66,7 @@ export default function ProtocolPage() {
     } : undefined,
   });
 
-  if (!protocol) {
-    return (
-      <div className="av-page-surface min-h-screen flex flex-col items-center justify-center gap-4">
-        <Navbar />
-        <p className="font-heading text-3xl text-foreground uppercase">Protocol not found</p>
-        <Link to="/book" className="font-body text-sm text-foreground/60 underline">Back to booking</Link>
-      </div>
-    );
-  }
+  if (!protocol) return <NotFound />;
 
   const Icon = protocol.icon;
 

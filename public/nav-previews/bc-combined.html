@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Avalon Nav — B+C combined (matches live bar)</title>
+<link rel="stylesheet" href="./_shared.css" />
+<style>
+  /* Outer fixed wrapper — matches Navbar.jsx: left-4 right-4 top-4 */
+  .navbar {
+    position: fixed;
+    left: 16px; right: 16px; top: 16px;
+    z-index: 100;
+    transition: left 0.6s var(--av-ease), right 0.6s var(--av-ease), top 0.6s var(--av-ease);
+    pointer-events: none;
+  }
+  .navbar > * { pointer-events: auto; }
+
+  /* The bar — matches .av-glass-menu rounded-3xl h-16 px-8 */
+  .bar {
+    position: relative;
+    height: 64px;
+    background: var(--av-glass-bg-solid); /* rgba(13,13,13,0.94) — Avalon dark theme */
+    backdrop-filter: blur(0px); /* dark theme has 0 blur; we lean on solid bg */
+    border: 1px solid var(--av-glass-border);
+    border-radius: 28px; /* rounded-3xl */
+    padding: 0 32px; /* px-8 */
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: center;
+    transition:
+      height 0.5s var(--av-ease-out),
+      max-width 0.7s var(--av-ease),
+      padding 0.5s var(--av-ease-out),
+      border-color 0.4s var(--av-ease-out),
+      box-shadow 0.5s var(--av-ease-out);
+  }
+
+  /* Scroll-shrink removed — bar stays at its full size all the way down. */
+
+  /* Col 1 — drop logo, left aligned (matches Navbar.jsx col 1) */
+  .col-logo { display: flex; align-items: center; gap: 14px; min-width: 152px; }
+  .drop-logo svg { width: 19px; height: 30px; }
+
+  /* Col 2 — centered links, gap-7 (28px) */
+  .col-links {
+    position: relative;
+    display: flex; align-items: center;
+    gap: 28px;
+    padding: 4px;
+  }
+
+  /* Magnetic spotlight pill (sits behind nav links, glides on hover) */
+  .spot {
+    position: absolute;
+    top: 50%; transform: translate(0, -50%);
+    height: 36px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--av-glass-border);
+    transition:
+      transform 0.55s var(--av-ease),
+      width 0.55s var(--av-ease),
+      opacity 0.36s var(--av-ease-out);
+    opacity: 0; pointer-events: none;
+    will-change: transform, width;
+  }
+  .col-links:hover .spot, .col-links:focus-within .spot { opacity: 1; }
+
+  /* Nav links — Inter uppercase, 11px, tracking-[0.24em] — matches live Navbar */
+  .nav-link {
+    position: relative; z-index: 1;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.62); /* text-foreground/62 */
+    text-decoration: none;
+    padding: 10px 14px;
+    line-height: 1;
+    white-space: nowrap;
+    transition: color 0.28s var(--av-ease-out), font-size 0.4s var(--av-ease);
+  }
+  .nav-link:hover { color: #fff; }
+
+  /* Col 3 — right cluster */
+  .col-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; height: 100%; }
+
+  /* Phone/chat circle icons — h-11 w-11, border-foreground/10 */
+  .icon-widget {
+    width: 44px; height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.74);
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.28s var(--av-ease-out), background 0.28s var(--av-ease-out), border-color 0.28s var(--av-ease-out), width 0.4s var(--av-ease), height 0.4s var(--av-ease);
+  }
+  .icon-widget:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.22); }
+  .icon-widget svg { width: 16px; height: 16px; }
+
+  /* Sign In link */
+  .signin {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.62);
+    text-decoration: none;
+    padding: 8px 10px;
+    transition: color 0.28s var(--av-ease-out);
+  }
+  .signin:hover { color: #fff; }
+
+  /* BOOK NOW — exact match to Navbar.jsx PremiumButton */
+  .book-now {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px;
+    padding: 10px 24px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+    border: 1px solid #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 18px 52px rgba(255,255,255,0.16);
+    transition: transform 0.4s var(--av-ease), background 0.28s var(--av-ease-out), box-shadow 0.4s var(--av-ease-out), padding 0.4s var(--av-ease), min-height 0.4s var(--av-ease);
+    text-decoration: none;
+  }
+  .book-now:hover { transform: translateY(-1px); background: rgba(255,255,255,0.92); }
+  .book-now:active { transform: translateY(0) scale(0.975); }
+  .book-now svg { width: 14px; height: 14px; }
+
+  /* === Spotlight panel ===
+     KEY: when closed → zero visible anything (no border, no shadow, no line, no bg flash).
+     Slim, content-sized card centered under the link cluster, not full-width. */
+  .spotlight-panel {
+    position: absolute;
+    left: 50%; top: 100%;
+    width: 320px; /* JS sets per panel: ~720 for IV tiles, ~320 for list */
+    padding-top: 14px;
+    transform: translateX(-50%) translateY(-6px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.32s var(--av-ease-out), transform 0.5s var(--av-ease);
+  }
+  .spotlight-panel.is-open {
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .spotlight-card {
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--av-glass-bg-solid);
+    border: 1px solid var(--av-glass-border);
+    box-shadow: 0 28px 60px rgba(0,0,0,0.55);
+  }
+  .spotlight-inner {
+    padding: 18px 18px;
+    display: grid; gap: 32px;
+  }
+  .spotlight-inner > div { min-width: 240px; }
+  .spotlight-inner h4 {
+    font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: rgba(255,255,255,0.5);
+    margin: 0 0 12px;
+  }
+  .spotlight-inner ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+  .spotlight-inner li a {
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    padding: 16px 18px; min-height: 52px;
+    border-radius: 14px;
+    color: rgba(255,255,255,0.78); text-decoration: none;
+    font-family: 'Inter'; font-weight: 500; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase;
+    transition: background 0.28s var(--av-ease-out), color 0.28s var(--av-ease-out), transform 0.28s var(--av-ease);
+  }
+  .spotlight-inner li a:hover { background: rgba(255,255,255,0.05); color: #fff; transform: translateX(3px); }
+  .spotlight-inner li .meta {
+    font-family: 'Inter';
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.42);
+    font-variant-numeric: tabular-nums;
+    min-width: 18px;
+    text-align: right;
+    text-transform: none;
+  }
+
+  /* === IV THERAPY tile mode — compact Apple-style rows with small bag graphic === */
+  .spotlight-inner.is-tiles { padding: 8px 8px 10px; gap: 2px; }
+  .iv-tile {
+    position: relative;
+    display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding: 6px 10px;
+    min-height: 44px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #fff;
+    background: transparent;
+    overflow: hidden;
+    transition: background 0.36s var(--av-ease-out), transform 0.5s var(--av-ease);
+  }
+  .iv-tile:hover { background: rgba(255,255,255,0.04); }
+
+  .iv-tile-text {
+    display: flex; flex-direction: column; gap: 1px;
+    min-width: 0; flex: 1;
+  }
+
+  .iv-tile-img-wrap {
+    flex: 0 0 auto;
+    width: 24px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+  }
+  .iv-tile-img {
+    height: 100%; width: auto; object-fit: contain;
+    transform: scale(0.96);
+    transition: transform 0.5s var(--av-ease);
+  }
+  .iv-tile:hover .iv-tile-img { transform: scale(1.06); }
+
+  .iv-tile-title {
+    font-family: 'Inter';
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: -0.005em;
+    text-transform: none;
+    color: #fff;
+    line-height: 1.15;
+  }
+  .iv-tile-desc {
+    font-family: 'Inter';
+    font-weight: 400;
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.5);
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+  .iv-tile-cta {
+    margin-top: 2px;
+    font-family: 'Inter';
+    font-weight: 500;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: color 0.28s var(--av-ease-out);
+  }
+  .iv-tile-arrow {
+    display: inline-block;
+    transition: transform 0.4s var(--av-ease);
+  }
+  .iv-tile:hover .iv-tile-cta { color: #fff; }
+  .iv-tile:hover .iv-tile-arrow { transform: translateX(4px); }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="bar">
+    <!-- Col 1 — drop logo -->
+    <div class="col-logo">
+      <span class="drop-logo">
+        <svg viewBox="0 0 19 30" fill="none"><path d="M9.5 0.5C9.5 0.5 1 12 1 19a8.5 8.5 0 0017 0C18 12 9.5 0.5 9.5 0.5z" fill="#fff"/></svg>
+      </span>
+    </div>
+
+    <!-- Col 2 — links + spotlight pill -->
+    <div class="col-links" id="track">
+      <span class="spot" id="spot"></span>
+      <a class="nav-link" href="#" data-panel="iv">IV THERAPY</a>
+      <a class="nav-link" href="/subscription">PLANS</a>
+      <a class="nav-link" href="/launches">LAUNCHES</a>
+    </div>
+
+    <!-- Col 3 — phone, chat, SIGN IN, BOOK NOW -->
+    <div class="col-right">
+      <button class="icon-widget" aria-label="Call">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </button>
+      <button class="icon-widget" aria-label="Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <a class="signin" href="#">SIGN IN</a>
+      <a class="book-now" href="#">
+        BOOK NOW
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Spotlight panel — sibling of .bar, NOT a grid item (grid was collapsing its width to 0) -->
+  <div class="spotlight-panel" id="panel">
+    <div class="spotlight-card">
+      <div class="spotlight-inner" id="panelInner"></div>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow">AVALON VITALITY</div>
+  <h1>MOBILE<br/>RECOVERY</h1>
+  <p>Hover IV THERAPY → PLANS → LAUNCHES: spotlight pill glides between them, a detached panel reveals below. Closed: zero seam, zero line, zero bg. Scroll: bar shrinks to floating compact pill.</p>
+</section>
+<div class="spacer"></div>
+
+<div class="preview-tag">B + C · COMBINED</div>
+
+<script>
+  // C — magnetic spotlight + sub-panel
+  const track = document.getElementById('track');
+  const spot = document.getElementById('spot');
+  const panel = document.getElementById('panel');
+  const panelInner = document.getElementById('panelInner');
+  const links = track.querySelectorAll('.nav-link');
+
+  // Pulled from src/data/catalog/iv-sessions.js — real Avalon catalog
+  const data = {
+    iv: {
+      mode: 'tiles',
+      tiles: [
+        { img: '/bags/energy.webp', title: 'IV Vitamins', desc: '8 hydration & wellness protocols', href: '/protocols?category=vitamins' },
+        { img: '/bags/cbd.webp',    title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       href: '/protocols?category=cbd' },
+        { img: '/bags/nad.webp',    title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     href: '/protocols?category=nad' }
+      ]
+    }
+  };
+
+  function moveSpot(target) {
+    const tr = track.getBoundingClientRect();
+    const r = target.getBoundingClientRect();
+    spot.style.width = r.width + 'px';
+    spot.style.transform = `translate(${r.left - tr.left}px, -50%)`;
+  }
+  function renderPanel(key) {
+    const cfg = data[key];
+    if (!cfg) { panelInner.innerHTML = ''; return; }
+
+    if (cfg.mode === 'tiles') {
+      // Stack vertically — each tile is a compact horizontal row
+      panel.style.width = '280px';
+      panelInner.classList.add('is-tiles');
+      panelInner.style.gridTemplateColumns = '1fr';
+      panelInner.innerHTML = cfg.tiles.map(t => `
+        <a class="iv-tile" href="${t.href}">
+          <span class="iv-tile-text">
+            <span class="iv-tile-title">${t.title}</span>
+            <span class="iv-tile-desc">${t.desc}</span>
+          </span>
+          <span class="iv-tile-img-wrap">
+            <img class="iv-tile-img" src="${t.img}" alt="${t.title}" loading="eager"/>
+          </span>
+        </a>
+      `).join('');
+      return;
+    }
+
+    panelInner.classList.remove('is-tiles');
+    const cols = cfg.cols || [];
+    panel.style.width = Math.max(280, cols.length * 240 + 40) + 'px';
+    panelInner.style.gridTemplateColumns = `repeat(${cols.length}, 1fr)`;
+    panelInner.innerHTML = cols.map(c => `
+      <div>
+        ${c.h ? `<h4>${c.h}</h4>` : ''}
+        <ul>${c.items.map(i => `
+          <li><a href="${i.href || '#'}">
+            <span>${i.label}</span>
+            ${i.meta ? `<span class="meta">${i.meta}</span>` : `<span style="opacity:.45; font-size:13px;">→</span>`}
+          </a></li>
+        `).join('')}</ul>
+      </div>
+    `).join('');
+  }
+  function openFor(l) {
+    moveSpot(l);
+    const key = l.dataset.panel;
+    if (key && data[key]) {
+      renderPanel(key);
+      panel.classList.add('is-open');
+    } else {
+      panel.classList.remove('is-open');
+    }
+  }
+  links.forEach(l => {
+    l.addEventListener('mouseenter', () => openFor(l));
+    l.addEventListener('focus',      () => openFor(l));
+  });
+  document.querySelector('nav').addEventListener('mouseleave', () => panel.classList.remove('is-open'));
+</script>
+</body>
+</html>

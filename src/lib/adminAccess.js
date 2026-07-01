@@ -25,6 +25,7 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/deletion-requests', // member account-deletion requests (anonymize)
   '/admin/expiring-credits', // members with visit credits about to expire
   '/admin/reviews', // post-visit NPS + review moderation
+  '/admin/support-tickets', // public support queue (store-then-notify)
   '/admin/reconciliation', // renewals / acuity sync / payment failures
   '/admin/soon', // coming-soon placeholders (Inventory/Events/Clinical/GFE/Tools/Settings)
 ]);
@@ -49,6 +50,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/deletion-requests', // member account-deletion requests
   '/admin/expiring-credits', // members with credits about to expire
   '/admin/reviews', // post-visit NPS + review moderation
+  '/admin/support-tickets', // public support queue
   '/admin/reconciliation', // renewals / acuity sync / payment failures
   '/admin/soon', // coming-soon placeholders
 ]);

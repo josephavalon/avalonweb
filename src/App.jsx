@@ -24,6 +24,15 @@ import IdleWarning from '@/components/auth/IdleWarning';
 const MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
 
 // Guard — redirects to /login if no active session; enforces role-based access
+// Legacy /plans/checkout and /plan-checkout deep links carry ?price=&term=&sessions=
+// query params that the /plan builder reads. A bare <Navigate to="/plan" /> would
+// drop them and land the visitor on the default plan. This preserves search + hash
+// so shared links keep working.
+function PreserveSearchNavigate({ to }) {
+  const loc = useLocation();
+  return <Navigate to={{ pathname: to, search: loc.search, hash: loc.hash }} replace />;
+}
+
 function RequireAuth({ children, allowedRoles }) {
   const { user, loading, authBackend } = useAuthStore();
   const { pathname } = useLocation();
@@ -147,6 +156,7 @@ const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
 const PageNotFound = lazyRoute(() => import('./lib/PageNotFound'));
 const NotFound = lazyRoute(() => import('./pages/NotFound'));
 const Safety = lazyRoute(() => import('./pages/Safety'));
+const Support = lazyRoute(() => import('./pages/Support'));
 const Ingredients = lazyRoute(() => import('./pages/Ingredients'));
 const MedicalDirection = lazyRoute(() => import('./pages/MedicalDirection'));
 const Gift = lazyRoute(() => import('./pages/Gift'));
@@ -183,6 +193,7 @@ const AdminRefunds = lazyRoute(() => import('./pages/admin/Refunds'));
 const AdminDeletionRequests = lazyRoute(() => import('./pages/admin/DeletionRequests'));
 const AdminExpiringCredits = lazyRoute(() => import('./pages/admin/ExpiringCredits'));
 const AdminReviews = lazyRoute(() => import('./pages/admin/Reviews'));
+const AdminSupportTickets = lazyRoute(() => import('./pages/admin/SupportTickets'));
 const AdminReconciliation = lazyRoute(() => import('./pages/admin/Reconciliation'));
 const Review = lazyRoute(() => import('./pages/Review'));
 const MemberRedeemGift = lazyRoute(() => import('./pages/members/RedeemGift'));
@@ -347,8 +358,8 @@ function AppRoutes() {
             <Route path="/providers" element={<Navigate to="/nurses" replace />} />
             <Route path="/provider/login" element={<Navigate to="/login" replace />} />
             <Route path="/plans" element={<Navigate to="/subscription" replace />} />
-            <Route path="/plans/checkout" element={<Navigate to="/plan" replace />} />
-            <Route path="/plan-checkout" element={<Navigate to="/plan" replace />} />
+            <Route path="/plans/checkout" element={<PreserveSearchNavigate to="/plan" />} />
+            <Route path="/plan-checkout" element={<PreserveSearchNavigate to="/plan" />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
             {/* /menu canonicalized to /protocols — both surfaces served the
@@ -430,12 +441,14 @@ function AppRoutes() {
             <Route path="/admin/deletion-requests" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminDeletionRequests /></RequireAuth>} />
             <Route path="/admin/expiring-credits" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminExpiringCredits /></RequireAuth>} />
             <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
+            <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
             <Route path="/safety" element={<Safety />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/gift" element={<Gift />} />
             <Route path="/review" element={<Review />} />

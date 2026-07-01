@@ -13,9 +13,10 @@ const SERVICES = [
 ];
 
 const COMPANY = [
-  { label: 'Story',  to: '/our-story' },
-  { label: 'Safety', to: '/safety' },
-  { label: 'FAQ',    to: '/faq' },
+  { label: 'Story',   to: '/our-story' },
+  { label: 'Safety',  to: '/safety' },
+  { label: 'FAQ',     to: '/faq' },
+  { label: 'Support', to: '/support' },
 ];
 
 const LEGAL = [
@@ -275,7 +276,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label={label}
                 title={label}
-                className="flex h-12 w-12 items-center justify-center text-foreground/70 transition-colors hover:text-foreground"
+                className="flex h-12 w-12 shrink-0 items-center justify-center text-foreground/70 transition-colors hover:text-foreground"
               >
                 <BrandIcon d={d} className="h-6 w-6" />
               </a>

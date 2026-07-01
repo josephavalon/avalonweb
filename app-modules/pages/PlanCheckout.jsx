@@ -401,7 +401,7 @@ export default function PlanCheckout() {
     visitsLabel,
     'Up to $250 included per visit',
     gfeOnFile ? 'Clinical review on file' : 'Initial clinical review',
-    'Cancel anytime',
+    'Cancel anytime after 3-month minimum',
   ];
 
   return (
@@ -462,7 +462,7 @@ export default function PlanCheckout() {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="font-heading text-[1.4rem] uppercase leading-none tracking-normal text-foreground">{visitsLabel}</p>
-                <p className="mt-1 font-body text-[13px] font-semibold text-foreground/55">Up to 4 people on one plan · Cancel anytime</p>
+                <p className="mt-1 font-body text-[13px] font-semibold text-foreground/55">Up to 4 people on one plan · 3-month minimum, then cancel anytime</p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="font-heading text-[1.6rem] leading-none text-foreground">{money(monthly)}</p>

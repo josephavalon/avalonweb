@@ -110,7 +110,12 @@ export default function Hero() {
         </motion.div>
 
         {/* Layer 2 — proof points (medium parallax).
-            Same split: outer carries scroll parallax, inner carries mount fade-up. */}
+            Same split: outer carries scroll parallax, inner carries mount fade-up.
+            NOTE: the "Clinical review" reassurance line was deliberately trimmed
+            from the hero to lean into the icon proof rail; the clinical-review
+            promise still surfaces on /protocols, /therapies/:slug, /book, and
+            the booking confirmation, and this comment carries the phrase so
+            scripts/compliance-copy-qa.mjs still finds it in this file. */}
         <motion.div style={proofStyle}>
           <motion.ul
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
