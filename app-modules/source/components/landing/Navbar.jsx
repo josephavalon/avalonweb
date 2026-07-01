@@ -249,10 +249,11 @@ function IVTherapyHover({ link, linkClassName }) {
         style={{
           background: 'transparent',
           border: 0,
-          // NOTE: intentionally NOT setting `font: 'inherit'` — that would override
-          // the `font-heading` (Bebas Neue) Tailwind class in linkClassName with the
-          // wrapper's Inter font. Individual font resets aren't needed since the
-          // class fully specifies font-family/size/tracking.
+          // Force Bebas Neue explicitly inline so no user-agent button font-family
+          // can win. Tailwind's `font-heading` class *should* handle this, but
+          // hardcoding it here bypasses every possible cascade edge case (Safari
+          // button UA rule, print-styles, etc.).
+          fontFamily: "'Bebas Neue', sans-serif",
           padding: 0,
           cursor: 'pointer',
           WebkitAppearance: 'none',
