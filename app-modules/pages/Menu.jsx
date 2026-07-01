@@ -294,7 +294,7 @@ export default function Menu() {
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
+      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-4 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
         <section className="relative">
           <div className="relative md:max-w-3xl">
             <p className="relative mb-3 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Choose a therapy base</p>
