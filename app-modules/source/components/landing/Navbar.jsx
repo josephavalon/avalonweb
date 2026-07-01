@@ -30,17 +30,32 @@ function IVTherapyHover({ link, linkClassName }) {
   const [anchor, setAnchor] = useState({ top: 0, left: 0 });
   const wrapperRef = useRef(null);
   const panelRef = useRef(null);
+  const closeTimerRef = useRef(null);
 
   // Recompute the portal panel's anchor from the trigger's client rect.
-  // The trigger lives inside .av-motion-rail which has overflow:hidden, so
-  // an absolute-positioned dropdown gets clipped. Rendering the panel via a
-  // portal onto <body> and positioning it in fixed coordinates escapes the
-  // ancestor's clip entirely.
+  // Anchor sits FLUSH with the bottom of the trigger's hit area so the
+  // cursor moves from trigger → panel with zero dead space.
   const updateAnchor = () => {
     const el = wrapperRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    setAnchor({ top: rect.bottom + 4, left: rect.left + rect.width / 2 });
+    setAnchor({ top: rect.bottom, left: rect.left + rect.width / 2 });
+  };
+
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+  // 180ms grace period on close so the cursor can travel from trigger → panel
+  // (through the invisible padding bridge) without the panel snapping shut.
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      closeTimerRef.current = null;
+    }, 180);
   };
 
   useEffect(() => {
@@ -65,6 +80,9 @@ function IVTherapyHover({ link, linkClassName }) {
     };
   }, [open]);
 
+  // Also cancel any pending close on unmount.
+  useEffect(() => () => cancelClose(), []);
+
   const panelStyle = {
     position: 'fixed',
     top: `${anchor.top}px`,
@@ -84,8 +102,8 @@ function IVTherapyHover({ link, linkClassName }) {
       aria-label="IV Therapy categories"
       aria-hidden={!open}
       style={panelStyle}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => { cancelClose(); setOpen(true); }}
+      onMouseLeave={scheduleClose}
     >
       <div className="av-glass-menu overflow-hidden rounded-3xl border shadow-[0_28px_60px_rgba(0,0,0,0.55)]">
         <div className="flex flex-col gap-0.5 p-2">
@@ -124,16 +142,31 @@ function IVTherapyHover({ link, linkClassName }) {
     <div
       ref={wrapperRef}
       className="relative"
-      // Extend hit area 16px below to cover the gap between link and panel.
-      style={{ paddingBottom: '16px', marginBottom: '-16px' }}
-      onMouseEnter={() => { updateAnchor(); setOpen(true); }}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => { cancelClose(); updateAnchor(); setOpen(true); }}
+      onMouseLeave={scheduleClose}
     >
+      {/* Invisible hover hit-box: extends the reachable area a full 90px sideways
+          and 28px down from the button, so the cursor can drift toward the panel
+          without leaving the wrapper. Rendered FIRST so the button naturally
+          stacks above it, keeping the button clickable. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: '-28px',
+          left: '-90px',
+          right: '-90px',
+          zIndex: 0,
+          pointerEvents: 'auto',
+        }}
+      />
       {/* Button (not Link) — click OPENS the menu instead of navigating.
           Users can still reach /protocols by clicking "IV Vitamins" inside the menu. */}
       <button
         type="button"
         className={linkClassName}
+        style={{ position: 'relative', zIndex: 1 }}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={(e) => {
