@@ -145,19 +145,17 @@ function IVTherapyHover({ link, linkClassName }) {
       onMouseEnter={() => { cancelClose(); updateAnchor(); setOpen(true); }}
       onMouseLeave={scheduleClose}
     >
-      {/* Invisible hover hit-box: extends the reachable area a full 90px sideways
-          and 28px down from the button, so the cursor can drift toward the panel
-          without leaving the wrapper. Rendered FIRST so the button naturally
-          stacks above it, keeping the button clickable. */}
+      {/* Invisible vertical bridge — 28px tall, same width as the button. Keeps
+          the cursor "inside" the wrapper on its way down to the panel. Does NOT
+          extend sideways so it can't overlap the neighboring nav links. */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          top: 0,
-          bottom: '-28px',
-          left: '-90px',
-          right: '-90px',
-          zIndex: 0,
+          top: '100%',
+          left: 0,
+          right: 0,
+          height: '28px',
           pointerEvents: 'auto',
         }}
       />
@@ -166,7 +164,6 @@ function IVTherapyHover({ link, linkClassName }) {
       <button
         type="button"
         className={linkClassName}
-        style={{ position: 'relative', zIndex: 1 }}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={(e) => {
