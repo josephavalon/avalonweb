@@ -185,17 +185,29 @@ const STEP_TITLES = {
 
 // Compact dropdown — the builder's default control. Native <select>: one tap,
 // zero open/close movement, every choice on one short screen.
-function PlanSelect({ value, onChange, ariaLabel, children, icon: Icon }) {
+function PlanSelect({ value, onChange, ariaLabel, children, icon: Icon, image }) {
+  // Prefer a per-selection bag image over the generic icon so the row shows the
+  // actual IV bag graphic the customer just picked (Beauty → beauty.webp, etc.).
+  const hasLeading = Boolean(image || Icon);
   return (
     <div className="relative">
-      {Icon && (
+      {image ? (
+        <span className="pointer-events-none absolute left-3 top-1/2 flex h-9 w-6 -translate-y-1/2 items-center justify-center">
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            className="h-full w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.5)]"
+          />
+        </span>
+      ) : Icon ? (
         <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/60" strokeWidth={2} />
-      )}
+      ) : null}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={ariaLabel}
-        className={`av-treatment-card w-full appearance-none rounded-xl border py-3 pr-10 font-body text-sm font-black text-foreground focus:border-foreground/45 focus:outline-none md:text-base ${Icon ? 'pl-10' : 'pl-3.5'}`}
+        className={`av-treatment-card w-full appearance-none rounded-xl border py-3 pr-10 font-body text-sm font-black text-foreground focus:border-foreground/45 focus:outline-none md:text-base ${hasLeading ? (image ? 'pl-11' : 'pl-10') : 'pl-3.5'}`}
       >
         {children}
       </select>
@@ -324,7 +336,7 @@ function SessionSegment({ sessions, onSessions, perIvPrice = VITAMIN_IV_PRICE })
 // Collapsed by default; tapping the header toggles the EXISTING control open via
 // SmoothDisclosure. The `value` is a live summary string read from existing
 // builder state (no new value state is introduced).
-function BuilderRow({ title, value, hint, icon: Icon, open, onToggle, children }) {
+function BuilderRow({ title, value, hint, icon: Icon, image, open, onToggle, children }) {
   return (
     <div className={`av-treatment-card relative overflow-hidden rounded-[1.05rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}>
       <button
@@ -334,11 +346,20 @@ function BuilderRow({ title, value, hint, icon: Icon, open, onToggle, children }
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors duration-base ease-editorial md:px-5"
       >
         <div className="flex min-w-0 items-center gap-3">
-          {Icon && (
+          {image ? (
+            <span className="flex h-10 w-8 shrink-0 items-center justify-center">
+              <img
+                src={image}
+                alt=""
+                loading="lazy"
+                className="h-full w-auto object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.55)]"
+              />
+            </span>
+          ) : Icon ? (
             <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-gradient-to-b from-foreground/[0.11] to-foreground/[0.03] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]">
               <Icon className="h-[18px] w-[18px] text-foreground/82" strokeWidth={2} />
             </span>
-          )}
+          ) : null}
           <span className="flex min-w-0 flex-col">
             <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
             {hint && (
@@ -447,7 +468,7 @@ function StepTherapy({ therapyKey, onSelect }) {
 // per-visit list stays scannable. `summary` shows live add-on count.
 function VisitRow({ index, visit, onTherapy, onIv, onIm }) {
   const [showAddons, setShowAddons] = useState(false);
-  const { category } = findTherapy(visit.therapyKey);
+  const { category, option: visitOption } = findTherapy(visit.therapyKey);
   const addonCount =
     IV_ADDON_ITEMS.reduce((s, i) => s + (visit.ivQty?.[i.key] || 0), 0) +
     IM_ADDON_ITEMS.reduce((s, i) => s + (visit.imQty?.[i.key] || 0), 0);
@@ -470,7 +491,7 @@ function VisitRow({ index, visit, onTherapy, onIv, onIm }) {
           </span>
         )}
       </div>
-      <PlanSelect value={visit.therapyKey} onChange={onTherapy} ariaLabel={`Visit ${index + 1} therapy`} icon={Droplets}>
+      <PlanSelect value={visit.therapyKey} onChange={onTherapy} ariaLabel={`Visit ${index + 1} therapy`} image={visitOption?.image} icon={Droplets}>
         {CATEGORIES.map((cat) => (
           <optgroup key={cat.key} label={cat.label} className="bg-background text-foreground">
             {cat.options.map((opt) => (
@@ -1282,6 +1303,7 @@ export default function Subscription() {
               <BuilderRow
                 title={STEP_TITLES.therapy}
                 value={therapySummary}
+                image={therapyOption?.image}
                 icon={Droplets}
                 open={openStep === 'therapy'}
                 onToggle={() => toggleStep('therapy')}
