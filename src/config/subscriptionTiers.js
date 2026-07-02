@@ -1,9 +1,13 @@
 // Visit-credit pricing model (per avalon-visit-credit-model memory):
-// each plan visit = a $250 credit; included if the chosen IV is ≤$250,
-// pay-difference otherwise. Monthly price = sessions × $250.
-// Stripe charges this value directly via api/create-checkout-session.js
-// dynamic price_data — keep these numbers in sync with what the UI shows.
+// each plan visit carries a $250 credit; included if the chosen IV is ≤$250,
+// pay-difference otherwise.
+//
+// Marketing "from" price is based on the CHEAPEST IV (Hydration = $200), not
+// the $250 credit ceiling. A Hydration Starter is 10% off $200 = $180/mo;
+// a NAD+ Starter (base $350) is priced dynamically at checkout. Stripe
+// charges the actual computed value via api/create-checkout-session.js.
 export const PLAN_VISIT_CREDIT = 250;
+export const PLAN_ENTRY_IV_PRICE = 200; // Hydration — the cheapest IV, used as the tier "from" price
 
 // Plan-member pricing incentives. Apply on top of the per-visit cart:
 //   - tier discount scales with sessions (10/15/17%) on the visit-credit base
@@ -24,16 +28,17 @@ export const SUBSCRIPTION_TIERS = [
     name: 'Starter',
     sessions: 1,
     tagline: 'The foundation.',
-    price: 225,
-    originalPrice: 250,
+    // "From" pricing on the cheapest IV (Hydration $200). 10% off = $180.
+    price: 180,
+    originalPrice: 200,
     discountPercent: 10,
     unit: '/mo',
-    perSessionNote: '$225 / visit',
+    perSessionNote: 'From $180 / visit',
     note: '1 visit monthly',
     discount: '10% off',
     shotCredit: 'None',
     benefits: [
-      '1 visit credit per month ($250 value, $225 with plan)',
+      '1 visit credit per month ($250 credit; $180 on Hydration)',
       '10% off all add-ons',
       'Priority booking window',
       'Plan scheduling portal',
@@ -44,11 +49,12 @@ export const SUBSCRIPTION_TIERS = [
     name: 'Pro',
     sessions: 2,
     tagline: 'The sweet spot.',
-    price: 425,
-    originalPrice: 500,
+    // 2 × $200 = $400, 15% off = $340
+    price: 340,
+    originalPrice: 400,
     discountPercent: 15,
     unit: '/mo',
-    perSessionNote: '$213 / visit',
+    perSessionNote: 'From $170 / visit',
     note: '2 visits monthly',
     discount: '15% off',
     shotCredit: '1 / mo',
@@ -65,11 +71,12 @@ export const SUBSCRIPTION_TIERS = [
     name: 'VIP',
     sessions: 4,
     tagline: 'Full access.',
-    price: 830,
-    originalPrice: 1000,
+    // 4 × $200 = $800, 17% off = $664
+    price: 664,
+    originalPrice: 800,
     discountPercent: 17,
     unit: '/mo',
-    perSessionNote: '$208 / visit',
+    perSessionNote: 'From $166 / visit',
     note: '4 visits monthly',
     discount: '17% off',
     shotCredit: '2 / mo',
