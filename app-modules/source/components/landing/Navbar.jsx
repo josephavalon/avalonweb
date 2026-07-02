@@ -39,9 +39,36 @@ const IV_HOVER_SURFACE_WIDTH = 320;
 // before the visible tile card, so diagonal exits are caught.
 const IV_BRIDGE_HEIGHT = 16;
 
+// Track the desktop (lg) breakpoint so the fixed portal surface only mounts
+// on viewports where the hover menu actually shows. Below `lg` the trigger
+// still renders as a plain link, but the 320px surface + 280px panel are
+// gone from the DOM — otherwise their fixed layout adds ~140px of horizontal
+// scrollWidth at 320px viewports (iPhone SE) and fails MOBILE_QA_WIDTHS=320.
+function useIsDesktop(minWidthPx = 1024) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(`(min-width: ${minWidthPx}px)`).matches;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mql = window.matchMedia(`(min-width: ${minWidthPx}px)`);
+    const onChange = (e) => setMatches(e.matches);
+    // matchMedia gets a change listener on all modern browsers; addListener
+    // is the pre-Safari-14 fallback.
+    if (mql.addEventListener) mql.addEventListener('change', onChange);
+    else mql.addListener(onChange);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onChange);
+      else mql.removeListener(onChange);
+    };
+  }, [minWidthPx]);
+  return matches;
+}
+
 function IVTherapyHover({ link, linkClassName }) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, left: 0, height: 0, width: 0 });
+  const isDesktop = useIsDesktop(1024);
   const wrapperRef = useRef(null);
   const triggerRef = useRef(null);
   const panelRef = useRef(null);
@@ -289,7 +316,7 @@ function IVTherapyHover({ link, linkClassName }) {
       >
         <span className="relative z-10">{link.label}</span>
       </button>
-      {typeof document !== 'undefined' && createPortal(surface, document.body)}
+      {isDesktop && typeof document !== 'undefined' && createPortal(surface, document.body)}
     </div>
   );
 }
