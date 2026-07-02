@@ -23,7 +23,8 @@ const PRIVATE_BETA_ROBOTS = 'noindex, nofollow, noarchive';
 
 function isPrivateBetaHost() {
   if (typeof window === 'undefined') return false;
-  return window.location.hostname === 'snooches.avalonvitality.co';
+  const host = window.location.hostname;
+  return host === 'snooches.avalonvitality.co' || host === 'beta.avalonvitality.co';
 }
 
 export function useSeo({ title, description, path, jsonLd, robots = 'index, follow, max-image-preview:large' }) {
