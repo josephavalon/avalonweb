@@ -44,7 +44,7 @@ export default function AvalonStaticBackdrop() {
           srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
           sizes="100vw"
           alt=""
-          className="avalon-static-backdrop__image absolute inset-0 h-full w-full object-cover [object-position:86%_52%] md:[object-position:74%_52%]"
+          className="avalon-static-backdrop__image absolute inset-0 h-full w-full object-cover [object-position:50%_40%] md:[object-position:55%_38%]"
           loading="eager"
           fetchpriority="high"
         />

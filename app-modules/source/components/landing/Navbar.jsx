@@ -512,6 +512,27 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   });
   const navVisible = !navHiddenByScroll;
 
+  // ScrollToTop (src/App.jsx) calls window.scrollTo(0, 0) on every route
+  // change, which fires a native scroll event that can flip navHiddenByScroll
+  // false→true a beat after navigation (if the nav was hidden on the page you
+  // left). Without this, that shows up as the bar visibly sliding back in
+  // right as the new page loads. Suppress the reveal transition for a short
+  // window after pathname changes so the correction is instant, not animated;
+  // real scroll-driven hide/show on the new page still animates normally.
+  const suppressNavTransitionRef = useRef(false);
+  const prevPathnameRef = useRef(location.pathname);
+  if (prevPathnameRef.current !== location.pathname) {
+    prevPathnameRef.current = location.pathname;
+    suppressNavTransitionRef.current = true;
+  }
+  useEffect(() => {
+    if (!suppressNavTransitionRef.current) return undefined;
+    const id = setTimeout(() => {
+      suppressNavTransitionRef.current = false;
+    }, 120);
+    return () => clearTimeout(id);
+  }, [location.pathname]);
+
   // Single persistent instance: <Navbar globalShell/> renders the bar for ALL
   // viewports from MobileShell — which sits OUTSIDE the page transition — so the bar
   // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
@@ -526,7 +547,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       inert={!navVisible ? '' : undefined}
       initial={false}
       animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -120 }}
-      transition={{ duration: 0.32, ease: EASE }}
+      transition={{ duration: suppressNavTransitionRef.current ? 0 : 0.32, ease: EASE }}
       className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'
