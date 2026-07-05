@@ -24,3 +24,11 @@ This file is loaded into agent context for every session in this workspace. Keep
 - Pure-logic Vitest checks live next to the file. Snapshot tests for admin shell.
 - Integration tests use the `scripts/verify-*.mjs` runner.
 - For Stripe / Acuity / Resend: use the existing mocks; do not hit live providers from local tests.
+
+## Design System
+
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.
+Events platform build plan: [`docs/EVENTS_BLUEPRINT_v1.5_AMENDMENTS.md`](docs/EVENTS_BLUEPRINT_v1.5_AMENDMENTS.md) (amendments over blueprint v1.4).
