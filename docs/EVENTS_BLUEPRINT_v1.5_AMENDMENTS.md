@@ -119,12 +119,33 @@ Insurance is both an ops requirement and a platform feature. Two sides:
 
 ---
 
-## Implementation order (folds into the v1.4 week table)
-1. **Week 1 additions:** stack decision (B); IBM Plex Mono self-host; Stripe `payment_method_types` pin + Apple Pay domain verify; DESIGN.md + CLAUDE.md committed ✅ (committed with this doc); **broker engagement for the coverage stack (K)**; counsel review of the event/provider agreement templates (K + I).
-2. **Week 2:** design tokens/components with the portal shell + feed (pill buttons, row-cards, chips, voices).
-3. **Weeks 3–7:** amendments C/D/E/J land with their blueprint steps.
-4. **Weeks 8–9:** TTF dashboard (A); copy pass enforces the three voices + claims screen; WCAG AA audit incl. kiosk board.
-5. **v1 gate addition:** the rehearsal event must **meet the TTF budgets**, plus the PHI red-team drill, not just zero door incidents.
+## Implementation order — ship until API, then finish with API input
+
+Strategy: the repo already carries live Stripe, Acuity, Supabase, Resend, and Attio integrations, and the events surface is started (`app-modules/pages/Events.jsx`, `EventPage.jsx`, `EventPresale.jsx`, `TripPage.jsx` on static demo data). So the build splits hard: **Phase 1 ships everything achievable on existing credentials; Phase 2 items land independently as each credential arrives and never block Phase 1.** The platform runs in graceful degradation until then (board-only queue, trip-page QR as the pass).
+
+### Phase 0 — start the paperwork clocks (day 1, parallel, no code)
+- **Twilio account + BAA + A2P 10DLC campaign registration** — the longest pole (days to weeks of carrier approval); start immediately even though the code lands late in Phase 1.
+- **Acuity Powerhouse upgrade + BAA** — required before *real patient* health checks, not before building against the existing Acuity creds.
+- **Apple Pass Type ID certificate** (+ Google Wallet API access).
+- **Stripe account config** (not a new API): HSA/FSA confirmation on MCC 8099, Apple Pay domain verification for the events routes.
+- **Broker engagement** for the coverage stack (K); **counsel review** of event/provider agreement templates (K + I) and postures (I).
+
+### Phase 1 — ship until API (existing credentials only)
+1. **Foundation:** stack decision (B — default: inside this Vite app); events schema in Supabase (container/tier/visit/queue_entry/catalog + `back_on_floor_minutes`/provider row #1/asset/theme/document) replacing the localStorage demo (`avalon.events.demo.visits.v1`); DESIGN.md skin on the existing events pages — IBM Plex Mono self-hosted, three voices, pill components. DESIGN.md + CLAUDE.md committed ✅.
+2. **Client journey:** feed → event page → reserve sheet: free RSVP end-to-end, then **paid checkout via the existing `create-checkout-session`** (server-side price recompute + webhooks already live; add `payment_method_types: ['card']` pin). Trip page with signed-JWT QR (Node crypto, no vendor) + day-of mode.
+3. **GFE loop on existing Acuity creds:** GFE appointment type (dashboard config); health-check card → Acuity scheduling → webhook flips `gfe_status`; card-stack reviewer with one-tap clear/decline; medical decline → auto full refund via existing Stripe.
+4. **Portals:** three-portal shell + RLS permission matrix + CI deny-tests; promoter event setup incl. image uploads + curated theme picker (J); admin audit panel; tier builder; package builder MVP with dual sign-off.
+5. **Serve + kiosk:** scanner PWA + offline signed manifest + per-service clearance; kiosk intake posting to Acuity via existing creds; queue in **board-only mode** (departures board shows position; no SMS yet); express-lane ordering (D).
+6. **Analytics:** server-side event stream + TTF timestamps to Postgres; CI pixel check extended to events routes.
+7. **Phase 1 exit gate — internal rehearsal on beta (team only, no real patients):** paid flow + GFE loop + offline scan drill + kiosk board-only drill; TTF stopwatch drill vs budgets; PHI red-team drill; merge-into-beta screenshot check.
+
+### Phase 2 — finish with API input (each lands independently, in arrival order)
+- **Twilio live (BAA + 10DLC approved):** SMS queue — call-next texts, 5-min response timer, two-call no-show + rejoin, pay-by-phone clearance link; reminder SMS (skip if Acuity native reminders cover the GFE nudge); full kiosk concierge drill.
+- **Acuity Powerhouse BAA executed:** real patient health checks authorized → first public event unblocked.
+- **Wallet passes (Apple cert / Google API):** branded passes with silent GFE-state updates; trip-page QR remains the permanent fallback.
+- **Monday.com token:** task-group push on presale (incl. auto "COI to venue" item).
+- **E-sign vendor:** contracts engine (K) — event/provider agreements with presale gating; COI stays an email pipe until a broker API exists.
+- **v1 gate (unchanged from blueprint):** a real low-stakes comp-tier event with real strangers, **TTF budgets met**, PHI red-team passed, zero door incidents — requires at minimum the Twilio and Acuity items above.
 
 ## Verification
 - **Design:** compare built screens against the approved preview (`~/.gstack/projects/josephavalon-avalonweb/designs/design-system-20260705/afterglow-clinical-preview.html`); `/design-review` after each client surface ships.
