@@ -92,10 +92,35 @@ Groundwork in v1 (rows-not-migrations): `provider` table (Avalon = row #1); **se
 - **Admin audit (compliance panel):** Brand & content audit view — every live asset/theme, one-tap pull/replace reverting to defaults, all audit-logged. Per-event `auto-publish` vs `require approval before Presale push`.
 - **Guardrails:** organizer warrants image rights in upload T&Cs; no patient-identifiable imagery without photo release; webp/avif compression so uploads can't blow the TTF page-weight budget.
 
+## K. Insurance workstream (amends Step 8; feeds H's provider network)
+
+Insurance is both an ops requirement and a platform feature. Two sides:
+
+**The Avalon/PC coverage stack (week-1 broker engagement, bound before the first paid event):**
+- **Professional liability / med-mal** covering the PC and every rendering clinician — with **mobile/off-site practice explicitly endorsed**. Many med-mal policies assume a fixed clinic; an events business dies on that assumption. Confirm per-clinician vs entity coverage and 1099-vs-W2 implications.
+- **General liability** ($1M/$2M typical) — venues will demand it, plus **additional-insured endorsements** naming the venue and host per event.
+- **Product liability** for compounded/administered products (pairs with the 503B sourcing documentation from amendment I).
+- **Commercial auto** for the mobile fleet; **workers' comp** for staff.
+- **Cyber liability with HIPAA breach response** — the platform is PHI-free by architecture, but Avalon touches PHI operationally through Acuity access; breach-response coverage is cheap relative to the exposure.
+- **Event cancellation coverage** — consider per large B2B event (refund exposure concentrates); optional, price it per event.
+- Clarify the boundary of what the venue/host carries (their GL, liquor liability) vs what Avalon carries — written into the event agreement template.
+
+**Platform hooks (build items):**
+- **COI creation & submission, not just tracking:** the admin panel generates the COI *request* from event data — venue name/address, event dates, required limits, and additional-insured wording auto-filled from `container` — and submits it to the broker/carrier in one click (broker email pipe in v1; carrier/broker API — Thimble/Coverdash-class or the broker's portal — when available). The returned certificate lands on the event as a versioned document, and one tap sends it to the venue contact. The Monday task group on presale push auto-includes "COI to venue" and closes itself when the document goes out (non-PHI payload, existing pipe).
+- **Contracts engine (same pattern as the package builder — the package IS the exhibit):** Avalon-authored, counsel-approved templates generate real agreements from platform data:
+  - **Event agreement** (host/organizer): scope, the approved package as Exhibit A (itemized, clinical/experience lines separated per §3.5), payment terms, cancellation/refund policy, insurance boundaries (who carries what, from the coverage stack above), indemnification.
+  - **Provider agreement** (partner onboarding, feeds H): services, rates, insurance minimums, brand standards, BAA when clinical.
+  - **Venue riders** as needed.
+  - E-signature via a Dropbox Sign / DocuSign-class integration; status machine `draft → sent → signed → active → expired`, all audit-logged; per-event config can **gate the presale push on a signed event agreement** (mirrors the package-approval gate). Contracts carry business terms only — no PHI — so the e-sign vendor needs no BAA; the BAAs themselves (Acuity, Twilio, Supabase) are tracked as documents in the same system so nothing lives in someone's inbox.
+- **Schema delta (adds to E):** `document (id, container_id | provider_id, kind [coi | event_agreement | provider_agreement | venue_rider | baa | waiver_template], status, url, esign_ref, version, expires_at, created_by, at)` — one table serves COIs, contracts, and BAA tracking; expiry alerts come free.
+- **Provider insurance enforcement (feeds H):** `provider.insurance_ref` points into the same document system — coverage type, carrier, limits, expiry, additional-insured status. **A provider with a lapsed COI or unsigned agreement cannot be added to an event package** — same hard-enforcement pattern as the minimum-notice rules. Expiry alerts surface in the admin portal before they become day-of problems.
+- **Waivers complement insurance:** `requires_waiver` services (amendment H) get their liability waiver flow; waiver completion is a visit-level status enum like everything else. Photo release stays separate.
+- **Guest-side stays cash-pay:** HSA/FSA acceptance is already handled (MCC 8099 + receipt substantiation wording). Health-insurance *claims billing* is out of scope permanently for elective wellness; a v2-maybe is superbill generation from the visit record — flag only, do not promise reimbursement anywhere in copy (claims-discipline overlap with amendment I).
+
 ---
 
 ## Implementation order (folds into the v1.4 week table)
-1. **Week 1 additions:** stack decision (B); IBM Plex Mono self-host; Stripe `payment_method_types` pin + Apple Pay domain verify; DESIGN.md + CLAUDE.md committed. ✅ (committed with this doc)
+1. **Week 1 additions:** stack decision (B); IBM Plex Mono self-host; Stripe `payment_method_types` pin + Apple Pay domain verify; DESIGN.md + CLAUDE.md committed ✅ (committed with this doc); **broker engagement for the coverage stack (K)**; counsel review of the event/provider agreement templates (K + I).
 2. **Week 2:** design tokens/components with the portal shell + feed (pill buttons, row-cards, chips, voices).
 3. **Weeks 3–7:** amendments C/D/E/J land with their blueprint steps.
 4. **Weeks 8–9:** TTF dashboard (A); copy pass enforces the three voices + claims screen; WCAG AA audit incl. kiosk board.
