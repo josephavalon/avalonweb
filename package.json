@@ -51,6 +51,7 @@
     "verify:events-refund-waitlist": "node scripts/verify-events-refund-waitlist.mjs",
     "verify:events-gfe": "node scripts/verify-events-gfe.mjs",
     "verify:events-qr": "node scripts/verify-events-qr.mjs",
+    "verify:events-ttf": "node scripts/verify-events-ttf.mjs",
     "a11y:scan": "node scripts/a11y-axe-scan.mjs",
     "exam:snooches": "node scripts/snooches-production-exam.mjs",
     "deploy:snooches": "node scripts/snooches-safe-deploy.mjs",
