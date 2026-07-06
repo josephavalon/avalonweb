@@ -121,6 +121,7 @@ const TripPage = lazyRoute(() => import('./pages/TripPage'));
 const EventKiosk = lazyRoute(() => import('./pages/EventKiosk'));
 const EventBoard = lazyRoute(() => import('./pages/EventBoard'));
 const AdminEventServe = lazyRoute(() => import('./pages/admin/EventServe'));
+const AdminEventBrand = lazyRoute(() => import('./pages/admin/EventBrand'));
 const SeoPillarPage = lazyRoute(() => import('./pages/SeoPillarPage'));
 const LocationPage = lazyRoute(() => import('./pages/LocationPage'));
 const LocationsHub = lazyRoute(() => import('./pages/LocationPage').then((mod) => ({ default: mod.LocationsHub })));
@@ -453,6 +454,7 @@ function AppRoutes() {
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
             <Route path="/admin/events/:slug/serve" element={<RequireAuth allowedRoles={['admin', 'staff', 'nurse', 'rn', 'np', 'physician', 'medical_director']}><AdminEventServe /></RequireAuth>} />
+            <Route path="/admin/events/:slug/brand" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEventBrand /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
