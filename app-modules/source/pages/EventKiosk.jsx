@@ -118,7 +118,13 @@ export default function EventKiosk() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-foreground" onPointerDown={() => { if (step === 'idle') setStep('name'); }}>
+    <div
+      className="min-h-screen bg-black text-foreground"
+      /* Both handlers: pointerdown for instant response on real touch, click as
+         the universal fallback (synthetic events, exotic input devices). */
+      onPointerDown={() => { if (step === 'idle') setStep('name'); }}
+      onClick={() => { if (step === 'idle') setStep('name'); }}
+    >
       {step === 'idle' ? (
         <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col justify-center px-8 py-14">
           <QueueBoard rows={board} large title="THE LOUNGE" subtitle={`${(eventName || 'AVALON RECOVERY').toUpperCase()} · LIVE QUEUE`} stale={stale} />
