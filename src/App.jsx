@@ -117,6 +117,7 @@ const ProviderReports = lazyRoute(() => import('./pages/provider/Reports'));
 const ProviderSettings = lazyRoute(() => import('./pages/provider/Settings'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
+const TripPage = lazyRoute(() => import('./pages/TripPage'));
 const SeoPillarPage = lazyRoute(() => import('./pages/SeoPillarPage'));
 const LocationPage = lazyRoute(() => import('./pages/LocationPage'));
 const LocationsHub = lazyRoute(() => import('./pages/LocationPage').then((mod) => ({ default: mod.LocationsHub })));
@@ -320,6 +321,8 @@ function AppRoutes() {
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />
+            <Route path="/trips" element={<Navigate to="/trips/local-preview" replace />} />
+            <Route path="/trips/:visitId" element={<TripPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/membership" element={<Navigate to="/subscription" replace />} />

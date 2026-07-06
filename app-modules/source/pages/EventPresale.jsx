@@ -1,283 +1,412 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Calendar, CheckCircle, Clock, Mail, QrCode, Shield, Ticket, User } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Apple, Check, CreditCard, Minus, Plus, ShieldCheck, Ticket, UserRound } from 'lucide-react';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import PremiumButton from '@/components/ui/PremiumButton';
-import {
-  generatePresaleCodes,
-  readEventPresales,
-  redeemPresaleCode,
-} from '@/lib/platformOps';
+import { createMockVisit, events, findEventBySlug } from '@/data/events';
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
-const fieldClass = 'w-full rounded-2xl border border-foreground/[0.10] bg-background/[0.72] px-4 py-3.5 font-body text-sm text-foreground outline-none transition focus:border-foreground/35';
+const inputClass = 'min-h-[52px] w-full rounded-2xl border border-foreground/[0.12] bg-background/62 px-4 font-body text-sm font-semibold text-foreground outline-none transition placeholder:text-foreground/36 focus:border-foreground/34';
 
-function MiniQr({ value = 'AV' }) {
-  const blocks = Array.from({ length: 49 }, (_, index) => {
-    const char = value.charCodeAt(index % Math.max(1, value.length)) || index;
-    return (char + index) % 3 !== 0;
-  });
+function currency(cents) {
+  return `$${Math.round(cents / 100).toLocaleString()}`;
+}
+
+function getEventDateLabel(event) {
+  if (!event.dateYear || event.date?.includes(event.dateYear)) return event.dateDisplay || event.date;
+  return event.dateDisplay || [event.date, event.dateYear].filter(Boolean).join(', ');
+}
+
+function isRequestTier(event, tier) {
+  return event.state === 'application' || tier?.serviceType === 'request';
+}
+
+function tierAllowsIv(event, tier) {
+  return !isRequestTier(event, tier) && tier?.serviceType !== 'experience_only';
+}
+
+function TierRow({ tier, active, onClick }) {
+  const priceLabel = tier.serviceType === 'request' ? 'Request' : tier.price ? `$${tier.price}` : 'Apply';
+
   return (
-    <div className="grid h-28 w-28 grid-cols-7 gap-1 rounded-2xl border border-foreground/[0.12] bg-background p-3">
-      {blocks.map((on, index) => (
-        <span key={index} className={`rounded-[3px] ${on ? 'bg-foreground' : 'bg-transparent'}`} />
-      ))}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-[1.25rem] border p-4 text-left transition ${
+        active
+          ? 'border-foreground bg-foreground text-background'
+          : 'border-foreground/[0.10] bg-foreground/[0.04] text-foreground hover:border-foreground/24'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-body text-sm font-bold">{tier.name}</p>
+          <p className={`mt-2 max-w-md font-body text-xs leading-relaxed ${active ? 'text-background/66' : 'text-foreground/56'}`}>
+            {tier.detail}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="font-heading text-3xl uppercase leading-none">{priceLabel}</p>
+          <p className={`mt-1 font-body text-[11px] font-semibold uppercase ${active ? 'text-background/54' : 'text-foreground/42'}`}>{tier.state}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function Stepper({ value, onChange }) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, value - 1))}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045]"
+        aria-label="Remove attendee"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <span className="min-w-10 text-center font-heading text-4xl uppercase leading-none">{value}</span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(8, value + 1))}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045]"
+        aria-label="Add attendee"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+function MiniSummary({ event, tier, party }) {
+  const requestOnly = isRequestTier(event, tier);
+  const allowsIv = tierAllowsIv(event, tier);
+  const ivCount = allowsIv ? party.filter((guest) => guest.iv).length : 0;
+  const experienceCount = party.length - ivCount;
+  const ivTotal = (tier?.price || 0) * ivCount * 100;
+  const experienceUnitCents = allowsIv ? 3500 : (tier?.price || 0) * 100;
+  const experienceTotal = Math.max(0, experienceCount) * experienceUnitCents;
+  const total = requestOnly ? 0 : ivTotal + experienceTotal;
+
+  return (
+    <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-background/62 p-4 backdrop-blur-2xl">
+      <p className="font-body text-[11px] font-semibold uppercase text-foreground/42">{requestOnly ? 'Request summary' : 'Reserve summary'}</p>
+      <h2 className="mt-2 font-heading text-4xl uppercase leading-none">{event.title}</h2>
+      <div className="mt-5 space-y-3">
+        {requestOnly && (
+          <div className="flex justify-between gap-4 font-body text-sm text-foreground/68">
+            <span>Request to join x {party.length}</span>
+            <span>No checkout</span>
+          </div>
+        )}
+        {ivCount > 0 && (
+          <div className="flex justify-between gap-4 font-body text-sm text-foreground/68">
+            <span>{tier.name} x {ivCount}</span>
+            <span>{currency(ivTotal)}</span>
+          </div>
+        )}
+        {experienceCount > 0 && (
+          <div className="flex justify-between gap-4 font-body text-sm text-foreground/68">
+            <span>Experience access x {experienceCount}</span>
+            <span>{currency(experienceTotal)}</span>
+          </div>
+        )}
+        <div className="border-t border-foreground/[0.10] pt-3">
+          <div className="flex items-end justify-between gap-4">
+            <span className="font-body text-xs font-semibold uppercase text-foreground/42">{requestOnly ? 'Status' : 'Total'}</span>
+            <span className="font-heading text-5xl uppercase leading-none">{requestOnly ? 'Request' : currency(total)}</span>
+          </div>
+        </div>
+      </div>
+      <p className="mt-4 font-body text-[11px] leading-relaxed text-foreground/45">
+        {requestOnly ? 'Mocked local request. No lead, payment, or live API call is created.' : 'Mocked checkout. No Stripe session is created.'}
+      </p>
     </div>
   );
 }
 
 export default function EventPresale() {
   const { eventId = '' } = useParams();
-  const [state, setState] = useState(() => {
-    const current = readEventPresales();
-    if (!current.codes.length && current.events[0]) return generatePresaleCodes(current.events[0].id, 6);
-    return current;
-  });
-  const selectedEvent = useMemo(
-    () => state.events.find((event) => event.id === eventId) || state.events[0],
-    [state.events, eventId]
-  );
-  const starterCode = useMemo(() => (
-    state.codes.find((code) => code.eventId === selectedEvent?.id && code.status !== 'Redeemed')?.code || ''
-  ), [selectedEvent?.id, state.codes]);
-  const query = useMemo(() => new URLSearchParams(window.location.search), []);
-  const [form, setForm] = useState({
-    code: query.get('code') || starterCode,
-    name: '',
-    email: '',
-    phone: '',
-    source: query.get('source') || 'Partner ticket',
-    selectedTime: selectedEvent?.slots?.[0] || '',
-    intakeStatus: 'GFE intake started',
-  });
-  const [result, setResult] = useState(null);
+  const event = findEventBySlug(eventId) || events.find((item) => item.presaleId === eventId);
+
+  if (!event?.tiers?.length) {
+    return <EventPresaleNotFound eventId={eventId} />;
+  }
+
+  return <EventPresaleFlow event={event} />;
+}
+
+function EventPresaleNotFound({ eventId }) {
+  const requestEvent = events.find((item) => item.state === 'application');
 
   useSeo({
-    title: 'Launch Presale Redemption - Avalon Vitality',
-    description: 'Redeem an Avalon launch presale, complete early intake, and reserve your launch service time.',
-    path: `/presale/${selectedEvent?.id || ''}`,
+    title: 'Presale not found - Avalon Events',
+    description: 'Request access to an Avalon private event when a presale link is unavailable.',
+    path: `/presale/${eventId}`,
   });
 
-  const setValue = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  return (
+    <div className="app-shell relative isolate min-h-screen bg-background text-foreground">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/88 via-black/76 to-black" />
+      </div>
+      <Navbar />
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const response = redeemPresaleCode({
-      eventId: selectedEvent.id,
-      code: form.code,
-      selectedTime: form.selectedTime,
-      source: form.source,
-      intakeStatus: form.intakeStatus,
-      client: {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-      },
-    });
-    setState(response.state);
-    setResult(response);
-  };
-
-  if (!selectedEvent) {
-    return (
-      <main className="av-page-surface min-h-screen px-5 py-8 text-foreground">
-        <p className="font-body text-sm text-foreground/60">No launch presales are configured yet.</p>
+      <main className="px-4 pb-20 pt-28 md:px-8 md:pt-36">
+        <section className="mx-auto max-w-3xl rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 p-6 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-8">
+          <Link to="/events" className="mb-6 inline-flex min-h-10 items-center gap-2 rounded-full border border-foreground/12 px-4 font-body text-[11px] font-semibold uppercase text-foreground/58">
+            <ArrowLeft className="h-3.5 w-3.5" /> Events
+          </Link>
+          <p className="font-body text-xs font-semibold uppercase text-foreground/42">Presale unavailable</p>
+          <h1 className="mt-3 font-heading text-[4.5rem] uppercase leading-[0.82] md:text-[6rem]">Request access</h1>
+          <p className="mt-5 max-w-xl font-body text-sm leading-relaxed text-foreground/62">
+            We could not find a local mocked event for this presale link. You can return to events or open the private group request flow instead.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            {requestEvent && (
+              <PremiumButton
+                as={Link}
+                to={`/presale/${requestEvent.slug}`}
+                wrapperClassName="inline-flex"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-foreground px-6 font-body text-xs font-black uppercase text-background transition hover:bg-foreground/90"
+              >
+                Request to join
+              </PremiumButton>
+            )}
+            <Link to="/events" className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-foreground/[0.14] px-6 font-body text-xs font-bold uppercase text-foreground/68">
+              View events
+            </Link>
+          </div>
+        </section>
       </main>
-    );
+
+      <Footer />
+    </div>
+  );
+}
+
+function EventPresaleFlow({ event }) {
+  const navigate = useNavigate();
+  const initialTier = event.tiers?.[0];
+  const [tierId, setTierId] = useState(event.tiers?.[0]?.id || '');
+  const [count, setCount] = useState(isRequestTier(event, initialTier) ? 1 : 2);
+  const [party, setParty] = useState([
+    { name: isRequestTier(event, initialTier) ? 'Host contact' : 'Jordan Lee', iv: tierAllowsIv(event, initialTier) },
+    ...(isRequestTier(event, initialTier) ? [] : [{ name: 'Maya Chen', iv: false }]),
+  ]);
+
+  const tier = useMemo(() => event.tiers.find((item) => item.id === tierId) || event.tiers[0], [event, tierId]);
+  const requestOnly = isRequestTier(event, tier);
+  const allowsIv = tierAllowsIv(event, tier);
+  const eventDateLabel = getEventDateLabel(event);
+  const totalCents = useMemo(() => {
+    if (requestOnly) return 0;
+    const ivCount = allowsIv ? party.filter((guest) => guest.iv).length : 0;
+    const experienceCount = party.length - ivCount;
+    const experienceUnitCents = allowsIv ? 3500 : (tier?.price || 0) * 100;
+    return ivCount * (tier?.price || 0) * 100 + experienceCount * experienceUnitCents;
+  }, [allowsIv, party, requestOnly, tier]);
+
+  useSeo({
+    title: `${requestOnly ? 'Request' : 'Reserve'} ${event.title} - Avalon Events`,
+    description: 'Mocked Avalon event flow with tier, party, and wallet-ready trip page.',
+    path: `/presale/${event.slug}`,
+  });
+
+  function selectTier(nextTier) {
+    setTierId(nextTier.id);
+    if (!tierAllowsIv(event, nextTier)) {
+      setParty((current) => current.map((guest) => ({ ...guest, iv: false })));
+    }
+  }
+
+  function updateCount(nextCount) {
+    setCount(nextCount);
+    setParty((current) => {
+      if (nextCount > current.length) {
+        return [
+          ...current,
+          ...Array.from({ length: nextCount - current.length }, (_, index) => ({ name: `Guest ${current.length + index + 1}`, iv: allowsIv })),
+        ];
+      }
+      return current.slice(0, nextCount);
+    });
+  }
+
+  function updateGuest(index, patch) {
+    const normalizedPatch = !allowsIv && Object.prototype.hasOwnProperty.call(patch, 'iv') ? { ...patch, iv: false } : patch;
+    setParty((current) => current.map((guest, guestIndex) => (guestIndex === index ? { ...guest, ...normalizedPatch } : guest)));
+  }
+
+  function confirmReserve() {
+    const visit = createMockVisit({
+      eventSlug: event.slug,
+      tierId: tier.id,
+      party,
+      totalCents,
+    });
+    navigate(`/trips/${visit.id}`);
   }
 
   return (
-    <div className="av-page-surface min-h-screen text-foreground">
+    <div className="app-shell relative isolate min-h-screen bg-background text-foreground">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <img src={event.cover} alt="" className="h-full w-full object-cover opacity-24" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/84 via-black/72 to-black" />
+      </div>
       <Navbar />
 
-      <main className="px-4 pb-20 pt-28 md:px-8 md:pb-24 md:pt-36">
-        <section className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, ease: EASE }}
-          className="av-motion-rail rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 p-6 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-8"
-        >
-          <h1 className="font-heading text-[4rem] uppercase leading-[0.84] tracking-tight md:text-[7rem]">
-            Reserve<br />Launch Time
-          </h1>
-          <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-foreground/58">
-            Enter your code. Pick a time. Start GFE before launch day.
-          </p>
+      <main className="px-4 pb-20 pt-28 md:px-8 md:pt-36">
+        <section className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_380px]">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: EASE }}
+            className="rounded-[1.75rem] border border-foreground/[0.10] bg-background/62 p-4 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-6"
+          >
+            <Link to={`/events/${event.slug}`} className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-foreground/12 px-4 font-body text-[11px] font-semibold uppercase text-foreground/58">
+              <ArrowLeft className="h-3.5 w-3.5" /> Event page
+            </Link>
 
-          <div className="mt-8 grid gap-3">
-            {[
-              { icon: Ticket, label: selectedEvent.name, sub: `${selectedEvent.partner} · ${selectedEvent.source}` },
-              { icon: Calendar, label: selectedEvent.date, sub: selectedEvent.venue },
-              { icon: Clock, label: selectedEvent.window, sub: selectedEvent.service },
-              { icon: Shield, label: 'Bring ID or credential', sub: 'Name and QR/code are checked at the launch.' },
-            ].map(({ icon: Icon, label, sub }) => (
-              <motion.div
-                key={label}
-                whileHover={{ y: -2 }}
-                transition={{ duration: 0.36, ease: EASE }}
-                className="av-glass-sweep relative flex items-center gap-3 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-4"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-foreground/[0.08] bg-background/64">
-                  <Icon className="h-5 w-5" strokeWidth={1.7} />
-                </span>
-                <div>
-                  <p className="font-body text-sm font-semibold text-foreground">{label}</p>
-                  <p className="font-body text-xs text-foreground/48">{sub}</p>
+            <div className="grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
+              <div className="relative min-h-[460px] overflow-hidden rounded-[1.35rem] border border-foreground/[0.10] bg-background">
+                <img src={event.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/84 via-black/34 to-transparent" />
+                <div className="absolute bottom-5 left-5 right-5">
+                  <p className="font-body text-xs font-semibold uppercase text-white/58">{eventDateLabel} / {event.neighborhood}</p>
+                  <h1 className="mt-3 font-heading text-[4.75rem] uppercase leading-[0.82] text-white md:text-[6.8rem]">{requestOnly ? 'Request' : 'Reserve'}</h1>
+                  <p className="mt-4 max-w-md font-body text-sm leading-relaxed text-white/68">
+                    {requestOnly ? 'Share a local mocked request. No payment, live lead, or health intake is submitted.' : 'Three taps: tier, party, confirm. Then the trip page becomes the pre-event home.'}
+                  </p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+              </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, delay: 0.08, ease: EASE }}
-          className="rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 p-5 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
-        >
-          <AnimatePresence mode="wait">
-          {result?.ok ? (
-            <motion.div
-              key="credential"
-              initial={{ opacity: 0, y: 14, rotateX: -8, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -10, filter: 'blur(6px)' }}
-              transition={{ duration: 0.7, ease: EASE }}
-              className="flex min-h-full flex-col"
-            >
-              <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.08] p-4 text-emerald-500">
-                <CheckCircle className="h-5 w-5" />
-                <p className="font-body text-xs font-semibold uppercase tracking-[0.16em]">Acuity + GFE queued</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-foreground/[0.10] bg-background p-5">
-                <div className="flex items-start justify-between gap-5">
-                  <div>
-                    <h2 className="mt-3 font-heading text-4xl uppercase leading-none">{result.redemption.client.name}</h2>
-                    <p className="mt-3 font-body text-sm text-foreground/58">{result.redemption.eventName}</p>
-                    <p className="font-body text-sm text-foreground/58">{result.redemption.date} · {result.redemption.selectedTime}</p>
+              <div className="space-y-6">
+                <section>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Ticket className="h-4 w-4 text-foreground/48" />
+                    <p className="font-body text-xs font-semibold uppercase text-foreground/42">Tap 1 / {requestOnly ? 'Request' : 'Tier'}</p>
                   </div>
-                  <MiniQr value={result.redemption.credential} />
-                </div>
-                <div className="mt-6 rounded-2xl border border-foreground/[0.08] bg-card p-4">
-                  <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40">Code</p>
-                  <p className="mt-1 font-heading text-2xl uppercase tracking-[0.08em]">{result.redemption.credential}</p>
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-foreground/[0.08] bg-card p-4">
-                    <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40">Acuity</p>
-                    <p className="mt-1 font-body text-xs font-semibold text-foreground">{result.redemption.scheduleStatus}</p>
+                  <div className="space-y-3">
+                    {event.tiers.map((item) => (
+                      <TierRow key={item.id} tier={item} active={item.id === tier.id} onClick={() => selectTier(item)} />
+                    ))}
                   </div>
-                  <div className="rounded-2xl border border-foreground/[0.08] bg-card p-4">
-                    <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40">GFE</p>
-                    <p className="mt-1 font-body text-xs font-semibold text-foreground">{result.redemption.gfeStatus}</p>
+                </section>
+
+                <section className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-4">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="font-body text-xs font-semibold uppercase text-foreground/42">Tap 2 / Party</p>
+                      <p className="mt-1 font-body text-sm text-foreground/62">
+                        {requestOnly
+                          ? 'Add the host or group contacts for this local request.'
+                          : allowsIv
+                            ? 'Each IV guest gets their own health-check status.'
+                            : 'This tier is experience-only. IV appointments are disabled for every attendee.'}
+                      </p>
+                    </div>
+                    <Stepper value={count} onChange={updateCount} />
                   </div>
-                </div>
+                  <div className="grid gap-3">
+                    {party.map((guest, index) => (
+                      <div key={index} className="grid gap-3 rounded-[1.1rem] border border-foreground/[0.10] bg-background/54 p-3 sm:grid-cols-[1fr_auto]">
+                        <label className="block">
+                          <span className="mb-2 flex items-center gap-2 font-body text-[11px] font-semibold uppercase text-foreground/42">
+                            <UserRound className="h-3.5 w-3.5" /> Attendee {index + 1}
+                          </span>
+                          <input
+                            className={inputClass}
+                            value={guest.name}
+                            onChange={(change) => updateGuest(index, { name: change.target.value })}
+                            placeholder="Guest name"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (allowsIv) updateGuest(index, { iv: !guest.iv });
+                          }}
+                          disabled={!allowsIv}
+                          className={`min-h-[52px] self-end rounded-2xl border px-4 font-body text-xs font-bold uppercase transition ${
+                            guest.iv
+                              ? 'border-emerald-200/24 bg-emerald-200/10 text-emerald-100'
+                              : 'border-foreground/[0.12] bg-foreground/[0.045] text-foreground/58'
+                          }`}
+                        >
+                          {requestOnly ? 'Request to join' : guest.iv ? 'IV appointment' : 'Experience only'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.035] p-4">
+                  <p className="font-body text-xs font-semibold uppercase text-foreground/42">Tap 3 / {requestOnly ? 'Request' : 'Apple Pay'}</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {requestOnly ? (
+                      <div className="flex min-h-[72px] items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-background/52 p-4 sm:col-span-2">
+                        <ShieldCheck className="h-5 w-5" />
+                        <span>
+                          <span className="block font-body text-sm font-semibold">Local request</span>
+                          <span className="block font-body text-xs text-foreground/45">Stored only as mocked trip state in this browser</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex min-h-[72px] items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-background/52 p-4">
+                          <Apple className="h-5 w-5" />
+                          <span>
+                            <span className="block font-body text-sm font-semibold">Apple Pay</span>
+                            <span className="block font-body text-xs text-foreground/45">Mocked for local preview</span>
+                          </span>
+                        </div>
+                        <div className="flex min-h-[72px] items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-background/52 p-4">
+                          <CreditCard className="h-5 w-5" />
+                          <span>
+                            <span className="block font-body text-sm font-semibold">Stripe hosted</span>
+                            <span className="block font-body text-xs text-foreground/45">Production path only</span>
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </section>
               </div>
-              <p className="mt-5 font-body text-sm leading-relaxed text-foreground/56">
-                Show this credential with your ID at the launch. Your intake status is saved as{' '}
-                <span className="font-semibold text-foreground">{result.redemption.intakeStatus}</span>.
-              </p>
-              <PremiumButton
-                as={Link}
-                wrapperClassName="mt-auto w-full"
-                to="/launches"
-                className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background"
-              >
-                Back to launches <ArrowRight className="h-4 w-4" />
-              </PremiumButton>
-            </motion.div>
-          ) : (
-            <motion.form
-              key="form"
-              onSubmit={handleSubmit}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="space-y-4"
-            >
-              {result?.error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.08] p-4 font-body text-sm text-red-400">
-                  {result.error}
-                </div>
-              )}
-              <label className="block">
-                <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Presale code or partner ticket</span>
-                <input className={fieldClass} value={form.code} onChange={(event) => setValue('code', event.target.value.toUpperCase())} placeholder="AV-LAUNCH-001" required />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42"><User className="h-3.5 w-3.5" /> Full name</span>
-                  <input className={fieldClass} value={form.name} onChange={(event) => setValue('name', event.target.value)} placeholder="Name on ID" required />
-                </label>
-                <label className="block">
-                  <span className="mb-2 flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42"><Mail className="h-3.5 w-3.5" /> Email</span>
-                  <input className={fieldClass} type="email" value={form.email} onChange={(event) => setValue('email', event.target.value)} placeholder="you@email.com" required />
-                </label>
+            </div>
+          </motion.div>
+
+          <motion.aside
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, delay: 0.08, ease: EASE }}
+            className="lg:sticky lg:top-28 lg:self-start"
+          >
+            <MiniSummary event={event} tier={tier} party={party} />
+            <div className="mt-4 rounded-[1.35rem] border border-foreground/[0.10] bg-background/62 p-4 backdrop-blur-2xl">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-emerald-200" />
+                <p className="font-body text-sm leading-relaxed text-foreground/62">
+                  {requestOnly ? 'This preview stores a mocked request record only. No live lead or payment service is called.' : 'Health content stays out of this preview. The trip page stores only status labels and mocked QR data.'}
+                </p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Phone</span>
-                  <input className={fieldClass} inputMode="tel" value={form.phone} onChange={(event) => setValue('phone', event.target.value)} placeholder="Mobile number" required />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Source</span>
-                  <select className={fieldClass} value={form.source} onChange={(event) => setValue('source', event.target.value)}>
-                    <option>Avalon presale</option>
-                    <option>Partner ticket</option>
-                    <option>Guest list</option>
-                    <option>Special code</option>
-                  </select>
-                </label>
-              </div>
-              <label className="block">
-                <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Choose launch time</span>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {selectedEvent.slots.map((slot) => (
-                    <motion.button
-                      key={slot}
-                      type="button"
-                      layout
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setValue('selectedTime', slot)}
-                      className={`min-h-[52px] rounded-2xl border px-3 font-body text-sm font-semibold transition ${
-                        form.selectedTime === slot
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-foreground/[0.10] bg-background/[0.52] text-foreground'
-                      }`}
-                    >
-                      {slot}
-                    </motion.button>
-                  ))}
-                </div>
-              </label>
-              <label className="block">
-                <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Estimate / intake state</span>
-                <select className={fieldClass} value={form.intakeStatus} onChange={(event) => setValue('intakeStatus', event.target.value)}>
-                  <option>GFE intake started</option>
-                  <option>GFE intake complete</option>
-                  <option>Clinical review needed</option>
-                  <option>Cleared before launch</option>
-                </select>
-              </label>
               <PremiumButton
                 as="button"
-                type="submit"
-                wrapperClassName="w-full"
-                className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background transition active:scale-[0.99]"
+                type="button"
+                onClick={confirmReserve}
+                wrapperClassName="mt-4 w-full"
+                className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-xs font-black uppercase text-background transition hover:bg-foreground/90"
               >
-                Reserve launch time <QrCode className="h-4 w-4" />
+                {requestOnly ? 'Submit request' : 'Confirm reserve'} <Check className="h-4 w-4" strokeWidth={2} />
               </PremiumButton>
-            </motion.form>
-          )}
-          </AnimatePresence>
-        </motion.div>
+            </div>
+          </motion.aside>
         </section>
       </main>
+
       <Footer />
     </div>
   );
