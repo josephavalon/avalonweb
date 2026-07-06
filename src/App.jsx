@@ -118,6 +118,9 @@ const ProviderSettings = lazyRoute(() => import('./pages/provider/Settings'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
 const TripPage = lazyRoute(() => import('./pages/TripPage'));
+const EventKiosk = lazyRoute(() => import('./pages/EventKiosk'));
+const EventBoard = lazyRoute(() => import('./pages/EventBoard'));
+const AdminEventServe = lazyRoute(() => import('./pages/admin/EventServe'));
 const SeoPillarPage = lazyRoute(() => import('./pages/SeoPillarPage'));
 const LocationPage = lazyRoute(() => import('./pages/LocationPage'));
 const LocationsHub = lazyRoute(() => import('./pages/LocationPage').then((mod) => ({ default: mod.LocationsHub })));
@@ -318,6 +321,8 @@ function AppRoutes() {
             <Route path="/products/:category/:slug" element={<ProductDetail />} />
             <Route path="/apply" element={<Apply />} />
             <Route path="/launches/:slug" element={<EventPage />} />
+            <Route path="/events/:slug/kiosk" element={<EventKiosk />} />
+            <Route path="/events/:slug/board" element={<EventBoard />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />
@@ -447,6 +452,7 @@ function AppRoutes() {
             <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
+            <Route path="/admin/events/:slug/serve" element={<RequireAuth allowedRoles={['admin', 'staff', 'nurse', 'rn', 'np', 'physician', 'medical_director']}><AdminEventServe /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
