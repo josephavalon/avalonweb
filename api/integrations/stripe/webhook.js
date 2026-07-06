@@ -36,6 +36,12 @@ import {
   isLegacyStripeMetadataPayload,
   syncCheckoutAttioPerson,
 } from '../../_checkout-fulfillment.js';
+import {
+  isEventSession,
+  handleEventCheckoutCompleted,
+  handleEventSessionExpired,
+  handleEventChargeRefunded,
+} from '../../_lib/events-webhook.js';
 
 export const config = {
   api: {
@@ -1524,23 +1530,22 @@ export default async function handler(req, res) {
 
     let result = { action: 'store_for_audit' };
     switch (event.type) {
-      case 'checkout.session.completed':
-        result = await withTimeout(
-          (async () => handleCheckoutCompleted(
-            stripe,
-            db,
-            await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id, {
-              expand: [
-                'discounts.coupon',
-                'discounts.promotion_code',
-                'total_details.breakdown.discounts.discount.coupon',
-                'total_details.breakdown.discounts.discount.promotion_code',
-              ],
-            }), 'stripe checkout session retrieve')
-          ))(),
-          'stripe checkout fulfillment'
-        );
+      case 'checkout.session.completed': {
+        const completedSession = await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id, {
+          expand: [
+            'discounts.coupon',
+            'discounts.promotion_code',
+            'total_details.breakdown.discounts.discount.coupon',
+            'total_details.breakdown.discounts.discount.promotion_code',
+          ],
+        }), 'stripe checkout session retrieve');
+        // Events platform sessions (metadata.kind === 'event') fulfill through
+        // events-core ONLY — they must never enter the mobile-IV path below.
+        result = isEventSession(completedSession)
+          ? await withTimeout(handleEventCheckoutCompleted(db, completedSession), 'event checkout fulfillment')
+          : await withTimeout(handleCheckoutCompleted(stripe, db, completedSession), 'stripe checkout fulfillment');
         break;
+      }
       case 'payment_intent.succeeded':
         if (!db) {
           result = { action: 'balance_tracking_skipped_db_not_configured' };
@@ -1560,8 +1565,23 @@ export default async function handler(req, res) {
           'stripe invoice payment failed recovery'
         );
         break;
-      case 'checkout.session.expired':
-        result = { action: 'release_scheduling_hold' };
+      case 'checkout.session.expired': {
+        // The expired-event payload carries the full session (incl. metadata),
+        // so no retrieve round-trip is needed to route it.
+        const expiredSession = event.data.object;
+        result = isEventSession(expiredSession)
+          ? await withTimeout(handleEventSessionExpired(db, expiredSession), 'event checkout expiry release')
+          : { action: 'release_scheduling_hold' };
+        break;
+      }
+      case 'charge.refunded':
+        // Events state-sync ONLY (eng decision 2A): acts when the charge's
+        // payment intent matches an event order; every other refund returns
+        // {action:'ignored_non_event_refund'} — the refund_requests admin flow
+        // remains the sole initiator/handler for non-event refunds.
+        result = db
+          ? await withTimeout(handleEventChargeRefunded(db, event.data.object), 'event refund sync')
+          : { action: 'event_refund_skipped_db_not_configured' };
         break;
       default:
         result = { action: 'store_for_audit' };
