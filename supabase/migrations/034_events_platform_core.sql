@@ -442,7 +442,7 @@ begin
   if p_field = 'status' then
     v_from := v.status;
     ok := (v_from, p_to) in (
-      ('held', 'pending'), ('held', 'canceled'),
+      ('held', 'pending'), ('held', 'confirmed'), ('held', 'canceled'),
       ('pending', 'confirmed'), ('pending', 'canceled'),
       ('confirmed', 'served'), ('confirmed', 'no_show'),
       ('confirmed', 'refunded'), ('confirmed', 'canceled'),
