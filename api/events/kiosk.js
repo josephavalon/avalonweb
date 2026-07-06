@@ -106,7 +106,7 @@ export default async function handler(req, res) {
     if (existing) {
       const { count } = await db.from('event_queue_entries')
         .select('id', { count: 'exact', head: true })
-        .eq('container_id', container.id).eq('status', 'waiting').lt('position', existing.position);
+        .eq('container_id', container.id).in('status', BOARD_STATUSES).lt('position', existing.position);
       return res.status(200).json({
         ok: true, result: 'already_in_line',
         entry: { position: existing.position, ahead: count ?? 0, initials: existing.display_initials },
@@ -139,7 +139,7 @@ export default async function handler(req, res) {
 
     const { count: ahead } = await db.from('event_queue_entries')
       .select('id', { count: 'exact', head: true })
-      .eq('container_id', container.id).eq('status', 'waiting').lt('position', entry.position);
+      .eq('container_id', container.id).in('status', BOARD_STATUSES).lt('position', entry.position);
 
     return res.status(200).json({
       ok: true,

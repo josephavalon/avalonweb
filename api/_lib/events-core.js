@@ -201,6 +201,27 @@ export async function createEventOrderWithHolds(db, { container, items, buyer = 
   const { data: visits, error: visitErr } = await db.from('event_visits').insert(visitRows).select();
   if (visitErr) throw visitErr;
 
+  // Oversell compensation (TOCTOU guard): the capacity check above races
+  // concurrent checkouts, so RE-CHECK after our insert. If the tier is now
+  // over capacity, release OUR holds and fail sold-out — the fail-safe
+  // direction (a temporarily lost seat beats an oversold room).
+  for (const { tier } of items) {
+    const cap = tier.allocation ?? container.capacity ?? null;
+    if (cap == null) continue;
+    const { count } = await db
+      .from('event_visits')
+      .select('id', { count: 'exact', head: true })
+      .eq('tier_id', tier.id)
+      .in('status', ['held', 'pending', 'confirmed', 'served']);
+    if ((count ?? 0) > cap) {
+      for (const v of visits) {
+        await transition(db, v.id, 'status', 'canceled', { via: 'oversell_compensation' });
+      }
+      await db.from('event_orders').update({ status: 'expired' }).eq('id', order.id);
+      throw Object.assign(new Error(`${tier.name} just sold out.`), { status: 409, reason: 'sold_out' });
+    }
+  }
+
   if (totalCents === 0) {
     const confirmed = await confirmEventOrder(db, { orderId: order.id, now });
     return { ...confirmed, totalCents, lines, free: true };

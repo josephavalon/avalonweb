@@ -124,8 +124,9 @@ export default function EventBrand() {
                   </p>
                   <div className="mt-2 flex gap-2">
                     {a.status !== 'live' ? (
+                      /* DESIGN.md: live is INK only — never a button fill. */
                       <button type="button" onClick={() => moderate(a.id, 'live')}
-                        className="rounded-full px-3 py-1.5 text-[10px] font-bold uppercase text-background" style={{ background: EVENT_TONES.live, fontFamily: MONO_STACK }}>
+                        className="rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase" style={{ color: EVENT_TONES.live, borderColor: EVENT_TONES.live, fontFamily: MONO_STACK }}>
                         Approve
                       </button>
                     ) : null}

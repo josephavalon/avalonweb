@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     const { data: visits, error } = await db
       .from('event_visits')
-      .select('id, attendee_name, status, gfe_status, gfe_scope, qr_jti, service_id, event_services:service_id (name, service_class, requires_gfe)')
+      .select('id, attendee_name, status, gfe_status, gfe_scope, qr_jti, qr_key_id, service_id, event_services:service_id (name, service_class, requires_gfe)')
       .eq('container_id', container.id)
       .in('status', ['pending', 'confirmed', 'served']);
     if (error) throw error;
@@ -38,17 +38,38 @@ export default async function handler(req, res) {
     const now = new Date();
     const entries = [];
     for (const v of visits || []) {
+      // Persist the jti BEFORE minting so concurrent manifest downloads mint
+      // identical tokens: the conditional update (is qr_jti null) makes the
+      // first writer win; losers re-read the winner's jti.
+      let jti = v.qr_jti;
+      if (!jti) {
+        const candidate = crypto.randomUUID();
+        const { data: claimed } = await db
+          .from('event_visits')
+          .update({ qr_jti: candidate })
+          .eq('id', v.id)
+          .is('qr_jti', null)
+          .select('qr_jti')
+          .maybeSingle();
+        if (claimed?.qr_jti) {
+          jti = claimed.qr_jti;
+        } else {
+          const { data: winner } = await db.from('event_visits').select('qr_jti').eq('id', v.id).maybeSingle();
+          jti = winner?.qr_jti || candidate;
+        }
+      }
       const minted = mintVisitToken({
         ...v,
+        qr_jti: jti,
         service_class: v.event_services?.service_class || null,
         event_slug: container.slug,
       }, { now });
-      if (!v.qr_jti) {
-        await db.from('event_visits').update({ qr_jti: minted.jti, qr_key_id: minted.kid }).eq('id', v.id);
+      if (minted.kid && minted.kid !== v.qr_key_id) {
+        await db.from('event_visits').update({ qr_key_id: minted.kid }).eq('id', v.id);
       }
       entries.push({
         visitId: v.id,
-        jti: v.qr_jti || minted.jti,
+        jti,
         name: v.attendee_name || 'Guest',
         status: v.status,
         gfeStatus: v.gfe_status,

@@ -462,9 +462,11 @@ begin
     ok := (v_from, p_to) in (
       ('not_started', 'invited'), ('not_started', 'cleared'),          -- returning patient auto-approve lane
       ('invited', 'scheduled'), ('invited', 'in_review'),
+      ('invited', 'cleared'), ('invited', 'declined_medical'),          -- on-site GFE: NP decides at the station without a prior booking
       ('scheduled', 'in_review'), ('scheduled', 'cleared'),
       ('in_review', 'cleared'), ('in_review', 'needs_followup'), ('in_review', 'declined_medical'),
       ('needs_followup', 'in_review'), ('needs_followup', 'cleared'), ('needs_followup', 'declined_medical'),
+      ('scheduled', 'declined_medical'),
       ('scheduled', 'invited')                                          -- reschedule/cancel resets
     );
     if not ok then

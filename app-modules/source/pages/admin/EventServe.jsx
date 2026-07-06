@@ -251,8 +251,9 @@ export default function EventServe() {
                     ) : null}
                     {['at_station', 'in_gfe'].includes(e.status) ? (
                       <>
-                        <button type="button" className="rounded-full px-4 py-2 text-[11px] font-bold uppercase text-background" style={{ background: EVENT_TONES.live, fontFamily: MONO_STACK }} onClick={() => queueAction('clear', e.id)}>CLEAR</button>
-                        <button type="button" className="rounded-full px-4 py-2 text-[11px] font-bold uppercase text-white" style={{ background: EVENT_TONES.stop, fontFamily: MONO_STACK }} onClick={() => queueAction('decline', e.id)}>DECLINE</button>
+                        {/* DESIGN.md: live/stop are INK only — never a button fill. */}
+                        <button type="button" className="rounded-full border px-4 py-2 text-[11px] font-bold uppercase" style={{ color: EVENT_TONES.live, borderColor: EVENT_TONES.live, fontFamily: MONO_STACK }} onClick={() => queueAction('clear', e.id)}>CLEAR</button>
+                        <button type="button" className="rounded-full border px-4 py-2 text-[11px] font-bold uppercase" style={{ color: EVENT_TONES.stop, borderColor: EVENT_TONES.stop, fontFamily: MONO_STACK }} onClick={() => queueAction('decline', e.id)}>DECLINE</button>
                       </>
                     ) : null}
                     {e.status === 'left' ? (

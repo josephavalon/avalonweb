@@ -124,16 +124,25 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, entry: patched });
     }
     if (action === 'clear' || action === 'decline') {
-      const status = action === 'clear' ? 'cleared' : 'declined';
-      const patched = await patch(entry.id, { status, resolved_at: new Date().toISOString() });
-      // Walk-ups with a linked visit get the audited GFE flip too.
+      // Flip the linked visit FIRST — if the audited transition fails, the
+      // queue entry must not claim a clearance that never happened (the
+      // scanner reads the visit, not the queue).
       if (entry.visit_id) {
         const to = action === 'clear' ? 'cleared' : 'declined_medical';
-        await db.rpc('transition_event_visit', {
+        const { error: rpcErr } = await db.rpc('transition_event_visit', {
           p_visit_id: entry.visit_id, p_field: 'gfe_status', p_to: to,
           p_actor: caller.user?.id || null, p_meta: { via: 'queue_console', entry: entry.id },
-        }).then(({ error }) => { if (error) console.warn('[events/queue] visit gfe flip failed', error.message); });
+        });
+        if (rpcErr) {
+          console.warn('[events/queue] visit gfe flip failed', rpcErr.message);
+          return res.status(409).json({
+            ok: false,
+            error: `Could not update the guest's clearance (${rpcErr.message}). Queue entry left unchanged — retry or handle in the chart.`,
+          });
+        }
       }
+      const status = action === 'clear' ? 'cleared' : 'declined';
+      const patched = await patch(entry.id, { status, resolved_at: new Date().toISOString() });
       return res.status(200).json({ ok: true, entry: patched });
     }
 
