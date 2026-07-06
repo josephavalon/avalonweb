@@ -49,6 +49,7 @@
     "verify:events-core": "node scripts/verify-events-core.mjs",
     "verify:events-checkout": "node scripts/verify-events-checkout.mjs",
     "verify:events-refund-waitlist": "node scripts/verify-events-refund-waitlist.mjs",
+    "verify:events-gfe": "node scripts/verify-events-gfe.mjs",
     "a11y:scan": "node scripts/a11y-axe-scan.mjs",
     "exam:snooches": "node scripts/snooches-production-exam.mjs",
     "deploy:snooches": "node scripts/snooches-safe-deploy.mjs",
