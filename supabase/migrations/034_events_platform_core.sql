@@ -395,6 +395,18 @@ create table if not exists public.event_audit_log (
   at          timestamptz not null default now()
 );
 
+-- Defined by migration 010 in the repo, but not present on databases that
+-- predate it — recreate idempotently so this migration is self-contained.
+create or replace function app_private.is_operator_or_clinical_authority()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select app_private.is_operator() or app_private.is_clinical_authority();
+$$;
+
 create or replace function app_private.is_event_promoter(row_container_id uuid)
 returns boolean
 language sql
