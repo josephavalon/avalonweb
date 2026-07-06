@@ -9,7 +9,7 @@ import { EASE } from '@/lib/motion';
 import { fetchEventsFeed } from '@/lib/eventsApi';
 import { eventStateChip, formatPriceCents, MONO_STACK } from '@/lib/eventStatus';
 
-const FALLBACK_COVER = '/recovery-lounge-hero.jpg';
+const FALLBACK_COVER = '/backgrounds/iv-vitamins-hero.webp';
 
 function formatEventDate(iso) {
   if (!iso) return 'Date TBA';
@@ -134,7 +134,7 @@ export default function Events() {
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <img src="/beta-preview/hero-bg.jpg" alt="" className="h-full w-full object-cover opacity-48" />
+        {/* Global AvalonStaticBackdrop provides the photo; these scrims tune it. */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/82 via-black/70 to-black" />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/52 to-transparent" />
       </div>

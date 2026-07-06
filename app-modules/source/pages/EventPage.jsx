@@ -11,7 +11,7 @@ import { eventStateChip, backOnFloorBadge, formatPriceCents, MONO_STACK } from '
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
-const FALLBACK_COVER = '/recovery-lounge-hero.jpg';
+const FALLBACK_COVER = '/backgrounds/iv-vitamins-hero.webp';
 
 function formatEventDate(iso) {
   if (!iso) return 'Date TBA';
@@ -137,7 +137,11 @@ function blocksOf(event) {
 }
 
 function ReserveCard({ event }) {
-  const openTier = (event.tiers || []).find((t) => !t.soldOut && !t.applicationGated) || event.tiers?.[0];
+  // Feature the accessible clinical tier ('the one most people get'), never
+  // the experience add-on and never the priciest.
+  const openTier = (event.tiers || []).find((t) => !t.soldOut && !t.applicationGated && !t.experienceOnly)
+    || (event.tiers || []).find((t) => !t.soldOut && !t.applicationGated)
+    || event.tiers?.[0];
   const applicationOnly = Boolean(openTier?.applicationGated);
   const closed = event.status === 'closed';
   const priceFrom = (event.tiers || []).reduce(
@@ -156,7 +160,7 @@ function ReserveCard({ event }) {
             <p className="font-body text-[11px] font-semibold uppercase text-foreground/42">Reserve</p>
             {/* Price is a number, never a table (DESIGN.md signature move #4). */}
             <p className="mt-2 font-heading text-5xl uppercase leading-none text-foreground">
-              {priceFrom != null ? formatPriceCents(priceFrom) : applicationOnly ? 'Apply' : 'Free'}
+              {priceFrom != null ? `From ${formatPriceCents(priceFrom)}` : applicationOnly ? 'Apply' : 'Free'}
             </p>
           </div>
           <span

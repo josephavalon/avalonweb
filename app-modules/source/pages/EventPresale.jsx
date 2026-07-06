@@ -10,7 +10,7 @@ import { formatPriceCents, MONO_STACK } from '@/lib/eventStatus';
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
-const FALLBACK_COVER = '/recovery-lounge-hero.jpg';
+const FALLBACK_COVER = '/backgrounds/iv-vitamins-hero.webp';
 const inputClass = 'min-h-[52px] w-full rounded-2xl border border-white/12 px-4 font-body text-sm font-semibold text-foreground outline-none transition placeholder:text-foreground/36 focus:border-foreground/34';
 const inputStyle = { background: 'rgba(13,13,13,0.7)' };
 
@@ -294,7 +294,7 @@ function EventPresaleFlow({ event }) {
                   <p className="text-xs text-white/60" style={{ fontFamily: MONO_STACK, letterSpacing: '0.1em' }}>
                     {formatEventDate(event.startsAt)} · {(event.venue || '').toUpperCase()}
                   </p>
-                  <h1 className="mt-3 font-heading text-[4.75rem] uppercase leading-[0.82] text-white md:text-[6.8rem]">
+                  <h1 className="mt-3 break-normal font-heading text-6xl uppercase leading-[0.85] text-white md:text-8xl">
                     {applicationOnly ? 'Request' : 'Reserve'}
                   </h1>
                   <p className="mt-4 max-w-md font-body text-sm leading-relaxed text-white/68">

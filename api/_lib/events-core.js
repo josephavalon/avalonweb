@@ -96,7 +96,7 @@ export async function fetchPublicEvent(db, slug) {
   if (error) throw error;
   if (!container) return null;
   const [{ data: tiers }, { data: assets }, { data: theme }] = await Promise.all([
-    db.from('event_tiers').select('*').eq('container_id', container.id).eq('active', true).order('price_cents', { ascending: false }),
+    db.from('event_tiers').select('*').eq('container_id', container.id).eq('active', true).order('price_cents', { ascending: true }),
     db.from('event_assets').select('id, kind, storage_path, renditions').eq('container_id', container.id).eq('status', 'live'),
     container.theme_id
       ? db.from('event_themes').select('id, name, tokens').eq('id', container.theme_id).maybeSingle()
