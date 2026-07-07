@@ -42,9 +42,9 @@ function EventCard({ event, index }) {
         src={event.heroImage || FALLBACK_COVER}
         alt=""
         loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"
+        className="absolute inset-0 h-full w-full object-cover opacity-55 transition duration-700 group-hover:opacity-75"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/48 to-black/12" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/72 to-black/35" />
       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-4">
         <StateChip status={event.status} />
         {event.priceFromCents != null ? (
@@ -135,36 +135,27 @@ export default function Events() {
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        {/* Global AvalonStaticBackdrop provides the photo; these scrims tune it. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/82 via-black/70 to-black" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/52 to-transparent" />
+        {/* Ive-quiet: the photo is a whisper behind near-black. One scrim. */}
+        <div className="absolute inset-0 bg-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
       </div>
       <Navbar />
 
       <main>
-        <section className="mx-auto grid min-h-[70svh] max-w-7xl items-end gap-10 px-4 pb-10 pt-32 md:grid-cols-[1.08fr_0.92fr] md:px-8 md:pb-14 md:pt-40">
+        <section className="mx-auto flex min-h-[52svh] max-w-7xl flex-col justify-end px-4 pb-16 pt-36 md:px-8 md:pb-20 md:pt-44">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE }}
           >
-            <p className="font-body text-xs font-semibold uppercase tracking-[0.22em] text-foreground/54">Avalon events · We deliver care</p>
-            <h1 className="mt-4 max-w-4xl font-heading text-[5.4rem] uppercase leading-[0.82] text-foreground md:text-[9.25rem]">
-              Reserve the recovery room.
-            </h1>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.08, ease: EASE }}
-            className="rounded-[1.35rem] border border-white/12 p-5"
-            style={{ background: 'rgba(13,13,13,0.94)' }}
-          >
-            <p className="font-body text-base leading-relaxed text-foreground/68">
-              A recovery lounge inside the party. Pick your drip, bring your people, and be back on the floor before the second set.
+            <p className="text-[11px] uppercase text-foreground/45" style={{ fontFamily: MONO_STACK, letterSpacing: '0.3em' }}>
+              Avalon events
             </p>
-            <p className="mt-4 text-[11px] text-foreground/55" style={{ fontFamily: MONO_STACK, letterSpacing: '0.1em' }}>
-              RN-STAFFED · 90-SECOND RESERVE · IV BACK IN ~30 · SHOT BACK IN ~5
+            <h1 className="mt-5 max-w-4xl font-heading text-[4.5rem] uppercase leading-[0.85] text-foreground md:text-[8rem]">
+              The recovery room.
+            </h1>
+            <p className="mt-6 text-[11px] uppercase text-foreground/45" style={{ fontFamily: MONO_STACK, letterSpacing: '0.14em' }}>
+              We deliver care · IV back in ~30 · shot back in ~5
             </p>
           </motion.div>
         </section>
