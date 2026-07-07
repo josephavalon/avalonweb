@@ -7,6 +7,20 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const INTERNAL_TO = 'littonjose@gmail.com';
 const FROM_SUBSCRIBER = 'Avalon Vitality <support@avalonvitality.co>';
 
+// The coming-soon splash page is a separate static Vercel project (not this
+// app), so its signup form calls this endpoint cross-origin.
+const CORS_ALLOWED_ORIGINS = ['https://avalonvitality.co', 'https://www.avalonvitality.co'];
+
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (origin && CORS_ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+}
+
 function isProductionRuntime() {
   return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
 }
@@ -69,8 +83,14 @@ function truncate(str, max) {
 // --- Handler ----------------------------------------------------------------
 
 export default async function handler(req, res) {
+  applyCors(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'POST, OPTIONS');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 

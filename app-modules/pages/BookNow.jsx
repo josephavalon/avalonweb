@@ -780,9 +780,48 @@ function bookingTimeLabel(state) {
   return 'Not selected';
 }
 
-function priceReceipt({ product, subtotal, groupContactRequired }) {
-  const total = groupContactRequired ? 'Quote' : currency(subtotal || 0);
-  return `Total ${total}`;
+function PaymentTruth({
+  total,
+  dueNow,
+  dueAfter,
+  dueAfterLabel = 'Due after visit',
+  compact = false,
+  className = '',
+  showClinicalNote = true,
+}) {
+  const rows = [
+    ['Total', total || 'Select'],
+    ['Charged today', dueNow || '$0'],
+    [dueAfterLabel, dueAfter || '$0'],
+  ];
+
+  return (
+    <div className={`rounded-xl border border-foreground/10 bg-background/34 ${compact ? 'p-2' : 'p-3'} ${className}`}>
+      <div className={`grid ${compact ? 'grid-cols-3 gap-1.5' : 'gap-2'}`}>
+        {rows.map(([label, value]) => (
+          <div key={label} className={compact ? 'min-w-0' : 'flex items-baseline justify-between gap-3'}>
+            <p className={`${compact ? 'text-[8.5px] leading-tight tracking-[0.045em] min-[390px]:text-[9px]' : 'text-[11px] tracking-[0.14em]'} font-body font-black uppercase text-foreground/48`}>
+              {label}
+            </p>
+            <p
+              className={`${compact ? 'mt-0.5 text-[13px] leading-tight min-[390px]:text-[14px]' : 'text-[15px] leading-none'} font-body font-black text-foreground tabular-nums`}
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
+      {showClinicalNote && (
+        <div className={`${compact ? 'mt-1.5 hidden min-[390px]:flex' : 'mt-2 flex'} items-center gap-1.5 border-t border-foreground/8 pt-1.5`}>
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-foreground/54" strokeWidth={2.2} />
+          <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground/54">
+            {CLINICAL_REVIEW_NOTICE}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function formatDateShort(value) {
@@ -1104,7 +1143,6 @@ function UniversalBookingFrame({
   total,
   dueNow,
   dueAfter,
-  receiptLine,
   showDueAfter = true,
   displayStepIndex,
   displayTitle,
@@ -1129,6 +1167,7 @@ function UniversalBookingFrame({
   children,
 }) {
   const [orderOpen, setOrderOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
   const hasOrder = Boolean(product);
   const orderCount = (product ? 1 : 0) + selectedAddons.length;
   const lastPerson = sessionPeople[sessionPeople.length - 1];
@@ -1153,10 +1192,10 @@ function UniversalBookingFrame({
         key={step}
         data-av-booking-scroll-region="true"
         className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-0 pb-1 md:pb-0"
-        initial={{ opacity: 1, y: 0, scale: 1 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 1 }}
-        transition={{ duration: 0.16, ease: EASE }}
+        initial={reduceMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -6 }}
+        transition={{ duration: reduceMotion ? 0 : 0.24, ease: EASE }}
       >
         <div className="relative h-full min-h-full">
           {children}
@@ -1248,7 +1287,7 @@ function UniversalBookingFrame({
               )}
             </div>
           )}
-          <div className="grid grid-cols-[76px_minmax(0,122px)_1fr] items-center gap-2 md:flex md:gap-2">
+          <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 md:grid-cols-[92px_minmax(230px,280px)_1fr] md:gap-2">
           <button
             type="button"
             onClick={onBack}
@@ -1258,13 +1297,13 @@ function UniversalBookingFrame({
           >
             Back
           </button>
-          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
-            <p className="font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[11px] md:text-[13px] md:tracking-[0.12em]">Today</p>
-            <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
-            {showDueAfter && (
-              <p className="mt-0.5 truncate font-body text-[12px] font-semibold text-foreground/62 min-[390px]:text-[13px]">Then {dueAfter}</p>
-            )}
-          </div>
+          <PaymentTruth
+            compact
+            total={total}
+            dueNow={dueNow}
+            dueAfter={showDueAfter ? dueAfter : 'After pick'}
+            className="order-3 col-span-2 md:order-none md:col-span-1"
+          />
           <button
             type="button"
             onClick={onNext}
@@ -1293,10 +1332,6 @@ function UniversalBookingFrame({
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
-          <p className="mt-1 px-1 text-center font-body text-[12px] font-black leading-tight text-foreground/58 md:text-[13px]">
-            {step !== LAST_STEP && receiptLine ? `${receiptLine} · ` : ''}
-            {CLINICAL_REVIEW_NOTICE}
-          </p>
         </div>
       </div>
     </section>
@@ -1452,35 +1487,26 @@ function DesktopOrderRail({
         <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
           {hasTherapySelection ? (
             <>
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Total</p>
-                <p className="font-body text-sm font-black text-foreground 2xl:text-base">{totalLabel || currency(displaySubtotal)}</p>
-              </div>
+              <PaymentTruth
+                total={totalLabel || currency(displaySubtotal)}
+                dueNow={currency(displayDueNow)}
+                dueAfter={displayBalanceDue > 0 ? currency(displayBalanceDue) : '$0'}
+                showClinicalNote={false}
+              />
               {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
-              <div className="mt-2.5 2xl:mt-3">
-                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
-                  Deposit today {currency(displayDueNow)}
-                </p>
-                {displayBalanceDue > 0 && (
-                  <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/52 2xl:text-[13px]">
-                    Balance after visit {currency(displayBalanceDue)}
-                  </p>
-                )}
-              </div>
             </>
           ) : (
             <div>
               <p className="font-body text-[13px] font-bold leading-snug text-foreground/58 2xl:text-[14px]">
                 Select a therapy to see your total.
               </p>
-              <div className="mt-2.5">
-                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
-                  Deposit today {currency(BOOKING_DEPOSIT_AMOUNT)}
-                </p>
-                <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
-                  Balance depends on therapy
-                </p>
-              </div>
+              <PaymentTruth
+                total="Select"
+                dueNow={currency(BOOKING_DEPOSIT_AMOUNT)}
+                dueAfter="After selection"
+                className="mt-2.5"
+                showClinicalNote={false}
+              />
             </div>
           )}
         </div>
@@ -1572,8 +1598,9 @@ function DesktopBookingFrame({
   onRemovePerson,
   children,
 }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[860px] min-h-[540px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
+    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[860px] min-h-[540px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-gradient-to-t from-background/78 via-background/40 to-background/16 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] lg:block 2xl:max-w-[1540px]">
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(248px,300px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,310px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
@@ -1590,9 +1617,9 @@ function DesktopBookingFrame({
           <motion.div
             key={step}
             className="relative min-h-0 overflow-y-auto overscroll-contain pb-2 pr-1"
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.16, ease: EASE }}
+            initial={reduceMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.22, ease: EASE }}
           >
             {children}
           </motion.div>
@@ -3662,12 +3689,20 @@ function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
   );
 }
 
-function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, dueNow = 0, balanceDue = 0 }) {
+function ConfirmSummary({
+  state,
+  product,
+  bookingGfeRequirement,
+  subtotal = 0,
+  dueNow = 0,
+  balanceDue = 0,
+  totalLabel,
+  dueNowLabel,
+  dueAfterLabel,
+}) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
-  // Receipt-style summary: product + price only. Payment terms (deposit today /
-  // balance after) live in the footer CTA, so we don't repeat them here.
 
   return (
     <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
@@ -3682,6 +3717,14 @@ function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, d
         <p className="shrink-0 font-heading text-[2.6rem] leading-none tracking-normal text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>
           {currency(subtotal)}
         </p>
+      </div>
+      <div className="relative border-t border-foreground/8 px-5 pb-5 pt-0">
+        <PaymentTruth
+          total={totalLabel || currency(subtotal)}
+          dueNow={dueNowLabel || currency(dueNow)}
+          dueAfter={dueAfterLabel || currency(balanceDue)}
+          showClinicalNote={false}
+        />
       </div>
     </div>
   );
@@ -3845,18 +3888,17 @@ function SummaryRail({
               ))}
             </div>
           )}
-          <div className="grid gap-2 md:grid-cols-2">
-            {[
-              ['Due now', currency(dueNow)],
-              [groupContactRequired ? 'Group' : isSubscription ? 'Plan' : 'Estimate', groupContactRequired ? 'Contact' : isSubscription ? plan.label : totalLabel || currency(subtotal)],
-              isSubscription ? ['After visit', currency(balanceDue)] : ['Upon completion', currency(balanceDue)],
-              ['Time', bookingTimeSummary(state)],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
-                <p className="font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
-                <p className="mt-1 font-body text-sm font-bold text-foreground/82">{value}</p>
-              </div>
-            ))}
+          <div className="grid gap-2">
+            <PaymentTruth
+              total={groupContactRequired ? 'Contact' : isSubscription ? `${currency(Number(plan.price || 0))}/mo` : totalLabel || currency(subtotal)}
+              dueNow={currency(dueNow)}
+              dueAfter={currency(balanceDue)}
+              showClinicalNote={false}
+            />
+            <div className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
+              <p className="font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/58">Time</p>
+              <p className="mt-1 font-body text-sm font-bold text-foreground/82">{bookingTimeSummary(state)}</p>
+            </div>
           </div>
           <div className="space-y-2 border-t border-foreground/8 pt-4 font-body text-sm font-medium text-foreground/66">
             <p>{state.address || 'Address pending'}</p>
@@ -5943,19 +5985,19 @@ export default function BookNow() {
         </button>
         <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
-            <div className="space-y-2.5 border-t border-foreground/10 px-3.5 py-3 text-left">
+            <div className="space-y-2 border-t border-foreground/10 px-3 py-2.5 text-left md:space-y-2.5 md:px-3.5 md:py-3">
               {whatItDoes && (
                 <div>
-                  <p className="mb-1 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
-                  <p className="font-body text-[15px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
+                  <p className="mb-0.5 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/42 md:mb-1 md:text-[12px]">What it does</p>
+                  <p className="font-body text-[14px] font-semibold leading-snug text-foreground/74 md:text-[15px]">{whatItDoes}</p>
                 </div>
               )}
               {ingredients.length > 0 && (
                 <div>
-                  <p className="mb-1.5 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
+                  <p className="mb-1 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/42 md:mb-1.5 md:text-[12px]">Ingredients</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ingredients.map((ingredient) => (
-                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[13px] font-bold text-foreground/74">{ingredient}</span>
+                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-0.5 font-body text-[12px] font-bold text-foreground/74 md:py-1 md:text-[13px]">{ingredient}</span>
                     ))}
                   </div>
                 </div>
@@ -5979,23 +6021,22 @@ export default function BookNow() {
     const active = state.productKey === item.key;
     const copy = compactProtocolCopy(item);
     const menuLabel = copy.label;
-    const titleSizeClass = 'md:text-[1.14rem] xl:text-[1.26rem] 2xl:text-[1.36rem]';
+    const titleSizeClass = 'md:text-[2.3rem] xl:text-[2.6rem] 2xl:text-[2.8rem]';
 
     return (
       <div
         key={item.key}
-        className={`${panelCardClass} shrink-0 transition-colors ${active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'hover:border-foreground/28'}`}
+        className={`shrink-0 border-b border-foreground/12 transition-colors ${active ? 'bg-foreground/[0.10]' : ''}`}
       >
         <button
           type="button"
           onClick={() => chooseTherapyMenuProduct(item.key)}
           aria-pressed={active}
-          className={`relative grid min-h-[88px] w-full grid-cols-[64px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-1.5 text-left transition-colors md:min-h-[100px] md:grid-cols-[76px_minmax(0,1fr)_72px_26px] md:px-4 md:py-2 xl:grid-cols-[76px_minmax(0,1fr)_80px_26px] ${
-            active ? 'bg-foreground/[0.14]' : 'hover:bg-foreground/[0.03]'
+          className={`relative grid min-h-[88px] w-full grid-cols-[64px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-1.5 text-left transition-colors md:min-h-[124px] md:grid-cols-[96px_minmax(0,1fr)_96px_26px] md:px-4 md:py-2 xl:grid-cols-[104px_minmax(0,1fr)_108px_26px] ${
+            active ? '' : 'hover:bg-foreground/[0.04]'
           }`}
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          <span className="relative flex h-[4.5rem] w-16 shrink-0 items-center justify-center md:h-[4.75rem] md:w-[4.25rem]">
+          <span className="relative flex h-[4.5rem] w-16 shrink-0 items-center justify-center md:h-[6.5rem] md:w-[5.5rem]">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
             ) : (
@@ -6012,7 +6053,7 @@ export default function BookNow() {
               </span>
             )}
           </span>
-          <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.16rem] xl:text-[1.24rem] 2xl:text-[1.34rem]">
+          <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.6rem] xl:text-[1.75rem] 2xl:text-[1.9rem]">
             {currency(protocolPrice(item))}
           </span>
           <ArrowRight className="relative h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.45} />
@@ -6225,6 +6266,7 @@ export default function BookNow() {
           <div className="grid min-h-0 grid-rows-[1fr]">
             <div data-av-therapy-list="true" className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
+              <div className="h-[calc(var(--av-booking-footer-height,5.25rem)+1rem)] shrink-0" aria-hidden="true" />
             </div>
             <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
@@ -6534,7 +6576,6 @@ export default function BookNow() {
                 total={totalLabel}
                 dueNow={dueNowLabel}
                 dueAfter={dueAfterLabel}
-                receiptLine={product ? priceReceipt({ product, subtotal, groupContactRequired }) : ''}
                 showDueAfter={!(step === 0 && !therapyCategoryScreen)}
                 displayStepIndex={progressDisplay.index}
                 displayTitle={progressDisplay.title}
@@ -7024,6 +7065,9 @@ export default function BookNow() {
                       subtotal={subtotal}
                       dueNow={dueNowAmount}
                       balanceDue={balanceDue}
+                      totalLabel={totalLabel}
+                      dueNowLabel={dueNowLabel}
+                      dueAfterLabel={dueAfterLabel}
                     />
                     </div>
                     <div className="order-first md:order-last">

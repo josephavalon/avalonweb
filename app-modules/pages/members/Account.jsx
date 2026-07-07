@@ -716,7 +716,7 @@ export default function MemberAccount() {
                   className="rounded-full px-3.5 py-1.5 font-body text-[10px] font-bold uppercase tracking-[0.16em] disabled:opacity-45"
                   style={{ background: TEXT, color: INVERT }}
                 >
-                  {passkeyState.busy ? 'Adding…' : 'Add passkey'}
+                  {passkeyState.busy ? 'Adding…' : 'Add Passkey'}
                 </button>
               }
             />

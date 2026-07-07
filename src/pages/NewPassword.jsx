@@ -15,7 +15,7 @@ const FIELD = 'min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-fo
 const LABEL = 'mb-2 block font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58';
 
 export default function NewPassword() {
-  const { user, loading, updatePassword } = useAuthStore();
+  const { user, loading, updatePassword, refreshSupabaseSession } = useAuthStore();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -43,14 +43,16 @@ export default function NewPassword() {
       setExchangeState({ busy: true, attempted: true });
       supabase.auth
         .verifyOtp({ token_hash: tokenHash, type: otpType })
-        .then(({ error: otpError }) => {
+        .then(async ({ error: otpError }) => {
           if (!active) return;
-          setExchangeState({ busy: false, attempted: true });
           if (otpError) {
+            setExchangeState({ busy: false, attempted: true });
             setError('This reset link is invalid or has expired. Request a new one and try again.');
             return;
           }
-          // Success: onAuthStateChange sets `user`, which re-renders the form.
+          await refreshSupabaseSession();
+          if (!active) return;
+          setExchangeState({ busy: false, attempted: true });
           url.searchParams.delete('token_hash');
           url.searchParams.delete('type');
           window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
@@ -80,7 +82,7 @@ export default function NewPassword() {
       setError('This reset link took too long to open or has expired. Request a new reset link and try again.');
     }, 12000);
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [refreshSupabaseSession, user]);
 
   const destination = () => {
     if (user?.role === 'admin' || user?.role === 'staff') return '/admin';
