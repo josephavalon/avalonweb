@@ -80,7 +80,7 @@ export default function QueueBoard({ rows, title = 'THE LOUNGE', subtitle, stale
           </div>
         ))}
       </div>
-      <style>{'@keyframes av-flipin{0%{transform:rotateX(90deg);opacity:0}100%{transform:rotateX(0);opacity:1}}'}</style>
+      <style>{'@keyframes av-flipin{0%{transform:rotateX(90deg);opacity:0}100%{transform:rotateX(0);opacity:1}}@media (prefers-reduced-motion: reduce){[style*="av-flipin"]{animation:none !important;opacity:1 !important;transform:none !important}}'}</style>
     </div>
   );
 }

@@ -65,7 +65,8 @@ function EventCard({ event, index }) {
         </h2>
         <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
           <span className="text-[11px] text-white/60" style={{ fontFamily: MONO_STACK, letterSpacing: '0.08em' }}>
-            IV · BACK IN ~30&nbsp;&nbsp;·&nbsp;&nbsp;SHOTS · BACK IN ~5
+            <span className="whitespace-nowrap">IV · BACK IN ~30</span>{' '}·{' '}
+            <span className="whitespace-nowrap">SHOTS · BACK IN ~5</span>
           </span>
           <span className="relative z-20 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 font-body text-xs font-bold uppercase text-black transition group-hover:bg-white/88">
             Reserve <Sparkles className="h-4 w-4" strokeWidth={2} />

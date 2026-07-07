@@ -289,7 +289,7 @@ function EventPresaleFlow({ event }) {
             <div className="grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
               <div className="relative min-h-[460px] overflow-hidden rounded-[1.35rem] border border-white/12 bg-background">
                 <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/84 via-black/34 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/15" />
                 <div className="absolute bottom-5 left-5 right-5">
                   <p className="text-xs text-white/60" style={{ fontFamily: MONO_STACK, letterSpacing: '0.1em' }}>
                     {formatEventDate(event.startsAt)} · {(event.venue || '').toUpperCase()}
