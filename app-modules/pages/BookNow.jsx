@@ -6084,9 +6084,7 @@ export default function BookNow() {
     return (
       <div
         key={item.key}
-        className={`relative shrink-0 overflow-hidden rounded-[1.35rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_56px_hsl(var(--background)/0.32)] backdrop-blur-2xl transition-colors ${
-          active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
-        }`}
+        className={`relative shrink-0 border-b border-foreground/12 transition-colors ${active ? 'bg-foreground/[0.10]' : ''}`}
       >
         <button
           type="button"
@@ -6094,10 +6092,9 @@ export default function BookNow() {
           aria-pressed={active}
           style={{ height: 'var(--av-therapy-card-h, 6.25rem)' }}
           className={`relative grid w-full grid-cols-[4.5rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 px-3.5 text-left transition-colors min-[390px]:grid-cols-[5rem_minmax(0,1fr)_auto_1.85rem] min-[390px]:gap-3.5 min-[390px]:px-4 ${
-            active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
+            active ? '' : 'hover:bg-foreground/[0.04]'
           }`}
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.05] via-transparent to-black/24" />
           <span className="relative flex h-full w-full items-center justify-center py-2">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.6)]" />
@@ -6105,10 +6102,10 @@ export default function BookNow() {
               <Icon className="h-9 w-9 text-foreground" strokeWidth={1.9} />
             )}
           </span>
-          <span className="relative min-w-0 font-heading text-[1.4rem] uppercase leading-[0.95] tracking-normal text-foreground min-[390px]:text-[1.55rem]">
+          <span className="relative min-w-0 font-heading text-[1.6rem] uppercase leading-[0.95] tracking-normal text-foreground min-[390px]:text-[1.8rem]">
             <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
           </span>
-          <span className="relative whitespace-nowrap font-heading text-[1.4rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem]">
+          <span className="relative whitespace-nowrap font-heading text-[1.5rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.65rem]">
             {currency(price)}
           </span>
           <span className="relative flex justify-end">
