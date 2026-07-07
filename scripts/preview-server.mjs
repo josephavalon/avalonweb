@@ -60,7 +60,7 @@ function isPrivateRoute(urlPath) {
 const PUBLIC_SPA_ROUTE_PATTERNS = [
   /^\/$/,
   /^\/(event-iv-therapy-bay-area|pricing|safety|ingredients|gift|athlete|hangover|jet-lag|press)$/,
-  /^\/(locations|learn|products|launches|events|presale|trips|therapies)(\/.+)?$/,
+  /^\/(locations|learn|products|launches|events|presale|therapies)(\/.+)?$/,
   /^\/(our-story|team|medical-direction|apply|careers|faq|services\/nad|services\/cbd)$/,
   /^\/(subscription|plan|corporate|hotel|service-area|partners|platform|b2b|custom|book|protocols|menu|checkout|checkout\/success|login|signup|forgot|forgot-password|admin\/login|order|redeem)$/,
   /^\/booking\/confirmation$/,

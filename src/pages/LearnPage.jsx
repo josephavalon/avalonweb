@@ -87,7 +87,7 @@ export function LearnHub() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search guides…"
-              className="min-h-11 min-w-0 flex-1 bg-transparent font-body text-sm text-foreground placeholder:text-foreground/40 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent font-body text-sm text-foreground placeholder:text-foreground/40 focus:outline-none"
               aria-label="Search guides"
             />
             {query && (

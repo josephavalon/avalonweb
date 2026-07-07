@@ -845,8 +845,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="relative isolate flex min-h-[520px] w-full max-w-[340px] flex-col overflow-hidden rounded-[1.5rem] border border-foreground/[0.14] bg-background/88 p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
-          <span className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.08),transparent_34%),linear-gradient(180deg,hsl(var(--background)/0.96),hsl(var(--background)/0.86))]" />
+        <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
           <div className="mb-3 flex items-center justify-between gap-4">
             <Link
               to="/"
@@ -855,9 +854,8 @@ export default function Login({ defaultAudience = 'patient' }) {
             >
               <AvalonMark className="h-10 w-[26px] text-foreground" />
             </Link>
-            <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-foreground/[0.12] bg-foreground/[0.055] px-3 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/68">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
               {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNurse ? <Stethoscope className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
-              <span>{isAdmin ? 'Staff' : isNurse ? 'Clinical' : isNew ? 'New' : 'Secure'}</span>
             </span>
           </div>
 

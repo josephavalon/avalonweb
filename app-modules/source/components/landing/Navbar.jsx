@@ -791,18 +791,18 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                       <Link
                         to={item.to}
                         onClick={close}
-                        className={`group relative flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] transition-all duration-300 ${
+                        className={`av-glass-widget group relative flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground transition-all duration-300 ${
                           item.primary
-                            ? 'border-foreground bg-foreground text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)]'
+                            ? 'text-foreground ring-1 ring-foreground/18'
                             : active
-                              ? 'av-glass-widget text-foreground ring-1 ring-foreground/16'
-                              : 'av-glass-widget text-foreground/66 hover:text-foreground'
+                              ? 'text-foreground ring-1 ring-foreground/16'
+                              : 'text-foreground/66 hover:text-foreground'
                         }`}
                       >
                         <span>{item.label}</span>
                         <span className={`h-1.5 w-1.5 rounded-full transition-colors ${
                           item.primary
-                            ? 'bg-background/60'
+                            ? 'bg-foreground/60'
                             : active
                               ? 'bg-accent'
                               : 'bg-foreground/18 group-hover:bg-foreground/42'

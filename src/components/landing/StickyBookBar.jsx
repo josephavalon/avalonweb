@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight } from 'lucide-react';
 
 import { EASE, premiumTap } from '@/lib/motion';
@@ -9,7 +9,6 @@ const BOOK_URL = '/book';
 
 export default function StickyBookBar() {
   const { pathname } = useLocation();
-  const reduceMotion = useReducedMotion();
   // The bar is revealed only once the hero's white Book button has scrolled
   // ABOVE the top of the viewport (i.e. you've scrolled past it). It must stay
   // hidden on first paint and while the button is still below the fold — the
@@ -63,18 +62,18 @@ export default function StickyBookBar() {
 
   return (
     <motion.div
-      initial={reduceMotion ? false : { y: 64, opacity: 0 }}
+      initial={false}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: reduceMotion ? 0 : 0.48, ease: EASE }}
+      transition={{ duration: 0.12, ease: EASE }}
       className="fixed inset-x-0 z-[70] md:hidden"
       style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}
       aria-label="Quick booking bar"
     >
       <div className="relative isolate mx-3 rounded-[16px]">
-        <motion.div className="relative z-0" whileTap={reduceMotion ? undefined : premiumTap}>
+        <motion.div className="relative z-0" whileTap={premiumTap}>
           <Link
             to={BOOK_URL}
-            className="group flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-foreground bg-foreground px-12 py-1.5 font-body text-[11px] font-black uppercase tracking-[0.16em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors duration-base ease-editorial hover:bg-foreground/92"
+            className="av-glass-widget group flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[14px] border px-12 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/72 transition-colors duration-base ease-editorial hover:text-foreground"
           >
             Book
             <ArrowRight className="h-4 w-4 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2.35} />

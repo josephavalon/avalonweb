@@ -35,11 +35,11 @@ export const glassCardClassName = ({
   interactive = false,
   className = '',
 } = {}) => cn(
-  'av-glass-card relative overflow-hidden border text-foreground transition-[border-color,background-color,transform] duration-base ease-editorial',
+  'av-glass-card relative overflow-hidden border text-foreground transition-colors duration-500 ease-editorial',
   TONES[tone] || TONES.default,
   BLUR[tone] || BLUR.default,
   RADIUS[radius] || RADIUS['3xl'],
-  interactive && 'hover:border-[var(--glass-border-hover)] motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:active:scale-[0.97]',
+  interactive && 'hover:border-[var(--glass-border-hover)]',
   className
 );
 

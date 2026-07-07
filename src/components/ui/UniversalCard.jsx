@@ -26,7 +26,7 @@ export default function UniversalCard({
   return (
     <Element
       className={cn(
-        'av-universal-card av-glass-card group relative flex w-full min-w-0 overflow-hidden rounded-[1.45rem] border text-left transition-[border-color,background-color,transform] duration-base ease-editorial hover:border-[var(--glass-border-hover)] motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:active:scale-[0.97]',
+        'av-universal-card av-glass-card group relative flex w-full min-w-0 overflow-hidden rounded-[1.45rem] border text-left transition-colors duration-500 hover:border-[var(--glass-border-hover)]',
         heightClass[size] || heightClass.default,
         selected && 'ring-1 ring-foreground/20',
         className

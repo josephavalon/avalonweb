@@ -23,7 +23,7 @@ import { PEOPLE_MAX, createPerson, personLabel as personLabelFor, makeVisit, res
 import SessionBuilder from '@/components/store/SessionBuilder';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { apiPost } from '@/lib/apiClient';
-import { SUBSCRIPTION_COMMITMENT_COPY, SUBSCRIPTION_COMMITMENT_SHORT } from '@/lib/subscription';
+import { SUBSCRIPTION_COMMITMENT_SHORT } from '@/lib/subscription';
 import { PLAN_VISIT_CREDIT, PLAN_ADDON_DISCOUNT, planTierDiscountRate } from '@/config/subscriptionTiers';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -746,7 +746,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
           </button>
         )}
         <p className={`text-center font-body text-[14px] font-semibold leading-snug text-foreground/52 ${showStart ? 'mt-2' : ''}`}>
-          Secure checkout. {SUBSCRIPTION_COMMITMENT_COPY}.
+          Secure checkout. Cancel anytime after the 3-month minimum.
         </p>
       </div>
     </div>
@@ -1144,14 +1144,14 @@ export default function Subscription() {
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem] md:px-8">
         <div className="mb-7 hidden text-center md:block">
           <h1 className="font-heading text-[4.6rem] uppercase leading-[0.86] tracking-normal text-foreground lg:text-[5.4rem]">Choose your plan</h1>
-          <p className="mt-3 font-body text-[15px] font-semibold text-foreground/60">Up to 4 people. {SUBSCRIPTION_COMMITMENT_COPY}.</p>
+          <p className="mt-3 font-body text-[15px] font-semibold text-foreground/60">Up to 4 people. 3-month minimum, then cancel anytime.</p>
         </div>
 
         {/* ───────── Minimalist mobile builder ───────── */}
         <div className="flex flex-col gap-4 md:hidden">
           <div className="text-center">
             <h1 className="font-heading text-[2.4rem] uppercase leading-[0.86] tracking-normal text-foreground">Choose plan</h1>
-            <p className="mx-auto mt-1 max-w-[18rem] font-body text-[13px] font-semibold text-foreground/60 [text-wrap:balance]">Up to 4 people. {SUBSCRIPTION_COMMITMENT_COPY}.</p>
+            <p className="mt-1 font-body text-[13px] font-semibold text-foreground/60">Up to 4 people. 3-month min, then cancel anytime.</p>
           </div>
 
           <div className="flex items-center justify-center rounded-full border border-foreground/16 bg-foreground/[0.04] px-3 py-2 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/72">
@@ -1257,7 +1257,7 @@ export default function Subscription() {
           </button>
 
           <p className="text-center font-body text-[12px] font-semibold text-foreground/50">
-            Secure checkout. {SUBSCRIPTION_COMMITMENT_COPY}.
+            Secure checkout. Cancel anytime after the 3-month minimum.
           </p>
         </div>
 
@@ -1347,12 +1347,12 @@ export default function Subscription() {
             <button
               type="button"
               onClick={onPrimaryCta}
-              className="mt-4 hidden min-h-[56px] w-full items-center justify-center rounded-full bg-foreground px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-background transition-transform hover:bg-foreground/95 active:scale-[0.99] md:flex"
+              className="mt-4 hidden min-h-[56px] w-full items-center justify-center rounded-full bg-white px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-black transition-transform hover:bg-white/95 active:scale-[0.99] md:flex"
             >
               {isChangeMode ? 'Update my plan' : `Start plan — ${money(depositToday)} today`}
             </button>
             <p className="mt-2 hidden text-center font-body text-[12px] font-semibold text-foreground/50 md:block">
-              Secure checkout. {SUBSCRIPTION_COMMITMENT_COPY}.
+              Secure checkout. Cancel anytime after the 3-month minimum.
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -113,7 +113,6 @@ export default function ProductDetail() {
   const match = getProduct(category, slug);
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
-  const [showStickyBook, setShowStickyBook] = useState(false);
   const { clearItems, addItem } = useCart();
 
   const price = useMemo(() => productPrice(match?.treatment || {}), [match]);
@@ -125,14 +124,6 @@ export default function ProductDetail() {
     path: match ? `/products/${category}/${slug}` : undefined,
     jsonLd: match ? buildProductJsonLd({ category: match.category, categorySlug: category, product: match.treatment, slug, price: numericPrice }) : undefined,
   });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-    const update = () => setShowStickyBook(window.scrollY > 430);
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    return () => window.removeEventListener('scroll', update);
-  }, []);
 
   if (!match) {
     return (
@@ -180,7 +171,7 @@ export default function ProductDetail() {
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent text-foreground">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-6xl px-2.5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[4.5rem] md:px-6 md:pb-16 md:pt-28 2xl:max-w-7xl">
+      <main className="mx-auto w-full max-w-6xl px-2.5 pb-28 pt-[4.5rem] md:px-6 md:pb-16 md:pt-28 2xl:max-w-7xl">
         <Link
           to={cat.backTo || '/protocols'}
           className="mb-3 ml-1 inline-flex items-center gap-2 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/55 transition-colors hover:text-foreground md:mb-4"
@@ -188,8 +179,8 @@ export default function ProductDetail() {
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.1} /> {cat.backLabel || 'Back to IV Therapy'}
         </Link>
 
-        {/* HERO — poster scrim: backdrop photo reads through, darkening toward the base */}
-        <section className="relative overflow-hidden rounded-[18px] border border-white/10 bg-gradient-to-t from-background/90 via-background/62 to-background/34">
+        {/* HERO — solid black */}
+        <section className="relative overflow-hidden rounded-[18px] border border-white/10 bg-black">
           <motion.div
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -199,19 +190,19 @@ export default function ProductDetail() {
             <div className="flex items-center gap-4 md:block">
               <Bag src={treatment.image} alt={treatment.name} className="h-[104px] w-[72px] shrink-0 drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)] md:mx-auto md:h-auto md:w-[170px]" />
               <div className="min-w-0 md:hidden">
-                <h1 className="font-heading text-[2.2rem] uppercase leading-[0.95] tracking-normal text-white">{treatment.name}</h1>
+                <h1 className="font-body text-[26px] font-medium uppercase leading-[1.04] tracking-[0.01em] text-white">{treatment.name}</h1>
                 <div className="mt-1 flex items-baseline gap-2">
-                  <span className="font-heading text-[1.9rem] uppercase leading-none tracking-normal text-white">{price}</span>
+                  <span className="font-body text-[30px] font-medium leading-none text-white">{price}</span>
                   <span className="font-body text-[11px] text-white/70">per visit</span>
                 </div>
               </div>
             </div>
 
             <div className="min-w-0">
-              <h1 className="hidden font-heading text-[2.6rem] uppercase leading-[0.92] tracking-normal text-white md:block md:text-[4rem] lg:text-[4.5rem]">{treatment.name}</h1>
+              <h1 className="hidden font-body text-[34px] font-medium uppercase leading-[1.02] tracking-[0.01em] text-white md:block md:text-[50px] lg:text-[56px]">{treatment.name}</h1>
               <p className="mt-2.5 font-body text-[13px] leading-relaxed text-white/85 md:mt-3.5 md:max-w-xl md:text-[17px]">{treatment.desc || treatment.benefitStatement}</p>
               <div className="mt-3 hidden items-baseline gap-3 md:flex">
-                <span className="font-heading text-[2.4rem] uppercase leading-none tracking-normal text-white md:text-[3.2rem]">{price}</span>
+                <span className="font-body text-[38px] font-medium leading-none text-white md:text-[52px]">{price}</span>
                 <span className="font-body text-sm text-white/70">per visit</span>
               </div>
 
@@ -323,9 +314,9 @@ export default function ProductDetail() {
       </main>
 
       {/* MOBILE STICKY BOOK BAR */}
-      {showStickyBook && <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-white/12 bg-background/92 px-4 pb-[calc(env(safe-area-inset-bottom)+0.65rem)] pt-2.5 backdrop-blur-xl md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-white/12 bg-background/92 px-4 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-3 backdrop-blur-xl md:hidden">
         <div className="min-w-0">
-          <p className="font-body text-[15px] font-semibold leading-none text-foreground tabular-nums" style={{ fontVariantNumeric: 'tabular-nums' }}>{price}</p>
+          <p className="font-body text-[15px] font-medium leading-none text-foreground">{price}</p>
           <p className="mt-1 truncate font-body text-[9px] uppercase tracking-[0.06em] text-foreground/60">{treatment.name} · {duration}</p>
         </div>
         <button
@@ -335,7 +326,7 @@ export default function ProductDetail() {
         >
           Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </button>
-      </div>}
+      </div>
 
       <Footer />
     </div>

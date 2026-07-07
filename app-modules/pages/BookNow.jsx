@@ -780,48 +780,9 @@ function bookingTimeLabel(state) {
   return 'Not selected';
 }
 
-function PaymentTruth({
-  total,
-  dueNow,
-  dueAfter,
-  dueAfterLabel = 'Due after visit',
-  compact = false,
-  className = '',
-  showClinicalNote = true,
-}) {
-  const rows = [
-    ['Total', total || 'Select'],
-    ['Charged today', dueNow || '$0'],
-    [dueAfterLabel, dueAfter || '$0'],
-  ];
-
-  return (
-    <div className={`rounded-xl border border-foreground/10 bg-background/52 ${compact ? 'p-2' : 'p-3'} ${className}`}>
-      <div className={`grid ${compact ? 'grid-cols-3 gap-1.5' : 'gap-2'}`}>
-        {rows.map(([label, value]) => (
-          <div key={label} className={compact ? 'min-w-0' : 'flex items-baseline justify-between gap-3'}>
-            <p className={`${compact ? 'text-[8.5px] leading-tight tracking-[0.045em] min-[390px]:text-[9px]' : 'text-[11px] tracking-[0.14em]'} font-body font-black uppercase text-foreground/48`}>
-              {label}
-            </p>
-            <p
-              className={`${compact ? 'mt-0.5 text-[13px] leading-tight min-[390px]:text-[14px]' : 'text-[15px] leading-none'} font-body font-black text-foreground tabular-nums`}
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
-              {value}
-            </p>
-          </div>
-        ))}
-      </div>
-      {showClinicalNote && (
-        <div className={`${compact ? 'mt-1.5 hidden min-[390px]:flex' : 'mt-2 flex'} items-center gap-1.5 border-t border-foreground/8 pt-1.5`}>
-          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-foreground/54" strokeWidth={2.2} />
-          <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground/54">
-            {CLINICAL_REVIEW_NOTICE}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+function priceReceipt({ product, subtotal, groupContactRequired }) {
+  const total = groupContactRequired ? 'Quote' : currency(subtotal || 0);
+  return `Total ${total}`;
 }
 
 function formatDateShort(value) {
@@ -849,7 +810,7 @@ function SectionTitle({ title, sub, icon: Icon }) {
       <div className="flex items-center gap-2">
         {Icon && (
           <motion.span
-            className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-foreground/14 bg-background/58 text-foreground/88 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_16px_52px_hsl(var(--foreground)/0.08)] md:hidden"
+            className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-foreground/14 bg-background/42 text-foreground/88 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_16px_52px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl md:hidden"
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={reduceMotion ? { duration: 0 } : CHECKOUT_MOTION}
@@ -869,7 +830,7 @@ function SectionTitle({ title, sub, icon: Icon }) {
 
 function TrustSpeedStrip() {
   return (
-    <div className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/58 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)]">
+    <div className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
       <div className="grid grid-cols-3 divide-x divide-foreground/10">
         {[
           { icon: ShieldCheck, title: 'Clinically supervised', body: 'RN oversight for every treatment' },
@@ -1055,7 +1016,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
     <div className="relative mb-1 shrink-0 px-1 pt-0 md:mb-3 md:pt-1">
       <div className="relative md:hidden">
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foreground/35 bg-background/48 text-foreground">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foreground/35 bg-background/30 text-foreground">
             <CurrentIcon className="h-3.5 w-3.5" strokeWidth={2.7} />
           </span>
           <p className="font-heading text-[1.34rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.48rem]">
@@ -1081,7 +1042,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
         <div className="flex items-center justify-between gap-2.5 md:gap-3">
           <div className="flex min-w-0 items-center gap-2 md:gap-2.5">
             <motion.span
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/48 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/42 bg-background/30 text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-xl min-[390px]:h-12 min-[390px]:w-12 md:h-14 md:w-14"
               key={step}
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0.72, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1110,11 +1071,11 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
                   aria-current={active ? 'step' : undefined}
                   className={`flex h-10 w-10 items-center justify-center rounded-full border font-body text-base font-black transition-all ${
                     active
-                      ? 'border-foreground/30 bg-foreground/[0.12] text-foreground shadow-[0_10px_28px_hsl(var(--foreground)/0.10)]'
+                      ? 'border-foreground/30 bg-foreground/[0.12] text-foreground shadow-[0_10px_28px_hsl(var(--foreground)/0.10)] backdrop-blur-xl'
                       : complete
                         ? 'border-foreground/26 bg-foreground/[0.10] text-foreground'
                         : reachable
-                          ? 'border-foreground/14 bg-background/56 text-foreground/56'
+                          ? 'border-foreground/14 bg-background/40 text-foreground/56'
                           : 'border-foreground/8 bg-background/20 text-foreground/24'
                   }`}
                 >
@@ -1125,7 +1086,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
           </div>
         </div>
 
-        <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/66 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
+        <div className="relative mt-3 h-3 overflow-hidden rounded-full border border-foreground/18 bg-background/52 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]">
           <motion.div
             className="absolute inset-y-0 left-0 w-full origin-left bg-foreground shadow-[0_0_28px_hsl(var(--foreground)/0.32)]"
             initial={false}
@@ -1143,6 +1104,7 @@ function UniversalBookingFrame({
   total,
   dueNow,
   dueAfter,
+  receiptLine,
   showDueAfter = true,
   displayStepIndex,
   displayTitle,
@@ -1167,7 +1129,6 @@ function UniversalBookingFrame({
   children,
 }) {
   const [orderOpen, setOrderOpen] = useState(false);
-  const reduceMotion = useReducedMotion();
   const hasOrder = Boolean(product);
   const orderCount = (product ? 1 : 0) + selectedAddons.length;
   const lastPerson = sessionPeople[sessionPeople.length - 1];
@@ -1192,10 +1153,10 @@ function UniversalBookingFrame({
         key={step}
         data-av-booking-scroll-region="true"
         className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-0 pb-1 md:pb-0"
-        initial={reduceMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -6 }}
-        transition={{ duration: reduceMotion ? 0 : 0.24, ease: EASE }}
+        initial={{ opacity: 1, y: 0, scale: 1 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 1 }}
+        transition={{ duration: 0.16, ease: EASE }}
       >
         <div className="relative h-full min-h-full">
           {children}
@@ -1210,9 +1171,9 @@ function UniversalBookingFrame({
         className="absolute inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-3 md:px-0"
         style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
-        <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] md:max-w-4xl md:p-2">
+        <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
           {hasOrder && (onRemoveAddon || onClearOrder || canAddPerson || multiPerson) && (
-            <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/48 md:hidden">
+            <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/30 md:hidden">
               <div className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5">
                 <button
                   type="button"
@@ -1287,29 +1248,29 @@ function UniversalBookingFrame({
               )}
             </div>
           )}
-          <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 md:grid-cols-[92px_minmax(230px,280px)_1fr] md:gap-2">
+          <div className="grid grid-cols-[76px_minmax(0,122px)_1fr] items-center gap-2 md:flex md:gap-2">
           <button
             type="button"
             onClick={onBack}
             disabled={!canGoBack}
             aria-label="Go back"
-            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/48 px-2 font-body text-[13px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[14px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[13px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[14px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
           >
             Back
           </button>
-          <PaymentTruth
-            compact
-            total={total}
-            dueNow={dueNow}
-            dueAfter={showDueAfter ? dueAfter : 'After pick'}
-            className="order-3 col-span-2 md:order-none md:col-span-1"
-          />
+          <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[11px] md:text-[13px] md:tracking-[0.12em]">Today</p>
+            <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
+            {showDueAfter && (
+              <p className="mt-0.5 truncate font-body text-[12px] font-semibold text-foreground/62 min-[390px]:text-[13px]">Then {dueAfter}</p>
+            )}
+          </div>
           <button
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
             className={`av-book-next-cta relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
-              canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/70 bg-foreground text-background/70 md:border-foreground/18 md:bg-background/58 md:text-foreground/58'
+              canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/70 bg-foreground text-background/70 md:border-foreground/18 md:bg-background/42 md:text-foreground/58'
             }`}
             // Force white pill + dark text so it reads consistently across themes.
             // On dark theme, --foreground is already white so bg matches; on daytime,
@@ -1332,6 +1293,10 @@ function UniversalBookingFrame({
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
+          <p className="mt-1 px-1 text-center font-body text-[12px] font-black leading-tight text-foreground/58 md:text-[13px]">
+            {step !== LAST_STEP && receiptLine ? `${receiptLine} · ` : ''}
+            {CLINICAL_REVIEW_NOTICE}
+          </p>
         </div>
       </div>
     </section>
@@ -1356,7 +1321,7 @@ function DesktopStepRail({ displayStepIndex = 0 }) {
                   : complete
                     ? 'border-foreground/34 bg-foreground/12 text-foreground'
                     : reachable
-                      ? 'border-foreground/24 bg-background/52 text-foreground/66'
+                      ? 'border-foreground/24 bg-background/34 text-foreground/66'
                       : 'border-foreground/14 bg-background/24 text-foreground/36'
               }`}
             >
@@ -1419,7 +1384,7 @@ function DesktopOrderRail({
   ];
 
   return (
-    <aside className="relative h-full min-h-0 overflow-x-hidden overflow-y-auto rounded-[1.25rem] border border-foreground/10 bg-background/70 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_72px_hsl(var(--foreground)/0.11)] 2xl:p-3">
+    <aside className="relative h-full min-h-0 overflow-x-hidden overflow-y-auto rounded-[1.25rem] border border-foreground/10 bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_72px_hsl(var(--foreground)/0.11)] backdrop-blur-2xl 2xl:p-3">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between gap-2">
@@ -1487,26 +1452,35 @@ function DesktopOrderRail({
         <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
           {hasTherapySelection ? (
             <>
-              <PaymentTruth
-                total={totalLabel || currency(displaySubtotal)}
-                dueNow={currency(displayDueNow)}
-                dueAfter={displayBalanceDue > 0 ? currency(displayBalanceDue) : '$0'}
-                showClinicalNote={false}
-              />
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Total</p>
+                <p className="font-body text-sm font-black text-foreground 2xl:text-base">{totalLabel || currency(displaySubtotal)}</p>
+              </div>
               {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
+              <div className="mt-2.5 2xl:mt-3">
+                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
+                  Deposit today {currency(displayDueNow)}
+                </p>
+                {displayBalanceDue > 0 && (
+                  <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/52 2xl:text-[13px]">
+                    Balance after visit {currency(displayBalanceDue)}
+                  </p>
+                )}
+              </div>
             </>
           ) : (
             <div>
               <p className="font-body text-[13px] font-bold leading-snug text-foreground/58 2xl:text-[14px]">
                 Select a therapy to see your total.
               </p>
-              <PaymentTruth
-                total="Select"
-                dueNow={currency(BOOKING_DEPOSIT_AMOUNT)}
-                dueAfter="After selection"
-                className="mt-2.5"
-                showClinicalNote={false}
-              />
+              <div className="mt-2.5">
+                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
+                  Deposit today {currency(BOOKING_DEPOSIT_AMOUNT)}
+                </p>
+                <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
+                  Balance depends on therapy
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -1526,7 +1500,7 @@ function DesktopOrderRail({
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/48 px-2.5 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/30 px-2.5 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
             >
               Back
             </button>
@@ -1598,9 +1572,8 @@ function DesktopBookingFrame({
   onRemovePerson,
   children,
 }) {
-  const reduceMotion = useReducedMotion();
   return (
-    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[860px] min-h-[540px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-gradient-to-t from-background/78 via-background/40 to-background/16 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] lg:block 2xl:max-w-[1540px]">
+    <section className="mx-auto hidden h-[calc(100svh-7.25rem)] max-h-[860px] min-h-[540px] w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.35rem] border border-foreground/18 bg-background/74 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_34px_130px_hsl(var(--foreground)/0.18)] backdrop-blur-2xl lg:block 2xl:max-w-[1540px]">
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(248px,300px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,310px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
@@ -1617,9 +1590,9 @@ function DesktopBookingFrame({
           <motion.div
             key={step}
             className="relative min-h-0 overflow-y-auto overscroll-contain pb-2 pr-1"
-            initial={reduceMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.22, ease: EASE }}
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16, ease: EASE }}
           >
             {children}
           </motion.div>
@@ -1659,7 +1632,7 @@ function StepControls({ step, canGoNext, nextLabel, total, onBack, onNext }) {
         type="button"
         onClick={onBack}
         disabled={step === 0}
-        className={`flex min-h-[52px] w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border bg-background/60 px-3 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors md:min-h-[48px] md:w-[112px] md:gap-2 md:text-xs ${
+        className={`flex min-h-[52px] w-[112px] shrink-0 items-center justify-center gap-1.5 rounded-full border bg-background/45 px-3 font-body text-sm font-black uppercase tracking-[0.06em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl transition-colors md:min-h-[48px] md:w-[112px] md:gap-2 md:text-xs ${
           step === 0
             ? 'cursor-not-allowed border-foreground/8 text-foreground/22'
             : 'border-foreground/14 text-foreground/66 hover:border-foreground/32 hover:text-foreground'
@@ -1671,7 +1644,7 @@ function StepControls({ step, canGoNext, nextLabel, total, onBack, onNext }) {
       <button
         type="button"
         onClick={onNext}
-        className="relative flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-3 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] md:min-h-[48px] md:gap-4 md:px-5 md:text-xs"
+        className="relative flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-3 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] md:min-h-[48px] md:gap-4 md:px-5 md:text-xs"
       >
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.14] to-foreground/[0.04] opacity-80" />
         <span className="truncate">{canGoNext ? compactNextLabel : 'Finish step'}</span>
@@ -1698,10 +1671,10 @@ function SelectCard({ item, active, onClick, children, className = '', index = 0
       whileHover={{ y: -3 }}
       transition={{ duration: 0.72, ease: EASE }}
       onClick={onClick}
-      className={`av-glass-card relative isolate grid min-h-[112px] grid-rows-[3rem_2.75rem_auto] gap-y-5 overflow-hidden rounded-[1.25rem] border p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_80px_hsl(var(--foreground)/0.07)] transition-colors ${
+      className={`av-glass-card relative isolate grid min-h-[112px] grid-rows-[3rem_2.75rem_auto] gap-y-5 overflow-hidden rounded-[1.25rem] border p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_20px_80px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl transition-colors ${
         active
           ? 'border-foreground/42 bg-foreground/[0.14] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
-          : 'border-foreground/12 bg-background/62 text-foreground hover:border-foreground/24 hover:bg-background/62'
+          : 'border-foreground/12 bg-background/48 text-foreground hover:border-foreground/24 hover:bg-background/62'
       } ${className}`}
     >
       <span className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-foreground/[0.10] via-transparent to-transparent opacity-80" />
@@ -1745,10 +1718,10 @@ function OutcomeCard({ item, active, onClick, index = 0 }) {
       whileHover={{ y: -2, scale: active ? 1.008 : 1.003 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
       onClick={onClick}
-      className={`av-glass-card group relative flex min-h-[96px] flex-col items-start justify-between gap-2 overflow-hidden rounded-[1.2rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
+      className={`av-glass-card group relative flex min-h-[96px] flex-col items-start justify-between gap-2 overflow-hidden rounded-[1.2rem] border p-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.13),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:min-h-[126px] md:flex-row md:items-center md:gap-4 md:rounded-[1.85rem] md:p-5 ${
         active
           ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_105px_hsl(var(--foreground)/0.18)]'
-          : 'border-foreground/9 bg-background/48 text-foreground hover:border-foreground/20 hover:bg-background/48'
+          : 'border-foreground/9 bg-background/30 text-foreground hover:border-foreground/20 hover:bg-background/48'
       }`}
       aria-pressed={active}
     >
@@ -1794,7 +1767,7 @@ function MoreGoalsAccordion({ items, activeKey, onChoose }) {
   if (!items.length) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/28 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.07)]">
+    <div className="relative overflow-hidden rounded-[1.55rem] border border-foreground/12 bg-background/28 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -1844,8 +1817,8 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
       }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: EASE }}
-      className={`av-glass-card relative overflow-hidden rounded-[1.35rem] border p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] transition-colors md:rounded-[1.35rem] md:p-2.5 ${
-        active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : 'border-foreground/9 bg-background/48 text-foreground'
+      className={`av-glass-card relative overflow-hidden rounded-[1.35rem] border p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_24px_95px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors md:rounded-[1.35rem] md:p-2.5 ${
+        active ? 'border-foreground/40 bg-foreground/[0.13] text-foreground shadow-[0_28px_110px_hsl(var(--foreground)/0.16)]' : 'border-foreground/9 bg-background/30 text-foreground'
       }`}
     >
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,hsl(var(--foreground)/0.16),transparent_38%),radial-gradient(circle_at_90%_80%,hsl(var(--foreground)/0.06),transparent_35%),linear-gradient(145deg,hsl(var(--foreground)/0.065),transparent_55%,hsl(var(--foreground)/0.026))]" />
@@ -1867,7 +1840,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
           </div>
           <div className="flex min-w-[68px] shrink-0 flex-col items-end justify-center text-right md:min-w-[72px]">
             {recommendation && (
-              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-1.5 py-0.5 font-body text-[12px] font-black uppercase leading-none tracking-[0.08em] text-foreground/66 md:text-[12px]">
+              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-1.5 py-0.5 font-body text-[12px] font-black uppercase leading-none tracking-[0.08em] text-foreground/66 backdrop-blur-2xl md:text-[12px]">
                 {recommendation}
               </span>
             )}
@@ -1880,7 +1853,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
           type="button"
           onClick={onPrimary}
           className={`min-h-[56px] w-full rounded-full font-body text-sm font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] ${
-            active ? 'border border-foreground/24 bg-foreground text-background' : 'border border-foreground/24 bg-foreground/[0.13] text-foreground'
+            active ? 'border border-foreground/24 bg-foreground text-background' : 'border border-foreground/24 bg-foreground/[0.13] text-foreground backdrop-blur-2xl'
           }`}
         >
           Select
@@ -1913,7 +1886,7 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
         recommendation="Selected"
       />
       {otherOptions.length > 0 && (
-        <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/48 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] md:rounded-[1.1rem]">
+        <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:rounded-[1.1rem]">
           <button
             type="button"
             onClick={() => setOpenOther((value) => !value)}
@@ -1963,7 +1936,7 @@ function CustomTreatmentBuilder({
 
   return (
     <div className="grid gap-3">
-      <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/64 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+      <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/50 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
         <div className="relative flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -1974,7 +1947,7 @@ function CustomTreatmentBuilder({
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/64 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+      <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/50 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
         <p className="relative font-body text-xs font-bold uppercase tracking-[0.16em] text-foreground/68">Choose IV</p>
         <div className="relative mt-3 grid gap-2 md:grid-cols-2">
@@ -1990,8 +1963,8 @@ function CustomTreatmentBuilder({
                 whileTap={{ scale: 0.985 }}
                 onClick={() => onBase(item.key)}
                 aria-pressed={active}
-                className={`relative flex min-h-[86px] items-center gap-3 overflow-hidden rounded-2xl border px-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-                  active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/60 text-foreground hover:border-foreground/24'
+                className={`relative flex min-h-[86px] items-center gap-3 overflow-hidden rounded-2xl border px-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+                  active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/45 text-foreground hover:border-foreground/24'
                 }`}
               >
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
@@ -2020,7 +1993,7 @@ function CustomTreatmentBuilder({
 
 function CustomSubscriptionBuilder({ sessions, estimate, serviceLabel, onSessions }) {
   return (
-    <div className="relative mt-3 overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/64 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative mt-3 overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/50 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
         <div className="min-w-0">
@@ -2041,8 +2014,8 @@ function CustomSubscriptionBuilder({ sessions, estimate, serviceLabel, onSession
               whileTap={{ scale: 0.985 }}
               onClick={() => onSessions(item.key)}
               aria-pressed={active}
-              className={`flex min-h-[66px] items-center justify-between gap-3 rounded-2xl border px-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/60 text-foreground hover:border-foreground/24'
+              className={`flex min-h-[66px] items-center justify-between gap-3 rounded-2xl border px-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/45 text-foreground hover:border-foreground/24'
               }`}
             >
               <span className="flex min-w-0 items-center gap-2">
@@ -2188,22 +2161,22 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
       <button
         type="button"
         onClick={onNone}
-        className={`group relative flex min-h-[96px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] transition-colors ${
+        className={`group relative flex min-h-[96px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
           noAddonsSelected
             ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
-            : 'border-foreground/12 bg-background/64 text-foreground hover:border-foreground/24'
+            : 'border-foreground/12 bg-background/50 text-foreground hover:border-foreground/24'
         }`}
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.07),transparent_55%,hsl(var(--foreground)/0.03))]" />
         <span className="relative flex min-w-0 items-center gap-3">
           <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${
-            noAddonsSelected ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/10 bg-background/48 group-hover:border-foreground/24'
+            noAddonsSelected ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/10 bg-background/30 group-hover:border-foreground/24'
           }`}>
             {noAddonsSelected ? <Check className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
           </span>
           <span className="block font-heading text-[2rem] uppercase leading-none tracking-normal">No extras</span>
         </span>
-        <span className="relative rounded-full border border-foreground/12 bg-background/52 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/72">
+        <span className="relative rounded-full border border-foreground/12 bg-background/34 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.1em] text-foreground/72">
           Fast
         </span>
       </button>
@@ -2216,7 +2189,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
           return (
             <section
               key={group.key}
-              className="relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/56 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_16px_60px_hsl(var(--foreground)/0.055)]"
+              className="relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_16px_60px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
               <button
@@ -2252,8 +2225,8 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                         key={`${group.key}-${item.label}`}
                         type="button"
                         onClick={() => onToggle(item.label)}
-                        className={`relative flex min-h-[60px] items-center justify-between gap-3 overflow-hidden rounded-[0.875rem] border px-3.5 py-2.5 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-                          active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/62 text-foreground hover:border-foreground/24'
+                        className={`relative flex min-h-[60px] items-center justify-between gap-3 overflow-hidden rounded-[0.875rem] border px-3.5 py-2.5 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+                          active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/48 text-foreground hover:border-foreground/24'
                         }`}
                       >
                         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
@@ -2280,7 +2253,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
           );
         })}
       </div>
-      <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+      <div className="relative overflow-hidden rounded-[1rem] border border-foreground/12 bg-background/44 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-xl">
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
         <div className="relative grid gap-2 font-body text-base font-bold">
           {selectedAddons.length > 0 && (
@@ -2479,7 +2452,7 @@ function AddressPrediction({ suggestion, onUse, compact = false }) {
     <button
       type="button"
       onClick={() => onUse(suggestion)}
-      className={`relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-foreground/28 bg-foreground/[0.13] px-3 text-left text-foreground shadow-[0_18px_70px_hsl(var(--foreground)/0.10),inset_0_1px_0_hsl(var(--foreground)/0.10)] transition-transform active:scale-[0.99] md:px-3 ${
+      className={`relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-foreground/28 bg-foreground/[0.13] px-3 text-left text-foreground shadow-[0_18px_70px_hsl(var(--foreground)/0.10),inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-2xl transition-transform active:scale-[0.99] md:px-3 ${
         compact ? 'min-h-[54px]' : 'min-h-[64px]'
       }`}
     >
@@ -2516,7 +2489,7 @@ function ClientReusePanel({ signedIn, lastBooking, savedContact, savedAddress, o
         <button
           type="button"
           onClick={onRepeat}
-          className="relative flex min-h-[64px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/62 px-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-foreground/24"
+          className="relative flex min-h-[64px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/48 px-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors hover:border-foreground/24"
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
           <span className="relative min-w-0">
@@ -2530,7 +2503,7 @@ function ClientReusePanel({ signedIn, lastBooking, savedContact, savedAddress, o
         <button
           type="button"
           onClick={onSavedInfo}
-          className="relative flex min-h-[64px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.055] px-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-colors hover:border-emerald-200/28"
+          className="relative flex min-h-[64px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.055] px-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors hover:border-emerald-200/28"
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-200/[0.06] via-transparent to-transparent" />
           <span className="relative min-w-0">
@@ -2621,7 +2594,7 @@ function ClientFastLane({ state, profileGfe, hasSavedVisit, signedIn, onChoose }
             aria-label={`${item.label} client`}
             className={`min-h-[42px] rounded-full px-4 text-center transition-colors ${
               active
-                ? 'border border-foreground/28 bg-foreground/[0.14] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)]'
+                ? 'border border-foreground/28 bg-foreground/[0.14] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] backdrop-blur-xl'
                 : 'text-foreground/58 hover:text-foreground'
             }`}
           >
@@ -2648,7 +2621,7 @@ function VisitForSelector({ value, onChoose }) {
   };
 
   return (
-    <div className="mb-2 rounded-[1rem] border border-foreground/12 bg-background/62 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] md:mb-2 md:p-2">
+    <div className="mb-2 rounded-[1rem] border border-foreground/12 bg-background/48 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:mb-2 md:p-2">
       <div className="hidden">
         <div className="min-w-0">
           <p className="font-body text-xs font-bold uppercase tracking-[0.16em] text-foreground/62">Who</p>
@@ -2668,8 +2641,8 @@ function VisitForSelector({ value, onChoose }) {
               type="button"
               onClick={() => onChoose(item.key)}
               aria-pressed={active}
-              className={`relative flex min-h-[42px] flex-row items-center justify-center gap-1.5 overflow-hidden rounded-xl border px-2 text-center shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors active:scale-[0.985] md:min-h-[44px] md:gap-1.5 ${
-                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/14 bg-background/60 text-foreground/72 hover:border-foreground/24'
+              className={`relative flex min-h-[42px] flex-row items-center justify-center gap-1.5 overflow-hidden rounded-xl border px-2 text-center shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors active:scale-[0.985] md:min-h-[44px] md:gap-1.5 ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/14 bg-background/45 text-foreground/72 hover:border-foreground/24'
               }`}
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
@@ -2689,7 +2662,7 @@ function LocationTypeDropdown({ value, onChange }) {
   const Icon = selected.icon || Home;
 
   return (
-    <label className="relative mb-2 flex min-h-[48px] cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-xl border border-foreground/12 bg-background/46 px-3 text-left text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/24 hover:bg-background/70 md:mb-2 md:min-h-[50px] md:rounded-xl md:px-3">
+    <label className="relative mb-2 flex min-h-[48px] cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-xl border border-foreground/12 bg-background/46 px-3 text-left text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl transition-colors hover:border-foreground/24 hover:bg-background/58 md:mb-2 md:min-h-[50px] md:rounded-xl md:px-3">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.075] via-transparent to-transparent" />
       <span className="relative flex min-w-0 items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] md:h-9 md:w-9 md:rounded-xl">
@@ -2700,7 +2673,7 @@ function LocationTypeDropdown({ value, onChange }) {
           <span className="mt-0.5 block truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal md:mt-1 md:text-[1.55rem]">{selected.label}</span>
         </span>
       </span>
-      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/58 text-foreground/84 md:h-8 md:w-8">
+      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-background/42 text-foreground/84 md:h-8 md:w-8">
         <ChevronDown className="h-4 w-4 md:h-4 md:w-4" strokeWidth={2.4} />
       </span>
       <select
@@ -2751,7 +2724,7 @@ function RetentionChoice({ state, plan, monthlyPrice, customSessions, customEsti
         })}
       </div>
       {state.visitType === 'subscription' && (
-        <div className="mt-2 overflow-hidden rounded-2xl border border-foreground/12 bg-background/60 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+        <div className="mt-2 overflow-hidden rounded-2xl border border-foreground/12 bg-background/45 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="font-body text-sm font-extrabold text-foreground/76">Plan</p>
@@ -2810,7 +2783,7 @@ function RetentionChoice({ state, plan, monthlyPrice, customSessions, customEsti
 function ClinicalReviewCard({ bookingGfeRequirement }) {
   const valid = !bookingGfeRequirement.required;
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative flex items-center gap-3">
         <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${valid ? 'border-emerald-300/20 bg-emerald-300/[0.06] text-emerald-100' : 'border-amber-300/24 bg-amber-300/[0.06] text-amber-200'}`}>
@@ -2841,7 +2814,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
       <button
         type="button"
         onClick={onContinue}
-        className="group relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] transition-colors hover:border-foreground/34"
+        className="group relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-colors hover:border-foreground/34"
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.16),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.025))]" />
         <div className="relative flex items-start justify-between gap-4">
@@ -2858,7 +2831,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
             <span className="mt-1 block font-heading text-4xl leading-none text-foreground">{currency(subtotal)}</span>
           </span>
         </div>
-        <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/52 p-3 font-body text-sm font-bold text-foreground/68">
+        <div className="relative mt-4 grid gap-2 rounded-2xl border border-foreground/10 bg-background/34 p-3 font-body text-sm font-bold text-foreground/68">
           <div className="flex items-center justify-between gap-3">
             <span>Secure checkout</span>
             <span>{currency(subtotal)}</span>
@@ -2912,7 +2885,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
 
   if (!editing) {
     return (
-      <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+      <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -2941,7 +2914,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
   }
 
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <p className="relative mb-3 font-body text-sm font-semibold leading-snug text-foreground/68">
         Used for receipt and nurse follow-up.
@@ -3021,7 +2994,7 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
         <button
           type="button"
           onClick={() => setEditing(false)}
-          className="relative mt-3 min-h-[48px] rounded-full border border-foreground/34 bg-foreground/[0.16] px-5 font-body text-xs font-bold uppercase tracking-[0.08em] text-foreground shadow-[0_14px_44px_hsl(var(--foreground)/0.12)]"
+          className="relative mt-3 min-h-[48px] rounded-full border border-foreground/34 bg-foreground/[0.16] px-5 font-body text-xs font-bold uppercase tracking-[0.08em] text-foreground shadow-[0_14px_44px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl"
         >
           Done
         </button>
@@ -3047,7 +3020,7 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
       {additionalPeople.map((row) => (
         <div
           key={row.person.id}
-          className="rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]"
+          className="rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-2xl"
         >
           <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/62">
             {row.label} · {row.product?.label || 'IV pending'}
@@ -3121,7 +3094,7 @@ function YesNoToggle({ label, value, onChange }) {
               onClick={() => onChange(opt)}
               aria-pressed={active}
               className={`min-h-[44px] rounded-xl border px-3 font-body text-sm font-black transition-colors ${
-                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/58 text-foreground/70'
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/70'
               }`}
             >
               {opt}
@@ -3135,7 +3108,7 @@ function YesNoToggle({ label, value, onChange }) {
 
 function ClinicalIntakeCard({ state, onChange }) {
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Medical &amp; consent</p>
 
@@ -3146,7 +3119,7 @@ function ClinicalIntakeCard({ state, onChange }) {
             id="bk-medical-conditions"
             value={state.medicalConditions}
             onChange={(e) => onChange('medicalConditions', e.target.value)}
-            className="min-h-[48px] w-full rounded-xl border border-foreground/14 bg-background/58 px-3 font-body text-sm font-semibold text-foreground outline-none focus:border-foreground/40"
+            className="min-h-[48px] w-full rounded-xl border border-foreground/14 bg-background/42 px-3 font-body text-sm font-semibold text-foreground outline-none focus:border-foreground/40"
           >
             {MEDICAL_CONDITION_OPTIONS.map((opt) => (
               <option key={opt} value={opt} className="bg-background text-foreground">{opt}</option>
@@ -3169,7 +3142,7 @@ function ClinicalIntakeCard({ state, onChange }) {
               onChange={(e) => onChange('allergies', e.target.value)}
               rows={2}
               placeholder="None, or list details"
-              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/58 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
+              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/42 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
             />
           </div>
           <div>
@@ -3180,7 +3153,7 @@ function ClinicalIntakeCard({ state, onChange }) {
               onChange={(e) => onChange('medications', e.target.value)}
               rows={2}
               placeholder="None, or list details"
-              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/58 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
+              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/42 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
             />
           </div>
         </div>
@@ -3210,7 +3183,7 @@ function ClinicalIntakeCard({ state, onChange }) {
 function SafetyFlagChoice({ value, onChange }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
         <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Safety</p>
@@ -3235,7 +3208,7 @@ function SafetyFlagChoice({ value, onChange }) {
               onClick={() => onChange(item.key)}
               aria-pressed={active}
               className={`min-h-[58px] rounded-2xl border px-3 text-left font-body text-sm font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/58 text-foreground/72'
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
               }`}
             >
               {item.label}
@@ -3277,7 +3250,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative grid gap-3">
         <div className="grid gap-2 md:grid-cols-2 md:gap-3">
@@ -3354,7 +3327,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
                   onClick={() => onChange('safetyFlag', item.key)}
                   aria-pressed={active}
                   className={`min-h-[52px] rounded-2xl border px-3 text-left font-body text-sm font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-                    active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/58 text-foreground/72'
+                    active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
                   }`}
                 >
                   {item.label}
@@ -3408,7 +3381,7 @@ function FastReviewSurface({
       )}
 
       <div className="grid gap-3">
-        <div className="relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)]">
+        <div className="relative overflow-hidden rounded-[1.45rem] border border-foreground/18 bg-foreground/[0.11] p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_22px_82px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,hsl(var(--foreground)/0.16),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.07),transparent_58%,hsl(var(--foreground)/0.025))]" />
           <p className="relative mb-3 font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">Pay</p>
           <div className="relative flex items-start justify-between gap-4">
@@ -3430,7 +3403,7 @@ function FastReviewSurface({
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/64 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+        <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
           <div className="relative mb-3 flex items-center justify-between gap-3">
             <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Address</p>
@@ -3506,7 +3479,7 @@ function FastReviewSurface({
         className="fixed inset-x-0 z-40 px-2 pb-0 pt-1 md:sticky md:bottom-4 md:mt-4 md:px-0"
         style={{ bottom: 'calc(max(env(safe-area-inset-bottom, 0px), var(--av-booking-visual-bottom-gap, 0px)) + 0.5rem)' }}
       >
-        <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] md:rounded-[1.25rem]">
+        <div className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-hidden rounded-[1.1rem] border border-foreground/14 bg-background/86 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl md:rounded-[1.25rem]">
           <div className="hidden min-w-0 flex-1 px-4 md:block">
             <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Checkout</p>
             <p className="mt-0.5 truncate font-body text-sm font-semibold text-foreground/70">Apple Pay, Google Pay, Link, or card</p>
@@ -3516,8 +3489,8 @@ function FastReviewSurface({
             onClick={onSubmit}
             disabled={checkoutLoading}
             aria-label="Continue to secure payment"
-            className={`relative flex min-h-[48px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[56px] md:text-sm ${
-              canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/58 text-foreground/58'
+            className={`relative flex min-h-[48px] flex-1 items-center justify-between overflow-hidden rounded-full border px-4 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[56px] md:text-sm ${
+              canPay ? 'border-foreground/34 bg-foreground/[0.18] text-foreground' : 'border-foreground/14 bg-background/42 text-foreground/58'
             }`}
           >
             {checkoutLoading && (
@@ -3544,7 +3517,7 @@ function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
   ];
 
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
         <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Clinical review</p>
@@ -3561,8 +3534,8 @@ function ClinicalReviewChoice({ value, onChange, allowOnFile = false }) {
               onClick={() => onChange(disabled ? false : item.key)}
               disabled={disabled}
               aria-pressed={active}
-              className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body text-base font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
-                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/58 text-foreground/72'
+              className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body text-base font-black shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
               }`}
             >
               <span className="flex min-w-0 items-center gap-2">
@@ -3587,7 +3560,7 @@ function OptionalNotes({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex min-h-[42px] w-full items-center justify-between rounded-xl border border-foreground/12 bg-background/60 px-3 font-body text-xs font-extrabold text-foreground/76 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] md:min-h-[44px] md:rounded-xl md:px-3 md:text-xs"
+        className="flex min-h-[42px] w-full items-center justify-between rounded-xl border border-foreground/12 bg-background/45 px-3 font-body text-xs font-extrabold text-foreground/76 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl md:min-h-[44px] md:rounded-xl md:px-3 md:text-xs"
       >
         <span>{open ? 'Hide nurse instructions' : 'Nurse instructions'}</span>
         <Plus className={`h-4 w-4 transition-transform ${open ? 'rotate-45' : ''}`} strokeWidth={2.4} />
@@ -3621,7 +3594,7 @@ function BillingChoice({ value, onChange }) {
   ];
 
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
       <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Payment</p>
       <div className="relative mt-3 grid gap-2 md:grid-cols-2">
@@ -3634,8 +3607,8 @@ function BillingChoice({ value, onChange }) {
               type="button"
               onClick={() => onChange(item.key)}
               aria-pressed={active}
-              className={`flex min-h-[72px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/58 text-foreground/72'
+              className={`flex min-h-[72px] items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
               }`}
             >
               <span className="flex min-w-0 items-center gap-2.5">
@@ -3658,7 +3631,7 @@ function BillingChoice({ value, onChange }) {
 
 function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
   return (
-    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)]">
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
       <div className="relative flex items-center justify-between gap-3">
         <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Member Credit</p>
@@ -3670,8 +3643,8 @@ function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
         type="button"
         onClick={() => onChange(!selected)}
         aria-pressed={selected}
-        className={`relative mt-3 flex min-h-[68px] w-full items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors ${
-          selected ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/58 text-foreground/72'
+        className={`relative mt-3 flex min-h-[68px] w-full items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+          selected ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
         }`}
       >
         <span className="flex min-w-0 items-center gap-2.5">
@@ -3689,23 +3662,15 @@ function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
   );
 }
 
-function ConfirmSummary({
-  state,
-  product,
-  bookingGfeRequirement,
-  subtotal = 0,
-  dueNow = 0,
-  balanceDue = 0,
-  totalLabel,
-  dueNowLabel,
-  dueAfterLabel,
-}) {
+function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, dueNow = 0, balanceDue = 0 }) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
+  // Receipt-style summary: product + price only. Payment terms (deposit today /
+  // balance after) live in the footer CTA, so we don't repeat them here.
 
   return (
-    <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/56 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)]">
+    <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.10),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.026))]" />
 
       {/* Product + price */}
@@ -3718,14 +3683,6 @@ function ConfirmSummary({
           {currency(subtotal)}
         </p>
       </div>
-      <div className="relative border-t border-foreground/8 px-5 pb-5 pt-0">
-        <PaymentTruth
-          total={totalLabel || currency(subtotal)}
-          dueNow={dueNowLabel || currency(dueNow)}
-          dueAfter={dueAfterLabel || currency(balanceDue)}
-          showClinicalNote={false}
-        />
-      </div>
     </div>
   );
 }
@@ -3736,7 +3693,7 @@ function GroupPricingPanel({ baseTotal, guestCount, contactRequired, eventType, 
   const canIncrease = safeCount < 5;
 
   return (
-    <div className="relative mt-4 overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/64 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)]">
+    <div className="relative mt-4 overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/50 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
       <div className="relative flex flex-wrap items-center justify-between gap-2">
         <div>
@@ -3749,7 +3706,7 @@ function GroupPricingPanel({ baseTotal, guestCount, contactRequired, eventType, 
           </span>
         )}
       </div>
-      <div className="relative mt-3 flex items-center gap-2 rounded-2xl border border-foreground/12 bg-background/60 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+      <div className="relative mt-3 flex items-center gap-2 rounded-2xl border border-foreground/12 bg-background/45 p-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
         <button
           type="button"
           onClick={() => onGuests(Math.max(2, safeCount - 1))}
@@ -3815,7 +3772,7 @@ function SummaryRail({
   const [open, setOpen] = useState(false);
   return (
     <aside className="hidden lg:block">
-      <div className="av-glass-card sticky top-28 overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/70 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_110px_hsl(var(--foreground)/0.12)]">
+      <div className="av-glass-card sticky top-28 overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/58 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.11),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_58%)]" />
         <button
           type="button"
@@ -3888,17 +3845,18 @@ function SummaryRail({
               ))}
             </div>
           )}
-          <div className="grid gap-2">
-            <PaymentTruth
-              total={groupContactRequired ? 'Contact' : isSubscription ? `${currency(Number(plan.price || 0))}/mo` : totalLabel || currency(subtotal)}
-              dueNow={currency(dueNow)}
-              dueAfter={currency(balanceDue)}
-              showClinicalNote={false}
-            />
-            <div className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
-              <p className="font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/58">Time</p>
-              <p className="mt-1 font-body text-sm font-bold text-foreground/82">{bookingTimeSummary(state)}</p>
-            </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {[
+              ['Due now', currency(dueNow)],
+              [groupContactRequired ? 'Group' : isSubscription ? 'Plan' : 'Estimate', groupContactRequired ? 'Contact' : isSubscription ? plan.label : totalLabel || currency(subtotal)],
+              isSubscription ? ['After visit', currency(balanceDue)] : ['Upon completion', currency(balanceDue)],
+              ['Time', bookingTimeSummary(state)],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
+                <p className="font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
+                <p className="mt-1 font-body text-sm font-bold text-foreground/82">{value}</p>
+              </div>
+            ))}
           </div>
           <div className="space-y-2 border-t border-foreground/8 pt-4 font-body text-sm font-medium text-foreground/66">
             <p>{state.address || 'Address pending'}</p>
@@ -3912,7 +3870,7 @@ function SummaryRail({
               type="button"
               onClick={onAction}
               disabled={actionDisabled}
-              className="relative flex min-h-[56px] w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-xs font-bold uppercase tracking-[0.12em] text-foreground shadow-[0_18px_62px_hsl(var(--foreground)/0.17),inset_0_1px_0_hsl(var(--foreground)/0.12)] disabled:cursor-not-allowed disabled:opacity-45"
+              className="relative flex min-h-[56px] w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-foreground/36 bg-foreground/[0.18] px-5 font-body text-xs font-bold uppercase tracking-[0.12em] text-foreground shadow-[0_18px_62px_hsl(var(--foreground)/0.17),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-45"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.13] to-foreground/[0.04]" />
               {actionDisabled && (
@@ -3928,7 +3886,7 @@ function SummaryRail({
               </span>
             </button>
           ) : (
-            <p className="rounded-2xl border border-foreground/10 bg-background/52 px-4 py-3 font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/58">
+            <p className="rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/58">
               Finish the steps to unlock payment.
             </p>
           )}
@@ -5899,7 +5857,7 @@ export default function BookNow() {
     setValue('contactLine', formatContactLine(next));
   };
 
-  const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/14 bg-background/70 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.08)]';
+  const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/14 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl';
   const expandedPanelCardClass = panelCardClass.replace('overflow-hidden', 'overflow-visible');
   const microLabelClass = 'font-body text-[13px] font-black uppercase tracking-[0.10em] text-foreground/70 md:text-[14px]';
   const renderStoreMenuRow = ({
@@ -5985,19 +5943,19 @@ export default function BookNow() {
         </button>
         <div className={`grid transition-[grid-template-rows] duration-300 ease-editorial ${expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
-            <div className="space-y-2 border-t border-foreground/10 px-3 py-2.5 text-left md:space-y-2.5 md:px-3.5 md:py-3">
+            <div className="space-y-2.5 border-t border-foreground/10 px-3.5 py-3 text-left">
               {whatItDoes && (
                 <div>
-                  <p className="mb-0.5 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/42 md:mb-1 md:text-[12px]">What it does</p>
-                  <p className="font-body text-[14px] font-semibold leading-snug text-foreground/74 md:text-[15px]">{whatItDoes}</p>
+                  <p className="mb-1 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
+                  <p className="font-body text-[15px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
                 </div>
               )}
               {ingredients.length > 0 && (
                 <div>
-                  <p className="mb-1 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/42 md:mb-1.5 md:text-[12px]">Ingredients</p>
+                  <p className="mb-1.5 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ingredients.map((ingredient) => (
-                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-0.5 font-body text-[12px] font-bold text-foreground/74 md:py-1 md:text-[13px]">{ingredient}</span>
+                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[13px] font-bold text-foreground/74">{ingredient}</span>
                     ))}
                   </div>
                 </div>
@@ -6021,22 +5979,23 @@ export default function BookNow() {
     const active = state.productKey === item.key;
     const copy = compactProtocolCopy(item);
     const menuLabel = copy.label;
-    const titleSizeClass = 'md:text-[2.3rem] xl:text-[2.6rem] 2xl:text-[2.8rem]';
+    const titleSizeClass = 'md:text-[1.14rem] xl:text-[1.26rem] 2xl:text-[1.36rem]';
 
     return (
       <div
         key={item.key}
-        className={`shrink-0 border-b border-foreground/12 transition-colors ${active ? 'bg-foreground/[0.10]' : ''}`}
+        className={`${panelCardClass} shrink-0 transition-colors ${active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'hover:border-foreground/28'}`}
       >
         <button
           type="button"
           onClick={() => chooseTherapyMenuProduct(item.key)}
           aria-pressed={active}
-          className={`relative grid min-h-[88px] w-full grid-cols-[64px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-1.5 text-left transition-colors md:min-h-[124px] md:grid-cols-[96px_minmax(0,1fr)_96px_26px] md:px-4 md:py-2 xl:grid-cols-[104px_minmax(0,1fr)_108px_26px] ${
-            active ? '' : 'hover:bg-foreground/[0.04]'
+          className={`relative grid min-h-[88px] w-full grid-cols-[64px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-1.5 text-left transition-colors md:min-h-[100px] md:grid-cols-[76px_minmax(0,1fr)_72px_26px] md:px-4 md:py-2 xl:grid-cols-[76px_minmax(0,1fr)_80px_26px] ${
+            active ? 'bg-foreground/[0.14]' : 'hover:bg-foreground/[0.03]'
           }`}
         >
-          <span className="relative flex h-[4.5rem] w-16 shrink-0 items-center justify-center md:h-[6.5rem] md:w-[5.5rem]">
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+          <span className="relative flex h-[4.5rem] w-16 shrink-0 items-center justify-center md:h-[4.75rem] md:w-[4.25rem]">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
             ) : (
@@ -6053,7 +6012,7 @@ export default function BookNow() {
               </span>
             )}
           </span>
-          <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.6rem] xl:text-[1.75rem] 2xl:text-[1.9rem]">
+          <span className="relative justify-self-end whitespace-nowrap font-heading text-[1.08rem] uppercase leading-none tracking-normal text-foreground/92 md:text-[1.16rem] xl:text-[1.24rem] 2xl:text-[1.34rem]">
             {currency(protocolPrice(item))}
           </span>
           <ArrowRight className="relative h-5 w-5 shrink-0 text-foreground md:h-6 md:w-6" strokeWidth={2.45} />
@@ -6084,7 +6043,9 @@ export default function BookNow() {
     return (
       <div
         key={item.key}
-        className={`relative shrink-0 border-b border-foreground/12 transition-colors ${active ? 'bg-foreground/[0.10]' : ''}`}
+        className={`relative shrink-0 overflow-hidden rounded-[1.35rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_56px_hsl(var(--background)/0.32)] backdrop-blur-2xl transition-colors ${
+          active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
+        }`}
       >
         <button
           type="button"
@@ -6092,9 +6053,10 @@ export default function BookNow() {
           aria-pressed={active}
           style={{ height: 'var(--av-therapy-card-h, 6.25rem)' }}
           className={`relative grid w-full grid-cols-[4.5rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 px-3.5 text-left transition-colors min-[390px]:grid-cols-[5rem_minmax(0,1fr)_auto_1.85rem] min-[390px]:gap-3.5 min-[390px]:px-4 ${
-            active ? '' : 'hover:bg-foreground/[0.04]'
+            active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.05] via-transparent to-black/24" />
           <span className="relative flex h-full w-full items-center justify-center py-2">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.6)]" />
@@ -6102,10 +6064,10 @@ export default function BookNow() {
               <Icon className="h-9 w-9 text-foreground" strokeWidth={1.9} />
             )}
           </span>
-          <span className="relative min-w-0 font-heading text-[1.6rem] uppercase leading-[0.95] tracking-normal text-foreground min-[390px]:text-[1.8rem]">
+          <span className="relative min-w-0 font-heading text-[1.4rem] uppercase leading-[0.95] tracking-normal text-foreground min-[390px]:text-[1.55rem]">
             <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
           </span>
-          <span className="relative whitespace-nowrap font-heading text-[1.5rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.65rem]">
+          <span className="relative whitespace-nowrap font-heading text-[1.4rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem]">
             {currency(price)}
           </span>
           <span className="relative flex justify-end">
@@ -6238,7 +6200,7 @@ export default function BookNow() {
 
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5 md:gap-3">
-          <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/56 p-1.5">
+          <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-foreground/12 bg-background/40 p-1.5">
             {therapyGroups.map((group) => {
               const Icon = group.icon || Droplets;
               const active = activeTherapyGroup === group.key;
@@ -6263,7 +6225,6 @@ export default function BookNow() {
           <div className="grid min-h-0 grid-rows-[1fr]">
             <div data-av-therapy-list="true" className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
-              <div className="h-[calc(var(--av-booking-footer-height,5.25rem)+1rem)] shrink-0" aria-hidden="true" />
             </div>
             <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
               {activeTherapies.map((item) => renderIvTherapyTile(item))}
@@ -6503,7 +6464,7 @@ export default function BookNow() {
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
           >
-            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] md:p-4">
+            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4">
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
               <div className="relative">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -6573,6 +6534,7 @@ export default function BookNow() {
                 total={totalLabel}
                 dueNow={dueNowLabel}
                 dueAfter={dueAfterLabel}
+                receiptLine={product ? priceReceipt({ product, subtotal, groupContactRequired }) : ''}
                 showDueAfter={!(step === 0 && !therapyCategoryScreen)}
                 displayStepIndex={progressDisplay.index}
                 displayTitle={progressDisplay.title}
@@ -6658,7 +6620,7 @@ export default function BookNow() {
         <div className="hidden">
           <section ref={stepShellRef} tabIndex={-1} className="min-w-0 scroll-mt-28 outline-none">
             {fastMode ? (
-              <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/52 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+              <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
                 <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">
                   {step === 1 ? '1 of 3 · Therapy' : step === 3 ? '2 of 3 · Address' : '3 of 3 · Patient'}
                 </p>
@@ -6670,7 +6632,7 @@ export default function BookNow() {
                 </div>
               </div>
             ) : compressedFlow && step >= 3 ? (
-              <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/52 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
+              <div className="mb-3 rounded-2xl border border-foreground/10 bg-background/34 px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
                 <p className="font-body text-xs font-black uppercase tracking-[0.18em] text-foreground/58">
                   {step === 3 ? '1 of 2 · Visit' : '2 of 2 · Patient'}
                 </p>
@@ -6702,7 +6664,7 @@ export default function BookNow() {
             )}
             <motion.div
               key={step}
-              className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] md:p-4"
+              className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/32 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl md:p-4"
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
               exit={{ opacity: 1 }}
@@ -6818,7 +6780,7 @@ export default function BookNow() {
                         type="button"
                         onClick={useCurrentLocation}
                         disabled={locationLoading}
-                        className="mb-2 flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/72 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] md:mb-2 md:min-h-[46px] md:rounded-xl md:px-3 md:text-xs"
+                        className="mb-2 flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/72 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl md:mb-2 md:min-h-[46px] md:rounded-xl md:px-3 md:text-xs"
                       >
                         <span className="flex items-center gap-2">
                           <Navigation className="h-4 w-4" strokeWidth={2.4} />
@@ -6866,7 +6828,7 @@ export default function BookNow() {
                               key={item.address}
                               type="button"
                               onClick={() => chooseAddressSuggestion(item)}
-                              className="relative flex min-h-[72px] items-center gap-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/60 px-3 text-left font-body text-base font-bold text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] transition-colors hover:border-foreground/24 hover:bg-background/70 hover:text-foreground md:min-h-[52px] md:rounded-xl md:text-sm"
+                              className="relative flex min-h-[72px] items-center gap-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/45 px-3 text-left font-body text-base font-bold text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors hover:border-foreground/24 hover:bg-background/58 hover:text-foreground md:min-h-[52px] md:rounded-xl md:text-sm"
                             >
                               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
                               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.05] text-foreground/82">
@@ -6885,7 +6847,7 @@ export default function BookNow() {
                       {!fastMode && !compressedFlow && <OptionalNotes value={state.notes} onChange={(value) => setValue('notes', value)} />}
                     </div>
                     {compressedFlow && !fastMode && (
-                      <div className="relative mt-3 flex min-h-[56px] items-center justify-between gap-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/58 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] md:mt-2">
+                      <div className="relative mt-3 flex min-h-[56px] items-center justify-between gap-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-2">
                         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.025))]" />
                         <span className="relative flex min-w-0 items-center gap-2 font-body text-sm font-black text-foreground">
                           <Calendar className="h-4 w-4" strokeWidth={2.35} />
@@ -6894,7 +6856,7 @@ export default function BookNow() {
                         <button
                           type="button"
                           onClick={() => chooseTimeIntent(state.timeIntent === 'choose' ? 'asap' : 'choose')}
-                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/56 px-3 font-body text-[13px] font-black uppercase tracking-[0.1em] text-foreground/72"
+                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[13px] font-black uppercase tracking-[0.1em] text-foreground/72"
                         >
                           {state.timeIntent === 'choose' ? 'ASAP' : 'Pick time'}
                         </button>
@@ -6907,7 +6869,7 @@ export default function BookNow() {
                         transition={{ duration: reduceMotion ? 0 : 0.22, ease: EASE }}
                         className="mt-3 grid gap-2 sm:grid-cols-2"
                       >
-                        <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+                        <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
                           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
                           <span className="relative block font-body text-sm font-black text-foreground/68">Date</span>
                           <select
@@ -6933,7 +6895,7 @@ export default function BookNow() {
                             ))}
                           </select>
                         </label>
-                        <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+                        <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
                           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
                           <span className="relative block font-body text-sm font-black text-foreground/68">Time</span>
                           <select
@@ -6951,7 +6913,7 @@ export default function BookNow() {
                         </label>
                       </motion.div>
                     )}
-		                    {!fastMode && !compressedFlow && <div className="relative mt-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/58 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] md:mt-2 md:rounded-[1.15rem] md:p-2.5">
+		                    {!fastMode && !compressedFlow && <div className="relative mt-3 overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/42 p-2.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:mt-2 md:rounded-[1.15rem] md:p-2.5">
 	                      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.13),transparent_38%),radial-gradient(circle_at_92%_95%,hsl(var(--foreground)/0.055),transparent_36%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.025))]" />
 		                      <div className="mb-2 flex items-center justify-between gap-3 md:mb-2">
 		                        <span className="relative flex items-center gap-2 font-body text-base font-black text-foreground md:text-base">
@@ -6969,7 +6931,7 @@ export default function BookNow() {
 	                              key={item.key}
 	                              type="button"
 	                              onClick={() => chooseTimeIntent(item.key)}
-		                              className={`relative flex min-h-[54px] items-center gap-2.5 overflow-hidden rounded-xl border px-2.5 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] transition-all active:scale-[0.98] md:min-h-[54px] md:rounded-xl md:px-2.5 ${
+		                              className={`relative flex min-h-[54px] items-center gap-2.5 overflow-hidden rounded-xl border px-2.5 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)] backdrop-blur-xl transition-all active:scale-[0.98] md:min-h-[54px] md:rounded-xl md:px-2.5 ${
 	                                active ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_18px_58px_hsl(var(--foreground)/0.14)]' : 'border-foreground/10 bg-background/36 text-foreground hover:border-foreground/22'
 	                              }`}
 	                            >
@@ -6999,7 +6961,7 @@ export default function BookNow() {
 	                          className="mt-3 grid gap-2"
 	                        >
                             <div className="grid gap-2 sm:grid-cols-2">
-	                          <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+	                          <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
 	                            <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
 	                            <span className="relative block font-body text-sm font-black text-foreground/68">Date</span>
 	                            <select
@@ -7025,7 +6987,7 @@ export default function BookNow() {
 	                              ))}
 	                            </select>
 	                          </label>
-	                          <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/58 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+	                          <label className="relative flex min-h-[66px] flex-col justify-center overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 px-3 py-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl">
 	                            <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.06] via-transparent to-transparent" />
 	                            <span className="relative block font-body text-sm font-black text-foreground/68">Time</span>
 	                            <select
@@ -7062,9 +7024,6 @@ export default function BookNow() {
                       subtotal={subtotal}
                       dueNow={dueNowAmount}
                       balanceDue={balanceDue}
-                      totalLabel={totalLabel}
-                      dueNowLabel={dueNowLabel}
-                      dueAfterLabel={dueAfterLabel}
                     />
                     </div>
                     <div className="order-first md:order-last">
@@ -7153,9 +7112,9 @@ export default function BookNow() {
       </main>
 
       {false && !fastMode && step > 0 && <div className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1 md:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/72 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)]">
+        <div className="mx-auto flex max-w-lg items-center gap-1.5 overflow-hidden rounded-[1.25rem] border border-foreground/14 bg-background/72 p-1 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-18px_76px_hsl(var(--foreground)/0.16)] backdrop-blur-2xl">
           {step > 0 && !(compressedFlow && step === 3) && (
-            <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[54px] rounded-full border border-foreground/14 bg-background/48 px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground/80 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
+            <button type="button" onClick={back} aria-label="Go back one booking step" className="min-h-[54px] rounded-full border border-foreground/14 bg-background/30 px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground/80 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]">
               Back
             </button>
           )}
@@ -7163,7 +7122,7 @@ export default function BookNow() {
             type="button"
             onClick={step < LAST_STEP ? next : submit}
             aria-label={step < LAST_STEP ? `Continue from ${STEPS[step]}` : `${primaryActionLabel()} and continue to checkout`}
-	            className="relative flex min-h-[54px] flex-1 items-center justify-between overflow-hidden rounded-full border border-foreground/34 bg-foreground/[0.18] px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985]"
+	            className="relative flex min-h-[54px] flex-1 items-center justify-between overflow-hidden rounded-full border border-foreground/34 bg-foreground/[0.18] px-4 font-body text-sm font-black uppercase tracking-[0.06em] text-foreground shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] backdrop-blur-2xl transition-transform active:scale-[0.985]"
           >
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-foreground/[0.14] to-foreground/[0.04]" />
             {checkoutLoading && (

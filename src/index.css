@@ -946,15 +946,15 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 .avalon-static-backdrop__side {
-  background: linear-gradient(90deg, hsl(var(--background) / 0.55) 0%, hsl(var(--background) / 0.3) 34%, hsl(var(--background) / 0.06) 64%, transparent 100%);
+  background: linear-gradient(90deg, hsl(var(--background) / 0.8) 0%, hsl(var(--background) / 0.5) 34%, hsl(var(--background) / 0.12) 64%, transparent 100%);
 }
 
 .avalon-static-backdrop__bottom {
-  background: linear-gradient(0deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.6) 28%, hsl(var(--background) / 0.06) 72%, transparent 100%);
+  background: linear-gradient(0deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.82) 28%, hsl(var(--background) / 0.10) 72%, transparent 100%);
 }
 
 .avalon-static-backdrop__top {
-  background: linear-gradient(180deg, hsl(var(--background) / 0.3), hsl(var(--background) / 0.1), transparent);
+  background: linear-gradient(180deg, hsl(var(--background) / 0.46), hsl(var(--background) / 0.18), transparent);
 }
 
 .daytime .avalon-static-backdrop,
