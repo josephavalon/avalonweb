@@ -1,21 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Check, MapPin, Ticket, Users } from 'lucide-react';
-import AvalonMark from '@/components/AvalonMark';
-import { motion } from '@/components/ui/PageTransitionMotion';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import PremiumButton from '@/components/ui/PremiumButton';
+import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { fetchEvent } from '@/lib/eventsApi';
-import { eventStateChip, backOnFloorBadge, formatPriceCents, MONO_STACK } from '@/lib/eventStatus';
+import { formatPriceCents } from '@/lib/eventStatus';
 import { useSeo } from '@/lib/seo';
-
-const EASE = [0.16, 1, 0.3, 1];
-const FALLBACK_COVER = '/backgrounds/iv-vitamins-hero.webp';
 
 function formatEventDate(iso) {
   if (!iso) return 'Date TBA';
-  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function formatEventTime(startIso, endIso) {
@@ -24,105 +19,6 @@ function formatEventTime(startIso, endIso) {
   const start = new Date(startIso).toLocaleTimeString('en-US', opts);
   const end = endIso ? ` – ${new Date(endIso).toLocaleTimeString('en-US', opts)}` : '';
   return `${start}${end}`;
-}
-
-function heroImages(event) {
-  const gallery = (event.assets || [])
-    .map((a) => a.renditions?.hero_1920 || a.renditions?.card_640 || a.storage_path)
-    .filter(Boolean);
-  return gallery.length ? gallery : [FALLBACK_COVER];
-}
-
-function Gallery({ event }) {
-  const gallery = heroImages(event);
-  return (
-    <div className="grid gap-2 md:grid-cols-[1.35fr_0.65fr]">
-      <div className="relative min-h-[420px] overflow-hidden rounded-[1.35rem] border border-white/12 bg-background md:min-h-[620px]">
-        <img src={gallery[0]} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        {/* The scrim makes any organizer photo on-brand (DESIGN.md). */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/74 via-black/16 to-black/8" />
-        <div className="absolute bottom-5 left-5 right-5">
-          <p className="text-xs text-white/60" style={{ fontFamily: MONO_STACK, letterSpacing: '0.1em' }}>
-            {formatEventDate(event.startsAt)} · {(event.venue || '').toUpperCase()}
-          </p>
-          <h1 className="mt-3 max-w-4xl font-heading text-[4.8rem] uppercase leading-[0.82] text-white md:text-[8.6rem]">
-            {event.name}
-          </h1>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-1">
-        {gallery.slice(1, 3).map((image) => (
-          <div key={image} className="relative min-h-[180px] overflow-hidden rounded-[1.25rem] border border-white/12 bg-background md:min-h-0">
-            <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-black/18" />
-          </div>
-        ))}
-        {gallery.length === 1 ? (
-          <div className="relative hidden min-h-[180px] overflow-hidden rounded-[1.25rem] border border-white/12 md:block" style={{ background: 'rgba(13,13,13,0.94)' }} />
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function DetailRow({ icon: Icon, label, value }) {
-  if (!value) return null;
-  return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-foreground/[0.045]">
-        <Icon className="h-4 w-4 text-foreground/62" strokeWidth={1.8} />
-      </span>
-      <span>
-        <span className="block font-body text-[11px] font-semibold uppercase text-foreground/42">{label}</span>
-        <span className="mt-1 block font-body text-sm font-semibold text-foreground">{value}</span>
-      </span>
-    </div>
-  );
-}
-
-/* Clinicians as headliners (DESIGN.md signature move #3): names LOUD, the
-   credential in mono like a catalog number. Rendered only with real data —
-   a stock version of this module is worse than nothing. */
-function Headliners({ clinicalLead, services }) {
-  if (!clinicalLead?.name) return null;
-  return (
-    <section className="rounded-[1.35rem] border border-white/12 p-5 md:p-6" style={{ background: 'rgba(13,13,13,0.94)' }}>
-      <p className="text-[10px] uppercase text-foreground/45" style={{ fontFamily: MONO_STACK, letterSpacing: '0.16em' }}>
-        Your clinical team — the headliners
-      </p>
-      <h2 className="mt-3 font-heading text-4xl uppercase leading-none text-foreground md:text-5xl">
-        {clinicalLead.name}{clinicalLead.role ? `, ${clinicalLead.role}` : ''}
-      </h2>
-      <p className="mt-3 text-[11px] text-foreground/55" style={{ fontFamily: MONO_STACK, letterSpacing: '0.08em' }}>
-        {[clinicalLead.role && `${clinicalLead.role} · SUPERVISING`, ...(services || []).map((s) => `${s.name.toUpperCase()}${s.backOnFloorMinutes || s.back_on_floor_minutes ? ` · ${backOnFloorBadge(s.backOnFloorMinutes ?? s.back_on_floor_minutes)}` : ''}`)]
-          .filter(Boolean)
-          .join('   ·   ')}
-      </p>
-    </section>
-  );
-}
-
-function DurationPills({ services }) {
-  const pills = (services || [])
-    .map((s) => {
-      const badge = backOnFloorBadge(s.backOnFloorMinutes ?? s.back_on_floor_minutes);
-      return badge ? `${s.name.toUpperCase()} · ${badge}` : null;
-    })
-    .filter(Boolean);
-  if (!pills.length) return null;
-  return (
-    <div className="flex flex-wrap gap-2">
-      {pills.map((label) => (
-        <span
-          key={label}
-          className="inline-flex min-h-8 items-center rounded-full border border-white/14 px-3 text-[11px] text-foreground/70"
-          style={{ fontFamily: MONO_STACK, letterSpacing: '0.06em' }}
-        >
-          {label}
-        </span>
-      ))}
-    </div>
-  );
 }
 
 function blocksOf(event) {
@@ -136,75 +32,53 @@ function blocksOf(event) {
   };
 }
 
-function ReserveCard({ event }) {
-  // Feature the accessible clinical tier ('the one most people get'), never
-  // the experience add-on and never the priciest.
-  const openTier = (event.tiers || []).find((t) => !t.soldOut && !t.applicationGated && !t.experienceOnly)
-    || (event.tiers || []).find((t) => !t.soldOut && !t.applicationGated)
-    || event.tiers?.[0];
-  const applicationOnly = Boolean(openTier?.applicationGated);
-  const closed = event.status === 'closed';
-  const priceFrom = (event.tiers || []).reduce(
-    (min, t) => (t.priceCents > 0 && (min == null || t.priceCents < min) ? t.priceCents : min),
-    null,
-  );
-  const chip = eventStateChip(event.status);
-  const cta = closed ? 'See upcoming events' : applicationOnly ? 'Request to join' : 'Reserve';
-  const ctaTarget = closed ? '/events' : `/presale/${event.slug}`;
+/* Organizer photos only — no stock fallback. An empty gallery renders nothing. */
+function uploadedPhotos(event) {
+  return (event.assets || [])
+    .map((a) => a.renditions?.hero_1920 || a.renditions?.card_640 || a.storage_path)
+    .filter(Boolean);
+}
 
+/* Quiet fact row, BuilderRow closed-state style: title left, value right. */
+function InfoRow({ title, hint, value }) {
   return (
-    <aside className="md:sticky md:top-28">
-      <div className="rounded-[1.35rem] border border-white/12 p-4 md:p-5" style={{ background: 'rgba(13,13,13,0.94)' }}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-body text-[11px] font-semibold uppercase text-foreground/42">Reserve</p>
-            {/* Price is a number, never a table (DESIGN.md signature move #4). */}
-            <p className="mt-2 font-heading text-5xl uppercase leading-none text-foreground">
-              {priceFrom != null ? `From ${formatPriceCents(priceFrom)}` : applicationOnly ? 'Apply' : 'Free'}
-            </p>
-          </div>
-          <span
-            className="rounded-full border border-white/14 px-3 py-2 text-[11px]"
-            style={{ fontFamily: MONO_STACK, color: chip.color, letterSpacing: '0.06em' }}
-          >
-            {chip.label}
-          </span>
-        </div>
-
-        <div className="mt-5 space-y-3">
-          <DetailRow icon={Calendar} label="When" value={`${formatEventDate(event.startsAt)} · ${formatEventTime(event.startsAt, event.endsAt)}`} />
-          <DetailRow icon={MapPin} label="Where" value={`${event.venue || 'San Francisco'} — exact address after you reserve`} />
-          <DetailRow icon={Users} label="Going" value={event.attendeeCount ? `${event.attendeeCount} confirmed` : 'Be the first'} />
-        </div>
-
-        {openTier ? (
-          <div className="mt-5 rounded-[1.2rem] border border-white/12 bg-foreground/[0.045] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <p className="font-body text-sm font-semibold text-foreground">{openTier.name}</p>
-              <p className="text-sm text-foreground" style={{ fontFamily: MONO_STACK }}>
-                {openTier.priceCents > 0 ? formatPriceCents(openTier.priceCents) : 'FREE'}
-              </p>
-            </div>
-            {openTier.description ? (
-              <p className="mt-2 font-body text-xs leading-relaxed text-foreground/56">{openTier.description}</p>
-            ) : null}
-          </div>
+    <div className="av-treatment-card flex items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border px-4 py-4 md:px-5">
+      <span className="flex min-w-0 flex-col">
+        <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
+        {hint ? (
+          <span className="mt-1 font-body text-[12px] font-semibold text-foreground/45 md:text-[13px]">{hint}</span>
         ) : null}
+      </span>
+      <span className="shrink-0 text-right font-body text-[13px] font-semibold text-foreground/64 md:text-sm">{value}</span>
+    </div>
+  );
+}
 
-        <PremiumButton
-          as={Link}
-          to={ctaTarget}
-          wrapperClassName="mt-5 w-full"
-          className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-body text-xs font-bold uppercase text-background transition hover:bg-foreground/90"
-        >
-          {cta} <Ticket className="h-4 w-4" strokeWidth={2} />
-        </PremiumButton>
-
-        <p className="mt-4 text-center font-body text-[11px] leading-relaxed text-foreground/50">
-          First time? A 90-second health check from our clinical team clears you before the event.
-        </p>
-      </div>
-    </aside>
+/* Expandable row, BuilderRow style: chevron, SmoothDisclosure body. */
+function DisclosureRow({ title, items }) {
+  const [open, setOpen] = useState(false);
+  if (!items.length) return null;
+  return (
+    <div className={`av-treatment-card relative overflow-hidden rounded-[1.05rem] border transition-colors duration-base ease-editorial ${open ? 'is-open' : ''}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left md:px-5"
+      >
+        <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{title}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-foreground/70 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
+      </button>
+      <SmoothDisclosure open={open}>
+        <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3.5 md:px-5">
+          {items.map((item) => (
+            <p key={item} className="border-t border-foreground/[0.08] py-2.5 font-body text-[13px] font-semibold leading-relaxed text-foreground/60 first:border-t-0 first:pt-0 last:pb-0">
+              {item}
+            </p>
+          ))}
+        </div>
+      </SmoothDisclosure>
+    </div>
   );
 }
 
@@ -231,10 +105,12 @@ export default function EventPage() {
 
   if (loading) {
     return (
-      <div className="app-shell relative isolate min-h-screen bg-background text-foreground">
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 pb-20 pt-32 md:px-8">
-          <div className="min-h-[420px] animate-pulse rounded-[1.35rem] border border-white/12 bg-white/[0.04] md:min-h-[620px]" />
+      <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+        <header><Navbar /></header>
+        <main className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 pb-24 pt-[9rem]">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-[76px] animate-pulse rounded-[1.05rem] border border-foreground/10 bg-foreground/[0.04]" />
+          ))}
         </main>
         <Footer />
       </div>
@@ -243,8 +119,8 @@ export default function EventPage() {
 
   if (!event) {
     return (
-      <div className="av-page-surface min-h-screen text-foreground">
-        <Navbar />
+      <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+        <header><Navbar /></header>
         <main className="mx-auto flex min-h-[70svh] max-w-xl flex-col items-center justify-center px-5 text-center">
           <h1 className="font-heading text-6xl uppercase leading-none">Event not found</h1>
           <Link to="/events" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground/16 px-5 font-body text-xs font-semibold uppercase text-foreground/70">
@@ -257,95 +133,81 @@ export default function EventPage() {
   }
 
   const blocks = blocksOf(event);
-  const cover = heroImages(event)[0];
+  const photos = uploadedPhotos(event);
+  const tiers = event.tiers || [];
+  const openTier = tiers.find((t) => !t.soldOut && !t.applicationGated) || tiers[0];
+  const applicationOnly = Boolean(openTier?.applicationGated);
+  const closed = event.status === 'closed' || event.status === 'ended';
+  const priceFrom = tiers.reduce(
+    (min, t) => (t.priceCents > 0 && (min == null || t.priceCents < min) ? t.priceCents : min),
+    null,
+  );
+  const ctaLabel = closed
+    ? 'See upcoming events'
+    : applicationOnly
+      ? 'Request to join'
+      : priceFrom != null
+        ? `Reserve — from ${formatPriceCents(priceFrom)}`
+        : 'Reserve';
+  const ctaTarget = closed ? '/events' : `/presale/${event.slug}`;
 
   return (
-    <div className="app-shell relative isolate min-h-screen bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <img src={cover} alt="" className="h-full w-full object-cover opacity-18" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/86 via-black/72 to-black" />
-      </div>
-      <Navbar />
+    <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+      <header><Navbar /></header>
 
-      <main className="px-4 pb-20 pt-28 md:px-8 md:pt-36">
-        <div className="mx-auto max-w-7xl">
-          <Link to="/events" className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-foreground/12 px-4 font-body text-[11px] font-semibold uppercase text-foreground/58 hover:text-foreground" style={{ background: 'rgba(13,13,13,0.7)' }}>
-            <ArrowLeft className="h-3.5 w-3.5" /> Events
-          </Link>
-
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE }}>
-            <Gallery event={event} />
-          </motion.div>
-
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
-            <div className="space-y-8">
-              <section className="grid gap-4 rounded-[1.35rem] border border-white/12 p-5 md:grid-cols-[0.65fr_1.35fr] md:p-6" style={{ background: 'rgba(13,13,13,0.94)' }}>
-                <div>
-                  <p className="font-body text-xs font-semibold uppercase text-foreground/42">Hosted by</p>
-                  <div className="mt-4 flex items-center gap-4">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/12 bg-foreground/[0.05]">
-                      <AvalonMark className="h-[18px] w-[12px] text-foreground" />
-                    </span>
-                    <div>
-                      <p className="font-heading text-3xl uppercase leading-none text-foreground">{event.hostName || 'Avalon Vitality'}</p>
-                      <p className="mt-1 text-[10px] uppercase text-foreground/48" style={{ fontFamily: MONO_STACK, letterSpacing: '0.14em' }}>We deliver care</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col justify-center gap-3">
-                  <DurationPills services={event.services} />
-                  <DetailRow icon={MapPin} label="Neighborhood" value={event.venue} />
-                </div>
-              </section>
-
-              <Headliners clinicalLead={event.clinicalLead} services={event.services} />
-
-              {blocks.vibe || blocks.description ? (
-                <section>
-                  <p className="font-body text-xs font-semibold uppercase text-foreground/42">The room</p>
-                  {blocks.vibe ? (
-                    <h2 className="mt-3 max-w-3xl font-heading text-6xl uppercase leading-[0.86] text-foreground md:text-8xl">{blocks.vibe}</h2>
-                  ) : null}
-                  {blocks.description ? (
-                    <p className="mt-5 max-w-3xl font-body text-lg leading-relaxed text-foreground/66">{blocks.description}</p>
-                  ) : null}
-                </section>
-              ) : null}
-
-              {blocks.included.length ? (
-                <section className="space-y-4">
-                  <div>
-                    <p className="font-body text-xs font-semibold uppercase text-foreground/42">What's included</p>
-                    <h2 className="mt-2 font-heading text-5xl uppercase leading-none text-foreground md:text-6xl">Before, during, after.</h2>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {blocks.included.map((item) => (
-                      <div key={item} className="flex items-start gap-3 rounded-[1.1rem] border border-white/12 bg-foreground/[0.035] p-4">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-foreground/70" strokeWidth={2} />
-                        <p className="font-body text-sm leading-relaxed text-foreground/68">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-
-              {blocks.goodToKnow.length ? (
-                <section className="rounded-[1.35rem] border border-white/12 bg-foreground/[0.045] p-5 md:p-6">
-                  <p className="font-body text-xs font-semibold uppercase text-foreground/42">Good to know</p>
-                  <div className="mt-4 grid gap-3">
-                    {blocks.goodToKnow.map((item) => (
-                      <p key={item} className="border-t border-foreground/[0.08] pt-3 font-body text-sm leading-relaxed text-foreground/64 first:border-t-0 first:pt-0">
-                        {item}
-                      </p>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-            </div>
-
-            <ReserveCard event={event} />
-          </div>
+      <main className="mx-auto flex w-full max-w-2xl flex-col px-4 pb-24 pt-[5.25rem] md:pt-[5.75rem]">
+        <div className="mb-8 pt-8 text-center md:mb-10 md:pt-12">
+          <p className="font-body text-[12px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+            {formatEventDate(event.startsAt)} · {event.venue || 'San Francisco'}
+          </p>
+          <h1 className="mt-3 font-heading text-[3rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[4.4rem]">
+            {event.name}
+          </h1>
+          {blocks.description ? (
+            <p className="mx-auto mt-4 max-w-xl font-body text-[15px] font-semibold leading-relaxed text-foreground/60">
+              {blocks.description}
+            </p>
+          ) : null}
         </div>
+
+        {photos.length > 0 ? (
+          <div className="relative mb-3 h-[240px] overflow-hidden rounded-[1.05rem] border border-foreground/10 md:h-[320px]">
+            <img src={photos[0]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-3">
+          <InfoRow
+            title="When"
+            value={`${formatEventDate(event.startsAt)} · ${formatEventTime(event.startsAt, event.endsAt)}`}
+          />
+          <InfoRow
+            title="Where"
+            hint="Exact address after you reserve"
+            value={event.venue || 'San Francisco'}
+          />
+          {tiers.map((tier) => (
+            <InfoRow
+              key={tier.id || tier.name}
+              title={tier.name}
+              hint={tier.description}
+              value={tier.soldOut ? 'Sold out' : tier.applicationGated ? 'By application' : tier.priceCents > 0 ? formatPriceCents(tier.priceCents) : 'Free'}
+            />
+          ))}
+          <DisclosureRow title="What's included" items={blocks.included} />
+          <DisclosureRow title="Good to know" items={blocks.goodToKnow} />
+        </div>
+
+        <Link
+          to={ctaTarget}
+          className="mt-4 flex min-h-[56px] w-full items-center justify-center rounded-full bg-white px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-black transition-transform hover:bg-white/95 active:scale-[0.99]"
+        >
+          {ctaLabel}
+        </Link>
+        <p className="mt-2 text-center font-body text-[12px] font-semibold text-foreground/50">
+          First time? A 90-second health check from our clinical team clears you before the event.
+        </p>
       </main>
 
       <Footer />
