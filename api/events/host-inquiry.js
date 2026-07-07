@@ -27,24 +27,32 @@ export default async function handler(req, res) {
     if (!EMAIL_RE.test(email)) {
       return res.status(400).json({ ok: false, error: 'A valid email is required.' });
     }
+    const services = Array.isArray(body.services)
+      ? body.services.slice(0, 12).map((s) => clean(s, 40)).filter(Boolean)
+      : [];
     const inquiry = {
       where: clean(body.where, 160) || 'Not specified',
       date: clean(body.date, 40) || 'Flexible',
+      eventType: clean(body.eventType, 40),
+      guestRange: clean(body.guestRange, 20),
       guests: count(body.guests, 5000),
       ivDrips: count(body.ivDrips, 500),
       shots: count(body.shots, 2000),
+      services,
       email,
     };
 
     const lines = [
-      'New event inquiry from the /events builder:',
+      'New event inquiry from the /events planner:',
       '',
       `Where:  ${inquiry.where}`,
       `When:   ${inquiry.date}`,
-      `Guests: ${inquiry.guests || 'Not specified'}`,
-      `IV drips: ${inquiry.ivDrips || 0} · Recovery shots: ${inquiry.shots || 0}`,
+      `Event type: ${inquiry.eventType || 'Not specified'}`,
+      `Guests: ${inquiry.guestRange || inquiry.guests || 'Not specified'}`,
+      `Services: ${inquiry.services.join(', ') || 'Not specified'}`,
+      inquiry.ivDrips || inquiry.shots ? `IV drips: ${inquiry.ivDrips} · Recovery shots: ${inquiry.shots}` : null,
       `Contact: ${inquiry.email}`,
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
