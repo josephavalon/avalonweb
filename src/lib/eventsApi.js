@@ -36,13 +36,15 @@ export async function fetchEvent(slug) {
 
 /**
  * Reserve (free RSVP or paid). items: [{ tierId, attendees: [{name, email}] }].
- * Paid → { url } (Stripe Checkout). Free → { free: true, orderId, visitIds }.
+ * Paid (inline) → { clientSecret, paymentIntentId, orderId, returnUrl }.
+ * Paid (hosted) → { url, orderId }.
+ * Free → { free: true, orderId, visitIds }.
  */
-export async function reserveEvent({ slug, items, buyer, member = false }) {
+export async function reserveEvent({ slug, items, buyer, member = false, mode }) {
   const res = await fetch('/api/events/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ slug, items, buyer, member }),
+    body: JSON.stringify({ slug, items, buyer, member, mode }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok || body.ok === false) {

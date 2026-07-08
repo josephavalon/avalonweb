@@ -9,7 +9,6 @@ const SectionInterstitial = lazy(() => import('../components/landing/SectionInte
 const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
 const WellnessQuiz = lazy(() => import('../components/landing/WellnessQuiz'));
 const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
-const CTABanner = lazy(() => import('../components/landing/CTABanner'));
 const MembershipSection = lazy(() => import('../components/landing/MembershipSection'));
 const EventsPosterSection = lazy(() => import('../components/landing/EventsPosterSection'));
 const Footer = lazy(() => import('../components/landing/Footer'));
@@ -51,7 +50,6 @@ export default function Home() {
             />
             <MembershipSection />
             <EventsPosterSection />
-            <CTABanner />
           </Suspense>
         </div>
       </main>

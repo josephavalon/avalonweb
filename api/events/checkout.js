@@ -57,7 +57,8 @@ export function validateEventCheckoutRequest(body = {}) {
     fail('A valid buyer email is required.', 'buyer_email_invalid');
   }
 
-  return { slug, items, buyer: { email: buyerEmail }, isMember: body.member === true };
+  const inline = body.mode === 'inline';
+  return { slug, items, buyer: { email: buyerEmail }, isMember: body.member === true, inline };
 }
 
 /**
@@ -105,7 +106,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { slug, items, buyer, isMember } = validateEventCheckoutRequest(req.body || {});
+    const { slug, items, buyer, isMember, inline } = validateEventCheckoutRequest(req.body || {});
 
     const db = await getSupabaseServiceClient();
     if (!db) {
@@ -152,6 +153,46 @@ export default async function handler(req, res) {
 
     const baseUrl = publicBaseUrl(req);
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    // Inline path: skip hosted Checkout and return a PaymentIntent client_secret
+    // so the frontend can mount <Elements> + <PaymentElement> and confirm card
+    // details without leaving the page. Same metadata + order_id so the existing
+    // webhook (kind: 'event') fulfills reservations without changes.
+    if (inline) {
+      const orderLines = result.lines || [];
+      const amountCents = orderLines.reduce((sum, line) => sum + (line.qty * line.unitCents), 0);
+      if (!Number.isFinite(amountCents) || amountCents <= 0) {
+        return res.status(400).json({ error: 'Order total is invalid.', code: 'invalid_amount' });
+      }
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountCents,
+        currency: 'usd',
+        payment_method_types: ['card'],
+        receipt_email: buyer.email,
+        description: `Avalon Event · ${container.name || container.slug}`,
+        metadata: {
+          kind: 'event',
+          event_order_id: result.order.id,
+          container_slug: container.slug,
+          buyer_email: buyer.email,
+        },
+      });
+      const { error: piLinkError } = await db
+        .from('event_orders')
+        .update({ stripe_payment_intent_id: paymentIntent.id, updated_at: new Date().toISOString() })
+        .eq('id', result.order.id);
+      if (piLinkError) {
+        console.warn('[events/checkout] could not link Stripe PI', safeLogContext(piLinkError, 'event_pi_link_failed'));
+      }
+      return res.status(200).json({
+        ok: true,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        orderId: result.order.id,
+        returnUrl: `${baseUrl}/trips/pi_${paymentIntent.id}?order=${result.order.id}`,
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],

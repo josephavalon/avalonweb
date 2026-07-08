@@ -60,7 +60,7 @@ function EventPlanner() {
   const [eventType, setEventType] = useState('');
   const [guestRange, setGuestRange] = useState('');
   const [services, setServices] = useState([]);
-  const [active, setActive] = useState('where');   // one editor open at a time — the tiles ARE the controls
+  const [active, setActive] = useState(null);   // one editor open at a time — the tiles ARE the controls; nothing open on arrival
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -103,7 +103,7 @@ function EventPlanner() {
 
   if (sent) {
     return (
-      <div className="av-treatment-card rounded-[1.35rem] border px-5 py-10 text-center">
+      <div className="av-treatment-card rounded-[1.55rem] border px-5 py-10 text-center">
         <p className="font-heading text-3xl uppercase leading-none text-foreground">Request received</p>
         <p className="mx-auto mt-3 max-w-sm font-body text-[14px] font-semibold text-foreground/55">
           Your quote lands at {email.trim()} within 24 hours. We pull up with whatever, whoever, wherever.
@@ -236,16 +236,16 @@ function EventPlanner() {
     <div>
       {/* Desktop: the tiles ARE the controls — one editor panel opens below */}
       <div className="hidden md:block">
-        <div className="av-treatment-card grid rounded-[1.35rem] border md:grid-cols-5">
+        <div className="av-treatment-card grid rounded-[1.55rem] border md:grid-cols-5">
           {summary.map((tile, i) => tileButton(tile, i))}
         </div>
         {active && panels[active] ? (
-          <div className="av-treatment-card mt-3 rounded-[1.35rem] border p-5">{panels[active]}</div>
+          <div className="av-treatment-card mt-3 rounded-[1.55rem] border p-5">{panels[active]}</div>
         ) : null}
       </div>
 
       {/* Mobile: accordion — each row expands its editor inline */}
-      <div className="av-treatment-card overflow-hidden rounded-[1.35rem] border md:hidden">
+      <div className="av-treatment-card overflow-hidden rounded-[1.55rem] border md:hidden">
         {summary.map((tile, i) => (
           <div key={tile.key}>
             {tileButton(tile, i, true)}

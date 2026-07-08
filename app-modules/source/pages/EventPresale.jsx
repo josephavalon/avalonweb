@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import InlineStripeCheckout from '@/components/checkout/InlineStripeCheckout';
 import { fetchEvent, reserveEvent } from '@/lib/eventsApi';
 import { formatPriceCents } from '@/lib/eventStatus';
 import { useSeo } from '@/lib/seo';
@@ -143,6 +144,10 @@ function EventPresaleFlow({ event }) {
   const [buyerEmail, setBuyerEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  // Inline-checkout state: set from /api/events/checkout `mode: 'inline'`
+  // response. When present, we render <InlineStripeCheckout /> in place of
+  // the reserve button so the user pays without leaving the page.
+  const [checkout, setCheckout] = useState(null); // { clientSecret, returnUrl }
 
   const tier = useMemo(
     () => event.tiers.find((t) => t.id === tierId) || selectableTiers[0],
@@ -204,9 +209,15 @@ function EventPresaleFlow({ event }) {
         slug: event.slug,
         items: buildItems({ tier, experienceTier, party: namedParty }),
         buyer: { email },
+        mode: 'inline',
       });
+      if (result.clientSecret) {
+        // Inline: mount Stripe Elements below; Stripe redirects to returnUrl after confirm.
+        setCheckout({ clientSecret: result.clientSecret, returnUrl: result.returnUrl });
+        return;
+      }
       if (result.url) {
-        window.location.assign(result.url);       // Stripe Checkout (Apple Pay first)
+        window.location.assign(result.url);       // Legacy hosted Checkout fallback.
         return;
       }
       navigate(`/trips/${result.orderId}`);        // free RSVP → straight to the trip page
@@ -331,18 +342,29 @@ function EventPresaleFlow({ event }) {
           <p role="alert" className="mt-4 text-center font-body text-sm font-semibold text-foreground/80">{error}</p>
         ) : null}
 
-        <button
-          type="button"
-          onClick={confirmReserve}
-          disabled={submitting}
-          className="mt-4 flex min-h-[56px] w-full items-center justify-center rounded-full bg-white px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-black transition-transform hover:bg-white/95 active:scale-[0.99] disabled:opacity-60"
-        >
-          {ctaLabel}
-        </button>
+        {checkout ? (
+          <div className="mt-5 rounded-[1.35rem] border border-foreground/12 bg-background/40 p-4 md:p-5">
+            <p className="mb-3 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">Card details</p>
+            <InlineStripeCheckout
+              clientSecret={checkout.clientSecret}
+              returnUrl={checkout.returnUrl}
+              submitLabel={totalCents > 0 ? `Pay ${formatPriceCents(totalCents)}` : 'Confirm reservation'}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={confirmReserve}
+            disabled={submitting}
+            className="mt-4 flex min-h-[56px] w-full items-center justify-center rounded-full bg-white px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-black transition-transform hover:bg-white/95 active:scale-[0.99] disabled:opacity-60"
+          >
+            {ctaLabel}
+          </button>
+        )}
         <p className="mt-2 text-center font-body text-[12px] font-semibold text-foreground/50">
           {applicationOnly
             ? "We'll reply within 24 hours."
-            : 'Secure Stripe checkout · Apple Pay. Seat held 15 minutes. Full refund 7+ days out.'}
+            : 'Secure Stripe checkout · Seat held 15 minutes. Full refund 7+ days out.'}
         </p>
         <p className="mt-1 text-center font-body text-[12px] font-semibold text-foreground/50">
           First time? A 90-second health check clears you before the event. Your health details never live on this page.

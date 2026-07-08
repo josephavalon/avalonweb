@@ -18,6 +18,33 @@ export function isEventSession(session) {
   return md.kind === 'event' && Boolean(md.event_order_id);
 }
 
+/** Pure: does this PaymentIntent belong to the events platform? Used for
+ * the inline-checkout flow where fulfillment fires on payment_intent.succeeded
+ * (no Checkout session is created).
+ */
+export function isEventPaymentIntent(paymentIntent) {
+  const md = paymentIntent?.metadata || {};
+  return md.kind === 'event' && Boolean(md.event_order_id);
+}
+
+/** payment_intent.succeeded (inline checkout) → same fulfillment as
+ * checkout.session.completed, without a session id. */
+export async function handleEventPaymentIntentSucceeded(db, paymentIntent) {
+  if (!db) return { action: 'event_fulfillment_skipped_db_not_configured', matched: false };
+  const orderId = paymentIntent.metadata.event_order_id;
+  const { order, visits, alreadyFulfilled } = await confirmEventOrder(db, {
+    orderId,
+    stripeSessionId: null,
+    paymentIntent: paymentIntent.id,
+  });
+  return {
+    action: alreadyFulfilled ? 'event_order_already_fulfilled' : 'event_order_confirmed_inline',
+    matched: true,
+    orderId: order.id,
+    visitCount: (visits || []).length,
+  };
+}
+
 /** checkout.session.completed → idempotent fulfillment via events-core. */
 export async function handleEventCheckoutCompleted(db, session) {
   if (!db) return { action: 'event_fulfillment_skipped_db_not_configured', matched: false };

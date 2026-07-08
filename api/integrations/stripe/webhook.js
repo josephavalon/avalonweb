@@ -38,7 +38,9 @@ import {
 } from '../../_checkout-fulfillment.js';
 import {
   isEventSession,
+  isEventPaymentIntent,
   handleEventCheckoutCompleted,
+  handleEventPaymentIntentSucceeded,
   handleEventSessionExpired,
   handleEventChargeRefunded,
 } from '../../_lib/events-webhook.js';
@@ -1546,13 +1548,21 @@ export default async function handler(req, res) {
           : await withTimeout(handleCheckoutCompleted(stripe, db, completedSession), 'stripe checkout fulfillment');
         break;
       }
-      case 'payment_intent.succeeded':
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object;
         if (!db) {
           result = { action: 'balance_tracking_skipped_db_not_configured' };
           break;
         }
-        result = await handleBalancePaid(db, event.data.object);
+        // Inline event-checkout PaymentIntents (metadata.kind === 'event')
+        // fulfill through events-core, same as the hosted-session path.
+        if (isEventPaymentIntent(pi)) {
+          result = await withTimeout(handleEventPaymentIntentSucceeded(db, pi), 'event PI fulfillment');
+          break;
+        }
+        result = await handleBalancePaid(db, pi);
         break;
+      }
       case 'invoice.paid':
         result = await withTimeout(
           handleInvoicePaid(stripe, db, event.data.object),
