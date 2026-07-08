@@ -46,7 +46,7 @@ export default function Home() {
             <TreatmentsTeaser />
             <SectionInterstitial
               title="Checkout in under 60 seconds"
-              body="Book once or start a plan."
+              body="Book once or start a monthly plan."
             />
             <MembershipSection />
             <EventsPosterSection />
