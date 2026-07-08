@@ -1,13 +1,10 @@
 /**
  * POST /api/manual-booking
  *
- * Creates a no-Stripe/manual-billing booking only after both live vendor
- * handoffs succeed:
- * - Attio person upsert
- * - Acuity appointment creation
+ * Creates a no-Stripe/manual-billing booking. Acuity is the blocking vendor;
+ * HubSpot CRM sync is best-effort (non-blocking) alongside.
  */
 
-import { upsertAttioPerson } from './_attio.js';
 import { upsertHubspotContact } from './_hubspot.js';
 import { createSchedulingAppointmentWithFallback } from './_checkout-fulfillment.js';
 import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
@@ -50,16 +47,12 @@ function validatePayload({ contact = {}, appointment = {}, items = [] } = {}) {
   return missing;
 }
 
-function attioIdFrom(response) {
-  return response?.data?.id || response?.id || response?.record_id || null;
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (blockLiveVendorAction(req, res, 'Manual Acuity and Attio booking')) return;
+  if (blockLiveVendorAction(req, res, 'Manual Acuity booking')) return;
 
   // Dispatches a real nurse to a real address + creates a real CRM contact.
   // Must be an authenticated operator, never anonymous.
@@ -111,26 +104,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    let attioResponse;
-    try {
-      attioResponse = await upsertAttioPerson({
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        email: contact.email,
-        phone: contact.phone,
-        source: 'Avalon VIP Manual Booking',
-        lifecycleStage: 'Booked',
-        service: primaryService || items[0]?.label || 'Avalon Visit',
-      });
-    } catch (err) {
-      throw Object.assign(err, { vendorStage: 'attio_person_upsert' });
-    }
-
-    const attioPersonId = attioIdFrom(attioResponse);
-
-    // HubSpot sync — non-blocking, no clinical detail. Manual bookings still
-    // gate acuity on the Attio call succeeding (or being kill-switched); HubSpot
-    // failures shouldn't block the booking so we swallow them.
+    // HubSpot CRM sync — non-blocking. CRM failure never gates the booking.
     let hubspotContactId = null;
     try {
       const hubspotResponse = await upsertHubspotContact({
@@ -157,7 +131,7 @@ export default async function handler(req, res) {
         req,
       });
     } catch (err) {
-      throw Object.assign(err, { vendorStage: 'acuity_appointment_create', attioPersonId });
+      throw Object.assign(err, { vendorStage: 'acuity_appointment_create', hubspotContactId });
     }
 
     if (!acuityAppointment?.id) {
@@ -166,15 +140,14 @@ export default async function handler(req, res) {
         error: 'Acuity did not return an appointment ID.',
         code: 'acuity_appointment_missing_id',
         vendorStage: 'acuity_appointment_create',
-        attioPersonId,
+        hubspotContactId,
       });
     }
 
     return res.status(200).json({
       ok: true,
-      provider: 'manual_acuity_attio',
+      provider: 'manual_acuity_hubspot',
       acuityAppointmentId: String(acuityAppointment.id),
-      attioPersonId,
       hubspotContactId,
       appointment: {
         id: String(acuityAppointment.id),
@@ -183,20 +156,20 @@ export default async function handler(req, res) {
         datetime: acuityAppointment.datetime || appointment.acuityDatetime,
         type: acuityAppointment.type || items[0]?.label || primaryService || 'Avalon Visit',
       },
-      attio: {
-        id: attioPersonId,
-        provider: 'attio',
-        status: 'synced',
+      hubspot: {
+        id: hubspotContactId,
+        provider: 'hubspot',
+        status: hubspotContactId ? 'synced' : 'skipped',
       },
     });
   } catch (err) {
     console.error('[manual-booking] live handoff failed', safeLogContext(err, 'manual_booking_failed'));
     return res.status(err.status || 500).json({
       ok: false,
-      error: 'Could not create the Acuity appointment and Attio client.',
+      error: 'Could not create the Acuity appointment.',
       code: safeErrorCode(err, 'manual_booking_failed'),
       vendorStage: err.vendorStage || 'manual_booking',
-      attioPersonId: err.attioPersonId || null,
+      hubspotContactId: err.hubspotContactId || null,
     });
   }
 }

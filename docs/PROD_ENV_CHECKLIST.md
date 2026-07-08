@@ -64,10 +64,6 @@ These block payment, scheduling, auth, or staff operations if missing.
 - `ACUITY_WEBHOOK_SECRET` - required only when enabling the P1 Acuity reverse webhook.
 - `ACUITY_WEBHOOK_FETCH_TIMEOUT_MS`
 - `ACUITY_WEBHOOK_MAX_BODY_BYTES`
-- `ATTIO_ACCESS_TOKEN`
-- `ATTIO_API_KEY`
-- `ATTIO_PEOPLE_OBJECT`
-- `ATTIO_WORKSPACE_ID`
 - `HUBSPOT_SYNC_ENABLED` — kill switch. Set to `true` after HubSpot custom properties are provisioned and the private-app token is loaded.
 - `HUBSPOT_ACCESS_TOKEN` — HubSpot private-app token. Scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.schemas.contacts.write` (bootstrap only).
 - `HUBSPOT_PORTAL_ID` — used only to build web URLs to the contact record in admin responses.
@@ -88,7 +84,6 @@ These block payment, scheduling, auth, or staff operations if missing.
 - `VITE_ADMIN_PREVIEW` - set `1` only for preview/admin feature exposure.
 - `VERCEL_ENV` / `VERCEL` - managed by Vercel; Acuity credentials fail loud in any Vercel runtime when missing.
 - `VITE_APP_VERSION` - optional release label for client error telemetry.
-- `VITE_ATTIO_CONFIGURED` - optional UI placeholder toggle.
 - `VITE_HUBSPOT_CONFIGURED` - optional UI placeholder toggle for HubSpot CRM tile.
 - `VITE_AVALON_DEMO_AUTH` - local/demo-only override; leave unset or `false` in live environments.
 - `VITE_AVALON_ENABLE_FIRST_PARTY_ANALYTICS` - optional first-party analytics switch.

@@ -169,7 +169,6 @@ const JetLag = lazyRoute(() => import('./pages/JetLag'));
 const Press = lazyRoute(() => import('./pages/Press'));
 const AdminEssentials = lazyRoute(() => import('./pages/admin/AdminEssentials'));
 const AdminAcuityControl = lazyRoute(() => import('./pages/admin/AcuityControl'));
-const AdminAttioControl = lazyRoute(() => import('./pages/admin/AttioControl'));
 const AdminHubspotControl = lazyRoute(() => import('./pages/admin/HubspotControl'));
 const AdminPatientRecords = lazyRoute(() => import('./pages/admin/PatientRecords'));
 const AdminClientDetail = lazyRoute(() => import('./pages/admin/ClientDetail'));
@@ -430,7 +429,7 @@ function AppRoutes() {
             <Route path="/admin/inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInbox /></RequireAuth>} />
             <Route path="/admin/team-inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamInbox /></RequireAuth>} />
             <Route path="/admin/gfe" element={<RequireAuth allowedRoles={['admin']}><AdminGfeSettings /></RequireAuth>} />
-            <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminAttioControl /></RequireAuth>} />
+            <Route path="/admin/crm" element={<Navigate to="/admin/hubspot" replace />} />
             <Route path="/admin/hubspot" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminHubspotControl /></RequireAuth>} />
             <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />

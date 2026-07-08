@@ -84,8 +84,8 @@ function scanDist() {
       label: 'Resend secret env name',
     },
     {
-      value: 'ATTIO_ACCESS_TOKEN',
-      label: 'Attio secret env name',
+      value: 'HUBSPOT_ACCESS_TOKEN',
+      label: 'HubSpot secret env name',
     },
   ];
 
@@ -531,7 +531,7 @@ function checkLaunchEnvDocs() {
     'AVALON_INTERNAL_API_SECRET',
     'ACUITY_API_KEY',
     'RESEND_API_KEY',
-    'ATTIO_ACCESS_TOKEN',
+    'HUBSPOT_ACCESS_TOKEN',
     'KV_REST_API_URL',
     'KV_REST_API_TOKEN',
   ]) {

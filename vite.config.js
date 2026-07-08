@@ -12,8 +12,6 @@ const API_ROUTES = {
   '/api/create-checkout-session': './api/create-checkout-session.js',
   '/api/integrations/acuity/test': './api/integrations/acuity/test.js',
   '/api/integrations/acuity/webhook': './api/integrations/acuity/webhook.js',
-  '/api/integrations/attio/test': './api/integrations/attio/test.js',
-  '/api/integrations/attio/upsert-person': './api/integrations/attio/upsert-person.js',
   '/api/integrations/hubspot/test': './api/integrations/hubspot/test.js',
   '/api/integrations/hubspot/upsert-contact': './api/integrations/hubspot/upsert-contact.js',
   '/api/integrations/stripe/test': './api/integrations/stripe/test.js',

@@ -9,7 +9,7 @@ This runbook covers promoting the snooches build to take over the root `avalonvi
 ## 0. Pre-flight checklist (must all be true)
 
 - [ ] **GL-003..GL-011** rows in `docs/GO_LIVE_STATUS.md` show `verified` with evidence pointers in `.context/drills/`.
-- [ ] **GL-012 BAAs** signed: Supabase (Team + HIPAA add-on), Acuity (Powerhouse/Premium in-app link), Vercel (Pro click-through), Sentry (Business → Legal & Compliance). Resend + Attio BAA decisions resolved (Attio sync stays off until then; `ATTIO_SYNC_ENABLED=false`).
+- [ ] **GL-012 BAAs** signed: Supabase (Team + HIPAA add-on), Acuity (Powerhouse/Premium in-app link), Vercel (Pro click-through), Sentry (Business → Legal & Compliance). HubSpot has no BAA — outbound sync is architecturally CRM-safe only (allowlist + CI guard + kill switch). Resend has no BAA — ops email is link-only.
 - [ ] **GL-014 key rotation** complete in provider dashboards. Confirm no `sk_live_*`, `sb_secret_*`, or `re_*` prefixes leaked into browser bundles — `npm run test:launch-blockers` enforces this.
 - [ ] **GL-018** `npm run verify:prod` green against Production env.
 - [ ] **Working tree clean**, branch frozen, last `test:release` run green within 24h.

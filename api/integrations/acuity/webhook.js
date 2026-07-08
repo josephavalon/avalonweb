@@ -4,7 +4,7 @@
  * Receives Acuity scheduling events and syncs them onto the canonical record:
  * public.appointments (the same row Stripe's deposit/balance data attaches to,
  * keyed by acuity_appointment_id). Contact detail is stored in external_payload
- * (jsonb); the CRM of record is Attio (upserted non-blocking).
+ * (jsonb); the CRM of record is HubSpot (upserted non-blocking).
  *
  * Acuity webhook config: Dashboard → Integrations → Webhooks
  *   URL: https://<domain>/api/integrations/acuity/webhook
@@ -22,7 +22,6 @@ import { gfeSyncAndAssign } from '../../_lib/gfe-core.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
-import { upsertAttioPerson } from '../../_attio.js';
 import { upsertHubspotContact } from '../../_hubspot.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { findRedemptionForAppointment, refundMemberCredit } from '../../_lib/member-credits.js';
@@ -598,30 +597,6 @@ export default async function handler(req, res) {
 
     // CRM sync — non-blocking, contact only (no clinical detail).
     if (appt.email) {
-      upsertAttioPerson({
-        firstName: appt.firstName, lastName: appt.lastName, email: appt.email, phone: appt.phone,
-        source: 'Acuity', lifecycleStage: 'Booked', service: appt.type || 'IV Therapy',
-      }).catch(async (e) => {
-        console.warn('[acuity/webhook] Attio sync failed', safeLogContext(e, 'attio_sync_failed'));
-        try {
-          await insertReconciliationCaseOnce(db, buildReconciliationCase({
-            caseType: 'crm_sync_failed',
-            provider: 'attio',
-            externalReference: String(apptId),
-            tenantId,
-            payload: {
-              appointmentRecordId,
-              acuityAppointmentId: String(apptId),
-              action,
-              eventId,
-              errorCode: safeErrorCode(e, 'attio_sync_failed'),
-              errorStatus: e?.statusCode || e?.status || null,
-            },
-          }));
-        } catch (err) {
-          console.warn('[acuity/webhook] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
-        }
-      });
       upsertHubspotContact({
         firstName: appt.firstName, lastName: appt.lastName, email: appt.email, phone: appt.phone,
         source: 'Acuity', lifecycleStage: 'Booked',

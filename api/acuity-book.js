@@ -15,7 +15,6 @@
  */
 
 import { acuityFetch } from './_acuity.js';
-import { upsertAttioPerson } from './_attio.js';
 import { upsertHubspotContact } from './_hubspot.js';
 import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
@@ -57,20 +56,16 @@ export default async function handler(req, res) {
       }),
     });
 
-    // Sync to CRMs - non-blocking, never fails the booking.
+    // Sync to HubSpot - non-blocking, never fails the booking.
     // Keep this CRM-safe: no clinical notes or intake details.
-    const crmPayload = {
+    upsertHubspotContact({
       firstName,
       lastName,
       email,
       phone,
       source: 'Avalon Scheduling',
       lifecycleStage: 'Booked',
-    };
-    upsertAttioPerson({ ...crmPayload, service: appointment?.type || 'IV Therapy' })
-      .catch((e) => console.warn('[scheduling-book] Attio sync failed', safeLogContext(e, 'attio_sync_failed')));
-    upsertHubspotContact(crmPayload)
-      .catch((e) => console.warn('[scheduling-book] HubSpot sync failed', safeLogContext(e, 'hubspot_sync_failed')));
+    }).catch((e) => console.warn('[scheduling-book] HubSpot sync failed', safeLogContext(e, 'hubspot_sync_failed')));
 
     return res.status(200).json(appointment);
   } catch (err) {
