@@ -37,6 +37,7 @@ const PROFILE_COLUMNS = `
   id, email, phone, role, status, tenant_id,
   full_name, preferred_name, address, date_of_birth,
   emergency_contact, phi, comm_prefs, stripe_customer_id,
+  guest_profile, hubspot_contact_id, hubspot_synced_at,
   created_at, updated_at
 `;
 
@@ -67,6 +68,9 @@ function toClientShape(row) {
     commPrefs: row.comm_prefs || null,
     stripeCustomerId: row.stripe_customer_id || null,
     tenantId: row.tenant_id || null,
+    guestProfile: row.guest_profile || null,
+    hubspotContactId: row.hubspot_contact_id || null,
+    hubspotSyncedAt: row.hubspot_synced_at || null,
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,
   };

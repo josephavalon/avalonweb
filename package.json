@@ -32,6 +32,7 @@
     "test:compliance": "node scripts/compliance-copy-qa.mjs",
     "test:privacy": "node scripts/privacy-qa.mjs",
     "test:no-phi-in-stripe": "node scripts/no-phi-in-stripe-qa.mjs",
+    "test:no-phi-in-hubspot": "node scripts/no-phi-in-hubspot-qa.mjs",
     "test:security": "node scripts/security-hard-wall-qa.mjs",
     "test:launch-blockers": "node scripts/launch-blocker-qa.mjs",
     "test:release": "node scripts/release-qa.mjs",

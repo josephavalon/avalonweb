@@ -1,5 +1,6 @@
 import { acuityFetch, resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { upsertAttioPerson } from './_attio.js';
+import { upsertHubspotContact } from './_hubspot.js';
 import { safeLogContext } from './_lib/safe-error.js';
 import { safeStripeMetadata } from './_lib/safe-stripe.js';
 
@@ -672,4 +673,26 @@ export async function syncCheckoutAttioPerson({
     return { id: null, skipped: true, reason: response.reason || 'attio_sync_disabled' };
   }
   return { id: response?.data?.id || response?.id || null, skipped: false };
+}
+
+/**
+ * HubSpot analog of `syncCheckoutAttioPerson`. Fires in parallel from every
+ * booking call site. Returns `{ id, skipped, reason }` with the same shape.
+ */
+export async function syncCheckoutHubspotContact({
+  contact = {},
+} = {}) {
+  const response = await upsertHubspotContact({
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    email: contact.email,
+    phone: contact.phone,
+    source: 'Avalon Booking',
+    lifecycleStage: 'Booked',
+  });
+
+  if (response?.skipped) {
+    return { id: null, skipped: true, reason: response.reason || 'hubspot_sync_disabled' };
+  }
+  return { id: response?.id || null, skipped: false };
 }

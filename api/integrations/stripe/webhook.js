@@ -35,6 +35,7 @@ import {
   readAcuityAppointmentId,
   isLegacyStripeMetadataPayload,
   syncCheckoutAttioPerson,
+  syncCheckoutHubspotContact,
 } from '../../_checkout-fulfillment.js';
 import {
   isEventSession,
@@ -758,6 +759,8 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     : null;
   let attioPersonId = null;
   let attioSynced = false;
+  let hubspotContactId = null;
+  let hubspotSynced = false;
   let fulfillmentError = null;
   const canUseStripeMetadataPayload = !record && isLegacyStripeMetadataPayload(md);
   const checkout = record
@@ -849,6 +852,28 @@ export async function handleCheckoutCompleted(stripe, db, session) {
               appointmentRecordId: record?.id || null,
               stripeSessionId: session.id,
               errorCode: safeErrorCode(err, 'attio_sync_failed'),
+              errorStatus: err?.statusCode || err?.status || null,
+            },
+          });
+        }
+
+        try {
+          const hubspotResult = await syncCheckoutHubspotContact({
+            contact: checkout.contact,
+          });
+          hubspotContactId = hubspotResult?.id || null;
+          hubspotSynced = Boolean(hubspotContactId) && !hubspotResult?.skipped;
+        } catch (err) {
+          console.warn('[stripe/webhook] HubSpot sync failed', safeLogContext(err, 'hubspot_sync_failed'));
+          await insertOperationalFailureCase(db, {
+            caseType: 'crm_sync_failed',
+            provider: 'hubspot',
+            externalReference: session.id,
+            tenantId: fulfillmentTenantId,
+            payload: {
+              appointmentRecordId: record?.id || null,
+              stripeSessionId: session.id,
+              errorCode: safeErrorCode(err, 'hubspot_sync_failed'),
               errorStatus: err?.statusCode || err?.status || null,
             },
           });
@@ -1105,6 +1130,8 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     scheduling_lock_at:            fulfillmentError ? null : undefined,
     attio_person_id:               attioPersonId || undefined,
     attio_synced_at:               attioSynced ? now : undefined,
+    hubspot_contact_id:            hubspotContactId || undefined,
+    hubspot_synced_at:             hubspotSynced ? now : undefined,
     balance_due_cents:            balanceDueCents,
     visit_subtotal_cents:         recordedVisitSubtotalCents || null,
     deposit_amount_cents:         depositPaidCents,
@@ -1113,6 +1140,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
       attioPersonId,
+      hubspotContactId,
       ...(planSubscriptionId ? { planSubscriptionId } : {}),
       ...(planSubscriptionDeferredReason ? { planSubscriptionDeferredReason } : {}),
       ...(discountForPayload ? { discount: discountForPayload } : {}),

@@ -21,6 +21,7 @@ import crypto from 'crypto';
 import { getAuthedUser } from '../../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
+import { upsertHubspotContact } from '../../_hubspot.js';
 
 function clientIp(req) {
   const fwd = req.headers?.['x-forwarded-for'];
@@ -180,6 +181,25 @@ export default async function handler(req, res) {
         version: doc.version,
       },
     });
+
+    // Fire-and-forget HubSpot metadata update. NEVER send the signature hash,
+    // the typed name, ip, or user_agent — only the consent-type timestamp +
+    // version. Best-effort; consent signing must not block on CRM.
+    if (email) {
+      const consentPayload = { email };
+      if (doc.consent_type === 'hipaa') {
+        consentPayload.hipaaNppSignedAt = inserted?.signed_at || signedAt;
+        consentPayload.hipaaNppVersion = doc.version || null;
+      } else if (doc.consent_type === 'general_treatment') {
+        consentPayload.termsSignedAt = inserted?.signed_at || signedAt;
+      }
+      // Only fire when we have something to update beyond the email.
+      if (consentPayload.hipaaNppSignedAt || consentPayload.termsSignedAt) {
+        upsertHubspotContact(consentPayload).catch((err) => {
+          console.warn('[me/documents/sign] hubspot consent sync failed', safeLogContext(err, 'hubspot_consent_sync_failed'));
+        });
+      }
+    }
 
     return res.status(200).json({
       ok: true,

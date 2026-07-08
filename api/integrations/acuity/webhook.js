@@ -23,6 +23,7 @@ import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
+import { upsertHubspotContact } from '../../_hubspot.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { findRedemptionForAppointment, refundMemberCredit } from '../../_lib/member-credits.js';
 import { decrementForAppointment } from '../../_lib/inventory-burndown.js';
@@ -619,6 +620,30 @@ export default async function handler(req, res) {
           }));
         } catch (err) {
           console.warn('[acuity/webhook] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
+        }
+      });
+      upsertHubspotContact({
+        firstName: appt.firstName, lastName: appt.lastName, email: appt.email, phone: appt.phone,
+        source: 'Acuity', lifecycleStage: 'Booked',
+      }).catch(async (e) => {
+        console.warn('[acuity/webhook] HubSpot sync failed', safeLogContext(e, 'hubspot_sync_failed'));
+        try {
+          await insertReconciliationCaseOnce(db, buildReconciliationCase({
+            caseType: 'crm_sync_failed',
+            provider: 'hubspot',
+            externalReference: String(apptId),
+            tenantId,
+            payload: {
+              appointmentRecordId,
+              acuityAppointmentId: String(apptId),
+              action,
+              eventId,
+              errorCode: safeErrorCode(e, 'hubspot_sync_failed'),
+              errorStatus: e?.statusCode || e?.status || null,
+            },
+          }));
+        } catch (err) {
+          console.warn('[acuity/webhook] hubspot reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
         }
       });
     }
