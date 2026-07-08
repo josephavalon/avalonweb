@@ -324,7 +324,10 @@ const HOW_IT_WORKS = [
   { step: '1', title: 'Tell us about your event', text: 'Share the basics and what you need.' },
   { step: '2', title: 'Customize services', text: "We'll help build the perfect wellness experience." },
   { step: '3', title: 'Receive your quote', text: 'Transparent pricing. Fast response.' },
+  { step: '4', title: 'Build your event page', text: 'Private landing page so guests can RSVP and prep.' },
+  { step: '5', title: 'Prescreen attendees', text: 'Intake & consent forms collected before we arrive.' },
 ];
+
 
 export default function Events() {
   const [feed, setFeed] = useState({ upcoming: [], previously: [] });
@@ -353,47 +356,22 @@ export default function Events() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-[5.25rem] md:px-8 md:pt-[5.75rem]">
-        {/* Hero — text left, the global dusk IV photo carries the right */}
-        <section className="flex min-h-[46svh] flex-col justify-center py-10 md:min-h-[56svh] md:max-w-[54%]">
-          <h1 className="font-heading text-[3.4rem] uppercase leading-[0.88] tracking-normal text-foreground md:text-[4.8rem]">
-            Wellness for your event.
-          </h1>
-          <p className="mt-3 font-body text-[14px] font-black uppercase tracking-[0.24em] text-foreground/80">
-            Anywhere. Any size.
-          </p>
-          <p className="mt-4 max-w-sm font-body text-[15px] font-semibold leading-relaxed text-foreground/60">
-            IV therapy, recovery &amp; wellness care for groups of any size.
-          </p>
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => plannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              className="inline-flex min-h-[52px] items-center gap-3 rounded-full px-7 font-body text-sm font-black uppercase tracking-[0.08em] transition-transform active:scale-[0.99]"
-              style={whiteBtn}
-            >
-              Plan your event <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-            </button>
-          </div>
-          <p className="mt-4 flex items-center gap-2 font-body text-[12px] font-semibold text-foreground/55">
-            <Clock className="h-3.5 w-3.5" /> Quotes delivered within 24 hours.
-          </p>
-        </section>
-
         {/* Planner */}
         <section ref={plannerRef} className="scroll-mt-24 pt-6">
           <div className="mb-7 text-center">
-            <h2 className="font-heading text-4xl uppercase leading-none tracking-normal text-foreground md:text-5xl">
-              Let's plan your event
+            <h2 className="font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
+              Let's build your event
             </h2>
-            <p className="mt-2 font-body text-[13px] font-semibold text-foreground/50">Takes less than 60 seconds.</p>
           </div>
           <EventPlanner />
         </section>
 
         {/* How it works */}
         <section className="mt-16">
-          <p className="mb-6 text-center font-body text-[12px] font-black uppercase tracking-[0.2em] text-foreground/50">How it works</p>
-          <div className="grid gap-6 md:grid-cols-3">
+          <h2 className="mb-8 font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
+            How it works
+          </h2>
+          <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-5">
             {HOW_IT_WORKS.map(({ step, title, text }) => (
               <div key={step} className="flex items-start gap-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/20 font-heading text-lg text-foreground">
@@ -411,7 +389,14 @@ export default function Events() {
         {/* Avalon-hosted events */}
         {!loading && (feed.upcoming.length > 0 || feed.previously.length > 0) ? (
           <section className="mt-16">
-            <h2 className="mb-4 font-heading text-4xl uppercase leading-none tracking-normal text-foreground md:text-5xl">Upcoming</h2>
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <h2 className="font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
+                Upcoming
+              </h2>
+              <p className="pb-1.5 font-body text-xs uppercase tracking-[0.18em] text-foreground/55 md:text-sm">
+                San Francisco Bay Area
+              </p>
+            </div>
             <div className={`grid gap-3 ${feed.upcoming.length > 1 ? 'md:grid-cols-2' : ''}`}>
               {feed.upcoming.map((event) => (
                 <EventRow key={event.slug} event={event} />

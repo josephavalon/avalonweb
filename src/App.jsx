@@ -135,8 +135,6 @@ const OurTeam = lazyRoute(() => import('./pages/OurTeam'));
 const Apply = lazyRoute(() => import('./pages/Apply'));
 const Careers = lazyRoute(() => import('./pages/Careers'));
 const FAQPage = lazyRoute(() => import('./pages/FAQ'));
-const NAD = lazyRoute(() => import('./pages/services/NAD'));
-const CBD = lazyRoute(() => import('./pages/services/CBD'));
 const PrivacyPolicy = lazyRoute(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazyRoute(() => import('./pages/TermsAndConditions'));
 const TelehealthDisclaimer = lazyRoute(() => import('./pages/TelehealthDisclaimer'));
@@ -211,23 +209,23 @@ const ScrollToTop = () => {
   useEffect(() => {
     const timers = [];
     let cancelled = false;
+    // Reset first so lazy pages never inherit the previous route's scroll offset,
+    // even when a hash anchor's target is still mounting.
+    window.scrollTo(0, 0);
     if (hash) {
-      // Section anchor — wait for lazy components to mount, then scroll into view
       const id = hash.slice(1);
       let attempts = 0;
       const tryScroll = () => {
         if (cancelled) return;
         const el = document.getElementById(id);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.scrollIntoView({ behavior: 'auto', block: 'start' });
         } else if (attempts < 12) {
           attempts += 1;
           timers.push(setTimeout(tryScroll, 80));
         }
       };
       tryScroll();
-    } else {
-      window.scrollTo(0, 0);
     }
     return () => {
       cancelled = true;
@@ -316,8 +314,8 @@ function AppRoutes() {
             <Route path="/our-team" element={<Navigate to="/team" replace />} />
             <Route path="/products/dehydration-iv" element={<Navigate to="/products/iv-vitamins/dehydration" replace />} />
             <Route path="/services/iv-vitamins" element={<Navigate to="/protocols" replace />} />
-            <Route path="/services/nad" element={<NAD />} />
-            <Route path="/services/cbd" element={<CBD />} />
+            <Route path="/services/nad" element={<Navigate to="/protocols#iv-nad" replace />} />
+            <Route path="/services/cbd" element={<Navigate to="/protocols#iv-cbd" replace />} />
             <Route path="/products/iv-vitamins" element={<Navigate to="/protocols" replace />} />
             <Route path="/products/:category/:slug" element={<ProductDetail />} />
             <Route path="/apply" element={<Apply />} />

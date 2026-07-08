@@ -5,9 +5,13 @@ import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 
+const SectionInterstitial = lazy(() => import('../components/landing/SectionInterstitial'));
 const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
+const WellnessQuiz = lazy(() => import('../components/landing/WellnessQuiz'));
 const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
+const CTABanner = lazy(() => import('../components/landing/CTABanner'));
 const MembershipSection = lazy(() => import('../components/landing/MembershipSection'));
+const EventsPosterSection = lazy(() => import('../components/landing/EventsPosterSection'));
 const Footer = lazy(() => import('../components/landing/Footer'));
 
 // Note: Reveal wrappers removed — each section owns its per-card whileInView
@@ -33,9 +37,21 @@ export default function Home() {
         {/* ── Below fold — per-card whileInView animations handle entrance ── */}
         <div className="relative z-10">
           <Suspense fallback={null}>
+            <SectionInterstitial
+              kicker="Same-day · SF Bay Area"
+              title="Wellness delivered"
+              body="Same-day nurse-delivered therapy across the Bay Area."
+            />
             <HowItWorks />
+            <WellnessQuiz />
             <TreatmentsTeaser />
+            <SectionInterstitial
+              title="Recovery in under 60 seconds"
+              body="Book once or start a plan."
+            />
             <MembershipSection />
+            <EventsPosterSection />
+            <CTABanner />
           </Suspense>
         </div>
       </main>

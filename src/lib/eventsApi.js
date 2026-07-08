@@ -4,6 +4,8 @@
  * is the only way client pages talk to the events backend.
  */
 
+import { fallbackList, fallbackEvent } from './eventsFallback';
+
 async function getJson(url) {
   const res = await fetch(url, { headers: { Accept: 'application/json' } });
   const body = await res.json().catch(() => ({}));
@@ -14,13 +16,22 @@ async function getJson(url) {
 }
 
 export async function fetchEventsFeed() {
-  const { upcoming, previously } = await getJson('/api/events/catalog');
-  return { upcoming: upcoming || [], previously: previously || [] };
+  try {
+    const { upcoming, previously } = await getJson('/api/events/catalog');
+    return { upcoming: upcoming || [], previously: previously || [] };
+  } catch {
+    return { upcoming: [], previously: [] };
+  }
 }
 
 export async function fetchEvent(slug) {
-  const { event } = await getJson(`/api/events/catalog?slug=${encodeURIComponent(slug)}`);
-  return event;
+  try {
+    const { event } = await getJson(`/api/events/catalog?slug=${encodeURIComponent(slug)}`);
+    if (event) return event;
+  } catch {
+    // Fall through to fallback lookup.
+  }
+  return fallbackEvent(slug);
 }
 
 /**

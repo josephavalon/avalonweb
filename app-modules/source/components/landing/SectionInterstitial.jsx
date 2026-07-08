@@ -1,0 +1,61 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from '@/components/ui/PageTransitionMotion';
+import { ArrowRight } from 'lucide-react';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+
+const MotionLink = motion.create(Link);
+
+// Poster-style band between sections. Plain background — sits directly on the
+// page canvas so section rhythm reads as: content → punctuation → content.
+// Renders one of two CTA shapes: an outline pill (variant="pill") or a small
+// uppercase tracked link (variant="link"). No CTA at all when `cta` is omitted.
+export default function SectionInterstitial({ kicker, title, body, cta }) {
+  return (
+    <section className="pt-16 pb-16 md:pt-28 md:pb-28 px-5 md:px-12">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-96px' }}
+        transition={{ duration: 0.9, ease: EASE }}
+        className="max-w-6xl mx-auto text-center"
+      >
+        {kicker && (
+          <p className="font-body text-[11px] uppercase tracking-[0.28em] text-foreground/45">
+            {kicker}
+          </p>
+        )}
+        <h2 className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-[15vw] md:text-[9rem] lg:text-[11rem]">
+          {title}
+        </h2>
+        {body && (
+          <p className="mx-auto mt-5 max-w-2xl font-body text-xs uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-sm">
+            {body}
+          </p>
+        )}
+        {cta && cta.variant !== 'link' && (
+          <MotionLink
+            to={cta.to}
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group mt-8 inline-flex items-center justify-center gap-2 rounded-full border border-foreground/45 px-8 py-3.5 font-body text-sm uppercase tracking-[0.22em] text-foreground transition-colors duration-base ease-editorial hover:border-foreground/80 hover:bg-foreground/[0.04]"
+          >
+            {cta.label}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </MotionLink>
+        )}
+        {cta && cta.variant === 'link' && (
+          <MotionLink
+            to={cta.to}
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group mt-6 inline-flex items-center justify-center gap-2 font-body text-[11px] uppercase tracking-[0.28em] text-foreground/70 transition-colors duration-base ease-editorial hover:text-foreground"
+          >
+            {cta.label}
+            <ArrowRight className="h-3 w-3 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </MotionLink>
+        )}
+      </motion.div>
+    </section>
+  );
+}
