@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check, MapPin, Plus } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import AvalonMark from '@/components/AvalonMark';
-import { fetchEvent } from '@/lib/eventsApi';
+import { fetchEventSync, fetchEventFresh } from '@/lib/eventsApi';
 import { formatPriceCents } from '@/lib/eventStatus';
 import { useSeo } from '@/lib/seo';
 
@@ -130,11 +130,18 @@ function QuietList({ kicker, title, items }) {
   );
 }
 
+function pickDefaultTierId(data) {
+  const open = (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated && !t.experienceOnly)
+    || (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated)
+    || data?.tiers?.[0];
+  return open?.id || '';
+}
+
 export default function EventPage() {
   const { slug } = useParams();
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [tierId, setTierId] = useState('');
+  const [event, setEvent] = useState(() => fetchEventSync(slug));
+  const [loading, setLoading] = useState(() => !fetchEventSync(slug));
+  const [tierId, setTierId] = useState(() => pickDefaultTierId(fetchEventSync(slug)));
   const [selectedAddOns, setSelectedAddOns] = useState([]);
 
   const toggleAddOn = (id) =>
@@ -144,17 +151,17 @@ export default function EventPage() {
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    fetchEvent(slug)
+    const seed = fetchEventSync(slug);
+    setEvent(seed);
+    setTierId(pickDefaultTierId(seed));
+    setLoading(!seed);
+    fetchEventFresh(slug)
       .then((data) => {
-        if (!alive) return;
+        if (!alive || !data) return;
         setEvent(data);
-        const open = (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated && !t.experienceOnly)
-          || (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated)
-          || data?.tiers?.[0];
-        setTierId(open?.id || '');
+        setTierId((current) => current || pickDefaultTierId(data));
       })
-      .catch(() => { if (alive) setEvent(null); })
+      .catch(() => { /* keep fallback / null */ })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [slug]);

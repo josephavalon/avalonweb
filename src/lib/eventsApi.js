@@ -34,6 +34,20 @@ export async function fetchEvent(slug) {
   return fallbackEvent(slug);
 }
 
+// Synchronous first-paint path. Returns the in-bundle fallback if one exists.
+// EventPage seeds its state from this so we can render instantly, then calls
+// fetchEventFresh() to reconcile with the server.
+export function fetchEventSync(slug) {
+  return fallbackEvent(slug);
+}
+
+// Background revalidator. Same as fetchEvent but never returns fallback on error —
+// the caller keeps whatever it already had if the API is unavailable.
+export async function fetchEventFresh(slug) {
+  const { event } = await getJson(`/api/events/catalog?slug=${encodeURIComponent(slug)}`);
+  return event || null;
+}
+
 /**
  * Reserve (free RSVP or paid). items: [{ tierId, attendees: [{name, email}] }].
  * Paid (inline) → { clientSecret, paymentIntentId, orderId, returnUrl }.

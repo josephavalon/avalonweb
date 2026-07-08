@@ -55,6 +55,14 @@ export const FALLBACK_EVENTS = [
       { id: 'ao-gluta', name: 'Glutathione shot', description: 'Antioxidant IM push.', priceCents: 5500 },
       { id: 'ao-compression', name: 'Compression therapy', description: '20-minute NormaTec session, added to your IV visit.', priceCents: 4500 },
     ],
+    assets: [
+      {
+        renditions: {
+          hero_1920: '/events/vital-ice-recovery-house/hero.webp',
+          card_640: '/events/vital-ice-recovery-house/card-640.webp',
+        },
+      },
+    ],
   },
   {
     slug: 'sf-marathon-recovery-lounge',

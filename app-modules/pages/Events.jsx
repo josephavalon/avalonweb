@@ -371,9 +371,9 @@ export default function Events() {
           <h2 className="mb-8 font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
             How it works
           </h2>
-          <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-5">
+          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-5">
             {HOW_IT_WORKS.map(({ step, title, text }) => (
-              <div key={step} className="flex items-start gap-4">
+              <div key={step} className="flex min-w-[78%] shrink-0 snap-start items-start gap-4 md:min-w-0">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/20 font-heading text-lg text-foreground">
                   {step}
                 </span>

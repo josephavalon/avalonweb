@@ -111,6 +111,7 @@ export default async function handler(req, res) {
         .eq('container_id', container.id)
         .in('status', ['confirmed', 'served']);
 
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
       return res.status(200).json({
         ok: true,
         event: {
@@ -172,6 +173,7 @@ export default async function handler(req, res) {
         upcoming.push(shape);
       }
     }
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
     return res.status(200).json({ ok: true, upcoming, previously: previously.slice(-6).reverse() });
   } catch (err) {
     console.error('[events/catalog]', err?.message || err);
