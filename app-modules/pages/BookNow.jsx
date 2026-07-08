@@ -5458,7 +5458,7 @@ export default function BookNow() {
     const appointmentTypeId = safeAcuityTypeId(localBooking.appointmentTypeId || localBooking.acuitySlot?.appointmentTypeID);
     return {
       mode: 'payment',
-      checkoutUiMode: 'hosted',
+      checkoutUiMode: 'embedded',
       items: (localBooking.items || []).map((item) => ({
         key: item.cartKey,
         cartKey: item.cartKey,

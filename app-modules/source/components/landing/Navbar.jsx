@@ -16,8 +16,6 @@ const mainLinks = [
   { to: '/protocols', label: 'IV Therapy' },
   { to: '/subscription', label: 'Plans' },
   { to: '/events', label: 'Events' },
-  // Launches hidden from the main nav — it currently points to a "Coming Soon"
-  // placeholder page. Re-add when Events.jsx has real content.
 ];
 
 // Desktop hover-dropdown payload for "IV Therapy" — three categories with bag graphics.
