@@ -1,6 +1,6 @@
 import { readLocal, writeLocal, appendActivity, readLastBooking, saveLastBooking } from '../../src/lib/localOs';
 import { queueCrossPortalEvent, upsertRepositoryEntity } from '../../src/lib/localRepository';
-import { ATTIO_PLACEHOLDER, buildAttioClientPayload } from '../../src/lib/attioPlaceholder';
+import { HUBSPOT_PLACEHOLDER as ATTIO_PLACEHOLDER, buildHubspotClientPayload as buildAttioClientPayload } from '../../src/lib/hubspotPlaceholder';
 import {
   buildAcuityCloseoutPacket,
   evaluateAcuityCloseout,

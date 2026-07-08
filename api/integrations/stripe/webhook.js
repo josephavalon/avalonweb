@@ -34,7 +34,6 @@ import {
   claimSchedulingCreation,
   readAcuityAppointmentId,
   isLegacyStripeMetadataPayload,
-  syncCheckoutAttioPerson,
   syncCheckoutHubspotContact,
 } from '../../_checkout-fulfillment.js';
 import {
@@ -757,8 +756,6 @@ export async function handleCheckoutCompleted(stripe, db, session) {
   let acuityAppointment = (record?.acuity_appointment_id || md.acuityAppointmentId)
     ? { id: record?.acuity_appointment_id || md.acuityAppointmentId, alreadyCreated: true }
     : null;
-  let attioPersonId = null;
-  let attioSynced = false;
   let hubspotContactId = null;
   let hubspotSynced = false;
   let fulfillmentError = null;
@@ -779,7 +776,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       matched: false,
       persisted: false,
       acuityAppointmentId: null,
-      attioSynced: false,
+      hubspotSynced: false,
     };
   }
 
@@ -826,42 +823,13 @@ export async function handleCheckoutCompleted(stripe, db, session) {
 
       if (acuityAppointment?.id && checkout.contact?.email) {
         try {
-          const attioResult = await syncCheckoutAttioPerson({
-            contact: checkout.contact,
-            primaryService: checkout.primaryService || md.service || 'Avalon Visit',
-            appointment: checkout.appointment || {},
-            items: checkout.items || [],
-            membership: checkout.membership || null,
-            amounts: fullComp
-              ? { ...(checkout.amounts || {}), depositAmountCents: 0, balanceDueCents: 0 }
-              : checkout.amounts || {},
-          });
-          attioPersonId = attioResult?.id || null;
-          // attioSynced=true ONLY when the sync actually ran. Skipped calls
-          // (BAA-pending kill switch) leave attioSynced=false so reconciliation
-          // dashboards don't show a false positive.
-          attioSynced = Boolean(attioPersonId) && !attioResult?.skipped;
-        } catch (err) {
-          console.warn('[stripe/webhook] Attio sync failed', safeLogContext(err, 'attio_sync_failed'));
-          await insertOperationalFailureCase(db, {
-            caseType: 'crm_sync_failed',
-            provider: 'attio',
-            externalReference: session.id,
-            tenantId: fulfillmentTenantId,
-            payload: {
-              appointmentRecordId: record?.id || null,
-              stripeSessionId: session.id,
-              errorCode: safeErrorCode(err, 'attio_sync_failed'),
-              errorStatus: err?.statusCode || err?.status || null,
-            },
-          });
-        }
-
-        try {
           const hubspotResult = await syncCheckoutHubspotContact({
             contact: checkout.contact,
           });
           hubspotContactId = hubspotResult?.id || null;
+          // hubspotSynced=true only when the sync actually ran. Skipped calls
+          // (kill switch off) leave it false so reconciliation dashboards
+          // don't show a false positive.
           hubspotSynced = Boolean(hubspotContactId) && !hubspotResult?.skipped;
         } catch (err) {
           console.warn('[stripe/webhook] HubSpot sync failed', safeLogContext(err, 'hubspot_sync_failed'));
@@ -1128,8 +1096,6 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     acuity_appointment_id:         schedulingDeferred ? undefined : acuityAppointment?.id ? String(acuityAppointment.id) : null,
     reconciliation_status:         schedulingDeferred ? undefined : fulfillmentError ? 'action_required' : 'ok',
     scheduling_lock_at:            fulfillmentError ? null : undefined,
-    attio_person_id:               attioPersonId || undefined,
-    attio_synced_at:               attioSynced ? now : undefined,
     hubspot_contact_id:            hubspotContactId || undefined,
     hubspot_synced_at:             hubspotSynced ? now : undefined,
     balance_due_cents:            balanceDueCents,
@@ -1139,7 +1105,6 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       stripeSessionId: session.id,
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
-      attioPersonId,
       hubspotContactId,
       ...(planSubscriptionId ? { planSubscriptionId } : {}),
       ...(planSubscriptionDeferredReason ? { planSubscriptionDeferredReason } : {}),
@@ -1230,7 +1195,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       action: fulfillmentError ? 'deposit_paid_acuity_failed' : 'deposit_paid_acuity_created',
       matched: true,
       acuityAppointmentId: acuityAppointment?.id || null,
-      attioSynced,
+      hubspotSynced,
     };
   }
 
@@ -1240,7 +1205,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       matched: false,
       persisted: false,
       acuityAppointmentId: acuityAppointment?.id || null,
-      attioSynced,
+      hubspotSynced,
     };
   }
 

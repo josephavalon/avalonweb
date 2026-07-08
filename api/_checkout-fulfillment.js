@@ -1,9 +1,11 @@
 import { acuityFetch, resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
-import { upsertAttioPerson } from './_attio.js';
 import { upsertHubspotContact } from './_hubspot.js';
 import { safeLogContext } from './_lib/safe-error.js';
 import { safeStripeMetadata } from './_lib/safe-stripe.js';
 
+// Kept as `_attio_v1` on purpose: this string is a marker in Stripe metadata
+// for in-flight sessions from before the Attio → HubSpot cutover. Do NOT
+// change it — reconciliation compares the exact literal.
 export const STRIPE_PAID_FULFILLMENT_VERSION = 'stripe_paid_then_acuity_attio_v1';
 
 const TZ = 'America/Los_Angeles';
@@ -657,27 +659,8 @@ export function checkoutPayloadFromStripeMetadata(metadata = {}) {
   };
 }
 
-export async function syncCheckoutAttioPerson({
-  contact = {},
-} = {}) {
-  const response = await upsertAttioPerson({
-    firstName: contact.firstName,
-    lastName: contact.lastName,
-    email: contact.email,
-    phone: contact.phone,
-    source: 'Avalon Booking',
-    lifecycleStage: 'Booked',
-  });
-
-  if (response?.skipped) {
-    return { id: null, skipped: true, reason: response.reason || 'attio_sync_disabled' };
-  }
-  return { id: response?.data?.id || response?.id || null, skipped: false };
-}
-
 /**
- * HubSpot analog of `syncCheckoutAttioPerson`. Fires in parallel from every
- * booking call site. Returns `{ id, skipped, reason }` with the same shape.
+ * Fires from every booking call site. Returns `{ id, skipped, reason }`.
  */
 export async function syncCheckoutHubspotContact({
   contact = {},

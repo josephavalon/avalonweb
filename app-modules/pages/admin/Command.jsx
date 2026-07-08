@@ -91,7 +91,7 @@ import { buildArrivalMissionSnapshot } from '@/lib/arrivalMissionBrain';
 import { buildVisitCloseoutSnapshot } from '@/lib/visitCloseoutBrain';
 import { buildKitReconciliationSnapshot } from '@/lib/kitReconciliationBrain';
 import { buildPostVisitQualitySnapshot } from '@/lib/postVisitQualityBrain';
-import { isAttioConfigured } from '@/lib/attioPlaceholder';
+import { isHubspotConfigured as isAttioConfigured } from '@/lib/hubspotPlaceholder';
 import {
   GUSTO_PAYROLL_PLACEHOLDER,
   MERCURY_BANKING_PLACEHOLDER,

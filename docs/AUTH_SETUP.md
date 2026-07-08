@@ -110,7 +110,7 @@ Production auth, checkout, scheduling, messaging, and rate-limit readiness depen
 - `AVALON_INTERNAL_API_SECRET`
 - `ACUITY_API_KEY`
 - `RESEND_API_KEY`
-- `ATTIO_ACCESS_TOKEN`
+- `HUBSPOT_ACCESS_TOKEN`
 - `KV_REST_API_URL`
 - `KV_REST_API_TOKEN`
 

@@ -5644,12 +5644,12 @@ export default function BookNow() {
           status: 'Manual billing appointment created',
           paymentStatus: 'manual_invoice_pending',
           acuityAppointmentId: manualResult.acuityAppointmentId,
-          attioPersonId: manualResult.attioPersonId,
+          hubspotContactId: manualResult.hubspotContactId,
           externalProvider: 'acuity',
           externalPayload: {
             provider: manualResult.provider,
             appointment: manualResult.appointment,
-            attio: manualResult.attio,
+            hubspot: manualResult.hubspot,
           },
         };
         persistLocalBooking(confirmedBooking, 'VIP manual billing');
@@ -5659,7 +5659,7 @@ export default function BookNow() {
           funnel: 'webstore',
           booking_id: confirmedBooking.id,
           acuity_appointment_id: manualResult.acuityAppointmentId,
-          attio_person_id: manualResult.attioPersonId,
+          hubspot_contact_id: manualResult.hubspotContactId,
           order_type: confirmedBooking.orderType,
           product_family: confirmedBooking.productFamily,
           protocol_key: confirmedBooking.protocolKey,

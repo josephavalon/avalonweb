@@ -14,7 +14,7 @@ import { ADDON_PRICE_BY_LABEL, ITEM_PRICE_BY_KEY } from '../api/_lib/catalog-pri
 import { buildStripeCheckoutMetadata } from '../api/_checkout-fulfillment.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../api/_booking-email.js';
 import { sendInviteEmail } from '../api/_lib/invite-email.js';
-import { buildPersonValues } from '../api/_attio.js';
+import { buildHubspotProperties } from '../api/_hubspot.js';
 import { RECONCILIATION_CASE_DEFAULTS, RECONCILIATION_CASE_TYPES } from '../api/_reconciliation.js';
 import { validateBalanceReturnBaseUrl } from '../api/_lib/balance-core.js';
 import { createAppointmentSummaryToken, isAppointmentSummaryTokenConfigured, verifyAppointmentSummaryToken } from '../api/_lib/summary-token.js';
@@ -92,10 +92,10 @@ const frontendAcuityTypesSource = readFileSync(new URL('../src/lib/acuityAppoint
 const acuityTestSource = readFileSync(new URL('../api/integrations/acuity/test.js', import.meta.url), 'utf8');
 const stripeTestSource = readFileSync(new URL('../api/integrations/stripe/test.js', import.meta.url), 'utf8');
 const safeErrorSource = readFileSync(new URL('../api/_lib/safe-error.js', import.meta.url), 'utf8');
-const attioSource = readFileSync(new URL('../api/_attio.js', import.meta.url), 'utf8');
-const attioTestSource = readFileSync(new URL('../api/integrations/attio/test.js', import.meta.url), 'utf8');
-const attioUpsertSource = readFileSync(new URL('../api/integrations/attio/upsert-person.js', import.meta.url), 'utf8');
-const attioPlaceholderSource = readFileSync(new URL('../src/lib/attioPlaceholder.js', import.meta.url), 'utf8');
+const hubspotSource = readFileSync(new URL('../api/_hubspot.js', import.meta.url), 'utf8');
+const hubspotTestSource = readFileSync(new URL('../api/integrations/hubspot/test.js', import.meta.url), 'utf8');
+const hubspotUpsertSource = readFileSync(new URL('../api/integrations/hubspot/upsert-contact.js', import.meta.url), 'utf8');
+const hubspotPlaceholderSource = readFileSync(new URL('../src/lib/hubspotPlaceholder.js', import.meta.url), 'utf8');
 const eventPresaleSource = readFileSync(new URL('../api/integrations/events/presale.js', import.meta.url), 'utf8');
 const eventPresalePageSource = readFileSync(new URL('../app-modules/source/pages/EventPresale.jsx', import.meta.url), 'utf8');
 const applySource = readFileSync(new URL('../api/apply.js', import.meta.url), 'utf8');
@@ -199,7 +199,7 @@ for (const key of ['customerName', 'customerEmail', 'firstName', 'lastName', 'ph
 assert(metadata.appointmentRecordId === 'appt_123', 'Stripe metadata must retain appointmentRecordId');
 assert(metadata.balanceDueCents === '75000', 'Stripe metadata must retain amount fields');
 
-const attioValues = buildPersonValues({
+const hubspotProps = buildHubspotProperties({
   firstName: 'Jane',
   lastName: 'Patient',
   email: 'jane@example.com',
@@ -225,13 +225,16 @@ const attioValues = buildPersonValues({
   balanceDue: '$750.00',
   paymentStatus: 'Partial payment; balance due at visit',
 });
-const attioDescription = attioValues.description || '';
-for (const leaked of ['DOB:', 'Emergency contact:', 'Address:', 'ZIP:', 'Requested time:', 'Items:', 'Clinical review', 'GFE required', 'Requested:', 'Booking ID:', 'Payment status:', '1980-01-01', '123 Health St', 'NAD+']) {
-  assert(!attioDescription.includes(leaked), `Attio CRM payload leaked PHI/intake detail: ${leaked}`);
+const hubspotBlob = JSON.stringify(hubspotProps);
+for (const leaked of ['1980-01-01', '123 Health St', 'NAD+', 'Emergency Person', '94107', 'Partial payment', 'GFE', 'Clinical', 'AV-123', 'apt_123']) {
+  assert(!hubspotBlob.includes(leaked), `HubSpot CRM payload leaked PHI/intake detail: ${leaked}`);
 }
-for (const expected of ['Source: Avalon Booking', 'Lifecycle: Booked', 'City: San Francisco', 'Plan interest: Membership', 'Visit count: 2']) {
-  assert(attioDescription.includes(expected), `Attio CRM payload dropped safe operational field: ${expected}`);
-}
+assert(hubspotProps.email === 'jane@example.com',                 'HubSpot payload dropped email');
+assert(hubspotProps.avalon_source === 'Avalon Booking',           'HubSpot payload dropped avalon_source');
+assert(hubspotProps.avalon_lifecycle_stage === 'Booked',          'HubSpot payload dropped avalon_lifecycle_stage');
+assert(hubspotProps.city === 'San Francisco',                     'HubSpot payload dropped city');
+assert(hubspotProps.avalon_plan_interest === 'Membership',        'HubSpot payload dropped avalon_plan_interest');
+assert(hubspotProps.avalon_visit_count === 2,                     'HubSpot payload dropped avalon_visit_count');
 
 process.env.APPOINTMENT_SUMMARY_TOKEN_SECRET = 'smoke-summary-secret';
 assert(isAppointmentSummaryTokenConfigured(), 'Summary token helper must report dedicated secret configuration');
@@ -274,7 +277,7 @@ assert(!checkoutVerifySource.includes('customerEmail:'), 'checkout/verify must n
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillment.fulfillmentError'), 'checkout/verify must not return raw fulfillment errors to customers');
 assert(!checkoutVerifySource.includes('fulfillmentError: fulfillmentError.slice'), 'checkout/verify must not write raw fulfillment errors into Stripe metadata');
 for (const rawPersistedError of [
-  "error: err.message || 'Attio sync failed'",
+  "error: err.message || 'HubSpot sync failed'",
   "error: err.message || 'Payment operations email failed'",
   "error: err.message || 'Customer pending email failed'",
   'message: fulfillment.fulfillmentError',
@@ -285,7 +288,7 @@ assert(checkoutVerifySource.includes('appointment_confirmation_pending'), 'check
 assert(checkoutVerifySource.includes('scheduling_lock_at: failed ? null : undefined'), 'checkout/verify must release the scheduling lock after a persisted Acuity failure');
 assert(checkoutVerifySource.includes('safeLogContext'), 'checkout/verify must sanitize fulfillment error log context');
 assert(!checkoutVerifySource.includes("console.error('[checkout/verify] Acuity fulfillment failed:', err.message"), 'checkout/verify must not log raw Acuity fulfillment errors');
-assert(!checkoutVerifySource.includes("console.warn('[checkout/verify] Attio sync failed:', err.message"), 'checkout/verify must not log raw Attio errors');
+assert(!checkoutVerifySource.includes("console.warn('[checkout/verify] HubSpot sync failed:', err.message"), 'checkout/verify must not log raw HubSpot errors');
 assert(!checkoutVerifySource.includes("error: err.message || 'Could not verify checkout session'"), 'checkout/verify must not return raw verification errors');
 assert(isValidCheckoutEmail('a+tag@sub.domain.org'), 'Valid tagged email should pass checkout validation');
 assert(!isValidCheckoutEmail('test@'), 'Incomplete email should fail checkout validation');
@@ -490,7 +493,7 @@ for (const kvEnv of ['KV_REST_API_URL', 'KV_REST_API_TOKEN']) {
 for (const optionalRuntimeEnv of [
   'SUPABASE_ANON_KEY',
   'VITE_APP_VERSION',
-  'VITE_ATTIO_CONFIGURED',
+  'VITE_HUBSPOT_CONFIGURED',
   'VITE_AVALON_DEMO_AUTH',
   'VITE_SENTRY_DSN',
 ]) {
@@ -545,19 +548,19 @@ assert(eventPresaleSource.includes('if (!liveApi)'), 'Presale ingress must only 
 for (const queryField of ["query.get('name')", "query.get('email')", "query.get('phone')"]) {
   assert(!eventPresalePageSource.includes(queryField), `Presale page must not prefill contact data from URLs: ${queryField}`);
 }
-for (const [label, source] of Object.entries({ acuityTestSource, attioTestSource, attioUpsertSource })) {
+for (const [label, source] of Object.entries({ acuityTestSource, hubspotTestSource, hubspotUpsertSource })) {
   assert(source.includes('requireAdmin'), `Live integration diagnostic route must require admin auth: ${label}`);
   assert(source.includes('safeLogContext'), `Live integration diagnostic route must sanitize error logs: ${label}`);
   assert(source.includes('safeErrorCode'), `Live integration diagnostic route must return stable error codes: ${label}`);
   assert(!source.includes("console.error('[acuity/test]', err.message"), `Acuity connection test must not log raw provider errors: ${label}`);
-  assert(!source.includes("console.error('[attio/test]', err.message"), `Attio connection test must not log raw provider errors: ${label}`);
-  assert(!source.includes("console.error('[attio/upsert-person]', err.message"), `Attio upsert route must not log raw provider errors: ${label}`);
+  assert(!source.includes("console.error('[hubspot/test]', err.message"), `HubSpot connection test must not log raw provider errors: ${label}`);
+  assert(!source.includes("console.error('[hubspot/upsert-contact]', err.message"), `HubSpot upsert route must not log raw provider errors: ${label}`);
   assert(!source.includes('error: err.message'), `Live integration diagnostic route must not return raw provider errors: ${label}`);
 }
 assert(stripeTestSource.includes('requireAdmin'), 'Stripe integration diagnostic route must require admin auth in live mode');
 assert(stripeTestSource.includes('isLiveApiEnabled'), 'Stripe integration diagnostic route must keep the pre-API hard wall');
 assert(!stripeTestSource.includes('STRIPE_SECRET_KEY:') && !stripeTestSource.includes('process.env.STRIPE_SECRET_KEY,'), 'Stripe integration diagnostic route must never return secret values');
-assert(attioPlaceholderSource.includes('apiGet') && attioPlaceholderSource.includes('apiPost'), 'Attio admin client helper must attach Supabase auth to integration calls');
+assert(hubspotPlaceholderSource.includes('apiGet') && hubspotPlaceholderSource.includes('apiPost'), 'HubSpot admin client helper must attach Supabase auth to integration calls');
 for (const [label, source] of Object.entries({
   acuityBookSource,
   acuityAppointmentSource,
@@ -616,10 +619,10 @@ assert(acuityWebhookSource.includes('ACUITY_WEBHOOK_FETCH_TIMEOUT_MS'), 'Acuity 
 assert(acuityWebhookSource.includes("withTimeout(getAppointment(apptId), 'acuity appointment fetch')"), 'Acuity webhook must wrap appointment fetch in a timeout');
 assert(acuityWebhookSource.includes('safeLogContext'), 'Acuity webhook must sanitize error log context');
 assert(!acuityWebhookSource.includes("console.error('[acuity/webhook] fetch appt failed:', err.message"), 'Acuity webhook must not log raw appointment fetch errors');
-assert(!acuityWebhookSource.includes("console.warn('[acuity/webhook] Attio sync failed:', e.message"), 'Acuity webhook must not log raw Attio errors');
-assert(acuityWebhookSource.includes("caseType: 'crm_sync_failed'"), 'Acuity webhook Attio failures must create a reconciliation case');
-assert(acuityWebhookSource.includes("provider: 'attio'"), 'Acuity webhook CRM reconciliation must identify Attio as the provider');
-assert(acuityWebhookSource.includes("errorCode: safeErrorCode(e, 'attio_sync_failed')"), 'Acuity webhook CRM reconciliation must store stable error codes');
+assert(!acuityWebhookSource.includes("console.warn('[acuity/webhook] HubSpot sync failed:', e.message"), 'Acuity webhook must not log raw HubSpot errors');
+assert(acuityWebhookSource.includes("caseType: 'crm_sync_failed'"), 'Acuity webhook HubSpot failures must create a reconciliation case');
+assert(acuityWebhookSource.includes("provider: 'hubspot'"), 'Acuity webhook CRM reconciliation must identify HubSpot as the provider');
+assert(acuityWebhookSource.includes("errorCode: safeErrorCode(e, 'hubspot_sync_failed')"), 'Acuity webhook CRM reconciliation must store stable error codes');
 assert(!acuityWebhookSource.includes('ok: false, error: err.message'), 'Acuity webhook must not return raw unhandled errors');
 assert(!acuityWebhookSource.includes('error_message: err.message'), 'Acuity webhook must not persist raw appointment fetch errors');
 assert(!acuityWebhookSource.includes('error: err.message'), 'Acuity webhook reconciliation payloads must use stable error codes');
@@ -648,7 +651,7 @@ assert(verifyBookingToAcuitySource.includes('planSubscriptionId'), 'Booking-to-A
 assert(!stripeWebhookSource.includes('fulfillmentError.body'), 'Stripe webhook must not persist raw fulfillment response bodies');
 assert(!stripeWebhookSource.includes('fulfillmentError: fulfillmentError.message.slice'), 'Stripe webhook must not write raw fulfillment errors into Stripe metadata');
 for (const rawPersistedError of [
-  "error: err.message || 'Attio sync failed'",
+  "error: err.message || 'HubSpot sync failed'",
   "error: err.message || 'Payment operations email failed'",
   "error: err.message || 'Customer pending email failed'",
   'message: fulfillmentError.message',
@@ -661,10 +664,10 @@ assert(stripeWebhookSource.includes("fulfillmentIssue: 'appointment_confirmation
 assert(stripeWebhookSource.includes('scheduling_lock_at:            fulfillmentError ? null : undefined'), 'Stripe webhook must release the scheduling lock after a persisted Acuity failure');
 assert(stripeWebhookSource.includes('safeLogContext'), 'Stripe webhook must sanitize fulfillment error log context');
 assert(!stripeWebhookSource.includes("console.error('[stripe/webhook] Acuity fulfillment failed:', err.message"), 'Stripe webhook must not log raw Acuity fulfillment errors');
-assert(!stripeWebhookSource.includes("console.warn('[stripe/webhook] Attio sync failed:', err.message"), 'Stripe webhook must not log raw Attio errors');
+assert(!stripeWebhookSource.includes("console.warn('[stripe/webhook] HubSpot sync failed:', err.message"), 'Stripe webhook must not log raw HubSpot errors');
 assert(!stripeWebhookSource.includes("error: err.message || 'Invalid Stripe webhook'"), 'Stripe webhook must not return raw invalid-webhook errors');
 assert(!stripeWebhookSource.includes('persisted: false, error: err.message'), 'Stripe webhook must not return raw processing errors');
-assert(attioSource.includes('crmSafeDescription'), 'Attio CRM payload must use an explicit safe description allowlist');
+assert(hubspotSource.includes('ALLOWED_HUBSPOT_PROPERTIES'), 'HubSpot CRM payload must use an explicit allowlist');
 assert(checkoutFulfillmentSource.includes('membership_recurrence_failed'), 'Membership recurrence failures must use stable log codes');
 assert(!checkoutFulfillmentSource.includes('failed:`, err.message'), 'Membership recurrence failures must not log raw Acuity errors');
 for (const [label, source] of Object.entries({

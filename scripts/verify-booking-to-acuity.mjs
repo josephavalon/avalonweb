@@ -320,7 +320,7 @@ async function verifyWebhookAndCheckoutVerifyRace({ label = 'Webhook + checkout 
         session: simulation.session,
         paymentIntentId: paymentIntent.id,
         fulfillment,
-        attioPersonId: fulfillment.attioPersonId,
+        hubspotContactId: fulfillment.hubspotContactId,
       });
       return fulfillment;
     };

@@ -22,7 +22,7 @@ const requiredIntegrations = [
   'stripe',
   'supabase',
   'resend_sms',
-  'attio',
+  'hubspot',
   'nursys',
   'qualiphy',
   'mercury',
@@ -52,8 +52,8 @@ assert.ok(
   'Qualiphy must remain fallback only when no Avalon NP is on call.'
 );
 assert.ok(
-  WIRE_TOMORROW_INTEGRATIONS.find((item) => item.id === 'attio')?.phiPolicy.includes('CRM-safe'),
-  'Attio contract must block PHI.'
+  WIRE_TOMORROW_INTEGRATIONS.find((item) => item.id === 'hubspot')?.phiPolicy.includes('CRM-safe'),
+  'HubSpot contract must block PHI.'
 );
 
 assert.deepEqual(WIRE_TOMORROW_FAILURE_MATRIX.map((item) => item.caseType), RECONCILIATION_CASE_TYPES);
