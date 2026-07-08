@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useState } from 'react';
 import {
   Activity, Armchair, ArrowRight, Briefcase, Calendar, ChevronDown, Clock, Droplet, Gem, MapPin,
   MoreHorizontal, Music, Pill, Presentation, Sparkles, Star, Syringe, Tent, Users, Wine,
@@ -9,8 +8,6 @@ import Footer from '@/components/landing/Footer';
 import AvalonMark from '@/components/AvalonMark';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import { useSeo } from '@/lib/seo';
-import { fetchEventsFeed } from '@/lib/eventsApi';
-import { formatPriceCents } from '@/lib/eventStatus';
 
 const EVENT_TYPES = [
   { key: 'Corporate', icon: Briefcase },
@@ -41,11 +38,6 @@ const whiteBtn = { background: '#fff', color: '#000' };   // true white — the 
 function formatEventDate(iso) {
   if (!iso) return 'Date TBA';
   return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function formatEventTime(iso) {
-  if (!iso) return '';
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
 function sectionLabel(text) {
@@ -287,61 +279,8 @@ function EventPlanner() {
   );
 }
 
-/* ───────────────────────── Luma-style discover rows ───────────────────────── */
-
-function EventRow({ event, dim = false }) {
-  return (
-    <Link
-      to={`/events/${event.slug}`}
-      className={`av-treatment-card flex items-center gap-4 rounded-[1.05rem] border p-3 transition-colors duration-base ease-editorial md:p-3.5 ${dim ? 'opacity-60 hover:opacity-90' : ''}`}
-    >
-      {event.heroImage ? (
-        <img src={event.heroImage} alt="" loading="lazy" className="h-[72px] w-[72px] shrink-0 rounded-xl border border-foreground/10 object-cover" />
-      ) : (
-        <span className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.045]">
-          <AvalonMark className="h-6 w-4 text-foreground/70" />
-        </span>
-      )}
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="font-body text-[12px] font-semibold text-foreground/50">
-          {formatEventDate(event.startsAt)}{event.startsAt ? ` · ${formatEventTime(event.startsAt)}` : ''}
-        </span>
-        <span className="mt-0.5 truncate font-heading text-xl uppercase leading-none tracking-normal text-foreground md:text-2xl">
-          {event.name}
-        </span>
-        <span className="mt-1 truncate font-body text-[12px] font-semibold text-foreground/45">
-          {event.venue || 'San Francisco'}
-        </span>
-      </span>
-      <span className="shrink-0 text-right font-body text-[13px] font-semibold text-foreground/64">
-        {dim ? '' : event.status === 'sold_out' ? 'Sold out' : event.priceFromCents != null ? `From ${formatPriceCents(event.priceFromCents)}` : 'Soon'}
-      </span>
-    </Link>
-  );
-}
-
-const HOW_IT_WORKS = [
-  { step: '1', title: 'Tell us about your event', text: 'Share the basics and what you need.' },
-  { step: '2', title: 'Customize services', text: "We'll help build the perfect wellness experience." },
-  { step: '3', title: 'Receive your quote', text: 'Transparent pricing. Fast response.' },
-  { step: '4', title: 'Build your event page', text: 'Private landing page so guests can RSVP and prep.' },
-  { step: '5', title: 'Prescreen attendees', text: 'Intake & consent forms collected before we arrive.' },
-];
-
-
 export default function Events() {
-  const [feed, setFeed] = useState({ upcoming: [], previously: [] });
-  const [loading, setLoading] = useState(true);
   const plannerRef = useRef(null);
-
-  useEffect(() => {
-    let alive = true;
-    fetchEventsFeed()
-      .then((data) => { if (alive) setFeed(data); })
-      .catch(() => {})
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, []);
 
   useSeo({
     title: 'Wellness For Your Event - Avalon Vitality',
@@ -360,60 +299,11 @@ export default function Events() {
         <section ref={plannerRef} className="scroll-mt-24 pt-6">
           <div className="mb-7 text-center">
             <h2 className="font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
-              Let's build your event
+              Does your event need a wellness lounge?
             </h2>
           </div>
           <EventPlanner />
         </section>
-
-        {/* How it works */}
-        <section className="mt-16">
-          <h2 className="mb-8 font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
-            How it works
-          </h2>
-          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-5">
-            {HOW_IT_WORKS.map(({ step, title, text }) => (
-              <div key={step} className="flex min-w-[78%] shrink-0 snap-start items-start gap-4 md:min-w-0">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/20 font-heading text-lg text-foreground">
-                  {step}
-                </span>
-                <span className="flex flex-col">
-                  <span className="font-body text-[13px] font-black uppercase tracking-[0.06em] text-foreground">{title}</span>
-                  <span className="mt-1 font-body text-[13px] font-semibold leading-relaxed text-foreground/50">{text}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Avalon-hosted events */}
-        {!loading && (feed.upcoming.length > 0 || feed.previously.length > 0) ? (
-          <section className="mt-16">
-            <div className="mb-6 flex items-end justify-between gap-4">
-              <h2 className="font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
-                Upcoming
-              </h2>
-              <p className="pb-1.5 font-body text-xs uppercase tracking-[0.18em] text-foreground/55 md:text-sm">
-                San Francisco Bay Area
-              </p>
-            </div>
-            <div className={`grid gap-3 ${feed.upcoming.length > 1 ? 'md:grid-cols-2' : ''}`}>
-              {feed.upcoming.map((event) => (
-                <EventRow key={event.slug} event={event} />
-              ))}
-            </div>
-            {feed.previously.length > 0 ? (
-              <>
-                <p className="mb-3 mt-10 font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/40">Previously</p>
-                <div className={`grid gap-3 ${feed.previously.length > 1 ? 'md:grid-cols-2' : ''}`}>
-                  {feed.previously.map((event) => (
-                    <EventRow key={event.slug} event={event} dim />
-                  ))}
-                </div>
-              </>
-            ) : null}
-          </section>
-        ) : null}
 
         <p className="mt-16 flex items-center justify-center gap-3 text-center font-body text-[11px] font-black uppercase tracking-[0.2em] text-foreground/45">
           Registered nurses <AvalonMark className="h-4 w-3 text-foreground/70" /> Premium care. Anywhere.
