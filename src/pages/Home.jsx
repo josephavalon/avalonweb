@@ -45,7 +45,7 @@ export default function Home() {
             <WellnessQuiz />
             <TreatmentsTeaser />
             <SectionInterstitial
-              title="Recovery in under 60 seconds"
+              title="Checkout in under 60 seconds"
               body="Book once or start a plan."
             />
             <MembershipSection />
