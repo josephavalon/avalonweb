@@ -822,12 +822,13 @@ export default async function handler(req, res) {
       sessionParams.customer_creation = 'always';
       sessionParams.payment_intent_data = {
         receipt_email: contact.email,
-        // When a balance is owed after the $50 deposit, save the card off-session
-        // so a nurse/admin can collect the remainder after the appointment
-        // (api/charge-balance.js). Stripe requires a customer for off-session reuse.
-        ...(Number(balanceDueCents) > 0
-          ? { setup_future_usage: 'off_session' }
-          : {}),
+        // Always save the card off-session on the Stripe Customer. Plans need
+        // it for the recurring subscription that fulfillment attaches after
+        // the first visit; one-time bookings need it whenever a balance is
+        // owed post-visit; and for goodwill/adjustment charges later. Storing
+        // it unconditionally simplifies the mental model and matches how the
+        // user described the intent — "store the payment for full later".
+        setup_future_usage: 'off_session',
       };
     }
 
