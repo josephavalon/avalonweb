@@ -14,7 +14,10 @@ const API_ROUTES = {
   '/api/integrations/acuity/webhook': './api/integrations/acuity/webhook.js',
   '/api/integrations/attio/test': './api/integrations/attio/test.js',
   '/api/integrations/attio/upsert-person': './api/integrations/attio/upsert-person.js',
+  '/api/integrations/hubspot/test': './api/integrations/hubspot/test.js',
+  '/api/integrations/hubspot/upsert-contact': './api/integrations/hubspot/upsert-contact.js',
   '/api/integrations/stripe/test': './api/integrations/stripe/test.js',
+  '/api/admin/guest-profile': './api/admin/guest-profile.js',
 };
 
 async function readJsonBody(req) {

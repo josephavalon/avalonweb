@@ -15,15 +15,14 @@ import AvalonMark from '@/components/AvalonMark';
 const mainLinks = [
   { to: '/protocols', label: 'IV Therapy' },
   { to: '/subscription', label: 'Plans' },
-  // Launches hidden from the main nav — it currently points to a "Coming Soon"
-  // placeholder page. Re-add when Events.jsx has real content.
+  { to: '/events', label: 'Events' },
 ];
 
 // Desktop hover-dropdown payload for "IV Therapy" — three categories with bag graphics.
 const IV_TILES = [
-  { title: 'IV Vitamins', desc: '8 hydration & wellness protocols', img: '/bags/energy.webp', href: '/protocols' },
-  { title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     img: '/bags/nad.webp',    href: '/services/nad' },
-  { title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       img: '/bags/cbd.webp',    href: '/services/cbd' },
+  { title: 'IV Vitamins', desc: '8 hydration & wellness protocols', img: '/bags/energy.webp', href: '/protocols#iv-vitamins' },
+  { title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     img: '/bags/nad.webp',    href: '/protocols#iv-nad' },
+  { title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       img: '/bags/cbd.webp',    href: '/protocols#iv-cbd' },
 ];
 
 // Width of the portal-side hover surface. Must be at least as wide as the
@@ -263,59 +262,26 @@ function IVTherapyHover({ link, linkClassName }) {
       onMouseEnter={() => { cancelClose(); updateAnchor(); setOpen(true); }}
       onMouseLeave={scheduleClose}
     >
-      {/* Button (not Link) — tap OPENS/closes the menu instead of navigating.
-          Users can still reach /protocols by clicking "IV Vitamins" inside the menu.
-          Reset user-agent button styles so it renders at the same baseline as the
-          neighboring <Link> anchors. `position: relative; z-index: 2` guarantees
-          it always paints ABOVE any sibling absolutely-positioned bridge or halo,
-          so first-click is never swallowed. */}
-      <button
+      {/* Link — click navigates to /protocols; hover-open dropdown is driven by
+          the wrapper's mouseenter/leave. `position: relative; z-index: 2`
+          guarantees it always paints ABOVE any sibling absolutely-positioned
+          bridge or halo, so the click target is never swallowed. */}
+      <Link
         ref={triggerRef}
-        type="button"
+        to={link.to}
         className={linkClassName}
         style={{
-          background: 'transparent',
-          border: 0,
-          // Force Bebas Neue explicitly inline so no user-agent button font-family
-          // can win. Tailwind's `font-heading` class *should* handle this, but
-          // hardcoding it here bypasses every possible cascade edge case (Safari
-          // button UA rule, print-styles, etc.).
-          fontFamily: "'Bebas Neue', sans-serif",
-          padding: 0,
-          cursor: 'pointer',
-          WebkitAppearance: 'none',
-          appearance: 'none',
           position: 'relative',
           zIndex: 2,
-          // Ensure Safari doesn't route the first pointerdown to text-selection
-          // (which can swallow the click on iPadOS + trackpad edge cases).
-          WebkitUserSelect: 'none',
-          userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation',
         }}
         aria-haspopup="menu"
         aria-expanded={open}
-        onPointerDown={(e) => {
-          // Only handle primary button / touch / pen. Ignore secondary mouse
-          // buttons so right-click doesn't open the menu.
-          if (e.button !== 0 && e.pointerType === 'mouse') return;
-          pointerToggledRef.current = true;
-          // Reset the guard shortly after so the next real tap works.
-          window.setTimeout(() => { pointerToggledRef.current = false; }, 400);
-          toggle();
-        }}
-        onClick={(e) => {
-          e.preventDefault();
-          if (pointerToggledRef.current) {
-            // pointerdown already toggled — click is the follow-up event.
-            return;
-          }
-          toggle();
-        }}
+        onClick={() => setOpen(false)}
       >
         <span className="relative z-10">{link.label}</span>
-      </button>
+      </Link>
       {isDesktop && typeof document !== 'undefined' && createPortal(surface, document.body)}
     </div>
   );
@@ -512,6 +478,27 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   });
   const navVisible = !navHiddenByScroll;
 
+  // ScrollToTop (src/App.jsx) calls window.scrollTo(0, 0) on every route
+  // change, which fires a native scroll event that can flip navHiddenByScroll
+  // false→true a beat after navigation (if the nav was hidden on the page you
+  // left). Without this, that shows up as the bar visibly sliding back in
+  // right as the new page loads. Suppress the reveal transition for a short
+  // window after pathname changes so the correction is instant, not animated;
+  // real scroll-driven hide/show on the new page still animates normally.
+  const suppressNavTransitionRef = useRef(false);
+  const prevPathnameRef = useRef(location.pathname);
+  if (prevPathnameRef.current !== location.pathname) {
+    prevPathnameRef.current = location.pathname;
+    suppressNavTransitionRef.current = true;
+  }
+  useEffect(() => {
+    if (!suppressNavTransitionRef.current) return undefined;
+    const id = setTimeout(() => {
+      suppressNavTransitionRef.current = false;
+    }, 120);
+    return () => clearTimeout(id);
+  }, [location.pathname]);
+
   // Single persistent instance: <Navbar globalShell/> renders the bar for ALL
   // viewports from MobileShell — which sits OUTSIDE the page transition — so the bar
   // never remounts/refreshes on navigation. The bare per-page <Navbar/> calls
@@ -526,7 +513,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       inert={!navVisible ? '' : undefined}
       initial={false}
       animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -120 }}
-      transition={{ duration: 0.32, ease: EASE }}
+      transition={{ duration: suppressNavTransitionRef.current ? 0 : 0.32, ease: EASE }}
       className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'

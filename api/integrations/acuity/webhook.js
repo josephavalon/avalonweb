@@ -23,9 +23,11 @@ import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { buildReconciliationCase, insertReconciliationCaseOnce } from '../../_reconciliation.js';
 import { upsertAttioPerson } from '../../_attio.js';
+import { upsertHubspotContact } from '../../_hubspot.js';
 import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { findRedemptionForAppointment, refundMemberCredit } from '../../_lib/member-credits.js';
 import { decrementForAppointment } from '../../_lib/inventory-burndown.js';
+import { loadEventsGfeTypeIds, isEventsGfeAppointment, syncEventsGfeAppointment } from '../../_lib/events-gfe.js';
 
 // bodyParser is disabled so we can HMAC over the exact bytes Acuity signed.
 // Re-stringifying a parsed body breaks the signature compare every time (and
@@ -349,6 +351,35 @@ async function sendTransactionalSms(db, {
   }
 }
 
+// ── Events GFE branch (ET3) ──────────────────────────────────────────────────
+//
+// Appointments booked on an events GFE appointment type are pointer/status
+// syncs on event_visits (via the audited transition RPC) and must NEVER enter
+// the mobile-IV canonical appointment upsert/SMS/CRM flow below. PHI law: the
+// Acuity pointer + gfe_status enum only; the audit payload is content-free.
+// Keeps the acuity_events idempotency bookkeeping consistent with the
+// existing pattern (processed/failed + processed_at).
+async function processEventsGfeAppointment(db, { apptId, action, email, tenantId, eventId, res }) {
+  let sync;
+  try {
+    sync = await syncEventsGfeAppointment(db, { apptId, action, email });
+  } catch (err) {
+    console.warn('[acuity/webhook] events gfe sync failed', safeLogContext(err, 'events_gfe_sync_failed'));
+    if (eventId) await db.from('acuity_events').update({
+      processed_status: 'failed', error_message: safeErrorCode(err, 'events_gfe_sync_failed'), processed_at: new Date().toISOString(),
+    }).eq('id', eventId);
+    return res.status(200).json({ ok: false, eventsGfe: true, code: safeErrorCode(err, 'events_gfe_sync_failed') });
+  }
+  if (eventId) await db.from('acuity_events')
+    .update({ processed_status: 'processed', processed_at: new Date().toISOString() }).eq('id', eventId);
+  await writeAuditEvent(db, {
+    tenantId, action: `acuity_webhook_events_gfe_${action}`,
+    entityType: 'event_visit', entityId: sync.visitId || null, phiTouched: false,
+    payload: { acuityAppointmentId: String(apptId), matched: sync.matched, transitioned: sync.transitioned || null },
+  });
+  return res.status(200).json({ ok: true, action, eventsGfe: true, matched: sync.matched });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -432,10 +463,20 @@ export default async function handler(req, res) {
     const { data: eventRow } = await eventWrite.select().single();
     const eventId = eventRow?.id;
 
+    // Events GFE appointment type ids — loaded once per invocation (ET3).
+    const eventsGfeTypeIds = await loadEventsGfeTypeIds(db);
+
     // 2. canceled — flip status on the canonical row, refund any redeemed
     //    visit credit, and send a PHI-free cancellation SMS. Done (no Acuity
     //    fetch needed; the canonical row already has contact/time in payload).
     if (action === 'canceled') {
+      // Events GFE cancel → gfe_status scheduled→invited reset, then return
+      // early (never the mobile-IV cancel flow). The cancel payload carries
+      // appointmentTypeID but no email, so matching is pointer-only here.
+      if (isEventsGfeAppointment(body, eventsGfeTypeIds)) {
+        return processEventsGfeAppointment(db, { apptId, action, email: '', tenantId, eventId, res });
+      }
+
       // Load the canonical row first so we can: (a) refund a redeemed credit
       // tied to it, and (b) pull a phone/time for the SMS.
       const { data: canceledRow } = await db.from('appointments')
@@ -524,6 +565,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, note: 'appt_fetch_failed' });
     }
 
+    // Events GFE scheduled/rescheduled/changed → gfe_status invited→scheduled,
+    // then return early — events GFE appointments never enter the mobile-IV
+    // canonical upsert/SMS/CRM/burndown flow below.
+    if (isEventsGfeAppointment(appt, eventsGfeTypeIds)) {
+      return processEventsGfeAppointment(db, { apptId, action, email: appt.email || '', tenantId, eventId, res });
+    }
+
     const appointmentRecordId = await upsertAppointment(db, appt, action);
     if (appointmentRecordId) {
       await writeAuditEvent(db, {
@@ -572,6 +620,30 @@ export default async function handler(req, res) {
           }));
         } catch (err) {
           console.warn('[acuity/webhook] reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
+        }
+      });
+      upsertHubspotContact({
+        firstName: appt.firstName, lastName: appt.lastName, email: appt.email, phone: appt.phone,
+        source: 'Acuity', lifecycleStage: 'Booked',
+      }).catch(async (e) => {
+        console.warn('[acuity/webhook] HubSpot sync failed', safeLogContext(e, 'hubspot_sync_failed'));
+        try {
+          await insertReconciliationCaseOnce(db, buildReconciliationCase({
+            caseType: 'crm_sync_failed',
+            provider: 'hubspot',
+            externalReference: String(apptId),
+            tenantId,
+            payload: {
+              appointmentRecordId,
+              acuityAppointmentId: String(apptId),
+              action,
+              eventId,
+              errorCode: safeErrorCode(e, 'hubspot_sync_failed'),
+              errorStatus: e?.statusCode || e?.status || null,
+            },
+          }));
+        } catch (err) {
+          console.warn('[acuity/webhook] hubspot reconciliation insert failed', safeLogContext(err, 'reconciliation_insert_failed'));
         }
       });
     }

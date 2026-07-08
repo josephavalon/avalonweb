@@ -8,6 +8,7 @@
  */
 
 import { upsertAttioPerson } from './_attio.js';
+import { upsertHubspotContact } from './_hubspot.js';
 import { createSchedulingAppointmentWithFallback } from './_checkout-fulfillment.js';
 import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
@@ -127,6 +128,24 @@ export default async function handler(req, res) {
 
     const attioPersonId = attioIdFrom(attioResponse);
 
+    // HubSpot sync — non-blocking, no clinical detail. Manual bookings still
+    // gate acuity on the Attio call succeeding (or being kill-switched); HubSpot
+    // failures shouldn't block the booking so we swallow them.
+    let hubspotContactId = null;
+    try {
+      const hubspotResponse = await upsertHubspotContact({
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        email: contact.email,
+        phone: contact.phone,
+        source: 'Avalon VIP Manual Booking',
+        lifecycleStage: 'Booked',
+      });
+      hubspotContactId = hubspotResponse?.id || null;
+    } catch (err) {
+      console.warn('[manual-booking] HubSpot sync failed', safeLogContext(err, 'hubspot_sync_failed'));
+    }
+
     let acuityAppointment;
     try {
       acuityAppointment = await createSchedulingAppointmentWithFallback({
@@ -156,6 +175,7 @@ export default async function handler(req, res) {
       provider: 'manual_acuity_attio',
       acuityAppointmentId: String(acuityAppointment.id),
       attioPersonId,
+      hubspotContactId,
       appointment: {
         id: String(acuityAppointment.id),
         provider: 'acuity',

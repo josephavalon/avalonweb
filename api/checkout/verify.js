@@ -16,6 +16,7 @@ import {
   readAcuityAppointmentId,
   isLegacyStripeMetadataPayload,
   syncCheckoutAttioPerson,
+  syncCheckoutHubspotContact,
 } from '../_checkout-fulfillment.js';
 
 function safeErrorCode(err, fallback = 'checkout_verify_error') {
@@ -136,7 +137,7 @@ async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 100
   return null;
 }
 
-export async function persistVerifyFulfillment({ appointment, session, paymentIntentId, fulfillment, attioPersonId }) {
+export async function persistVerifyFulfillment({ appointment, session, paymentIntentId, fulfillment, attioPersonId, hubspotContactId }) {
   if (!appointment?.id) return;
   const db = await getSupabaseServiceClient();
   if (!db) return;
@@ -156,11 +157,14 @@ export async function persistVerifyFulfillment({ appointment, session, paymentIn
     scheduling_lock_at: failed ? null : undefined,
     attio_person_id: attioPersonId || undefined,
     attio_synced_at: attioPersonId ? now : undefined,
+    hubspot_contact_id: hubspotContactId || undefined,
+    hubspot_synced_at: hubspotContactId ? now : undefined,
     external_payload: buildExternalPayload(appointment.external_payload || {}, {
       stripeSessionId: session.id,
       stripePaymentIntentId: paymentIntentId || null,
       acuityAppointmentId: appointmentId,
       attioPersonId: attioPersonId || null,
+      hubspotContactId: hubspotContactId || null,
       ...(fulfillment.planSubscriptionId ? { planSubscriptionId: fulfillment.planSubscriptionId } : {}),
       fulfillmentStatus: fulfillment.fulfillmentStatus || null,
       error: fulfillment.fulfillmentError ? safeLogContext(fulfillment.fulfillmentError, 'acuity_fulfillment_failed') : null,
@@ -194,6 +198,7 @@ export async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment
   let fulfillmentStatus = appointment?.status || metadata.fulfillmentStatus || null;
   let fulfillmentError = null;
   let attioPersonId = null;
+  let hubspotContactId = null;
   let planSubscriptionId = null;
   const storedCheckout = !appointment && session.metadata?.checkoutStoreKey
     ? await readCheckoutStoreRecord(session.metadata.checkoutStoreKey)
@@ -214,6 +219,7 @@ export async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment
       fulfillmentStatus: 'checkout_record_missing',
       fulfillmentError: null,
       attioPersonId,
+      hubspotContactId,
       paymentIntentMetadata: metadata,
       deferred: true,
     };
@@ -282,6 +288,26 @@ export async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment
                   appointmentRecordId: appointment?.id || null,
                   stripeSessionId: session.id,
                   errorCode: safeErrorCode(err, 'attio_sync_failed'),
+                  errorStatus: err?.statusCode || err?.status || null,
+                },
+              });
+            }
+
+            try {
+              const hubspotResult = await syncCheckoutHubspotContact({
+                contact: checkout.contact,
+              });
+              hubspotContactId = hubspotResult?.id || null;
+            } catch (err) {
+              console.warn('[checkout/verify] HubSpot sync failed', safeLogContext(err, 'hubspot_sync_failed'));
+              await insertOperationalFailureCase(db, {
+                caseType: 'crm_sync_failed',
+                provider: 'hubspot',
+                externalReference: session.id,
+                payload: {
+                  appointmentRecordId: appointment?.id || null,
+                  stripeSessionId: session.id,
+                  errorCode: safeErrorCode(err, 'hubspot_sync_failed'),
                   errorStatus: err?.statusCode || err?.status || null,
                 },
               });
@@ -392,6 +418,7 @@ export async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment
     fulfillmentStatus,
     fulfillmentError,
     attioPersonId,
+    hubspotContactId,
     planSubscriptionId,
     paymentIntentMetadata: metadata,
     deferred: schedulingDeferred,
@@ -463,6 +490,7 @@ export default async function handler(req, res) {
         paymentIntentId: paymentIntent?.id || (typeof session.payment_intent === 'string' ? session.payment_intent : null),
         fulfillment,
         attioPersonId: fulfillment.attioPersonId,
+        hubspotContactId: fulfillment.hubspotContactId,
       });
       try {
         const db = await getSupabaseServiceClient();

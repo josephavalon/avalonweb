@@ -35,7 +35,16 @@ import {
   readAcuityAppointmentId,
   isLegacyStripeMetadataPayload,
   syncCheckoutAttioPerson,
+  syncCheckoutHubspotContact,
 } from '../../_checkout-fulfillment.js';
+import {
+  isEventSession,
+  isEventPaymentIntent,
+  handleEventCheckoutCompleted,
+  handleEventPaymentIntentSucceeded,
+  handleEventSessionExpired,
+  handleEventChargeRefunded,
+} from '../../_lib/events-webhook.js';
 
 export const config = {
   api: {
@@ -750,6 +759,8 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     : null;
   let attioPersonId = null;
   let attioSynced = false;
+  let hubspotContactId = null;
+  let hubspotSynced = false;
   let fulfillmentError = null;
   const canUseStripeMetadataPayload = !record && isLegacyStripeMetadataPayload(md);
   const checkout = record
@@ -841,6 +852,28 @@ export async function handleCheckoutCompleted(stripe, db, session) {
               appointmentRecordId: record?.id || null,
               stripeSessionId: session.id,
               errorCode: safeErrorCode(err, 'attio_sync_failed'),
+              errorStatus: err?.statusCode || err?.status || null,
+            },
+          });
+        }
+
+        try {
+          const hubspotResult = await syncCheckoutHubspotContact({
+            contact: checkout.contact,
+          });
+          hubspotContactId = hubspotResult?.id || null;
+          hubspotSynced = Boolean(hubspotContactId) && !hubspotResult?.skipped;
+        } catch (err) {
+          console.warn('[stripe/webhook] HubSpot sync failed', safeLogContext(err, 'hubspot_sync_failed'));
+          await insertOperationalFailureCase(db, {
+            caseType: 'crm_sync_failed',
+            provider: 'hubspot',
+            externalReference: session.id,
+            tenantId: fulfillmentTenantId,
+            payload: {
+              appointmentRecordId: record?.id || null,
+              stripeSessionId: session.id,
+              errorCode: safeErrorCode(err, 'hubspot_sync_failed'),
               errorStatus: err?.statusCode || err?.status || null,
             },
           });
@@ -1097,6 +1130,8 @@ export async function handleCheckoutCompleted(stripe, db, session) {
     scheduling_lock_at:            fulfillmentError ? null : undefined,
     attio_person_id:               attioPersonId || undefined,
     attio_synced_at:               attioSynced ? now : undefined,
+    hubspot_contact_id:            hubspotContactId || undefined,
+    hubspot_synced_at:             hubspotSynced ? now : undefined,
     balance_due_cents:            balanceDueCents,
     visit_subtotal_cents:         recordedVisitSubtotalCents || null,
     deposit_amount_cents:         depositPaidCents,
@@ -1105,6 +1140,7 @@ export async function handleCheckoutCompleted(stripe, db, session) {
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
       attioPersonId,
+      hubspotContactId,
       ...(planSubscriptionId ? { planSubscriptionId } : {}),
       ...(planSubscriptionDeferredReason ? { planSubscriptionDeferredReason } : {}),
       ...(discountForPayload ? { discount: discountForPayload } : {}),
@@ -1524,30 +1560,37 @@ export default async function handler(req, res) {
 
     let result = { action: 'store_for_audit' };
     switch (event.type) {
-      case 'checkout.session.completed':
-        result = await withTimeout(
-          (async () => handleCheckoutCompleted(
-            stripe,
-            db,
-            await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id, {
-              expand: [
-                'discounts.coupon',
-                'discounts.promotion_code',
-                'total_details.breakdown.discounts.discount.coupon',
-                'total_details.breakdown.discounts.discount.promotion_code',
-              ],
-            }), 'stripe checkout session retrieve')
-          ))(),
-          'stripe checkout fulfillment'
-        );
+      case 'checkout.session.completed': {
+        const completedSession = await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id, {
+          expand: [
+            'discounts.coupon',
+            'discounts.promotion_code',
+            'total_details.breakdown.discounts.discount.coupon',
+            'total_details.breakdown.discounts.discount.promotion_code',
+          ],
+        }), 'stripe checkout session retrieve');
+        // Events platform sessions (metadata.kind === 'event') fulfill through
+        // events-core ONLY — they must never enter the mobile-IV path below.
+        result = isEventSession(completedSession)
+          ? await withTimeout(handleEventCheckoutCompleted(db, completedSession), 'event checkout fulfillment')
+          : await withTimeout(handleCheckoutCompleted(stripe, db, completedSession), 'stripe checkout fulfillment');
         break;
-      case 'payment_intent.succeeded':
+      }
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object;
         if (!db) {
           result = { action: 'balance_tracking_skipped_db_not_configured' };
           break;
         }
-        result = await handleBalancePaid(db, event.data.object);
+        // Inline event-checkout PaymentIntents (metadata.kind === 'event')
+        // fulfill through events-core, same as the hosted-session path.
+        if (isEventPaymentIntent(pi)) {
+          result = await withTimeout(handleEventPaymentIntentSucceeded(db, pi), 'event PI fulfillment');
+          break;
+        }
+        result = await handleBalancePaid(db, pi);
         break;
+      }
       case 'invoice.paid':
         result = await withTimeout(
           handleInvoicePaid(stripe, db, event.data.object),
@@ -1560,8 +1603,23 @@ export default async function handler(req, res) {
           'stripe invoice payment failed recovery'
         );
         break;
-      case 'checkout.session.expired':
-        result = { action: 'release_scheduling_hold' };
+      case 'checkout.session.expired': {
+        // The expired-event payload carries the full session (incl. metadata),
+        // so no retrieve round-trip is needed to route it.
+        const expiredSession = event.data.object;
+        result = isEventSession(expiredSession)
+          ? await withTimeout(handleEventSessionExpired(db, expiredSession), 'event checkout expiry release')
+          : { action: 'release_scheduling_hold' };
+        break;
+      }
+      case 'charge.refunded':
+        // Events state-sync ONLY (eng decision 2A): acts when the charge's
+        // payment intent matches an event order; every other refund returns
+        // {action:'ignored_non_event_refund'} — the refund_requests admin flow
+        // remains the sole initiator/handler for non-event refunds.
+        result = db
+          ? await withTimeout(handleEventChargeRefunded(db, event.data.object), 'event refund sync')
+          : { action: 'event_refund_skipped_db_not_configured' };
         break;
       default:
         result = { action: 'store_for_audit' };

@@ -117,6 +117,11 @@ const ProviderReports = lazyRoute(() => import('./pages/provider/Reports'));
 const ProviderSettings = lazyRoute(() => import('./pages/provider/Settings'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
+const TripPage = lazyRoute(() => import('./pages/TripPage'));
+const EventKiosk = lazyRoute(() => import('./pages/EventKiosk'));
+const EventBoard = lazyRoute(() => import('./pages/EventBoard'));
+const AdminEventServe = lazyRoute(() => import('./pages/admin/EventServe'));
+const AdminEventBrand = lazyRoute(() => import('./pages/admin/EventBrand'));
 const SeoPillarPage = lazyRoute(() => import('./pages/SeoPillarPage'));
 const LocationPage = lazyRoute(() => import('./pages/LocationPage'));
 const LocationsHub = lazyRoute(() => import('./pages/LocationPage').then((mod) => ({ default: mod.LocationsHub })));
@@ -130,8 +135,6 @@ const OurTeam = lazyRoute(() => import('./pages/OurTeam'));
 const Apply = lazyRoute(() => import('./pages/Apply'));
 const Careers = lazyRoute(() => import('./pages/Careers'));
 const FAQPage = lazyRoute(() => import('./pages/FAQ'));
-const NAD = lazyRoute(() => import('./pages/services/NAD'));
-const CBD = lazyRoute(() => import('./pages/services/CBD'));
 const PrivacyPolicy = lazyRoute(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazyRoute(() => import('./pages/TermsAndConditions'));
 const TelehealthDisclaimer = lazyRoute(() => import('./pages/TelehealthDisclaimer'));
@@ -167,6 +170,7 @@ const Press = lazyRoute(() => import('./pages/Press'));
 const AdminEssentials = lazyRoute(() => import('./pages/admin/AdminEssentials'));
 const AdminAcuityControl = lazyRoute(() => import('./pages/admin/AcuityControl'));
 const AdminAttioControl = lazyRoute(() => import('./pages/admin/AttioControl'));
+const AdminHubspotControl = lazyRoute(() => import('./pages/admin/HubspotControl'));
 const AdminPatientRecords = lazyRoute(() => import('./pages/admin/PatientRecords'));
 const AdminClientDetail = lazyRoute(() => import('./pages/admin/ClientDetail'));
 const AdminMemberships = lazyRoute(() => import('./pages/admin/Memberships'));
@@ -206,23 +210,23 @@ const ScrollToTop = () => {
   useEffect(() => {
     const timers = [];
     let cancelled = false;
+    // Reset first so lazy pages never inherit the previous route's scroll offset,
+    // even when a hash anchor's target is still mounting.
+    window.scrollTo(0, 0);
     if (hash) {
-      // Section anchor — wait for lazy components to mount, then scroll into view
       const id = hash.slice(1);
       let attempts = 0;
       const tryScroll = () => {
         if (cancelled) return;
         const el = document.getElementById(id);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.scrollIntoView({ behavior: 'auto', block: 'start' });
         } else if (attempts < 12) {
           attempts += 1;
           timers.push(setTimeout(tryScroll, 80));
         }
       };
       tryScroll();
-    } else {
-      window.scrollTo(0, 0);
     }
     return () => {
       cancelled = true;
@@ -311,15 +315,19 @@ function AppRoutes() {
             <Route path="/our-team" element={<Navigate to="/team" replace />} />
             <Route path="/products/dehydration-iv" element={<Navigate to="/products/iv-vitamins/dehydration" replace />} />
             <Route path="/services/iv-vitamins" element={<Navigate to="/protocols" replace />} />
-            <Route path="/services/nad" element={<NAD />} />
-            <Route path="/services/cbd" element={<CBD />} />
+            <Route path="/services/nad" element={<Navigate to="/protocols#iv-nad" replace />} />
+            <Route path="/services/cbd" element={<Navigate to="/protocols#iv-cbd" replace />} />
             <Route path="/products/iv-vitamins" element={<Navigate to="/protocols" replace />} />
             <Route path="/products/:category/:slug" element={<ProductDetail />} />
             <Route path="/apply" element={<Apply />} />
             <Route path="/launches/:slug" element={<EventPage />} />
+            <Route path="/events/:slug/kiosk" element={<EventKiosk />} />
+            <Route path="/events/:slug/board" element={<EventBoard />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />
+            <Route path="/trips" element={<Navigate to="/events" replace />} />
+            <Route path="/trips/:visitId" element={<TripPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/membership" element={<Navigate to="/subscription" replace />} />
@@ -423,6 +431,7 @@ function AppRoutes() {
             <Route path="/admin/team-inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamInbox /></RequireAuth>} />
             <Route path="/admin/gfe" element={<RequireAuth allowedRoles={['admin']}><AdminGfeSettings /></RequireAuth>} />
             <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminAttioControl /></RequireAuth>} />
+            <Route path="/admin/hubspot" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminHubspotControl /></RequireAuth>} />
             <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
@@ -444,6 +453,8 @@ function AppRoutes() {
             <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
+            <Route path="/admin/events/:slug/serve" element={<RequireAuth allowedRoles={['admin', 'staff', 'nurse', 'rn', 'np', 'physician', 'medical_director']}><AdminEventServe /></RequireAuth>} />
+            <Route path="/admin/events/:slug/brand" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEventBrand /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />

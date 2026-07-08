@@ -1,283 +1,376 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Calendar, CheckCircle, Clock, Mail, QrCode, Shield, Ticket, User } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Minus, Plus } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import PremiumButton from '@/components/ui/PremiumButton';
-import {
-  generatePresaleCodes,
-  readEventPresales,
-  redeemPresaleCode,
-} from '@/lib/platformOps';
+import InlineStripeCheckout from '@/components/checkout/InlineStripeCheckout';
+import { fetchEvent, reserveEvent } from '@/lib/eventsApi';
+import { formatPriceCents } from '@/lib/eventStatus';
 import { useSeo } from '@/lib/seo';
 
-const EASE = [0.16, 1, 0.3, 1];
-const fieldClass = 'w-full rounded-2xl border border-foreground/[0.10] bg-background/[0.72] px-4 py-3.5 font-body text-sm text-foreground outline-none transition focus:border-foreground/35';
+const inputClass = 'min-h-[48px] w-full rounded-xl border border-foreground/14 bg-background/60 px-4 font-body text-sm font-semibold text-foreground outline-none transition placeholder:text-foreground/36 focus:border-foreground/34';
 
-function MiniQr({ value = 'AV' }) {
-  const blocks = Array.from({ length: 49 }, (_, index) => {
-    const char = value.charCodeAt(index % Math.max(1, value.length)) || index;
-    return (char + index) % 3 !== 0;
-  });
+function formatEventDate(iso) {
+  if (!iso) return 'Date TBA';
+  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+/* Tier as a BuilderRow-style select row: name left, price right. */
+function TierRow({ tier, active, onClick }) {
   return (
-    <div className="grid h-28 w-28 grid-cols-7 gap-1 rounded-2xl border border-foreground/[0.12] bg-background p-3">
-      {blocks.map((on, index) => (
-        <span key={index} className={`rounded-[3px] ${on ? 'bg-foreground' : 'bg-transparent'}`} />
-      ))}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={tier.soldOut}
+      aria-pressed={active}
+      className={`av-treatment-card flex w-full items-center justify-between gap-3 overflow-hidden rounded-[1.05rem] border px-4 py-4 text-left transition-colors duration-base ease-editorial md:px-5 ${
+        active ? 'is-open border-foreground/45' : tier.soldOut ? 'cursor-not-allowed opacity-45' : ''
+      }`}
+    >
+      <span className="flex min-w-0 flex-col">
+        <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">{tier.name}</span>
+        {tier.description ? (
+          <span className="mt-1 font-body text-[12px] font-semibold text-foreground/45 md:text-[13px]">{tier.description}</span>
+        ) : null}
+      </span>
+      <span className="shrink-0 text-right font-body text-[13px] font-semibold text-foreground/64 md:text-sm">
+        {tier.soldOut
+          ? 'Sold out'
+          : tier.applicationGated
+            ? 'Apply'
+            : tier.priceCents > 0
+              ? formatPriceCents(tier.priceCents)
+              : 'Free'}
+        {!tier.soldOut && tier.remaining != null && tier.remaining <= 8 ? ` · ${tier.remaining} left` : ''}
+      </span>
+    </button>
+  );
+}
+
+/* Custom pill stepper — native <select> wheels are banned from the reserve
+   flow (eng review, repo scar tissue). */
+function Stepper({ value, onChange }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, value - 1))}
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.045]"
+        aria-label="Remove attendee"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <span className="min-w-8 text-center font-heading text-2xl uppercase leading-none">{value}</span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(8, value + 1))}
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.045]"
+        aria-label="Add attendee"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
     </div>
   );
 }
 
+function buildItems({ tier, experienceTier, party }) {
+  const primary = party.filter((g) => g.iv || !experienceTier);
+  const experience = experienceTier ? party.filter((g) => !g.iv) : [];
+  const items = [];
+  if (primary.length) items.push({ tierId: tier.id, attendees: primary.map(({ name, email }) => ({ name, email })) });
+  if (experience.length) items.push({ tierId: experienceTier.id, attendees: experience.map(({ name, email }) => ({ name, email })) });
+  return items;
+}
+
 export default function EventPresale() {
   const { eventId = '' } = useParams();
-  const [state, setState] = useState(() => {
-    const current = readEventPresales();
-    if (!current.codes.length && current.events[0]) return generatePresaleCodes(current.events[0].id, 6);
-    return current;
-  });
-  const selectedEvent = useMemo(
-    () => state.events.find((event) => event.id === eventId) || state.events[0],
-    [state.events, eventId]
-  );
-  const starterCode = useMemo(() => (
-    state.codes.find((code) => code.eventId === selectedEvent?.id && code.status !== 'Redeemed')?.code || ''
-  ), [selectedEvent?.id, state.codes]);
-  const query = useMemo(() => new URLSearchParams(window.location.search), []);
-  const [form, setForm] = useState({
-    code: query.get('code') || starterCode,
-    name: '',
-    email: '',
-    phone: '',
-    source: query.get('source') || 'Partner ticket',
-    selectedTime: selectedEvent?.slots?.[0] || '',
-    intakeStatus: 'GFE intake started',
-  });
-  const [result, setResult] = useState(null);
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    fetchEvent(eventId)
+      .then((data) => { if (alive) setEvent(data); })
+      .catch(() => { if (alive) setEvent(null); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [eventId]);
 
   useSeo({
-    title: 'Launch Presale Redemption - Avalon Vitality',
-    description: 'Redeem an Avalon launch presale, complete early intake, and reserve your launch service time.',
-    path: `/presale/${selectedEvent?.id || ''}`,
+    title: event ? `Reserve ${event.name} - Avalon Events` : 'Reserve - Avalon Events',
+    description: 'Three taps: tier, party, pay. Back on the floor in ~30.',
+    path: `/presale/${eventId}`,
   });
 
-  const setValue = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const response = redeemPresaleCode({
-      eventId: selectedEvent.id,
-      code: form.code,
-      selectedTime: form.selectedTime,
-      source: form.source,
-      intakeStatus: form.intakeStatus,
-      client: {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-      },
-    });
-    setState(response.state);
-    setResult(response);
-  };
-
-  if (!selectedEvent) {
+  if (loading) {
     return (
-      <main className="av-page-surface min-h-screen px-5 py-8 text-foreground">
-        <p className="font-body text-sm text-foreground/60">No launch presales are configured yet.</p>
-      </main>
+      <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+        <header><Navbar /></header>
+        <main className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 pb-24 pt-[9rem]">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-[76px] animate-pulse rounded-[1.05rem] border border-foreground/10 bg-foreground/[0.04]" />
+          ))}
+        </main>
+        <Footer />
+      </div>
     );
   }
 
+  if (!event || !(event.tiers || []).length) {
+    return (
+      <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+        <header><Navbar /></header>
+        <main className="mx-auto flex min-h-[70svh] max-w-xl flex-col items-center justify-center px-5 text-center">
+          <h1 className="font-heading text-6xl uppercase leading-none">Presale unavailable</h1>
+          <p className="mt-4 font-body text-sm text-foreground/60">This event isn't open for reservations right now.</p>
+          <Link to="/events" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground/16 px-5 font-body text-xs font-semibold uppercase text-foreground/70">
+            <ArrowLeft className="h-4 w-4" /> Back to events
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return <EventPresaleFlow event={event} />;
+}
+
+function EventPresaleFlow({ event }) {
+  const navigate = useNavigate();
+  const selectableTiers = event.tiers.filter((t) => !t.experienceOnly);
+  const experienceTier = event.tiers.find((t) => t.experienceOnly && !t.soldOut) || null;
+  const [tierId, setTierId] = useState((selectableTiers.find((t) => !t.soldOut) || selectableTiers[0])?.id || '');
+  const [party, setParty] = useState([{ name: '', email: '', iv: true }]);
+  const [buyerEmail, setBuyerEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  // Inline-checkout state: set from /api/events/checkout `mode: 'inline'`
+  // response. When present, we render <InlineStripeCheckout /> in place of
+  // the reserve button so the user pays without leaving the page.
+  const [checkout, setCheckout] = useState(null); // { clientSecret, returnUrl }
+
+  const tier = useMemo(
+    () => event.tiers.find((t) => t.id === tierId) || selectableTiers[0],
+    [event, tierId, selectableTiers],
+  );
+  const applicationOnly = Boolean(tier?.applicationGated);
+
+  const totalCents = useMemo(() => {
+    if (applicationOnly) return 0;
+    const ivCount = party.filter((g) => g.iv || !experienceTier).length;
+    const expCount = party.length - ivCount;
+    return ivCount * (tier?.priceCents || 0) + expCount * (experienceTier?.priceCents || 0);
+  }, [applicationOnly, party, tier, experienceTier]);
+
+  function updateCount(nextCount) {
+    setParty((current) => {
+      if (nextCount > current.length) {
+        return [...current, ...Array.from({ length: nextCount - current.length }, () => ({ name: '', email: '', iv: true }))];
+      }
+      return current.slice(0, nextCount);
+    });
+  }
+
+  function updateGuest(index, patch) {
+    setParty((current) => current.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+  }
+
+  async function confirmReserve() {
+    setError('');
+    const email = buyerEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Add your email — your reservation and health-check link land there.');
+      return;
+    }
+    const namedParty = party.map((g, i) => ({
+      ...g,
+      name: g.name.trim() || `Guest ${i + 1}`,
+      email: (g.email || (i === 0 ? email : '')).trim(),
+    }));
+    const missingIvEmail = namedParty.find((g) => (g.iv || !experienceTier) && !g.email);
+    if (missingIvEmail) {
+      setError(`${missingIvEmail.name} needs an email — every IV guest gets their own health-check link.`);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (applicationOnly) {
+        const res = await fetch('/api/events/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: event.slug, tierId: tier.id, name: namedParty[0].name, email }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || body.ok === false) throw new Error(body.error || 'Request failed.');
+        navigate(`/events/${event.slug}?requested=1`);
+        return;
+      }
+      const result = await reserveEvent({
+        slug: event.slug,
+        items: buildItems({ tier, experienceTier, party: namedParty }),
+        buyer: { email },
+        mode: 'inline',
+      });
+      if (result.clientSecret) {
+        // Inline: mount Stripe Elements below; Stripe redirects to returnUrl after confirm.
+        setCheckout({ clientSecret: result.clientSecret, returnUrl: result.returnUrl });
+        return;
+      }
+      if (result.url) {
+        window.location.assign(result.url);       // Legacy hosted Checkout fallback.
+        return;
+      }
+      navigate(`/trips/${result.orderId}`);        // free RSVP → straight to the trip page
+    } catch (err) {
+      setError(err.message || 'Reservation failed — try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const ivCount = party.filter((g) => g.iv || !experienceTier).length;
+  const expCount = party.length - ivCount;
+  const ctaLabel = submitting
+    ? 'Holding your spot…'
+    : applicationOnly
+      ? 'Request to join'
+      : totalCents > 0
+        ? `Continue to pay — ${formatPriceCents(totalCents)}`
+        : 'Confirm RSVP';
+
   return (
-    <div className="av-page-surface min-h-screen text-foreground">
-      <Navbar />
+    <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+      <header><Navbar /></header>
 
-      <main className="px-4 pb-20 pt-28 md:px-8 md:pb-24 md:pt-36">
-        <section className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, ease: EASE }}
-          className="av-motion-rail rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 p-6 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-8"
-        >
-          <h1 className="font-heading text-[4rem] uppercase leading-[0.84] tracking-tight md:text-[7rem]">
-            Reserve<br />Launch Time
-          </h1>
-          <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-foreground/58">
-            Enter your code. Pick a time. Start GFE before launch day.
+      <main className="mx-auto flex w-full max-w-2xl flex-col px-4 pb-24 pt-[5.25rem] md:pt-[5.75rem]">
+        <div className="mb-8 pt-8 text-center md:mb-10 md:pt-12">
+          <p className="font-body text-[12px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+            <Link to={`/events/${event.slug}`} className="hover:text-foreground/70">{event.name}</Link>
+            {' · '}{formatEventDate(event.startsAt)}
           </p>
+          <h1 className="mt-3 font-heading text-[3rem] uppercase leading-[0.86] tracking-normal text-foreground md:text-[4.4rem]">
+            {applicationOnly ? 'Request' : 'Reserve'}
+          </h1>
+          <p className="mt-3 font-body text-[15px] font-semibold text-foreground/60">
+            {applicationOnly
+              ? "Four fields. We'll get back within 24 hours."
+              : 'Tier, party, pay. Back on the floor in ~30.'}
+          </p>
+        </div>
 
-          <div className="mt-8 grid gap-3">
-            {[
-              { icon: Ticket, label: selectedEvent.name, sub: `${selectedEvent.partner} · ${selectedEvent.source}` },
-              { icon: Calendar, label: selectedEvent.date, sub: selectedEvent.venue },
-              { icon: Clock, label: selectedEvent.window, sub: selectedEvent.service },
-              { icon: Shield, label: 'Bring ID or credential', sub: 'Name and QR/code are checked at the launch.' },
-            ].map(({ icon: Icon, label, sub }) => (
-              <motion.div
-                key={label}
-                whileHover={{ y: -2 }}
-                transition={{ duration: 0.36, ease: EASE }}
-                className="av-glass-sweep relative flex items-center gap-3 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-4"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-foreground/[0.08] bg-background/64">
-                  <Icon className="h-5 w-5" strokeWidth={1.7} />
+        <div className="flex flex-col gap-3">
+          {selectableTiers.map((item) => (
+            <TierRow key={item.id} tier={item} active={item.id === tier?.id} onClick={() => setTierId(item.id)} />
+          ))}
+
+          <div className="av-treatment-card overflow-hidden rounded-[1.05rem] border">
+            <div className="flex items-center justify-between gap-3 px-4 py-4 md:px-5">
+              <span className="flex min-w-0 flex-col">
+                <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">Party</span>
+                <span className="mt-1 font-body text-[12px] font-semibold text-foreground/45 md:text-[13px]">
+                  Every IV guest gets their own health-check link.
                 </span>
-                <div>
-                  <p className="font-body text-sm font-semibold text-foreground">{label}</p>
-                  <p className="font-body text-xs text-foreground/48">{sub}</p>
-                </div>
-              </motion.div>
-            ))}
+              </span>
+              <Stepper value={party.length} onChange={updateCount} />
+            </div>
+            {party.length > 1 || experienceTier ? (
+              <div className="grid gap-3 border-t border-foreground/[0.08] px-4 pb-4 pt-3.5 md:px-5">
+                {party.map((guest, index) => (
+                  <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                    <input
+                      className={inputClass}
+                      value={guest.name}
+                      onChange={(e) => updateGuest(index, { name: e.target.value })}
+                      placeholder={`Guest ${index + 1} name`}
+                      aria-label={`Guest ${index + 1} name`}
+                      autoComplete="off"
+                    />
+                    <input
+                      className={inputClass}
+                      type="email"
+                      value={guest.email}
+                      onChange={(e) => updateGuest(index, { email: e.target.value })}
+                      placeholder={index === 0 ? 'Uses your email' : 'guest@email.com'}
+                      aria-label={`Guest ${index + 1} email`}
+                      autoComplete="off"
+                    />
+                    {experienceTier ? (
+                      <button
+                        type="button"
+                        onClick={() => updateGuest(index, { iv: !guest.iv })}
+                        className={`min-h-[48px] rounded-xl border px-4 font-body text-xs font-bold uppercase transition ${
+                          guest.iv
+                            ? 'border-foreground bg-foreground text-background'
+                            : 'border-foreground/14 bg-foreground/[0.045] text-foreground/58'
+                        }`}
+                      >
+                        {guest.iv ? tier?.name || 'IV' : experienceTier.name}
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, delay: 0.08, ease: EASE }}
-          className="rounded-[1.75rem] border border-foreground/[0.10] bg-background/68 p-5 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-7"
-        >
-          <AnimatePresence mode="wait">
-          {result?.ok ? (
-            <motion.div
-              key="credential"
-              initial={{ opacity: 0, y: 14, rotateX: -8, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -10, filter: 'blur(6px)' }}
-              transition={{ duration: 0.7, ease: EASE }}
-              className="flex min-h-full flex-col"
-            >
-              <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.08] p-4 text-emerald-500">
-                <CheckCircle className="h-5 w-5" />
-                <p className="font-body text-xs font-semibold uppercase tracking-[0.16em]">Acuity + GFE queued</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-foreground/[0.10] bg-background p-5">
-                <div className="flex items-start justify-between gap-5">
-                  <div>
-                    <h2 className="mt-3 font-heading text-4xl uppercase leading-none">{result.redemption.client.name}</h2>
-                    <p className="mt-3 font-body text-sm text-foreground/58">{result.redemption.eventName}</p>
-                    <p className="font-body text-sm text-foreground/58">{result.redemption.date} · {result.redemption.selectedTime}</p>
-                  </div>
-                  <MiniQr value={result.redemption.credential} />
-                </div>
-                <div className="mt-6 rounded-2xl border border-foreground/[0.08] bg-card p-4">
-                  <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40">Code</p>
-                  <p className="mt-1 font-heading text-2xl uppercase tracking-[0.08em]">{result.redemption.credential}</p>
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-foreground/[0.08] bg-card p-4">
-                    <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40">Acuity</p>
-                    <p className="mt-1 font-body text-xs font-semibold text-foreground">{result.redemption.scheduleStatus}</p>
-                  </div>
-                  <div className="rounded-2xl border border-foreground/[0.08] bg-card p-4">
-                    <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/40">GFE</p>
-                    <p className="mt-1 font-body text-xs font-semibold text-foreground">{result.redemption.gfeStatus}</p>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-5 font-body text-sm leading-relaxed text-foreground/56">
-                Show this credential with your ID at the launch. Your intake status is saved as{' '}
-                <span className="font-semibold text-foreground">{result.redemption.intakeStatus}</span>.
-              </p>
-              <PremiumButton
-                as={Link}
-                wrapperClassName="mt-auto w-full"
-                to="/launches"
-                className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background"
-              >
-                Back to launches <ArrowRight className="h-4 w-4" />
-              </PremiumButton>
-            </motion.div>
-          ) : (
-            <motion.form
-              key="form"
-              onSubmit={handleSubmit}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="space-y-4"
-            >
-              {result?.error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.08] p-4 font-body text-sm text-red-400">
-                  {result.error}
-                </div>
-              )}
-              <label className="block">
-                <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Presale code or partner ticket</span>
-                <input className={fieldClass} value={form.code} onChange={(event) => setValue('code', event.target.value.toUpperCase())} placeholder="AV-LAUNCH-001" required />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42"><User className="h-3.5 w-3.5" /> Full name</span>
-                  <input className={fieldClass} value={form.name} onChange={(event) => setValue('name', event.target.value)} placeholder="Name on ID" required />
-                </label>
-                <label className="block">
-                  <span className="mb-2 flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42"><Mail className="h-3.5 w-3.5" /> Email</span>
-                  <input className={fieldClass} type="email" value={form.email} onChange={(event) => setValue('email', event.target.value)} placeholder="you@email.com" required />
-                </label>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Phone</span>
-                  <input className={fieldClass} inputMode="tel" value={form.phone} onChange={(event) => setValue('phone', event.target.value)} placeholder="Mobile number" required />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Source</span>
-                  <select className={fieldClass} value={form.source} onChange={(event) => setValue('source', event.target.value)}>
-                    <option>Avalon presale</option>
-                    <option>Partner ticket</option>
-                    <option>Guest list</option>
-                    <option>Special code</option>
-                  </select>
-                </label>
-              </div>
-              <label className="block">
-                <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Choose launch time</span>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {selectedEvent.slots.map((slot) => (
-                    <motion.button
-                      key={slot}
-                      type="button"
-                      layout
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setValue('selectedTime', slot)}
-                      className={`min-h-[52px] rounded-2xl border px-3 font-body text-sm font-semibold transition ${
-                        form.selectedTime === slot
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-foreground/[0.10] bg-background/[0.52] text-foreground'
-                      }`}
-                    >
-                      {slot}
-                    </motion.button>
-                  ))}
-                </div>
-              </label>
-              <label className="block">
-                <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Estimate / intake state</span>
-                <select className={fieldClass} value={form.intakeStatus} onChange={(event) => setValue('intakeStatus', event.target.value)}>
-                  <option>GFE intake started</option>
-                  <option>GFE intake complete</option>
-                  <option>Clinical review needed</option>
-                  <option>Cleared before launch</option>
-                </select>
-              </label>
-              <PremiumButton
-                as="button"
-                type="submit"
-                wrapperClassName="w-full"
-                className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 font-body text-xs font-semibold uppercase tracking-[0.22em] text-background transition active:scale-[0.99]"
-              >
-                Reserve launch time <QrCode className="h-4 w-4" />
-              </PremiumButton>
-            </motion.form>
-          )}
-          </AnimatePresence>
-        </motion.div>
-        </section>
+          <div className="av-treatment-card flex flex-col gap-3 overflow-hidden rounded-[1.05rem] border px-4 py-4 md:px-5">
+            <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground md:text-xl">
+              Your email
+            </span>
+            <input
+              className={inputClass}
+              type="email"
+              value={buyerEmail}
+              onChange={(e) => setBuyerEmail(e.target.value)}
+              placeholder="you@email.com"
+              aria-label="Your email"
+              autoComplete="email"
+            />
+          </div>
+
+          {!applicationOnly && expCount > 0 && experienceTier ? (
+            <div className="av-treatment-card flex items-center justify-between gap-3 rounded-[1.05rem] border px-4 py-3.5 md:px-5">
+              <span className="font-body text-[13px] font-semibold text-foreground/60">
+                {tier.name} × {ivCount} · {experienceTier.name} × {expCount}
+              </span>
+              <span className="font-body text-[13px] font-semibold text-foreground/64">{formatPriceCents(totalCents)}</span>
+            </div>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p role="alert" className="mt-4 text-center font-body text-sm font-semibold text-foreground/80">{error}</p>
+        ) : null}
+
+        {checkout ? (
+          <div className="mt-5 rounded-[1.35rem] border border-foreground/12 bg-background/40 p-4 md:p-5">
+            <p className="mb-3 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">Card details</p>
+            <InlineStripeCheckout
+              clientSecret={checkout.clientSecret}
+              returnUrl={checkout.returnUrl}
+              submitLabel={totalCents > 0 ? `Pay ${formatPriceCents(totalCents)}` : 'Confirm reservation'}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={confirmReserve}
+            disabled={submitting}
+            className="mt-4 flex min-h-[56px] w-full items-center justify-center rounded-full bg-white px-5 font-heading text-lg uppercase leading-none tracking-[0.08em] text-black transition-transform hover:bg-white/95 active:scale-[0.99] disabled:opacity-60"
+          >
+            {ctaLabel}
+          </button>
+        )}
+        <p className="mt-2 text-center font-body text-[12px] font-semibold text-foreground/50">
+          {applicationOnly
+            ? "We'll reply within 24 hours."
+            : 'Secure Stripe checkout · Seat held 15 minutes. Full refund 7+ days out.'}
+        </p>
+        <p className="mt-1 text-center font-body text-[12px] font-semibold text-foreground/50">
+          First time? A 90-second health check clears you before the event. Your health details never live on this page.
+        </p>
       </main>
+
       <Footer />
     </div>
   );

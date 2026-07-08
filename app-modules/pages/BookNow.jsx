@@ -1863,19 +1863,40 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
   );
 }
 
-function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) {
+function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary, isSuggestion = false }) {
   const [openOther, setOpenOther] = useState(false);
   const activeOption = productOptions.find((item) => item.key === activeKey) || productOptions[0];
   const otherOptions = productOptions.filter((item) => item.key !== activeOption?.key);
+  const panelRef = useRef(null);
 
   useEffect(() => {
     setOpenOther(false);
   }, [activeKey]);
 
+  // Quiz-driven landings scroll the suggested therapy into view so the
+  // recommendation is immediately obvious instead of forcing a hunt.
+  useEffect(() => {
+    if (!isSuggestion || !panelRef.current) return;
+    const el = panelRef.current;
+    const timer = window.setTimeout(() => {
+      try {
+        el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      } catch {
+        el.scrollIntoView();
+      }
+    }, 240);
+    return () => window.clearTimeout(timer);
+  }, [isSuggestion, activeKey]);
+
   if (!activeOption) return null;
 
   return (
-    <div className="grid gap-2 md:gap-2">
+    <div ref={panelRef} className="grid gap-2 md:gap-2">
+      {isSuggestion && (
+        <p className="mb-1 px-1 font-body text-[10.5px] uppercase leading-relaxed tracking-[0.16em] text-foreground/50">
+          Wellness suggestion based on your quiz · Not medical advice
+        </p>
+      )}
       <ProductCard
         key={activeOption.key}
         product={activeOption}
@@ -1883,7 +1904,7 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
         active
         onSelect={() => onSelect(activeOption.key)}
         onPrimary={() => onPrimary(activeOption.key)}
-        recommendation="Selected"
+        recommendation={isSuggestion ? 'Suggested' : 'Selected'}
       />
       {otherOptions.length > 0 && (
         <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:rounded-[1.1rem]">
@@ -5437,7 +5458,7 @@ export default function BookNow() {
     const appointmentTypeId = safeAcuityTypeId(localBooking.appointmentTypeId || localBooking.acuitySlot?.appointmentTypeID);
     return {
       mode: 'payment',
-      checkoutUiMode: 'hosted',
+      checkoutUiMode: 'embedded',
       items: (localBooking.items || []).map((item) => ({
         key: item.cartKey,
         cartKey: item.cartKey,
@@ -6733,6 +6754,7 @@ export default function BookNow() {
 	                        activeKey={state.productKey}
 	                        onSelect={chooseProductAndContinue}
 	                        onPrimary={chooseProductAndContinue}
+	                        isSuggestion={Boolean(searchParams.get('protocol'))}
 	                      />
 	                    )}
                       </>

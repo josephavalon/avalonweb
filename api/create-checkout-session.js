@@ -781,15 +781,14 @@ export default async function handler(req, res) {
 
     const sessionParams = {
       mode: sessionMode,
-      // Card only. This surfaces the Apple Pay + Google Pay express buttons
-      // (once the Apple Pay domain is verified and the wallets are enabled in
-      // the Stripe Dashboard) and DISABLES Stripe Link. Without this, Checkout
-      // falls back to the dashboard's automatic methods, and because we pass
-      // customer_email below, Link auto-prompts a "Confirm it's you" OTP that
-      // hijacks the payment UI before any wallet renders.
-      // TODO: add 'amazon_pay' here once it is activated in the Stripe Dashboard.
-      payment_method_types: ['card'],
-      customer_email: contact.email,
+      // Use the Dashboard-enabled payment methods (Cards, Amazon Pay, Apple
+      // Pay, Affirm, Klarna as of 2026-07). automatic_payment_methods lets
+      // Stripe render exactly the methods enabled in the account without us
+      // hardcoding a list; Link stays off because it's disabled in the
+      // account's payment_methods settings, not because we exclude it here.
+      // Dropping `customer_email` at the top level ALSO helps ensure Link
+      // never recognizes a returning shopper.
+      automatic_payment_methods: { enabled: true },
       line_items,
       allow_promotion_codes: true,
       expires_at: checkoutExpiresAt(),
@@ -825,12 +824,13 @@ export default async function handler(req, res) {
       sessionParams.customer_creation = 'always';
       sessionParams.payment_intent_data = {
         receipt_email: contact.email,
-        // When a balance is owed after the $50 deposit, save the card off-session
-        // so a nurse/admin can collect the remainder after the appointment
-        // (api/charge-balance.js). Stripe requires a customer for off-session reuse.
-        ...(Number(balanceDueCents) > 0
-          ? { setup_future_usage: 'off_session' }
-          : {}),
+        // Always save the card off-session on the Stripe Customer. Plans need
+        // it for the recurring subscription that fulfillment attaches after
+        // the first visit; one-time bookings need it whenever a balance is
+        // owed post-visit; and for goodwill/adjustment charges later. Storing
+        // it unconditionally simplifies the mental model and matches how the
+        // user described the intent — "store the payment for full later".
+        setup_future_usage: 'off_session',
       };
     }
 

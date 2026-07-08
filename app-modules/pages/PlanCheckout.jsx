@@ -8,6 +8,7 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { apiGet } from '@/lib/apiClient';
 import { resolveGfeRequirement } from '@/lib/bookingLifecycle';
 import AddressAutocomplete from '@/components/store/AddressAutocomplete';
+import EmbeddedStripeCheckout from '@/components/checkout/EmbeddedStripeCheckout';
 
 // Dedicated membership checkout — intentionally separate from the one-time
 // 5-step /book flow. The customer picks one recurring day/time (their standing
@@ -193,6 +194,7 @@ export default function PlanCheckout() {
   const [address, setAddress] = useState({ line1: '', zip: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [checkoutSecret, setCheckoutSecret] = useState(null);
   const normalizedZip = address.zip.replace(/\D/g, '').slice(0, 5);
 
   // ── Logged-in fast path ──────────────────────────────────────────────────
@@ -318,7 +320,7 @@ export default function PlanCheckout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'payment',
-          checkoutUiMode: 'hosted',
+          checkoutUiMode: 'embedded',
           membership: { name: 'custom', price: perPeriodTotal, billing: term.billing, visitsPerCycle },
           contact: {
             firstName: contact.firstName.trim(),
@@ -366,8 +368,20 @@ export default function PlanCheckout() {
         }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || 'Could not start checkout.');
-      window.location.href = data.url; // Stripe hosted checkout (or pre-API preview url)
+      if (!res.ok) throw new Error(data?.error || 'Could not start checkout.');
+      // Embedded checkout: mount inline via the client_secret returned by the
+      // API. Stripe redirects the browser to /booking/confirmation on success
+      // (return_url baked in by the backend).
+      if (data.checkoutUiMode === 'embedded' && data.clientSecret) {
+        setCheckoutSecret(data.clientSecret);
+        return;
+      }
+      // Legacy hosted-checkout fallback.
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error('Checkout unavailable.');
     } catch (err) {
       setError(err.message || 'Something went wrong starting your plan.');
       setSubmitting(false);
@@ -597,17 +611,26 @@ export default function PlanCheckout() {
 
             {error && <p className="mt-4 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 font-body text-sm font-semibold text-red-200" role="alert">{error}</p>}
 
-            <button
-              type="button"
-              onClick={startMembership}
-              disabled={!canSubmit}
-              className="mt-5 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] disabled:opacity-50"
-            >
-              {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Continue to payment <ArrowRight className="h-4 w-4" /></>)}
-            </button>
-            <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center font-body text-[13px] font-semibold text-foreground/44">
-              <Lock className="h-3.5 w-3.5" /> Secure checkout. Your information is always protected.
-            </p>
+            {checkoutSecret ? (
+              <div className="mt-5">
+                <p className="mb-3 font-body text-[13px] font-black uppercase tracking-[0.18em] text-foreground/50">Card details</p>
+                <EmbeddedStripeCheckout clientSecret={checkoutSecret} />
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={startMembership}
+                  disabled={!canSubmit}
+                  className="mt-5 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[1.05rem] border border-foreground/82 bg-foreground px-4 font-body text-sm font-black uppercase tracking-[0.1em] text-background transition-transform active:scale-[0.99] disabled:opacity-50"
+                >
+                  {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Starting…</>) : (<>Continue to payment <ArrowRight className="h-4 w-4" /></>)}
+                </button>
+                <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center font-body text-[13px] font-semibold text-foreground/44">
+                  <Lock className="h-3.5 w-3.5" /> Secure checkout. Your information is always protected.
+                </p>
+              </>
+            )}
           </motion.div>
 
           {/* RIGHT — order summary */}

@@ -1,202 +1,398 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Check, MapPin, Plus } from 'lucide-react';
+import Navbar from '@/components/landing/Navbar';
+import Footer from '@/components/landing/Footer';
 import AvalonMark from '@/components/AvalonMark';
-import { motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowLeft, Calendar, MapPin, Shield, Users, Ticket } from 'lucide-react';
-import Navbar from '../../../src/components/landing/Navbar';
-import Footer from '../../../src/components/landing/Footer';
-import { findEventBySlug } from '../../../src/data/events';
-import { readEventPresales } from '@/lib/platformOps';
-import PremiumButton from '@/components/ui/PremiumButton';
+import { fetchEventSync, fetchEventFresh } from '@/lib/eventsApi';
+import { formatPriceCents } from '@/lib/eventStatus';
+import { useSeo } from '@/lib/seo';
 
-const EASE = [0.16, 1, 0.3, 1];
+function formatDayLong(iso) {
+  if (!iso) return 'Date TBA';
+  return new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function formatEventTime(startIso, endIso) {
+  if (!startIso) return '';
+  const opts = { hour: 'numeric', minute: '2-digit' };
+  const start = new Date(startIso).toLocaleTimeString('en-US', opts);
+  const end = endIso ? ` – ${new Date(endIso).toLocaleTimeString('en-US', opts)}` : '';
+  return `${start}${end}`;
+}
+
+function blocksOf(event) {
+  const blocks = event.descriptionBlocks;
+  if (Array.isArray(blocks)) return { included: [], goodToKnow: [], description: '', vibe: '' };
+  return {
+    vibe: blocks?.vibe || '',
+    description: blocks?.description || '',
+    included: Array.isArray(blocks?.included) ? blocks.included : [],
+    goodToKnow: Array.isArray(blocks?.goodToKnow) ? blocks.goodToKnow : [],
+  };
+}
+
+/* Organizer photos only — no stock fallback (never the IV bag). */
+function uploadedPhotos(event) {
+  return (event.assets || [])
+    .map((a) => a.renditions?.hero_1920 || a.renditions?.card_640 || a.storage_path)
+    .filter(Boolean);
+}
+
+/* Calendar tile + pin tile — Bebas date, hairline border, matches row-icon DNA. */
+function CalendarChip({ iso }) {
+  const d = iso ? new Date(iso) : null;
+  return (
+    <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center overflow-hidden rounded-xl border border-foreground/12 bg-foreground/[0.04]">
+      <span className="font-body text-[9px] uppercase leading-none tracking-[0.18em] text-foreground/55">
+        {d ? d.toLocaleDateString('en-US', { month: 'short' }) : 'TBA'}
+      </span>
+      <span className="mt-0.5 font-heading text-[22px] leading-none tracking-tight text-foreground">
+        {d ? d.getDate() : '—'}
+      </span>
+    </span>
+  );
+}
+
+function InfoRow({ chip, title, hint }) {
+  return (
+    <div className="av-treatment-card flex items-center gap-3.5 rounded-[1.05rem] border px-4 py-3">
+      {chip}
+      <span className="flex min-w-0 flex-col">
+        <span className="font-heading text-xl uppercase leading-none tracking-normal text-foreground md:text-2xl">
+          {title}
+        </span>
+        {hint ? (
+          <span className="mt-1 font-body text-[11px] uppercase leading-relaxed tracking-[0.18em] text-foreground/50">
+            {hint}
+          </span>
+        ) : null}
+      </span>
+    </div>
+  );
+}
+
+function TierRow({ tier, active, onClick }) {
+  const priceLabel = tier.soldOut
+    ? 'Sold out'
+    : tier.applicationGated
+      ? 'Apply'
+      : tier.priceCents > 0
+        ? formatPriceCents(tier.priceCents)
+        : 'Free';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={tier.soldOut}
+      aria-pressed={active}
+      className={`av-treatment-card flex w-full items-center justify-between gap-3 rounded-[1.25rem] border px-4 py-3.5 text-left transition-colors ${
+        active
+          ? 'border-foreground/55 bg-foreground/[0.06]'
+          : tier.soldOut
+            ? 'cursor-not-allowed opacity-45'
+            : 'hover:border-foreground/30'
+      }`}
+    >
+      <span className="flex min-w-0 flex-col">
+        <span className="font-heading text-xl uppercase leading-none tracking-normal text-foreground md:text-2xl">
+          {tier.name}
+        </span>
+        {tier.description ? (
+          <span className="mt-1.5 font-body text-[11px] uppercase leading-relaxed tracking-[0.16em] text-foreground/50">
+            {tier.description}
+          </span>
+        ) : null}
+      </span>
+      <span className="shrink-0 text-right font-heading text-2xl leading-none tabular-nums text-foreground/82">
+        {priceLabel}
+      </span>
+    </button>
+  );
+}
+
+function QuietList({ kicker, title, items }) {
+  if (!items.length) return null;
+  return (
+    <div className="mt-8">
+      <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/42">{kicker}</p>
+      <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">
+        {title}
+      </h3>
+      <div className="mt-3">
+        {items.map((item) => (
+          <p key={item} className="border-t border-foreground/[0.08] py-2.5 font-body text-[13px] leading-relaxed text-foreground/60 first:border-t-0">
+            {item}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function pickDefaultTierId(data) {
+  const open = (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated && !t.experienceOnly)
+    || (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated)
+    || data?.tiers?.[0];
+  return open?.id || '';
+}
 
 export default function EventPage() {
   const { slug } = useParams();
-  const saved = readEventPresales().events.find((item) => item.slug === slug || item.id === slug);
-  const event = saved ? {
-    slug: saved.slug,
-    title: saved.headline || saved.name,
-    date: saved.date,
-    location: saved.venue,
-    desc: saved.description,
-    briefing: saved.description,
-    hostName: saved.partner,
-    hostRole: 'Launch partner',
-    when: [saved.date, saved.window].filter(Boolean).join(' · '),
-    venue: saved.venue,
-    capacity: saved.capacity ? `${saved.capacity} presale spots` : 'Capacity pending',
-    cover: '/backgrounds/iv-vitamins-hero.webp',
-    status: saved.publishStatus,
-    publicMode: saved.publicMode,
-    presaleEnabled: saved.presaleEnabled,
-    ticketSystem: saved.ticketSystem,
-    ticketTiers: saved.ticketTiers,
-    presaleId: saved.id,
-    service: saved.service,
-    gfeTiming: saved.gfeTiming,
-    acuityHandoff: saved.acuityStatus,
-  } : findEventBySlug(slug);
+  const [event, setEvent] = useState(() => fetchEventSync(slug));
+  const [loading, setLoading] = useState(() => !fetchEventSync(slug));
+  const [tierId, setTierId] = useState(() => pickDefaultTierId(fetchEventSync(slug)));
+  const [selectedAddOns, setSelectedAddOns] = useState([]);
 
-  if (!event) {
+  const toggleAddOn = (id) =>
+    setSelectedAddOns((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+    );
+
+  useEffect(() => {
+    let alive = true;
+    const seed = fetchEventSync(slug);
+    setEvent(seed);
+    setTierId(pickDefaultTierId(seed));
+    setLoading(!seed);
+    fetchEventFresh(slug)
+      .then((data) => {
+        if (!alive || !data) return;
+        setEvent(data);
+        setTierId((current) => current || pickDefaultTierId(data));
+      })
+      .catch(() => { /* keep fallback / null */ })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [slug]);
+
+  useSeo({
+    title: event ? `${event.name} - Avalon Events` : 'Avalon Events - Avalon Vitality',
+    description: 'Avalon recovery lounge — reserve your spot.',
+    path: `/events/${slug}`,
+  });
+
+  if (loading) {
     return (
-      <div className="av-page-surface min-h-screen flex flex-col">
-        <Navbar />
-        <section className="flex-1 flex items-center justify-center px-6 py-24">
-          <div className="max-w-xl text-center">
-            <h1 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-6">Launch not found</h1>
-            <Link to="/launches" className="inline-flex items-center gap-2 text-accent hover:text-accent/70 font-body text-xs tracking-widest uppercase">
-              <ArrowLeft className="w-4 h-4" /> Back to Launches
-            </Link>
+      <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+        <header><Navbar /></header>
+        <main className="mx-auto grid w-full max-w-5xl gap-8 px-4 pb-24 pt-[9rem] md:grid-cols-[340px_1fr] md:px-8">
+          <div className="aspect-square animate-pulse rounded-[1.55rem] border border-foreground/10 bg-foreground/[0.04]" />
+          <div className="flex flex-col gap-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-[72px] animate-pulse rounded-[1.25rem] border border-foreground/10 bg-foreground/[0.04]" />
+            ))}
           </div>
-        </section>
+        </main>
         <Footer />
       </div>
     );
   }
 
-  const cover = event.cover || '/backgrounds/iv-vitamins-hero.webp';
+  if (!event) {
+    return (
+      <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+        <header><Navbar /></header>
+        <main className="mx-auto flex min-h-[70svh] max-w-xl flex-col items-center justify-center px-5 text-center">
+          <h1 className="font-heading text-6xl uppercase leading-none tracking-tight md:text-7xl">Event not found</h1>
+          <Link
+            to="/events"
+            className="group mt-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground/40 px-6 font-body text-[11px] uppercase tracking-[0.22em] text-foreground transition-colors hover:border-foreground/80 hover:bg-foreground/[0.04]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} /> Back to events
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const blocks = blocksOf(event);
+  const photos = uploadedPhotos(event);
+  const tiers = event.tiers || [];
+  const addOns = event.addOns || [];
+  const tier = tiers.find((t) => t.id === tierId) || tiers[0];
+  const addOnTotalCents = addOns
+    .filter((ao) => selectedAddOns.includes(ao.id))
+    .reduce((sum, ao) => sum + (ao.priceCents || 0), 0);
+  const reserveTotalCents = (tier?.priceCents || 0) + addOnTotalCents;
+  const applicationOnly = Boolean(tier?.applicationGated);
+  const closed = event.status === 'closed' || event.status === 'ended';
+  const ctaLabel = closed
+    ? 'See upcoming events'
+    : applicationOnly
+      ? 'Request to join'
+      : reserveTotalCents > 0
+        ? `Reserve — ${formatPriceCents(reserveTotalCents)}`
+        : 'Reserve';
+  const ctaTarget = closed ? '/events' : `/presale/${event.slug}`;
 
   return (
-    <div className="av-page-surface min-h-screen flex flex-col">
-      <Navbar />
+    <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
+      <header><Navbar /></header>
 
-      <section className="pt-28 md:pt-36 pb-12 md:pb-20 px-5 md:px-10">
-        <div className="max-w-5xl mx-auto">
-            <Link to="/launches" className="mb-7 inline-flex min-h-10 items-center gap-2 text-foreground/48 hover:text-foreground font-body text-xs tracking-[0.25em] uppercase">
-            <ArrowLeft className="w-3 h-3" /> Launches
-          </Link>
+      <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-[5.75rem] md:px-8 md:pt-[6.5rem]">
+        <Link
+          to="/events"
+          className="group inline-flex items-center gap-1.5 font-body text-[11px] uppercase tracking-[0.24em] text-foreground/55 transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" strokeWidth={2} />
+          All events
+        </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease: EASE }}
-            className="mb-7"
-          >
-            <h1 className="font-heading text-[4rem] uppercase leading-[0.84] tracking-tight text-foreground md:text-[7rem]">
-              {event.title}
-            </h1>
-          </motion.div>
+        {/* Poster title — matches PLANS / IV THERAPY / EVENTS scale */}
+        <h1 className="mt-6 font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
+          {event.name}
+        </h1>
 
-          <div className="grid md:grid-cols-[1fr_360px] gap-7 md:gap-10">
-            {/* LEFT: cover poster + body */}
-            <div>
-              <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE }} className="av-glass-sweep relative mb-7 aspect-[4/3] overflow-hidden rounded-[1.75rem] border border-foreground/[0.12] bg-background/62 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl">
-                <motion.img
-                  src={cover}
-                  alt={event.title}
-                  className="h-full w-full object-cover"
-                  initial={{ scale: 1.05 }}
-                  animate={{ scale: 1.015, x: ['0%', '-1.5%', '0%'] }}
-                  transition={{ duration: 9, ease: EASE, repeat: Infinity, repeatType: 'mirror' }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <p className="text-xs tracking-[0.35em] text-foreground font-body uppercase mb-2">{event.date}</p>
-                  <p className="font-body text-sm text-foreground/70">{event.venue || event.location}</p>
-                </div>
-              </motion.div>
+        <div className="mt-10 grid gap-8 md:grid-cols-[360px_1fr] md:gap-12">
+          {/* Left rail: poster, hosted-by, about */}
+          <aside className="md:sticky md:top-24 md:self-start">
+            {photos.length > 0 ? (
+              <div className="relative aspect-square overflow-hidden rounded-[1.55rem] border border-foreground/12">
+                <img src={photos[0]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              </div>
+            ) : (
+              <div className="flex aspect-square items-center justify-center rounded-[1.55rem] border border-foreground/12 bg-foreground/[0.035]">
+                <AvalonMark className="h-16 w-11 text-foreground/45" />
+              </div>
+            )}
 
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: EASE }}>
-                <p className="font-body text-xs tracking-[0.35em] text-foreground/42 uppercase mb-3">About</p>
-                <p className="font-body text-base md:text-lg text-foreground/68 leading-relaxed">
-                  {event.briefing || event.desc}
-                </p>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.15, ease: EASE }} className="mt-8 rounded-[1.35rem] border border-foreground/[0.10] bg-background/58 p-4 shadow-[0_18px_70px_hsl(var(--foreground)/0.055)] backdrop-blur-xl">
-                <p className="font-body text-xs tracking-[0.35em] text-foreground/42 uppercase mb-5">Hosted by</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full border border-foreground/[0.12] bg-foreground/[0.05] backdrop-blur-md flex items-center justify-center">
-                    <AvalonMark className="h-[14px] w-[9px] text-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-heading text-xl text-foreground tracking-wide leading-tight">{event.hostName || 'Avalon Vitality'}</p>
-                    <p className="font-body text-xs tracking-[0.25em] text-muted-foreground uppercase mt-0.5">{event.hostRole || 'Host'}</p>
-                  </div>
-                </div>
-              </motion.div>
+            <div className="mt-8">
+              <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/42">Hosted by</p>
+              <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">
+                The host
+              </h3>
+              <div className="mt-3 flex items-center gap-3 border-t border-foreground/[0.08] pt-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.045]">
+                  <AvalonMark className="h-4 w-3 text-foreground" />
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-heading text-xl uppercase leading-none tracking-normal text-foreground md:text-2xl">
+                    {event.hostName || 'Avalon Vitality'}
+                  </span>
+                  <span className="mt-1 font-body text-[11px] uppercase tracking-[0.18em] text-foreground/45">
+                    We deliver care
+                  </span>
+                </span>
+              </div>
             </div>
 
-            {/* RIGHT: details card + CTA */}
-            <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: EASE }} className="md:sticky md:top-28 self-start">
-              <div className="border border-foreground/[0.12] bg-background/68 backdrop-blur-2xl rounded-[1.75rem] p-5 shadow-[0_28px_110px_hsl(var(--foreground)/0.12)] md:p-6">
-                <div className="space-y-5 mb-6">
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
-                    <div>
-                      <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-1">When</p>
-                      <p className="font-body text-sm text-foreground">{event.when || event.date}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
-                    <div>
-                      <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-1">Where</p>
-                      <p className="font-body text-sm text-foreground">{event.venue || event.location}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Users className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
-                    <div>
-                      <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-1">Capacity</p>
-                      <p className="font-body text-sm text-foreground">{event.capacity || 'TBA'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
-                    <div>
-                      <p className="font-body text-xs tracking-[0.3em] text-muted-foreground uppercase mb-1">Clinical</p>
-                      <p className="font-body text-sm text-foreground">{event.gfeTiming || 'GFE before service'}</p>
-                    </div>
+            {blocks.description ? (
+              <div className="mt-8 hidden md:block">
+                <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/42">About</p>
+                <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">
+                  The event
+                </h3>
+                <p className="mt-3 font-body text-[14px] leading-relaxed text-foreground/62">{blocks.description}</p>
+              </div>
+            ) : null}
+
+            <div className="hidden md:block">
+              <QuietList kicker="What's included" title="Included" items={blocks.included} />
+              <QuietList kicker="Good to know" title="The fine print" items={blocks.goodToKnow} />
+            </div>
+          </aside>
+
+          {/* Right: date/place rows + reserve card */}
+          <section>
+            <div className="flex flex-col gap-2.5">
+              <InfoRow
+                chip={<CalendarChip iso={event.startsAt} />}
+                title={formatDayLong(event.startsAt)}
+                hint={formatEventTime(event.startsAt, event.endsAt)}
+              />
+              <InfoRow
+                chip={(
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.04]">
+                    <MapPin className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
+                  </span>
+                )}
+                title={event.venue || 'San Francisco'}
+                hint="Exact address after you reserve"
+              />
+            </div>
+
+            <div className="av-treatment-card mt-6 rounded-[1.55rem] border p-5 md:p-6">
+              <p className="font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">Reserve</p>
+              <div className="mt-4 flex flex-col gap-2.5">
+                {tiers.map((t) => (
+                  <TierRow key={t.id || t.name} tier={t} active={t.id === tier?.id} onClick={() => setTierId(t.id)} />
+                ))}
+              </div>
+
+              {addOns.length > 0 ? (
+                <div className="mt-6 border-t border-foreground/[0.08] pt-5">
+                  <p className="font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">Add-ons</p>
+                  <div className="mt-3 flex flex-col gap-2">
+                    {addOns.map((ao) => {
+                      const on = selectedAddOns.includes(ao.id);
+                      return (
+                        <button
+                          key={ao.id}
+                          type="button"
+                          onClick={() => toggleAddOn(ao.id)}
+                          aria-pressed={on}
+                          className={`av-treatment-card flex w-full items-center justify-between gap-3 rounded-[1.05rem] border px-4 py-3 text-left transition-colors ${
+                            on ? 'border-foreground/55 bg-foreground/[0.06]' : 'hover:border-foreground/30'
+                          }`}
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${
+                              on ? 'border-foreground bg-foreground text-background' : 'border-foreground/25 text-foreground/40'
+                            }`}>
+                              {on ? <Check className="h-3.5 w-3.5" strokeWidth={2.6} /> : <Plus className="h-3.5 w-3.5" strokeWidth={2.2} />}
+                            </span>
+                            <span className="flex min-w-0 flex-col">
+                              <span className="font-heading text-lg uppercase leading-none tracking-normal text-foreground">
+                                {ao.name}
+                              </span>
+                              {ao.description ? (
+                                <span className="mt-1 font-body text-[11px] uppercase leading-relaxed tracking-[0.16em] text-foreground/50">
+                                  {ao.description}
+                                </span>
+                              ) : null}
+                            </span>
+                          </span>
+                          <span className="shrink-0 font-heading text-lg leading-none tabular-nums text-foreground/82">
+                            {formatPriceCents(ao.priceCents)}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
+              ) : null}
 
-                {event.ticketSystem && event.ticketTiers?.length > 0 && (
-                  <div className="mb-5 space-y-2">
-                    {event.ticketTiers.map((tier) => (
-                      <motion.div
-                        key={tier.name}
-                        whileHover={{ y: -2 }}
-                        transition={{ duration: 0.36, ease: EASE }}
-                        className="av-glass-sweep relative overflow-hidden rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="font-body text-sm font-semibold text-foreground">{tier.name}</p>
-                          <p className="font-heading text-lg text-foreground">{tier.price}</p>
-                        </div>
-                        <p className="mt-1 font-body text-[11px] leading-relaxed text-foreground/48">{tier.detail}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+              <Link
+                to={ctaTarget}
+                className="group mt-5 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-sm uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/90"
+              >
+                {ctaLabel}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+              </Link>
+              <p className="mt-4 text-center font-body text-[11px] uppercase leading-relaxed tracking-[0.18em] text-foreground/45">
+                90-second health check clears you before the event
+              </p>
+            </div>
 
-                <PremiumButton
-                  as={Link}
-                  wrapperClassName="w-full"
-                  to={event.presaleEnabled ? `/presale/${event.presaleId || event.slug}` : '/launches#inquiry'}
-                  className="group flex w-full items-center justify-center gap-2 bg-foreground text-background font-body text-xs tracking-widest uppercase font-semibold rounded-full py-3.5 hover:bg-foreground/90 transition-colors"
-                >
-                  <Ticket className="w-4 h-4" strokeWidth={2} />
-                  {event.presaleEnabled ? 'Open Presale' : 'Launch'}
-                </PremiumButton>
-                <PremiumButton
-                  as={Link}
-                  wrapperClassName="mt-3 w-full"
-                  to="/launches#inquiry"
-                  className="block w-full text-center border border-foreground/30 text-foreground font-body text-xs tracking-widest uppercase font-semibold rounded-full py-3.5 hover:border-foreground transition-colors"
-                >
-                  Plan Launch
-                </PremiumButton>
-
-                <p className="font-body text-xs text-foreground/48 leading-relaxed mt-5 text-center">
-                  Presales queue Acuity and pre-launch GFE review.
-                </p>
+            {blocks.description ? (
+              <div className="mt-8 md:hidden">
+                <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/42">About</p>
+                <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground">
+                  The event
+                </h3>
+                <p className="mt-3 font-body text-[14px] leading-relaxed text-foreground/62">{blocks.description}</p>
               </div>
-            </motion.aside>
-          </div>
+            ) : null}
+            <div className="md:hidden">
+              <QuietList kicker="What's included" title="Included" items={blocks.included} />
+              <QuietList kicker="Good to know" title="The fine print" items={blocks.goodToKnow} />
+            </div>
+          </section>
         </div>
-      </section>
+      </main>
 
       <Footer />
     </div>

@@ -72,7 +72,7 @@ const TOP_CATEGORIES = [
   { key: 'vitamins', label: 'IV VITAMINS', icon: Droplets,      type: 'flat-treatments', data: VITAMIN_DRIPS },
   { key: 'cbd',      label: 'IV CBD',      icon: CannabisLeaf,  type: 'flat-treatments', data: CBD_DRIPS },
   { key: 'nad',      label: 'IV NAD+',     icon: FlaskConical,  type: 'flat-treatments', data: NAD_DRIPS },
-  { key: 'all',      label: 'VIEW ALL',    icon: ArrowRight,    type: 'flat-treatments', data: ALL_DRIPS },
+  { key: 'all',      label: 'VIEW ALL',    icon: ArrowRight,    type: 'link',            href: '/protocols', data: ALL_DRIPS },
 ];
 
 // ── Sub-category row (inside Vitamin / Specialty) ─────────────────────────────

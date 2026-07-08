@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
   ArrowRight,
@@ -252,6 +252,21 @@ function Foldout({ title, icon: Icon, children, meta, open: controlledOpen, onTo
 export default function Menu() {
   const [openSections, setOpenSections] = useState({});
   const exitConfirm = useBackExitConfirm();
+  const { hash } = useLocation();
+
+  // Hash-driven section auto-open: /protocols#iv-nad opens the NAD row and
+  // scrolls to it. Same for #iv-vitamins / #iv-cbd / #protocol-directory.
+  useEffect(() => {
+    const map = {
+      '#iv-vitamins': 'vitamins',
+      '#iv-nad': 'nad',
+      '#iv-cbd': 'cbd',
+      '#protocol-directory': 'all',
+    };
+    const key = map[hash];
+    if (!key) return;
+    setOpenSections((prev) => ({ ...prev, [key]: true }));
+  }, [hash]);
 
   useSeo({
     title: 'Mobile IV Therapy Bay Area — Avalon Vitality',
