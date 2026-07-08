@@ -781,12 +781,14 @@ export default async function handler(req, res) {
 
     const sessionParams = {
       mode: sessionMode,
-      // Card only. payment_method_types: ['card'] scopes the picker to cards
-      // only, and dropping `customer_email` at the top-level prevents Stripe
-      // Link from recognising a returning shopper and popping a "Confirm it's
-      // you" OTP that hijacks the card UI. The receipt still reaches the
-      // buyer via payment_intent_data.receipt_email below.
-      payment_method_types: ['card'],
+      // Use the Dashboard-enabled payment methods (Cards, Amazon Pay, Apple
+      // Pay, Affirm, Klarna as of 2026-07). automatic_payment_methods lets
+      // Stripe render exactly the methods enabled in the account without us
+      // hardcoding a list; Link stays off because it's disabled in the
+      // account's payment_methods settings, not because we exclude it here.
+      // Dropping `customer_email` at the top level ALSO helps ensure Link
+      // never recognizes a returning shopper.
+      automatic_payment_methods: { enabled: true },
       line_items,
       allow_promotion_codes: true,
       expires_at: checkoutExpiresAt(),
