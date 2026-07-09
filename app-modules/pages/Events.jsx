@@ -169,7 +169,7 @@ function EventPlanner() {
               }`}
             >
               <Icon className="h-5 w-5 text-foreground/80" strokeWidth={1.6} />
-              <span className="font-body text-[11px] font-semibold text-foreground/75">{key}</span>
+              <span className="font-body text-xs font-semibold text-foreground/75">{key}</span>
             </button>
           ))}
         </div>
@@ -212,7 +212,7 @@ function EventPlanner() {
     >
       <Icon className={`${mobile ? 'h-5 w-5' : 'h-6 w-6'} shrink-0 text-foreground/70`} strokeWidth={1.6} />
       <span className={mobile ? 'flex min-w-0 flex-col' : 'contents'}>
-        <span className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground">{label}</span>
+        <span className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground">{label}</span>
         <span className={`font-body text-[13px] font-semibold ${set ? 'text-foreground/80' : 'text-foreground/45'} ${mobile ? 'truncate' : 'line-clamp-1'}`}>
           {value}
         </span>
@@ -305,7 +305,7 @@ export default function Events() {
           <EventPlanner />
         </section>
 
-        <p className="mt-16 flex items-center justify-center gap-3 text-center font-body text-[11px] font-black uppercase tracking-[0.2em] text-foreground/45">
+        <p className="mt-16 flex items-center justify-center gap-3 text-center font-body text-xs font-black uppercase tracking-[0.2em] text-foreground/45">
           Registered nurses <AvalonMark className="h-4 w-3 text-foreground/70" /> Premium care. Anywhere.
         </p>
       </main>
