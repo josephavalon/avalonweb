@@ -104,7 +104,7 @@ function PerkRow({ children }) {
 
 export default function Memberships() {
   useSeo({
-    title: 'Memberships - Avalon Vitality',
+    title: 'Memberships — Avalon Vitality',
     description: 'Your Avalon membership — credits, billing, plan changes, and history.',
     path: '/members/memberships',
     robots: 'noindex, nofollow',

@@ -5739,7 +5739,7 @@ export default function Command() {
   const [opsTick, setOpsTick]             = useState(0);
 
   useEffect(() => {
-    document.title = 'Admin Command - Avalon Vitality';
+    document.title = 'Admin Command — Avalon Vitality';
   }, []);
 
   function handleSignOut() {

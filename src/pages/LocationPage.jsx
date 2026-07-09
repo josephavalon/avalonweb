@@ -38,7 +38,7 @@ function RouteLink({ to, children }) {
 
 export function LocationsHub() {
   useSeo({
-    title: 'Bay Area Mobile IV Therapy City Pages | Avalon Vitality',
+    title: 'Bay Area Mobile IV Therapy City Pages — Avalon Vitality',
     description: 'Explore Avalon Vitality city SEO pages for mobile recovery, IV therapy, NAD+, hotel service, launch service, neighborhoods, and things to do across the Bay Area.',
     path: '/locations',
     jsonLd: {
@@ -146,7 +146,7 @@ export default function LocationPage() {
   const page = getLocationBySlug(slug);
 
   useSeo({
-    title: page?.title || 'Location Not Found | Avalon Vitality',
+    title: page?.title || 'Location Not Found — Avalon Vitality',
     description: page?.description || 'Avalon Vitality location page not found.',
     path: page?.path || `/locations/${slug || ''}`,
     // Unknown slug → tell crawlers not to index; NotFound body renders below.

@@ -283,7 +283,7 @@ export default function Events() {
   const plannerRef = useRef(null);
 
   useSeo({
-    title: 'Wellness For Your Event - Avalon Vitality',
+    title: 'Wellness For Your Event — Avalon Vitality',
     description: 'IV therapy, recovery, and wellness care for events of any size. Plan your event in under 60 seconds — quotes delivered within 24 hours.',
     path: '/events',
   });
@@ -298,7 +298,7 @@ export default function Events() {
         {/* Planner */}
         <section ref={plannerRef} className="scroll-mt-24 pt-6">
           <div className="mb-7 text-center">
-            <h2 className="font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
+            <h2 className="av-h-hero [text-wrap:balance]">
               Does your event need a wellness lounge?
             </h2>
           </div>

@@ -163,7 +163,7 @@ export default function PlanCheckout() {
   const perPeriodTotal = Math.round(monthly * term.months * (1 - term.discount));
 
   useSeo({
-    title: 'Start your plan - Avalon Vitality',
+    title: 'Start your plan — Avalon Vitality',
     description: 'Schedule your recurring membership visit and start your Avalon IV therapy plan.',
     path: '/plan',
     jsonLd: {

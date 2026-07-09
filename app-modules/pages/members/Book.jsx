@@ -180,7 +180,7 @@ function PickRow({ label, price, desc, selected, onToggle, qty, onQty }) {
 
 export default function MemberBook() {
   useSeo({
-    title: 'Book a visit - Avalon Vitality',
+    title: 'Book a visit — Avalon Vitality',
     description: 'Use a visit credit to book your next in-home IV visit.',
     path: '/members/book',
     robots: 'noindex, nofollow',

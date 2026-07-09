@@ -317,7 +317,7 @@ function AuthRow({ icon, name, desc, action }) {
 
 export default function MemberAccount() {
   useSeo({
-    title: 'Account - Avalon Vitality',
+    title: 'Account — Avalon Vitality',
     description: 'Your account: identity, emergency contact, health record, communication preferences, sign-in, and payment.',
     path: '/members/account',
     robots: 'noindex, nofollow',

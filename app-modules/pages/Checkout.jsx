@@ -1327,11 +1327,13 @@ export default function Checkout() {
           >
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
             <div className="relative">
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.08] text-foreground">
-                <Droplets className="h-7 w-7" strokeWidth={2.45} />
+              {/* Audit finding J2: standard 48×48 icon chip, matches every
+                  other card icon slot on the site. */}
+              <div className="av-icon-chip mb-5 text-foreground">
+                <Droplets className="h-6 w-6" strokeWidth={2.2} />
               </div>
-              <p className="font-body text-[14px] font-black uppercase tracking-[0.22em] text-foreground/54">Checkout</p>
-              <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-none tracking-normal text-foreground sm:text-[4rem]">Choose IV</h1>
+              <p className="av-eyebrow text-foreground/54">Checkout</p>
+              <h1 className="mt-2 font-heading text-display uppercase leading-none tracking-normal text-foreground">Choose IV</h1>
               <p className="mt-3 max-w-md font-body text-sm font-semibold leading-relaxed text-foreground/62">
                 Select a therapy first. Then confirm address, patient details, and secure payment.
               </p>

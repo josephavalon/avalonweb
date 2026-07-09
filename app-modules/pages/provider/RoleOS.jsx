@@ -94,7 +94,7 @@ export default function RoleOS() {
   const isAdmin = role === 'admin';
 
   useSeo({
-    title: `${isAdmin ? 'Admin Tools' : 'Provider Tools'} - Avalon Vitality`,
+    title: `${isAdmin ? 'Admin Tools' : 'Provider Tools'} — Avalon Vitality`,
     description: 'Avalon role tools for fast field execution.',
     path: isAdmin ? '/admin/role-os' : '/provider/role-os',
     robots: 'noindex, nofollow',

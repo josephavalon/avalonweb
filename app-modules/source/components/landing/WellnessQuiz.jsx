@@ -185,7 +185,7 @@ export default function WellnessQuiz() {
               >
                 {/* Left: kicker */}
                 <p className="font-body text-[11px] uppercase tracking-[0.32em] text-foreground/55 md:pr-8">
-                  IV Finder<sup className="ml-0.5 text-[8px]">™</sup>
+                  IV Finder<sup className="ml-0.5 align-super text-[0.5em] leading-none">™</sup>
                 </p>
 
                 {/* Center: headline + body */}
@@ -220,7 +220,7 @@ export default function WellnessQuiz() {
                 {/* Left: kicker + step counter */}
                 <div className="flex items-center justify-between md:block md:pr-8">
                   <p className="font-body text-[11px] uppercase tracking-[0.32em] text-foreground/55">
-                    IV Finder<sup className="ml-0.5 text-[8px]">™</sup>
+                    IV Finder<sup className="ml-0.5 align-super text-[0.5em] leading-none">™</sup>
                   </p>
                   <div className="flex items-center gap-2 md:mt-2">
                     <StepDots total={QUIZ_STEPS.length} current={step - 1} />

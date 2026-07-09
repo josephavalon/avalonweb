@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowRight, Check, MailCheck, RefreshCw, UserPlus } from 'lucide-react';
+import AvalonMark from '@/components/AvalonMark';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
@@ -93,7 +94,7 @@ function Divider({ label = 'or' }) {
 
 export default function Signup() {
   useSeo({
-    title: 'Create Account - Avalon Vitality',
+    title: 'Create Account — Avalon Vitality',
     description: 'Create your Avalon Vitality client account.',
     path: '/signup',
   });
@@ -184,9 +185,10 @@ export default function Signup() {
       <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center pt-20 md:pt-24">
         <section className="w-full max-w-[440px] rounded-[2rem] border border-foreground/[0.12] bg-foreground/[0.045] p-5 shadow-[0_28px_120px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:p-7">
           <div className="mb-7 flex items-center justify-between gap-4">
-            <Link to="/" className="inline-flex min-h-11 flex-col justify-center leading-none transition-opacity hover:opacity-70">
-              <span className="block font-heading text-[19px] leading-none tracking-[0.24em] text-foreground">AVALON</span>
-              <span className="mt-1 block font-body text-[8px] uppercase tracking-[0.38em] text-foreground/58">VITALITY</span>
+            {/* Audit finding K1: match login's drop-mark chip so both auth
+                surfaces share one eyebrow treatment. */}
+            <Link to="/" className="av-icon-chip transition-opacity hover:opacity-70" aria-label="Avalon Vitality">
+              <AvalonMark className="h-6 w-4 text-foreground" />
             </Link>
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
               <UserPlus className="h-4 w-4" strokeWidth={1.8} />
@@ -194,8 +196,8 @@ export default function Signup() {
           </div>
 
           <div className="mb-7">
-            <h1 className="font-heading text-[3.15rem] uppercase leading-[0.86] tracking-tight text-foreground sm:text-[4rem]">
-              Create<br />Account
+            <h1 className="font-heading text-display uppercase leading-[0.86] tracking-tight text-foreground [text-wrap:balance]">
+              Create Account
             </h1>
             <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55">
               We email a confirmation link — no password to remember.

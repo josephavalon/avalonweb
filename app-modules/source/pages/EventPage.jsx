@@ -167,7 +167,7 @@ export default function EventPage() {
   }, [slug]);
 
   useSeo({
-    title: event ? `${event.name} - Avalon Events` : 'Avalon Events - Avalon Vitality',
+    title: event ? `${event.name} — Avalon Events` : 'Avalon Events — Avalon Vitality',
     description: 'Avalon recovery lounge — reserve your spot.',
     path: `/events/${slug}`,
   });
@@ -194,10 +194,16 @@ export default function EventPage() {
       <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
         <header><Navbar /></header>
         <main className="mx-auto flex min-h-[70svh] max-w-xl flex-col items-center justify-center px-5 text-center">
-          <h1 className="font-heading text-6xl uppercase leading-none tracking-tight md:text-7xl">Event not found</h1>
+          {/* Audit finding I6: align Event-Not-Found treatment with 404 template
+              scale so both "page not found" states feel like the same product. */}
+          <p className="av-eyebrow text-foreground/60 mb-6">Avalon Events</p>
+          <h1 className="font-heading text-display-xl uppercase leading-[0.82] tracking-tight text-foreground">Event not found</h1>
+          <p className="mt-6 max-w-md font-body text-sm leading-relaxed text-foreground/60">
+            This event isn't on our board — it may have wrapped, been renamed, or never existed.
+          </p>
           <Link
             to="/events"
-            className="group mt-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground/40 px-6 font-body text-[11px] uppercase tracking-[0.22em] text-foreground transition-colors hover:border-foreground/80 hover:bg-foreground/[0.04]"
+            className="av-pill-btn-outline mt-8 min-h-11 text-[11px]"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} /> Back to events
           </Link>

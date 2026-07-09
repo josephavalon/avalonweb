@@ -71,7 +71,7 @@ function writeCachedSummary(summary) {
 
 export default function AdminEssentials() {
   useSeo({
-    title: 'Admin - Avalon Vitality',
+    title: 'Admin — Avalon Vitality',
     description: 'Avalon admin console — patients, billing, and collections.',
     robots: 'noindex,nofollow',
   });

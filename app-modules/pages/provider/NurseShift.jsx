@@ -118,7 +118,7 @@ function Checklist({ items }) {
 
 export default function NurseShift() {
   useSeo({
-    title: 'Nurse Shift - Avalon Vitality',
+    title: 'Nurse Shift — Avalon Vitality',
     description: 'Low-input Avalon nurse shift view for ETA, route, client text, kit, and protocol review.',
     path: '/provider/shift',
     robots: 'noindex, nofollow',

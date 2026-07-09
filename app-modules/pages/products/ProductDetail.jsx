@@ -119,7 +119,7 @@ export default function ProductDetail() {
   const numericPrice = useMemo(() => priceNumber(price), [price]);
 
   useSeo({
-    title: match ? `${match.treatment.name} — Mobile IV Therapy | Avalon Vitality` : 'Product Not Found — Avalon Vitality',
+    title: match ? `${match.treatment.name} — Mobile IV Therapy — Avalon Vitality` : 'Product Not Found — Avalon Vitality',
     description: match?.treatment.seoDescription || match?.treatment.desc || 'Avalon Vitality mobile IV therapy in the San Francisco Bay Area.',
     path: match ? `/products/${category}/${slug}` : undefined,
     jsonLd: match ? buildProductJsonLd({ category: match.category, categorySlug: category, product: match.treatment, slug, price: numericPrice }) : undefined,

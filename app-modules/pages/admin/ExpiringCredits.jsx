@@ -257,7 +257,7 @@ export function CreditsExpiringSoon({ limit = 5 } = {}) {
 // ── Full page ────────────────────────────────────────────────────────────────
 export default function AdminExpiringCredits() {
   useSeo({
-    title: 'Expiring credits - Avalon Admin',
+    title: 'Expiring credits — Avalon Admin',
     description: 'Member visit credits expiring within 30 days; reach out before they vanish.',
     robots: 'noindex,nofollow',
   });

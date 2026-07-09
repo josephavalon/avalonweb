@@ -559,10 +559,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           <div className="flex items-center justify-center gap-7">
             {mainLinks.map((link) => {
               const active = isActiveLink(link.to);
-              // All nav labels render at the same brightness regardless of which page
-              // is active — matches the intended visual reference. Hover still dims
-              // slightly for feedback.
-              const linkClassName = 'relative inline-flex min-h-10 items-center justify-center px-1 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-foreground transition-colors hover:text-foreground/82';
+              // Audit finding D8: active-page nav link gets a 1px accent
+              // underline so users can tell which section they're in.
+              const baseClassName = 'relative inline-flex min-h-10 items-center justify-center px-1 pb-0.5 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] transition-colors';
+              const linkClassName = `${baseClassName} ${
+                active
+                  ? 'text-foreground border-b border-foreground/70'
+                  : 'text-foreground hover:text-foreground/82'
+              }`;
               // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
               if (link.to === '/protocols') {
                 return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
@@ -571,6 +575,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                 <Link
                   key={link.to}
                   to={link.to}
+                  aria-current={active ? 'page' : undefined}
                   className={linkClassName}
                 >
                   <span className="relative z-10">{link.label}</span>
@@ -606,7 +611,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           {!compact && !focusMode && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
-          {!compact && !focusMode && !user && <Link to="/login" className={linkClass}>Sign In</Link>}
+          {/* Audit finding K6/D7: hide Sign In on /login (redundant with the
+              sign-in card); hide on /signup (users already in a signup flow). */}
+          {!compact && !focusMode && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
           {!compact && !focusMode && <PremiumButton
             as={Link}
             to={BOOK_URL}

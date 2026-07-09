@@ -29,7 +29,7 @@ function ErrorBanner({ message }) {
 
 export default function ForgotPassword() {
   useSeo({
-    title: 'Reset Password - Avalon Vitality',
+    title: 'Reset Password — Avalon Vitality',
     description: 'Request a secure Avalon Vitality password reset link.',
     path: '/forgot',
   });

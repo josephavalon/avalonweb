@@ -116,7 +116,7 @@ export default function TripPage() {
   }, [visitId, location.search]);
 
   useSeo({
-    title: trip ? `${trip.event.name} Trip - Avalon Vitality` : 'Your Trip - Avalon Vitality',
+    title: trip ? `${trip.event.name} Trip — Avalon Vitality` : 'Your Trip — Avalon Vitality',
     description: 'Your Avalon event trip page: countdown, credential, health-check status, and your party.',
     path: `/trips/${visitId}`,
     robots: 'noindex,nofollow',

@@ -971,7 +971,7 @@ function LiveClientDashboard() {
 
 function MemberDashboard() {
   useSeo({
-    title: 'Client Dashboard - Avalon Vitality',
+    title: 'Client Dashboard — Avalon Vitality',
     description: 'Your Avalon dashboard — next visit, balance, plan, and recent visits at a glance.',
     path: '/members/dashboard',
     robots: 'noindex, nofollow',

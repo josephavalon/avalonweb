@@ -115,7 +115,7 @@ function CheckRow({ icon: Icon, label, value, ready = true }) {
 
 export default function NurseDashboard() {
   useSeo({
-    title: 'Nurse Dashboard - Avalon Vitality',
+    title: 'Nurse Dashboard — Avalon Vitality',
     description: 'Minimal Avalon nurse dashboard for shift readiness, next visit, route, kit, and protocol review.',
     path: '/provider/dashboard',
     robots: 'noindex, nofollow',

@@ -757,7 +757,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
 
 export default function Subscription() {
   useSeo({
-    title: 'Plans - Avalon Vitality',
+    title: 'Plans — Avalon Vitality',
     description: 'Build a monthly Avalon IV therapy plan one step at a time: choose how often, your therapy, add-ons, and pay monthly or upfront for 3, 6, or 12 months to save.',
     path: '/subscription',
     jsonLd: {

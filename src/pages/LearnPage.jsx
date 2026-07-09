@@ -43,7 +43,7 @@ function pickStartHere() {
 
 export function LearnHub() {
   useSeo({
-    title: 'Mobile IV Therapy Education | Avalon Vitality',
+    title: 'Mobile IV Therapy Education — Avalon Vitality',
     description: 'Educational guides for mobile IV therapy, NAD+, recovery therapy, event recovery, hotel service, and Bay Area location planning.',
     path: '/learn',
     jsonLd: {
@@ -203,7 +203,7 @@ export default function LearnPage() {
   const robots = !article || article.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
 
   useSeo({
-    title: article?.title || 'Guide Not Found | Avalon Vitality',
+    title: article?.title || 'Guide Not Found — Avalon Vitality',
     description: article?.description || 'Avalon Vitality education guide not found.',
     path: article?.path || `/learn/${slug || ''}`,
     robots,

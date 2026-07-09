@@ -246,7 +246,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [resendError, setResendError] = useState('');
 
   useSeo({
-    title: isAdmin ? 'Admin Sign In - Avalon Vitality' : 'Client Sign In - Avalon Vitality',
+    title: isAdmin ? 'Admin Sign In — Avalon Vitality' : 'Client Sign In — Avalon Vitality',
     description: isAdmin
       ? 'Avalon operations sign-in.'
       : 'Client sign in for Avalon Vitality visits, preparation, and support.',
@@ -634,7 +634,7 @@ export default function Login({ defaultAudience = 'patient' }) {
           type="button"
           onClick={() => setShowPassword((value) => !value)}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
-          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:text-foreground"
         >
           {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
         </button>
@@ -669,7 +669,7 @@ export default function Login({ defaultAudience = 'patient' }) {
           type="button"
           onClick={() => setShowPassword((value) => !value)}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
-          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground"
+          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:text-foreground"
         >
           {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
         </button>

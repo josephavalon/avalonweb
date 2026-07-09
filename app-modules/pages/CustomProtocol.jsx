@@ -395,12 +395,14 @@ export default function CustomProtocol() {
               {/* ── IM Shots ── */}
               <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/80 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
                 <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
+                {/* Audit finding H3: section header parity with IV VITAMINS /
+                    IV NAD+ / IV CBD — same size, tracking, and eyebrow style. */}
                 <div className="mb-1 flex items-center gap-2">
                   <Syringe className="h-4 w-4 text-foreground/65" strokeWidth={1.5} />
-                  <span className="font-heading text-2xl uppercase tracking-wide text-foreground">IM Shots</span>
+                  <span className="font-heading text-2xl uppercase leading-none tracking-normal text-foreground md:text-[2rem]">IM Shots</span>
                 </div>
-                <p className="mb-4 font-body text-[10px] uppercase tracking-[0.22em] text-foreground/50">
-                  Add-Ons — Select any combination
+                <p className="mb-4 av-eyebrow text-foreground/50">
+                  Add-ons — select any combination
                 </p>
                 <div className="grid gap-2.5 md:grid-cols-2">
                   {IM_OPTIONS.map(shot => {

@@ -82,7 +82,7 @@ function SkeletonRow() {
 
 export default function Billing() {
   useSeo({
-    title: 'Billing - Avalon Vitality',
+    title: 'Billing — Avalon Vitality',
     description: 'Your Avalon Vitality receipts, payment methods, and upcoming charges.',
     path: '/members/billing',
     robots: 'noindex, nofollow',

@@ -26,7 +26,7 @@ const SELF_SERVE = [
 
 export default function Support() {
   useSeo({
-    title: 'Support - Avalon Vitality',
+    title: 'Support — Avalon Vitality',
     description: 'Get help from your Avalon Vitality care team — message us, email, call, or browse the FAQ.',
     path: '/members/support',
   });

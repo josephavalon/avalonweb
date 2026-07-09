@@ -300,7 +300,7 @@ function SkeletonRows() {
 
 export default function AdminMemberships() {
   useSeo({
-    title: 'Memberships - Avalon Admin',
+    title: 'Memberships — Avalon Admin',
     description: 'Active membership plans, credit balances, and grant/revoke controls.',
     robots: 'noindex,nofollow',
   });

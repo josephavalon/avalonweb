@@ -227,7 +227,7 @@ function BookingCard({ appointment }) {
 
 export default function Bookings() {
   useSeo({
-    title: 'My Bookings - Avalon Vitality',
+    title: 'My Bookings — Avalon Vitality',
     description: 'Review your Avalon Vitality visit schedule and payment status.',
     path: '/members/bookings',
   });

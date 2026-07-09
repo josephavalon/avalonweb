@@ -97,7 +97,7 @@ export default function EventPresale() {
   }, [eventId]);
 
   useSeo({
-    title: event ? `Reserve ${event.name} - Avalon Events` : 'Reserve - Avalon Events',
+    title: event ? `Reserve ${event.name} — Avalon Events` : 'Reserve — Avalon Events',
     description: 'Three taps: tier, party, pay. Back on the floor in ~30.',
     path: `/presale/${eventId}`,
   });

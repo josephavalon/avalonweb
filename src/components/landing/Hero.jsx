@@ -79,17 +79,13 @@ export default function Hero() {
             settles to y:0 + opacity:1 in <600ms, then the outer carries the
             whole title on scroll. */}
         <motion.div style={titleStyle}>
-          <motion.p
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.48, delay: 0.08, ease: EASE }}
-            className="mb-3 font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground md:mb-4 md:text-3xl"
-          >
-            Avalon Vitality
-          </motion.p>
+          {/* Audit finding F2: dropped duplicate "AVALON VITALITY" text eyebrow.
+              The nav-pill drop mark + <title> tag already carry the identity
+              signal, so this eyebrow was the third repetition in one rectangle
+              before the reader reached the promise. */}
 
           <h1
-            className="font-heading text-[clamp(4rem,11vw,10rem)] leading-[0.88] tracking-[0.02em] text-foreground uppercase max-w-3xl"
+            className="av-h-hero max-w-3xl"
           >
             <motion.span
               initial={reduceMotion ? false : { opacity: 0, y: 22 }}

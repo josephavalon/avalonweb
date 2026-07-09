@@ -104,7 +104,7 @@ export default function EventsBackend() {
     : [];
 
   useSeo({
-    title: 'Event Backend - Avalon Vitality',
+    title: 'Event Backend — Avalon Vitality',
     description: 'Avalon local event guest intake and presale roster.',
     robots: 'noindex,nofollow',
   });

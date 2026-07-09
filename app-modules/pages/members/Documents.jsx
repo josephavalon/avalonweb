@@ -351,7 +351,7 @@ function SectionHeading({ eyebrow, title, count }) {
 
 export default function MemberDocuments() {
   useSeo({
-    title: 'Documents - Avalon Vitality',
+    title: 'Documents — Avalon Vitality',
     description: 'Sign and review the consent documents required for your visits.',
     path: '/members/documents',
     robots: 'noindex, nofollow',
