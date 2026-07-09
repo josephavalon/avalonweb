@@ -136,12 +136,22 @@ export default function EventsPosterSection() {
     <section id="events" className="pt-10 pb-10 md:pt-16 md:pb-16 px-4 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header */}
-        <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
-          <div>
-            <h2 className="font-heading text-display text-foreground tracking-tight leading-[0.92] uppercase [text-wrap:balance]">
+        {/* Interstitial card — matches SectionInterstitial treatment */}
+        <ScrollParallax className="mb-8 md:mb-10">
+          <div className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14">
+            <h3 className="font-heading text-h1 text-foreground tracking-tight leading-[0.92] uppercase [text-wrap:balance]">
               Does your event need a wellness lounge?
-            </h2>
+            </h3>
+            <p className="mx-auto mt-4 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
+              Nurse-run recovery lounges for weddings, offsites, and backstage.
+            </p>
+          </div>
+        </ScrollParallax>
+
+        {/* Header — matches TreatmentsTeaser / Plans section-title pattern */}
+        <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10">
+          <div>
+            <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">Events</h2>
           </div>
         </ScrollParallax>
 
