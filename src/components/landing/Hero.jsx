@@ -79,10 +79,14 @@ export default function Hero() {
             settles to y:0 + opacity:1 in <600ms, then the outer carries the
             whole title on scroll. */}
         <motion.div style={titleStyle}>
-          {/* Audit finding F2: dropped duplicate "AVALON VITALITY" text eyebrow.
-              The nav-pill drop mark + <title> tag already carry the identity
-              signal, so this eyebrow was the third repetition in one rectangle
-              before the reader reached the promise. */}
+          <motion.p
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08, ease: EASE }}
+            className="mb-3 font-body text-[11px] uppercase tracking-[0.32em] text-foreground/55 md:text-xs"
+          >
+            Avalon Vitality
+          </motion.p>
 
           <h1
             className="av-h-hero max-w-3xl"
@@ -156,23 +160,17 @@ export default function Hero() {
             initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.44, delay: 0.52, ease: EASE }}
-            className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 lg:mt-0 lg:w-[28rem] lg:max-w-[28rem] lg:shrink-0 lg:grid-cols-1 lg:gap-3.5"
+            className="relative mt-7 grid w-full grid-cols-3 gap-2.5 lg:mt-0 lg:w-[38rem] lg:max-w-[38rem] lg:shrink-0 lg:gap-3"
           >
             {HERO_ACTIONS.map((action) => {
               const Icon = action.icon;
               const isBookAction = action.to === BOOK_URL;
-              // BOOK shares the exact card geometry + layout of the two below it
-              // (icon-left, label, arrow-right, same radius/padding); it differs
-              // only by being the white, filled primary. The white look is forced
-              // in CSS (.av-hero-action.av-hero-action-primary) because the night
-              // theme neutralizes raw `bg-white`/`text-*` utilities — so we keep
-              // those utilities OFF the primary and let the stylesheet own color.
+              // driphydration.com-style row: three equal pills, icon+label inline.
+              // BOOK stays the white primary via .av-hero-action-primary (night
+              // theme neutralizes bg-white utility).
               const actionClassName = isBookAction
-                ? 'av-premium-cta av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
-                : 'av-premium-cta av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
-              const iconWrapClassName = isBookAction
-                ? 'av-hero-book-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl'
-                : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
+                ? 'av-premium-cta av-hero-action av-hero-action-primary group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full border px-3 py-4 shadow-[0_14px_36px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:gap-2.5 md:px-5 md:py-5'
+                : 'av-premium-cta av-hero-action av-treatment-card group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full border px-3 py-4 text-foreground transition-colors duration-base ease-editorial md:gap-2.5 md:px-5 md:py-5';
               const foregroundClassName = isBookAction ? '' : 'text-foreground';
 
               const cta = (
@@ -184,16 +182,9 @@ export default function Hero() {
                   whileTap={premiumTap}
                   className={actionClassName}
                 >
-                  <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
-                    <span className={iconWrapClassName}>
-                      <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
-                    </span>
-                    <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
-                      {action.label}
-                    </span>
-                  </span>
-                  <span className={`relative shrink-0 transition-transform group-hover:translate-x-1 ${foregroundClassName}`}>
-                    <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
+                  <Icon className={`h-4 w-4 shrink-0 md:h-5 md:w-5 ${foregroundClassName}`} strokeWidth={2} />
+                  <span className={`min-w-0 whitespace-nowrap font-heading text-sm uppercase leading-none tracking-[0.08em] md:text-base lg:text-lg ${foregroundClassName}`}>
+                    {action.label}
                   </span>
                 </MotionLink>
               );
