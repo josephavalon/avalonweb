@@ -6506,58 +6506,52 @@ export default function BookNow() {
       >
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
-            className="mx-auto max-w-3xl"
+            className="mx-auto w-full max-w-xl"
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
           >
-            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4">
-              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
-              <div className="relative">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${dueNowLabel}`} />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmbeddedCheckoutSession(null);
-                      setCheckoutLoading(false);
-                      setStep(LAST_STEP);
-                    }}
-                    className="min-h-[44px] shrink-0 rounded-full border border-foreground/14 px-4 font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/76 transition-colors hover:border-foreground/28 hover:text-foreground"
-                  >
-                    Edit Booking
-                  </button>
+            <div className="mb-3 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmbeddedCheckoutSession(null);
+                  setCheckoutLoading(false);
+                  setStep(LAST_STEP);
+                }}
+                className="font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55 transition-colors hover:text-foreground"
+              >
+                ← Edit booking
+              </button>
+            </div>
+            <div data-av-embedded-checkout className="overflow-hidden rounded-[1.25rem] bg-background">
+              {checkoutMountError && (
+                <div role="alert" className="mx-0 mb-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
+                  <div className="flex items-center gap-2.5">
+                    <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+                    <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCheckoutMountError('');
+                        setCheckoutRetryKey((current) => current + 1);
+                      }}
+                      className="min-h-[40px] rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]"
+                    >
+                      Retry payment
+                    </button>
+                  </div>
                 </div>
-                <div data-av-embedded-checkout className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
-                  {checkoutMountError && (
-                    <div role="alert" className="m-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
-                      <div className="flex items-center gap-2.5">
-                        <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
-                        <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCheckoutMountError('');
-                            setCheckoutRetryKey((current) => current + 1);
-                          }}
-                          className="min-h-[40px] rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]"
-                        >
-                          Retry payment
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <EmbeddedCheckoutProvider
-                    key={`${embeddedCheckoutSession.clientSecret}-${checkoutRetryKey}`}
-                    stripe={stripeClientPromise}
-                    options={embeddedCheckoutOptions}
-                  >
-                    <EmbeddedCheckout className="min-h-[calc(100dvh-250px)]" />
-                  </EmbeddedCheckoutProvider>
-                </div>
-              </div>
+              )}
+              <EmbeddedCheckoutProvider
+                key={`${embeddedCheckoutSession.clientSecret}-${checkoutRetryKey}`}
+                stripe={stripeClientPromise}
+                options={embeddedCheckoutOptions}
+              >
+                <EmbeddedCheckout className="min-h-[calc(100dvh-200px)]" />
+              </EmbeddedCheckoutProvider>
             </div>
           </motion.section>
         )}
