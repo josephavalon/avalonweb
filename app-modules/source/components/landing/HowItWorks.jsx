@@ -92,11 +92,9 @@ export default function HowItWorks() {
       <div className="max-w-6xl mx-auto">
 
         <ScrollParallax className="mb-6 md:mb-10">
-          <div className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14">
-            <h2 className="font-heading text-h1 text-foreground uppercase tracking-tight leading-[0.9]">
-              How it works
-            </h2>
-          </div>
+          <h2 className="whitespace-nowrap font-heading text-display text-foreground tracking-tight leading-[0.92]">
+            How it works
+          </h2>
         </ScrollParallax>
 
         <div className="relative space-y-2">
