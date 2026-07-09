@@ -872,18 +872,44 @@ function useMobileBookingViewportLayout(deps = []) {
     // can mis-position the focused input. Lock the document scroll while the
     // booking page is mounted so scroll-into-view targets the inner scroll
     // region (overflow-y-auto on the step content) instead.
+    //
+    // BUT: at tablet+ (md: ≥ 768) the booking shell is `md:!relative
+    // md:min-h-screen md:h-auto` — the layout expects the DOCUMENT to scroll,
+    // not an inner region. Locking html/body overflow at tablet leaves users
+    // with no way to reach content past the fold (the "can't scroll after
+    // switching NAD → CBD" tablet bug). Only apply the mobile-fixed shell
+    // overflow lock on narrow viewports.
     const priorHtmlOverflow = root.style.overflow;
     const priorBodyOverflow = body.style.overflow;
     const priorHtmlPos = root.style.position;
-    root.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
-    root.style.position = 'relative';
+    const applyMobileLock = () => window.matchMedia('(max-width: 767px)').matches;
+    if (applyMobileLock()) {
+      root.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
+      root.style.position = 'relative';
+    } else {
+      root.style.overflow = priorHtmlOverflow;
+      body.style.overflow = priorBodyOverflow;
+      root.style.position = priorHtmlPos;
+    }
 
     let frame = 0;
 
     const update = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
+        // Reapply the mobile-only overflow lock on every viewport update so
+        // resize-across-breakpoint (device rotation, window resize into
+        // tablet range) doesn't leave the document scroll disabled at md+.
+        if (applyMobileLock()) {
+          root.style.overflow = 'hidden';
+          body.style.overflow = 'hidden';
+          root.style.position = 'relative';
+        } else {
+          root.style.overflow = priorHtmlOverflow;
+          body.style.overflow = priorBodyOverflow;
+          root.style.position = priorHtmlPos;
+        }
         const viewport = window.visualViewport;
         const visualHeight = Math.max(0, Math.round(viewport?.height || window.innerHeight || 0));
         const visualOffsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
