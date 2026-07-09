@@ -12,24 +12,24 @@ const MotionLink = motion.create(Link);
 // uppercase tracked link (variant="link"). No CTA at all when `cta` is omitted.
 export default function SectionInterstitial({ kicker, title, body, cta }) {
   return (
-    <section className="pt-16 pb-16 md:pt-28 md:pb-28 px-5 md:px-12">
+    <section className="pt-10 pb-10 md:pt-16 md:pb-16 px-5 md:px-12">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-96px' }}
         transition={{ duration: 0.9, ease: EASE }}
-        className="max-w-6xl mx-auto text-center"
+        className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14"
       >
         {kicker && (
-          <p className="font-body text-[11px] uppercase tracking-[0.28em] text-foreground/45">
+          <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]">
             {kicker}
           </p>
         )}
-        <h2 className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-display-xl">
+        <h2 className="mt-3 font-heading uppercase text-foreground leading-[0.9] tracking-tight text-h1">
           {title}
         </h2>
         {body && (
-          <p className="mx-auto mt-5 max-w-2xl font-body text-xs uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-sm">
+          <p className="mx-auto mt-4 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
             {body}
           </p>
         )}
