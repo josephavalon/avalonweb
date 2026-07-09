@@ -781,14 +781,13 @@ export default async function handler(req, res) {
 
     const sessionParams = {
       mode: sessionMode,
-      // Use the Dashboard-enabled payment methods (Cards, Amazon Pay, Apple
-      // Pay, Affirm, Klarna as of 2026-07). automatic_payment_methods lets
-      // Stripe render exactly the methods enabled in the account without us
-      // hardcoding a list; Link stays off because it's disabled in the
-      // account's payment_methods settings, not because we exclude it here.
-      // Dropping `customer_email` at the top level ALSO helps ensure Link
-      // never recognizes a returning shopper.
-      automatic_payment_methods: { enabled: true },
+      // Payment methods come from the Stripe Dashboard's enabled set (Cards,
+      // Amazon Pay, Apple Pay, Affirm, Klarna as of 2026-07). Leaving both
+      // payment_method_types and automatic_payment_methods unset is the correct
+      // way to defer to Dashboard config on Checkout Sessions — the latter is
+      // a PaymentIntent-only param and Stripe rejects it here with
+      // `parameter_unknown`, 500ing every checkout. Dropping `customer_email`
+      // too so Link never recognizes a returning shopper.
       line_items,
       allow_promotion_codes: true,
       expires_at: checkoutExpiresAt(),
