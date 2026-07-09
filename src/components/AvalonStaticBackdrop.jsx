@@ -16,7 +16,7 @@ export default function AvalonStaticBackdrop() {
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-0"
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.13)',
+        backgroundColor: 'rgba(255, 255, 255, 0.12)',
         WebkitMaskImage: 'url(/avalon-logo.svg)',
         maskImage: 'url(/avalon-logo.svg)',
         WebkitMaskRepeat: 'no-repeat',
