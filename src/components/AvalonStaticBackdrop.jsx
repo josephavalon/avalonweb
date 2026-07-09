@@ -1,58 +1,7 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
-
-const HIDDEN_PREFIXES = [];
-const HIDDEN_PATHS = [];
-
-// Staff/operations surfaces are data-dense; the ambient photo must be heavily
-// blurred and darkened there so glass panels stay readable, not see-through.
-const OPS_PREFIXES = ['/admin', '/provider'];
-
-function shouldShowBackdrop(pathname) {
-  if (HIDDEN_PATHS.includes(pathname)) return false;
-  return !HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
-function isOpsSurface(pathname) {
-  return OPS_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
+// User directive: every page renders on plain black — no photo backdrop.
+// Component is preserved as a no-op so every existing consumer keeps
+// importing it without a build break; if the photo ever returns, restore
+// the JSX from git history.
 export default function AvalonStaticBackdrop() {
-  const { pathname } = useLocation();
-  if (!shouldShowBackdrop(pathname)) return null;
-  const opsMode = isOpsSurface(pathname);
-
-  return (
-    <div
-      className={`avalon-static-backdrop pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-background${opsMode ? ' avalon-static-backdrop--ops' : ''}`}
-      aria-hidden="true"
-      role="presentation"
-    >
-      <picture>
-        <source
-          type="image/avif"
-          srcSet="/images/avalon-static-back-512.avif 512w, /images/avalon-static-back-1024.avif 1024w, /images/avalon-static-back.avif 1536w"
-          sizes="100vw"
-        />
-        <source
-          type="image/webp"
-          srcSet="/images/avalon-static-back-512.webp 512w, /images/avalon-static-back-1024.webp 1024w, /images/avalon-static-back.webp 1536w"
-          sizes="100vw"
-        />
-        <img
-          src="/images/avalon-static-back.jpg"
-          srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
-          sizes="100vw"
-          alt=""
-          className="avalon-static-backdrop__image absolute inset-0 h-full w-full object-cover [object-position:50%_40%] md:[object-position:55%_38%]"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </picture>
-      <div className="avalon-static-backdrop__veil absolute inset-0" />
-      <div className="avalon-static-backdrop__side absolute inset-0" />
-      <div className="avalon-static-backdrop__bottom absolute inset-x-0 bottom-0 h-[78svh]" />
-      <div className="avalon-static-backdrop__top absolute inset-x-0 top-0 h-[38svh]" />
-    </div>
-  );
+  return null;
 }

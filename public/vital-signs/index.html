@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Vital Signs — Avalon Clinical Team Newsletter</title>
+    <meta
+      name="description"
+      content="Vital Signs, the Avalon clinical team newsletter. Vol. 1, No. 1. Launch Week Edition for Thursday, July 2nd, 2026."
+    />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
+    <link rel="preload" href="/fonts/bebas-neue-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face {
+        font-family: "Bebas Neue";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url("/fonts/bebas-neue-400.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Inter";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url("/fonts/inter-400.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Inter";
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url("/fonts/inter-600.woff2") format("woff2");
+      }
+
+      :root {
+        --background: #000;
+        --foreground: #fff;
+        --muted: #fff;
+        --dim: #fff;
+        --border: rgba(255, 255, 255, 0.14);
+        --border-strong: rgba(255, 255, 255, 0.24);
+        --panel: rgba(255, 255, 255, 0.045);
+        --panel-strong: rgba(255, 255, 255, 0.075);
+        --radius: 6px;
+        --page-pad: clamp(20px, 4vw, 48px);
+        --heading: "Bebas Neue", "Arial Narrow", sans-serif;
+        --body: "Inter", Arial, sans-serif;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background: var(--background);
+      }
+
+      body {
+        position: relative;
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(255, 255, 255, 0.035) calc(50% - 0.5px), rgba(255, 255, 255, 0.035) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.038), transparent 32rem),
+          var(--background);
+        color: var(--foreground);
+        font-family: var(--body);
+        font-size: 13px;
+        line-height: 1.65;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 50% auto auto 50%;
+        z-index: 0;
+        width: min(118vmax, 1500px);
+        height: min(182vmax, 2320px);
+        background: rgba(150, 150, 150, 0.16);
+        transform: translate(-50%, -50%);
+        -webkit-mask: url("/avalon-logo.svg") center / contain no-repeat;
+        mask: url("/avalon-logo.svg") center / contain no-repeat;
+        pointer-events: none;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .site-nav {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px var(--page-pad);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0));
+        pointer-events: none;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        text-decoration: none;
+        pointer-events: auto;
+      }
+
+      .brand-mark {
+        display: inline-block;
+        width: 34px;
+        height: 42px;
+        flex: 0 0 auto;
+        background: currentColor;
+        -webkit-mask: url("/avalon-logo.svg") center / contain no-repeat;
+        mask: url("/avalon-logo.svg") center / contain no-repeat;
+      }
+
+      .brand span {
+        font-family: var(--heading);
+        font-size: 16px;
+        line-height: 0.9;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+        pointer-events: auto;
+      }
+
+      .nav-links a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 18px;
+        text-decoration: none;
+        font-family: var(--heading);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--foreground);
+        transition: color 160ms ease, background-color 160ms ease;
+      }
+
+      .nav-links a:hover {
+        color: var(--foreground);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero {
+        min-height: 92svh;
+        display: grid;
+        align-items: end;
+        padding: 104px var(--page-pad) 42px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .kicker {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin: 0 0 14px;
+        padding: 12px 0;
+        border-top: 1px solid var(--border-strong);
+        border-bottom: 1px solid var(--border);
+        font-family: var(--heading);
+        font-size: clamp(18px, 2.8vw, 32px);
+        line-height: 0.95;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .kicker::after {
+        content: none;
+      }
+
+      .hero-title-lockup {
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid var(--border-strong);
+      }
+
+      .hero-title-lockup::before {
+        content: none;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        position: relative;
+        z-index: 1;
+        max-width: none;
+        padding: 18px 0 16px;
+        font-family: var(--heading);
+        font-size: clamp(4.5rem, 15vw, 15rem);
+        line-height: 0.76;
+        letter-spacing: 0.02em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .edition {
+        margin-top: 14px;
+        font-family: var(--heading);
+        font-size: clamp(18px, 3.2vw, 36px);
+        line-height: 0.92;
+        letter-spacing: 0.08em;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--foreground);
+      }
+
+      .eyebrow,
+      .tag,
+      .stat-label {
+        font-family: var(--heading);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      .hero-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 48px;
+        border-right: 1px solid var(--border);
+        border-radius: 0;
+        padding: 0 16px;
+        font-family: var(--heading);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--foreground);
+        white-space: nowrap;
+      }
+
+      .pill:last-child {
+        border-right: 0;
+      }
+
+      .pill svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+      }
+
+      .rule {
+        height: 1px;
+        margin: 0 var(--page-pad);
+        background: var(--border);
+      }
+
+      .section {
+        padding: clamp(58px, 8vw, 104px) var(--page-pad);
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.55fr);
+        gap: clamp(24px, 6vw, 72px);
+        align-items: end;
+        margin-bottom: 28px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border-strong);
+      }
+
+      .section-title {
+        margin-top: 10px;
+        font-family: var(--heading);
+        font-size: clamp(34px, 6vw, 76px);
+        line-height: 0.9;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .section-subtitle {
+        margin-top: 14px;
+        max-width: 760px;
+        font-family: var(--heading);
+        font-size: clamp(24px, 3.5vw, 42px);
+        line-height: 0.98;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--foreground);
+      }
+
+      .section-deck {
+        max-width: 580px;
+        color: var(--muted);
+      }
+
+      .timeline {
+        display: grid;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        overflow: hidden;
+      }
+
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        min-height: 136px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .timeline-item:last-child {
+        border-bottom: 0;
+      }
+
+      .date-cell {
+        position: relative;
+        padding: 26px 24px;
+        border-right: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.018);
+      }
+
+      .date-main {
+        font-family: var(--heading);
+        font-size: 28px;
+        line-height: 0.9;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .date-sub {
+        margin-top: 9px;
+        font-family: var(--heading);
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      .dot {
+        position: absolute;
+        top: 30px;
+        right: -6px;
+        width: 11px;
+        height: 11px;
+        border: 1px solid var(--background);
+        border-radius: 50%;
+        background: var(--foreground);
+      }
+
+      .dot.live {
+        animation: pulse 2.2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+        }
+      }
+
+      .content-cell {
+        display: grid;
+        align-content: center;
+        gap: 18px;
+        padding: 28px 32px;
+      }
+
+      .beat-title {
+        font-family: var(--heading);
+        font-size: clamp(20px, 2.8vw, 30px);
+        line-height: 0.95;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .beat-copy {
+        max-width: 760px;
+        color: var(--muted);
+      }
+
+      .beat-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .beat-list li {
+        display: grid;
+        gap: 5px;
+      }
+
+      .beat-list strong {
+        font-family: var(--heading);
+        font-size: clamp(20px, 2.8vw, 30px);
+        line-height: 0.95;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 400;
+      }
+
+      .beat-list span {
+        color: var(--muted);
+      }
+
+      .employee-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.62fr);
+        gap: clamp(24px, 5vw, 64px);
+        align-items: stretch;
+      }
+
+      .employee-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 36px;
+      }
+
+      .employee-aside {
+        align-self: start;
+        max-width: 360px;
+        font-family: var(--heading);
+        font-size: 18px;
+        line-height: 1;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      .award-card {
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--panel);
+        padding: clamp(28px, 5vw, 56px);
+      }
+
+      .diamond {
+        margin-bottom: 22px;
+        color: var(--dim);
+        font-size: 16px;
+      }
+
+      .award-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 28px;
+      }
+
+      .award-pill {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-family: var(--heading);
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      .employee-name {
+        font-family: var(--heading);
+        font-size: clamp(52px, 9vw, 112px);
+        line-height: 0.8;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .employee-role {
+        margin-top: 14px;
+        font-family: var(--heading);
+        font-size: 17px;
+        line-height: 1;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      .employee-bio {
+        max-width: 650px;
+        margin-top: 30px;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border: 1px solid var(--border);
+        border-radius: 0;
+        overflow: hidden;
+      }
+
+      .stat {
+        min-height: 118px;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 9px;
+        padding: 20px 12px;
+        border-right: 1px solid var(--border);
+      }
+
+      .stat:last-child {
+        border-right: 0;
+      }
+
+      .stat-value {
+        font-family: var(--heading);
+        font-size: 30px;
+        line-height: 0.9;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .town-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border: 1px solid var(--border);
+        border-radius: 0;
+        overflow: hidden;
+      }
+
+      .town-item {
+        display: grid;
+        gap: 18px;
+        min-height: 238px;
+        padding: clamp(28px, 4vw, 44px);
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+      }
+
+      .town-item:last-child {
+        border-right: 0;
+      }
+
+      .town-title {
+        font-family: var(--heading);
+        font-size: clamp(24px, 3.5vw, 38px);
+        line-height: 0.95;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .town-copy {
+        max-width: 620px;
+        color: var(--muted);
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 28px var(--page-pad) 38px;
+        border-top: 1px solid var(--border);
+        color: var(--dim);
+        font-family: var(--heading);
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 860px) {
+        .site-nav {
+          align-items: flex-start;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 104px;
+        }
+
+        .hero-grid,
+        .section-head,
+        .employee-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .town-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .pill {
+          justify-content: center;
+          border-right: 1px solid var(--border);
+          border-bottom: 0;
+        }
+
+        .pill:last-child {
+          border-right: 0;
+        }
+
+        .beat-list {
+          grid-template-columns: 1fr;
+        }
+
+        .section-head {
+          align-items: start;
+        }
+
+        .timeline-item {
+          grid-template-columns: 1fr;
+          min-height: 0;
+        }
+
+        .date-cell {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .dot {
+          right: auto;
+          left: 24px;
+          top: auto;
+          bottom: -6px;
+        }
+
+        .content-cell {
+          padding: 28px 24px 32px;
+        }
+
+        .employee-aside {
+          max-width: none;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .stat:nth-child(2) {
+          border-right: 0;
+        }
+
+        .stat:nth-child(-n + 2) {
+          border-bottom: 1px solid var(--border);
+        }
+
+        .town-item {
+          min-height: 0;
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .town-item:last-child {
+          border-bottom: 0;
+        }
+
+        footer {
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 520px) {
+        body {
+          font-size: 12px;
+        }
+
+        h1 {
+          font-size: clamp(3.8rem, 18vw, 5.8rem);
+        }
+
+        .kicker {
+          display: grid;
+        }
+
+        .kicker::after {
+          text-align: left;
+        }
+
+        .pill {
+          justify-content: center;
+          width: 100%;
+        }
+
+        .section {
+          padding-top: 58px;
+          padding-bottom: 68px;
+        }
+
+        .date-main {
+          font-size: 24px;
+        }
+
+        .employee-name {
+          font-size: clamp(46px, 17vw, 74px);
+        }
+
+        .stat-value {
+          font-size: 26px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="Vital Signs navigation">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Avalon<br />Vitality</span>
+      </a>
+      <div class="nav-links" aria-label="Section links">
+        <a href="#launch">Launch</a>
+        <a href="#employee">Employee</a>
+        <a href="#town">Town</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-grid">
+          <div>
+            <p class="kicker">Clinical Team Newsletter</p>
+            <div class="hero-title-lockup">
+              <h1 id="page-title">Vital Signs</h1>
+            </div>
+            <p class="edition">Launch Week Edition</p>
+            <div class="hero-actions" aria-label="Issue summary">
+              <span class="pill">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v15H5z" /></svg>
+                Vol1.
+              </span>
+              <span class="pill">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2" /><circle cx="12" cy="12" r="9" /></svg>
+                July 2nd.
+              </span>
+              <span class="pill">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 4 4L20 4" /></svg>
+                2026.
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <section class="section" id="launch" aria-label="Launch week">
+        <div class="section-head">
+          <div>
+              <p class="section-subtitle">Launch week is live &mdash;<br />Happy July!</p>
+          </div>
+          <p class="section-deck">Four beats taking us from this week's launch across July.</p>
+        </div>
+
+        <div class="timeline">
+          <article class="timeline-item">
+            <div class="date-cell">
+              <span class="dot live" aria-hidden="true"></span>
+              <div class="date-main">Jul 2</div>
+              <div class="date-sub">Thurs &middot; Live</div>
+            </div>
+            <div class="content-cell">
+              <ul class="beat-list">
+                <li>
+                  <strong>Beta website launch</strong>
+                  <span>Full preview site live at beta.avalonvitality.co.</span>
+                </li>
+                <li>
+                  <strong>Service is live</strong>
+                  <span>Mobile IV/IM visits and memberships are open to select testers across the Bay Area.</span>
+                </li>
+                <li>
+                  <strong>Social content</strong>
+                  <span>Channels switch on &mdash; brand presence begins.</span>
+                </li>
+                <li>
+                  <strong>Newsletter</strong>
+                  <span>This briefing goes out to the team.</span>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="date-cell">
+              <span class="dot live" aria-hidden="true"></span>
+              <div class="date-main">July 4th</div>
+              <div class="date-sub">Sat &middot; Boat Party</div>
+            </div>
+            <div class="content-cell">
+              <h3 class="beat-title">SF Belle VIP Event</h3>
+              <p class="beat-copy">4th of july sunset cruise to golden gate bridge firework display</p>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="date-cell">
+              <span class="dot" aria-hidden="true"></span>
+              <div class="date-main">July 6th</div>
+              <div class="date-sub">Mon &middot; Banking Transition</div>
+            </div>
+            <div class="content-cell">
+              <h3 class="beat-title">Payroll</h3>
+              <p class="beat-copy">Gusto payroll and invoicing goes out to all staff. One easy location for all things payroll &amp; HR.</p>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="date-cell">
+              <span class="dot" aria-hidden="true"></span>
+              <div class="date-main">Jul 7th</div>
+              <div class="date-sub">Tues &middot; Test</div>
+            </div>
+            <div class="content-cell">
+              <ul class="beat-list">
+                <li>
+                  <strong>Beta test finish</strong>
+                  <span>URL transfer to main seals the deal.</span>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="date-cell">
+              <span class="dot" aria-hidden="true"></span>
+              <div class="date-main">TBD</div>
+              <div class="date-sub">2nd Half of July</div>
+            </div>
+            <div class="content-cell">
+              <ul class="beat-list">
+                <li>
+                  <strong>Vital Ice partnership</strong>
+                  <span>Second-half-of-July launch window, exact date to be announced.</span>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <section class="section" id="employee" aria-labelledby="employee-title">
+        <div class="employee-layout">
+          <div class="employee-copy">
+            <div>
+              <p class="eyebrow">EOTM</p>
+              <h2 class="section-title" id="employee-title">Employee of the Month</h2>
+              <p class="section-subtitle">$$ award for the teammate<br />who shows up.</p>
+            </div>
+          </div>
+
+          <article class="award-card" aria-label="Employee of the Month award">
+            <div class="employee-name">Mateya</div>
+            <div class="employee-role">Registered Nurse</div>
+            <p class="employee-bio">
+              One appointment, flawless execution. Mateya crushed a midnight backstage appointment with a famous DJ.
+              Cool under pressure, flawless on the clock. Exactly the standard. Takes home the $250 Employee of the
+              Month award.
+            </p>
+          </article>
+        </div>
+
+        <div class="stats" aria-label="Employee spotlight stats">
+          <div class="stat">
+            <div class="stat-value">1</div>
+            <div class="stat-label">Appointment</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">5.00</div>
+            <div class="stat-label">Rating &#9733;</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">12 AM</div>
+            <div class="stat-label">Showtime</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">VIP</div>
+            <div class="stat-label">Client</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <section class="section" id="town" aria-labelledby="town-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Town Business</p>
+            <h2 class="section-title" id="town-title">Town Business</h2>
+            <p class="section-subtitle">What's open</p>
+          </div>
+        </div>
+
+        <div class="town-grid">
+          <article class="town-item">
+            <p class="tag">Team &middot; Headshots</p>
+            <h3 class="town-title">Headshots</h3>
+            <p class="town-copy">
+              Grady is available the week of July 6th for in-office headshots. Please reach out directly to Grady.
+            </p>
+          </article>
+
+          <article class="town-item">
+            <p class="tag">2nd half of banking transition</p>
+            <h3 class="town-title">New contracts, NDAs, paperwork</h3>
+            <p class="town-copy">TBD 2nd half of July.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Avalon Vitality</span>
+      <span>Clinical Team Newsletter &middot; Vol. 1 &middot; No. 1</span>
+    </footer>
+  </body>
+</html>
