@@ -99,9 +99,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Avalon" />
-    <!-- theme-color for light vs dark OS preference -->
+    <!-- The site forces dark theme regardless of OS preference (html class="dark"),
+         so both media queries paint black. Prior light variant #F5F5F3 was
+         causing gray Safari safe-area shading on iOS devices set to Light OS mode. -->
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)" />
 
     <!-- Theme + boot bootstrap: blocking on purpose so `av-js`, theme, and
          splash-skip classes exist before first paint. -->
