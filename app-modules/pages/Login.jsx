@@ -845,7 +845,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl sm:max-w-[360px] md:max-w-[360px] md:p-4">
+        <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:max-w-[360px] md:p-4">
           <div className="mb-3 flex items-center justify-between gap-4">
             <Link
               to="/"
