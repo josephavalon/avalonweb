@@ -176,10 +176,10 @@ export default function EventsPosterSection() {
             whileHover={premiumHover}
             whileTap={premiumTap}
             style={{ background: '#fff', color: '#000' }}
-            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full font-body text-sm tracking-[0.2em] uppercase transition-transform duration-base ease-editorial active:scale-[0.99]"
+            className="group w-full flex items-center justify-center gap-3 py-4 md:py-5 rounded-full font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] transition-transform duration-base ease-editorial active:scale-[0.99]"
           >
             Build my event
-            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+            <ArrowRight className="h-4 w-4 md:h-5 md:w-5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
           </MotionLink>
         </div>
 
