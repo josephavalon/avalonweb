@@ -1045,7 +1045,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foreground/35 bg-background/30 text-foreground">
             <CurrentIcon className="h-3.5 w-3.5" strokeWidth={2.7} />
           </span>
-          <p className="font-heading text-[1.34rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.48rem]">
+          <p className="font-body text-[1.15rem] font-black uppercase leading-[0.98] tracking-[0.02em] text-foreground min-[390px]:text-[1.25rem]">
             {displayTitle}
           </p>
         </div>
@@ -1077,7 +1077,7 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
               <CurrentIcon className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
             </motion.span>
             <div className="min-w-0">
-              <p className="font-heading text-[1.3rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.42rem] md:text-[1.55rem]">
+              <p className="font-body text-[1.1rem] font-black uppercase leading-[0.98] tracking-[0.02em] text-foreground min-[390px]:text-[1.2rem] md:text-[1.3rem]">
                 {displayTitle}
               </p>
             </div>
