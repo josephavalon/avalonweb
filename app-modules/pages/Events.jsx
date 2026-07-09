@@ -299,7 +299,7 @@ export default function Events() {
         <section ref={plannerRef} className="scroll-mt-24 pt-6">
           <div className="mb-7 text-center">
             <h1 className="av-h-hero [text-wrap:balance]">
-              Does your event need a wellness lounge?
+              Plan your event
             </h1>
           </div>
           <EventPlanner />
