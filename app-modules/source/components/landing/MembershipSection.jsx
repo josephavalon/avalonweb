@@ -145,7 +145,8 @@ export default function MembershipSection() {
             to="/subscription"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/40 text-foreground font-body text-sm tracking-[0.2em] uppercase hover:border-foreground/70 hover:bg-foreground/[0.04] transition-colors duration-base ease-editorial"
+            style={{ background: '#fff', color: '#000' }}
+            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full font-body text-sm tracking-[0.2em] uppercase transition-transform duration-base ease-editorial active:scale-[0.99]"
           >
             Build my plan
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
