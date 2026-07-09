@@ -20,16 +20,16 @@ export default function SectionInterstitial({ kicker, title, body, cta }) {
         transition={{ duration: 0.9, ease: EASE }}
         className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14"
       >
+        <h2 className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-h1">
+          {title}
+        </h2>
         {kicker && (
-          <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]">
+          <p className="mt-4 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]">
             {kicker}
           </p>
         )}
-        <h2 className="mt-3 font-heading uppercase text-foreground leading-[0.9] tracking-tight text-h1">
-          {title}
-        </h2>
         {body && (
-          <p className="mx-auto mt-4 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
+          <p className="mx-auto mt-3 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
             {body}
           </p>
         )}
