@@ -160,7 +160,7 @@ export default function Hero() {
             initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.44, delay: 0.52, ease: EASE }}
-            className="relative mt-7 grid w-full grid-cols-3 gap-2.5 lg:mt-0 lg:w-[38rem] lg:max-w-[38rem] lg:shrink-0 lg:gap-3"
+            className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 lg:mt-0 lg:w-[28rem] lg:max-w-[28rem] lg:shrink-0 lg:grid-cols-1 lg:gap-3.5"
           >
             {HERO_ACTIONS.map((action) => {
               const Icon = action.icon;
