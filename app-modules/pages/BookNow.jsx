@@ -6529,18 +6529,6 @@ export default function BookNow() {
                   </button>
                 </div>
                 <div data-av-embedded-checkout className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
-                  <div className="border-b border-foreground/8 px-4 py-3">
-                    <p className="font-body text-[14px] font-black uppercase tracking-[0.16em] text-foreground/60">Secure checkout ready</p>
-                    <div className="mt-2 h-px overflow-hidden bg-foreground/10">
-                      <motion.div
-                        className="h-full bg-foreground"
-                        initial={reduceMotion ? { scaleX: 1 } : { scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: reduceMotion ? 0 : 0.5, ease: EASE }}
-                        style={{ originX: 0 }}
-                      />
-                    </div>
-                  </div>
                   {checkoutMountError && (
                     <div role="alert" className="m-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
                       <div className="flex items-center gap-2.5">
