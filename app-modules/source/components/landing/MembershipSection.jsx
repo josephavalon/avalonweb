@@ -116,10 +116,10 @@ export default function MembershipSection() {
     <section id="subscription" className="pt-10 pb-10 md:pt-16 md:pb-16 px-4">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header — matches SectionInterstitial card treatment */}
-        <ScrollParallax className="mb-8 md:mb-10">
-          <div className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14">
-            <h2 className="font-heading text-h1 text-foreground uppercase tracking-tight leading-[0.9]">
+        {/* Header */}
+        <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
+          <div>
+            <h2 className="font-heading text-display text-foreground tracking-tight leading-[0.92] uppercase">
               Plans
             </h2>
           </div>

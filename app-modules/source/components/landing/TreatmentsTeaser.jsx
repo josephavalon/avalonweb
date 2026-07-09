@@ -269,10 +269,10 @@ export default function TreatmentsTeaser() {
     <section id="treatments" className="scroll-mt-20 md:scroll-mt-28 pt-10 pb-10 md:pt-16 md:pb-16 px-5 md:px-12">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header — matches SectionInterstitial card treatment */}
-        <ScrollParallax className="mb-6 md:mb-10">
-          <div className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14">
-            <h2 className="font-heading text-h1 text-foreground uppercase tracking-tight leading-[0.9]">IV Therapy</h2>
+        {/* Header */}
+        <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10">
+          <div>
+            <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">IV Therapy</h2>
           </div>
         </ScrollParallax>
 
