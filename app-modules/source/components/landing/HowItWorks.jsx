@@ -16,13 +16,13 @@ const STEPS = [
     n: '02',
     title: 'Confirm',
     preview: 'Registered Nurse · arrival window',
-    desc: 'We confirm the visit and registered nurse details.',
+    desc: 'We confirm your nurse and time.',
   },
   {
     n: '03',
     title: 'Recover',
     preview: '30-60 min',
-    desc: 'Your registered nurse handles setup and care.',
+    desc: 'Your nurse handles the rest.',
   },
 ];
 

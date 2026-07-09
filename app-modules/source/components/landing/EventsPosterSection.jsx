@@ -22,7 +22,7 @@ const EVENT_TIERS = [
       'On-site IV drips & recovery',
       'Licensed nurses, HIPAA-compliant',
       'Executive offsites · conferences',
-      'Invoice or purchase order billing',
+      'Invoice or PO billing',
     ],
   },
   {

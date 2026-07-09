@@ -19,7 +19,7 @@ const Footer = lazy(() => import('../components/landing/Footer'));
 export default function Home() {
   useSeo({
     title: 'Avalon Vitality — Mobile IV Therapy in the SF Bay Area',
-    description: 'Avalon Vitality delivers mobile IV therapy at home, hotel, office, or event with registered nurses, clinical review, and fast SF Bay Area booking.',
+    description: 'Mobile IV therapy in the SF Bay Area — registered nurses, same-day booking, at home or on-site.',
     path: '/',
   });
 
@@ -39,7 +39,6 @@ export default function Home() {
             <SectionInterstitial
               kicker="Same-day · SF Bay Area"
               title="Wellness delivered"
-              body="Same-day nurse-delivered therapy across the Bay Area."
             />
             <HowItWorks />
             <WellnessQuiz />
