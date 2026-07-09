@@ -33,7 +33,7 @@ export default function CTABanner() {
               whileTap={premiumTap}
               className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-foreground px-7 py-3.5 font-body text-sm uppercase tracking-[0.2em] text-background transition-colors duration-base ease-editorial"
             >
-              Book now
+              Book
               <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
             </MotionLink>
           </GlassCard>

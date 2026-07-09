@@ -107,7 +107,7 @@ export default function EventsSection() {
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">
             In the Field
           </p>
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
+          <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">
             EVENTS
           </h2>
           <div className="w-10 h-[2px] bg-accent mt-3" />

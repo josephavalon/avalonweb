@@ -25,7 +25,7 @@ export default function SectionInterstitial({ kicker, title, body, cta }) {
             {kicker}
           </p>
         )}
-        <h2 className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-[15vw] md:text-[9rem] lg:text-[11rem]">
+        <h2 className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-display-xl">
           {title}
         </h2>
         {body && (

@@ -1376,9 +1376,49 @@ html, body {
     @apply text-xs md:text-sm tracking-[0.3em] text-accent font-body uppercase;
   }
 
-  /* Canonical section h2 — used on every landing section title */
+  /* Canonical section h2 — used on every landing section title. Uses
+     Tailwind's `text-display` fluid clamp token so mirror sections all share
+     one scale. See findings A1/A3 in .context/beta-audit-complete.md. */
   .av-h2 {
-    @apply font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase;
+    @apply font-heading text-display text-foreground tracking-wide leading-[0.95] uppercase;
+  }
+
+  /* Poster tier — hero H1 and event-slug hero titles ONLY. Never a section
+     head — those use .av-h2 / text-display. */
+  .av-h-hero {
+    @apply font-heading text-display-xl text-foreground tracking-wide leading-[0.88] uppercase;
+  }
+
+  /* TRUE clinical voice per DESIGN.md: prices at rest, timestamps, counts,
+     step numbers, protocol codes, license numbers, back-on-floor times, GFE
+     states, queue positions. Never animates, never persuades. Uses tabular
+     numerals so digits don't shimmer. */
+  .av-mono {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  /* Price display token. Composes with .av-mono via CSS so prices only need
+     one class. Size stays whatever the parent context dictates. */
+  .av-price {
+    @apply av-mono;
+  }
+
+  /* Standard filled pill CTA — Bebas caps, 999px radius, white on black.
+     Matches nav BOOK / home BOOK / plan START PLAN / checkout gate primary. */
+  .av-pill-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background font-heading uppercase tracking-[0.06em] px-6 py-3 hover:bg-foreground/90 transition-colors;
+  }
+
+  /* Outline variant */
+  .av-pill-btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-foreground/30 text-foreground font-heading uppercase tracking-[0.06em] px-6 py-3 hover:border-foreground transition-colors;
+  }
+
+  /* Standard 48×48 icon chip used at the left of every list row. */
+  .av-icon-chip {
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-lg av-glass-card shrink-0;
   }
 
   /* Tagline body copy that follows the h2 */
@@ -1894,6 +1934,13 @@ a:focus-visible,
 /* Targeted: paragraphs inside main landing sections that aren't already constrained */
 section p:not([class*="max-w-"]):not([class*="text-center"]) {
   max-width: 65ch;
+}
+
+/* Anchor-jump / scroll-into-view target offset — audit finding D1. Every
+   H1/H2 gets 96 px of scroll-margin so nav-pill scroll-to anchors leave
+   the heading fully visible instead of clipped under the fixed pill. */
+h1, h2 {
+  scroll-margin-top: 96px;
 }
 
 /* ===== 9. Eyebrow primary anchor — bump to 13px ===== */

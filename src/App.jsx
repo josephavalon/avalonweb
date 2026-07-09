@@ -364,6 +364,13 @@ function AppRoutes() {
             <Route path="/services" element={<Navigate to="/protocols" replace />} />
             <Route path="/providers" element={<Navigate to="/nurses" replace />} />
             <Route path="/provider/login" element={<Navigate to="/login" replace />} />
+            {/* Deep-link recovery — audit findings N2-N5. Nurse SMS invites,
+                marketing-cadence /iv-therapy links, muscle-memory /dashboard
+                and /kiosk should route somewhere useful, not 404. */}
+            <Route path="/nurse" element={<Navigate to="/login?role=nurse" replace />} />
+            <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/members/dashboard" replace />} />
+            <Route path="/kiosk" element={<Navigate to="/login?next=/kiosk" replace />} />
             <Route path="/plans" element={<Navigate to="/subscription" replace />} />
             <Route path="/plans/checkout" element={<PreserveSearchNavigate to="/plan" />} />
             <Route path="/plan-checkout" element={<PreserveSearchNavigate to="/plan" />} />

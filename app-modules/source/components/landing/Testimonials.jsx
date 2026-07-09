@@ -116,7 +116,7 @@ export default function Testimonials() {
           transition={{ duration: 0.7, ease: EASE }}
           className="px-4 text-left mb-6 md:mb-10"
         >
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+          <h2 className="font-heading text-display text-foreground tracking-wide leading-[0.95] uppercase">
             Real Results
           </h2>
         </motion.div>

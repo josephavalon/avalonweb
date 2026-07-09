@@ -670,7 +670,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
 
       <div className="px-4 pt-3">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="font-heading text-[2.7rem] leading-none text-foreground">{money(isMonthly ? monthly : perMonth)}</span>
+          <span className="av-mono text-[2.7rem] leading-none text-foreground">{money(isMonthly ? monthly : perMonth)}</span>
           <span className="font-body text-sm font-bold text-foreground/52">/mo</span>
         </div>
       </div>
@@ -680,7 +680,7 @@ function PlanRail({ therapyOption, therapyLabel, sessions, baseMonthly, visitLin
       <div className="mx-4 mt-2 rounded-xl border border-foreground/12 bg-foreground/[0.04] px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/74">Due today</span>
-          <span className="font-heading text-[1.3rem] leading-none text-foreground tabular-nums">{money(depositToday)}</span>
+          <span className="av-mono text-[1.3rem] leading-none text-foreground">{money(depositToday)}</span>
         </div>
         <p className="mt-0.5 font-body text-[13px] font-bold uppercase tracking-[0.06em] text-foreground/42">
           $50 deposit{peopleCount > 1 ? ` · ${peopleCount} people` : ' to start'}
@@ -1143,7 +1143,7 @@ export default function Subscription() {
       </header>
       <main id="plans-builder" className="mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-[5.25rem] md:pt-[5.75rem] md:px-8">
         <div className="mb-7 hidden text-center md:block">
-          <h1 className="font-heading text-[4.6rem] uppercase leading-[0.86] tracking-normal text-foreground lg:text-[5.4rem]">Choose your plan</h1>
+          <h1 className="font-heading text-display-xl uppercase leading-[0.86] tracking-normal text-foreground">Choose your plan</h1>
           <p className="mt-3 font-body text-[15px] font-semibold text-foreground/60">Up to 4 people. 3-month minimum, then cancel anytime.</p>
         </div>
 

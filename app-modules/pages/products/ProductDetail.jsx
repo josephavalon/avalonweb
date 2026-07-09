@@ -219,7 +219,7 @@ export default function ProductDetail() {
                   style={{ backgroundColor: '#ffffff', color: '#000000' }}
                   className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-xl px-8 font-body text-xs font-semibold uppercase tracking-[0.08em] transition-opacity hover:opacity-90 md:min-h-[3.4rem] md:text-sm"
                 >
-                  Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                  Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </button>
                 <Link
                   to={bookingPath(treatment, true)}
@@ -324,7 +324,7 @@ export default function ProductDetail() {
           onClick={buyNow}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-body text-xs font-semibold uppercase tracking-[0.08em] text-black"
         >
-          Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </button>
       </div>
 

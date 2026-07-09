@@ -139,7 +139,7 @@ export default function EventsPosterSection() {
         {/* Header */}
         <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
           <div>
-            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
+            <h2 className="font-heading text-display text-foreground tracking-tight leading-[0.92] uppercase">
               Events
             </h2>
             <p className="mt-2 font-body text-[11px] uppercase tracking-[0.18em] text-foreground/45">

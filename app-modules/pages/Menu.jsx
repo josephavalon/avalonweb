@@ -313,7 +313,7 @@ export default function Menu() {
         <section className="relative">
           <div className="relative md:max-w-3xl">
             <p className="relative mb-3 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Choose a therapy base</p>
-            <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
+            <h1 className="relative font-heading text-display-xl uppercase leading-[0.82] tracking-normal text-foreground">
               IV Therapy
             </h1>
           </div>

@@ -134,7 +134,7 @@ export default function OurDrips() {
         <div className="flex items-end justify-between mb-6 md:mb-8">
           <div>
             <p className="text-[11px] md:text-xs tracking-[0.3em] text-foreground font-body uppercase mb-2">Therapies</p>
-            <h2 className="font-heading text-[9vw] md:text-7xl text-foreground tracking-tight leading-[0.92] uppercase">
+            <h2 className="font-heading text-display text-foreground tracking-tight leading-[0.92] uppercase">
               Choose Your Session
             </h2>
             <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-foreground/50">

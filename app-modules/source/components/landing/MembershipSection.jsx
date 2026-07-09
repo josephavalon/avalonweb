@@ -119,7 +119,7 @@ export default function MembershipSection() {
         {/* Header */}
         <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
           <div>
-            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
+            <h2 className="font-heading text-display text-foreground tracking-tight leading-[0.92] uppercase">
               Plans
             </h2>
           </div>

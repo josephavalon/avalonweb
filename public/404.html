@@ -27,7 +27,57 @@
         justify-content: center;
         padding: 2rem;
         text-align: center;
+        position: relative;
+        overflow-x: hidden;
       }
+      /* Photo backdrop so the static 404 lives in the same room as the rest
+         of the site (audit finding D3). Ships as inline reference so no
+         extra fetch is required beyond the OG image the domain already
+         serves. Kept low-opacity so type stays legible. */
+      body::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.06), transparent 60%),
+                    radial-gradient(ellipse at 80% 70%, rgba(255,255,255,0.04), transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+      }
+      main { position: relative; z-index: 1; }
+      /* Minimal top strip matching the site nav pill (audit finding D2).
+         Static <a> so it works without JS. */
+      .av-404-topbar {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(13, 13, 13, 0.94);
+      }
+      .av-404-topbar-mark {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 14px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #f4f4f1;
+        text-decoration: none;
+      }
+      .av-404-topbar-links { display: flex; gap: 1.25rem; }
+      .av-404-topbar-links a {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(244, 244, 241, 0.7);
+        text-decoration: none;
+      }
+      .av-404-topbar-links a:hover { color: #f4f4f1; }
       .av-404-eyebrow {
         font-size: 11px;
         letter-spacing: 0.32em;
@@ -89,6 +139,14 @@
     </style>
   </head>
   <body>
+    <div class="av-404-topbar">
+      <a class="av-404-topbar-mark" href="/">Avalon Vitality</a>
+      <div class="av-404-topbar-links">
+        <a href="/protocols">IV Therapy</a>
+        <a href="/subscription">Plans</a>
+        <a href="/events">Events</a>
+      </div>
+    </div>
     <main>
       <p class="av-404-eyebrow">Avalon Vitality</p>
       <h1 class="av-404-mark">404</h1>
