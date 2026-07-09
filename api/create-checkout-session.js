@@ -781,16 +781,18 @@ export default async function handler(req, res) {
 
     const sessionParams = {
       mode: sessionMode,
-      // Explicit list excludes Stripe Link (which the Dashboard would otherwise
-      // auto-enable as a top-of-sheet green express button — the user does not
-      // want it). Apple Pay + Google Pay ride along on `card` when the domain
-      // is verified. `automatic_payment_methods` is NOT a valid Checkout
-      // Session param (it belongs to PaymentIntents) and Stripe returns
-      // `parameter_unknown` if you send it. Also skip top-level `customer_email`
-      // so Link never recognizes a returning shopper.
-      payment_method_types: sessionMode === 'subscription'
-        ? ['card']
-        : ['card', 'amazon_pay', 'affirm', 'klarna'],
+      // Cards only. This suppresses Stripe Link (Dashboard would otherwise
+      // auto-enable it as a top-of-sheet green express button — the user does
+      // not want it) and Apple Pay + Google Pay ride along on `card` when the
+      // domain is verified. Listing methods the account hasn't activated
+      // (amazon_pay, affirm, klarna) makes Stripe return
+      // StripeInvalidRequestError, so keep this narrow — extend it only after
+      // the corresponding method is turned on in the Stripe Dashboard.
+      // `automatic_payment_methods` is NOT a valid Checkout Session param
+      // (it belongs to PaymentIntents) and Stripe returns `parameter_unknown`
+      // if you send it. Also skip top-level `customer_email` so Link never
+      // recognizes a returning shopper.
+      payment_method_types: ['card'],
       line_items,
       allow_promotion_codes: true,
       expires_at: checkoutExpiresAt(),
