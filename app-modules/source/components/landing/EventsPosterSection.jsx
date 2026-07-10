@@ -143,7 +143,7 @@ export default function EventsPosterSection() {
               Does your event need a wellness lounge?
             </h3>
             <p className="mx-auto mt-4 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
-              Nurse-run recovery lounges for conferences, music festivals, and backstage.
+              Nurse-run lounges for conferences, music festivals, and backstage.
             </p>
           </div>
         </ScrollParallax>
