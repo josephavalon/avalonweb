@@ -113,7 +113,12 @@
          These rules apply the correct background immediately from the theme class that
          the script above already wrote to <html>, before a single pixel paints. -->
     <style>
-      html, body { background-color: hsl(0,0%,96%); }
+      /* Pre-boot fallback — pure black. Was hsl(0,0%,96%) (near-white) which
+         painted for the microsecond between theme-bootstrap.js's class remove
+         and re-add. iOS Safari samples the top-of-page bg for its URL bar +
+         safe-area tint; catching that gray flash produced persistent gray
+         bands at top + bottom even though meta[theme-color] said #000000. */
+      html, body { background-color: #000000; }
       html.dark, html.dark body { background-color: #000000; }
       html.giants, html.giants body { background-color: #000000; }
       html.golden, html.golden body { background-color: hsl(28,35%,16%); }
