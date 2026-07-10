@@ -402,21 +402,15 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     }
   };
 
-  // Hidden mobile easter egg: one tap on the logo goes home (default Link
-  // behavior), a double tap cycles the color theme (Night → Giants → Warriors).
-  // Mobile only — bound solely to the mobile-bar logo and guarded by useIsMobile.
+  // Hidden easter egg on every breakpoint: single click/tap on the chevron
+  // goes home (default Link behavior), a double click/tap cycles the color
+  // theme (Night ↔ Warriors). Attached to both mobile and desktop logos.
   const DOUBLE_TAP_MS = 260;
   const goHome = () => {
     if (location.pathname === '/') window.scrollTo({ top: 0, behavior: 'smooth' });
     else navigate('/');
   };
   const handleMarkTap = (e) => {
-    if (!isMobile) {
-      // Desktop never reaches here (mobile bar is display:none), but stay safe:
-      // fall back to the standard home-link behavior.
-      handleLogoClick(e);
-      return;
-    }
     e.preventDefault();
     const s = tapState.current;
     s.count += 1;
@@ -545,7 +539,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           )}
           <Link
             to="/"
-            onClick={handleLogoClick}
+            onClick={handleMarkTap}
             aria-label="Avalon Vitality — home"
             className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left`}
           >
