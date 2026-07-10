@@ -16,11 +16,20 @@ export default function AvalonStaticBackdrop() {
       aria-hidden="true"
       className="av-static-backdrop pointer-events-none fixed left-0 right-0 z-0"
       style={{
-        // Nav bar height (~4.5rem) offset so the drop tip starts BELOW the pinned
-        // top menu instead of peeking behind it. Safe-area offset added for iOS
-        // notch. Bottom padding stays safe-area only.
+        // Nav bar height (~4.5rem) + iOS notch offset so the drop tip starts
+        // BELOW the pinned top menu instead of peeking behind it.
         top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)',
-        bottom: 'env(safe-area-inset-bottom, 0px)',
+        // Explicit height using 100lvh (Large Viewport Height — the FULL
+        // viewport with browser chrome retracted). CRITICAL: this must NOT
+        // derive from `bottom` + viewport. On iOS Safari the URL bar
+        // collapses during the initial scroll gesture; that fluctuates the
+        // viewport height, which resized the box, which re-fit the
+        // `mask-size: contain` chevron — making the drop visibly shift.
+        // 100lvh is stationary through URL-bar transitions. `100vh` is
+        // fallback for browsers without lvh support (iOS <16, older Chromium):
+        // on those, 100vh already behaves like the large viewport.
+        height: 'calc(100vh - 4.5rem - env(safe-area-inset-top, 0px))',
+        maxHeight: 'calc(100lvh - 4.5rem - env(safe-area-inset-top, 0px))',
         // Fill color uses a CSS var so themes can retint the watermark:
         // - dark (default): 11% white → soft gray chevron
         // - warriors: light yellow (overridden in src/index.css)
