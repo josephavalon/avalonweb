@@ -16,9 +16,12 @@ export default function AvalonStaticBackdrop() {
       aria-hidden="true"
       className="pointer-events-none fixed left-0 right-0 z-0"
       style={{
-        top: 'env(safe-area-inset-top, 0px)',
+        // Nav bar height (~4.5rem) offset so the drop tip starts BELOW the pinned
+        // top menu instead of peeking behind it. Safe-area offset added for iOS
+        // notch. Bottom padding stays safe-area only.
+        top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)',
         bottom: 'env(safe-area-inset-bottom, 0px)',
-        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+        backgroundColor: 'rgba(255, 255, 255, 0.11)',
         WebkitMaskImage: 'url(/avalon-logo.svg)',
         maskImage: 'url(/avalon-logo.svg)',
         WebkitMaskRepeat: 'no-repeat',
