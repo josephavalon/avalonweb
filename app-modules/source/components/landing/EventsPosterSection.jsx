@@ -183,10 +183,6 @@ export default function EventsPosterSection() {
           </MotionLink>
         </div>
 
-        <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4 text-center">
-          Licensed nurses · White-glove service · Travel available
-        </p>
-
       </div>
     </section>
   );
