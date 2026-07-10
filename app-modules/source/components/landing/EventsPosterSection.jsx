@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Building2, Wine, Palmtree, Crown, Check, ChevronDown } from 'lucide-react';
+import { ArrowRight, Building2, Wine, Music, Crown, Check, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import ScrollParallax from '@/components/ui/ScrollParallax';
@@ -15,7 +15,7 @@ const EVENT_TIERS = [
   {
     key: 'corporate',
     name: 'Corporate wellness',
-    note: 'Meetings • Conferences • Employee Wellness',
+    note: 'Employee Wellness • Meetings • Conferences',
     icon: Building2,
     href: '/events?type=Corporate',
     details: [
@@ -39,16 +39,16 @@ const EVENT_TIERS = [
     ],
   },
   {
-    key: 'retreats',
-    name: 'Retreats & offsites',
-    note: 'Multi-Day • Teams • Custom Logistics',
-    icon: Palmtree,
-    href: '/events?type=Conference',
+    key: 'festivals',
+    name: 'Music festivals',
+    note: 'Artists • Backstage • Crew Wellness',
+    icon: Music,
+    href: '/events?type=Festival',
     details: [
-      'Multi-day nurse coverage',
-      'Wellness programming for teams',
-      'Wine country · Tahoe · Napa',
-      'Travel & lodging coordinated',
+      'Artist & crew recovery',
+      'On-site medical staffing',
+      'Multi-day event coverage',
+      'Backstage & green room service',
     ],
   },
   {
@@ -143,7 +143,7 @@ export default function EventsPosterSection() {
               Does your event need a wellness lounge?
             </h3>
             <p className="mx-auto mt-4 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
-              Nurse-run recovery lounges for weddings, offsites, and backstage.
+              Nurse-run recovery lounges for conferences, music festivals, and backstage.
             </p>
           </div>
         </ScrollParallax>
