@@ -294,20 +294,16 @@ export default function Events() {
         <Navbar />
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-[5.25rem] md:px-8 md:pt-[5.75rem]">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-[5.25rem] md:px-8 md:pb-12 md:pt-[5.75rem]">
         {/* Planner */}
-        <section ref={plannerRef} className="scroll-mt-24 pt-6">
-          <div className="mb-7 text-center">
+        <section ref={plannerRef} className="scroll-mt-24 pt-2">
+          <div className="mb-4 text-center md:mb-5">
             <h1 className="av-h-hero [text-wrap:balance]">
               Build your event
             </h1>
           </div>
           <EventPlanner />
         </section>
-
-        <p className="mt-16 flex items-center justify-center gap-3 text-center font-body text-xs font-black uppercase tracking-[0.2em] text-foreground/45">
-          Registered nurses <AvalonMark className="h-4 w-3 text-foreground/70" /> Premium care. Anywhere.
-        </p>
       </main>
 
       <Footer />
