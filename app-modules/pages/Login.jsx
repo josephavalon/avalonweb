@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle, ArrowLeft, ArrowRight, Check, ChevronRight, Eye, EyeOff, Fingerprint,
-  LockKeyhole, Mail, MailCheck, RefreshCw, ShieldCheck, Smartphone, Stethoscope, UserPlus,
+  AlertCircle, ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight, Eye, EyeOff, Fingerprint,
+  Link2, LockKeyhole, Mail, MailCheck, MessageCircle, RefreshCw, ShieldCheck, Smartphone, Stethoscope, UserPlus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -115,18 +115,28 @@ function SubmitButton({ loading, idle, busy }) {
 function SegmentedToggle({ options, value, onChange }) {
   return (
     <div
-      className="grid gap-1 rounded-full border border-foreground/[0.12] bg-foreground/[0.04] p-1"
+      className="grid items-center gap-0 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] p-1"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
-      {options.map(({ key, label, Icon }) => (
+      {options.map(({ key, label, Icon }, i) => (
         <button
           key={key}
           type="button"
           onClick={() => onChange(key)}
-          className={`flex min-h-[38px] items-center justify-center gap-1.5 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${value === key ? 'bg-foreground text-background' : 'text-foreground/55 hover:text-foreground'}`}
+          className={`relative flex min-h-[44px] items-center justify-center gap-1.5 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.22em] transition-colors ${
+            value === key
+              ? 'bg-foreground text-background shadow-[0_1px_0_hsl(var(--background)/0.10)]'
+              : 'text-foreground/62 hover:text-foreground'
+          }`}
         >
           {Icon ? <Icon className="h-3.5 w-3.5" strokeWidth={2} /> : null}
           {label}
+          {i > 0 && value !== key && value !== options[i - 1].key && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0 top-1/2 h-3 w-px -translate-y-1/2 bg-foreground/22"
+            />
+          )}
         </button>
       ))}
     </div>
@@ -809,31 +819,40 @@ export default function Login({ defaultAudience = 'patient' }) {
       </button>
     </div>
   ) : (
-    <div className="mt-4 grid gap-1.5 border-t border-foreground/[0.08] pt-3 md:mt-3 md:pt-3">
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-        {!isNew && (
+    <div className="mt-6 grid gap-3">
+      {/* OR divider */}
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-foreground/16" />
+        <span className="font-body text-[10px] font-semibold uppercase tracking-[0.28em] text-foreground/45">or</span>
+        <span className="h-px flex-1 bg-foreground/16" />
+      </div>
+      <div className="grid grid-cols-2 items-center">
+        {!isNew ? (
           <button
             type="button"
             onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-            className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
+            className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-foreground"
           >
-            Forgot? Email me a link
+            <Link2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+            Forgot password?
           </button>
-        )}
+        ) : <span aria-hidden="true" />}
         <a
           href="mailto:support@avalonvitality.co"
-          className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
+          className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-foreground border-l border-foreground/12"
         >
+          <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.8} />
           Need help?
         </a>
-        <button
-          type="button"
-          onClick={() => switchAudience('admin')}
-          className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
-        >
-          Avalon staff? Sign in
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={() => switchAudience('admin')}
+        className="mt-1 inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.22em] text-foreground/72 transition-colors hover:text-foreground"
+      >
+        <span className="underline underline-offset-[6px] decoration-foreground/40 group-hover:decoration-foreground">Avalon staff? Sign in</span>
+        <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
+      </button>
     </div>
   );
 
@@ -846,15 +865,18 @@ export default function Login({ defaultAudience = 'patient' }) {
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
         <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:max-w-[360px] md:p-4">
-          <div className="mb-3 flex items-center justify-between gap-4">
+          <div className="mb-5 flex items-center justify-between gap-4">
             <Link
               to="/"
               aria-label="Avalon Vitality home"
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center transition-opacity hover:opacity-70"
+              className="inline-flex min-h-[44px] items-center gap-3 transition-opacity hover:opacity-70"
             >
               <AvalonMark className="h-10 w-[26px] text-foreground" />
+              <span className="font-body text-lg font-medium uppercase tracking-[0.28em] text-foreground">
+                Avalon
+              </span>
             </Link>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.22] text-foreground">
               {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNurse ? <Stethoscope className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
             </span>
           </div>
@@ -887,7 +909,7 @@ export default function Login({ defaultAudience = 'patient' }) {
               className="flex-1"
             >
               <div className="mb-3">
-                <h1 className="font-heading text-[1.9rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[1.65rem]">
+                <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[2.2rem]">
                   {heading[0]} {heading[1]}
                 </h1>
                 {supabaseMode && isAdmin ? (
