@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ChevronRight, LogOut, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 import { cycleTheme } from '@/lib/theme';
@@ -747,8 +747,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                 )}
 
                 <div className="relative grid gap-1.5">
-                  {mobileLinks.map((item) => {
+                  {mobileLinks.map((item, i) => {
                   const active = isActiveLink(item.to);
+                  const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Sign In' || item.label === 'Dashboard');
+                  const Trailing = isAuthRow ? ArrowUpRight : ChevronRight;
                   return (
                     <motion.div
                       key={item.to}
@@ -757,22 +759,21 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                       <Link
                         to={item.to}
                         onClick={close}
-                        className={`av-glass-widget group relative flex min-h-[58px] items-center justify-between rounded-2xl border px-4 font-body text-[11px] uppercase tracking-[0.24em] text-foreground transition-all duration-300 ${
+                        className={`av-glass-widget group relative flex min-h-[62px] items-center justify-between rounded-2xl border px-5 font-body text-[12px] uppercase tracking-[0.42em] text-foreground transition-all duration-300 ${
                           item.primary
-                            ? 'text-foreground ring-1 ring-foreground/18'
+                            ? 'text-foreground ring-1 ring-foreground/70 shadow-[0_0_0_1px_hsl(var(--foreground)/0.15)]'
                             : active
-                              ? 'text-foreground ring-1 ring-foreground/16'
-                              : 'text-foreground/66 hover:text-foreground'
+                              ? 'text-foreground ring-1 ring-foreground/40'
+                              : 'text-foreground/74 hover:text-foreground'
                         }`}
                       >
                         <span>{item.label}</span>
-                        <span className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                          item.primary
-                            ? 'bg-foreground/60'
-                            : active
-                              ? 'bg-accent'
-                              : 'bg-foreground/18 group-hover:bg-foreground/42'
-                        }`} />
+                        <Trailing
+                          className={`h-4 w-4 shrink-0 transition-colors ${
+                            item.primary || active ? 'text-foreground' : 'text-foreground/50 group-hover:text-foreground'
+                          }`}
+                          strokeWidth={1.6}
+                        />
                       </Link>
                     </motion.div>
                   );
