@@ -153,7 +153,7 @@ export default function MembershipSection() {
           </MotionLink>
         </div>
 
-        <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4">
+        <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4 text-center">
           {SUBSCRIPTION_COMMITMENT_COPY}
         </p>
 
