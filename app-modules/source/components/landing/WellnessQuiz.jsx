@@ -190,7 +190,7 @@ export default function WellnessQuiz() {
 
                 {/* Center: headline + body */}
                 <div className="md:px-8">
-                  <h2 className="font-heading text-4xl uppercase leading-none tracking-tight text-foreground md:text-[44px]">
+                  <h2 className="font-heading text-5xl uppercase leading-none tracking-tight text-foreground md:text-[64px]">
                     Not sure?
                   </h2>
                   <p className="mt-1.5 font-body text-[11px] uppercase leading-relaxed tracking-[0.18em] text-foreground/55 md:text-xs">
