@@ -896,7 +896,7 @@ export default function Login({ defaultAudience = 'patient' }) {
                   </p>
                 ) : !isAdmin && !isNurse && !isNew ? (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    Your visits, your nurse, your records. Sign in to manage clinically reviewed sessions on your own time.
+                    Your visits, your nurse, your records. Sign in to manage your account.
                   </p>
                 ) : null}
               </div>
