@@ -8,7 +8,7 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const SERVICES = [
   { label: 'Book',       to: '/book' },
-  { label: 'IV Therapy', to: '/protocols' },
+  { label: 'IV Therapy Menu', to: '/protocols' },
   { label: 'Plans',      to: '/subscription' },
 ];
 

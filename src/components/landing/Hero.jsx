@@ -9,7 +9,7 @@ const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
-  { to: '/protocols', label: 'IV Therapy', icon: Droplet },
+  { to: '/protocols', label: 'IV Therapy Menu', icon: Droplet },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 // All 6 rows are non-clickable so structure is identical — no <Link> wrapper on
