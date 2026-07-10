@@ -665,6 +665,13 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   border-color: hsl(var(--foreground)) !important;
 }
 
+/* Warriors: tint the fixed drop-mark watermark to light yellow. Consumed by
+   AvalonStaticBackdrop's inline `background-color: var(--av-backdrop-fill, ...)`.
+   14% gold at 45,100%,58% (theme accent) → readable but recedes behind text. */
+.warriors {
+  --av-backdrop-fill: hsl(45 100% 58% / 0.14);
+}
+
 #root, .app-shell {
   max-width: 100vw;
   overflow-x: clip;

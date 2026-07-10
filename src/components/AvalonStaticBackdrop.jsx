@@ -14,14 +14,17 @@ export default function AvalonStaticBackdrop() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 right-0 z-0"
+      className="av-static-backdrop pointer-events-none fixed left-0 right-0 z-0"
       style={{
         // Nav bar height (~4.5rem) offset so the drop tip starts BELOW the pinned
         // top menu instead of peeking behind it. Safe-area offset added for iOS
         // notch. Bottom padding stays safe-area only.
         top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)',
         bottom: 'env(safe-area-inset-bottom, 0px)',
-        backgroundColor: 'rgba(255, 255, 255, 0.11)',
+        // Fill color uses a CSS var so themes can retint the watermark:
+        // - dark (default): 11% white → soft gray chevron
+        // - warriors: light yellow (overridden in src/index.css)
+        backgroundColor: 'var(--av-backdrop-fill, rgba(255, 255, 255, 0.11))',
         WebkitMaskImage: 'url(/avalon-logo.svg)',
         maskImage: 'url(/avalon-logo.svg)',
         WebkitMaskRepeat: 'no-repeat',
