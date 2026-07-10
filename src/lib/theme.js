@@ -41,11 +41,12 @@ const THEME_COLOR_SCHEMES = {
   july: 'dark',
 };
 
-// Hidden mobile easter egg (double-tap the logo): cycles Night → Daytime →
-// Giants → Warriors → Night. Daytime sits before Giants so a curious user
-// discovers the white/light look right after the default dark, then continues
-// into the team themes. Other themes remain reachable via applyTheme() directly.
-export const THEME_CYCLE = ['dark', 'daytime', 'giants', 'warriors'];
+// Hidden easter egg (double-click/tap the chevron on any breakpoint): cycles
+// Night ↔ Warriors. Narrowed from the previous 4-theme rotation per user
+// directive to keep only the two active themes in the toggle. Other themes
+// remain reachable via applyTheme() directly for anyone who wants to hit them
+// by key.
+export const THEME_CYCLE = ['dark', 'warriors'];
 
 export function normalizeTheme(theme) {
   const value = String(theme || '').trim();
