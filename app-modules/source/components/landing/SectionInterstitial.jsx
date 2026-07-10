@@ -24,12 +24,12 @@ export default function SectionInterstitial({ kicker, title, body, cta }) {
           {title}
         </h2>
         {kicker && (
-          <p className="mt-4 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]">
+          <p className="mt-4 text-center font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]">
             {kicker}
           </p>
         )}
         {body && (
-          <p className="mx-auto mt-3 max-w-xl font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
+          <p className="mx-auto mt-3 max-w-xl text-center font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
             {body}
           </p>
         )}
