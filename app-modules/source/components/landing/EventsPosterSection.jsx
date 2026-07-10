@@ -175,7 +175,7 @@ export default function EventsPosterSection() {
             to="/events"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            style={{ background: '#fff', color: '#000' }}
+            style={{ background: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
             className="group w-full flex items-center justify-center gap-3 py-4 md:py-5 rounded-full font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] transition-transform duration-base ease-editorial active:scale-[0.99]"
           >
             Build my event
