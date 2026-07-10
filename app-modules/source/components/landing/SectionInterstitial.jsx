@@ -14,28 +14,50 @@ export default function SectionInterstitial({ kicker, title, body, cta }) {
   return (
     <section className="pt-10 pb-10 md:pt-16 md:pb-16 px-5 md:px-12">
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 40, scale: 0.96 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: '-96px' }}
-        transition={{ duration: 0.9, ease: EASE }}
+        transition={{ duration: 0.95, ease: EASE }}
         className="av-treatment-card mx-auto max-w-3xl rounded-[1.3rem] border px-6 py-10 text-center md:px-10 md:py-14"
       >
-        <h2 className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-h1">
+        <motion.h2
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-96px' }}
+          transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
+          className="font-heading uppercase text-foreground leading-[0.9] tracking-tight text-h1"
+        >
           {title}
-        </h2>
+        </motion.h2>
         {kicker && (
-          <p className="mt-4 text-center font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-96px' }}
+            transition={{ duration: 0.6, delay: 0.28, ease: EASE }}
+            className="mt-4 text-center font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45 md:text-[11px]"
+          >
             {kicker}
-          </p>
+          </motion.p>
         )}
         {body && (
-          <p className="mx-auto mt-3 max-w-xl text-center font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-96px' }}
+            transition={{ duration: 0.6, delay: 0.38, ease: EASE }}
+            className="mx-auto mt-3 max-w-xl text-center font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs"
+          >
             {body}
-          </p>
+          </motion.p>
         )}
         {cta && cta.variant !== 'link' && (
           <MotionLink
             to={cta.to}
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-96px' }}
+            transition={{ duration: 0.6, delay: 0.5, ease: EASE }}
             whileHover={premiumHover}
             whileTap={premiumTap}
             className="group mt-8 inline-flex items-center justify-center gap-2 rounded-full border border-foreground/45 px-8 py-3.5 font-body text-sm uppercase tracking-[0.22em] text-foreground transition-colors duration-base ease-editorial hover:border-foreground/80 hover:bg-foreground/[0.04]"
@@ -47,6 +69,10 @@ export default function SectionInterstitial({ kicker, title, body, cta }) {
         {cta && cta.variant === 'link' && (
           <MotionLink
             to={cta.to}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-96px' }}
+            transition={{ duration: 0.55, delay: 0.5, ease: EASE }}
             whileHover={premiumHover}
             whileTap={premiumTap}
             className="group mt-6 inline-flex items-center justify-center gap-2 font-body text-[11px] uppercase tracking-[0.28em] text-foreground/70 transition-colors duration-base ease-editorial hover:text-foreground"
