@@ -136,19 +136,18 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
         </ScrollParallax>
       </div>
 
-      {/* Marquee ribbon — full viewport width with edge fades */}
+      {/* Marquee ribbon — full viewport width with edge fades.
+          NOTE (iOS Safari bug): a CSS mask on the parent of the animated
+          strip forces WebKit to software-render the subtree, and the
+          marquee stalls on iPhone. Edge fades are drawn as absolute gradient
+          overlays so the animated element sits in its own compositor layer
+          with no mask ancestor. Verified against desktop Chrome/Safari. */}
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: '-40px' }}
         transition={{ duration: 0.8, ease: EASE }}
-        className="av-ig-marquee relative w-full"
-        style={{
-          WebkitMaskImage:
-            'linear-gradient(to right, transparent 0, #000 96px, #000 calc(100% - 96px), transparent 100%)',
-          maskImage:
-            'linear-gradient(to right, transparent 0, #000 96px, #000 calc(100% - 96px), transparent 100%)',
-        }}
+        className="av-ig-marquee relative w-full overflow-hidden"
       >
         <div
           className="flex w-max gap-2"
@@ -156,12 +155,19 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             animation: 'av-ig-marquee 150s linear infinite',
             animationPlayState: isRunning ? 'running' : 'paused',
             willChange: 'transform',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
           }}
         >
           {loop.map((post, i) => (
             <RibbonTile key={`${post.id}-${i}`} post={post} />
           ))}
         </div>
+
+        {/* Edge fades — gradient overlays instead of CSS mask (mask breaks
+            iOS Safari GPU composition on the animated child). */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent" />
 
         <style>{`
           @keyframes av-ig-marquee {
