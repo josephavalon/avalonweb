@@ -88,7 +88,10 @@ function RibbonTile({ post }) {
 
 export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS, handleUrl = IG_HANDLE_URL }) {
   const [paused, setPaused] = useState(false);
-  const reduce = useReducedMotion();
+  // Marquee ignores prefers-reduced-motion — this ribbon is a decorative
+  // element where motion is the point; iOS "Reduce Motion" would otherwise
+  // freeze the strip entirely on many users' phones.
+  const reduce = false;
   const posts = useLiveInstagramFeed(initialPosts);
 
   // Cap source at 30 (most-recent). Marquee doubles the strip for a seamless
@@ -164,9 +167,6 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
           @keyframes av-ig-marquee {
             0%   { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-50%, 0, 0); }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .av-ig-marquee > div { animation: none !important; }
           }
         `}</style>
       </motion.div>
