@@ -150,8 +150,9 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
         <div
           className="flex w-max gap-2"
           style={{
-            animation: 'av-ig-marquee 360s linear infinite',
+            animation: 'av-ig-marquee 150s linear infinite',
             animationPlayState: isRunning ? 'running' : 'paused',
+            willChange: 'transform',
           }}
         >
           {loop.map((post, i) => (
