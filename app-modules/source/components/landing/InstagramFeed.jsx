@@ -5,8 +5,34 @@ import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import ScrollParallax from '@/components/ui/ScrollParallax';
 import { PLACEHOLDER_POSTS, IG_HANDLE_URL } from './InstagramFeed.data.js';
 
+const IG_HANDLE = 'avalon_vitality';
+const IG_EMBED_URL = `https://www.instagram.com/${IG_HANDLE}/embed/`;
 const IG_LIMIT = 30;
 const IG_REFRESH_MS = 15 * 60 * 1000;
+
+// Instagram's anonymous profile SPA fails with "Something went wrong" for
+// many logged-out sessions (documented Meta authwall since 2023). Deep-link
+// to the IG app on mobile; fall back to the /embed/ route on desktop, which
+// is the only Meta-sanctioned URL that renders anonymously.
+function openInstagram(event) {
+  if (event) event.preventDefault();
+  if (typeof window === 'undefined') return;
+  const ua = (window.navigator && window.navigator.userAgent) || '';
+  const isIOS = /iPad|iPhone|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
+  const web = `https://www.instagram.com/${IG_HANDLE}/`;
+  if (isIOS) {
+    const t = window.setTimeout(() => { window.location.href = web; }, 700);
+    window.addEventListener('pagehide', () => window.clearTimeout(t), { once: true });
+    window.location.href = `instagram://user?username=${IG_HANDLE}`;
+    return;
+  }
+  if (isAndroid) {
+    window.location.href = `intent://instagram.com/${IG_HANDLE}/#Intent;package=com.instagram.android;scheme=https;end`;
+    return;
+  }
+  window.open(IG_EMBED_URL, '_blank', 'noopener,noreferrer');
+}
 
 function useLiveInstagramFeed(fallback) {
   const [posts, setPosts] = useState(fallback);
@@ -37,6 +63,7 @@ function RibbonTile({ post }) {
   return (
     <a
       href={post.permalink}
+      onClick={openInstagram}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Open Instagram post: ${post.caption}`}
@@ -149,6 +176,7 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
         <div className="mt-6">
           <motion.a
             href={handleUrl}
+            onClick={openInstagram}
             target="_blank"
             rel="noopener noreferrer"
             whileHover={premiumHover}
