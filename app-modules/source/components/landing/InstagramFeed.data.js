@@ -6,7 +6,7 @@
 // entries below. The marquee caps at 30 and repeats what it has to fill.
 // The feed still tries `/api/instagram-feed` first — if you ever set the
 // Meta Graph API env vars, live posts replace these placeholders.
-const IG_PROFILE = 'https://www.instagram.com/avalon_vitality/';
+const IG_PROFILE = 'https://instagram.com/avalon_vitality';
 
 export const PLACEHOLDER_POSTS = [
   {
