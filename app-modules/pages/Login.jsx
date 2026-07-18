@@ -225,7 +225,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const isAdmin = audience === 'admin';
   // Patient-facing tab: 'returning' (sign in) or 'new' (create account). The
   // 'nurse' tab is a nav action, not a persistent mode — it routes to /nurses.
-  const [mode, setMode] = useState('returning');
+  const [mode, setMode] = useState(() => (searchParams.get('role') === 'nurse' ? 'nurse' : 'returning'));
   const isNew = !isAdmin && mode === 'new';
   const isNurse = !isAdmin && mode === 'nurse';
 
@@ -256,12 +256,14 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [resendError, setResendError] = useState('');
 
   useSeo({
-    title: isAdmin ? 'Admin Sign In — Avalon Vitality' : 'Client Sign In — Avalon Vitality',
+    title: isAdmin ? 'Admin Sign In — Avalon Vitality' : isNurse ? 'Nurse Portal Sign In — Avalon Vitality' : 'Client Sign In — Avalon Vitality',
     description: isAdmin
       ? 'Avalon operations sign-in.'
+      : isNurse
+        ? 'Secure sign-in for Avalon nurses.'
       : 'Client sign in for Avalon Vitality visits, preparation, and support.',
     path: isAdmin ? '/admin/login' : '/login',
-    robots: isAdmin ? 'noindex, nofollow, noarchive' : undefined,
+    robots: isAdmin || isNurse ? 'noindex, nofollow, noarchive' : undefined,
   });
 
   useEffect(() => {
@@ -284,6 +286,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const destinationFor = (sessionUser) => {
     const localPath = safeLoginRedirectPath(searchParams.get('redirect'));
     if (localPath && sessionUser?.role === 'client') return localPath;
+    if (localPath?.startsWith('/provider/') && ['nurse', 'admin'].includes(sessionUser?.role)) return localPath;
     return sessionUser?.redirect || '/members/dashboard';
   };
 
@@ -485,22 +488,6 @@ export default function Login({ defaultAudience = 'patient' }) {
         ? ['New', 'Customer']
         : ['Welcome', 'Back'];
 
-  // Nurse tab: in-card coming-soon panel (mirrors /nurses copy) so switching to
-  // it keeps the same card — no navigation, no remount.
-  const nursePanel = (
-    <div className="space-y-4 text-center">
-      <span className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-foreground/[0.12] bg-foreground/[0.045] text-foreground/72">
-        <Stethoscope className="h-6 w-6" strokeWidth={1.8} />
-      </span>
-      <p className="font-body text-[11px] font-semibold uppercase tracking-[0.28em] text-foreground/55">
-        Nurse Portal — Coming Soon
-      </p>
-      <p className="mx-auto max-w-[34ch] font-body text-sm font-medium leading-relaxed text-foreground/65">
-        Schedule, kit checkout, and clinical reviews will live here. Already credentialed? Watch your invite email — onboarding goes out by name.
-      </p>
-    </div>
-  );
-
   // Shown under the sign-in error when the failure was specifically an
   // unconfirmed email. Lets the user resend the Supabase confirmation link
   // without leaving the login screen. Loading / "sent ✓" / error states inline.
@@ -616,20 +603,19 @@ export default function Login({ defaultAudience = 'patient' }) {
     </form>
   );
 
-  // Demo (offline) roster form. Patient = Client ID + Password; admin = Operator
-  // ID + Passcode. Passwordless methods can't reach a backend offline, so this
-  // is the only path the beta surfaces.
+  // Demo (offline) roster form. Patient = Client ID, nurse = Nurse ID, and
+  // admin = Operator ID. Passwordless methods cannot reach a backend offline.
   const demoForm = (
     <form onSubmit={handleDemoSubmit} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-identifier"
-        label={isAdmin ? 'Operator ID' : 'Client ID or Email'}
+        label={isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : 'Client ID or Email'}
         type="text"
         value={identifier}
         onChange={(event) => { setIdentifier(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="username"
-        autoCapitalize={isAdmin ? 'characters' : 'none'}
-        placeholder={isAdmin ? 'ADMIN001' : 'CLIENT0001'}
+        autoCapitalize={isAdmin || isNurse ? 'characters' : 'none'}
+        placeholder={isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : 'CLIENT0001'}
       />
       <Field
         id="login-password"
@@ -778,7 +764,7 @@ export default function Login({ defaultAudience = 'patient' }) {
       <div className="space-y-3">
         {patientMethodButtons}
         <ErrorBanner message={displayError} />
-        <Divider label="or client id" />
+        <Divider label={isNurse ? 'or nurse id' : 'or client id'} />
         {demoForm}
         <Divider />
         <button
@@ -916,14 +902,14 @@ export default function Login({ defaultAudience = 'patient' }) {
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
                     Sign in with your staff email and password.
                   </p>
-                ) : !isAdmin && !isNurse && !isNew ? (
+                ) : !isAdmin && !isNew ? (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    Your visits, your nurse, your records. Sign in to manage your account.
+                    {isNurse ? 'Sign in with your Avalon nurse credentials.' : 'Your visits, your nurse, your records. Sign in to manage your account.'}
                   </p>
                 ) : null}
               </div>
 
-              {isNew ? <NewCustomerPanel showHeading={false} bordered={false} embedded /> : isNurse ? nursePanel : body}
+              {isNew ? <NewCustomerPanel showHeading={false} bordered={false} embedded /> : body}
             </motion.div>
           </AnimatePresence>
           {footer}

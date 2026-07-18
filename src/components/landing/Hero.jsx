@@ -4,23 +4,34 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BadgeDollarSign, Calendar, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Timer, Zap } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import MagneticButton from '@/components/ui/MagneticButton';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
-const HERO_ACTIONS = [
+const HERO_ACTIONS_FULL = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'IV Therapy Menu', icon: Droplet },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
+const HERO_ACTIONS_CARE = [
+  { to: ACUITY_URL, external: true, label: 'Book', icon: Calendar },
+  { to: '/protocols', label: 'IV Therapy Menu', icon: Droplet },
+];
 // All 6 rows are non-clickable so structure is identical — no <Link> wrapper on
 // any row → uniform spacing (no baseline drift between the 3rd and 4th item).
-const HERO_PROOF_POINTS = [
+const HERO_PROOF_POINTS_FULL = [
   { label: 'Same Day', icon: Zap },
   { label: 'Registered Nurses', icon: ShieldPlus },
   { label: 'Custom Plans', icon: Sparkles },
   { label: 'SF Bay Area', icon: MapPin },
   { label: 'No Hidden Fees', icon: BadgeDollarSign },
   { label: '60-Second Checkout', icon: Timer },
+];
+const HERO_PROOF_POINTS_CARE = [
+  { label: 'Same Day', icon: Zap },
+  { label: 'Registered Nurses', icon: ShieldPlus },
+  { label: 'SF Bay Area', icon: MapPin },
+  { label: 'No Hidden Fees', icon: BadgeDollarSign },
 ];
 
 export default function Hero() {
@@ -54,6 +65,9 @@ export default function Hero() {
   const titleStyle = reduceMotion ? undefined : { y: titleY, scale: titleScale, opacity: titleOpacity };
   const proofStyle = reduceMotion ? undefined : { y: proofY, opacity: proofOpacity };
   const railStyle = reduceMotion ? undefined : { y: railY, opacity: railOpacity };
+  const care = isCareHost();
+  const HERO_ACTIONS = care ? HERO_ACTIONS_CARE : HERO_ACTIONS_FULL;
+  const HERO_PROOF_POINTS = care ? HERO_PROOF_POINTS_CARE : HERO_PROOF_POINTS_FULL;
 
   return (
     <section
@@ -179,7 +193,26 @@ export default function Hero() {
                 : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
               const foregroundClassName = isBookAction ? '' : 'text-foreground';
 
-              const cta = (
+              const cta = action.external ? (
+                <motion.a
+                  href={action.to}
+                  whileHover={premiumHover}
+                  whileTap={premiumTap}
+                  className={actionClassName}
+                >
+                  <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
+                    <span className={iconWrapClassName}>
+                      <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
+                    </span>
+                    <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
+                      {action.label}
+                    </span>
+                  </span>
+                  <span className={`relative shrink-0 transition-transform group-hover:translate-x-1 ${foregroundClassName}`}>
+                    <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
+                  </span>
+                </motion.a>
+              ) : (
                 <MotionLink
                   to={action.to}
                   onPointerEnter={action.preload}

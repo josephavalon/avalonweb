@@ -9,6 +9,7 @@ import RouteFallback from '@/components/RouteFallback';
 import AppLoader from '@/components/AppLoader';
 import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
+import CareAcuityForward from '@/components/CareAcuityForward';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -37,7 +38,12 @@ function RequireAuth({ children, allowedRoles }) {
   const { user, loading, authBackend } = useAuthStore();
   const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    if (pathname.startsWith('/provider/')) {
+      return <Navigate to={{ pathname: '/login', search: `?role=nurse&redirect=${encodeURIComponent(pathname)}` }} replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
   // Admin force-set a temporary password — make them rotate it before anything else.
   if (user.mustChangePassword && pathname !== '/account/new-password') {
     return <Navigate to="/account/new-password" replace />;
@@ -330,8 +336,8 @@ function AppRoutes() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/membership" element={<Navigate to="/subscription" replace />} />
-            <Route path="/subscription" element={<Subscription />} />
-            <Route path="/plan" element={<PlanCheckout />} />
+            <Route path="/subscription" element={<CareAcuityForward><Subscription /></CareAcuityForward>} />
+            <Route path="/plan" element={<CareAcuityForward><PlanCheckout /></CareAcuityForward>} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
@@ -352,8 +358,8 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
-            <Route path="/custom" element={<CustomProtocol />} />
-            <Route path="/book" element={<BookNow />} />
+            <Route path="/custom" element={<CareAcuityForward><CustomProtocol /></CareAcuityForward>} />
+            <Route path="/book" element={<CareAcuityForward><BookNow /></CareAcuityForward>} />
             <Route path="/booking" element={<Navigate to="/book" replace />} />
             <Route path="/book-now" element={<Navigate to="/book" replace />} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
@@ -381,9 +387,9 @@ function AppRoutes() {
             <Route path="/menu" element={<Navigate to="/protocols" replace />} />
             <Route path="/store" element={<Navigate to="/protocols" replace />} />
             <Route path="/store/confirmation" element={<Navigate to="/protocols" replace />} />
-            <Route path="/booking/confirmation" element={<BookingConfirmation />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/checkout/success" element={<CheckoutSuccess />} />
+            <Route path="/booking/confirmation" element={<CareAcuityForward><BookingConfirmation /></CareAcuityForward>} />
+            <Route path="/checkout" element={<CareAcuityForward><Checkout /></CareAcuityForward>} />
+            <Route path="/checkout/success" element={<CareAcuityForward><CheckoutSuccess /></CareAcuityForward>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
@@ -406,6 +412,7 @@ function AppRoutes() {
             <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
             <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
             <Route path="/provider" element={<Navigate to="/login" replace />} />
+            <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shift" replace /></RequireAuth>} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'admin']}><NurseDashboard /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderAppointments /></RequireAuth>} />
             <Route path="/provider/clients" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderClients /></RequireAuth>} />

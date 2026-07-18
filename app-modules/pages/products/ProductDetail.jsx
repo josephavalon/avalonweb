@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import Navbar from '@/components/landing/Navbar';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import Footer from '@/components/landing/Footer';
 import { useCart } from '@/context/CartContext';
 import { getProduct, productsByCategory, slugify } from '@/data/products';
@@ -149,7 +150,12 @@ export default function ProductDetail() {
   const timeline = DESIGN_TIMELINE;
   const duration = (treatment.duration || '60 min').replace(/\s*min$/i, ' MIN').toUpperCase();
 
+  const care = isCareHost();
   const buyNow = () => {
+    if (care) {
+      window.location.href = ACUITY_URL;
+      return;
+    }
     clearItems();
     addItem({
       cartKey: treatment.doseKey || treatment.protocolKey || currentSlug,
@@ -221,12 +227,14 @@ export default function ProductDetail() {
                 >
                   Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </button>
-                <Link
-                  to={bookingPath(treatment, true)}
-                  className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-background/42 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-background/58 md:min-h-[3.4rem] md:text-sm"
-                >
-                  Subscribe &amp; Save 15%
-                </Link>
+                {!care && (
+                  <Link
+                    to={bookingPath(treatment, true)}
+                    className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-background/42 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-background/58 md:min-h-[3.4rem] md:text-sm"
+                  >
+                    Subscribe &amp; Save 15%
+                  </Link>
+                )}
               </div>
 
               <p className="mt-3 flex items-center gap-1.5 font-body text-[11px] text-white/72">

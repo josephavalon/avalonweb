@@ -11,10 +11,15 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 
-const mainLinks = [
+const MAIN_LINKS_FULL = [
   { to: '/protocols', label: 'IV Therapy Menu' },
   { to: '/subscription', label: 'Plans' },
+  { to: '/events', label: 'Events' },
+];
+const MAIN_LINKS_CARE = [
+  { to: '/protocols', label: 'IV Therapy Menu' },
   { to: '/events', label: 'Events' },
 ];
 
@@ -449,10 +454,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const authRoute = ['/login', '/signup', '/nurses', '/forgot', '/forgot-password']
     .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   // (navVisible is computed below from scroll direction on mobile.)
+  const care = isCareHost();
+  const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
+  const bookHref = care ? ACUITY_URL : BOOK_URL;
+  const bookIsExternal = care;
   const mobileLinks = [
-    { to: BOOK_URL, label: 'Book', primary: true },
+    { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
     ...mainLinks,
-    ...(user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
+    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
   ];
 
   // Sign-in / sign-up screens (customer + admin) intentionally DO show the
@@ -604,18 +613,29 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               Sign Out
             </button>
           )}
-          {!compact && !focusMode && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
+          {!compact && !focusMode && !care && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
           {/* Audit finding K6/D7: hide Sign In on /login (redundant with the
               sign-in card); hide on /signup (users already in a signup flow). */}
-          {!compact && !focusMode && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
-          {!compact && !focusMode && <PremiumButton
-            as={Link}
-            to={BOOK_URL}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
-          >
-            Book
-            <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
-          </PremiumButton>}
+          {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
+          {!compact && !focusMode && (bookIsExternal ? (
+            <PremiumButton
+              as="a"
+              href={bookHref}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
+            >
+              Book
+              <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
+            </PremiumButton>
+          ) : (
+            <PremiumButton
+              as={Link}
+              to={bookHref}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
+            >
+              Book
+              <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
+            </PremiumButton>
+          ))}
         </div>
       </div>
 
@@ -748,33 +768,35 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
                 <div className="relative grid gap-1.5">
                   {mobileLinks.map((item, i) => {
-                  const active = isActiveLink(item.to);
+                  const active = !item.external && isActiveLink(item.to);
                   const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Sign In' || item.label === 'Dashboard');
                   const Trailing = isAuthRow ? ArrowUpRight : ChevronRight;
+                  const rowClass = `av-glass-widget group relative flex min-h-[62px] items-center justify-between rounded-2xl border px-5 font-body text-[12px] uppercase tracking-[0.42em] text-foreground transition-all duration-300 ${
+                    item.primary
+                      ? 'text-foreground ring-1 ring-foreground/70 shadow-[0_0_0_1px_hsl(var(--foreground)/0.15)]'
+                      : active
+                        ? 'text-foreground ring-1 ring-foreground/40'
+                        : 'text-foreground/74 hover:text-foreground'
+                  }`;
+                  const trailingClass = `h-4 w-4 shrink-0 transition-colors ${
+                    item.primary || active ? 'text-foreground' : 'text-foreground/50 group-hover:text-foreground'
+                  }`;
                   return (
                     <motion.div
                       key={item.to}
                       variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
                     >
-                      <Link
-                        to={item.to}
-                        onClick={close}
-                        className={`av-glass-widget group relative flex min-h-[62px] items-center justify-between rounded-2xl border px-5 font-body text-[12px] uppercase tracking-[0.42em] text-foreground transition-all duration-300 ${
-                          item.primary
-                            ? 'text-foreground ring-1 ring-foreground/70 shadow-[0_0_0_1px_hsl(var(--foreground)/0.15)]'
-                            : active
-                              ? 'text-foreground ring-1 ring-foreground/40'
-                              : 'text-foreground/74 hover:text-foreground'
-                        }`}
-                      >
-                        <span>{item.label}</span>
-                        <Trailing
-                          className={`h-4 w-4 shrink-0 transition-colors ${
-                            item.primary || active ? 'text-foreground' : 'text-foreground/50 group-hover:text-foreground'
-                          }`}
-                          strokeWidth={1.6}
-                        />
-                      </Link>
+                      {item.external ? (
+                        <a href={item.to} onClick={close} className={rowClass}>
+                          <span>{item.label}</span>
+                          <Trailing className={trailingClass} strokeWidth={1.6} />
+                        </a>
+                      ) : (
+                        <Link to={item.to} onClick={close} className={rowClass}>
+                          <span>{item.label}</span>
+                          <Trailing className={trailingClass} strokeWidth={1.6} />
+                        </Link>
+                      )}
                     </motion.div>
                   );
                 })}

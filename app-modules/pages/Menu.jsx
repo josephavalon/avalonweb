@@ -11,6 +11,7 @@ import {
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumHover, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import { IV_SESSIONS } from '@/config/verticals';
@@ -68,6 +69,15 @@ function detailPathForSession(session) {
   return `/products/iv-vitamins/${DETAIL_SLUG_BY_KEY[session.key] || slugify(`${session.label} IV`)}`;
 }
 
+function detailPathForDose(session, dose) {
+  const key = String(dose?.key || '');
+  const m = key.match(/(\d+)$/);
+  if ((session.key === 'nad' || session.key === 'cbd') && m) {
+    return `/products/${session.key}/${session.key}-${m[1]}mg`;
+  }
+  return detailPathForSession(session);
+}
+
 function doseIntroFor(session) {
   if (session.key === 'nad') return 'Dose menu';
   if (session.key === 'cbd') return 'Approval-gated';
@@ -107,7 +117,9 @@ function DoseLadder({ session }) {
         {session.doses.map((dose, doseIndex) => (
           <Link
             key={dose.key || dose.label}
-            to={`${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`}
+            to={isCareHost()
+              ? detailPathForDose(session, dose)
+              : `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`}
             className={`group/dose min-h-[54px] rounded-xl border px-2.5 py-2 text-left transition-colors ${
               doseIndex === 0
                 ? 'border-foreground/24 bg-foreground/[0.10]'
@@ -136,6 +148,7 @@ function sortSessions(sessions) {
 
 // Normalize a session (or a single dose of a dose-protocol) into one chip's data.
 function protocolItems(sessions, expandDoses = false) {
+  const care = isCareHost();
   return sessions.flatMap((session) => {
     if (expandDoses && session.doses?.length) {
       return session.doses.map((dose) => ({
@@ -144,7 +157,7 @@ function protocolItems(sessions, expandDoses = false) {
         price: dose.price,
         image: dose.image || session.image,
         icon: session.icon,
-        to: `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`,
+        to: care ? detailPathForDose(session, dose) : `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`,
       }));
     }
     return [{

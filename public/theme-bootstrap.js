@@ -4,6 +4,17 @@
   var VALID = ['dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs'];
   try {
     var stored = window.localStorage.getItem('avalon.theme');
+    var path = String(window.location.pathname || '/');
+    var isPortal = /^\/(provider|admin|members|account)(\/|$)/.test(path)
+      || /^\/(login|signup|forgot|forgot-password)(\/|$)/.test(path);
+    // Workforce/member screens must never inherit a promotional sports theme.
+    // Reset before first paint so a saved Warriors preference cannot produce a
+    // blue boot flash while a protected route redirects or restores a session.
+    if (isPortal && stored !== 'dark') {
+      stored = 'dark';
+      window.localStorage.setItem('avalon.theme', 'dark');
+      window.localStorage.setItem('avalon.theme.v2', '1');
+    }
     var theme = (stored && VALID.indexOf(stored) !== -1) ? stored : 'dark';
     if (theme === 'light') theme = 'daytime';
     if (theme === 'golden') theme = 'golden-hour';

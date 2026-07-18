@@ -63,6 +63,7 @@ export const appRoutes = [
   '/provider/services',
   '/provider/staff',
   '/provider/communications',
+  '/provider/today',
   '/provider/shift',
   '/provider/reports',
   '/provider/settings',
