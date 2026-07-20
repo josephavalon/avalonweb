@@ -136,46 +136,52 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
         </ScrollParallax>
       </div>
 
-      {/* Marquee ribbon — full viewport width with edge fades.
-          NOTE (iOS Safari bug): a CSS mask on the parent of the animated
-          strip forces WebKit to software-render the subtree, and the
-          marquee stalls on iPhone. Edge fades are drawn as absolute gradient
-          overlays so the animated element sits in its own compositor layer
-          with no mask ancestor. Verified against desktop Chrome/Safari. */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-40px' }}
-        transition={{ duration: 0.8, ease: EASE }}
-        className="av-ig-marquee relative w-full overflow-hidden"
-      >
+      {/* Marquee ribbon. iOS Safari fix bundle:
+          - Plain <div> instead of motion.div (framer's whileInView can leave
+            opacity at 0 on some IntersectionObserver races).
+          - No CSS mask — WebKit software-renders masked subtrees.
+          - Extra layer-promoting wrapper (translateZ(0) + will-change) so the
+            animation lives on its own compositor layer.
+          - Edge fades are gradient overlays outside the animated pipeline. */}
+      <div className="av-ig-marquee relative w-full overflow-hidden">
         <div
-          className="flex w-max gap-2"
-          style={{
-            animation: 'av-ig-marquee 150s linear infinite',
-            animationPlayState: isRunning ? 'running' : 'paused',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden',
-          }}
+          className="av-ig-strip-wrap"
+          style={{ transform: 'translateZ(0)', willChange: 'transform', WebkitTransform: 'translateZ(0)' }}
         >
-          {loop.map((post, i) => (
-            <RibbonTile key={`${post.id}-${i}`} post={post} />
-          ))}
+          <div
+            className="flex w-max gap-2 av-ig-strip"
+            style={{
+              animation: 'av-ig-marquee 150s linear infinite',
+              WebkitAnimation: 'av-ig-marquee 150s linear infinite',
+              animationPlayState: isRunning ? 'running' : 'paused',
+              WebkitAnimationPlayState: isRunning ? 'running' : 'paused',
+              willChange: 'transform',
+              transform: 'translate3d(0,0,0)',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+            }}
+          >
+            {loop.map((post, i) => (
+              <RibbonTile key={`${post.id}-${i}`} post={post} />
+            ))}
+          </div>
         </div>
 
-        {/* Edge fades — gradient overlays instead of CSS mask (mask breaks
-            iOS Safari GPU composition on the animated child). */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent" />
+        {/* Edge fades — gradient overlays instead of CSS mask. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-24 bg-gradient-to-r from-black to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-24 bg-gradient-to-l from-black to-transparent" />
 
         <style>{`
           @keyframes av-ig-marquee {
-            0%   { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-50%, 0, 0); }
+            0%   { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+            100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+          }
+          @-webkit-keyframes av-ig-marquee {
+            0%   { -webkit-transform: translate3d(0, 0, 0); }
+            100% { -webkit-transform: translate3d(-50%, 0, 0); }
           }
         `}</style>
-      </motion.div>
+      </div>
 
       {/* Hairline separator + FOLLOW pill */}
       <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-10">

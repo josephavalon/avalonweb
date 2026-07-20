@@ -15,12 +15,23 @@ export const THEME_CLASSES = [
 ];
 
 export const THEME_ALIASES = {
-  light: 'daytime',
-  golden: 'golden-hour',
+  // All light / seasonal / legacy themes now collapse to dark. The only real
+  // aliases we keep are `dubs` → `warriors` (legacy toggle name).
+  light: 'dark',
+  daytime: 'dark',
+  golden: 'dark',
+  'golden-hour': 'dark',
+  giants: 'dark',
+  pride: 'dark',
+  july: 'dark',
   dubs: 'warriors',
 };
 
-export const VALID_THEMES = ['dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july'];
+// Only two themes are exposed to visitors on the marketing site: Night (dark)
+// and Warriors. All other keys (daytime / golden-hour / giants / pride / july /
+// light / golden / dubs) are treated as aliases that fall back to dark, so a
+// stale localStorage value or a bad deep link can't flash a light theme.
+export const VALID_THEMES = ['dark', 'warriors'];
 export const THEME_LABELS = {
   dark: 'Night',
   giants: 'Giants',
