@@ -63,6 +63,8 @@ const DEFAULT_ROUTES = [
   '/telehealth-disclaimer',
   '/product-disclaimer',
   '/notice-of-privacy-practices',
+  '/waiver',
+  '/liability-waiver',
   '/cookie-policy',
   '/login',
   '/members/dashboard',

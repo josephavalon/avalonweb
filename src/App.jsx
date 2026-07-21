@@ -56,6 +56,7 @@ function RequireAuth({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(role)) {
     if (user.role === 'admin' || user.role === 'staff') return <Navigate to="/admin" replace />;
     if (user.role === 'nurse') return <Navigate to="/provider/shift" replace />;
+    if (user.role === 'promoter') return <Navigate to="/organizer" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
     return <Navigate to="/login" replace />;
   }
@@ -125,6 +126,7 @@ const NurseDashboard = lazyRoute(() => import('./pages/provider/NurseDashboard')
 const RoleOS = lazyRoute(() => import('./pages/provider/RoleOS'));
 const ProviderReports = lazyRoute(() => import('./pages/provider/Reports'));
 const ProviderSettings = lazyRoute(() => import('./pages/provider/Settings'));
+const OrganizerEventHub = lazyRoute(() => import('./pages/organizer/EventHub'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
 const TripPage = lazyRoute(() => import('./pages/TripPage'));
@@ -409,6 +411,8 @@ function AppRoutes() {
             <Route path="/invite/accept" element={<InviteAccept />} />
             <Route path="/account/new-password" element={<NewPassword />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
+            <Route path="/organizer/login" element={<Navigate to="/login?portal=organizer" replace />} />
+            <Route path="/organizer" element={<RequireAuth allowedRoles={['promoter', 'admin']}><OrganizerEventHub /></RequireAuth>} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/book" element={<RequireAuth allowedRoles={['client', 'admin', 'staff']}><MemberBook /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
