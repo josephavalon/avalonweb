@@ -1,54 +1,49 @@
-**Correction target**
+# Navigation Design QA
 
-- Source visual truth: `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/3Vg2HE/Screenshot 2026-07-21 at 11.23.41 AM.png`.
-- Supporting before-state capture: `.context/homepage-chevron-before-1996x1168.png`.
-- Explicit requirements: keep only the Avalon logo mark in the homepage header, remove the homepage's right-facing chevrons, and render only one static background logo.
+- Source visual truth:
+  - `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/8O2d2a/Screenshot 2026-07-21 at 1.16.23 PM.png`
+  - `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/DTWG54/Screenshot 2026-07-21 at 1.17.10 PM.png`
+- Implementation screenshots:
+  - `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/recovery-main-alignment/.context/nav-home-desktop.png`
+  - `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/recovery-main-alignment/.context/nav-menu-desktop.png`
+  - `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/recovery-main-alignment/.context/nav-events-desktop.png`
+- Combined comparison evidence: `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/recovery-main-alignment/.context/nav-qa-comparison.png`
+- Viewport: desktop 1440 × 900; mobile 390 × 844.
+- State: care-host navigation, top of page, menu closed.
 
-**Implementation evidence**
+## Findings
 
-- Desktop implementation screenshot: `.context/homepage-chevron-after-desktop.png`.
-- Mobile implementation screenshot: `.context/homepage-chevron-after-mobile.png`.
-- Combined before/after comparison: `.context/homepage-chevron-wordmark-comparison.png`.
-- Viewports: 1996 × 1168 desktop and 390 × 844 mobile.
-- State: care-host homepage with below-fold content loaded and the Book destination set to Acuity.
+No actionable P0, P1, or P2 differences remain.
 
-**Findings**
+- Fonts and typography: Home, Menu, and Events all render the same Inter 18px/600 navigation type with 2.16px tracking and uppercase presentation.
+- Spacing and layout rhythm: the desktop navigation frame is identical on all three routes at x 28.796875, y 16, width 1382.40625, and height 64. The grid columns, link boxes, padding, and 24px radius are also identical. Mobile uses the same 358 × 56 frame at x 16, y 8 on all three routes.
+- Colors and visual tokens: every route uses the same `rgb(3, 3, 3)` surface, border treatment, white foreground, and transparent link underline state.
+- Image quality and asset fidelity: the existing Avalon logo asset is retained without substitution or reconstruction.
+- Copy and content: the visible link sequence is consistently BOOK, MENU, EVENTS; BOOK retains its Acuity destination.
+- Interaction and accessibility: MENU and EVENTS navigation works; no horizontal overflow occurs at 390px; browser console and page-error checks are clean.
 
-- No actionable P0, P1, or P2 differences remain.
-- The homepage header now shows the supplied Avalon mark without the visible `AVALON VITALITY` desktop wordmark or mobile `AVALON` wordmark. The accessible home label remains available to screen readers.
-- The hero's Book, View Menu, and Private Events controls no longer contain right-facing arrow/chevron icons.
-- The homepage contains one `.home-hero__watermark`, no site-wide `.av-static-backdrop`, and the watermark has no CSS animation.
-- Fonts and typography: existing hero, navigation, and CTA type styles are unchanged; only the requested header wordmark is removed.
-- Spacing and layout rhythm: navigation height, link placement, hero scale, CTA dimensions, and below-fold spacing are preserved. The next card remains below the fold at both tested viewports.
-- Colors and visual tokens: the black canvas, white controls, muted watermark, borders, and brand colors are unchanged.
-- Image quality and asset fidelity: the existing source logo asset remains in both the header and the single hero watermark; no replacement artwork or CSS approximation was introduced.
-- Copy and content: the hero eyebrow and all CTA labels remain unchanged. Only the requested header lockup text is removed.
+Focused comparison was required because the source screenshots isolate the navigation typography and underline state. The combined comparison shows both source mismatches beside the corrected canonical bar.
 
-**Primary behavior checked**
+## Comparison History
 
-- Desktop and mobile render meaningful homepage content with no error overlay.
-- Book resolves to `https://app.acuityscheduling.com/schedule/a9d85b1e`; Menu resolves to `/protocols`; Events remains present in navigation.
-- Header logo remains a working home link.
-- Desktop and mobile document widths match their viewports with no horizontal overflow.
-- Browser console reports zero errors and zero warnings.
+### Iteration 1
 
-**Comparison history**
+- Earlier P1 finding: the component applied the canonical `av-home-nav` design only on `/`, so interior routes switched typography, layout rules, and active-link decoration.
+- Earlier P2 finding: BOOK was force-highlighted on Home, while interior routes moved the underline to the active route.
+- Fixes: apply the canonical navigation class, grid, brand, and mobile treatment on every public route; remove visual underline decoration from all top-menu links while retaining route semantics.
+- Post-fix evidence: Home, Menu, and Events desktop captures are visually identical; computed geometry and typography match exactly; all link border widths are `0px` and all `::after` contents are `none`.
 
-- Initial evidence showed the two-line `AVALON VITALITY` header lockup and right-arrow icons in all three hero actions.
-- The implementation removed those elements without altering the existing layout, typography, color system, or single hero watermark.
-- The combined comparison confirms the desktop removal; the dedicated mobile capture confirms the compact header keeps only the logo mark.
+## Implementation Checklist
 
-**Focused-region evidence**
+- [x] One canonical top-navigation presentation across public routes.
+- [x] No underline beneath BOOK, MENU, or EVENTS.
+- [x] BOOK continues to open Acuity.
+- [x] MENU and EVENTS navigation tested.
+- [x] Desktop and mobile geometry verified.
+- [x] Console errors and horizontal overflow checked.
 
-- The user-supplied source is already a focused header crop, so no additional crop was needed. It was inspected alongside the full desktop before/after comparison at original resolution.
+## Follow-up Polish
 
-**Implementation checklist**
-
-- [x] User-supplied header crop opened
-- [x] Before and after placed in one comparison image and inspected
-- [x] 1996 × 1168 desktop verification
-- [x] 390 × 844 mobile verification
-- [x] Single static watermark and chevron absence checks
-- [x] CTA destination, overflow, and console checks
+No P3 follow-ups identified for this scoped change.
 
 final result: passed
