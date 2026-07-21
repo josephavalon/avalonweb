@@ -26,7 +26,7 @@ export default function Home() {
   });
 
   return (
-    <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent">
+    <div className="av-home-redesign app-shell relative isolate min-h-screen w-full overflow-x-hidden">
       <header>
         <Navbar />
       </header>
