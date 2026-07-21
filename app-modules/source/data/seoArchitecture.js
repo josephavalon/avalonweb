@@ -771,6 +771,14 @@ export const publicStaticRoutes = [
     changefreq: 'yearly',
   },
   {
+    path: '/waiver',
+    title: 'Liability Waiver — Avalon Vitality',
+    description: 'Avalon Vitality consent to voluntary treatment, assumption of risk, privacy notice, release, and liability waiver for IV, IM, and injection services.',
+    h1: 'Liability Waiver',
+    priority: '0.3',
+    changefreq: 'yearly',
+  },
+  {
     path: '/cookie-policy',
     title: 'Cookie Policy — Avalon Vitality',
     description: 'Avalon Vitality cookie policy for site analytics, preferences, security, and user controls.',

@@ -45,6 +45,8 @@ export const legalRoutes = [
   '/telehealth-disclaimer',
   '/product-disclaimer',
   '/notice-of-privacy-practices',
+  '/waiver',
+  '/liability-waiver',
   '/hipaa-notice',
   '/cookie-policy',
   '/cookies',
