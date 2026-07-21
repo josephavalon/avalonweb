@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <script src="/scroll-restore.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#2A2521" />
+    <meta name="theme-color" content="#000000" />
 
     <!-- Primary -->
     <title>Avalon Vitality — Mobile IV Therapy in the SF Bay Area</title>
@@ -12,11 +12,7 @@
     <meta name="keywords" content="mobile IV therapy San Francisco, NAD+ IV Bay Area, at-home IV drip, vitamin IV, IV hydration SF, luxury wellness Bay Area" />
     <meta name="author" content="Avalon Vitality" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <script type="module">
-      if (location.hostname === 'snooches.avalonvitality.co') {
-        document.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex, nofollow, noarchive');
-      }
-    </script>
+    <script src="/snooches-noindex.js"></script>
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
@@ -56,6 +52,9 @@
       @font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/inter-500.woff2') format('woff2');}
       @font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/inter-600.woff2') format('woff2');}
       @font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/inter-700.woff2') format('woff2');}
+      /* TRUE voice (events design system, DESIGN.md): everything medically/operationally true renders mono. */
+      @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/ibm-plex-mono-400.woff2') format('woff2');}
+      @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/ibm-plex-mono-500.woff2') format('woff2');}
     </style>
 
     <!-- Structured Data: LocalBusiness -->
@@ -100,21 +99,30 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Avalon" />
-    <!-- theme-color for light vs dark OS preference -->
-    <meta name="theme-color" content="#2A2521" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)" />
+    <!-- The site forces dark theme regardless of OS preference (html class="dark"),
+         so both media queries paint black. Prior light variant #F5F5F3 was
+         causing gray Safari safe-area shading on iOS devices set to Light OS mode. -->
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)" />
 
     <!-- Theme + boot bootstrap: blocking on purpose so `av-js`, theme, and
          splash-skip classes exist before first paint. -->
-    <script src="/theme-bootstrap.js"></script>
+    <script src="/theme-bootstrap.js?v=20260717-portal-dark"></script>
     <!-- Anti-FOUC background lock. The CSS bundle loads asynchronously via the JS
          module, so there is a paint window where background-color is unset → white flash.
          These rules apply the correct background immediately from the theme class that
          the script above already wrote to <html>, before a single pixel paints. -->
     <style>
-      html, body { background-color: hsl(0,0%,96%); }
-      html.dark, html.dark body { background-color: #2a2521; }
+      /* Pre-boot fallback — pure black. Was hsl(0,0%,96%) (near-white) which
+         painted for the microsecond between theme-bootstrap.js's class remove
+         and re-add. iOS Safari samples the top-of-page bg for its URL bar +
+         safe-area tint; catching that gray flash produced persistent gray
+         bands at top + bottom even though meta[theme-color] said #000000. */
+      html, body { background-color: #000000; }
+      html.dark, html.dark body { background-color: #000000; }
+      html.giants, html.giants body { background-color: #000000; }
       html.golden, html.golden body { background-color: hsl(28,35%,16%); }
+      html.warriors, html.warriors body,
       html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
       #root { min-height: 100dvh; background: transparent; }
       #root:empty { min-height: 100dvh; background: transparent; }
@@ -130,15 +138,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: #2a2521;
-        background-image:
-          linear-gradient(90deg, rgba(42, 37, 33, 0.84), rgba(42, 37, 33, 0.52) 45%, rgba(42, 37, 33, 0.22)),
-          image-set(
-            url("/images/avalon-static-back-512.webp") type("image/webp"),
-            url("/images/avalon-static-back-512.jpg") type("image/jpeg")
-          );
-        background-size: cover;
-        background-position: 86% 52%;
+        background-color: #000000;
         color: #f4f4f1;
         opacity: 1;
         transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1), visibility 160ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -178,7 +178,7 @@
         font-size: 10px;
         letter-spacing: 0.42em;
         text-transform: uppercase;
-        color: rgba(244, 244, 241, 0.46);
+        color: #ffffff;
         user-select: none;
       }
       .av-boot-progress {
@@ -198,6 +198,48 @@
         transform-origin: 0 50%;
         animation: avBootProgress 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
+      /* Theme-aware boot splash. theme-bootstrap.js sets the theme class on
+         <html> before this paints, so the loading screen matches the active
+         theme (Giants orange, Warriors blue+gold, light themes) instead of a
+         black-and-white flash. Colors mirror the theme tokens in src/index.css. */
+      html.giants .av-boot-splash { background-color: #000000; color: hsl(16, 98%, 55%); }
+      html.giants .av-boot-logo,
+      html.giants .av-boot-wordmark { color: hsl(16, 98%, 55%); }
+      html.giants .av-boot-progress { background: hsla(16, 98%, 55%, 0.10); }
+      html.giants .av-boot-progress span { background: hsl(16, 98%, 55%); }
+
+      html.warriors .av-boot-splash,
+      html.dubs .av-boot-splash { background-color: hsl(218, 60%, 16%); color: hsl(45, 100%, 58%); }
+      html.warriors .av-boot-logo,
+      html.warriors .av-boot-wordmark,
+      html.dubs .av-boot-logo,
+      html.dubs .av-boot-wordmark { color: hsl(45, 100%, 58%); }
+      html.warriors .av-boot-progress,
+      html.dubs .av-boot-progress { background: hsla(45, 100%, 58%, 0.12); }
+      html.warriors .av-boot-progress span,
+      html.dubs .av-boot-progress span { background: hsl(45, 100%, 58%); }
+
+      html.daytime .av-boot-splash,
+      html.light .av-boot-splash { background-color: hsl(0, 0%, 99%); color: hsl(24, 10%, 14%); }
+      html.daytime .av-boot-logo,
+      html.daytime .av-boot-wordmark,
+      html.light .av-boot-logo,
+      html.light .av-boot-wordmark { color: hsl(24, 10%, 14%); }
+      html.daytime .av-boot-progress,
+      html.light .av-boot-progress { background: hsla(24, 10%, 14%, 0.10); }
+      html.daytime .av-boot-progress span,
+      html.light .av-boot-progress span { background: hsl(24, 10%, 14%); }
+
+      html.golden-hour .av-boot-splash,
+      html.golden .av-boot-splash { background-color: hsl(36, 60%, 88%); color: hsl(25, 42%, 13%); }
+      html.golden-hour .av-boot-logo,
+      html.golden-hour .av-boot-wordmark,
+      html.golden .av-boot-logo,
+      html.golden .av-boot-wordmark { color: hsl(25, 42%, 13%); }
+      html.golden-hour .av-boot-progress,
+      html.golden .av-boot-progress { background: hsla(32, 88%, 47%, 0.16); }
+      html.golden-hour .av-boot-progress span,
+      html.golden .av-boot-progress span { background: hsl(32, 88%, 47%); }
       @keyframes avBootPulse {
         0%, 100% { opacity: 0.78; transform: scale(0.985); filter: blur(0); }
         50% { opacity: 1; transform: scale(1.015); filter: blur(0); }
@@ -224,7 +266,7 @@
     </style>
   </head>
   <body>
-    <div id="av-boot-splash" class="av-boot-splash" role="status" aria-live="polite" aria-label="Loading Avalon Vitality">
+    <div id="av-boot-splash" class="av-boot-splash" role="status" aria-live="polite" aria-label="Loading Avalon Vitality" aria-hidden="false">
       <div class="av-boot-lockup">
         <svg class="av-boot-logo" viewBox="0 0 346 535" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M 166.509 13.223 C 157.220 34.353, 137.150 75.148, 125.960 95.647 C 111.969 121.278, 96.997 146.556, 69.486 191 C 26.731 260.068, 13.377 286.284, 5.489 316.636 C 2.689 327.410, 0 349.668, 0 362.068 C 0 371.209, 1.644 387.451, 3.327 394.951 L 4.500 400.174 87.943 269.026 C 133.837 196.895, 171.696 137.688, 172.075 137.454 C 172.617 137.118, 211.154 196.924, 274.718 296.750 C 276.557 299.637, 278.385 301.977, 278.781 301.949 C 279.849 301.873, 311 252.405, 311 250.784 C 311 249.179, 292.272 217.639, 269.859 181.500 C 225.700 110.294, 200.765 64.141, 177.995 11.462 C 175.627 5.983, 173.387 1.150, 173.017 0.723 C 172.648 0.295, 169.719 5.920, 166.509 13.223 M 303.858 299.785 C 294.154 315.028, 261.906 365.575, 232.195 412.112 C 202.485 458.648, 176.879 498.807, 175.294 501.353 L 172.413 505.983 119.456 423.003 C 90.330 377.365, 66.275 340.031, 66 340.040 C 65.725 340.048, 53.472 359.425, 38.771 383.099 L 12.041 426.142 16.978 436.453 C 40.773 486.157, 87.818 522.016, 142.500 532.128 C 159.496 535.272, 185.504 535.272, 202.500 532.128 C 256.668 522.111, 302.440 487.907, 326.459 439.500 C 330.007 432.350, 334.289 422.501, 335.975 417.612 C 348.676 380.793, 347.712 334.467, 333.464 296.949 C 329.357 286.132, 322.912 271.989, 322.111 272.035 C 321.775 272.054, 313.561 284.541, 303.858 299.785"/></svg>
         <p class="av-boot-wordmark">AVALON VITALITY</p>
@@ -235,7 +277,9 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- Google Translate target. The script is loaded lazily by LanguageSelect only when needed. -->
-    <div id="google_translate_element" style="display:none;visibility:hidden;position:absolute;"></div>
+    <!-- Google Translate target. The script is loaded lazily by LanguageSelect only when needed.
+         aria-hidden because this is a hidden DOM mount point with no user-facing content
+         (axe-core's region check otherwise flags it as content-outside-a-landmark). -->
+    <div id="google_translate_element" style="display:none;visibility:hidden;position:absolute;" aria-hidden="true"></div>
   </body>
 </html>

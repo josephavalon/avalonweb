@@ -4,7 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 
-const BASE_URL = process.env.MOBILE_QA_BASE_URL || 'http://localhost:4173';
+const BASE_URL = process.env.MOBILE_QA_BASE_URL || 'http://127.0.0.1:4173';
 const VIEWPORTS = (process.env.MOBILE_QA_WIDTHS || '320,375,390,430,768')
   .split(',')
   .map((width) => Number(width.trim()))
@@ -16,6 +16,8 @@ const VIEWPORTS = (process.env.MOBILE_QA_WIDTHS || '320,375,390,430,768')
     mobile: width < 768,
   }));
 const PORT = Number(process.env.MOBILE_QA_DEBUG_PORT || 9337);
+const ROUTE_TIMEOUT_MS = Number(process.env.MOBILE_QA_ROUTE_TIMEOUT_MS || 45_000);
+const CONNECT_TIMEOUT_MS = Number(process.env.MOBILE_QA_CONNECT_TIMEOUT_MS || 8_000);
 
 const DEFAULT_ROUTES = [
   '/',
@@ -161,11 +163,31 @@ class CdpClient {
 
   connect() {
     return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`Timed out connecting to Chrome target after ${CONNECT_TIMEOUT_MS}ms.`));
+        this.ws?.close();
+      }, CONNECT_TIMEOUT_MS);
       this.ws = new WebSocket(this.wsUrl);
-      this.ws.addEventListener('open', resolve, { once: true });
-      this.ws.addEventListener('error', reject, { once: true });
+      this.ws.addEventListener('open', () => {
+        clearTimeout(timeout);
+        resolve();
+      }, { once: true });
+      this.ws.addEventListener('error', (error) => {
+        clearTimeout(timeout);
+        this.rejectPending(new Error(error.message || 'Chrome websocket error.'));
+        reject(error);
+      }, { once: true });
+      this.ws.addEventListener('close', () => {
+        clearTimeout(timeout);
+        this.rejectPending(new Error('Chrome websocket closed.'));
+      });
       this.ws.addEventListener('message', (event) => this.handleMessage(event));
     });
+  }
+
+  rejectPending(error) {
+    for (const { reject } of this.pending.values()) reject(error);
+    this.pending.clear();
   }
 
   handleMessage(event) {
@@ -215,6 +237,7 @@ class CdpClient {
   }
 
   close() {
+    this.rejectPending(new Error('Chrome websocket closed.'));
     this.ws?.close();
   }
 }
@@ -274,15 +297,9 @@ async function auditRoute(cdp, route, viewport) {
   const url = new URL(route, BASE_URL).toString();
 
   let result;
-  try {
-    await cdp.send('Emulation.setDeviceMetricsOverride', viewport);
-    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: viewport.mobile });
-    await cdp.send('Page.navigate', { url });
-    await waitForReady(cdp, route, viewport);
-    await wait(650);
-    result = await cdp.send('Runtime.evaluate', {
-      returnByValue: true,
-      expression: `(() => {
+  const collectSnapshot = () => cdp.send('Runtime.evaluate', {
+    returnByValue: true,
+    expression: `(() => {
       const viewportWidth = window.innerWidth;
       const doc = document.documentElement;
       const body = document.body;
@@ -371,7 +388,18 @@ async function auditRoute(cdp, route, viewport) {
         smallTargets,
       };
     })()`,
-    });
+  });
+  try {
+    await cdp.send('Emulation.setDeviceMetricsOverride', viewport);
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: viewport.mobile });
+    await cdp.send('Page.navigate', { url });
+    await waitForReady(cdp, route, viewport);
+    await wait(650);
+    result = await collectSnapshot();
+    if (result.result.value?.blank) {
+      await wait(1500);
+      result = await collectSnapshot();
+    }
   } catch (error) {
     throw new Error(`Mobile QA route audit failed for ${route} @${viewport.width}: ${error.message}`);
   }
@@ -384,17 +412,32 @@ async function auditRoute(cdp, route, viewport) {
   };
 }
 
+async function auditRouteWithTimeout(cdp, route, viewport) {
+  let timeout;
+  const label = `Mobile QA ${route} @${viewport.width}`;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeout = setTimeout(() => {
+      cdp.close();
+      reject(new Error(`${label} timed out after ${ROUTE_TIMEOUT_MS}ms`));
+    }, ROUTE_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([auditRoute(cdp, route, viewport), timeoutPromise]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function auditRouteWithRetry(cdp, route, viewport) {
   try {
-    return { cdp, result: await auditRoute(cdp, route, viewport) };
+    return { cdp, result: await auditRouteWithTimeout(cdp, route, viewport) };
   } catch (error) {
-    if (!/CDP command timed out|page readiness failed/i.test(error.message || '')) {
-      throw error;
-    }
-    console.warn(`WARN ${error.message}; retrying with a fresh page target.`);
+    const retryable = /CDP command timed out|page readiness failed|websocket closed|timed out after/i.test(error.message || '');
+    if (!retryable) throw error;
+    console.warn(`WARN ${error.message}; retrying ${route} @${viewport.width} with a fresh page target.`);
     await closePageClient(cdp);
     const retryClient = await createPageClient();
-    return { cdp: retryClient, result: await auditRoute(retryClient, route, viewport) };
+    return { cdp: retryClient, result: await auditRouteWithTimeout(retryClient, route, viewport) };
   }
 }
 
@@ -428,7 +471,6 @@ function printFindings(results) {
 let chrome;
 let profileDir;
 let cdp;
-
 try {
   const chromePath = await findChrome();
   profileDir = await fs.mkdtemp(path.join(os.tmpdir(), 'avalon-mobile-qa-'));
@@ -445,14 +487,21 @@ try {
   ], { stdio: 'ignore' });
 
   await waitForChrome();
-  cdp = await createPageClient();
 
   const results = [];
   for (const viewport of VIEWPORTS) {
-    for (const route of ROUTES) {
-      const audited = await auditRouteWithRetry(cdp, route, viewport);
-      cdp = audited.cdp;
-      results.push(audited.result);
+    cdp = await createPageClient();
+    try {
+      for (const route of ROUTES) {
+        console.log(`CHECK mobile ${route} @${viewport.width}`);
+        const audited = await auditRouteWithRetry(cdp, route, viewport);
+        cdp = audited.cdp;
+        results.push(audited.result);
+        console.log(`DONE mobile ${route} @${viewport.width}`);
+      }
+    } finally {
+      await closePageClient(cdp);
+      cdp = null;
     }
   }
   printFindings(results);

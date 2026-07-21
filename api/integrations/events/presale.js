@@ -10,10 +10,11 @@ import { acuityFetch } from '../../_acuity.js';
 import { isLiveApiEnabled } from '../../_lib/pre-api-guard.js';
 import { safeLogContext } from '../../_lib/safe-error.js';
 
-function requestOrigin(req) {
-  const proto = req.headers['x-forwarded-proto'] || 'https';
-  const host = req.headers['x-forwarded-host'] || req.headers.host || 'avalonvitality.co';
-  return `${proto}://${host}`;
+// PUBLIC_SITE_URL is the only trusted host source. Trusting X-Forwarded-Host
+// would let a partner caller (the only authenticated source for this route)
+// rewrite the redemption-link host and harvest the codes.
+function siteUrl() {
+  return String(process.env.PUBLIC_SITE_URL || 'https://avalonvitality.co').replace(/\/$/, '');
 }
 
 export default async function handler(req, res) {
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'code or ticketId, plus email, are required' });
   }
 
-  const redemptionLink = `${requestOrigin(req)}/presale/${encodeURIComponent(eventId)}?code=${encodeURIComponent(redemptionCode)}&source=${encodeURIComponent(source)}`;
+  const redemptionLink = `${siteUrl()}/presale/${encodeURIComponent(eventId)}?code=${encodeURIComponent(redemptionCode)}&source=${encodeURIComponent(source)}`;
   const response = {
     ok: true,
     eventId,

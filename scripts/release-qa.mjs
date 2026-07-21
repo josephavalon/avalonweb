@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const BASE_URL = process.env.RELEASE_QA_BASE_URL || 'http://localhost:4173';
+const BASE_URL = process.env.RELEASE_QA_BASE_URL || 'http://127.0.0.1:4173';
 const PREVIEW_PORT = Number(new URL(BASE_URL).port || 4173);
 const DEBUG_PORT_BASE = Number(process.env.RELEASE_QA_DEBUG_PORT_BASE || (20_000 + (process.pid % 10_000)));
 const RETIRED_DEMO_PASSWORD = ['Jon', 'Jones', '1986'].join('');

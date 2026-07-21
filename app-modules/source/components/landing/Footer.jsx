@@ -3,24 +3,20 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Mail, Phone, Clock, MapPin, ChevronDown, Layers, Building2, Scale } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
-import LanguageSelect from '@/components/landing/LanguageSelect';
+// LanguageSelect intentionally removed — coming back later.
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const SERVICES = [
-  { label: 'Book',   to: '/book' },
-  { label: 'Plans',  to: '/subscription' },
-  { label: 'Menu',   to: '/protocols' },
-  { label: 'Events', to: '/events' },
-  { label: 'Launches', to: '/launches' },
-  { label: 'Bay Area IV', to: '/mobile-iv-therapy-bay-area' },
-  { label: 'Locations', to: '/locations' },
-  { label: 'Learn', to: '/learn' },
+  { label: 'Book',       to: '/book' },
+  { label: 'Menu', to: '/protocols' },
+  { label: 'Plans',      to: '/subscription' },
 ];
 
 const COMPANY = [
-  { label: 'Story',  to: '/our-story' },
-  { label: 'Safety', to: '/safety' },
-  { label: 'FAQ',    to: '/faq' },
+  { label: 'Story',   to: '/our-story' },
+  { label: 'Safety',  to: '/safety' },
+  { label: 'FAQ',     to: '/faq' },
+  { label: 'Support', to: '/support' },
 ];
 
 const LEGAL = [
@@ -34,6 +30,25 @@ const GROUPS = [
   { label: 'Company', icon: Building2, links: COMPANY },
   { label: 'Legal', icon: Scale, links: LEGAL },
   { label: 'Contact', icon: Mail, type: 'contact' },
+];
+
+// Real brand glyphs (simple-icons paths), rendered uniformly in currentColor so
+// the row stays consistent. lucide has no official Facebook/Instagram/X/Yelp/
+// Google-Business marks, so we inline the real ones.
+function BrandIcon({ d, className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d={d} />
+    </svg>
+  );
+}
+
+const SOCIALS = [
+  { label: 'Facebook', href: 'https://www.facebook.com/avalon.vitality/', d: 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z' },
+  { label: 'Instagram', href: 'https://www.instagram.com/avalon_vitality/', d: 'M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077' },
+  { label: 'X', href: 'https://x.com/avalonvitality', d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z' },
+  { label: 'Google', href: 'https://www.google.com/maps/search/?api=1&query=Avalon+Vitality+San+Francisco', d: 'M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z' },
+  { label: 'Yelp', href: 'https://www.yelp.com/biz/avalon-vitality-san-francisco', d: 'm7.6885 15.1415-3.6715.8483c-.3769.0871-.755.183-1.1452.155-.2611-.0188-.5122-.0414-.7606-.213a1.179 1.179 0 0 1-.331-.3594c-.3486-.5519-.3656-1.3661-.3697-2.0004a6.2874 6.2874 0 0 1 .3314-2.0642 1.857 1.857 0 0 1 .1073-.2474 2.3426 2.3426 0 0 1 .1255-.2165 2.4572 2.4572 0 0 1 .1563-.1975 1.1736 1.1736 0 0 1 .399-.2831 1.082 1.082 0 0 1 .4592-.0837c.2355.0016.5139.052.91.1734.0555.0191.1237.0382.1856.0572.3277.1013.7048.2404 1.1499.3987.6863.2404 1.3663.487 2.0463.7397l1.2117.4423c.2217.0807.4363.18.6412.297.174.0984.3273.2298.4512.387a1.217 1.217 0 0 1 .192.4309 1.2205 1.2205 0 0 1-.872 1.4522c-.0468.0151-.0852.0239-.1085.0293l-1.105.2553-.0031-.001zM18.8208 7.565a1.8506 1.8506 0 0 0-.2042-.1754 2.4082 2.4082 0 0 0-.2077-.1394 2.3607 2.3607 0 0 0-.2269-.109 1.1705 1.1705 0 0 0-.482-.0796 1.0862 1.0862 0 0 0-.4498.1263c-.2107.1048-.4388.2732-.742.5551-.042.0417-.0947.0886-.142.133-.2502.2351-.5286.5252-.8599.863a114.6363 114.6363 0 0 0-1.5166 1.5629l-.8962.9293a4.1897 4.1897 0 0 0-.4466.5483 1.541 1.541 0 0 0-.2364.5459 1.2199 1.2199 0 0 0 .0107.4518l.0046.02a1.218 1.218 0 0 0 1.4184.923 1.162 1.162 0 0 0 .1105-.0213l4.7781-1.104c.3766-.087.7587-.1667 1.097-.3631.2269-.1316.4428-.262.5909-.5252a1.1793 1.1793 0 0 0 .1405-.4683c.0733-.6512-.2668-1.3908-.5403-1.963a6.2792 6.2792 0 0 0-1.2001-1.7103zM8.9703.0754a8.6724 8.6724 0 0 0-.83.1564c-.2754.066-.548.1383-.8146.2236-.868.2844-2.0884.8063-2.295 1.8065-.1165.5655.1595 1.1439.3737 1.66.2595.6254.614 1.1889.9373 1.7777.8543 1.5545 1.7245 3.0993 2.5922 4.6457.259.4617.5416 1.0464 1.043 1.2856a1.058 1.058 0 0 0 .1013.0383c.2248.0851.4699.1016.7041.0471a4.3015 4.3015 0 0 0 .0418-.0097 1.2136 1.2136 0 0 0 .5658-.3397 1.1033 1.1033 0 0 0 .079-.0822c.3463-.435.3454-1.0833.3764-1.6134.1042-1.771.2139-3.5423.3009-5.3142.0332-.6712.1055-1.3333.0655-2.0096-.0328-.5579-.0368-1.1984-.3891-1.6563-.6218-.8073-1.9476-.741-2.8523-.6158zm2.084 15.9505a1.1053 1.1053 0 0 0-1.2306-.4145 1.1398 1.1398 0 0 0-.1526.0633 1.4806 1.4806 0 0 0-.2171.1354c-.1992.1475-.3668.3392-.5196.5315-.0386.049-.074.1143-.12.1562l-.7686 1.0573a113.9168 113.9168 0 0 0-1.2913 1.789c-.278.3895-.5184.7184-.7083 1.0094-.036.0547-.0734.116-.1075.1647-.2277.3522-.3566.6092-.4228.8381a1.0945 1.0945 0 0 0-.046.4721c.0211.1655.0768.3246.1635.467.046.0715.0957.1406.1487.207a2.334 2.334 0 0 0 .1754.1825 1.843 1.843 0 0 0 .2108.1732c.5304.369 1.1112.6342 1.722.8391a6.0958 6.0958 0 0 0 1.5716.3004c.091.0046.1821.0025.2728-.006a2.3878 2.3878 0 0 0 .2506-.0351 2.3862 2.3862 0 0 0 .2447-.071 1.1927 1.1927 0 0 0 .4175-.2658c.1127-.113.1994-.249.2541-.3989.0889-.2214.1473-.5026.1857-.92.0034-.0593.0118-.1305.0177-.1958.0304-.3463.0443-.7531.0666-1.2315.0375-.7357.067-1.4681.0903-2.2026 0 0 .0495-1.3053.0494-1.306.0113-.3008.002-.6342-.0814-.9336a1.396 1.396 0 0 0-.1756-.4054zm8.6754 2.0439c-.1605-.176-.3878-.3514-.7462-.5682-.0518-.0288-.1124-.0674-.1684-.1009-.2985-.1795-.658-.3684-1.078-.5965a120.7615 120.7615 0 0 0-1.9427-1.042l-1.1515-.6107c-.0597-.0175-.1203-.0607-.1766-.0878-.2212-.1058-.4558-.2045-.6992-.2498a1.4915 1.4915 0 0 0-.2545-.0265 1.1527 1.1527 0 0 0-.1648.01 1.1077 1.1077 0 0 0-.9227.9133 1.4186 1.4186 0 0 0 .0159.439c.0563.3065.1932.6096.3346.875l.615 1.1526c.3422.65.6884 1.2963 1.0435 1.9406.229.4202.4196.7799.5982 1.078.0338.056.0721.1163.1011.1682.2173.3584.392.584.569.7458.1146.1107.252.195.4026.247.1583.0525.326.071.4919.0546a2.368 2.368 0 0 0 .251-.0435c.0817-.022.1622-.048.241-.0784a1.863 1.863 0 0 0 .2475-.1143 6.1018 6.1018 0 0 0 1.2818-.9597c.4596-.4522.8659-.9454 1.182-1.51.044-.08.0819-.163.1138-.2483a2.49 2.49 0 0 0 .0773-.2411c.0186-.083.033-.1669.0429-.2513a1.188 1.188 0 0 0-.0565-.491 1.0933 1.0933 0 0 0-.248-.4041zm2.86 3.742a.8523.8523 0 0 1-.111.4236c-.074.132-.178.2377-.3115.3172a.8428.8428 0 0 1-.4385.119.847.847 0 0 1-.4373-.1179.8526.8526 0 0 1-.3125-.3171.8548.8548 0 0 1-.111-.4248c0-.1526.038-.2958.1143-.4294a.8405.8405 0 0 1 .315-.3159.849.849 0 0 1 .4315-.1156.8514.8514 0 0 1 .4294.1144.84.84 0 0 1 .316.3148.8494.8494 0 0 1 .1156.4317zm-.1202 0c0-.1328-.0332-.256-.0996-.3698s-.1564-.2038-.2702-.2702a.7125.7125 0 0 0-.371-.1007.7204.7204 0 0 0-.3698.0996.7487.7487 0 0 0-.2713.2702.7181.7181 0 0 0-.0996.3709c0 .132.0332.2557.0996.371a.7355.7355 0 0 0 .2713.2713.7354.7354 0 0 0 .3698.0985.7205.7205 0 0 0 .3698-.0996.7423.7423 0 0 0 .2702-.2691.7186.7186 0 0 0 .1008-.3721zm-.577.0584.2724.4522h-.1922l-.237-.4052h-.1546v.4052h-.1695v-1.02h.2988c.1268 0 .2195.0247.2783.0744.0595.0496.0892.1252.0892.2267a.2785.2785 0 0 1-.0492.1625c-.032.0466-.0775.0813-.1362.1042zm-.0412-.1408a.1532.1532 0 0 0 .056-.1214c0-.0573-.0164-.0981-.0491-.1225-.0329-.0251-.0847-.0377-.1557-.0377h-.1214v.3285h.1237c.061 0 .1098-.0157.1465-.047z' },
 ];
 
 const DESKTOP_LINK =
@@ -67,38 +82,47 @@ function FooterContactLink({ href, icon: Icon, children }) {
   );
 }
 
-function FooterDesktopGroup({ title, icon: Icon, open, onToggle, children }) {
+// Desktop footer groups render expanded — footer links are wayfinding (and SEO
+// surface), so on desktop they stay visible rather than hidden behind a click.
+// The mobile footer keeps its compact accordion (FooterGroup) below.
+function FooterDesktopGroup({ title, icon: Icon, children }) {
+  // Collapsible accordion — header is a click target, children reveal below.
+  // Reduces desktop footer height by ~60%; matches the mobile accordion pattern.
+  const [open, setOpen] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-32px' }}
       transition={{ duration: 0.55, ease: EASE }}
-        className="av-glass-card relative overflow-hidden rounded-[1.15rem] border transition-colors"
+      className={`av-glass-card relative overflow-hidden rounded-[1.15rem] border transition-colors ${open ? 'is-open' : ''}`}
     >
       <button
         type="button"
-        onClick={onToggle}
-        className="relative flex min-h-[54px] w-full items-center justify-between gap-2.5 px-3 text-left transition-colors hover:bg-foreground/[0.035]"
+        onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
+        className="relative flex min-h-[54px] w-full items-center justify-between gap-2.5 px-3 text-left transition-colors [@media(hover:hover)]:hover:bg-foreground/[0.025]"
       >
-            <span className="flex min-w-0 items-center gap-2.5">
+        <span className="flex min-w-0 items-center gap-2.5">
           {Icon && (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/80 text-foreground/58">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/80 text-foreground/58">
               <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
             </span>
           )}
           <span className="font-body text-[11px] uppercase tracking-[0.28em] text-foreground/62">{title}</span>
         </span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.32, ease: EASE }} className="text-foreground/42">
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.32, ease: EASE }}
+          className="shrink-0 text-foreground/45"
+          aria-hidden="true"
+        >
           <ChevronDown className="h-4 w-4" strokeWidth={2} />
         </motion.span>
       </button>
-      {open && (
-        <SmoothDisclosure open>
-          <div className="relative grid gap-1 border-t border-foreground/[0.07] p-2">{children}</div>
-        </SmoothDisclosure>
-      )}
+      <SmoothDisclosure open={open}>
+        <div className="relative grid gap-1 border-t border-foreground/[0.07] p-2">{children}</div>
+      </SmoothDisclosure>
     </motion.div>
   );
 }
@@ -177,7 +201,6 @@ function FooterGroup({ group, open, onToggle }) {
 
 export default function Footer() {
   const [openGroup, setOpenGroup] = useState(null);
-  const [openDesktopGroup, setOpenDesktopGroup] = useState(null);
 
   return (
     <footer className="px-4 pb-4 pt-6 md:pb-4 md:pt-6">
@@ -194,7 +217,7 @@ export default function Footer() {
         <div className="mb-3 flex flex-col gap-2 md:mb-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="font-heading text-xl tracking-widest text-foreground md:text-2xl">AVALON</div>
-            <div className="-mt-1 font-body text-[10px] tracking-[0.3em] text-foreground/60 md:text-xs">VITALITY</div>
+            <div className="-mt-1 font-body text-[11px] tracking-[0.3em] text-foreground/60 md:text-xs">VITALITY</div>
           </div>
           <p className="max-w-sm font-body text-[11px] leading-snug text-foreground/55 md:text-right md:text-xs">
             Clinician-led recovery across the Bay Area.
@@ -215,16 +238,11 @@ export default function Footer() {
         </div>
 
         {/* Desktop: hidden accordions */}
-        <div className="mb-3 hidden gap-2 md:grid md:grid-cols-4">
+        <div className="mb-3 hidden gap-2 md:grid md:grid-cols-4 md:items-start">
 
           {/* Services */}
-          <FooterDesktopGroup
-            title="Services"
-            icon={Layers}
-            open={openDesktopGroup === 'Services'}
-            onToggle={() => setOpenDesktopGroup(current => current === 'Services' ? null : 'Services')}
-          >
-            <div className="grid grid-cols-2 gap-1.5">
+          <FooterDesktopGroup title="Services" icon={Layers}>
+            <div className="grid grid-cols-1 gap-1.5">
               {SERVICES.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}
@@ -232,24 +250,14 @@ export default function Footer() {
           </FooterDesktopGroup>
 
           {/* Company */}
-          <FooterDesktopGroup
-            title="Company"
-            icon={Building2}
-            open={openDesktopGroup === 'Company'}
-            onToggle={() => setOpenDesktopGroup(current => current === 'Company' ? null : 'Company')}
-          >
+          <FooterDesktopGroup title="Company" icon={Building2}>
               {COMPANY.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}
           </FooterDesktopGroup>
 
           {/* Contact */}
-          <FooterDesktopGroup
-            title="Contact"
-            icon={Mail}
-            open={openDesktopGroup === 'Contact'}
-            onToggle={() => setOpenDesktopGroup(current => current === 'Contact' ? null : 'Contact')}
-          >
+          <FooterDesktopGroup title="Contact" icon={Mail}>
               <FooterContactLink href="mailto:support@avalonvitality.co" icon={Mail}>
                 support@avalonvitality.co
               </FooterContactLink>
@@ -267,12 +275,7 @@ export default function Footer() {
           </FooterDesktopGroup>
 
           {/* Legal */}
-          <FooterDesktopGroup
-            title="Legal"
-            icon={Scale}
-            open={openDesktopGroup === 'Legal'}
-            onToggle={() => setOpenDesktopGroup(current => current === 'Legal' ? null : 'Legal')}
-          >
+          <FooterDesktopGroup title="Legal" icon={Scale}>
               {LEGAL.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}
@@ -280,23 +283,34 @@ export default function Footer() {
 
         </div>
 
+        {/* Social */}
+        <div className="mb-3 flex flex-col items-center gap-3 border-t border-foreground/[0.07] pt-4">
+          <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/45">Follow Avalon</p>
+          <div className="flex items-center justify-center gap-5">
+            {SOCIALS.map(({ label, href, d }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                title={label}
+                className="flex h-12 w-12 shrink-0 items-center justify-center text-foreground/70 transition-colors hover:text-foreground"
+              >
+                <BrandIcon d={d} className="h-6 w-6" />
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom bar */}
         <div className="border-t border-foreground/[0.07] pt-2 md:pt-2 space-y-1 md:space-y-0.5">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <p className="font-body text-[10px] text-foreground/58 leading-tight">
+            <p className="font-body text-[11px] text-foreground/58 leading-tight">
               © 2026 Avalon Vitality. All rights reserved.
             </p>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/admin/login"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center font-body text-[9px] uppercase tracking-[0.22em] text-foreground/40 transition-colors hover:text-foreground/72"
-              >
-                Admin
-              </Link>
-              <LanguageSelect />
-            </div>
           </div>
-          <p className="font-body text-[10px] text-foreground/58 leading-tight">
+          <p className="font-body text-[11px] text-foreground/58 leading-tight">
             California wellness support only. Not emergency care or medical advice.
           </p>
         </div>

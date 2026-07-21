@@ -21,7 +21,7 @@ function prettyDate(iso) {
 
 export default function ManageOrder() {
   useSeo({
-    title: 'Manage Your Order - Avalon Vitality',
+    title: 'Manage Your Order — Avalon Vitality',
     description: 'Look up your Avalon booking with the order number from your confirmation text.',
     path: '/order',
     robots: 'noindex, nofollow',

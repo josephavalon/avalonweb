@@ -42,7 +42,7 @@ if (!phiMap) {
     'Acuity',
     'Resend ops email',
     'Resend customer email',
-    'Attio',
+    'HubSpot',
     'Sentry-compatible endpoint',
     'Appointment Summary Access',
     'Exhaust Controls',

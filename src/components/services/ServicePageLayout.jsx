@@ -14,8 +14,6 @@ export default function ServicePageLayout({
   heroImage,
   heroImgClassName,
   badge,
-  comingSoon = false,
-  comingSoonNote,
   categorySlug,
 }) {
   const imgClass = heroImgClassName || 'w-full h-full object-cover opacity-40';
@@ -58,90 +56,74 @@ export default function ServicePageLayout({
         </section>
       )}
 
-      {/* Treatments grid OR Coming Soon block */}
-      {comingSoon ? (
-        <section className="px-6 py-20 md:px-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">
-              Joining after launch
-            </p>
-            <h2 className="font-heading text-4xl md:text-6xl text-foreground tracking-wide mb-5 leading-none">
-              Not yet available
-            </h2>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed">
-              {comingSoonNote || "This protocol is not live yet. Browse the active protocol set to see what is available today."}
-            </p>
-          </div>
-        </section>
-      ) : (
-        <section className="px-6 py-6 md:px-16 md:py-10">
-          <div className="max-w-6xl mx-auto">
+      {/* Treatments grid */}
+      <section className="px-6 py-6 md:px-16 md:py-10">
+        <div className="max-w-6xl mx-auto">
 
-            <div className="grid gap-3 md:grid-cols-2">
-              {treatments.map((t, i) => {
-                const href = categorySlug ? `/products/${categorySlug}/${slugify(t.name)}` : null;
-                const CardBody = (
-                  <>
-                    {t.image && (
-                      <div className="absolute inset-y-0 right-0 flex w-[42%] items-center justify-center overflow-hidden bg-background/35">
-                        <img
-                          src={t.image}
-                          alt={t.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-full w-full object-contain p-3 opacity-80 transition-opacity group-hover:opacity-100"
-                        />
-                      </div>
-                    )}
-                    <div className="relative z-10 flex min-h-[144px] w-[68%] flex-col justify-center p-5">
-                       <h3 className="font-heading text-[2.45rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[3rem]">{t.name}</h3>
-                       {t.desc && <p className="mt-2 font-body text-xs font-bold leading-relaxed text-muted-foreground md:text-sm">{t.desc}</p>}
-                       <div className="space-y-1">
-                         {t.oneTime && <div className="font-body text-sm text-foreground">{t.oneTime} <span className="text-xs text-muted-foreground">one-time</span></div>}
-                         {t.price && <div className="font-body text-sm text-foreground">{t.price} <span className="text-xs text-muted-foreground">session</span></div>}
-                         {/* annualPrice in product data holds the per-unit monthly member rate
-                             (already 20% off session). Annual membership = monthly × 12, flat. */}
-                         {t.annualPrice && <div className="font-body text-sm text-accent">{t.annualPrice} <span className="text-xs text-muted-foreground">monthly</span></div>}
-                         {t.annualPrice && (() => {
-                           const n = parseFloat(String(t.annualPrice).replace(/[^0-9.]/g, ''));
-                           if (!Number.isFinite(n)) return null;
-                           const annual = Math.round(n * 12);
-                           return (
-                             <div className="font-body text-sm text-foreground">
-                               ${annual.toLocaleString()} <span className="text-xs text-muted-foreground">annual member</span>
-                             </div>
-                           );
-                         })()}
-                         {t.monthly && <div className="font-body text-sm text-accent">{t.monthly} <span className="text-xs text-muted-foreground">monthly</span></div>}
-                         {t.annual && <div className="font-body text-sm text-foreground">{t.annual} <span className="text-xs text-muted-foreground">annual member</span></div>}
-                       </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {treatments.map((t, i) => {
+              const href = categorySlug ? `/products/${categorySlug}/${slugify(t.name)}` : null;
+              const CardBody = (
+                <>
+                  {t.image && (
+                    <div className="absolute inset-y-0 right-0 flex w-[42%] items-center justify-center overflow-hidden bg-background/35">
+                      <img
+                        src={t.image}
+                        alt={t.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-contain p-3 opacity-80 transition-opacity group-hover:opacity-100"
+                      />
+                    </div>
+                  )}
+                  <div className="relative z-10 flex min-h-[144px] w-[68%] flex-col justify-center p-5">
+                     <h3 className="font-heading text-[2.45rem] uppercase leading-[0.9] tracking-normal text-foreground md:text-[3rem]">{t.name}</h3>
+                     {t.desc && <p className="mt-2 font-body text-xs font-bold leading-relaxed text-muted-foreground md:text-sm">{t.desc}</p>}
+                     <div className="space-y-1">
+                       {t.oneTime && <div className="font-body text-sm text-foreground">{t.oneTime} <span className="text-xs text-muted-foreground">one-time</span></div>}
+                       {t.price && <div className="font-body text-sm text-foreground">{t.price} <span className="text-xs text-muted-foreground">session</span></div>}
+                       {/* annualPrice in product data holds the per-unit monthly member rate
+                           (already 20% off session). Annual membership = monthly × 12, flat. */}
+                       {t.annualPrice && <div className="font-body text-sm text-accent">{t.annualPrice} <span className="text-xs text-muted-foreground">monthly</span></div>}
+                       {t.annualPrice && (() => {
+                         const n = parseFloat(String(t.annualPrice).replace(/[^0-9.]/g, ''));
+                         if (!Number.isFinite(n)) return null;
+                         const annual = Math.round(n * 12);
+                         return (
+                           <div className="font-body text-sm text-foreground">
+                             ${annual.toLocaleString()} <span className="text-xs text-muted-foreground">annual member</span>
+                           </div>
+                         );
+                       })()}
+                       {t.monthly && <div className="font-body text-sm text-accent">{t.monthly} <span className="text-xs text-muted-foreground">monthly</span></div>}
+                       {t.annual && <div className="font-body text-sm text-foreground">{t.annual} <span className="text-xs text-muted-foreground">annual member</span></div>}
                      </div>
-                  </>
-                );
+                   </div>
+                </>
+              );
 
-                return (
-                  <motion.div
-                    key={t.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.06 }}
+              return (
+                <motion.div
+                  key={t.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.06 }}
                   className="av-rect-card av-glass-card group relative min-h-[144px] overflow-hidden rounded-[1.35rem] border transition-colors"
                 >
                   {href ? (
-                      <Link to={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[1.35rem]">
-                        {CardBody}
-                      </Link>
-                    ) : (
-                      CardBody
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
+                    <Link to={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[1.35rem]">
+                      {CardBody}
+                    </Link>
+                  ) : (
+                    CardBody
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
 
 

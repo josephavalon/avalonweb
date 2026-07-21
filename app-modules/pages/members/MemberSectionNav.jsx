@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Calendar, Crown, CreditCard, UserRound, FileText } from 'lucide-react';
+import { Calendar, Crown, CreditCard, UserRound, FileText, LifeBuoy } from 'lucide-react';
 
 export const MEMBER_SECTIONS = [
   { to: '/members/bookings',    label: 'Bookings',    icon: Calendar  },
@@ -8,6 +8,7 @@ export const MEMBER_SECTIONS = [
   { to: '/members/billing',     label: 'Billing',     icon: CreditCard },
   { to: '/members/account',     label: 'Profile',     icon: UserRound  },
   { to: '/members/documents',   label: 'Documents',   icon: FileText   },
+  { to: '/members/support',     label: 'Support',     icon: LifeBuoy   },
 ];
 
 // Pill row of cross-section links. Used on the member dashboard and every

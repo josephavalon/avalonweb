@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Avalon Nav — B: Scroll-Shrink Floating Pill</title>
+<link rel="stylesheet" href="./_shared.css" />
+<style>
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: center;
+    padding: 16px 24px;
+    transition: padding 0.6s var(--av-ease);
+    pointer-events: none;
+  }
+  .navbar > * { pointer-events: auto; }
+
+  .bar {
+    width: 100%; max-width: 1280px;
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 16px 28px;
+    background: var(--av-glass-bg);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    border: 1px solid var(--av-glass-border);
+    border-radius: 28px;
+    transition:
+      max-width 0.7s var(--av-ease),
+      padding 0.7s var(--av-ease),
+      background 0.5s var(--av-ease-out),
+      border-color 0.5s var(--av-ease-out),
+      border-radius 0.7s var(--av-ease),
+      box-shadow 0.5s var(--av-ease-out);
+  }
+
+  /* Shrunk state */
+  body.scrolled .navbar { padding: 12px 24px; }
+  body.scrolled .bar {
+    max-width: 760px;
+    padding: 8px 12px 8px 22px;
+    background: var(--av-glass-bg-solid);
+    border-color: var(--av-glass-border-hover);
+    border-radius: 999px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  body.scrolled .icon-widget { width: 32px; height: 32px; }
+  body.scrolled .cta-pill { padding: 8px 14px; font-size: 11px; }
+  body.scrolled .nav-link { padding: 6px 10px; font-size: 11px; }
+  body.scrolled .signin { display: none; }
+  body.scrolled .brand-name { opacity: 0; width: 0; overflow: hidden; transition: opacity 0.3s var(--av-ease-out), width 0.5s var(--av-ease); }
+
+  .nav-left, .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-right { justify-content: flex-end; }
+  .nav-center { display: flex; align-items: center; gap: 4px; justify-self: center; }
+  .brand-name { transition: opacity 0.5s var(--av-ease-out); }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="bar">
+    <div class="nav-left">
+      <span class="brand-mark">
+        <span class="drop-logo">
+          <svg viewBox="0 0 24 32" fill="none"><path d="M12 1C12 1 2 13 2 21a10 10 0 0020 0C22 13 12 1 12 1z" fill="#fff"/></svg>
+        </span>
+        <span class="brand-name">AVALON</span>
+      </span>
+    </div>
+    <div class="nav-center">
+      <a class="nav-link" href="#">IV THERAPY</a>
+      <a class="nav-link" href="#">PLANS</a>
+      <a class="nav-link" href="#">LAUNCHES</a>
+    </div>
+    <div class="nav-right">
+      <button class="icon-widget" aria-label="Call">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </button>
+      <button class="icon-widget" aria-label="Chat">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <a class="signin" href="#">SIGN IN</a>
+      <button class="cta-pill">BOOK NOW</button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow">AVALON VITALITY</div>
+  <h1>MOBILE<br/>RECOVERY</h1>
+  <p>Scroll down — the full-width rounded bar collapses into a centered floating pill. Spring easing, blur intensifies, brand wordmark retracts, BOOK NOW anchored right. Avalon Bebas + Inter, dark glass tokens, white border at 12 → 22% on shrink.</p>
+</section>
+<div class="spacer"></div>
+
+<div class="preview-tag">B · SCROLL-SHRINK PILL</div>
+
+<script>
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      document.body.classList.toggle('scrolled', window.scrollY > 40);
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+</script>
+</body>
+</html>

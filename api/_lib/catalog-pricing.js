@@ -139,12 +139,17 @@ export function sanitizeCheckoutItems(items = []) {
   if (!Array.isArray(items)) return [];
   return items.map((item) => {
     const price = priceForItem(item);
+    const rawQuantity = Number(item?.quantity);
+    const quantity = Number.isFinite(rawQuantity)
+      ? Math.min(4, Math.max(1, Math.floor(rawQuantity)))
+      : 1;
     if (price == null) {
       throw Object.assign(new Error(`Unknown checkout item: ${item?.label || item?.key || 'item'}`), { status: 400 });
     }
     return {
       ...item,
       price,
+      quantity,
       label: item.label || item.key || 'Avalon service',
       type: item.type || 'service',
     };
@@ -158,6 +163,8 @@ export function sanitizeCheckoutMembership(membership = null) {
   const term = MEMBERSHIP_TERMS[termKey] || MEMBERSHIP_TERMS.monthly;
   const monthlyPrice = MEMBERSHIP_PRICE_BY_NAME.get(key);
   const price = monthlyPrice == null ? null : Math.max(0, Math.round(monthlyPrice * term.months * (1 - term.discount)));
+  // Visit-credits granted per cycle. Clamp 1–32, default 1 (back-compat).
+  const visitsPerCycle = Math.max(1, Math.min(32, Math.floor(Number(membership.visitsPerCycle) || 1)));
   if (price == null && key === 'custom') {
     const proposed = Number(membership.price);
     if (Number.isFinite(proposed) && proposed >= 150 && proposed <= 10000) {
@@ -167,6 +174,7 @@ export function sanitizeCheckoutMembership(membership = null) {
         billing: term.billing,
         term: term.key,
         commitmentMonths: term.commitmentMonths,
+        visitsPerCycle,
       };
     }
   }
@@ -180,5 +188,6 @@ export function sanitizeCheckoutMembership(membership = null) {
     billing: term.billing,
     term: term.key,
     commitmentMonths: term.commitmentMonths,
+    visitsPerCycle,
   };
 }

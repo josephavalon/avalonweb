@@ -6,7 +6,7 @@ import { applyTheme } from '@/lib/theme';
 
 export default function Nurses() {
   useSeo({
-    title: 'Nurse Portal - Avalon Vitality',
+    title: 'Nurse Portal — Avalon Vitality',
     description: 'The Avalon Vitality nurse portal is coming soon.',
     path: '/nurses',
     robots: 'noindex, nofollow',

@@ -18,7 +18,10 @@ Disallow: /
 `;
 
 function isPrivateBetaHost(host = '') {
-  return host.toLowerCase().split(':')[0] === 'snooches.avalonvitality.co';
+  const bare = host.toLowerCase().split(':')[0];
+  return bare === 'snooches.avalonvitality.co'
+    || bare === 'beta.avalonvitality.co'
+    || bare === 'care.avalonvitality.co';
 }
 
 export default function handler(req, res) {

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   Droplets, Zap, ShieldCheck, Sparkles, Heart, Plane, FlaskConical, Moon,
   ArrowRight, Check, X, ShoppingBag, Plus, Syringe, ChevronDown, ChevronRight,
-  Flame, BatteryCharging, Shield, Info, LayoutGrid,
+  Flame, Shield, Info, LayoutGrid,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -35,7 +35,7 @@ const IV_ADDONS = [
 const IM_SHOTS = [
   { label: 'B12',         price: 40, icon: Zap,           desc: 'Energy + metabolism support' },
   { label: 'MIC',         price: 50, icon: Flame,         desc: 'Metabolism support' },
-  { label: 'NAD+',        price: 80, icon: BatteryCharging,desc: 'Clinician-reviewed NAD+ support' },
+  { label: 'NAD+',        price: 80, icon: FlaskConical,desc: 'Clinician-reviewed NAD+ support' },
   { label: 'Glutathione', price: 50, icon: Sparkles,      desc: 'Antioxidant + skin clarity' },
   { label: 'Vitamin C',   price: 30, icon: Shield,        desc: 'Immune + antioxidant support' },
   { label: 'Vitamin D',   price: 35, icon: Zap,           desc: 'Vitamin D support' },
@@ -408,7 +408,7 @@ export default function RecoveryMenuSection() {
                   <ArrowRight className="w-4 h-4" strokeWidth={2} />
                 </motion.button>
                 <div className="flex items-center gap-2 px-1">
-                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save 20% ·</span>
+                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save up to 17% + 10% off add-ons ·</span>
                   <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">View subscriptions →</Link>
                 </div>
               </div>
@@ -508,7 +508,7 @@ export default function RecoveryMenuSection() {
                 ))}
               </div>
               <div className="flex items-center gap-2 px-1 pt-1">
-                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save an additional 20% ·</span>
+                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-foreground/40">Plan clients save up to 17% + 10% off add-ons ·</span>
                 <Link to="/subscription" className="font-body text-[10px] tracking-[0.2em] uppercase text-accent hover:text-accent/80 transition-colors">Join →</Link>
               </div>
             </motion.div>

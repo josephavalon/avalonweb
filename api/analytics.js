@@ -43,6 +43,20 @@ function safeString(value, max = 160) {
   return String(value || '').slice(0, max);
 }
 
+// The events client funnel, one stage per name (blueprint Step 9 + eng 8B).
+const EVENTS_FUNNEL_EVENTS = new Set([
+  'events.feed_viewed',
+  'events.event_viewed',
+  'events.tier_selected',
+  'events.checkout_started',
+  'events.order_completed',
+  'events.rsvp_completed',
+  'events.application_submitted',
+  'events.gfe_link_opened',
+  'events.trip_viewed',
+  'events.kiosk_joined',
+]);
+
 function sensitiveAnalyticsKey(key = '') {
   const normalized = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
   return DROP_KEYS.some((blocked) => normalized.includes(blocked));
@@ -77,6 +91,13 @@ export default async function handler(req, res) {
   const rawEvent = req.body?.event || req.body || {};
   const name = safeString(rawEvent.name);
   if (!name) return res.status(400).json({ ok: false, error: 'Missing event name' });
+
+  // events.* is ALLOWLISTED (eng review 8B): the funnel needs a stable,
+  // junk-free namespace. Supplemental funnel color only — published TTF comes
+  // from transition_event_visit() audit timestamps (T4), never this endpoint.
+  if (name.startsWith('events.') && !EVENTS_FUNNEL_EVENTS.has(name)) {
+    return res.status(400).json({ ok: false, error: 'Unknown events funnel event' });
+  }
 
   const event = {
     name,

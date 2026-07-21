@@ -36,7 +36,7 @@ assert.ok(snapshot.gfeProof.find((row) => row.id === 'qualiphy-fallback-only' &&
 
 assert.ok(snapshot.dispatch.metrics.requests >= 4, 'Dispatch brain must run against active day visits.');
 assert.ok(snapshot.marketplace.offers.some((offer) => offer.replyCommand === 'Y/N'), 'Nurse Y/N shift flow must exist.');
-assert.ok(snapshot.arrival.missions.some((row) => row.clientTextReady && /ETA/i.test(row.clientText || '')), 'Client ETA text must wait for nurse ETA.');
+assert.ok(snapshot.arrival.missions.some((row) => row.clientTextReady && /on the way/i.test(row.clientText || '')), 'Client route update must wait for nurse acceptance.');
 assert.ok(snapshot.arrival.missions.some((row) => row.maps?.apple && row.maps?.google), 'Route handoffs must include Apple and Google maps.');
 
 assert.ok(snapshot.closeout.metrics.payrollReady >= 2, 'Clean closeouts must unlock payroll proof.');

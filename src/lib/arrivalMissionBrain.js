@@ -5,11 +5,11 @@ export const ARRIVAL_MISSION_MODE = 'local-route-placeholder';
 
 export const ARRIVAL_MISSION_RULES = [
   'Route unlocks after nurse acceptance.',
-  'The nurse sets the final ETA before client text.',
-  'Client ETA copy only publishes after a real ETA exists.',
+  'Client route updates unlock after nurse acceptance.',
+  'Route timing is managed outside the nurse portal.',
   'Apple and Google Maps are route handoffs, not tracked API state.',
   'Acuity remains the visit chart and closeout destination.',
-  'Late or missing ETA escalates to dispatch.',
+  'Late-risk routes escalate to dispatch.',
 ];
 
 function compactText(...parts) {
@@ -88,17 +88,9 @@ function mapsFor(request = {}) {
   };
 }
 
-function readEta(request = {}, etaRecords = {}) {
-  const id = request.id || request.reference || request.client || 'visit';
-  const record = etaRecords[id] || etaRecords[String(id)] || null;
-  if (typeof record === 'string') return record;
-  return record?.eta || request.eta || request.routeEta || request.nurseEta || '';
-}
-
-function stageFor({ accepted, blockers = [], eta = '', maps = {} } = {}) {
+function stageFor({ accepted, blockers = [], maps = {} } = {}) {
   if (blockers.length) return 'Hold';
   if (!accepted) return 'Await Accept';
-  if (!eta) return 'ETA Needed';
   if (!maps.apple || !maps.google) return 'Route Needs Address';
   return 'Client Text Ready';
 }
@@ -106,18 +98,16 @@ function stageFor({ accepted, blockers = [], eta = '', maps = {} } = {}) {
 function nextActionFor(stage, firstBlocker = '') {
   if (stage === 'Hold') return `Clear ${firstBlocker || 'readiness'} before route.`;
   if (stage === 'Await Accept') return 'Keep Y/N offer loop running.';
-  if (stage === 'ETA Needed') return 'Prompt nurse to set final ETA.';
   if (stage === 'Route Needs Address') return 'Confirm exact address before map handoff.';
   return 'Text client and open route.';
 }
 
-export function buildArrivalMission({ request = {}, nurse = null, offer = null, etaRecords = {} } = {}) {
+export function buildArrivalMission({ request = {}, nurse = null, offer = null } = {}) {
   const accepted = Boolean(offer?.stage === 'Accepted' || nurse);
   const maps = mapsFor(request);
-  const eta = readEta(request, etaRecords);
   const readinessBlockers = clearanceBlockers(request);
   if (!request.address) readinessBlockers.push('Address');
-  const stage = stageFor({ accepted, blockers: readinessBlockers, eta, maps });
+  const stage = stageFor({ accepted, blockers: readinessBlockers, maps });
   const nurseName = offer?.nurseName || nurse?.name || request.nurse || 'Unassigned';
   const client = request.client || request.contact?.name || 'Client';
   const service = request.therapy || request.service || request.plan || 'Avalon protocol';
@@ -129,8 +119,6 @@ export function buildArrivalMission({ request = {}, nurse = null, offer = null, 
     service,
     nurseName,
     accepted,
-    eta: eta || 'Nurse sets final ETA',
-    etaMissing: accepted && !eta,
     stage,
     status: request.status || 'New Request',
     address: request.address || 'Address pending',
@@ -140,10 +128,9 @@ export function buildArrivalMission({ request = {}, nurse = null, offer = null, 
     mapsReady: Boolean(maps.apple && maps.google && accepted),
     clientTextReady: stage === 'Client Text Ready',
     clientText: stage === 'Client Text Ready'
-      ? `Avalon: ${nurseName} is on the way. ETA ${eta}. Please keep your phone nearby.`
-      : 'Hold client ETA text until nurse accepts and sets final ETA.',
+      ? `Avalon: ${nurseName} is on the way. Please keep your phone nearby.`
+      : 'Hold the client route update until the nurse accepts.',
     nurseActions: [
-      { id: 'eta', label: 'Set final ETA', owner: 'Nurse', status: eta ? 'Done' : accepted ? 'Needed' : 'Locked' },
       { id: 'maps', label: 'Open Apple/Google Maps', owner: 'Nurse', status: accepted && maps.apple ? 'Ready' : 'Locked' },
       { id: 'client-text', label: 'Text client', owner: 'Nurse', status: stage === 'Client Text Ready' ? 'Ready' : 'Locked' },
       { id: 'arrive', label: 'Mark arrived', owner: 'Nurse', status: stage === 'Client Text Ready' ? 'Ready' : 'Locked' },
@@ -151,7 +138,7 @@ export function buildArrivalMission({ request = {}, nurse = null, offer = null, 
     ],
     handoffs: [
       { id: 'nurse-page', label: 'Nurse personal page', status: accepted ? 'Loaded' : 'Locked' },
-      { id: 'client-portal', label: 'Client portal ETA', status: stage === 'Client Text Ready' ? 'Publish' : 'Hidden' },
+      { id: 'client-portal', label: 'Client route update', status: stage === 'Client Text Ready' ? 'Publish' : 'Hidden' },
       { id: 'sms', label: 'SMS placeholder', status: stage === 'Client Text Ready' ? 'Ready' : 'Hold' },
       { id: 'acuity', label: 'Acuity chart', status: 'System of record' },
     ],
@@ -173,15 +160,6 @@ function buildEscalations(missions = []) {
         action: mission.nextAction,
       });
     }
-    if (mission.stage === 'ETA Needed') {
-      items.push({
-        id: `${mission.id}-eta`,
-        client: mission.client,
-        severity: 'Action',
-        reason: 'Accepted shift missing nurse ETA',
-        action: 'Ping nurse. No client ETA text until set.',
-      });
-    }
     if (mission.stage === 'Await Accept') {
       items.push({
         id: `${mission.id}-accept`,
@@ -198,14 +176,14 @@ function buildEscalations(missions = []) {
   });
 }
 
-export function buildArrivalMissionSnapshot({ requests = [], nurses = [], inventory = [], booking = null, etaRecords = {} } = {}) {
+export function buildArrivalMissionSnapshot({ requests = [], nurses = [], inventory = [], booking = null } = {}) {
   const active = activeRequests(requests, booking);
   const marketplace = buildShiftMarketplaceSnapshot({ requests: active, nurses, inventory });
   const missionRows = active.map((request) => {
     const row = marketplace.rows.find((item) => item.requestId === (request.id || request.reference || request.client));
     const nurse = assignedNurseFor(request, nurses);
     const offer = row?.accepted || null;
-    return buildArrivalMission({ request, nurse, offer, etaRecords });
+    return buildArrivalMission({ request, nurse, offer });
   });
   const escalations = buildEscalations(missionRows);
 
@@ -217,17 +195,15 @@ export function buildArrivalMissionSnapshot({ requests = [], nurses = [], invent
     escalations,
     clientTexts: missionRows.filter((mission) => mission.clientTextReady),
     routeReady: missionRows.filter((mission) => mission.mapsReady),
-    etaNeeded: missionRows.filter((mission) => mission.etaMissing),
     handoffChannels: [
       { id: 'nurse', label: 'Nurse page', status: missionRows.some((mission) => mission.accepted) ? 'Loaded' : 'Waiting' },
       { id: 'maps', label: 'Apple/Google Maps', status: missionRows.some((mission) => mission.mapsReady) ? 'Ready' : 'Locked' },
-      { id: 'client', label: 'Client ETA', status: missionRows.some((mission) => mission.clientTextReady) ? 'Publish' : 'Hidden' },
+      { id: 'client', label: 'Client route update', status: missionRows.some((mission) => mission.clientTextReady) ? 'Publish' : 'Hidden' },
       { id: 'acuity', label: 'Acuity closeout', status: 'Placeholder' },
     ],
     metrics: {
       visits: missionRows.length,
       accepted: missionRows.filter((mission) => mission.accepted).length,
-      etaNeeded: missionRows.filter((mission) => mission.etaMissing).length,
       routeReady: missionRows.filter((mission) => mission.mapsReady).length,
       clientTexts: missionRows.filter((mission) => mission.clientTextReady).length,
       escalations: escalations.length,

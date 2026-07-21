@@ -47,7 +47,7 @@ export default function SeoPillarPage() {
   const robots = page?.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
 
   useSeo({
-    title: page?.title || 'Page Not Found | Avalon Vitality',
+    title: page?.title || 'Page Not Found — Avalon Vitality',
     description: page?.description || 'Avalon Vitality page not found.',
     path: page?.path || pathname,
     robots,

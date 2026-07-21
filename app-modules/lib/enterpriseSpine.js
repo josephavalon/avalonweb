@@ -26,15 +26,15 @@ export const CANONICAL_DATA_CONTRACTS = [
     sourceOfTruth: 'Avalon provider OS plus Nursys placeholder',
     localTruth: 'Availability, kit state, city zone, certification tags',
     requiredFields: ['id', 'name', 'status', 'area', 'kit'],
-    events: ['nurse.available', 'nurse.accepted_shift', 'nurse.set_eta'],
+    events: ['nurse.available', 'nurse.accepted_shift', 'route.started'],
     neverStore: ['credential document image without vault approval'],
   },
   {
     id: 'visit',
     label: 'Visit Contract',
     sourceOfTruth: 'Acuity EMR for chart, Avalon OS for operations',
-    localTruth: 'Lifecycle stage, assignment, ETA, closeout proof',
-    requiredFields: ['bookingId', 'nurse', 'eta', 'stage', 'closeoutStatus'],
+    localTruth: 'Lifecycle stage, assignment, route status, closeout proof',
+    requiredFields: ['bookingId', 'nurse', 'routeStatus', 'stage', 'closeoutStatus'],
     events: ['visit.assigned', 'visit.en_route', 'visit.completed'],
     neverStore: ['full EMR note', 'diagnostic conclusion'],
   },
@@ -543,8 +543,6 @@ export function buildNurseMissionPacket({ request = {}, nurse = {}, inventory = 
   const currentRequest = normalizeRequest(request);
   const currentNurse = normalizeNurse(nurse);
   const ledger = buildEnterpriseInventoryLedger({ requests: [currentRequest], inventory });
-  const etaOwner = currentNurse.name === 'Nurse pending' ? 'Assigned RN' : currentNurse.name;
-
   return {
     id: `mission-${currentRequest.id}`,
     title: `${currentRequest.client} mission packet`,
@@ -555,12 +553,12 @@ export function buildNurseMissionPacket({ request = {}, nurse = {}, inventory = 
     route: {
       destination: currentRequest.address,
       maps: 'Apple/Google Maps placeholder',
-      etaRule: `${etaOwner} sets final ETA after accepting the visit.`,
+      routeRule: 'Open navigation after accepting the visit.',
     },
     contact: {
       clientPhone: currentRequest.phone || 'Phone pending',
       nursePhone: currentNurse.phone || 'Nurse phone pending',
-      textRule: 'Nurse may text client after accepting and setting ETA.',
+      textRule: 'Nurse may text the client after accepting the visit.',
     },
     bringList: ledger.transactions.map((line) => `${line.quantity} x ${line.item}`),
     closeoutSteps: [

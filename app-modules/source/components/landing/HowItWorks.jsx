@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from '@/components/ui/PageTransitionMotion';
+import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { ChevronDown } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -16,18 +16,17 @@ const STEPS = [
     n: '02',
     title: 'Confirm',
     preview: 'Registered Nurse · arrival window',
-    desc: 'We confirm the visit and registered nurse details.',
+    desc: 'We confirm your nurse and time.',
   },
   {
     n: '03',
     title: 'Recover',
     preview: '30-60 min',
-    desc: 'Your registered nurse handles setup and care.',
+    desc: 'Your nurse handles the rest.',
   },
 ];
 
 function StepCard({ step, index, open, onToggle }) {
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
@@ -46,28 +45,38 @@ function StepCard({ step, index, open, onToggle }) {
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-            <span className="font-body text-[10px] tracking-[0.2em] text-white">{step.n}</span>
+            <span className="font-body text-[10px] tracking-[0.2em] text-foreground tabular-nums">{step.n}</span>
           </div>
           <div className="min-w-0 text-left">
-            <p className="font-heading text-2xl tracking-normal text-white leading-none">{step.title}</p>
-            <p className="mt-1 truncate font-body text-[11px] font-semibold tracking-[0.04em] text-white/76">{step.preview}</p>
+            <p className="font-heading text-2xl tracking-normal text-foreground leading-none">{step.title}</p>
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.38, ease: EASE }}
-          className="shrink-0 text-white"
-        >
-        <ChevronDown
-          className="h-4 w-4 shrink-0 text-white transition-transform duration-300"
-          strokeWidth={2}
-        />
-        </motion.div>
+        <div className="flex shrink-0 items-center gap-4">
+          {/* Tablet+ inline preview — fills the otherwise-empty wide card row
+              with the same eyebrow we show inside the disclosure body. Hidden
+              on mobile to keep the row compact. */}
+          <p className="hidden md:block font-body text-[11px] font-semibold tracking-[0.04em] uppercase text-foreground/72 text-right max-w-[24rem]">
+            {step.preview}
+          </p>
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.38, ease: EASE }}
+            className="shrink-0 text-foreground"
+          >
+            <ChevronDown
+              className="h-4 w-4 shrink-0 text-foreground transition-transform duration-300"
+              strokeWidth={2}
+            />
+          </motion.div>
+        </div>
       </motion.button>
 
       <SmoothDisclosure open={open}>
         <div className="border-t border-foreground/[0.08] px-4 pb-4 pt-3 md:px-5">
-          <p className="font-body text-xs leading-relaxed text-white">{step.desc}</p>
+          {/* Mobile keeps the eyebrow inside the disclosure (since it isn't
+              visible in the collapsed row); tablet+ already shows it inline. */}
+          <p className="md:hidden font-body text-[11px] font-semibold tracking-[0.04em] text-foreground/76">{step.preview}</p>
+          <p className="mt-1.5 md:mt-0 font-body text-xs leading-relaxed text-foreground">{step.desc}</p>
         </div>
       </SmoothDisclosure>
     </motion.div>
@@ -76,18 +85,35 @@ function StepCard({ step, index, open, onToggle }) {
 
 export default function HowItWorks() {
   const [openStep, setOpenStep] = useState(null);
+  const reduceMotion = useReducedMotion();
 
   return (
     <section id="how-it-works" className="pt-12 pb-10 md:pt-20 md:pb-16 px-5 md:px-12 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
 
         <ScrollParallax className="mb-6 md:mb-10">
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92]">
+          <h2 className="whitespace-nowrap font-heading text-display text-foreground tracking-tight leading-[0.92]">
             How it works
           </h2>
         </ScrollParallax>
 
         <div className="relative space-y-2">
+          {/* Connecting line: hairline that draws downward from the centerline of
+              step 1's badge to step 3's badge as the section enters viewport.
+              `left-9` (36px) aligns with the badge center (px-4 + half of w-10).
+              Stays behind the cards (z-0); the cards' `av-treatment-card` is on
+              top of it. Skipped under prefers-reduced-motion via the CSS rule on
+              `.av-howitworks-connector`. */}
+          <motion.div
+            className="av-howitworks-connector absolute left-9 top-[34px] bottom-[34px] w-px bg-foreground/15 pointer-events-none z-0"
+            style={{ transformOrigin: 'top' }}
+            initial={reduceMotion ? { scaleY: 1 } : { scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true, margin: '-15%' }}
+            transition={{ duration: 1.1, delay: 0.3, ease: EASE }}
+            aria-hidden="true"
+          />
+
           {STEPS.map((step, i) => (
             <StepCard
               key={step.n}

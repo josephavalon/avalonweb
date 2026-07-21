@@ -24,7 +24,7 @@ export const NO_API_COMPLETION_DOMAINS = [
     builds: [
       'Real visit status timeline',
       'Nurse assignment state',
-      'Nurse ETA display',
+      'Route status display',
       'Clearance state explainer',
       'Payment and deposit state',
       'Saved locations',
@@ -41,7 +41,7 @@ export const NO_API_COMPLETION_DOMAINS = [
     mission: 'Nurse can claim, route, execute, close, and escalate without asking admin.',
     builds: [
       'Shift claim Y/N model',
-      'Nurse-owned final ETA setter',
+      'Accepted route handoff',
       'Route packet',
       'Client contact templates',
       'Protocol bring-list',

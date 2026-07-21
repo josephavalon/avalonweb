@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { MapPin, Calendar, ChevronDown, ArrowRight, Users } from 'lucide-react';
-import { events } from '../../../../src/data/events';
+import { fetchEventsFeed } from '@/lib/eventsApi';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+function formatEventDate(iso) {
+  if (!iso) return 'Date TBA';
+  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
 function EventRow({ event, index }) {
   const [open, setOpen] = useState(false);
+  const desc = !Array.isArray(event.descriptionBlocks) ? event.descriptionBlocks?.description : '';
 
   return (
     <motion.div
@@ -30,8 +36,8 @@ function EventRow({ event, index }) {
             <Calendar className="w-4 h-4 text-accent" strokeWidth={1.5} />
           </div>
           <div className="min-w-0">
-            <p className="font-heading text-lg tracking-[0.06em] text-foreground uppercase leading-none truncate">{event.title}</p>
-            <p className="font-body text-[10px] text-accent tracking-[0.2em] uppercase mt-0.5">{event.date}</p>
+            <p className="font-heading text-lg tracking-[0.06em] text-foreground uppercase leading-none truncate">{event.name}</p>
+            <p className="font-body text-[10px] text-accent tracking-[0.2em] uppercase mt-0.5">{formatEventDate(event.startsAt)}</p>
           </div>
         </div>
         <ChevronDown
@@ -44,24 +50,28 @@ function EventRow({ event, index }) {
       {/* Expanded */}
       <SmoothDisclosure open={open}>
         <div className="border-t border-white/[0.06] px-5 pb-5 pt-4 space-y-4">
-              <p className="font-body text-sm text-foreground/65 leading-relaxed">{event.desc}</p>
+              {desc ? <p className="font-body text-sm text-foreground/65 leading-relaxed">{desc}</p> : null}
 
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-foreground/30 shrink-0" strokeWidth={1.5} />
-                  <span className="font-body text-xs text-foreground/50">{event.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-foreground/30 shrink-0" strokeWidth={1.5} />
-                  <span className="font-body text-xs text-foreground/50">{event.capacity}</span>
-                </div>
+                {event.venue ? (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-foreground/30 shrink-0" strokeWidth={1.5} />
+                    <span className="font-body text-xs text-foreground/50">{event.venue}</span>
+                  </div>
+                ) : null}
+                {event.capacity ? (
+                  <div className="flex items-center gap-2">
+                    <Users className="w-3.5 h-3.5 text-foreground/30 shrink-0" strokeWidth={1.5} />
+                    <span className="font-body text-xs text-foreground/50">{event.capacity} spots</span>
+                  </div>
+                ) : null}
               </div>
 
               <Link
-                to={`/launches/${event.slug}`}
+                to={`/events/${event.slug}`}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.05] border border-foreground/10 hover:bg-white/[0.10] hover:border-white/20 font-body text-[11px] tracking-[0.2em] uppercase text-foreground transition-all"
               >
-                Launch Details <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+                Event Details <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
               </Link>
         </div>
       </SmoothDisclosure>
@@ -70,6 +80,18 @@ function EventRow({ event, index }) {
 }
 
 export default function EventsSection() {
+  const [upcoming, setUpcoming] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchEventsFeed()
+      .then(({ upcoming: rows }) => { if (alive) setUpcoming(rows.slice(0, 4)); })
+      .catch(() => { /* landing section simply hides when events are unavailable */ });
+    return () => { alive = false; };
+  }, []);
+
+  if (!upcoming.length) return null;
+
   return (
     <section id="events" className="py-12 md:py-20 px-4 scroll-mt-24">
       <div className="max-w-6xl mx-auto">
@@ -85,28 +107,28 @@ export default function EventsSection() {
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">
             In the Field
           </p>
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
-            LAUNCHES
+          <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">
+            EVENTS
           </h2>
           <div className="w-10 h-[2px] bg-accent mt-3" />
           <p className="font-body text-sm text-foreground/50 leading-relaxed max-w-2xl mt-3">
-            Private recovery for groups, hotels, and venues.
+            Recovery lounges for parties, retreats, and venues. We deliver care.
           </p>
         </motion.div>
 
-        {/* Launch accordion rows */}
+        {/* Event accordion rows */}
         <div className="space-y-2 mb-8">
-          {events.map((event, i) => (
+          {upcoming.map((event, i) => (
             <EventRow key={event.slug} event={event} index={i} />
           ))}
         </div>
 
         {/* CTA */}
         <Link
-          to="/launches"
+          to="/events"
           className="inline-flex items-center gap-2 font-body text-[11px] tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors"
         >
-          All Launches <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+          All Events <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
         </Link>
 
       </div>

@@ -4,6 +4,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight } from 'lucide-react';
 
 import { EASE, premiumTap } from '@/lib/motion';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 
 const BOOK_URL = '/book';
 
@@ -71,13 +72,23 @@ export default function StickyBookBar() {
     >
       <div className="relative isolate mx-3 rounded-[16px]">
         <motion.div className="relative z-0" whileTap={premiumTap}>
-          <Link
-            to={BOOK_URL}
-            className="av-glass-widget group flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[14px] border px-12 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/72 transition-colors duration-base ease-editorial hover:text-foreground"
-          >
-            Book
-            <ArrowRight className="h-4 w-4 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2.35} />
-          </Link>
+          {isCareHost() ? (
+            <a
+              href={ACUITY_URL}
+              className="av-glass-widget group flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[14px] border px-12 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/72 transition-colors duration-base ease-editorial hover:text-foreground"
+            >
+              Book
+              <ArrowRight className="h-4 w-4 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2.35} />
+            </a>
+          ) : (
+            <Link
+              to={BOOK_URL}
+              className="av-glass-widget group flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[14px] border px-12 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.16em] text-foreground/72 transition-colors duration-base ease-editorial hover:text-foreground"
+            >
+              Book
+              <ArrowRight className="h-4 w-4 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2.35} />
+            </Link>
+          )}
         </motion.div>
       </div>
     </motion.div>

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, BookOpen, CheckCircle, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle, Search, ShieldCheck } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import MedicalReviewNote from '@/components/seo/MedicalReviewNote';
@@ -29,9 +29,21 @@ function TextLink({ to, children }) {
   );
 }
 
+// "Start here" featured picks — first article in each of the top 3 clusters
+// gives new visitors an opinionated on-ramp instead of a flat grid.
+function pickStartHere() {
+  const picks = [];
+  for (const cluster of educationClusters) {
+    const first = indexedEducationArticles.find((item) => item.cluster === cluster);
+    if (first) picks.push(first);
+    if (picks.length >= 3) break;
+  }
+  return picks;
+}
+
 export function LearnHub() {
   useSeo({
-    title: 'Mobile IV Therapy Education | Avalon Vitality',
+    title: 'Mobile IV Therapy Education — Avalon Vitality',
     description: 'Educational guides for mobile IV therapy, NAD+, recovery therapy, event recovery, hotel service, and Bay Area location planning.',
     path: '/learn',
     jsonLd: {
@@ -42,6 +54,18 @@ export function LearnHub() {
       hasPart: indexedEducationArticles.map((item) => ({ '@type': 'Article', name: item.h1, url: `${SEO_BASE_URL}${item.path}` })),
     },
   });
+
+  const [query, setQuery] = useState('');
+  const startHere = useMemo(pickStartHere, []);
+  const q = query.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (!q) return indexedEducationArticles;
+    return indexedEducationArticles.filter((item) => {
+      const hay = `${item.h1} ${item.description} ${item.cluster} ${item.slug}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [q]);
+  const isSearching = q.length > 0;
 
   return (
     <div className="av-page-surface min-h-screen text-foreground">
@@ -55,35 +79,115 @@ export function LearnHub() {
             Useful, compliance-aware guides that support Avalon service pages without unsafe medical claims.
           </p>
 
-          <div className="mt-12 space-y-10">
-            {educationClusters.map((cluster) => {
-              const articles = indexedEducationArticles.filter((item) => item.cluster === cluster);
-              if (!articles.length) return null;
-              return (
-                <section key={cluster}>
-                  <div className="mb-4 flex items-center justify-between gap-4">
-                    <h2 className="font-heading text-3xl uppercase leading-none text-foreground">{cluster}</h2>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {articles.map((item) => (
-                      <Link
-                        key={item.slug}
-                        to={item.path}
-                        className="group rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 transition-colors hover:border-foreground/24 hover:bg-foreground/[0.055]"
-                      >
-                        <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{item.cluster}</p>
-                        <h3 className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{item.h1}</h3>
-                        <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.description}</p>
-                        <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
-                          Read guide <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+          {/* Search — client-side filter across title, cluster, description, slug. */}
+          <div className="mt-8 flex items-center gap-3 rounded-full border border-foreground/12 bg-foreground/[0.04] px-5 py-3 md:max-w-xl">
+            <Search className="h-4 w-4 shrink-0 text-foreground/45" strokeWidth={2} />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search guides…"
+              className="min-w-0 flex-1 bg-transparent font-body text-sm text-foreground placeholder:text-foreground/40 focus:outline-none"
+              aria-label="Search guides"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="shrink-0 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/45 hover:text-foreground"
+              >
+                Clear
+              </button>
+            )}
           </div>
+
+          {/* Start here — hand-picked on-ramp; hidden when the visitor is actively searching. */}
+          {!isSearching && startHere.length > 0 && (
+            <section className="mt-10">
+              {/* h2 (not p) so the heading order is h1 → h2 (Start here) → h3
+                  (article titles) → h2 (cluster) → h3, matching the cluster
+                  sections below. Visual styling stays identical to the sibling
+                  cluster h2s (small caps eyebrow → then large title above card grid). */}
+              <h2 className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Start here</h2>
+              <div className="mt-3 grid gap-4 md:grid-cols-3">
+                {startHere.map((item) => (
+                  <Link
+                    key={`start-${item.slug}`}
+                    to={item.path}
+                    className="group rounded-2xl border border-emerald-400/22 bg-emerald-500/[0.06] p-5 transition-colors hover:border-emerald-300/40 hover:bg-emerald-500/[0.09]"
+                  >
+                    <p className="font-body text-[9px] uppercase tracking-[0.24em] text-emerald-200/72">{item.cluster}</p>
+                    <h3 className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{item.h1}</h3>
+                    <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/62">{item.description}</p>
+                    <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200/85 group-hover:text-emerald-100">
+                      Read guide <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {isSearching ? (
+            // Search results — flat grid, no cluster grouping, empty state on zero hits.
+            <section className="mt-10">
+              <p className="font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">
+                {filtered.length} {filtered.length === 1 ? 'result' : 'results'} for "{query}"
+              </p>
+              {filtered.length === 0 ? (
+                <p className="mt-6 font-body text-sm text-foreground/55">
+                  No guides matched. Try a broader term like "NAD", "recovery", or "jet lag".
+                </p>
+              ) : (
+                <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filtered.map((item) => (
+                    <Link
+                      key={item.slug}
+                      to={item.path}
+                      className="group rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 transition-colors hover:border-foreground/24 hover:bg-foreground/[0.055]"
+                    >
+                      <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{item.cluster}</p>
+                      <h3 className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{item.h1}</h3>
+                      <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.description}</p>
+                      <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
+                        Read guide <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : (
+            <div className="mt-10 space-y-10">
+              {educationClusters.map((cluster) => {
+                const articles = indexedEducationArticles.filter((item) => item.cluster === cluster);
+                if (!articles.length) return null;
+                return (
+                  <section key={cluster}>
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                      <h2 className="font-heading text-3xl uppercase leading-none text-foreground">{cluster}</h2>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {articles.map((item) => (
+                        <Link
+                          key={item.slug}
+                          to={item.path}
+                          className="group rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 transition-colors hover:border-foreground/24 hover:bg-foreground/[0.055]"
+                        >
+                          <p className="font-body text-[9px] uppercase tracking-[0.24em] text-foreground/35">{item.cluster}</p>
+                          <h3 className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{item.h1}</h3>
+                          <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.description}</p>
+                          <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
+                            Read guide <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
       <Footer />
@@ -94,10 +198,12 @@ export function LearnHub() {
 export default function LearnPage() {
   const { slug } = useParams();
   const article = getArticleBySlug(slug);
-  const robots = article?.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
+  // Unknown slug → noindex (branded NotFound renders below). Otherwise honor the
+  // per-article noindex flag; else default to index.
+  const robots = !article || article.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
 
   useSeo({
-    title: article?.title || 'Guide Not Found | Avalon Vitality',
+    title: article?.title || 'Guide Not Found — Avalon Vitality',
     description: article?.description || 'Avalon Vitality education guide not found.',
     path: article?.path || `/learn/${slug || ''}`,
     robots,

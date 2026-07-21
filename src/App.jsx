@@ -9,23 +9,64 @@ import RouteFallback from '@/components/RouteFallback';
 import AppLoader from '@/components/AppLoader';
 import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
+import CareAcuityForward from '@/components/CareAcuityForward';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
+import { canAccessAdminRoute } from '@/lib/adminAccess';
+import MfaGate from '@/components/auth/MfaGate';
+import IdleWarning from '@/components/auth/IdleWarning';
+import { requiresPrivilegedMfa } from '@/lib/portalAccess';
+
+// Operator-tier MFA enforcement. Off by default; flip VITE_MFA_ENFORCED=true
+// (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
+// or the gate would lock every admin out of /admin.
+const MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
 
 // Guard — redirects to /login if no active session; enforces role-based access
+// Legacy /plans/checkout and /plan-checkout deep links carry ?price=&term=&sessions=
+// query params that the /plan builder reads. A bare <Navigate to="/plan" /> would
+// drop them and land the visitor on the default plan. This preserves search + hash
+// so shared links keep working.
+function PreserveSearchNavigate({ to }) {
+  const loc = useLocation();
+  return <Navigate to={{ pathname: to, search: loc.search, hash: loc.hash }} replace />;
+}
+
 function RequireAuth({ children, allowedRoles }) {
   const { user, loading, authBackend } = useAuthStore();
+  const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    if (pathname.startsWith('/provider/')) {
+      return <Navigate to={{ pathname: '/login', search: `?role=nurse&redirect=${encodeURIComponent(pathname)}` }} replace />;
+    }
+    if (pathname.startsWith('/organizer')) {
+      return <Navigate to={{ pathname: '/login', search: `?portal=organizer&redirect=${encodeURIComponent(pathname)}` }} replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
+  // Admin force-set a temporary password — make them rotate it before anything else.
+  if (user.mustChangePassword && pathname !== '/account/new-password') {
+    return <Navigate to="/account/new-password" replace />;
+  }
   const role = user.role ?? null;
   if (allowedRoles && !allowedRoles.includes(role)) {
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'admin' || user.role === 'staff') return <Navigate to="/admin" replace />;
     if (user.role === 'nurse') return <Navigate to="/provider/shift" replace />;
+    if (user.role === 'promoter') return <Navigate to="/organizer" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
     return <Navigate to="/login" replace />;
+  }
+  if ((role === 'admin' || role === 'staff') && pathname.startsWith('/admin') && !canAccessAdminRoute(role, pathname)) {
+    return <Navigate to="/admin" replace />;
+  }
+  // Operator-tier step-up: force MFA enrollment/challenge before any admin/staff
+  // route once enforcement is enabled. Lockout-safe — off until the flag flips.
+  if (MFA_ENFORCED && requiresPrivilegedMfa(user) && !user.mfa?.verified) {
+    return <MfaGate />;
   }
   return children;
 }
@@ -60,16 +101,19 @@ const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
 const Signup = lazyRoute(() => import('./pages/Signup'));
 const ForgotPassword = lazyRoute(() => import('./pages/ForgotPassword'));
+const AuthCallback = lazyRoute(() => import('./pages/AuthCallback'));
 const Nurses = lazyRoute(() => import('./pages/Nurses'));
 const ManageOrder = lazyRoute(() => import('./pages/ManageOrder'));
 const AdminLogin = lazyRoute(() => import('./pages/AdminLogin'));
 const MemberDashboard = lazyRoute(() => import('./pages/members/Dashboard'));
+const MemberBook = lazyRoute(() => import('./pages/members/Book'));
 const MemberAccount = lazyRoute(() => import('./pages/members/Account'));
 const MemberMessages = lazyRoute(() => import('./pages/members/Messages'));
 const MemberBookings = lazyRoute(() => import('./pages/members/Bookings'));
 const MemberMemberships = lazyRoute(() => import('./pages/members/Memberships'));
 const MemberBilling = lazyRoute(() => import('./pages/members/Billing'));
 const MemberDocuments = lazyRoute(() => import('./pages/members/Documents'));
+const MembersSupport = lazyRoute(() => import('./pages/members/Support'));
 const ProviderAccounting = lazyRoute(() => import('./pages/provider/Accounting'));
 const ProviderAppointments = lazyRoute(() => import('./pages/provider/Appointments'));
 const ProviderClients = lazyRoute(() => import('./pages/provider/Clients'));
@@ -82,8 +126,14 @@ const NurseDashboard = lazyRoute(() => import('./pages/provider/NurseDashboard')
 const RoleOS = lazyRoute(() => import('./pages/provider/RoleOS'));
 const ProviderReports = lazyRoute(() => import('./pages/provider/Reports'));
 const ProviderSettings = lazyRoute(() => import('./pages/provider/Settings'));
+const OrganizerEventHub = lazyRoute(() => import('./pages/organizer/EventHub'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
+const TripPage = lazyRoute(() => import('./pages/TripPage'));
+const EventKiosk = lazyRoute(() => import('./pages/EventKiosk'));
+const EventBoard = lazyRoute(() => import('./pages/EventBoard'));
+const AdminEventServe = lazyRoute(() => import('./pages/admin/EventServe'));
+const AdminEventBrand = lazyRoute(() => import('./pages/admin/EventBrand'));
 const SeoPillarPage = lazyRoute(() => import('./pages/SeoPillarPage'));
 const LocationPage = lazyRoute(() => import('./pages/LocationPage'));
 const LocationsHub = lazyRoute(() => import('./pages/LocationPage').then((mod) => ({ default: mod.LocationsHub })));
@@ -97,8 +147,6 @@ const OurTeam = lazyRoute(() => import('./pages/OurTeam'));
 const Apply = lazyRoute(() => import('./pages/Apply'));
 const Careers = lazyRoute(() => import('./pages/Careers'));
 const FAQPage = lazyRoute(() => import('./pages/FAQ'));
-const NAD = lazyRoute(() => import('./pages/services/NAD'));
-const CBD = lazyRoute(() => import('./pages/services/CBD'));
 const PrivacyPolicy = lazyRoute(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazyRoute(() => import('./pages/TermsAndConditions'));
 const TelehealthDisclaimer = lazyRoute(() => import('./pages/TelehealthDisclaimer'));
@@ -124,6 +172,7 @@ const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
 const PageNotFound = lazyRoute(() => import('./lib/PageNotFound'));
 const NotFound = lazyRoute(() => import('./pages/NotFound'));
 const Safety = lazyRoute(() => import('./pages/Safety'));
+const Support = lazyRoute(() => import('./pages/Support'));
 const Ingredients = lazyRoute(() => import('./pages/Ingredients'));
 const MedicalDirection = lazyRoute(() => import('./pages/MedicalDirection'));
 const Gift = lazyRoute(() => import('./pages/Gift'));
@@ -133,7 +182,14 @@ const JetLag = lazyRoute(() => import('./pages/JetLag'));
 const Press = lazyRoute(() => import('./pages/Press'));
 const AdminEssentials = lazyRoute(() => import('./pages/admin/AdminEssentials'));
 const AdminAcuityControl = lazyRoute(() => import('./pages/admin/AcuityControl'));
-const AdminAttioControl = lazyRoute(() => import('./pages/admin/AttioControl'));
+const AdminHubspotControl = lazyRoute(() => import('./pages/admin/HubspotControl'));
+const AdminPatientRecords = lazyRoute(() => import('./pages/admin/PatientRecords'));
+const AdminClientDetail = lazyRoute(() => import('./pages/admin/ClientDetail'));
+const AdminMemberships = lazyRoute(() => import('./pages/admin/Memberships'));
+const AdminMessages = lazyRoute(() => import('./pages/admin/Messages'));
+const AdminInbox = lazyRoute(() => import('./pages/admin/Inbox'));
+const AdminTeamInbox = lazyRoute(() => import('./pages/admin/TeamInbox'));
+const AdminGfeSettings = lazyRoute(() => import('./pages/admin/GfeSettings'));
 const AdminFinanceControl = lazyRoute(() => import('./pages/admin/FinanceControl'));
 const AdminCredentialControl = lazyRoute(() => import('./pages/admin/CredentialControl'));
 const AdminDispatchControl = lazyRoute(() => import('./pages/admin/DispatchControl'));
@@ -141,9 +197,24 @@ const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
 const AdminKitControl = lazyRoute(() => import('./pages/admin/KitControl'));
 const AdminTrainingControl = lazyRoute(() => import('./pages/admin/TrainingControl'));
 const AdminInventory = lazyRoute(() => import('./pages/admin/Inventory'));
+const AdminComingSoon = lazyRoute(() => import('./pages/admin/ComingSoon'));
 const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
 const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
+const AdminTeamSettings = lazyRoute(() => import('./pages/admin/TeamSettings'));
+const AdminEmailTemplates = lazyRoute(() => import('./pages/admin/EmailTemplates'));
+const AdminPromoCodes = lazyRoute(() => import('./pages/admin/PromoCodes'));
+const AdminShiftMarketplace = lazyRoute(() => import('./pages/admin/ShiftMarketplace'));
+const AdminRefunds = lazyRoute(() => import('./pages/admin/Refunds'));
+const AdminDeletionRequests = lazyRoute(() => import('./pages/admin/DeletionRequests'));
+const AdminExpiringCredits = lazyRoute(() => import('./pages/admin/ExpiringCredits'));
+const AdminReviews = lazyRoute(() => import('./pages/admin/Reviews'));
+const AdminSupportTickets = lazyRoute(() => import('./pages/admin/SupportTickets'));
+const AdminReconciliation = lazyRoute(() => import('./pages/admin/Reconciliation'));
+const Review = lazyRoute(() => import('./pages/Review'));
+const MemberRedeemGift = lazyRoute(() => import('./pages/members/RedeemGift'));
+const InviteAccept = lazyRoute(() => import('./pages/InviteAccept'));
+const NewPassword = lazyRoute(() => import('./pages/NewPassword'));
 
 
 const ScrollToTop = () => {
@@ -151,23 +222,23 @@ const ScrollToTop = () => {
   useEffect(() => {
     const timers = [];
     let cancelled = false;
+    // Reset first so lazy pages never inherit the previous route's scroll offset,
+    // even when a hash anchor's target is still mounting.
+    window.scrollTo(0, 0);
     if (hash) {
-      // Section anchor — wait for lazy components to mount, then scroll into view
       const id = hash.slice(1);
       let attempts = 0;
       const tryScroll = () => {
         if (cancelled) return;
         const el = document.getElementById(id);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.scrollIntoView({ behavior: 'auto', block: 'start' });
         } else if (attempts < 12) {
           attempts += 1;
           timers.push(setTimeout(tryScroll, 80));
         }
       };
       tryScroll();
-    } else {
-      window.scrollTo(0, 0);
     }
     return () => {
       cancelled = true;
@@ -228,7 +299,11 @@ function AppRoutes() {
   const location = useLocation();
   return (
     <>
-      <a href="#main-content" className="skip-to-content" data-mobile-qa-ignore>Skip to content</a>
+      {/* Skip link inside a labeled <nav> so axe-core's region check sees it
+          as content inside a landmark instead of a loose <a> at the root. */}
+      <nav aria-label="Skip navigation">
+        <a href="#main-content" className="skip-to-content" data-mobile-qa-ignore>Skip to content</a>
+      </nav>
       <div id="main-content" tabIndex={-1} className="relative z-10 outline-none">
         {/* mode="wait" → outgoing page fully crossfades out before the next fades in
             (avoids two stacked pages / two fixed navbars). initial={false} → no fade
@@ -252,20 +327,24 @@ function AppRoutes() {
             <Route path="/our-team" element={<Navigate to="/team" replace />} />
             <Route path="/products/dehydration-iv" element={<Navigate to="/products/iv-vitamins/dehydration" replace />} />
             <Route path="/services/iv-vitamins" element={<Navigate to="/protocols" replace />} />
-            <Route path="/services/nad" element={<NAD />} />
-            <Route path="/services/cbd" element={<CBD />} />
+            <Route path="/services/nad" element={<Navigate to="/protocols#iv-nad" replace />} />
+            <Route path="/services/cbd" element={<Navigate to="/protocols#iv-cbd" replace />} />
             <Route path="/products/iv-vitamins" element={<Navigate to="/protocols" replace />} />
             <Route path="/products/:category/:slug" element={<ProductDetail />} />
             <Route path="/apply" element={<Apply />} />
             <Route path="/launches/:slug" element={<EventPage />} />
+            <Route path="/events/:slug/kiosk" element={<EventKiosk />} />
+            <Route path="/events/:slug/board" element={<EventBoard />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />
+            <Route path="/trips" element={<Navigate to="/events" replace />} />
+            <Route path="/trips/:visitId" element={<TripPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/membership" element={<Navigate to="/subscription" replace />} />
-            <Route path="/subscription" element={<Subscription />} />
-            <Route path="/plan" element={<PlanCheckout />} />
+            <Route path="/subscription" element={<CareAcuityForward><Subscription /></CareAcuityForward>} />
+            <Route path="/plan" element={<CareAcuityForward><PlanCheckout /></CareAcuityForward>} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
@@ -288,34 +367,63 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
-            <Route path="/custom" element={<CustomProtocol />} />
-            <Route path="/book" element={<BookNow />} />
+            <Route path="/custom" element={<CareAcuityForward><CustomProtocol /></CareAcuityForward>} />
+            <Route path="/book" element={<CareAcuityForward><BookNow /></CareAcuityForward>} />
+            <Route path="/booking" element={<Navigate to="/book" replace />} />
+            <Route path="/book-now" element={<Navigate to="/book" replace />} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
+            {/* Common URL guesses → canonical routes. Captures muscle memory
+                and competitor patterns that would otherwise hit the 404. */}
+            <Route path="/signin" element={<Navigate to="/login" replace />} />
+            <Route path="/sign-in" element={<Navigate to="/login" replace />} />
+            <Route path="/services" element={<Navigate to="/protocols" replace />} />
+            <Route path="/providers" element={<Navigate to="/nurses" replace />} />
+            <Route path="/provider/login" element={<Navigate to="/login" replace />} />
+            {/* Deep-link recovery — audit findings N2-N5. Nurse SMS invites,
+                marketing-cadence /iv-therapy links, muscle-memory /dashboard
+                and /kiosk should route somewhere useful, not 404. */}
+            <Route path="/nurse" element={<Navigate to="/login?role=nurse" replace />} />
+            <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/members/dashboard" replace />} />
+            <Route path="/kiosk" element={<Navigate to="/login?next=/kiosk" replace />} />
+            <Route path="/plans" element={<Navigate to="/subscription" replace />} />
+            <Route path="/plans/checkout" element={<PreserveSearchNavigate to="/plan" />} />
+            <Route path="/plan-checkout" element={<PreserveSearchNavigate to="/plan" />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
-            <Route path="/menu" element={<Menu />} />
+            {/* /menu canonicalized to /protocols — both surfaces served the
+                same component, splitting SEO equity between two URLs. */}
+            <Route path="/menu" element={<Navigate to="/protocols" replace />} />
             <Route path="/store" element={<Navigate to="/protocols" replace />} />
             <Route path="/store/confirmation" element={<Navigate to="/protocols" replace />} />
-            <Route path="/booking/confirmation" element={<BookingConfirmation />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/checkout/success" element={<CheckoutSuccess />} />
+            <Route path="/booking/confirmation" element={<CareAcuityForward><BookingConfirmation /></CareAcuityForward>} />
+            <Route path="/checkout" element={<CareAcuityForward><Checkout /></CareAcuityForward>} />
+            <Route path="/checkout/success" element={<CareAcuityForward><CheckoutSuccess /></CareAcuityForward>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
             <Route path="/order" element={<ManageOrder />} />
             <Route path="/redeem" element={<Navigate to="/order" replace />} />
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/invite/accept" element={<InviteAccept />} />
+            <Route path="/account/new-password" element={<NewPassword />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
+            <Route path="/organizer/login" element={<Navigate to="/login?portal=organizer" replace />} />
+            <Route path="/organizer" element={<RequireAuth allowedRoles={['promoter', 'admin']}><OrganizerEventHub /></RequireAuth>} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
+            <Route path="/members/book" element={<RequireAuth allowedRoles={['client', 'admin', 'staff']}><MemberBook /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
             <Route path="/members/messages" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMessages /></RequireAuth>} />
             <Route path="/members/bookings" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBookings /></RequireAuth>} />
             <Route path="/members/memberships" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMemberships /></RequireAuth>} />
             <Route path="/members/billing" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBilling /></RequireAuth>} />
             <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
+            <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
             <Route path="/provider" element={<Navigate to="/login" replace />} />
+            <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shift" replace /></RequireAuth>} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'admin']}><NurseDashboard /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderAppointments /></RequireAuth>} />
             <Route path="/provider/clients" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderClients /></RequireAuth>} />
@@ -337,10 +445,18 @@ function AppRoutes() {
             <Route path="/provider/role-os" element={<RequireAuth allowedRoles={['nurse', 'admin']}><RoleOS /></RequireAuth>} />
             <Route path="/provider/reports" element={<RequireAuth allowedRoles={['admin']}><ProviderReports /></RequireAuth>} />
             <Route path="/provider/settings" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderSettings /></RequireAuth>} />
-            <Route path="/admin" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEssentials /></RequireAuth>} />
             <Route path="/admin/acuity" element={<RequireAuth allowedRoles={['admin']}><AdminAcuityControl /></RequireAuth>} />
-            <Route path="/admin/crm" element={<RequireAuth allowedRoles={['admin']}><AdminAttioControl /></RequireAuth>} />
-            <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin']}><AdminFinanceControl /></RequireAuth>} />
+            <Route path="/admin/clients" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminPatientRecords /></RequireAuth>} />
+            <Route path="/admin/clients/:id" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminClientDetail /></RequireAuth>} />
+            <Route path="/admin/memberships" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminMemberships /></RequireAuth>} />
+            <Route path="/admin/messages" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminMessages /></RequireAuth>} />
+            <Route path="/admin/inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInbox /></RequireAuth>} />
+            <Route path="/admin/team-inbox" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamInbox /></RequireAuth>} />
+            <Route path="/admin/gfe" element={<RequireAuth allowedRoles={['admin']}><AdminGfeSettings /></RequireAuth>} />
+            <Route path="/admin/crm" element={<Navigate to="/admin/hubspot" replace />} />
+            <Route path="/admin/hubspot" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminHubspotControl /></RequireAuth>} />
+            <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
             <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />
@@ -348,14 +464,30 @@ function AppRoutes() {
             <Route path="/admin/training" element={<RequireAuth allowedRoles={['admin']}><AdminTrainingControl /></RequireAuth>} />
             <Route path="/admin/communications" element={<RequireAuth allowedRoles={['admin']}><ProviderCommunications /></RequireAuth>} />
             <Route path="/admin/role-os" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
-            <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><AdminInventory /></RequireAuth>} />
-            <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin']}><AdminBookings /></RequireAuth>} />
+            <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminInventory /></RequireAuth>} />
+            <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
+            <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamSettings /></RequireAuth>} />
+            <Route path="/admin/email-templates" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEmailTemplates /></RequireAuth>} />
+            <Route path="/admin/promo-codes" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminPromoCodes /></RequireAuth>} />
+            <Route path="/admin/shift-marketplace" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminShiftMarketplace /></RequireAuth>} />
+            <Route path="/admin/refunds" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminRefunds /></RequireAuth>} />
+            <Route path="/admin/deletion-requests" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminDeletionRequests /></RequireAuth>} />
+            <Route path="/admin/expiring-credits" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminExpiringCredits /></RequireAuth>} />
+            <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
+            <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
+            <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
+            <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
+            <Route path="/admin/events/:slug/serve" element={<RequireAuth allowedRoles={['admin', 'staff', 'nurse', 'rn', 'np', 'physician', 'medical_director']}><AdminEventServe /></RequireAuth>} />
+            <Route path="/admin/events/:slug/brand" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEventBrand /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
             <Route path="/admin/client-heat-map" element={<RequireAuth allowedRoles={['admin']}><AdminClientHeatMap /></RequireAuth>} />
             <Route path="/admin/*" element={<RequireAuth allowedRoles={['admin']}><AdminEssentials /></RequireAuth>} />
             <Route path="/safety" element={<Safety />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/gift" element={<Gift />} />
+            <Route path="/review" element={<Review />} />
+            <Route path="/members/redeem" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberRedeemGift /></RequireAuth>} />
             <Route path="/athlete" element={<Athlete />} />
             <Route path="/hangover" element={<Hangover />} />
             <Route path="/jet-lag" element={<JetLag />} />
@@ -387,9 +519,10 @@ function App() {
           <MobileShell />
           <AppRoutes />
           <StickyBookBar />
+          <CookieConsent />
+          <IdleWarning />
         </Router>
         <Toaster />
-        <CookieConsent />
       </CartProvider>
       </AuthStoreProvider>
     </ErrorBoundary>

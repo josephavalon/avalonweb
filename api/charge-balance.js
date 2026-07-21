@@ -19,10 +19,24 @@ import { writeAuditEvent } from './_lib/audit-events.js';
 import { checkRateLimit } from './_lib/rate-limit.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
-const INTERNAL_CHARGE_LIMIT = {
-  windowMs: 60 * 1000,
-  max: 15,
+// Per-appointment throttle: caps abuse if the shared internal secret leaks,
+// regardless of caller. Previously keyed by hashed-secret fingerprint, which
+// meant every legitimate caller shared one global bucket and an attacker with
+// the secret had no per-target limit.
+const INTERNAL_CHARGE_PER_APPT = {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
 };
+
+const INTERNAL_CHARGE_PER_TOKEN = {
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+};
+
+function internalTokenFingerprint(req) {
+  const supplied = String(req.headers?.authorization || '').replace(/^Bearer\s+/i, '');
+  return crypto.createHash('sha256').update(supplied || 'missing').digest('hex').slice(0, 24);
+}
 
 function resolveChargeAmount({ requestedOverride, balanceDue }) {
   const balance = Number(balanceDue || 0);
@@ -44,11 +58,6 @@ async function getSupabase() {
   return _supabase;
 }
 
-function internalTokenFingerprint(req) {
-  const supplied = String(req.headers?.authorization || '').replace(/^Bearer\s+/i, '');
-  return crypto.createHash('sha256').update(supplied).digest('hex').slice(0, 16);
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -64,6 +73,28 @@ export default async function handler(req, res) {
   const db = await getSupabase();
   if (!db) {
     return res.status(503).json({ error: 'Database is not configured', code: 'db_not_configured' });
+  }
+
+  const tokenLimit = await checkRateLimit({
+    key: `charge-balance:${internalTokenFingerprint(req)}`,
+    windowMs: INTERNAL_CHARGE_PER_TOKEN.windowMs,
+    max: INTERNAL_CHARGE_PER_TOKEN.max,
+  });
+  if (!tokenLimit.ok) {
+    await writeAuditEvent(db, {
+      action: 'balance_charge_rejected',
+      entityType: 'appointment',
+      payload: {
+        actor: 'internal_service',
+        reason: 'rate_limited',
+        resultCode: 'rate_limited',
+        acuityAppointmentId: acuityAppointmentId ? String(acuityAppointmentId) : null,
+        mode,
+        override: overrideRequested,
+      },
+    });
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((tokenLimit.reset - Date.now()) / 1000)));
+    return res.status(429).json({ error: 'Too many charge attempts. Try again later.', code: 'rate_limited' });
   }
 
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -82,27 +113,6 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Stripe is not configured', code: 'stripe_not_configured' });
   }
 
-  const limit = await checkRateLimit({
-    key: `charge-balance:${internalTokenFingerprint(req)}`,
-    windowMs: INTERNAL_CHARGE_LIMIT.windowMs,
-    max: INTERNAL_CHARGE_LIMIT.max,
-  });
-  if (!limit.ok) {
-    await writeAuditEvent(db, {
-      action: 'balance_charge_rejected',
-      entityType: 'appointment',
-      payload: {
-        actor: 'internal_service',
-        reason: 'rate_limited',
-        resultCode: 'rate_limited',
-        mode,
-        override: overrideRequested,
-      },
-    });
-    res.setHeader('Retry-After', Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000)));
-    return res.status(429).json({ error: 'Too many balance charge attempts. Try again shortly.', code: 'rate_limited' });
-  }
-
   if (!acuityAppointmentId) {
     await writeAuditEvent(db, {
       action: 'balance_charge_rejected',
@@ -116,6 +126,31 @@ export default async function handler(req, res) {
       },
     });
     return res.status(400).json({ error: 'acuityAppointmentId is required', code: 'missing_appointment_lookup' });
+  }
+
+  // Per-target throttle. The override amount intentionally does NOT participate
+  // in the key — sweeping a single appointment with distinct overrides was the
+  // exploit path that survived idempotency.
+  const limit = await checkRateLimit({
+    key: `charge-balance:appt:${String(acuityAppointmentId)}`,
+    windowMs: INTERNAL_CHARGE_PER_APPT.windowMs,
+    max: INTERNAL_CHARGE_PER_APPT.max,
+  });
+  if (!limit.ok) {
+    await writeAuditEvent(db, {
+      action: 'balance_charge_rejected',
+      entityType: 'appointment',
+      payload: {
+        actor: 'internal_service',
+        reason: 'rate_limited',
+        resultCode: 'rate_limited',
+        acuityAppointmentId: String(acuityAppointmentId),
+        mode,
+        override: overrideRequested,
+      },
+    });
+    res.setHeader('Retry-After', Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000)));
+    return res.status(429).json({ error: 'Too many charge attempts for this appointment. Try again later.', code: 'rate_limited' });
   }
 
   const { data: appt, error: lookupErr } = await db.from('appointments')

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { EASE } from '@/lib/motion';
@@ -186,12 +187,42 @@ async function applyLanguage(code) {
 
 // Inline variant — sits in the footer, not fixed to the viewport.
 // Dropdown opens upward (bottom-full) so it doesn't get clipped by page bottom.
+const MENU_WIDTH = 176; // matches w-44
+
 export default function LanguageSelect() {
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState('en');
-  const ref = useRef(null);
+  const [coords, setCoords] = useState(null);
+  const ref = useRef(null);      // trigger wrapper
+  const menuRef = useRef(null);  // portaled dropdown
 
   useEffect(() => { setCurrent(getCurrentLang()); }, []);
+
+  // The footer card clips its contents with overflow-hidden, which chops the
+  // top/bottom of an in-flow dropdown (hiding Español + Japanese). Portal the
+  // menu to <body> and position it with fixed coords measured off the trigger
+  // so the full list is always visible regardless of the footer's overflow.
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const place = () => {
+      const trigger = ref.current?.querySelector('[data-lang-trigger]');
+      if (!trigger) return;
+      const r = trigger.getBoundingClientRect();
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - MENU_WIDTH - 8));
+      setCoords({
+        left,
+        bottom: window.innerHeight - r.top + 8, // open upward, above the trigger
+        maxHeight: Math.max(180, r.top - 16),   // never exceed space above
+      });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     document.documentElement.lang = current;
@@ -204,7 +235,9 @@ export default function LanguageSelect() {
 
   useEffect(() => {
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current?.contains(e.target)) return;
+      if (menuRef.current?.contains(e.target)) return; // menu is portaled outside ref
+      setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -224,6 +257,7 @@ export default function LanguageSelect() {
     <div ref={ref} className="relative inline-block notranslate" translate="no">
       {/* Trigger */}
       <motion.button
+        data-lang-trigger
         onClick={() => setOpen((v) => !v)}
         whileTap={{ scale: 0.97, transition: { duration: 0.22, ease: EASE } }}
         aria-label={`Select language (${currentLang.native})`}
@@ -239,39 +273,52 @@ export default function LanguageSelect() {
         />
       </motion.button>
 
-      {/* Dropdown — opens upward */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.97 }}
-            transition={{ duration: 0.22, ease: EASE }}
-            className="av-glass-card absolute bottom-full left-0 z-50 mb-2 w-44 overflow-hidden rounded-2xl border"
-            role="listbox"
-            aria-label="Language options"
-          >
-            {LANGUAGES.map((lang) => {
-              const active = current === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  role="option"
-                  aria-selected={active}
-                  onClick={() => select(lang.code)}
-                  data-lang-code={lang.code}
-                  className={`flex min-h-11 w-full items-center justify-between px-4 py-2.5 font-body text-[11px] transition-colors hover:bg-foreground/[0.05] ${
-                    active ? 'text-foreground' : 'text-foreground/50'
-                  }`}
-                >
-                  <span>{lang.native}</span>
-                  {active && <Check className="w-3 h-3 shrink-0" strokeWidth={2.5} />}
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Dropdown — portaled to <body> so the footer's overflow-hidden can't clip
+          it, and opens upward from the trigger. */}
+      {createPortal(
+        <AnimatePresence>
+          {open && coords && (
+            <motion.div
+              ref={menuRef}
+              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: EASE }}
+              style={{
+                position: 'fixed',
+                left: coords.left,
+                bottom: coords.bottom,
+                width: MENU_WIDTH,
+                maxHeight: coords.maxHeight,
+              }}
+              className="av-glass-card notranslate z-[2147483647] overflow-y-auto rounded-2xl border"
+              translate="no"
+              role="listbox"
+              aria-label="Language options"
+            >
+              {LANGUAGES.map((lang) => {
+                const active = current === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => select(lang.code)}
+                    data-lang-code={lang.code}
+                    className={`flex min-h-11 w-full items-center justify-between px-4 py-2.5 font-body text-[11px] transition-colors hover:bg-foreground/[0.05] ${
+                      active ? 'text-foreground' : 'text-foreground/50'
+                    }`}
+                  >
+                    <span>{lang.native}</span>
+                    {active && <Check className="w-3 h-3 shrink-0" strokeWidth={2.5} />}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ export const DEFAULT_THEME = 'dark';
 
 export const THEME_CLASSES = [
   'dark',
+  'giants',
   'daytime',
   'golden-hour',
   'warriors',
@@ -14,14 +15,26 @@ export const THEME_CLASSES = [
 ];
 
 export const THEME_ALIASES = {
-  light: 'daytime',
-  golden: 'golden-hour',
+  // All light / seasonal / legacy themes now collapse to dark. The only real
+  // aliases we keep are `dubs` → `warriors` (legacy toggle name).
+  light: 'dark',
+  daytime: 'dark',
+  golden: 'dark',
+  'golden-hour': 'dark',
+  giants: 'dark',
+  pride: 'dark',
+  july: 'dark',
   dubs: 'warriors',
 };
 
-export const VALID_THEMES = ['dark', 'daytime', 'golden-hour', 'warriors', 'pride', 'july'];
+// Only two themes are exposed to visitors on the marketing site: Night (dark)
+// and Warriors. All other keys (daytime / golden-hour / giants / pride / july /
+// light / golden / dubs) are treated as aliases that fall back to dark, so a
+// stale localStorage value or a bad deep link can't flash a light theme.
+export const VALID_THEMES = ['dark', 'warriors'];
 export const THEME_LABELS = {
   dark: 'Night',
+  giants: 'Giants',
   daytime: 'Daytime',
   'golden-hour': 'Golden',
   warriors: 'Warriors',
@@ -31,12 +44,20 @@ export const THEME_LABELS = {
 
 const THEME_COLOR_SCHEMES = {
   dark: 'dark',
+  giants: 'dark',
   daytime: 'light',
   'golden-hour': 'light',
   warriors: 'dark',
   pride: 'dark',
   july: 'dark',
 };
+
+// Hidden easter egg (double-click/tap the chevron on any breakpoint): cycles
+// Night ↔ Warriors. Narrowed from the previous 4-theme rotation per user
+// directive to keep only the two active themes in the toggle. Other themes
+// remain reachable via applyTheme() directly for anyone who wants to hit them
+// by key.
+export const THEME_CYCLE = ['dark', 'warriors'];
 
 export function normalizeTheme(theme) {
   const value = String(theme || '').trim();
@@ -77,4 +98,12 @@ export function applyTheme(theme = readStoredTheme(), { persist = true } = {}) {
     // CustomEvent can be unavailable in older embedded browsers; the root class still changed.
   }
   return normalized;
+}
+
+export function cycleTheme() {
+  const current = readStoredTheme();
+  const idx = THEME_CYCLE.indexOf(current);
+  // idx === -1 (current theme not in the cycle) → (-1 + 1) % len === 0 → 'dark'.
+  const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+  return applyTheme(next);
 }

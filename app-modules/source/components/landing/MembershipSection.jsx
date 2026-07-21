@@ -6,15 +6,17 @@ import { EASE, premiumExpandTransition, premiumHover, premiumTap } from '@/lib/m
 import { BOOKABLE_SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import ScrollParallax from '@/components/ui/ScrollParallax';
+import { SUBSCRIPTION_COMMITMENT_COPY } from '@/lib/subscription';
 
 const MotionLink = motion.create(Link);
 
-// Per-IV pricing so the home teaser matches the /subscription builder
-// ($250 per vitamin IV x sessions/month). Avoids showing stale tier prices.
-const VITAMIN_IV_PRICE = 250;
+// subscriptionTiers.js is the single source of truth for visit-credit
+// pricing now (sessions × $250). Just format the numeric price for display
+// and add the deep-link to the /subscription builder.
 const TIERS = BOOKABLE_SUBSCRIPTION_TIERS.map((tier) => ({
   ...tier,
-  price: `$${(tier.sessions * VITAMIN_IV_PRICE).toLocaleString()}`,
+  priceLabel: typeof tier.price === 'number' ? `$${tier.price.toLocaleString()}` : tier.price,
+  originalPriceLabel: typeof tier.originalPrice === 'number' ? `$${tier.originalPrice.toLocaleString()}` : null,
   href: '/subscription',
 }));
 
@@ -55,14 +57,21 @@ function TierRow({ tier, index, open, onToggle }) {
           <div className="flex items-center gap-2">
             <p className="font-heading text-2xl uppercase leading-none tracking-[0.06em] text-foreground/72 md:text-3xl">{tier.name}</p>
           </div>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
+          <p className="mt-1 font-body text-[11px] uppercase tracking-[0.12em] text-foreground/42">{tier.note}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3 text-right">
           <div>
-            <span className="block font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">From</span>
-            <span className="font-heading text-2xl leading-none tracking-wide text-foreground/72">{tier.price}</span>
-            {tier.unit && <span className="ml-0.5 font-body text-[10px] text-foreground/32">{tier.unit}</span>}
+            <span className="block font-body text-[11px] uppercase tracking-[0.12em] text-foreground/38">
+              {tier.discountPercent ? `Save ${tier.discountPercent}%` : 'From'}
+            </span>
+            <span className="flex items-baseline justify-end gap-1.5">
+              {tier.originalPriceLabel && (
+                <span className="font-body text-[13px] tabular-nums text-foreground/35 line-through">{tier.originalPriceLabel}</span>
+              )}
+              <span className="font-heading text-2xl leading-none tracking-wide tabular-nums text-foreground/82">{tier.priceLabel}</span>
+            </span>
+            {tier.unit && <span className="ml-0.5 font-body text-[11px] tabular-nums text-foreground/32">{tier.unit}</span>}
           </div>
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
@@ -84,6 +93,16 @@ function TierRow({ tier, index, open, onToggle }) {
               </div>
             ))}
           </div>
+
+          <MotionLink
+            to={`/subscription?sessions=${tier.sessions}`}
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 font-body text-sm uppercase tracking-[0.2em] text-background transition-colors duration-base ease-editorial"
+          >
+            Start {tier.name}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </MotionLink>
         </div>
       </SmoothDisclosure>
     </motion.div>
@@ -100,7 +119,7 @@ export default function MembershipSection() {
         {/* Header */}
         <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
           <div>
-            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground tracking-tight leading-[0.92] uppercase">
+            <h2 className="font-heading text-display text-foreground tracking-tight leading-[0.92] uppercase">
               Plans
             </h2>
           </div>
@@ -126,15 +145,16 @@ export default function MembershipSection() {
             to="/subscription"
             whileHover={premiumHover}
             whileTap={premiumTap}
-            className="group w-full flex items-center justify-center gap-2 py-4 rounded-full border border-foreground/20 text-foreground/66 font-body text-xs tracking-[0.2em] uppercase hover:border-foreground/35 hover:text-foreground transition-colors duration-base ease-editorial"
+            style={{ background: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
+            className="group w-full flex items-center justify-center gap-3 py-4 md:py-5 rounded-full font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] transition-transform duration-base ease-editorial active:scale-[0.99]"
           >
-            Plans
-            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+            Build my plan
+            <ArrowRight className="h-4 w-4 md:h-5 md:w-5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
           </MotionLink>
         </div>
 
-        <p className="font-body text-[10px] text-foreground/30 tracking-[0.15em] mt-4">
-          3-month minimum · then pause or cancel
+        <p className="font-body text-[11px] text-foreground/30 tracking-[0.15em] mt-4 text-center">
+          {SUBSCRIPTION_COMMITMENT_COPY}
         </p>
 
       </div>

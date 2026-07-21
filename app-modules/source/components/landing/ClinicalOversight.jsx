@@ -53,7 +53,7 @@ export default function ClinicalOversight() {
           <p className="text-xs tracking-[0.35em] text-accent font-body uppercase mb-4">
             Clinical Oversight
           </p>
-          <h2 className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95]">
+          <h2 className="font-heading text-display text-foreground tracking-wide leading-[0.95]">
             MEDICAL DIRECTION
           </h2>
           <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mt-4">

@@ -15,7 +15,7 @@ import { motion, useScroll, useTransform, useReducedMotion } from '@/components/
  * a full-section wrapper (clips children) or any ancestor of the fixed Navbar.
  * Fully disabled under prefers-reduced-motion.
  */
-export default function ScrollParallax({ children, className, distance = 90, ...rest }) {
+export default function ScrollParallax({ children, className, distance = 24, ...rest }) {
   const ref = useRef(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({

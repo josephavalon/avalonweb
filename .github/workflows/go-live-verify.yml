@@ -1,0 +1,72 @@
+name: go-live verify
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-prod:
+    name: verify prod integrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Go-live integration verification
+        run: npm run verify:prod
+        env:
+          API_BASE_URL: https://snooches.avalonvitality.co
+          PUBLIC_SITE_URL: https://snooches.avalonvitality.co
+          AVALON_ENABLE_LIVE_API: 'true'
+          VITE_AVALON_ENABLE_LIVE_API: 'true'
+          VITE_AUTH_GOOGLE_ENABLED: ${{ vars.VITE_AUTH_GOOGLE_ENABLED || 'false' }}
+          VITE_AUTH_APPLE_ENABLED: ${{ vars.VITE_AUTH_APPLE_ENABLED || 'false' }}
+          VITE_AUTH_PHONE_ENABLED: ${{ vars.VITE_AUTH_PHONE_ENABLED || 'false' }}
+          VITE_AUTH_PASSKEY_ENABLED: ${{ vars.VITE_AUTH_PASSKEY_ENABLED || 'false' }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VERIFY_EMAIL_ROOT: ${{ secrets.VERIFY_EMAIL_ROOT }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          APPOINTMENT_SUMMARY_TOKEN_SECRET: ${{ secrets.APPOINTMENT_SUMMARY_TOKEN_SECRET }}
+          ACUITY_VERIFY: '1'
+          ACUITY_USER_ID: ${{ secrets.ACUITY_USER_ID }}
+          ACUITY_API_KEY: ${{ secrets.ACUITY_API_KEY }}
+          ACUITY_DEFAULT_TYPE_ID: ${{ secrets.ACUITY_DEFAULT_TYPE_ID }}
+          ACUITY_TYPE_HYDRATION: ${{ secrets.ACUITY_TYPE_HYDRATION }}
+          ACUITY_TYPE_MEMBERSHIP: ${{ secrets.ACUITY_TYPE_MEMBERSHIP }}
+          PASSWORD_RESET_REDIRECT_TO: https://snooches.avalonvitality.co/account/new-password
+
+      - name: Hosted admin endpoint smoke
+        run: npm run verify:hosted-admin-endpoints
+        env:
+          API_BASE_URL: https://snooches.avalonvitality.co
+
+      - name: Build
+        run: npm run build
+
+      - name: Launch blockers
+        run: npm run test:launch-blockers

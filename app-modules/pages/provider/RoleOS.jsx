@@ -94,7 +94,7 @@ export default function RoleOS() {
   const isAdmin = role === 'admin';
 
   useSeo({
-    title: `${isAdmin ? 'Admin Tools' : 'Provider Tools'} - Avalon Vitality`,
+    title: `${isAdmin ? 'Admin Tools' : 'Provider Tools'} — Avalon Vitality`,
     description: 'Avalon role tools for fast field execution.',
     path: isAdmin ? '/admin/role-os' : '/provider/role-os',
     robots: 'noindex, nofollow',
@@ -136,7 +136,7 @@ export default function RoleOS() {
             The field surface is simple: shift, route, kit, protocol, messages.
           </p>
           <div className="mt-5 grid gap-2">
-            <ToolCard to="/provider/shift" icon={Stethoscope} label="Shift" detail="Visit, ETA, closeout" primary />
+            <ToolCard to="/provider/shift" icon={Stethoscope} label="Shift" detail="Visit, route, closeout" primary />
             <ToolCard to="/provider/communications" icon={MessageCircle} label="Messages" detail="Ops and client comms" />
             <ToolCard to="#kit" icon={Package} label="Kit" detail="What to bring" />
             <ToolCard to="#protocol" icon={BookOpenCheck} label="Protocol" detail="Review before treatment" />

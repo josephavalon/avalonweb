@@ -1,0 +1,20 @@
+# Security-sensitive paths. Changes here require a review.
+# Owner is the repo's primary maintainer; expand once a security team exists.
+
+# Vercel + headers + CSP
+/vercel.json                 @josephavalon
+
+# Server-side helpers (auth, rate-limit, webhooks)
+/api/_lib/                   @josephavalon
+/api/integrations/           @josephavalon
+/api/admin/                  @josephavalon
+/api/auth/                   @josephavalon
+/api/invite/                 @josephavalon
+/api/manual-booking.js       @josephavalon
+/api/charge-balance.js       @josephavalon
+
+# Database schema + RLS
+/supabase/migrations/        @josephavalon
+
+# CI + this file itself
+/.github/                    @josephavalon

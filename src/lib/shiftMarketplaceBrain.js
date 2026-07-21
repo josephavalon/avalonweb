@@ -6,7 +6,7 @@ export const SHIFT_MARKETPLACE_MODE = 'local-offer-placeholder';
 export const SHIFT_MARKETPLACE_RULES = [
   'Only cleared, payable visits become nurse offers.',
   'Nurses reply Y/N to accept or decline.',
-  'The accepting nurse sets the final ETA.',
+  'Accepted visits open the route handoff.',
   'Accepted shifts lock to the nurse personal page.',
   'SMS, Acuity, and payroll remain placeholder handoffs until APIs are connected.',
 ];
@@ -102,7 +102,7 @@ function rankStage(stage) {
 }
 
 function offerAction(stage, candidate = {}) {
-  if (stage === 'Accepted') return 'Lock to nurse page. Ask nurse to set final ETA.';
+  if (stage === 'Accepted') return 'Lock to the nurse page and open the route handoff.';
   if (stage === 'Send') return 'Send open shift. Await Y/N reply.';
   if (stage === 'Backup') return 'Keep as backup. Send if primary stalls.';
   if (stage === 'Hold') return `Do not send: ${candidate.blockers?.[0] || 'local readiness block'}.`;
@@ -129,8 +129,7 @@ export function buildShiftOffer({ request = {}, nurse = {}, inventory = [] } = {
     score: candidate.score,
     grade: candidate.grade,
     etaEstimate: candidate.etaMinutes,
-    nurseFinalEta: true,
-    finalEtaOwner: 'nurse',
+    routeHandoffReady: stage === 'Accepted',
     shiftValue: pay.estimate,
     pay,
     replyCommand: stage === 'Accepted' ? 'ACCEPTED' : stage === 'Send' ? 'Y/N' : 'NONE',
@@ -138,7 +137,7 @@ export function buildShiftOffer({ request = {}, nurse = {}, inventory = [] } = {
     declineToken: `${offerId}:N`,
     loadsInto: stage === 'Accepted' ? 'nurse-personal-page-placeholder' : 'open-shift-queue-placeholder',
     confirmation: stage === 'Accepted'
-      ? `${nurse.name || 'Nurse'} accepted. Final ETA required from nurse.`
+      ? `${nurse.name || 'Nurse'} accepted. Route handoff ready.`
       : stage === 'Send'
         ? `Open shift: ${city} ${time}. $${pay.estimate}. Reply Y/N.`
         : offerAction(stage, candidate),
@@ -190,15 +189,6 @@ function buildEscalations(rows = []) {
         severity: 'High',
         reason: row.primary?.blockers?.[0] || 'No sendable nurse offer.',
         action: 'Clear blocker before broadcasting.',
-      });
-    }
-    if (row.accepted) {
-      items.push({
-        id: `${row.requestId}-eta`,
-        client: row.client,
-        severity: 'Action',
-        reason: 'Nurse final ETA required.',
-        action: 'Prompt nurse for ETA after accept.',
       });
     }
     return items;
@@ -256,7 +246,7 @@ export function buildShiftMarketplaceSnapshot({ requests = [], nurses = [], inve
       client: offer.client,
       nurse: offer.nurseName,
       loadsInto: offer.loadsInto,
-      etaOwner: offer.finalEtaOwner,
+      routeStatus: offer.routeHandoffReady ? 'Route ready' : 'Pending',
       confirmation: offer.confirmation,
     })),
     nurseInbox: buildNurseInbox({ nurses, offers }),
@@ -271,7 +261,7 @@ export function buildShiftMarketplaceSnapshot({ requests = [], nurses = [], inve
       hold: hold.length,
       escalations: escalations.length,
       avgShiftValue,
-      nurseFinalEta: accepted.length,
+      routeHandoffs: accepted.length,
     },
   };
 }

@@ -25,7 +25,7 @@ export const OPERATING_DAY_SOURCE_OF_TRUTH = [
   { object: 'Customer / patient / payer / member', localOwner: 'Avalon local repository', liveOwner: 'Supabase after API wiring' },
   { object: 'Appointment schedule', localOwner: 'Acuity placeholder mirror', liveOwner: 'Acuity' },
   { object: 'Clinical chart / GFE', localOwner: 'Placeholder status only', liveOwner: 'Acuity + Avalon NP or Qualiphy fallback' },
-  { object: 'Shift offer / nurse ETA', localOwner: 'Avalon OS', liveOwner: 'Avalon OS + SMS delivery proof' },
+  { object: 'Shift offer / route handoff', localOwner: 'Avalon OS', liveOwner: 'Avalon OS + SMS delivery proof' },
   { object: 'Inventory / nurse kit', localOwner: 'Avalon OS', liveOwner: 'Avalon OS with vendor replenishment APIs later' },
   { object: 'Deposit / refund', localOwner: 'Stripe placeholder state', liveOwner: 'Stripe or Acuity Pay' },
   { object: 'Payroll', localOwner: 'Gusto placeholder proof', liveOwner: 'Gusto' },
@@ -356,7 +356,7 @@ const DAY_TIMELINE = [
   ['07:30', 'GFE triage', 'Returning annual GFE is accepted; Avalon NP clears new hydration; Qualiphy fallback is held for no-NP coverage only.'],
   ['08:00', 'Dispatch', 'Avalon scores nurses by zone, kit, credential, protocol, ETA, workload, and value.'],
   ['08:10', 'Shift market', 'Open shifts generate Y/N offers; accepted visits lock to nurse pages.'],
-  ['08:20', 'ETA authority', 'Nurses set final ETA before client text. No automatic ETA is treated as final.'],
+  ['08:20', 'Route handoff', 'Accepted visits open navigation and client contact tools.'],
   ['09:00', 'Route', 'Apple/Google Maps links are prepared as handoffs, not tracked live APIs.'],
   ['10:00', 'Field execution', 'Arrive, start, complete, incident, wrong-address, and cancel/rebook lanes are simulated.'],
   ['15:30', 'Closeout', 'Acuity closeout proof gates local completion, payroll proof, and client follow-up.'],
@@ -523,8 +523,8 @@ function buildCriteria(snapshot) {
   const hasEvent = requests.some((row) => row.eventPresale);
   const hasReturningAnnual = gfeProof.some((row) => row.id === 'annual-returning' && row.status === 'Pass' && row.required === false);
   const hasQualiphyFallback = gfeProof.some((row) => row.id === 'qualiphy-fallback-only' && row.status === 'Pass');
-  const hasNurseEta = arrival.metrics.clientTexts >= 1
-    && arrival.missions.some((row) => row.clientTextReady && row.nurseActions.some((action) => action.id === 'eta' && action.owner === 'Nurse' && action.status === 'Done'));
+  const hasRouteHandoff = arrival.metrics.clientTexts >= 1
+    && arrival.missions.some((row) => row.clientTextReady && row.nurseActions.some((action) => action.id === 'maps' && action.owner === 'Nurse' && action.status === 'Ready'));
 
   return [
     { id: 'full-demand', label: 'Demand mix', pass: requests.length >= 8 && hasEvent && requests.some((row) => row.locationType === 'hotel') && requests.some((row) => row.locationType === 'office') },
@@ -534,7 +534,7 @@ function buildCriteria(snapshot) {
     { id: 'qualiphy', label: 'Qualiphy fallback rule', pass: hasQualiphyFallback },
     { id: 'dispatch', label: 'Dispatch scoring', pass: dispatch.metrics.requests >= 4 && dispatch.topDecisions.length >= 1 && dispatch.metrics.dispatchable >= 1 },
     { id: 'shift-market', label: 'Nurse Y/N shift flow', pass: marketplace.metrics.visits >= 4 && marketplace.offers.some((offer) => offer.replyCommand === 'Y/N') },
-    { id: 'nurse-eta', label: 'Nurse owns ETA', pass: hasNurseEta },
+    { id: 'route-handoff', label: 'Route handoff', pass: hasRouteHandoff },
     { id: 'route', label: 'Maps handoff', pass: arrival.missions.some((row) => row.maps?.apple && row.maps?.google) },
     { id: 'field', label: 'Field execution', pass: completed.length >= 3 },
     { id: 'closeout', label: 'Acuity closeout proof', pass: closeout.metrics.payrollReady >= 2 && closeout.handoffChannels.some((row) => row.id === 'acuity') },

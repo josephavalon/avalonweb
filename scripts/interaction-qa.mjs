@@ -348,6 +348,7 @@ async function testBookingAddOnFlow(cdp) {
   await fillByLabel(cdp, 'Phone', '(415) 555-0144');
   await fillByLabel(cdp, 'DOB', '01/01/1980');
   await fillByLabel(cdp, 'Email', 'demo.client@avalon.local');
+  await fillByLabel(cdp, 'Emergency contact', 'Demo Emergency (415) 555-0100');
   await clickText(cdp, 'CONFIRM & PAY');
   await waitForText(cdp, /Secure checkout ready|Hold received|Confirmation|Myers/i);
   const booking = await evalOnPage(cdp, `JSON.parse(localStorage.getItem('av.local.lastBooking') || 'null')`);

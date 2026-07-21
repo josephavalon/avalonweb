@@ -14,7 +14,7 @@
  */
 
 import Stripe from 'stripe';
-import { requireAdmin } from '../_lib/supabase-auth.js';
+import { requireStaff } from '../_lib/supabase-auth.js';
 import { collectBalance } from '../_lib/balance-core.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const authed = await requireAdmin(req, res);
+  const authed = await requireStaff(req, res);
   if (!authed) return;
 
   const { appointmentId, acuityAppointmentId, amountCentsOverride } = req.body || {};
@@ -71,12 +71,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'appointmentId or acuityAppointmentId is required' });
   }
 
-  const { db } = authed;
+  const { db, tenantId } = authed;
   let lookup = db.from('appointments')
     .select('id, tenant_id, stripe_customer_id, stripe_payment_method_id, balance_due_cents, payment_status, currency, acuity_appointment_id');
   lookup = appointmentId
     ? lookup.eq('id', appointmentId)
     : lookup.eq('acuity_appointment_id', String(acuityAppointmentId));
+  // Service-role client bypasses RLS — tenant filter must come from JS, or a
+  // staff member at tenant A could charge tenant B's appointment by id.
+  if (tenantId) lookup = lookup.eq('tenant_id', tenantId);
 
   const { data: appt, error: lookupErr } = await lookup.maybeSingle();
   if (lookupErr) {

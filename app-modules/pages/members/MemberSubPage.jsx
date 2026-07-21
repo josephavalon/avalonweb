@@ -13,7 +13,7 @@ export default function MemberSubPage({ eyebrow, title, description, ctaLabel, c
   const location = useLocation();
 
   useSeo({
-    title: `${title} - Avalon Vitality`,
+    title: `${title} — Avalon Vitality`,
     description,
     path: seoPath || location.pathname,
   });
