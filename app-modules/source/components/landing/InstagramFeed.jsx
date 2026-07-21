@@ -166,7 +166,7 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
               @avalon_vitality
             </p>
             <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl text-foreground uppercase tracking-tight leading-[0.92]">
-              Live from the field
+              Live
             </h2>
           </div>
         </ScrollParallax>

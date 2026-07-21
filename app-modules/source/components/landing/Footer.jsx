@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Mail, Phone, Clock, MapPin, ChevronDown, Layers, Building2, Scale } from 'lucide-react';
+import { ArrowRight, Mail, Phone, Clock, MapPin, ChevronDown } from 'lucide-react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { EASE, premiumTap } from '@/lib/motion';
 // LanguageSelect intentionally removed — coming back later.
@@ -26,10 +26,10 @@ const LEGAL = [
 ];
 
 const GROUPS = [
-  { label: 'Services', icon: Layers, links: SERVICES },
-  { label: 'Company', icon: Building2, links: COMPANY },
-  { label: 'Legal', icon: Scale, links: LEGAL },
-  { label: 'Contact', icon: Mail, type: 'contact' },
+  { label: 'Services', links: SERVICES },
+  { label: 'Company', links: COMPANY },
+  { label: 'Legal', links: LEGAL },
+  { label: 'Contact', type: 'contact' },
 ];
 
 // Real brand glyphs (simple-icons paths), rendered uniformly in currentColor so
@@ -85,7 +85,7 @@ function FooterContactLink({ href, icon: Icon, children }) {
 // Desktop footer groups render expanded — footer links are wayfinding (and SEO
 // surface), so on desktop they stay visible rather than hidden behind a click.
 // The mobile footer keeps its compact accordion (FooterGroup) below.
-function FooterDesktopGroup({ title, icon: Icon, children }) {
+function FooterDesktopGroup({ title, children }) {
   // Collapsible accordion — header is a click target, children reveal below.
   // Reduces desktop footer height by ~60%; matches the mobile accordion pattern.
   const [open, setOpen] = useState(false);
@@ -103,12 +103,7 @@ function FooterDesktopGroup({ title, icon: Icon, children }) {
         aria-expanded={open}
         className="relative flex min-h-[54px] w-full items-center justify-between gap-2.5 px-3 text-left transition-colors [@media(hover:hover)]:hover:bg-foreground/[0.025]"
       >
-        <span className="flex min-w-0 items-center gap-2.5">
-          {Icon && (
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/[0.08] bg-background/80 text-foreground/58">
-              <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
-            </span>
-          )}
+        <span className="flex min-w-0 items-center">
           <span className="font-body text-[11px] uppercase tracking-[0.28em] text-foreground/62">{title}</span>
         </span>
         <motion.span
@@ -128,8 +123,6 @@ function FooterDesktopGroup({ title, icon: Icon, children }) {
 }
 
 function FooterGroup({ group, open, onToggle }) {
-  const Icon = group.icon;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -145,10 +138,7 @@ function FooterGroup({ group, open, onToggle }) {
         className="relative flex min-h-[72px] w-full items-center justify-between gap-3 px-4 text-left transition-colors duration-base ease-editorial [@media(hover:hover)]:hover:bg-foreground/[0.025]"
         aria-expanded={open}
       >
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-            <Icon className="h-4.5 w-4.5 text-accent" strokeWidth={1.8} />
-          </span>
+        <span className="flex min-w-0 items-center">
           <span className="font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground">
             {group.label}
           </span>
@@ -241,7 +231,7 @@ export default function Footer() {
         <div className="mb-3 hidden gap-2 md:grid md:grid-cols-4 md:items-start">
 
           {/* Services */}
-          <FooterDesktopGroup title="Services" icon={Layers}>
+          <FooterDesktopGroup title="Services">
             <div className="grid grid-cols-1 gap-1.5">
               {SERVICES.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
@@ -250,14 +240,14 @@ export default function Footer() {
           </FooterDesktopGroup>
 
           {/* Company */}
-          <FooterDesktopGroup title="Company" icon={Building2}>
+          <FooterDesktopGroup title="Company">
               {COMPANY.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}
           </FooterDesktopGroup>
 
           {/* Contact */}
-          <FooterDesktopGroup title="Contact" icon={Mail}>
+          <FooterDesktopGroup title="Contact">
               <FooterContactLink href="mailto:support@avalonvitality.co" icon={Mail}>
                 support@avalonvitality.co
               </FooterContactLink>
@@ -275,7 +265,7 @@ export default function Footer() {
           </FooterDesktopGroup>
 
           {/* Legal */}
-          <FooterDesktopGroup title="Legal" icon={Scale}>
+          <FooterDesktopGroup title="Legal">
               {LEGAL.map((l) => (
                 <FooterLink key={l.label} to={l.to}>{l.label}</FooterLink>
               ))}

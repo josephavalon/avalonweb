@@ -69,10 +69,10 @@ const NAD_DRIPS = ((SPECIALTY_IVS.find((s) => s.label === 'NAD+') || {}).treatme
 const ALL_DRIPS = [...VITAMIN_DRIPS, ...CBD_DRIPS, ...NAD_DRIPS];
 
 const TOP_CATEGORIES = [
-  { key: 'vitamins', label: 'IV VITAMINS', icon: Droplets,      type: 'flat-treatments', data: VITAMIN_DRIPS },
-  { key: 'cbd',      label: 'IV CBD',      icon: CannabisLeaf,  type: 'flat-treatments', data: CBD_DRIPS },
-  { key: 'nad',      label: 'IV NAD+',     icon: FlaskConical,  type: 'flat-treatments', data: NAD_DRIPS },
-  { key: 'all',      label: 'VIEW ALL',    icon: ArrowRight,    type: 'link',            href: '/protocols', data: ALL_DRIPS },
+  { key: 'vitamins', label: 'IV VITAMINS', type: 'flat-treatments', data: VITAMIN_DRIPS },
+  { key: 'cbd',      label: 'IV CBD',      type: 'flat-treatments', data: CBD_DRIPS },
+  { key: 'nad',      label: 'IV NAD+',     type: 'flat-treatments', data: NAD_DRIPS },
+  { key: 'all',      label: 'VIEW ALL',    type: 'link',            href: '/protocols', data: ALL_DRIPS },
 ];
 
 // ── Sub-category row (inside Vitamin / Specialty) ─────────────────────────────
@@ -134,7 +134,6 @@ function SubRow({ sub }) {
 
 // ── Top-level category row ────────────────────────────────────────────────────
 function CategoryRow({ cat, index, open, onToggle }) {
-  const Icon = cat.icon;
   // Desktop rows are full-bleed; without a secondary value the collapsed card
   // reads as label-left + chevron-right over a wide empty gap. Surface the
   // option count + entry price (same treatment as HowItWorks' inline preview)
@@ -160,10 +159,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
           whileTap={premiumTap}
           className="group flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial"
         >
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
-              <Icon className="h-4 w-4 text-foreground/66" strokeWidth={1.8} />
-            </div>
+          <div className="flex min-w-0 items-center">
             <p className="truncate font-heading text-xl uppercase leading-none tracking-[0.06em] text-foreground/66">{cat.label}</p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-foreground/30 transition-all duration-base ease-editorial group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
@@ -189,10 +185,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
         className="flex w-full items-center justify-between px-5 py-4 transition-colors duration-base ease-editorial"
         aria-expanded={open}
       >
-        <div className="flex items-center gap-3">
-          <div className="av-treatment-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
-            <Icon className="h-4 w-4 text-foreground/66" strokeWidth={1.8} />
-          </div>
+        <div className="flex items-center">
           <div className="text-left">
             <p className="font-heading text-xl tracking-[0.06em] text-foreground/66 uppercase leading-none">{cat.label}</p>
             {cat.sub ? (

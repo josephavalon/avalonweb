@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, CalendarDays, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Timer, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, MapPin, ShieldPlus, Sparkles, Timer, Zap } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import MagneticButton from '@/components/ui/MagneticButton';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
@@ -9,15 +9,15 @@ import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS_FULL = [
-  { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
-  { to: '/protocols', label: 'Menu', icon: Droplet },
-  { to: '/events', label: 'Events', icon: CalendarDays },
-  { to: '/subscription', label: 'Plans', icon: Diamond },
+  { to: BOOK_URL, label: 'Book', preload: () => import('@/pages/BookNow') },
+  { to: '/protocols', label: 'Menu' },
+  { to: '/events', label: 'Events' },
+  { to: '/subscription', label: 'Plans' },
 ];
 const HERO_ACTIONS_CARE = [
-  { to: ACUITY_URL, external: true, label: 'Book', icon: Calendar },
-  { to: '/protocols', label: 'Menu', icon: Droplet },
-  { to: '/events', label: 'Events', icon: CalendarDays },
+  { to: ACUITY_URL, external: true, label: 'Book' },
+  { to: '/protocols', label: 'Menu' },
+  { to: '/events', label: 'Events' },
 ];
 // All 6 rows are non-clickable so structure is identical — no <Link> wrapper on
 // any row → uniform spacing (no baseline drift between the 3rd and 4th item).
@@ -179,20 +179,16 @@ export default function Hero() {
             className="relative mt-7 grid w-full max-w-[23rem] grid-cols-1 gap-2.5 lg:mt-0 lg:w-[28rem] lg:max-w-[28rem] lg:shrink-0 lg:grid-cols-1 lg:gap-3.5"
           >
             {HERO_ACTIONS.map((action) => {
-              const Icon = action.icon;
               const isBookAction = action.to === BOOK_URL;
               // BOOK shares the exact card geometry + layout of the two below it
-              // (icon-left, label, arrow-right, same radius/padding); it differs
-              // only by being the white, filled primary. The white look is forced
+              // (label-left, arrow-right, same radius/padding); it differs only
+              // by being the white, filled primary. The white look is forced
               // in CSS (.av-hero-action.av-hero-action-primary) because the night
               // theme neutralizes raw `bg-white`/`text-*` utilities — so we keep
               // those utilities OFF the primary and let the stylesheet own color.
               const actionClassName = isBookAction
                 ? 'av-premium-cta av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
                 : 'av-premium-cta av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
-              const iconWrapClassName = isBookAction
-                ? 'av-hero-book-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl'
-                : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
               const foregroundClassName = isBookAction ? '' : 'text-foreground';
 
               const cta = action.external ? (
@@ -202,10 +198,7 @@ export default function Hero() {
                   whileTap={premiumTap}
                   className={actionClassName}
                 >
-                  <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
-                    <span className={iconWrapClassName}>
-                      <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
-                    </span>
+                  <span className="relative flex min-w-0 flex-1 items-center">
                     <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
                       {action.label}
                     </span>
@@ -223,10 +216,7 @@ export default function Hero() {
                   whileTap={premiumTap}
                   className={actionClassName}
                 >
-                  <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
-                    <span className={iconWrapClassName}>
-                      <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
-                    </span>
+                  <span className="relative flex min-w-0 flex-1 items-center">
                     <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
                       {action.label}
                     </span>
