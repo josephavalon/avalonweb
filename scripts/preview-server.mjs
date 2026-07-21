@@ -64,7 +64,7 @@ const PUBLIC_SPA_ROUTE_PATTERNS = [
   /^\/(our-story|team|medical-direction|apply|careers|faq|services\/nad|services\/cbd)$/,
   /^\/(subscription|plan|corporate|hotel|service-area|partners|platform|b2b|custom|book|protocols|menu|checkout|checkout\/success|login|signup|forgot|forgot-password|admin\/login|order|redeem)$/,
   /^\/booking\/confirmation$/,
-  /^\/(privacy|privacy-policy|terms|terms-and-conditions|terms-of-service|telehealth-disclaimer|product-disclaimer|notice-of-privacy-practices|hipaa-notice|cookie-policy|cookies)$/,
+  /^\/(privacy|privacy-policy|terms|terms-and-conditions|terms-of-service|telehealth-disclaimer|product-disclaimer|notice-of-privacy-practices|waiver|liability-waiver|hipaa-notice|cookie-policy|cookies)$/,
 ];
 
 function isPublicSpaRoute(urlPath) {

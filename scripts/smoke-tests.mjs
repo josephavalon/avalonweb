@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { allKnownRoutes } from '../src/routes/routeGroups.js';
-import { noindexStaticRoutes } from '../src/data/seoArchitecture.js';
+import { noindexStaticRoutes, publicStaticRoutes } from '../src/data/seoArchitecture.js';
 import {
   IV_ADDONS,
   IV_SESSIONS,
@@ -31,6 +31,8 @@ function assert(condition, message) {
 }
 
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const previewServerSource = readFileSync(new URL('./preview-server.mjs', import.meta.url), 'utf8');
+const vercelConfig = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
 const authCallbackSource = readFileSync(new URL('../src/pages/AuthCallback.jsx', import.meta.url), 'utf8');
 const newPasswordSource = readFileSync(new URL('../src/pages/NewPassword.jsx', import.meta.url), 'utf8');
 const authStoreSource = readFileSync(new URL('../src/lib/useAuthStore.js', import.meta.url), 'utf8');
@@ -125,6 +127,17 @@ const localRepositorySource = readFileSync(new URL('../app-modules/lib/localRepo
 
 for (const route of allKnownRoutes) {
   assert(appSource.includes(`path="${route}"`), `Route missing from App.jsx: ${route}`);
+}
+
+const publicSpaRewrite = vercelConfig.rewrites.find(
+  (rewrite) => rewrite.destination === '/index.html' && rewrite.source.startsWith('/(account|')
+);
+assert(publicStaticRoutes.some((route) => route.path === '/waiver'), 'Waiver must receive generated route HTML');
+for (const route of ['/waiver', '/liability-waiver']) {
+  const slug = route.slice(1);
+  assert(allKnownRoutes.includes(route), `Waiver route missing from route registry: ${route}`);
+  assert(publicSpaRewrite?.source.includes(slug), `Waiver route missing from Vercel rewrite: ${route}`);
+  assert(previewServerSource.includes(slug), `Waiver route missing from preview server: ${route}`);
 }
 
 assert(IV_SESSIONS.length >= 10, 'Expected full IV session catalog');
