@@ -80,7 +80,7 @@ export default function AsSeenAt() {
 
       {/* Desktop marquee — CSS keyframe on a doubled strip. */}
       <div
-        className="relative mt-3 hidden overflow-hidden md:block"
+        className="av-asa-marquee-viewport relative mt-3 hidden overflow-hidden md:block"
         onMouseEnter={() => setHoverPaused(true)}
         onMouseLeave={() => setHoverPaused(false)}
       >
@@ -108,9 +108,6 @@ export default function AsSeenAt() {
             ))}
           </div>
         </div>
-
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black to-transparent md:w-20" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black to-transparent md:w-20" />
       </div>
 
       {/* Mobile marquee — transform the strip instead of mutating scrollLeft.
@@ -141,12 +138,17 @@ export default function AsSeenAt() {
             </div>
           ))}
         </div>
-
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[72px] bg-gradient-to-r from-black via-black/70 to-transparent" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[72px] bg-gradient-to-l from-black via-black/70 to-transparent" />
       </div>
 
       <style>{`
+        .av-asa-marquee-viewport {
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+        }
+        .av-asa-mobile-viewport {
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+        }
         @keyframes av-asa-marquee {
           0%   { transform: translate3d(0, 0, 0); }
           100% { transform: translate3d(-50%, 0, 0); }
